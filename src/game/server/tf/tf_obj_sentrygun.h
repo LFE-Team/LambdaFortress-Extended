@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Engineer's Sentrygun
 //
@@ -119,6 +119,9 @@ private:
 	CNetworkVar( int, m_iMaxAmmoShells );
 	CNetworkVar( int, m_iAmmoRockets );
 	CNetworkVar( int, m_iMaxAmmoRockets );
+
+	CNetworkVar(int, m_iAmmoShellsHauled);
+	CNetworkVar(int, m_iAmmoRocketsHauled);
 
 	int	m_iAmmoType;
 

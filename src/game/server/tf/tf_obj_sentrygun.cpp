@@ -187,6 +187,9 @@ void CObjectSentrygun::MakeCarriedObject( CTFPlayer *pPlayer )
 	// Clear enemy.
 	m_hEnemy = NULL;
 
+	m_iAmmoShellsHauled = m_iAmmoShells;
+	m_iAmmoRocketsHauled = m_iAmmoRockets;
+
 	// Reset upgrade values.
 	m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_1;
 	m_flHeavyBulletResist = SENTRYGUN_MINIGUN_RESIST_LVL_1;
@@ -260,6 +263,11 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 //-----------------------------------------------------------------------------
 bool CObjectSentrygun::CanBeUpgraded( CTFPlayer *pPlayer )
 {
+	if (m_bMiniBuilding)
+	{
+		return false;
+	}
+
 	if ( !m_bWasMapPlaced || HasSpawnFlags( SF_OBJ_UPGRADABLE ) )
 	{
 		return BaseClass::CanBeUpgraded( pPlayer );
@@ -309,6 +317,8 @@ void CObjectSentrygun::OnGoActive( void )
 	SetWaterLevel( ( bUnderwater ) ? 3 : 0 );	
 
 	m_iAmmoShells = m_iMaxAmmoShells;
+	if (m_bCarryDeploy)
+		m_iAmmoShells = m_iAmmoShellsHauled;
 
 	// Init attachments for level 1 sentry gun
 	m_iAttachments[SENTRYGUN_ATTACHMENT_MUZZLE] = LookupAttachment( "muzzle" );
@@ -390,6 +400,10 @@ void CObjectSentrygun::StartUpgrading( void )
 	case 3:
 		SetModel( SENTRY_MODEL_LEVEL_3_UPGRADE );
 		m_iAmmoRockets = SENTRYGUN_MAX_ROCKETS;
+		if (m_bCarryDeploy)
+		{
+			m_iAmmoRockets = m_iAmmoRocketsHauled;
+		}
 		m_flHeavyBulletResist = SENTRYGUN_MINIGUN_RESIST_LVL_3;
 		SetViewOffset( SENTRYGUN_EYE_OFFSET_LEVEL_3 );
 		m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_3;
@@ -401,6 +415,8 @@ void CObjectSentrygun::StartUpgrading( void )
 
 	// more ammo capability
 	m_iAmmoShells = m_iMaxAmmoShells;
+	if (m_bCarryDeploy)
+		m_iAmmoShells = m_iAmmoShellsHauled;
 
 	m_iState.Set( SENTRY_STATE_UPGRADING );
 
