@@ -1,0 +1,23 @@
+"VertexlitGeneric"
+{
+
+	"$basetexture" "models\weapons\gray"
+	
+	"$lightwarptexture" "models\lightwarps\weapon_lightwarp"
+	
+	"$additive" 1
+	"$phong" 1
+	"$phongboost" 0
+	
+	"$rimlight" "1"
+	"$rimlightexponent" "4"	
+	"$rimlightboost" "2"
+
+	"Proxies"
+	{
+		"weapon_invis"
+		{
+		}
+
+	}
+}

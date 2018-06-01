@@ -1,0 +1,31 @@
+"VertexlitGeneric"
+{
+	"$baseTexture" "models\items/target_duck_ghost"
+
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.5 .1 1]"
+	"$basemapalphaphongmask" 0
+	"$selfillum" 1
+	"$additive" 1
+
+	"$phong" "1"
+	"$phongexponent" "15"
+	"$phongboost" "3"
+	"$lightwarptexture" "models\lightwarps\weapon_lightwarp"
+	"$phongfresnelranges"	"[.25 1 4]"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "4"
+	"$rimlightboost" "3"
+	
+	"Proxies"
+	{
+		"Sine"
+		{
+			"sineperiod" "1.5"
+			"sinemin" ".55"
+			"sinemax" "1.5"
+			"resultVar" "$selfillumtint"
+		}
+	}
+}

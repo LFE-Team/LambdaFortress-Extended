@@ -1,0 +1,19 @@
+"VertexlitGeneric"
+{
+	"$baseTexture" "models\items/target_duck"
+
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.1 .5.1]"
+	//"$basemapalphaphongmask" 1
+	"$selfillum" 1
+
+	"$phong" "1"
+	"$phongexponent" "115"
+	"$phongboost" "1"
+	"$lightwarptexture" "models/player/pyro/pyro_lightwarp"
+	"$phongfresnelranges"	"[.25 1 4]"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "4"
+	"$rimlightboost" "3"
+}

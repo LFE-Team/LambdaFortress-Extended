@@ -1,0 +1,16 @@
+"VertexlitGeneric"
+{
+	"$baseTexture" "models/items/cash_bundle"
+
+
+//	"$rimlight" "1"
+//	"$rimlightexponent" "4"
+//	"$rimlightboost" "2"
+
+	"$selfillum" "1"
+
+//	">=DX90"
+//	{
+//		"$selfillummask" 	"models\items/item_selfillum"
+//	}
+}

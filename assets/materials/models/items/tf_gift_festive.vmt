@@ -1,0 +1,35 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/items/tf_gift_festive"
+	"$phongexponenttexture" "models/items/tf_gift_festive_exp"
+	"$bumpmap" "models/effects/flat_normal"
+	"$phongexponentfactor"  "28"
+
+	
+	"$phong" "1"
+	"$phongexponent" "75"
+	"$phongboost" "2.5"
+	"$phongalbedotint" "1"
+	
+	"$lightwarptexture" "models/lightwarps/weapon_lightwarp"
+	
+	"$phongfresnelranges"	"[2.3 1.5 3]"
+	"$halflambert" "1"
+	"$glowcolor" "1"
+	
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.1 .07 .07]"
+	"$basemapalphaphongmask" "1"
+	
+	"$selfillum" 1
+	"$selfillumtint" "[5.0 6.0 2.7]"
+	"$selfIllumFresnel" "1"
+	"$selfIllumFresnelMinMaxExp" "[0 5 10]"
+
+	"$phongtint" "[0.5 0.4 0.4]"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "50"
+	"$rimlightboost" "5.25"
+	"$rimmask" "1"
+}

@@ -1,0 +1,9 @@
+"UnlitGeneric"
+{
+	"$basetexture" "VGUI/entities/pickup03_red"
+	"$nocull" 1
+	"$nodecal" 1
+	"$nolod" 1
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+}

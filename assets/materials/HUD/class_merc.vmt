@@ -1,0 +1,34 @@
+"UnlitGeneric"
+{
+	"$translucent" 1
+	"$baseTexture" "hud\class_mercred"
+	//"$baseTexture" "hud\class_merccustom_base"
+	
+	"$vertexcolor" 1
+	"$no_fullbright" 1
+	"$ignorez" 1
+	"%keywords" "tf"
+	
+	//"$detail" "hud\class_merccustom_detail"
+	//"$detailblendmode" "2"
+	//"$detailscale" "1"
+	//"$detailtint" "{180 180 180}"
+	//"$colortint_base"		"{180 180 180}"
+	//"$colortint_tmp"		"[0 0 0]"
+	//
+	//
+	//"Proxies"
+	//{
+	//	"ItemTintColor"
+	//	{
+	//		"resultVar"		"$colortint_tmp"
+	//	}
+	//	"SelectFirstIfNonZero"
+	//	{
+	//		"srcVar1"		"$colortint_tmp"
+	//		"srcVar2"		"$colortint_base"
+	//		"resultVar"		"$detailtint"
+	//	}
+	//}
+}
+

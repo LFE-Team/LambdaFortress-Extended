@@ -1,0 +1,65 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/weapons/c_items/c_bread_cinnamon"
+	"$bumpmap" "models/weapons/c_items/c_bread_cinnamon_normal"
+
+	"$phong" "1"
+	"$phongexponent" "65"
+	"$phongexponenttexture" "models/weapons/c_items/c_bread_cinnamon"
+	"$phongboost" ".5"	
+	//"$lightwarptexture" "models/player/pyro/pyro_lightwarp"
+	"$lightwarptexture" "/models/lightwarps/weapon_lightwarp"
+	
+	"$phongfresnelranges"	"[.15 .25 .5]"
+
+	//"$basemapalphaphongmask" "1"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "25"	
+	"$rimlightboost" "2"
+	"$rimmask" "1"
+
+
+	"$glowcolor" "1"
+
+	// Cloaking
+	"$cloakPassEnabled" "1"
+	"$yellow" "0"
+
+	"Proxies"
+	{
+		"AnimatedWeaponSheen"
+		{
+			"animatedtexturevar" 		"$sheenmapmask"
+			"animatedtextureframenumvar" 	"$sheenmapmaskframe"
+			"animatedtextureframerate" 		"40"
+		}
+		"invis"
+		{
+		}
+		"ModelGlowColor"
+		{
+			"resultVar" "$glowcolor"
+		}
+		"Equals"
+		{
+			"srcVar1"  "$glowcolor"
+			"resultVar" "$selfillumtint"
+		}
+		"Equals"
+		{
+			"srcVar1"  "$glowcolor"
+			"resultVar" "$color2"
+		}
+		"YellowLevel"
+		{
+			"resultVar" "$yellow"
+		}
+		"Multiply"
+		{
+			"srcVar1" "$color2"
+			"srcVar2" "$yellow"
+			"resultVar" "$color2"
+		}
+	}
+}
