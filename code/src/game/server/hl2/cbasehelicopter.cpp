@@ -827,11 +827,7 @@ void CBaseHelicopter::UpdatePlayerDopplerShift( )
 	}
 	else
 	{
-		CBaseEntity *pPlayer = NULL;
-
-		// UNDONE: this needs to send different sounds to every player for multiplayer.	
-		// FIXME: this isn't the correct way to find a player!!!
-		pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 		if (pPlayer)
 		{
 			Vector dir;
@@ -1269,7 +1265,11 @@ void CBaseHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 	// Take no damage from trace attacks unless it's blast damage. RadiusDamage() sometimes calls
 	// TraceAttack() as a means for delivering blast damage. Usually when the explosive penetrates
 	// the target. (RPG missiles do this sometimes).
+#ifdef TF_CLASSIC
+	if( info.GetDamageType() & (DMG_BLAST|DMG_AIRBOAT|DMG_BULLET) )
+#else
 	if( info.GetDamageType() & (DMG_BLAST|DMG_AIRBOAT) )
+#endif
 	{
 		BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 	}

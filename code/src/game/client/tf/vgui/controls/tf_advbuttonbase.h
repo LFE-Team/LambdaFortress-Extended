@@ -6,6 +6,7 @@
 
 #include "tf_mainmenu.h"
 #include <vgui_controls/EditablePanel.h>
+#include <vgui_controls/ImagePanel.h>
 #include "tf_imagepanel.h"
 #include "tf_controls.h"
 

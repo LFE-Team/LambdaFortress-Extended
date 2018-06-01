@@ -18,6 +18,9 @@
 #include "ndebugoverlay.h"
 #include "ai_senses.h"
 
+//SecobMod__MiscFixes: Here we include the hl2mp gamerules so that calls to darkness mode work. Calls to HL2GameRules are also changed to HL2MPRules in this file for darkness mode to work.
+#include "tf_gamerules.h"
+
 #ifdef HL2_EPISODIC
 	#include "info_darknessmode_lightsource.h"
 #endif
@@ -28,6 +31,7 @@
 ConVar	ai_debug_follow( "ai_debug_follow", "0" );
 ConVar	ai_follow_use_points( "ai_follow_use_points", "1" );
 ConVar	ai_follow_use_points_when_moving( "ai_follow_use_points_when_moving", "1" );
+ConVar	sv_hl1_ff( "sv_hl1_ff", "0" );
 #define FollowMsg(s) if ( !GetOuter() || !ai_debug_follow.GetBool() ) ; else DevMsg( GetOuter(), "Follow: " s )
 
 #define WAIT_HINT_MIN_DIST		(16*16)		// Was: Square(GetHullWidth())
@@ -764,7 +768,7 @@ void CAI_FollowBehavior::GatherConditions( void )
 
 #ifdef HL2_EPISODIC
 	// Let followers know if the player is lit in the darkness
-	if ( GetFollowTarget()->IsPlayer() && HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( GetFollowTarget()->IsPlayer() && TFGameRules()->IsAlyxInDarknessMode() )
 	{
 		if ( LookerCouldSeeTargetInDarkness( GetOuter(), GetFollowTarget() ) )
 		{
@@ -848,7 +852,7 @@ bool CAI_FollowBehavior::ShouldMoveToFollowTarget()
 		return false;
 
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( TFGameRules()->IsAlyxInDarknessMode() )
 	{
 		// If we're in darkness mode, the player needs to be lit by
 		// darkness, but we don't need line of sight to him.
@@ -1968,7 +1972,7 @@ void CAI_FollowBehavior::BuildScheduleTestBits()
 
 #ifdef HL2_EPISODIC
 		// In Alyx darkness mode, break on the player turning their flashlight off
-		if ( HL2GameRules()->IsAlyxInDarknessMode() )
+		if ( TFGameRules()->IsAlyxInDarknessMode() )
 		{
 			if ( IsCurSchedule(SCHED_FOLLOW, false) || IsCurSchedule(SCHED_MOVE_TO_FACE_FOLLOW_TARGET, false) ||
 				 IsCurSchedule(SCHED_FACE_FOLLOW_TARGET, false) )
@@ -2123,24 +2127,39 @@ LINK_ENTITY_TO_CLASS( ai_goal_follow, CAI_FollowGoal );
 
 //-------------------------------------
 
-void CAI_FollowGoal::EnableGoal( CAI_BaseNPC *pAI )
+void CAI_FollowGoal::EnableGoal(CAI_BaseNPC *pAI)
 {
 	CAI_FollowBehavior *pBehavior;
-	if ( !pAI->GetBehavior( &pBehavior ) )
+	if (!pAI->GetBehavior(&pBehavior))
 		return;
-	
+
 	CBaseEntity *pGoalEntity = GetGoalEntity();
-	if ( !pGoalEntity && AI_IsSinglePlayer() )
+
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	if (!pGoalEntity)
 	{
-		if ( pAI->IRelationType(UTIL_GetLocalPlayer()) == D_LI )
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+
+		if (pAI->IRelationType(pPlayer) == D_LI)
 		{
-			pGoalEntity = UTIL_GetLocalPlayer();
-			SetGoalEntity( pGoalEntity );
+			pGoalEntity = pPlayer;
+			SetGoalEntity(pGoalEntity);
 		}
 	}
+#else
+	if (!pGoalEntity && AI_IsSinglePlayer())
+	{
+		if (pAI->IRelationType(UTIL_GetLocalPlayer()) == D_LI)
+		{
+			pGoalEntity = UTIL_GetLocalPlayer();
+			SetGoalEntity(pGoalEntity);
+		}
+	}
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
-	if ( pGoalEntity )
-		pBehavior->SetFollowGoal( this );
+
+	if (pGoalEntity)
+		pBehavior->SetFollowGoal(this);
 }
 
 //-------------------------------------

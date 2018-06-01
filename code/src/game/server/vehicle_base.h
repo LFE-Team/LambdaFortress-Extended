@@ -58,6 +58,7 @@ public:
 	CPropVehicleDriveable	*GetFourWheelVehicle( void );
 	bool					GetWheelContactPoint( int nWheelIndex, Vector &vecPos );
 
+	virtual void	ItemPostFrame( CBasePlayer *player );
 public:
 	virtual void	SetVehicle( CBaseEntity *pVehicle );
 	void	InitViewSmoothing( const Vector &vecStartOrigin, const QAngle &vecStartAngles );
@@ -127,6 +128,7 @@ protected:
 	virtual float GetUprightStrength( void ) { return 8.0f; }
 	virtual float GetUprightTime( void ) { return 5.0f; }
 
+	virtual bool					IsDeflectable() { return true; }
 protected:
 	CFourWheelVehiclePhysics		m_VehiclePhysics;
 	unsigned int					m_nVehicleType;
@@ -208,6 +210,8 @@ public:
 	void	StopEngine( void );
 	bool	IsEngineOn( void );
 
+	// Pyro Airblast
+	virtual bool	IsDeflectable() { return true; }
 // IDrivableVehicle
 public:
 	virtual CBaseEntity *GetDriver( void );
@@ -228,6 +232,10 @@ public:
 	virtual string_t	GetVehicleScriptName() { return m_vehicleScript; }
 	
 	virtual bool		PassengerShouldReceiveDamage( CTakeDamageInfo &info ) { return true; }
+
+#ifdef TF_CLASSIC
+	virtual void		UpdateOnRemove( void );
+#endif
 
 	// If this is a vehicle, returns the vehicle interface
 	virtual IServerVehicle *GetServerVehicle() { return m_pServerVehicle; }

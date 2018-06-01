@@ -83,6 +83,8 @@ public:
 	virtual void	SharedSpawn(); // Shared between client and server.
 	virtual bool	GetSteamID( CSteamID *pID );
 
+	virtual const Vector &GetRenderOrigin();
+
 	// IClientEntity overrides.
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
@@ -116,7 +118,7 @@ public:
 	// Handle view smoothing when going up stairs
 	void				SmoothViewOnStairs( Vector& eyeOrigin );
 	virtual float		CalcRoll (const QAngle& angles, const Vector& velocity, float rollangle, float rollspeed);
-	void				CalcViewRoll( QAngle& eyeAngles );
+	virtual void CalcViewRoll(QAngle& eyeAngles);
 	void				CreateWaterEffects( void );
 
 	virtual void			SetPlayerUnderwater( bool state );
@@ -444,10 +446,8 @@ public:
 	float			m_flConstraintSpeedFactor;
 
 protected:
-
-	void				CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	void				CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,
-							float& zNear, float& zFar, float& fov );
+	virtual void CalcPlayerView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	virtual void CalcVehicleView(IClientVehicle* pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,float& zNear, float& zFar, float& fov);
 	virtual void		CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
 	void				CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
@@ -488,6 +488,8 @@ protected:
 	float			m_flStepSoundTime;
 	bool			m_IsFootprintOnLeft;
 
+	// Player flashlight dynamic light pointers
+	CFlashlightEffect *m_pFlashlight;
 private:
 	// Make sure no one calls this...
 	C_BasePlayer& operator=( const C_BasePlayer& src );
@@ -524,10 +526,6 @@ private:
 	EHANDLE			m_pCurrentVguiScreen;
 
 	bool			m_bFiredWeapon;
-
-
-	// Player flashlight dynamic light pointers
-	CFlashlightEffect *m_pFlashlight;
 
 	typedef CHandle<C_BaseCombatWeapon> CBaseCombatWeaponHandle;
 	CNetworkVar( CBaseCombatWeaponHandle, m_hLastWeapon );

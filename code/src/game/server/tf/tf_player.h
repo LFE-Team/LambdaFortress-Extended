@@ -15,6 +15,8 @@
 #include "tf_inventory.h"
 #include "tf_weapon_medigun.h"
 #include "ihasattributes.h"
+#include "hl_movedata.h"
+#include "hl2_player.h"
 
 class CTFPlayer;
 class CTFTeam;
@@ -96,6 +98,7 @@ public:
 	void				SendOffHandViewModelActivity( Activity activity );
 
 	virtual void		CheatImpulseCommands( int iImpulse );
+	virtual void		PlayerRunCommand( CUserCmd *ucmd, IMoveHelper *moveHelper);
 
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
 
@@ -160,6 +163,7 @@ public:
 	void				DropFlag( void );
 	void				TFWeaponRemove( int iWeaponID );
 	bool				TFWeaponDrop( CTFWeaponBase *pWeapon, bool bThrowForward );
+	virtual bool		BumpWeapon( CBaseCombatWeapon *pWeapon );
 
 	// Class.
 	CTFPlayerClass		*GetPlayerClass( void ) 					{ return &m_PlayerClass; }
@@ -168,7 +172,8 @@ public:
 
 	// Team.
 	void				ForceChangeTeam( int iTeamNum );
-	virtual void		ChangeTeam( int iTeamNum );
+	virtual void		ChangeTeam( int iTeamNum ) { ChangeTeam( iTeamNum, false, false ); }
+	virtual void		ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent );
 
 	// mp_fadetoblack
 	void				HandleFadeToBlack( void );
@@ -181,6 +186,7 @@ public:
 	// Think.
 	virtual void		PreThink();
 	virtual void		PostThink();
+	virtual bool		HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 
 	virtual void		ItemPostFrame();
 	virtual void		Weapon_FrameUpdate( void );
@@ -245,7 +251,7 @@ public:
 	// TF doesn't want the explosion ringing sound
 	virtual void			OnDamagedByExplosion( const CTakeDamageInfo &info ) { return; }
 
-	void	OnBurnOther( CTFPlayer *pTFPlayerVictim );
+	void	OnBurnOther( CBaseEntity *pTFPlayerVictim );
 
 	// Buildables
 	void SetWeaponBuilder( CTFWeaponBuilder *pBuilder );
@@ -369,6 +375,54 @@ public:
 	void	InputSpeakResponseConcept( inputdata_t &inputdata );
 	void	InputSetForcedTauntCam( inputdata_t &inputdata );
 
+	// HL2 ladder related methods
+	LadderMove_t		*GetLadderMove() { return &m_LadderMove; }
+	virtual void		ExitLadder();
+	virtual surfacedata_t *GetLadderSurface( const Vector &origin );
+
+	// physics interactions
+	virtual void		PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize );
+	virtual	bool		IsHoldingEntity( CBaseEntity *pEnt );
+	virtual void		ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldindThis );
+	virtual float		GetHeldObjectMass( IPhysicsObject *pHeldObject );
+
+	virtual bool		IsFollowingPhysics( void ) { return (m_afPhysicsFlags & PFLAG_ONBARNACLE) > 0; }
+	void				InputForceDropPhysObjects( inputdata_t &data );
+
+	// Required for func_tank and some other things.
+	virtual Vector		EyeDirection2D( void );
+	virtual Vector		EyeDirection3D( void );
+
+	// Commander Mode for controller NPCs
+	enum CommanderCommand_t
+	{
+		CC_NONE,
+		CC_TOGGLE,
+		CC_FOLLOW,
+		CC_SEND,
+	};
+
+	virtual void CommanderMode();
+	void CommanderUpdate();
+	void CommanderExecute( CommanderCommand_t command = CC_TOGGLE );
+	bool CommanderFindGoal( commandgoal_t *pGoal );
+	void NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity );
+	CAI_BaseNPC *GetSquadCommandRepresentative();
+	int GetNumSquadCommandables();
+	int GetNumSquadCommandableMedics();
+
+	//Transition
+	void	SaveForTransition( void );
+	void	DeleteForTransition( void );
+
+	virtual void ResetPerRoundStats( void );
+	virtual void UpdatePlayerSound( void );
+
+	bool IsOnStoryTeam( void ) { return ( GetTeamNumber() == TF_STORY_TEAM ); }
+
+	char GetPrevTextureType( void ) { return m_chPreviousTextureType; }
+
+	Class_T				Classify ( void );
 public:
 
 	CNetworkVector( m_vecPlayerColor );
@@ -420,6 +474,7 @@ public:
 	void				ManageRegularWeaponsLegacy( TFPlayerClassData_t *pData );
 	void				ManageRandomWeapons( TFPlayerClassData_t *pData );
 	void				ManageBuilderWeapons( TFPlayerClassData_t *pData );
+	void				ManageTeamWeapons( TFPlayerClassData_t *pData );
 	void				ManageGrenades(TFPlayerClassData_t *pData);
 
 	void				PostInventoryApplication( void );
@@ -468,6 +523,8 @@ private:
 	void				InitClass( void );
 	void				GiveDefaultItems();
 	bool				SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
+	void				SearchCoopSpawnSpot( void );
+	bool				ShouldUseCoopSpawning( void );
 	void				PrecachePlayerModels( void );
 	void				RemoveNemesisRelationships();
 
@@ -520,6 +577,7 @@ private:
 
 	bool				GetResponseSceneFromConcept( int iConcept, char *chSceneBuffer, int numSceneBufferBytes );
 
+	bool				CommanderExecuteOne( CAI_BaseNPC *pNpc, const commandgoal_t &goal, CAI_BaseNPC **Allies, int numAllies );
 private:
 	// Map introductions
 	int					m_iIntroStep;
@@ -607,6 +665,9 @@ private:
 
 	float				m_flNextCarryTalkTime;
 
+	EHANDLE				m_hTempSpawnSpot;
+	CNetworkVar( bool, m_bSearchingSpawn )
+
 	int					m_nBlastJumpFlags;
 	bool				m_bJumpEffect;
 
@@ -617,11 +678,25 @@ private:
 
 	COutputEvent		m_OnDeath;
 
+	// HL2 squad stuff
+	CAI_Squad *			m_pPlayerAISquad;
+	CSimpleSimTimer		m_CommanderUpdateTimer;
+	float				m_RealTimeLastSquadCommand;
+	CommanderCommand_t	m_QueuedCommand;
+
+	CNetworkVar( int,	m_iSquadMemberCount );
+	CNetworkVar( int,	m_iSquadMedicCount );
+	CNetworkVar( bool,	m_fSquadInFollowMode );
 public:
 	bool				SetPowerplayEnabled( bool bOn );
 	bool				PlayerHasPowerplay( void );
 	void				PowerplayThink( void );
 	float				m_flPowerPlayTime;
+	
+	// HL2 Ladder related data
+	CNetworkVar( EHANDLE, m_hLadder );
+	LadderMove_t			m_LadderMove;
+	bool				m_bTransition;
 };
 
 //-----------------------------------------------------------------------------

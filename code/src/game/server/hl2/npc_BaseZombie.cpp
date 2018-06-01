@@ -43,7 +43,7 @@
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 #include "props.h"
-#include "hl2_gamerules.h"
+#include "tf_gamerules.h"
 #include "weapon_physcannon.h"
 #include "ammodef.h"
 #include "vehicle_base.h"
@@ -138,8 +138,8 @@ int CNPC_BaseZombie::ACT_ZOM_SWATRIGHTLOW;
 int CNPC_BaseZombie::ACT_ZOM_RELEASECRAB;
 int CNPC_BaseZombie::ACT_ZOM_FALL;
 
-ConVar	sk_zombie_dmg_one_slash( "sk_zombie_dmg_one_slash","0");
-ConVar	sk_zombie_dmg_both_slash( "sk_zombie_dmg_both_slash","0");
+ConVar	sk_zombie_dmg_one_slash( "sk_zombie_dmg_one_slash","10");
+ConVar	sk_zombie_dmg_both_slash( "sk_zombie_dmg_both_slash","25");
 
 
 // When a zombie spawns, he will select a 'base' pitch value
@@ -694,6 +694,7 @@ void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 		m_bHeadShot = true;
 	}
 
+#ifndef TF_CLASSIC
 	if( infoCopy.GetDamageType() & DMG_BUCKSHOT )
 	{
 		// Zombie gets across-the-board damage reduction for buckshot. This compensates for the recent changes which
@@ -701,6 +702,7 @@ void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 		// This normalizes the buckshot damage to what it used to be on normal (5 dmg per pellet. Now it's 8 dmg per pellet). 
 		infoCopy.ScaleDamage( 0.625 );
 	}
+#endif
 
 	BaseClass::TraceAttack( infoCopy, vecDir, ptr, pAccumulator );
 }
@@ -761,6 +763,8 @@ bool CNPC_BaseZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDa
 //-----------------------------------------------------------------------------
 HeadcrabRelease_t CNPC_BaseZombie::ShouldReleaseHeadcrab( const CTakeDamageInfo &info, float flDamageThreshold )
 {
+	//CTakeDamageInfo info_modified = info;
+
 	if ( m_iHealth <= 0 )
 	{
 		if ( info.GetDamageType() & DMG_REMOVENORAGDOLL )
@@ -776,6 +780,7 @@ HeadcrabRelease_t CNPC_BaseZombie::ShouldReleaseHeadcrab( const CTakeDamageInfo 
 			{
 				if( flDamageThreshold > 0.25 )
 				{
+					//info_modified.AddDamageType( DMG_CRITICAL );
 					// Enough force to kill the crab.
 					return RELEASE_RAGDOLL;
 				}
@@ -821,7 +826,11 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		// If a zombie is on fire it only takes damage from the fire that's attached to it. (DMG_DIRECT)
 		// This is to stop zombies from burning to death 10x faster when they're standing around
 		// 10 fire entities.
-		if( IsOnFire() && !(inputInfo.GetDamageType() & DMG_DIRECT) )
+		if( IsOnFire() && !(inputInfo.GetDamageType() & DMG_DIRECT)
+#ifdef TF_CLASSIC
+			&& !(inputInfo.GetAttacker()->IsPlayer())
+#endif
+			)
 		{
 			return 0;
 		}
@@ -950,7 +959,7 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 void CNPC_BaseZombie::MakeAISpookySound( float volume, float duration )
 {
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( TFGameRules()->IsAlyxInDarknessMode() )
 	{
 		CSoundEnt::InsertSound( SOUND_COMBAT, EyePosition(), volume, duration, this, SOUNDENT_CHANNEL_SPOOKY_NOISE );
 	}
@@ -1056,7 +1065,7 @@ bool CNPC_BaseZombie::ShouldIgniteZombieGib( void )
 #ifdef HL2_EPISODIC
 	// If we're in darkness mode, don't ignite giblets, because we don't want to
 	// pay the perf cost of multiple dynamic lights per giblet.
-	return ( IsOnFire() && !HL2GameRules()->IsAlyxInDarknessMode() );
+	return ( IsOnFire() && !TFGameRules()->IsAlyxInDarknessMode() );
 #else
 	return IsOnFire();
 #endif 
@@ -1208,15 +1217,15 @@ void CNPC_BaseZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() == true && GetEffectEntity() != NULL )
+	if ( TFGameRules()->IsAlyxInDarknessMode() == true && GetEffectEntity() != NULL )
 	{
 		GetEffectEntity()->AddEffects( EF_DIMLIGHT );
 	}
 #endif // HL2_EPISODIC
-
+#ifndef TF_CLASSIC
 	// Set the zombie up to burn to death in about ten seconds.
 	SetHealth( MIN( m_iHealth, FLAME_DIRECT_DAMAGE_PER_SEC * (ZOMBIE_BURN_TIME + random->RandomFloat( -ZOMBIE_BURN_TIME_NOISE, ZOMBIE_BURN_TIME_NOISE)) ) );
-
+#endif
 	// FIXME: use overlays when they come online
 	//AddOverlay( ACT_ZOM_WALK_ON_FIRE, false );
 	if( !m_ActBusyBehavior.IsActive() )
@@ -1349,7 +1358,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 		if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE ) )
 		{
 			pPlayer->ViewPunch( qaViewPunch );
-			
+
 			pPlayer->VelocityPunch( vecVelocityPunch );
 		}
 		else if( !pPlayer && UTIL_ShouldShowBlood(pHurt->BloodColor()) )
@@ -1605,7 +1614,7 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 		QAngle qaPunch( 45, random->RandomInt(-5,5), random->RandomInt(-5,5) );
 		AngleVectors( GetLocalAngles(), &forward );
 		forward = forward * 200;
-		ClawAttack( GetClawAttackRange(), sk_zombie_dmg_one_slash.GetFloat(), qaPunch, forward, ZOMBIE_BLOOD_BOTH_HANDS );
+		ClawAttack( GetClawAttackRange(), sk_zombie_dmg_both_slash.GetFloat(), qaPunch, forward, ZOMBIE_BLOOD_BOTH_HANDS );
 		return;
 	}
 
@@ -2456,6 +2465,7 @@ void CNPC_BaseZombie::ReleaseHeadcrab( const Vector &vecOrigin, const Vector &ve
 		pCrab->SetAbsOrigin( vecSpot );
 		pCrab->SetAbsAngles( GetAbsAngles() );
 		DispatchSpawn( pCrab );
+		pCrab->Activate();
 
 		pCrab->GetMotor()->SetIdealYaw( GetAbsAngles().y );
 
@@ -2496,12 +2506,15 @@ void CNPC_BaseZombie::ReleaseHeadcrab( const Vector &vecOrigin, const Vector &ve
 		}
 		if( ShouldIgniteZombieGib() )
 		{
+#ifdef TF_CLASSIC
+			pCrab->Ignite( m_flFlameRemoveTime - gpGlobals->curtime );
+			pCrab->SetBurnAttacker( m_hBurnAttacker );
+#else
 			pCrab->Ignite( 30 );
+#endif
 		}
 
 		CopyRenderColorTo( pCrab );
-
-		pCrab->Activate();
 	}
 
 	if( fRemoveHead )

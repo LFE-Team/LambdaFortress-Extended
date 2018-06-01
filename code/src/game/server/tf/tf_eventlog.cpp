@@ -164,9 +164,9 @@ protected:
 			}
  
  			// Assist kill
- 			int assistid = event->GetInt( "assister" );
- 			CBasePlayer *pAssister = UTIL_PlayerByUserId( assistid );
- 
+			int assistid = event->GetInt( "assister" );
+			CBasePlayer *pAssister = UTIL_PlayerByUserId( assistid );
+
  			if ( pAssister )
  			{
  				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kill assist\" against \"%s<%i><%s><%s>\" (assister_position \"%d %d %d\") (attacker_position \"%d %d %d\") (victim_position \"%d %d %d\")\n",    

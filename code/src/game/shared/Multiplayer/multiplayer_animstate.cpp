@@ -831,6 +831,25 @@ bool CMultiPlayerAnimState::HandleDucking( Activity &idealActivity )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
+// Input  : *idealActivity - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CMultiPlayerAnimState::HandleVehicle( Activity &idealActivity )
+{
+	if ( GetBasePlayer()->IsInAVehicle() )
+	{
+		{
+			//SecobMod__Information: Once you have created your custom player animations, set sequences in the .qc file and remove/replace the ACT idle below.
+			idealActivity = ACT_MP_CROUCH_IDLE; //ACT_HL2MP_SIT_IN_VEHICLE;
+		}
+
+		return true;
+	}
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
 // Input  : &idealActivity - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
@@ -922,7 +941,8 @@ Activity CMultiPlayerAnimState::CalcMainActivity()
 
 	if ( HandleJumping( idealActivity ) || 
 		HandleDucking( idealActivity ) || 
-		HandleSwimming( idealActivity ) || 
+		HandleSwimming( idealActivity ) ||
+		HandleVehicle( idealActivity ) || 
 		HandleDying( idealActivity ) )
 	{
 		// intentionally blank

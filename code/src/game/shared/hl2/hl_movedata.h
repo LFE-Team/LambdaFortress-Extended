@@ -13,6 +13,7 @@
 
 
 #include "igamemovement.h"
+#include "func_ladder.h"
 
 
 // This class contains HL2-specific prediction data.

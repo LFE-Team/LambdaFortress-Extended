@@ -57,7 +57,7 @@ BEGIN_DATADESC( CNPC_BaseScanner )
 	DEFINE_THINKFUNC( DiveBombSoundThink ),
 END_DATADESC()
 
-ConVar	sk_scanner_dmg_dive( "sk_scanner_dmg_dive","0");
+ConVar	sk_scanner_dmg_dive( "sk_scanner_dmg_dive","25");
 
 //-----------------------------------------------------------------------------
 // Think contexts
@@ -1355,6 +1355,7 @@ void CNPC_BaseScanner::MoveToDivebomb(float flInterval)
 //-----------------------------------------------------------------------------
 bool CNPC_BaseScanner::IsEnemyPlayerInSuit()
 {
+#ifdef HL2_DLL
 	if( GetEnemy() && GetEnemy()->IsPlayer() )
 	{
 		CHL2_Player *pPlayer = NULL;
@@ -1367,6 +1368,9 @@ bool CNPC_BaseScanner::IsEnemyPlayerInSuit()
 	}
 
 	return false;
+#else
+	return true;
+#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -11,6 +11,9 @@
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "soundent.h"
+#include "tf_player.h"
+#include "tf_gamerules.h"
+#include "iscorer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -23,23 +26,30 @@
 
 const float GRENADE_COEFFICIENT_OF_RESTITUTION = 0.2f;
 
-ConVar sk_plr_dmg_fraggrenade	( "sk_plr_dmg_fraggrenade","0");
-ConVar sk_npc_dmg_fraggrenade	( "sk_npc_dmg_fraggrenade","0");
-ConVar sk_fraggrenade_radius	( "sk_fraggrenade_radius", "0");
+ConVar sk_plr_dmg_fraggrenade	( "sk_plr_dmg_fraggrenade","125");
+ConVar sk_npc_dmg_fraggrenade	( "sk_npc_dmg_fraggrenade","75");
+ConVar sk_fraggrenade_radius	( "sk_fraggrenade_radius", "250");
 
 #define GRENADE_MODEL "models/Weapons/w_grenade.mdl"
 
-class CGrenadeFrag : public CBaseGrenade
+class CGrenadeFrag : public CBaseGrenade, public IScorer
 {
 	DECLARE_CLASS( CGrenadeFrag, CBaseGrenade );
 
 #if !defined( CLIENT_DLL )
 	DECLARE_DATADESC();
 #endif
-					
+public:		
+	CGrenadeFrag( void );
 	~CGrenadeFrag( void );
 
 public:
+	// IScorer interface
+	virtual CBaseEntity *GetScorer( void );
+	virtual CBaseEntity *GetAssistant( void ) { return NULL; }
+
+	void	SetScorer( CBaseEntity *pScorer );
+
 	void	Spawn( void );
 	void	OnRestore( void );
 	void	Precache( void );
@@ -57,6 +67,7 @@ public:
 	void	SetPunted( bool punt ) { m_punted = punt; }
 	bool	WasPunted( void ) const { return m_punted; }
 
+	virtual void		Explode( trace_t *pTrace, int bitsDamageType );
 	// this function only used in episodic.
 #if defined(HL2_EPISODIC) && 0 // FIXME: HandleInteraction() is no longer called now that base grenade derives from CBaseAnimating
 	bool	HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
@@ -64,6 +75,12 @@ public:
 
 	void	InputSetTimer( inputdata_t &inputdata );
 
+	CNetworkVar( int, m_iDeflected );
+	CNetworkHandle( CBaseEntity, m_hDeflectOwner );
+
+	virtual bool			IsDeflectable() { return true; }
+	virtual void			Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
+	virtual void			IncremenentDeflected( void );
 protected:
 	CHandle<CSprite>		m_pMainGlow;
 	CHandle<CSpriteTrail>	m_pGlowTrail;
@@ -72,6 +89,8 @@ protected:
 	bool	m_inSolid;
 	bool	m_combineSpawned;
 	bool	m_punted;
+
+	EHANDLE					m_hScorer;
 };
 
 LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
@@ -85,6 +104,9 @@ BEGIN_DATADESC( CGrenadeFrag )
 	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_punted, FIELD_BOOLEAN ),
+
+	DEFINE_FIELD( m_iDeflected, FIELD_INTEGER ),
+	DEFINE_FIELD( m_hDeflectOwner, FIELD_EHANDLE ),
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
@@ -98,8 +120,45 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+CGrenadeFrag::CGrenadeFrag( void )
+{
+	m_iDeflected = 0;
+	m_hDeflectOwner = NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 CGrenadeFrag::~CGrenadeFrag( void )
 {
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CGrenadeFrag::SetScorer( CBaseEntity *pScorer )
+{
+	m_hScorer = pScorer;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBaseEntity *CGrenadeFrag::GetScorer( void )
+{
+	return m_hScorer.Get();
+}
+
+void CGrenadeFrag::Explode( trace_t *pTrace, int bitsDamageType )
+{
+	CBaseEntity *pAttacker = GetOwnerEntity();
+	IScorer *pScorerInterface = dynamic_cast<IScorer*>( pAttacker );
+	if ( pScorerInterface )
+	{
+		pAttacker = pScorerInterface->GetScorer();
+	}
+
+	BaseClass::Explode(pTrace,bitsDamageType);
 }
 
 void CGrenadeFrag::Spawn( void )
@@ -134,6 +193,9 @@ void CGrenadeFrag::Spawn( void )
 	m_combineSpawned	= false;
 	m_punted			= false;
 
+	// Set the team.
+	ChangeTeam( GetThrower()->GetTeamNumber() );
+
 	BaseClass::Spawn();
 }
 
@@ -151,35 +213,64 @@ void CGrenadeFrag::OnRestore( void )
 
 //-----------------------------------------------------------------------------
 // Purpose: 
+// + AdRiAnIlloO's fix
 //-----------------------------------------------------------------------------
 void CGrenadeFrag::CreateEffects( void )
 {
 	// Start up the eye glow
-	m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
+	//m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
+	int	nAttachment = LookupAttachment("fuse");
 
-	int	nAttachment = LookupAttachment( "fuse" );
+	//int	nAttachment = LookupAttachment( "fuse" );
 
-	if ( m_pMainGlow != NULL )
+	//if ( m_pMainGlow != NULL )
+	if (m_pMainGlow == NULL)
+ 	{
+		//m_pMainGlow->FollowEntity( this );
+		//m_pMainGlow->SetAttachment( this, nAttachment );
+		//m_pMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
+		//m_pMainGlow->SetScale( 0.2f );
+		//m_pMainGlow->SetGlowProxySize( 4.0f );
+	//}	
+		// Start up the eye glow
+ 		m_pMainGlow = CSprite::SpriteCreate("sprites/redglow1.vmt", GetLocalOrigin(), false);
+	
+ 
+ 	// Start up the eye trail
+	//m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
+	
+	if (m_pMainGlow != NULL)
+ 		{
+ 			m_pMainGlow->FollowEntity(this);
+ 			m_pMainGlow->SetAttachment(this, nAttachment);
+ 			m_pMainGlow->SetTransparency(kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation);
+ 			m_pMainGlow->SetScale(0.2f);
+ 			m_pMainGlow->SetGlowProxySize(4.0f);
+ 		}
+ 	}
+
+	//if ( m_pGlowTrail != NULL )
+	if (m_pGlowTrail == NULL)
 	{
-		m_pMainGlow->FollowEntity( this );
-		m_pMainGlow->SetAttachment( this, nAttachment );
-		m_pMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
-		m_pMainGlow->SetScale( 0.2f );
-		m_pMainGlow->SetGlowProxySize( 4.0f );
-	}
-
-	// Start up the eye trail
-	m_pGlowTrail	= CSpriteTrail::SpriteTrailCreate( "sprites/bluelaser1.vmt", GetLocalOrigin(), false );
-
-	if ( m_pGlowTrail != NULL )
-	{
-		m_pGlowTrail->FollowEntity( this );
-		m_pGlowTrail->SetAttachment( this, nAttachment );
-		m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
-		m_pGlowTrail->SetStartWidth( 8.0f );
-		m_pGlowTrail->SetEndWidth( 1.0f );
-		m_pGlowTrail->SetLifeTime( 0.5f );
-	}
+		//m_pGlowTrail->FollowEntity( this );
+		//m_pGlowTrail->SetAttachment( this, nAttachment );
+		//m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
+		//m_pGlowTrail->SetStartWidth( 8.0f );
+		//m_pGlowTrail->SetEndWidth( 1.0f );
+		//m_pGlowTrail->SetLifeTime( 0.5f );
+		// Start up the eye trail
+ 		m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+ 
+ 		if (m_pGlowTrail != NULL)
+ 		{
+ 			m_pGlowTrail->FollowEntity(this);
+ 			m_pGlowTrail->SetAttachment(this, nAttachment);
+ 			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone);
+ 			m_pGlowTrail->SetStartWidth(8.0f);
+ 			m_pGlowTrail->SetEndWidth(1.0f);
+ 			m_pGlowTrail->SetLifeTime(0.5f);
+ 		}
+ 	}
 }
 
 bool CGrenadeFrag::CreateVPhysics()
@@ -414,6 +505,44 @@ bool CGrenadeFrag::HandleInteraction(int interactionType, void *data, CBaseComba
 void CGrenadeFrag::InputSetTimer( inputdata_t &inputdata )
 {
 	SetTimer( inputdata.value.Float(), inputdata.value.Float() - FRAG_GRENADE_WARN_TIME );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CGrenadeFrag::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
+	if ( pPhysicsObject )
+	{
+		Vector vecOldVelocity, vecVelocity;
+
+		pPhysicsObject->GetVelocity( &vecOldVelocity, NULL );
+
+		float flVel = vecOldVelocity.Length();
+
+		vecVelocity = vecDir;
+		vecVelocity *= flVel;
+		AngularImpulse angVelocity( ( 600, random->RandomInt( -1200, 1200 ), 0 ) );
+
+		// Now change grenade's direction.
+		pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
+	}
+
+	CBaseCombatCharacter *pBCC = pDeflectedBy->MyCombatCharacterPointer();
+
+	IncremenentDeflected();
+	m_hDeflectOwner = pDeflectedBy;
+	SetThrower( pBCC );
+	ChangeTeam( pDeflectedBy->GetTeamNumber() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Increment deflects counter
+//-----------------------------------------------------------------------------
+void CGrenadeFrag::IncremenentDeflected( void )
+{
+	m_iDeflected++;
 }
 
 CBaseGrenade *Fraggrenade_Create( const Vector &position, const QAngle &angles, const Vector &velocity, const AngularImpulse &angVelocity, CBaseEntity *pOwner, float timer, bool combineSpawned )

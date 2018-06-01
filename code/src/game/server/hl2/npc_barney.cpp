@@ -36,7 +36,8 @@
 
 #define BARNEY_MODEL "models/barney.mdl"
 
-ConVar	sk_barney_health( "sk_barney_health","0");
+ConVar	sk_barney_health( "sk_barney_health","35");
+ConVar	sk_barneyhl2_health( "sk_barney_hl2health","80");
 
 //=========================================================
 // Barney activities
@@ -112,6 +113,7 @@ END_DATADESC()
 void CNPC_Barney::SelectModel()
 {
 	SetModelName( AllocPooledString( BARNEY_MODEL ) );
+
 }
 
 //-----------------------------------------------------------------------------
@@ -121,7 +123,7 @@ void CNPC_Barney::Spawn( void )
 {
 	Precache();
 
-	m_iHealth = 80;
+	m_iHealth		= sk_barneyhl2_health.GetFloat();
 
 	m_iszIdleExpression = MAKE_STRING("scenes/Expressions/BarneyIdle.vcd");
 	m_iszAlertExpression = MAKE_STRING("scenes/Expressions/BarneyAlert.vcd");

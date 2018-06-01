@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 // Needed for launch velocity
 extern ConVar physcannon_minforce;
 extern ConVar physcannon_maxforce;

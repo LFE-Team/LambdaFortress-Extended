@@ -26,6 +26,9 @@
 #include "eventqueue.h"
 #include "physics_collisionevent.h"
 #include "gamestats.h"
+#include "tf_player.h"
+#include "tf_gamerules.h"
+#include "iscorer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -211,9 +214,11 @@ BEGIN_DATADESC( CPropCombineBall )
 	DEFINE_FIELD( m_nBounceCount,	FIELD_INTEGER ),
 	DEFINE_FIELD( m_nMaxBounces,	FIELD_INTEGER ),
 	DEFINE_FIELD( m_bBounceDie,	FIELD_BOOLEAN ),
-	
-	
+
 	DEFINE_FIELD( m_hSpawner, FIELD_EHANDLE ),
+
+	// Pyro's Airblast
+	DEFINE_FIELD( m_iDeflected,	FIELD_INTEGER ),
 
 	DEFINE_THINKFUNC( ExplodeThink ),
 	DEFINE_THINKFUNC( WhizSoundThink ),
@@ -235,6 +240,7 @@ IMPLEMENT_SERVERCLASS_ST( CPropCombineBall, DT_PropCombineBall )
 	SendPropFloat( SENDINFO( m_flRadius ), 0, SPROP_NOSCALE ),
 	SendPropBool( SENDINFO( m_bHeld ) ),
 	SendPropBool( SENDINFO( m_bLaunched ) ),
+	SendPropInt( SENDINFO( m_iDeflected ), 4, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -583,14 +589,14 @@ void CPropCombineBall::InputSocketed( inputdata_t &inputdata )
 		pOwner->DeathNotice( this );
 		SetOwnerEntity( NULL );
 	}
-
+#ifdef HL2_DLL
 	// if our owner is a player, tell them we were socketed
 	CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>( pOwner );
 	if ( pPlayer )
 	{
 		pPlayer->CombineBallSocketed( this );
 	}
-
+#endif
 	UTIL_Remove( this );
 
 	NotifySpawnerOfRemoval();
@@ -1113,7 +1119,7 @@ void CPropCombineBall::DoExplosion( )
 
 	m_bEmit = false;
 
-	
+#ifdef HL2_DLL
 	if( !m_bStruckEntity && hl2_episodic.GetBool() && GetOwnerEntity() != NULL )
 	{
 		// Notify the player proxy that this combine ball missed so that it can fire an output.
@@ -1123,7 +1129,7 @@ void CPropCombineBall::DoExplosion( )
 			pPlayer->MissedAR2AltFire();
 		}
 	}
-
+#endif
 	SetContextThink( &CPropCombineBall::SUB_Remove, gpGlobals->curtime + 0.5f, s_pRemoveContext );
 	StopLoopingSounds();
 }
@@ -1672,6 +1678,52 @@ void CPropCombineBall::AnimThink( void )
 {
 	StudioFrameAdvance();
 	SetContextThink( &CPropCombineBall::AnimThink, gpGlobals->curtime + 0.1f, s_pAnimThinkContext );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPropCombineBall::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	// Get rocket's speed.
+	float flSpeed = GetAbsVelocity().Length();
+
+	QAngle angForward;
+	VectorAngles( vecDir, angForward );
+
+	// Now change rocket's direction.
+	SetAbsAngles( angForward );
+	SetAbsVelocity( vecDir * flSpeed );
+
+	// And change owner.
+	IncremenentDeflected();
+	SetOwnerEntity( pDeflectedBy );
+	ChangeTeam( pDeflectedBy->GetTeamNumber() );
+	SetScorer( pDeflectedBy );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Increment deflects counter
+//-----------------------------------------------------------------------------
+void CPropCombineBall::IncremenentDeflected( void )
+{
+	m_iDeflected++;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CPropCombineBall::SetScorer( CBaseEntity *pScorer )
+{
+	m_hScorer = pScorer;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBaseEntity *CPropCombineBall::GetScorer(void)
+{
+	return ToBasePlayer( m_hScorer.Get() );
 }
 
 //-----------------------------------------------------------------------------

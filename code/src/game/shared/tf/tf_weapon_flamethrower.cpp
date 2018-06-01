@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "tf_gamerules.h"
 #include "tf_player_shared.h"
+#include "props_shared.h"
 
 #if defined( CLIENT_DLL )
 
@@ -31,6 +32,10 @@
 	#include "collisionutils.h"
 	#include "tf_team.h"
 	#include "tf_obj.h"
+	#include "ai_basenpc.h"
+	#include "npc_antlion.h"
+	#include "ai_condition.h"
+	#include "props.h"
 
 	ConVar	tf_debug_flamethrower("tf_debug_flamethrower", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Visualize the flamethrower damage." );
 	ConVar  tf_flamethrower_velocity( "tf_flamethrower_velocity", "2300.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Initial velocity of flame damage entities." );
@@ -58,13 +63,18 @@
 #define TF_FLAMETHROWER_AMMO_PER_SECONDARY_ATTACK	20
 
 #ifdef CLIENT_DLL
-	extern ConVar tf2c_muzzlelight;
+	extern ConVar lf_muzzlelight;
 #endif
 
-ConVar  tf2c_airblast( "tf2c_airblast", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast function of the Flamethrower." );
-ConVar  tf2c_airblast_players( "tf2c_airblast_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing players." );
+ConVar  lf_airblast( "lf_airblast", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast function of the Flamethrower." );
+ConVar  lf_airblast_players( "lf_airblast_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing players." );
+ConVar  lf_allow_airblast_npc( "lf_allow_airblast_npc", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing NPCs." );
+ConVar  lf_allow_airblast_physics( "lf_allow_airblast_physics", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing Physics." );
 #ifdef GAME_DLL
-ConVar	tf2c_debug_airblast( "tf2c_debug_airblast", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Visualize airblast box." );
+ConVar	lf_debug_airblast( "lf_debug_airblast", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Visualize airblast box." );
+ConVar  lf_debug_airblast_physics_force( "lf_debug_airblast_physics_force", "30.0f", FCVAR_CHEAT | FCVAR_REPLICATED, "How much is the power of airblast?" );
+ConVar  lf_debug_airblast_physics_mass( "lf_debug_airblast_physics_mass", "1000.0f", FCVAR_CHEAT | FCVAR_REPLICATED, "Don't push something too heavy." );
+ConVar  lf_debug_airblast_physics_distance( "lf_debug_airblast_physics_distance", "150", FCVAR_CHEAT | FCVAR_REPLICATED, "What distance that pyro can airblast physics?" );
 #endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED( TFFlameThrower, DT_WeaponFlameThrower )
@@ -279,7 +289,7 @@ public:
 	{
 		CBaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
 
-		if ( pEntity && pEntity->IsBaseObject() )
+		if ( pEntity && ( pEntity->IsBaseObject() || pEntity->IsNPC() || ( pEntity->GetMoveType() == MOVETYPE_VPHYSICS || ( pEntity->VPhysicsGetObject() ) ) ) )
 			return false;
 
 		return BaseClass::ShouldHitEntity( pServerEntity, contentsMask );
@@ -384,7 +394,7 @@ void CTFFlameThrower::PrimaryAttack()
 
 #ifdef CLIENT_DLL
 	// Handle the flamethrower light
-	if (tf2c_muzzlelight.GetBool())
+	if (lf_muzzlelight.GetBool())
 	{
 		dlight_t *dl = effects->CL_AllocDlight(LIGHT_INDEX_MUZZLEFLASH + index);
 		dl->origin = vecMuzzlePos;
@@ -392,9 +402,9 @@ void CTFFlameThrower::PrimaryAttack()
 		dl->color.g = 100;
 		dl->color.b = 10;
 		dl->die = gpGlobals->curtime + 0.01f;
-		dl->radius = 240.f;
+		dl->radius = 340.f;
 		dl->decay = 512.0f;
-		dl->style = 5;
+		dl->style = 1;
 	}
 #endif
 
@@ -487,7 +497,7 @@ void CTFFlameThrower::PrimaryAttack()
 //-----------------------------------------------------------------------------
 void CTFFlameThrower::SecondaryAttack()
 {
-	if ( !tf2c_airblast.GetBool() )
+	if ( !lf_airblast.GetBool() )
 		return;
 
 	int iNoAirblast = 0;
@@ -544,7 +554,7 @@ void CTFFlameThrower::SecondaryAttack()
 
 	int count = UTIL_EntitiesInBox( pList, 64, vecOrigin - vecBlastSize, vecOrigin + vecBlastSize, 0 );
 
-	if ( tf2c_debug_airblast.GetBool() )
+	if ( lf_debug_airblast.GetBool() )
 	{
 		NDebugOverlay::Box( vecOrigin, -vecBlastSize, vecBlastSize, 0, 0, 255, 100, 2.0 );
 	}
@@ -585,6 +595,44 @@ void CTFFlameThrower::SecondaryAttack()
 			AngleVectors( angPushDir, &vecPushDir );
 
 			DeflectPlayer( pTFPlayer, pOwner, vecPushDir );
+		}
+		else if ( pEntity->IsNPC() ) // push npcs
+		{
+			if ( !pEntity->IsAlive() )
+				continue;
+
+			CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
+
+			Vector vecPushDir;
+			QAngle angPushDir = angDir;
+
+			// Push them at least 45 degrees up.
+			angPushDir[PITCH] = min( -45, angPushDir[PITCH] );
+
+			AngleVectors( angPushDir, &vecPushDir );
+
+			DeflectNPC( pNPC, pOwner, vecPushDir );
+		}
+		else if( pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion") ) // gravity gun like  push antlions
+		{
+			if ( !pEntity->IsAlive() )
+				continue;
+
+			CNPC_Antlion *pAnt = dynamic_cast<CNPC_Antlion *>(pEntity);
+
+			Vector	vecShoveDir = vecDir;
+			vecShoveDir.z = 0.0f;
+			//pAnt->SetCondition( COND_ANTLION_FLIPPED );
+			pAnt->ApplyAbsVelocityImpulse( ( vecShoveDir * random->RandomInt( 50.0f, 100.0f ) ) + Vector(0,0,64.0f) );
+			pAnt->SetGroundEntity( NULL );
+			pAnt->Flip();
+		}
+		else if ( pEntity->VPhysicsGetObject() ) // push physics?
+		{
+			Vector vecPos = pEntity->GetAbsOrigin();
+			Vector vecDeflect;
+
+			DeflectPhysics( pEntity, pOwner, vecDeflect );
 		}
 		else
 		{
@@ -627,7 +675,7 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 	if ( !pVictim )
 		return;
 
-	if ( pVictim->InSameTeam( pAttacker ) && !TFGameRules()->IsDeathmatch() )
+	if ( pVictim->InSameTeam( pAttacker ) )
 	{
 		if ( pVictim->m_Shared.InCond( TF_COND_BURNING ) )
 		{
@@ -638,7 +686,7 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
 		}
 	}
-	else if ( tf2c_airblast_players.GetBool() )
+	else if ( lf_airblast_players.GetBool() )
 	{
 		// Don't push players if they're too far off to the side. Ignore Z.
 		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
@@ -660,6 +708,123 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
 			pVictim->AddDamagerToHistory( pAttacker );
 		}
+	}
+}
+
+void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Vector &vecDir )
+{
+	if ( !pVictim )
+		return;
+
+	if ( pVictim->InSameTeam( pAttacker ) )
+	{
+		if ( pVictim->InCond( TF_COND_BURNING ) )
+		{
+			// Extinguish teammates.
+			pVictim->RemoveCond( TF_COND_BURNING );
+			pVictim->EmitSound( "TFPlayer.FlameOut" );
+
+			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
+		}
+	}
+	else if ( lf_allow_airblast_npc.GetBool() )
+	{
+		// Don't push players if they're too far off to the side. Ignore Z.
+		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
+
+		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
+		VectorNormalize( vecVictimDir2D );
+
+		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
+		VectorNormalize( vecDir2D );
+
+		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
+		if ( flDot >= 0.8 )
+		{
+			// Push enemy NPC.
+			pVictim->SetGroundEntity( NULL );
+			pVictim->ApplyAbsVelocityImpulse( vecDir * 500 );
+			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+
+			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
+			pVictim->AddDamagerToHistory( pAttacker );
+		}
+		pVictim->Deflected( pAttacker, vecDir );
+	}
+}
+
+void CTFFlameThrower::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir ) // new one copy from physexplosion. // old one copy from deflected pipe grenade.
+{
+	if ( lf_allow_airblast_physics.GetBool() )
+	{
+		
+		float		flDist;
+		// iterate on all entities in the vicinity.
+		// I've removed the traceline heuristic from phys explosions. SO right now they will
+		// affect entities through walls. (sjb)
+		// UNDONE: Try tracing world-only?
+		//while ((pEntity = FindEntity( pEntity, pAttacker, NULL )) != NULL)
+		//{
+			while ((pEntity = gEntList.FindEntityInSphere( pEntity, GetAbsOrigin(), lf_debug_airblast_physics_distance.GetFloat() )) != NULL)
+			{
+			// UNDONE: Ask the object if it should get force if it's not MOVETYPE_VPHYSICS?
+			//if ( pEntity->m_takedamage != DAMAGE_NO && (pEntity->GetMoveType() == MOVETYPE_VPHYSICS || ( pEntity->VPhysicsGetObject() )) )
+			//{
+				flDist = (pEntity->WorldSpaceCenter() - GetAbsOrigin()).Length();
+
+					CTakeDamageInfo info( this, this, 1, DMG_BLAST );
+					CalculateExplosiveDamageForce( &info, (pEntity->GetAbsOrigin() - GetAbsOrigin()), pEntity->GetAbsOrigin() );
+					
+					if ( (pEntity->GetAbsOrigin() - GetAbsOrigin()).Length2D() <= lf_debug_airblast_physics_distance.GetFloat() )
+					{
+						if ( /*pEntity->m_takedamage != DAMAGE_NO &&*/ pEntity->GetMoveType() == MOVETYPE_VPHYSICS || (pEntity->VPhysicsGetObject() && !pEntity->IsPlayer()) ) 
+						{
+							IPhysicsObject *pPhysObject = pEntity->VPhysicsGetObject();
+
+							if ( pPhysObject )
+							{
+								float flMass = pPhysObject->GetMass();
+
+								if ( flMass <= lf_debug_airblast_physics_mass.GetFloat() )
+								{
+									// Increase the vertical lift of the force
+									Vector vecForce = info.GetDamageForce();
+									vecForce.z *= lf_debug_airblast_physics_force.GetFloat();
+									info.SetDamageForce( vecForce );
+
+									pEntity->VPhysicsTakeDamage( info );
+									//pEntity->Deflected( pAttacker, vecDir );
+									pEntity->EmitSound( "Weapon_FlameThrower.AirBurstAttackDeflect" );
+								}
+							}
+						}
+					}
+			}
+			//}
+		//}
+		
+
+		/*
+		if ( (pEntity->GetAbsOrigin() - GetAbsOrigin()).Length2D() <= lf_debug_airblast_physics_distance.GetFloat() )
+		{
+			IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
+			if ( pPhysicsObject )
+			{
+				Vector vecOldVelocity, vecVelocity;
+
+				pPhysicsObject->GetVelocity( &vecOldVelocity, NULL );
+
+				float flSpeed = vecOldVelocity.Length();
+
+				vecVelocity = vecDir;
+				vecVelocity *= flSpeed;
+				AngularImpulse angVelocity( ( 600, random->RandomInt( -1200, 1200 ), 0 ) );
+
+				// Now change physics's direction.
+				pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
+			}
+		}
+		*/
 	}
 }
 #endif
@@ -1182,6 +1347,19 @@ void CTFFlameEntity::FlameThink( void )
 							return;
 					}
 				}
+				
+				// check collision against all enemy NPCs
+				for (int iNPC = 0; iNPC < pTeamList[i]->GetNumNPCs(); iNPC++)
+				{
+					CAI_BaseNPC *pNPC = pTeamList[i]->GetNPC(iNPC);
+					// Is this NPC alive and an enemy?
+					if ( pNPC && pNPC->IsAlive() )
+					{
+						CheckCollision( pNPC, &bHitWorld );
+						if ( bHitWorld )
+							return;
+					}
+				}
 			}
 		}
 	}
@@ -1274,7 +1452,6 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 			UTIL_Remove( this );
 		}
 	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -1319,6 +1496,15 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 
 	pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
 	ApplyMultiDamage();
+
+	// It's better to ignite NPC here rather than NPC code.
+	CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
+	if ( pNPC )
+	{
+		pNPC->Ignite( TF_BURNING_FLAME_LIFE );
+		// I don't like this but Ignite doesn't allow us to set attacker so we have to do it separately. -nicknine?
+		pNPC->SetBurnAttacker( pAttacker );
+	}
 }
 
 void CTFFlameEntity::SetHitTarget( void )

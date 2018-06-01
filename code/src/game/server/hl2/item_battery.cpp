@@ -15,6 +15,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#ifdef TF_CLASSIC
+ConVar sk_battery( "sk_battery","15" );
+#endif
+
 class CItemBattery : public CItem
 {
 public:
@@ -35,8 +39,14 @@ public:
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
+#ifdef TF_CLASSIC
+		// For now, suit batteries don't do anything for TF2 players.
+		// TODO: Find a use for them.
+		return false;
+#else
 		CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player *>( pPlayer );
 		return ( pHL2Player && pHL2Player->ApplyBattery() );
+#endif
 	}
 };
 

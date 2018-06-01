@@ -696,11 +696,6 @@ void CTFTeamMenu::OnTick()
 		m_bRedDisabled = true;
 	}
 
-	if ( ( bUnbalanced && iHeavyTeam == TF_TEAM_BLUE ) || ( pRules->WouldChangeUnbalanceTeams( TF_TEAM_BLUE, iCurrentTeam ) ) )
-	{
-		m_bBlueDisabled = true;
-	}
-
 	if ( TFGameRules() )
 		SetHighlanderTeamsFullPanels( TFGameRules()->IsInHighlanderMode() );
 

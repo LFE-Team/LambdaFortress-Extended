@@ -31,6 +31,20 @@ public:
 	{ 
 		Precache( );
 		SetModel( "models/items/hevsuit.mdl" );
+		char szMapName[256];
+		Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+		Q_strlower(szMapName);
+
+		if( !Q_strnicmp( szMapName, "c1a0d", 5 ) )
+		{
+			PrecacheModel( "models/w_suit_hl1.mdl" );
+			SetModel( "models/w_suit_hl1.mdl" );
+		}
+		else if( !Q_strnicmp( szMapName, "t0a0", 4 ) )
+		{
+			PrecacheModel( "models/w_suit_hl1.mdl" );
+			SetModel( "models/w_suit_hl1.mdl" );
+		}
 		BaseClass::Spawn( );
 		
 		CollisionProp()->UseTriggerBounds( false, 0 );
@@ -41,6 +55,10 @@ public:
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
+#ifdef TF_CLASSIC
+		// Can be picked up but doesn't actually do anything.
+		return true;
+#else
 		if ( pPlayer->IsSuitEquipped() )
 			return FALSE;
 
@@ -52,6 +70,7 @@ public:
 		pPlayer->EquipSuit();
 				
 		return true;
+#endif
 	}
 };
 

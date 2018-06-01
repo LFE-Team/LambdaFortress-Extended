@@ -12,6 +12,7 @@
 #include "particles_new.h"
 #else
 #include "tf_player.h"
+#include "ai_basenpc.h"
 #include "tf_fx.h"
 #endif
 
@@ -111,6 +112,7 @@ void CTFProjectile_Flare::Explode( trace_t *pTrace, CBaseEntity *pOther )
 	// Play explosion sound and effect.
 	Vector vecOrigin = GetAbsOrigin();
 	CTFPlayer *pPlayer = ToTFPlayer( pOther );
+	CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
 
 	if ( pPlayer )
 	{
@@ -123,6 +125,18 @@ void CTFProjectile_Flare::Explode( trace_t *pTrace, CBaseEntity *pOther )
 		
 		CPVSFilter filter( vecOrigin );
 		EmitSound( filter, pPlayer->entindex(), "TFPlayer.FlareImpact" );
+	}
+	else if ( pNPC )
+	{
+		// Hit player, do impact sound.
+		if ( pNPC->InCond( TF_COND_BURNING ) )
+		{
+			// Jeez, hardcoding this doesn't seem like a good idea.
+			m_bCritical = true;
+		}
+		
+		CPVSFilter filter( vecOrigin );
+		EmitSound( filter, pNPC->entindex(), "TFPlayer.FlareImpact" );
 	}
 	else
 	{

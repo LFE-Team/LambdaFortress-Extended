@@ -50,6 +50,8 @@
 #include "c_tf_team.h"
 #include "c_tf_playerresource.h"
 
+#include "vgui/lf_loadingprogress.h"
+
 #if defined( _X360 )
 #include "tf_clientscoreboard.h"
 #endif
@@ -179,7 +181,7 @@ void ClientModeTFNormal::Init()
 		if ( NULL != m_pGameUI )
 		{
 			// insert stats summary panel as the loading background dialog
-			CTFStatsSummaryPanel *pPanel = GStatsSummaryPanel();
+			CTFLoadingProgress *pPanel = GLoadingProgress();
 			pPanel->InvalidateLayout( false, true );
 			pPanel->SetVisible( false );
 			pPanel->MakePopup( false );

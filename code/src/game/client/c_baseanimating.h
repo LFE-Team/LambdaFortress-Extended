@@ -305,7 +305,7 @@ public:
 	virtual int GetBody()			{ return m_nBody; }
 	virtual int GetSkin()			{ return m_nSkin; }
 
-	bool IsOnFire() { return ( (GetFlags() & FL_ONFIRE) != 0 ); }
+	virtual bool IsOnFire() { return ( (GetFlags() & FL_ONFIRE) != 0 ); }
 
 	inline float					GetPlaybackRate();
 	inline void						SetPlaybackRate( float rate );
@@ -537,12 +537,14 @@ protected:
 	float							m_fadeMaxDist;
 	float							m_flFadeScale;
 
-private:
+public:
 
 	float							m_flGroundSpeed;	// computed linear movement rate for current sequence
 	float							m_flLastEventCheck;	// cycle index of when events were last checked
 	bool							m_bSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
 	bool							m_bSequenceLoops;	// true if the sequence loops
+
+private:
 
 	// Mouth lipsync/envelope following values
 	CMouthInfo						m_mouth;

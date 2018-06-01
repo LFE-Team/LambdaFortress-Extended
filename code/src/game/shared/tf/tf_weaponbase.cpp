@@ -15,6 +15,8 @@
 // Server specific.
 #if !defined( CLIENT_DLL )
 #include "tf_player.h"
+#include "tf_team.h"
+#include "ai_basenpc.h"
 // Client specific.
 #else
 #include "vgui/ISurface.h"
@@ -42,7 +44,7 @@ extern ConVar tf_useparticletracers;
 
 #ifdef CLIENT_DLL
 extern ConVar tf2c_model_muzzleflash;
-extern ConVar tf2c_muzzlelight;
+extern ConVar lf_muzzlelight;
 #endif
 
 ConVar tf_weapon_criticals( "tf_weapon_criticals", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled." );
@@ -783,7 +785,20 @@ void CTFWeaponBase::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 {
+#ifdef GAME_DLL
 	BaseClass::OnPickedUp( pNewOwner );
+
+	CTFTeam *pTeam = dynamic_cast<CTFTeam *>( pNewOwner->GetTeam() );
+
+	if ( pTeam )
+	{
+		// If this is a shared weapon add it to team inventory.
+		if ( GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( GetWeaponID() ) )
+		{
+			pTeam->AddWeapon( GetWeaponID() );
+		}
+	}
+#endif
 }
 
 
@@ -1550,14 +1565,7 @@ bool CTFWeaponBase::Lower( void )
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::SetWeaponVisible( bool visible )
 {
-	if ( visible )
-	{
-		RemoveEffects( EF_NODRAW );
-	}
-	else
-	{
-		AddEffects( EF_NODRAW );
-	}
+	BaseClass::SetWeaponVisible( visible );
 
 #ifdef CLIENT_DLL
 	UpdateVisibility();
@@ -1902,6 +1910,9 @@ CBaseEntity *CTFWeaponBase::Respawn()
 // -----------------------------------------------------------------------------
 void CTFWeaponBase::Materialize()
 {
+	BaseClass::Materialize();
+
+#if 0
 	if ( IsEffectActive( EF_NODRAW ) )
 	{
 		RemoveEffects( EF_NODRAW );
@@ -1912,6 +1923,7 @@ void CTFWeaponBase::Materialize()
 
 	SetThink ( &CTFWeaponBase::SUB_Remove );
 	SetNextThink( gpGlobals->curtime + 1 );
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -1974,13 +1986,23 @@ const Vector &CTFWeaponBase::GetBulletSpread( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 // ----------------------------------------------------------------------------
-void CTFWeaponBase::ApplyOnHitAttributes( CTFPlayer *pVictim, const CTakeDamageInfo &info )
+void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
+	CTFPlayer *pPlayer = ToTFPlayer( pVictim );
+	CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pVictim );
+
 	float flStunTime = 0.0f;
 	CALL_ATTRIB_HOOK_FLOAT( flStunTime, mult_onhit_enemyspeed_major );
 	if ( flStunTime )
 	{
-		pVictim->m_Shared.AddCond( TF_COND_SLOWED, flStunTime );
+		if ( pVictim->IsPlayer() )
+		{
+			pPlayer->m_Shared.AddCond( TF_COND_SLOWED, flStunTime );
+		}
+		else if (  pVictim->IsNPC() )
+		{
+			pNPC->AddCond( TF_COND_SLOWED, flStunTime );
+		}
 	}
 
 	CTFPlayer *pOwner = GetTFPlayerOwner();
@@ -1989,9 +2011,18 @@ void CTFWeaponBase::ApplyOnHitAttributes( CTFPlayer *pVictim, const CTakeDamageI
 
 	// Afterburn shouldn't trigger on-hit effects.
 	// Disguised spies shouldn't trigger on-hit effects.
-	if ( ( info.GetDamageType() & DMG_BURN ) ||
-		( pVictim->m_Shared.InCond( TF_COND_DISGUISED ) && pVictim->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) )
-		return;
+	if ( pVictim->IsPlayer() )
+	{
+		if ( ( info.GetDamageType() & DMG_BURN ) ||
+			( pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pPlayer->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) )
+			return;
+	}
+	else if ( pVictim->IsNPC() )
+	{
+		if ( ( info.GetDamageType() & DMG_BURN ) ||
+			( pNPC->InCond( TF_COND_DISGUISED ) ) )
+			return;
+	}
 
 	float flAddCharge = 0.0f;
 	CALL_ATTRIB_HOOK_FLOAT( flAddCharge, add_onhit_ubercharge );
@@ -2062,7 +2093,7 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 		pAttachEnt->GetAttachment( iMuzzleFlashAttachment, vecOrigin, angAngles );
 
 		// Muzzleflash light
-		if ( tf2c_muzzlelight.GetBool() )
+		if ( lf_muzzlelight.GetBool() )
 		{
 			CLocalPlayerFilter filter;
 			TE_DynamicLight( filter, 0.0f, &vecOrigin, 255, 192, 64, 5, 70.0f, 0.05f, 70.0f / 0.05f, LIGHT_INDEX_MUZZLEFLASH );
@@ -3301,12 +3332,12 @@ int CTFWeaponBase::GetSkin()
 	return nSkin;
 }
 
-//-----------------------------------------------------------------------------
-// Should this object cast shadows?
-//-----------------------------------------------------------------------------
 ShadowType_t CTFWeaponBase::ShadowCastType( void )
 {
-	if ( IsEffectActive( EF_NODRAW | EF_NOSHADOW ) || m_iState != WEAPON_IS_ACTIVE )
+	if ( IsEffectActive( EF_NODRAW | EF_NOSHADOW ) )
+		return SHADOWS_NONE;
+
+	if ( m_iState == WEAPON_IS_CARRIED_BY_PLAYER )
 		return SHADOWS_NONE;
 
 	return BaseClass::ShadowCastType();

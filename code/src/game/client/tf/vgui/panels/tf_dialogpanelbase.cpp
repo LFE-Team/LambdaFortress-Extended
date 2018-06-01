@@ -93,21 +93,26 @@ void CTFDialogPanelBase::Show()
 		RequestFocus();
 		MakePopup();
 	}
+	/*
 	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 255, 0.05f, 0.3f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE);
 	int _x, _y;
 	GetPos(_x, _y);
 	SetPos(_x - XRES(15), _y);
 	AnimationController::PublicValue_t p_AnimHover(_x, _y);
 	vgui::GetAnimationController()->RunAnimationCommand(this, "Position", p_AnimHover, 0.0f, 0.3f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE, NULL);
+	*/
 	MAINMENU_ROOT->ShowPanel(SHADEBACKGROUND_MENU);
 };
 
 void CTFDialogPanelBase::Hide()
 {
 	BaseClass::Hide();
+	/*
 	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 0, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR);
+	*/
 	MAINMENU_ROOT->HidePanel(SHADEBACKGROUND_MENU);
 	MAINMENU_ROOT->ShowPanel(CURRENT_MENU);
+
 	if (bShowSingle)
 	{
 		engine->ClientCmd("gameui_hide");

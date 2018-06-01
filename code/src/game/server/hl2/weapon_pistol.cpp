@@ -30,7 +30,7 @@
 ConVar	pistol_use_new_accuracy( "pistol_use_new_accuracy", "1" );
 
 //-----------------------------------------------------------------------------
-// CWeaponPistol
+// CHLWeaponPistol
 //-----------------------------------------------------------------------------
 
 class CWeaponPistol : public CBaseHLCombatWeapon

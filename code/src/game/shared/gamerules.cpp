@@ -262,7 +262,7 @@ void CGameRules::RefreshSkillData ( bool forceUpdate )
 	}
 	GlobalEntity_Add( "skill.cfg", STRING(gpGlobals->mapname), GLOBAL_ON );
 
-#if !(defined( TF_DLL ) || defined( TF_CLASSIC ) )&& !defined( DOD_DLL )
+#if !defined( TF_DLL )&& !defined( DOD_DLL )
 	char	szExec[256];
 #endif 
 
@@ -279,7 +279,7 @@ void CGameRules::RefreshSkillData ( bool forceUpdate )
 	engine->ServerExecute();
 #else
 
-#if !(defined( TF_DLL ) || defined( TF_CLASSIC ) ) && !defined( DOD_DLL )
+#if !defined( TF_DLL ) && !defined( DOD_DLL )
 	Q_snprintf( szExec,sizeof(szExec), "exec skill%d.cfg\n", GetSkillLevel() );
 
 	engine->ServerCommand( szExec );
@@ -790,8 +790,12 @@ float CGameRules::GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, i
 	float flDamage = 0;
 	CAmmoDef *pAmmoDef = GetAmmoDef();
 
-	if ( pAttacker->IsPlayer() )
-	{
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+ 	if ( pAttacker && pAttacker->IsPlayer() )
+ #else
+ 	if ( pAttacker->IsPlayer() )
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+ 	{
 		flDamage = pAmmoDef->PlrDamage( nAmmoType );
 	}
 	else

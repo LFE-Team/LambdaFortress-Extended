@@ -521,7 +521,7 @@ CBaseEntity *CGlobalEntityList::FindEntityProcedural( const char *szName, CBaseE
 		//
 		if ( FStrEq( pName, "player" ) )
 		{
-			return (CBaseEntity *)UTIL_PlayerByIndex( 1 );
+			return (CBaseEntity *)UTIL_GetLocalPlayer(); 
 		}
 		else if ( FStrEq( pName, "pvsplayer" ) )
 		{

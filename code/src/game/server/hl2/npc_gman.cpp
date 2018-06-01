@@ -98,6 +98,40 @@ void CNPC_GMan::Spawn()
 	BaseClass::Spawn();
 
 	SetModel( "models/gman.mdl" );
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	if( !Q_strnicmp( szMapName, "d1", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/gman.mdl");
+		SetModel("models/hl2/gman.mdl");
+	}
+	if( !Q_strnicmp( szMapName, "d2", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/gman.mdl");
+		SetModel("models/hl2/gman.mdl");
+	}
+	if( !Q_strnicmp( szMapName, "d3", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/gman.mdl");
+		SetModel("models/hl2/gman.mdl");
+	}
+	if( !Q_strnicmp( szMapName, "ep1", 3 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/ep1/gman.mdl");
+		SetModel("models/ep1/gman.mdl");
+	}
+	if( !Q_strnicmp( szMapName, "ep2", 3 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/ep2/gman.mdl");
+		SetModel("models/ep2/gman.mdl");
+	}
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
@@ -124,6 +158,9 @@ void CNPC_GMan::Spawn()
 void CNPC_GMan::Precache()
 {
 	PrecacheModel( "models/gman.mdl" );
+	PrecacheModel("models/hl2/gman.mdl");
+	PrecacheModel("models/ep1/gman.mdl");
+	PrecacheModel("models/ep2/gman.mdl");
 	
 	BaseClass::Precache();
 }	

@@ -265,6 +265,7 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 
 	bool bFlicker = false;
 
+#ifndef TF_CLASSIC_CLIENT
 #ifdef HL2_EPISODIC
 	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
 	if ( pPlayer )
@@ -312,7 +313,7 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 		}
 	}
 #endif // HL2_EPISODIC
-
+#endif
 	if ( bFlicker == false )
 	{
 		state.m_fLinearAtten = r_flashlightlinear.GetFloat();

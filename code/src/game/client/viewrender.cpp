@@ -59,7 +59,7 @@
 #include "portal_render_targets.h"
 #include "PortalRender.h"
 #endif
-#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
+#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL ) || defined( TF_CLASSIC_CLIENT )
 #define USE_MONITORS
 #endif
 #include "rendertexture.h"
@@ -75,7 +75,7 @@
 #endif // USE_MONITORS
 
 // Projective textures
-#include "C_Env_Projected_Texture.h"
+#include "c_env_projected_texture.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -767,7 +767,7 @@ static void SetClearColorToFogColor()
 // Precache of necessary materials
 //-----------------------------------------------------------------------------
 
-#ifdef HL2_CLIENT_DLL
+#if defined( HL2_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheViewRender )
 	CLIENTEFFECT_MATERIAL( "scripted/intro_screenspaceeffect" )
 CLIENTEFFECT_REGISTER_END()
@@ -795,7 +795,7 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/motion_blur" )
 	CLIENTEFFECT_MATERIAL( "dev/upscale" )
 
-#ifdef TF_CLIENT_DLL
+#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_blur_filter_y" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_blur_filter_x" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_dof" )

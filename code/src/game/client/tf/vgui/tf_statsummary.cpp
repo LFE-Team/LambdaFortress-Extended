@@ -82,7 +82,7 @@ void CTFStatsSummaryPanel::ShowModal()
 	// we are in interactive mode, enable controls
 	m_bInteractive = true;
 
-	SetParent( enginevgui->GetPanel( PANEL_GAMEDLL ) );
+	SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) );
 	UpdateDialog();
 	SetVisible( true );
 	MoveToFront();

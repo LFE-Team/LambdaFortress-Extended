@@ -290,9 +290,13 @@ static const char *s_PreserveEnts[] =
 	"env_fog_controller",
 	"func_wall",
 	"func_illusionary",
+	"info_hint",
 	"info_node",
-	"info_target",
 	"info_node_hint",
+	"info_node_air",
+	"info_node_air_hint",
+	"info_node_climb",
+	"info_target",
 	"point_commentary_node",
 	"point_viewcontrol",
 	"func_precipitation",
@@ -1754,6 +1758,56 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 	// check round restart
 	CheckReadyRestart();
 
+#ifdef TF_CLASSIC
+	// In co-op RED loses if all players die at the same time.
+	if ( TFGameRules()->IsCoOpGameRunning() )
+	{
+		CTeam *pTeam = GetGlobalTeam( TF_STORY_TEAM );
+		Assert( pTeam );
+
+		bool bFoundLiveOne = false;
+		int iPlayers = pTeam->GetNumPlayers();
+		if ( iPlayers )
+		{
+			for ( int player = 0; player < iPlayers; player++ )
+			{
+				if ( pTeam->GetPlayer(player) && pTeam->GetPlayer(player)->IsAlive() )
+				{
+					bFoundLiveOne = true;
+					break;
+				}
+			}
+		}
+
+		if ( !bFoundLiveOne )
+		{
+			// The live team has won. 
+			bool bMasterHandled = false;
+			if ( !m_bForceMapReset )
+			{
+				// We're not resetting the map, so give the winners control
+				// of all the points that were in play this round.
+				// Find the control point master.
+				CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
+				if ( pMaster )
+				{
+					variant_t sVariant;
+					sVariant.SetInt( TF_COMBINE_TEAM );
+					pMaster->AcceptInput( "SetWinnerAndForceCaps", NULL, NULL, sVariant, 0 );
+					bMasterHandled = true;
+				}
+			}
+
+			if ( !bMasterHandled )
+			{
+				SetWinningTeam( TF_COMBINE_TEAM, WINREASON_OPPONENTS_DEAD, m_bForceMapReset );
+			}
+
+			return;
+		}
+	}
+#endif
+
 	// See if we're coming up to the server timelimit, in which case force a stalemate immediately.
 	if ( mp_timelimit.GetInt() > 0 && IsInPreMatch() == false && GetTimeLeft() <= 0 )
 	{
@@ -3150,7 +3204,20 @@ void CTeamplayRoundBasedRules::BalanceTeams( bool bRequireSwitcheesToBeDead )
 
 	Assert( pHeavyTeam && pLightTeam );
 
+#ifdef TF_CLASSIC
+	int iNumSwitchesRequired;
+
+	if ( TFGameRules()->IsCoOp() )
+	{
+		iNumSwitchesRequired = lf_coop_min_red_players.GetInt() - pLightTeam->GetNumPlayers();
+	}
+	else
+	{
+		iNumSwitchesRequired = ( pHeavyTeam->GetNumPlayers() - pLightTeam->GetNumPlayers() ) / 2;
+	}
+#else
 	int iNumSwitchesRequired = ( pHeavyTeam->GetNumPlayers() - pLightTeam->GetNumPlayers() ) / 2;
+#endif
 
 	// sort the eligible players and switch the n best candidates
 	CUtlVector<CBaseMultiplayerPlayer *> vecPlayers;
@@ -3584,6 +3651,39 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 		return true;
 	}
 
+#if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
+	// In Versus don't allow joining BLU unless there's min amount of players on RED.
+	if ( TFGameRules()->IsCoOp() )
+	{
+		if ( iNewTeam == TF_COMBINE_TEAM )
+		{
+			if ( TFGameRules()->IsVersus() )
+			{
+				CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
+				Assert( pRebels );
+
+				int iRebelPlayers = pRebels->GetNumPlayers();
+
+				if ( iCurrentTeam == TF_STORY_TEAM )
+				{
+					iRebelPlayers -= 1;
+				}
+
+				if ( iRebelPlayers < lf_coop_min_red_players.GetInt() )
+					return true;
+			}
+			else
+			{
+				// Don't allow joining Combine outside of Versus mode.
+				return true;
+			}
+		}
+
+		// Always allow joining Rebels.
+		return false;
+	}
+#endif
+
 	// add one because we're joining this team
 	int iNewTeamPlayers = pNewTeam->GetNumPlayers() + 1;
 
@@ -3636,6 +3736,28 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 #ifndef CLIENT_DLL
 	if ( IsInCommentaryMode() )
 		return false;
+#endif
+
+#if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
+	// In Versus there must be min amount of players on RED.
+	if ( TFGameRules()->IsCoOp() )
+	{
+		if ( TFGameRules()->IsVersus() )
+		{
+			CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
+			CTeam *pCombine = GetGlobalTeam( TF_COMBINE_TEAM );
+
+			if ( pRebels->GetNumPlayers() < lf_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
+			{
+				iHeaviestTeam = TF_COMBINE_TEAM;
+				iLightestTeam = TF_STORY_TEAM;
+				return true;
+			}
+		}
+		
+		// Don't balance teams in Co-op.
+		return false;
+	}
 #endif
 
 	int iMostPlayers = 0;

@@ -278,7 +278,7 @@ BEGIN_DATADESC( CHLSelectFireMachineGun )
 	DEFINE_FIELD( m_iFireMode,		FIELD_INTEGER ),
 	
 	// Function pinters
-	DEFINE_FUNCTION( BurstThink ),
+	DEFINE_THINKFUNC( BurstThink ),
 
 END_DATADESC()
 

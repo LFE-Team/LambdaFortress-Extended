@@ -957,4 +957,6 @@ enum
 };
 #endif // TF_DLL || TF_CLIENT_DLL
 
+#include "secobmod_shareddefs.h"
+
 #endif // SHAREDDEFS_H

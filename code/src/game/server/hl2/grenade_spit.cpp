@@ -183,7 +183,7 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 	QAngle vecAngles;
 	VectorAngles( tracePlaneNormal, vecAngles );
 	
-	if ( pOther->IsPlayer() || bHitWater )
+	if ( pOther->IsPlayer() || pOther->IsBaseObject() || bHitWater )
 	{
 		// Do a lighter-weight effect if we just hit a player
 		DispatchParticleEffect( "antlion_spit_player", GetAbsOrigin(), vecAngles );

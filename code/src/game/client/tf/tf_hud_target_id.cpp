@@ -13,6 +13,8 @@
 #include "c_team.h"
 #include "tf_gamerules.h"
 #include "tf_hud_statpanel.h"
+#include "vgui_avatarimage.h"
+#include "c_ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -23,7 +25,7 @@ DECLARE_HUDELEMENT( CSecondaryTargetID );
 
 using namespace vgui;
 
-vgui::IImage* GetDefaultAvatarImage( C_BasePlayer *pPlayer );
+extern vgui::IImage* GetDefaultAvatarImage( C_BasePlayer *pPlayer );
 
 ConVar tf_hud_target_id_alpha( "tf_hud_target_id_alpha", "100", FCVAR_ARCHIVE , "Alpha value of target id background, default 100" );
 
@@ -176,6 +178,10 @@ bool CTargetID::ShouldDraw( void )
 			else if ( pEnt->IsBaseObject() && (pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) || pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR) )
 			{
 				bReturn = true;
+			}
+			else if ( pEnt->IsNPC() )
+			{
+				bReturn = ( pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) );
 			}
 		}
 	}
@@ -413,6 +419,17 @@ void CTargetID::UpdateID( void )
 				{
 					pAvatarPlayer = pBuilder;
 				}
+			}
+			else if ( pEnt->IsNPC() )
+			{
+				C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEnt );
+				pNPC->GetTargetIDString( sIDString, sizeof(sIDString) );
+				pNPC->GetTargetIDDataString( sDataString, sizeof(sDataString) );
+				bShowHealth = true;
+				flHealth = pNPC->GetHealth();
+				flMaxHealth = pNPC->GetMaxHealth();
+				iMaxBuffedHealth = pNPC->GetMaxBuffedHealth();
+				iColorNum = pNPC->GetTeamNumber();
 			}
 		}
 

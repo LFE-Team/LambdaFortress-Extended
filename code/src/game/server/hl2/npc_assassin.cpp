@@ -1,8 +1,8 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2001, Valve Corp, All rights reserved. ============
 //
 // Purpose: 
 //
-//=============================================================================//
+//=============================================================================
 
 #include "cbase.h"
 #include "ammodef.h"
@@ -10,14 +10,11 @@
 #include "AI_Navigator.h"
 #include "npc_Assassin.h"
 #include "game.h"
-#include "npcevent.h"
+#include "NPCEvent.h"
 #include "engine/IEngineSound.h"
-#include "ai_squad.h"
+#include "AI_Squad.h"
 #include "AI_SquadSlot.h"
 #include "ai_moveprobe.h"
-
-// memdbgon must be the last include file in a .cpp file!!!
-#include "tier0/memdbgon.h"
 
 ConVar	sk_assassin_health( "sk_assassin_health","150");
 ConVar	g_debug_assassin( "g_debug_assassin", "0" );
@@ -28,10 +25,6 @@ ConVar	g_debug_assassin( "g_debug_assassin", "0" );
 #define	ASSASSIN_AE_FIRE_PISTOL_RIGHT	1
 #define	ASSASSIN_AE_FIRE_PISTOL_LEFT	2
 #define	ASSASSIN_AE_KICK_HIT			3
-
-int AE_ASSASIN_FIRE_PISTOL_RIGHT;
-int AE_ASSASIN_FIRE_PISTOL_LEFT;
-int AE_ASSASIN_KICK_HIT;
 
 //=========================================================
 // Assassin activities
@@ -102,23 +95,12 @@ LINK_ENTITY_TO_CLASS( npc_assassin, CNPC_Assassin );
 //---------------------------------------------------------
 IMPLEMENT_SERVERCLASS_ST(CNPC_Assassin, DT_NPC_Assassin)
 END_SEND_TABLE()
-
 #endif
 
 //---------------------------------------------------------
 // Save/Restore
 //---------------------------------------------------------
 BEGIN_DATADESC( CNPC_Assassin )
-	DEFINE_FIELD( m_nNumFlips,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_nLastFlipType, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flNextFlipTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flNextLungeTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flNextShotTime, FIELD_TIME ),
-	DEFINE_FIELD( m_bEvade,		FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bAggressive, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bBlinkState, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_pEyeSprite,	FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_pEyeTrail,	FIELD_CLASSPTR ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -128,14 +110,15 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CNPC_Assassin::Precache( void )
 {
-	PrecacheModel( "models/fassassin.mdl" );
+	engine->PrecacheModel( "models/fassassin.mdl" );
 
-	PrecacheScriptSound( "NPC_Assassin.ShootPistol" );
-	PrecacheScriptSound( "Zombie.AttackHit" );
-	PrecacheScriptSound( "Assassin.AttackMiss" );
-	PrecacheScriptSound( "NPC_Assassin.Footstep" );
+	enginesound->PrecacheSound( "player/pl_step1.wav" );
+	enginesound->PrecacheSound( "player/pl_step2.wav" );
+	enginesound->PrecacheSound( "player/pl_step3.wav" );
+	enginesound->PrecacheSound( "player/pl_step4.wav" );
 
-	PrecacheModel( "sprites/redglow1.vmt" );
+	enginesound->PrecacheSound( "player/pl_shoot1.wav" );
+	enginesound->PrecacheSound( "player/pl_shoot2.wav" );
 
 	BaseClass::Precache();
 }
@@ -190,7 +173,7 @@ void CNPC_Assassin::Spawn( void )
 	{
 		m_pEyeTrail->SetAttachment( this, attachment );
 		m_pEyeTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 200, kRenderFxNone );
-		m_pEyeTrail->SetStartWidth( 8.0f );
+		m_pEyeTrail->SetScale( 8.0f );
 		m_pEyeTrail->SetLifeTime( 0.75f );
 	}
 
@@ -319,71 +302,78 @@ void CNPC_Assassin::FirePistol( int hand )
 		VectorNormalize( muzzleDir );
 	}
 
-	int bulletType = GetAmmoDef()->Index( "Pistol" );
+	int bulletType = GetAmmoDef()->Index( "SmallRound" );
 
 	FireBullets( 1, muzzlePos, muzzleDir, VECTOR_CONE_5DEGREES, 1024, bulletType, 2 );
 
 	UTIL_MuzzleFlash( muzzlePos, muzzleAngle, 0.5f, 1 );
 
 	CPASAttenuationFilter filter( this );
-	EmitSound( filter, entindex(), "NPC_Assassin.ShootPistol" );
+
+	if ( random->RandomInt( 0, 1 ) )
+	{
+		enginesound->EmitSound( filter, entindex(), CHAN_WEAPON, "player/pl_shoot1.wav", 0.5, ATTN_NORM );
+	}
+	else
+	{
+		enginesound->EmitSound( filter, entindex(), CHAN_WEAPON, "player/pl_shoot2.wav", 0.5, ATTN_NORM );
+	}
 }
 
 //---------------------------------------------------------
 //---------------------------------------------------------
 void CNPC_Assassin::HandleAnimEvent( animevent_t *pEvent )
 {
-	
-	if ( pEvent->event == AE_ASSASIN_FIRE_PISTOL_RIGHT )
+	switch ( pEvent->event )
 	{
+	case ASSASSIN_AE_FIRE_PISTOL_RIGHT:
 		FirePistol( 0 );
-		return;
-	}
+		break;
 
-	if ( pEvent->event == AE_ASSASIN_FIRE_PISTOL_LEFT )
-	{
+	case ASSASSIN_AE_FIRE_PISTOL_LEFT:
 		FirePistol( 1 );
-		return;
-	}
+		break;
 	
-	if ( pEvent->event == AE_ASSASIN_KICK_HIT )
-	{
-		Vector	attackDir = BodyDirection2D();
-		Vector	attackPos = WorldSpaceCenter() + ( attackDir * 64.0f );
-
-		trace_t	tr;
-		UTIL_TraceHull( WorldSpaceCenter(), attackPos, -Vector(8,8,8), Vector(8,8,8), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
-
-		if ( ( tr.m_pEnt != NULL ) && ( tr.DidHitWorld() == false ) )
+	case ASSASSIN_AE_KICK_HIT:
 		{
-			if ( tr.m_pEnt->m_takedamage != DAMAGE_NO )
+			Vector	attackDir = BodyDirection2D();
+			Vector	attackPos = WorldSpaceCenter() + ( attackDir * 64.0f );
+
+			trace_t	tr;
+			UTIL_TraceHull( WorldSpaceCenter(), attackPos, -Vector(8,8,8), Vector(8,8,8), MASK_SHOT_HULL, this, COLLISION_GROUP_NONE, &tr );
+
+			if ( ( tr.m_pEnt != NULL ) && ( tr.DidHitWorld() == false ) )
 			{
-				CTakeDamageInfo info( this, this, 5, DMG_CLUB );
-				CalculateMeleeDamageForce( &info, (tr.endpos - tr.startpos), tr.endpos );
-				tr.m_pEnt->TakeDamage( info );
-
-				CBasePlayer	*pPlayer = ToBasePlayer( tr.m_pEnt );
-
-				if ( pPlayer != NULL )
+				if ( tr.m_pEnt->m_takedamage != DAMAGE_NO )
 				{
-					//Kick the player angles
-					pPlayer->ViewPunch( QAngle( -30, 40, 10 ) );
-				}
+					CTakeDamageInfo info( this, this, 5, DMG_CLUB );
+					CalculateMeleeDamageForce( &info, (tr.endpos - tr.startpos), tr.endpos );
+					tr.m_pEnt->TakeDamage( info );
 
-				EmitSound( "Zombie.AttackHit" );
-				//EmitSound( "Assassin.AttackHit" );
+					CBasePlayer	*pPlayer = ToBasePlayer( tr.m_pEnt );
+
+					if ( pPlayer != NULL )
+					{
+						//Kick the player angles
+						pPlayer->ViewPunch( QAngle( -30, 40, 10 ) );
+					}
+
+					EmitSound( "Zombie.AttackHit" );
+					//EmitSound( "Assassin.AttackHit" );
+				}
+			}
+			else
+			{
+				EmitSound( "Assassin.AttackMiss" );
+				//EmitSound( "Assassin.AttackMiss" );
 			}
 		}
-		else
-		{
-			EmitSound( "Assassin.AttackMiss" );
-			//EmitSound( "Assassin.AttackMiss" );
-		}
+		break;
 
-		return;
+	default:
+		BaseClass::HandleAnimEvent( pEvent );
+		break;
 	}
-
-	BaseClass::HandleAnimEvent( pEvent );
 }
 
 //-----------------------------------------------------------------------------
@@ -499,7 +489,13 @@ void CNPC_Assassin::PrescheduleThink( void )
 		iStep = ! iStep;
 		if (iStep)
 		{
-			EmitSound( filter, entindex(), "NPC_Assassin.Footstep" );
+			switch( random->RandomInt( 0, 3 ) )
+			{
+			case 0:	enginesound->EmitSound( filter, entindex(), CHAN_BODY, "player/pl_step1.wav", 0.5, ATTN_NORM );	break;
+			case 1:	enginesound->EmitSound( filter, entindex(), CHAN_BODY, "player/pl_step3.wav", 0.5, ATTN_NORM );	break;
+			case 2:	enginesound->EmitSound( filter, entindex(), CHAN_BODY, "player/pl_step2.wav", 0.5, ATTN_NORM );	break;
+			case 3:	enginesound->EmitSound( filter, entindex(), CHAN_BODY, "player/pl_step4.wav", 0.5, ATTN_NORM );	break;
+			}
 		}
 	}
 }
@@ -575,7 +571,6 @@ bool CNPC_Assassin::CanFlip( int flipType, Activity &activity, const Vector *avo
 
 	/*
 	UTIL_TraceHull( GetAbsOrigin(), endPos, NAI_Hull::Mins(m_eHull) + Vector( 0, 0, StepHeight() ), NAI_Hull::Maxs(m_eHull), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
-
 	// See if we're hit an obstruction in that direction
 	if ( tr.fraction < 1.0f )
 	{
@@ -583,32 +578,25 @@ bool CNPC_Assassin::CanFlip( int flipType, Activity &activity, const Vector *avo
 		{
 			NDebugOverlay::BoxDirection( GetAbsOrigin(), NAI_Hull::Mins(m_eHull) + Vector( 0, 0, StepHeight() ), NAI_Hull::Maxs(m_eHull) + Vector( testDist, 0, StepHeight() ), testDir, 255, 0, 0, true, 2.0f );
 		}
-
 		return false;
 	}
-
 #define NUM_STEPS 2
-
 	float	stepLength = testDist / NUM_STEPS;
-
 	for ( int i = 1; i <= NUM_STEPS; i++ )
 	{
 		endPos = GetAbsOrigin() + ( testDir * (stepLength*i) );
 		
 		// Also check for a cliff edge
 		UTIL_TraceHull( endPos, endPos - Vector( 0, 0, StepHeight() * 4.0f ), NAI_Hull::Mins(m_eHull) + Vector( 0, 0, StepHeight() ), NAI_Hull::Maxs(m_eHull), MASK_NPCSOLID, this, COLLISION_GROUP_NONE, &tr );
-
 		if ( tr.fraction == 1.0f )
 		{
 			if ( g_debug_assassin.GetBool() )
 			{
 				NDebugOverlay::BoxDirection( endPos, NAI_Hull::Mins(m_eHull) + Vector( 0, 0, StepHeight() ), NAI_Hull::Maxs(m_eHull) + Vector( StepHeight() * 4.0f, 0, StepHeight() ), Vector(0,0,-1), 255, 0, 0, true, 2.0f );
 			}
-
 			return false;
 		}
 	}
-
 	if ( g_debug_assassin.GetBool() )
 	{
 		NDebugOverlay::BoxDirection( GetAbsOrigin(), NAI_Hull::Mins(m_eHull) + Vector( 0, 0, StepHeight() ), NAI_Hull::Maxs(m_eHull) + Vector( testDist, 0, StepHeight() ), testDir, 0, 255, 0, true, 2.0f );
@@ -708,7 +696,7 @@ void CNPC_Assassin::StartTask( const Task_t *pTask )
 	
 			hint.SetFlag( bits_HINT_NODE_NEAREST );
 
-			CAI_Hint *pHint = CAI_HintManager::FindHint( this, GetEnemy()->GetAbsOrigin(), &hint );
+			CAI_Hint *pHint = CAI_Hint::FindHint( this, GetEnemy()->GetAbsOrigin(), &hint );
 
 			if ( pHint == NULL )
 			{
@@ -762,6 +750,27 @@ float CNPC_Assassin::MaxYawSpeed( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : &vecSpot - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_Assassin::FInAimCone( const Vector &vecSpot )
+{
+	/*
+	Vector los = ( vecSpot - GetAbsOrigin() );
+	// do this in 2D
+	los.z = 0;
+	VectorNormalize( los );
+	Vector facingDir = EyeDirection2D( );
+	float flDot = DotProduct( los, facingDir );
+	if ( flDot > 0.866 ) //30 degrees
+		return true;
+	return false;
+	*/
+
+	return BaseClass::FInAimCone( vecSpot );
+}
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -789,7 +798,7 @@ void CNPC_Assassin::RunTask( const Task_t *pTask )
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-bool CNPC_Assassin::FValidateHintType ( CAI_Hint *pHint )
+bool CNPC_Assassin :: FValidateHintType ( CAI_Hint *pHint )
 {
 	switch( pHint->HintType() )
 	{
@@ -1011,11 +1020,6 @@ AI_BEGIN_CUSTOM_NPC( npc_assassin, CNPC_Assassin )
 	DECLARE_ACTIVITY(ACT_ASSASSIN_FLIP_BACK)
 	DECLARE_ACTIVITY(ACT_ASSASSIN_FLIP_FORWARD)
 	DECLARE_ACTIVITY(ACT_ASSASSIN_PERCH)
-
-	//Adrian: events go here
-	DECLARE_ANIMEVENT( AE_ASSASIN_FIRE_PISTOL_RIGHT )
-	DECLARE_ANIMEVENT( AE_ASSASIN_FIRE_PISTOL_LEFT )
-	DECLARE_ANIMEVENT( AE_ASSASIN_KICK_HIT )
 
 	DECLARE_TASK(TASK_ASSASSIN_GET_PATH_TO_VANTAGE_POINT)
 	DECLARE_TASK(TASK_ASSASSIN_EVADE)

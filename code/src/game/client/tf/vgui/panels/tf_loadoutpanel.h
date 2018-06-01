@@ -3,6 +3,7 @@
 
 #include "tf_dialogpanelbase.h"
 #include "tf_inventory.h"
+#include <vgui/KeyCode.h>
 
 class CTFAdvModelPanel;
 class CTFWeaponSetPanel;
@@ -41,7 +42,7 @@ public:
 	void SetSlotAndPreset(int iSlot, int iPreset);
 	void SideRow(int iRow, int iDir);
 	void ResetRows();
-
+	virtual void OnKeyCodeTyped(vgui::KeyCode code);
 private:
 	CTFAdvModelPanel *m_pClassModelPanel;
 	CTFWeaponSetPanel *m_pWeaponSetPanel;

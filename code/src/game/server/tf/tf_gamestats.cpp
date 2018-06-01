@@ -473,6 +473,14 @@ void CTFGameStats::Event_PlayerCreatedBuilding( CTFPlayer *pPlayer, CBaseObject 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CTFGameStats::Event_PlayerKilledNPC( CTFPlayer *pPlayer, CAI_BaseNPC *pNPC )
+{
+	IncrementStat( pPlayer, TFSTAT_KILLS, 1 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CTFGameStats::Event_PlayerDestroyedBuilding( CTFPlayer *pPlayer, CBaseObject *pBuilding )
 {
 	// sappers are buildings from the code's point of view but not from the player's, don't count them

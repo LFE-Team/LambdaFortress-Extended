@@ -8,6 +8,7 @@
 #include "tf_weaponbase_melee.h"
 #include "effect_dispatch_data.h"
 #include "tf_gamerules.h"
+#include "ai_basenpc_shared.h"
 
 // Server specific.
 #if !defined( CLIENT_DLL )
@@ -313,7 +314,7 @@ void CTFWeaponBaseMelee::Smack( void )
 	if ( DoSwingTrace( trace ) )
 	{
 		// Hit sound - immediate.
-		if( trace.m_pEnt->IsPlayer()  )
+		if( trace.m_pEnt->IsPlayer() || ( trace.m_pEnt->IsNPC() && !trace.m_pEnt->MyNPCPointer()->IsMech() ) )
 		{
 			WeaponSound( MELEE_HIT );
 		}
@@ -336,7 +337,7 @@ void CTFWeaponBaseMelee::Smack( void )
 		// Do Damage.
 		int iCustomDamage = TF_DMG_CUSTOM_NONE;
 		float flDamage = GetMeleeDamage( trace.m_pEnt, iCustomDamage );
-		int iDmgType = DMG_BULLET | DMG_NEVERGIB | DMG_CLUB;
+		int iDmgType = DMG_NEVERGIB | DMG_CLUB;
 		if ( IsCurrentAttackACrit() )
 		{
 			// TODO: Not removing the old critical path yet, but the new custom damage is marking criticals as well for melee now.

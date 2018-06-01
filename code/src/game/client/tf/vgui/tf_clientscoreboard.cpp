@@ -146,6 +146,16 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 		m_pSpectatorsInQueue->SetVisible( false );
 
 	Reset();
+
+	if ( TFGameRules() && ( TFGameRules()->IsCoOp() && !TFGameRules()->IsVersus() ) )
+	{
+		LoadControlSettings( "Resource/UI/scoreboard_coop.res" );
+		m_pPlayerListBlue->SetVisible( false );
+	}
+	else if ( TFGameRules() && ( !TFGameRules()->IsCoOp() && TFGameRules()->IsVersus() ) )
+	{
+		LoadControlSettings( "Resource/UI/scoreboard_vs.res" );
+	}
 }
 
 //-----------------------------------------------------------------------------

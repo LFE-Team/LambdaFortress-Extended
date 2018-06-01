@@ -181,7 +181,7 @@ void CPropAPC::CreateAPCLaserDot( void )
 //-----------------------------------------------------------------------------
 bool CPropAPC::ShouldAttractAutoAim( CBaseEntity *pAimingEnt )
 {
-	if( g_pGameRules->GetAutoAimMode() == AUTOAIM_ON_CONSOLE && pAimingEnt->IsPlayer() && GetDriver() )
+	if( g_pGameRules->GetAutoAimMode() == AUTOAIM_ON_CONSOLE && pAimingEnt->IsPlayer() || pAimingEnt->IsBaseObject() && GetDriver() )
 	{
 		return true;
 	}
@@ -548,7 +548,7 @@ int CPropAPC::OnTakeDamage( const CTakeDamageInfo &info )
 
 	m_OnDamaged.FireOutput( info.GetAttacker(), this );
 
-	if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
+	if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
 	{
 		m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
 	}

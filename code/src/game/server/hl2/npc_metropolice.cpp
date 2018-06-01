@@ -18,7 +18,11 @@
 #include "hl2_player.h"
 #include "iservervehicle.h"
 #include "items.h"
+#ifdef HL2_DLL
 #include "hl2_gamerules.h"
+#elif defined(TF_CLASSIC)
+#include "tf_gamerules.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -111,7 +115,7 @@ ConVar	sk_metropolice_stitch_behind_hitcount( "sk_metropolice_stitch_behind_hitc
 ConVar	sk_metropolice_stitch_along_hitcount( "sk_metropolice_stitch_along_hitcount","2");
 
 
-ConVar	sk_metropolice_health( "sk_metropolice_health","0");
+ConVar	sk_metropolice_health( "sk_metropolice_health","40");
 ConVar	sk_metropolice_simple_health( "sk_metropolice_simple_health","26");
 ConVar	sk_metropolice_stitch_distance( "sk_metropolice_stitch_distance","1000");
 
@@ -497,8 +501,11 @@ void CNPC_MetroPolice::PrescheduleThink( void )
 	m_bPlayerIsNear = false;
 	if ( PlayerIsCriminal() == false )
 	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
-		
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+#else
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI	
 		if ( pPlayer && ( pPlayer->WorldSpaceCenter() - WorldSpaceCenter() ).LengthSqr() < (128*128) )
 		{
 			m_bPlayerIsNear = true;
@@ -521,7 +528,7 @@ void CNPC_MetroPolice::PrescheduleThink( void )
 			m_bKeepFacingPlayer = false;
 		}
 	}
-
+#ifndef TF_CLASSIC
 	if( IsOnFire() )
 	{
 		SetCondition( COND_METROPOLICE_ON_FIRE );
@@ -530,7 +537,7 @@ void CNPC_MetroPolice::PrescheduleThink( void )
 	{
 		ClearCondition( COND_METROPOLICE_ON_FIRE );
 	}
-
+#endif
 	if (gpGlobals->curtime > m_flRecentDamageTime + RECENT_DAMAGE_INTERVAL)
 	{
 		m_nRecentDamage = 0;
@@ -2646,11 +2653,13 @@ void CNPC_MetroPolice::PainSound( const CTakeDamageInfo &info )
 {
 	if ( gpGlobals->curtime < m_flNextPainSoundTime )
 		return;
-
+	
+	// What looping sound?
+#ifndef TF_CLASSIC
 	// Don't make pain sounds if I'm on fire. The looping sound will take care of that for us.
 	if ( IsOnFire() )
 		return;
-
+#endif
 	float healthRatio = (float)GetHealth() / (float)GetMaxHealth();
 	if ( healthRatio > 0.0f )
 	{
@@ -3101,13 +3110,16 @@ void CNPC_MetroPolice::Event_Killed( const CTakeDamageInfo &info )
 
 	if ( pPlayer != NULL )
 	{
-		CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules);
-
+#ifdef HL2_DLL
+		CHalfLife2 *pGameRules = static_cast<CHalfLife2 *>(g_pGameRules);
+#elif defined(TF_CLASSIC)
+		CTFGameRules *pGameRules = TFGameRules();
+#endif
 		// Attempt to drop health
-		if ( pHL2GameRules->NPC_ShouldDropHealth( pPlayer ) )
+		if ( pGameRules->NPC_ShouldDropHealth( pPlayer ) )
 		{
 			DropItem( "item_healthvial", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
-			pHL2GameRules->NPC_DroppedHealth();
+			pGameRules->NPC_DroppedHealth();
 		}
 	}
 
@@ -3899,7 +3911,11 @@ void CNPC_MetroPolice::AnnounceHarrassment( void )
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::IncrementPlayerCriminalStatus( void )
 {
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+#else
 	CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	if ( pPlayer )
 	{
@@ -3951,8 +3967,10 @@ float CNPC_MetroPolice::GetIdealAccel( void ) const
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::AdministerJustice( void )
 {
-	if ( !AI_IsSinglePlayer() )
-		return;
+#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
+	if ( !AI_IsSinglePlayer() ) 
+		return; 
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	// If we're allowed to chase the player, do so. Otherwise, just threaten.
 	if ( !IsInAScript() && (m_NPCState != NPC_STATE_SCRIPT) && HasSpawnFlags( SF_METROPOLICE_ALLOWED_TO_RESPOND ) )
@@ -3965,7 +3983,13 @@ void CNPC_MetroPolice::AdministerJustice( void )
 		m_flChasePlayerTime = gpGlobals->curtime + RandomFloat( 3, 7 );
 
 		// Attack the target
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
+		if ( !pPlayer ) 
+			pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+#else
 		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		SetEnemy( pPlayer );
 		SetState( NPC_STATE_COMBAT );
 		UpdateEnemyMemory( pPlayer, pPlayer->GetAbsOrigin() );
@@ -3989,8 +4013,14 @@ void CNPC_MetroPolice::AdministerJustice( void )
 				if ( pNPC->HasSpawnFlags( SF_METROPOLICE_ALLOWED_TO_RESPOND ) )
 				{
 					// Is he within site & range?
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+					CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
+					if ( pPlayer && FVisible(pNPC) && pNPC->FVisible( pPlayer ) &&  
+#else
 					if ( FVisible(pNPC) && pNPC->FVisible( UTIL_PlayerByIndex(1) ) && 
-						UTIL_DistApprox( WorldSpaceCenter(), pNPC->WorldSpaceCenter() ) < 512 )
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI				
+
+					UTIL_DistApprox( WorldSpaceCenter(), pNPC->WorldSpaceCenter() ) < 512 )
 					{
 						pNPC->AdministerJustice();
 						break;
@@ -4006,17 +4036,19 @@ void CNPC_MetroPolice::AdministerJustice( void )
 //-----------------------------------------------------------------------------
 int CNPC_MetroPolice::SelectSchedule( void )
 {
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+	if ( !GetEnemy() && HasCondition( COND_IN_PVS ) && pPlayer && !pPlayer->IsAlive() ) 
+#else
 	if ( !GetEnemy() && HasCondition( COND_IN_PVS ) && AI_GetSinglePlayer() && !AI_GetSinglePlayer()->IsAlive() )
-	{
-		return SCHED_PATROL_WALK;
-	}
-
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+#ifndef TF_CLASSIC
 	if ( HasCondition(COND_METROPOLICE_ON_FIRE) )
 	{
 		m_Sentences.Speak( "METROPOLICE_ON_FIRE", SENTENCE_PRIORITY_INVALID, SENTENCE_CRITERIA_ALWAYS );
 		return SCHED_METROPOLICE_BURNING_STAND;
 	}
-
+#endif
 	// React to being struck by a physics object
 	if ( HasCondition( COND_METROPOLICE_PHYSOBJECT_ASSAULT ) )
 	{
@@ -4846,30 +4878,37 @@ void CNPC_MetroPolice::RunTask( const Task_t *pTask )
 //-----------------------------------------------------------------------------
 int CNPC_MetroPolice::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
-	CTakeDamageInfo info = inputInfo;
-
-	if ( HasSpawnFlags( SF_METROPOLICE_ARREST_ENEMY ) )
+	if ( inputInfo.GetAttacker()->GetTeamNumber() == TF_TEAM_BLUE )
 	{
-		EnemyResistingArrest();
+		return 0;
 	}
-
-#if 0
-	// Die instantly from a hit in idle/alert states
-	if( m_NPCState == NPC_STATE_IDLE || m_NPCState == NPC_STATE_ALERT )
+	else
 	{
-		info.SetDamage( m_iHealth );
-	}
-#endif //0
+		CTakeDamageInfo info = inputInfo;
 
-	if (info.GetAttacker() == GetEnemy())
-	{
-		// Keep track of recent damage by my attacker. If it seems like we're
-		// being killed, consider running off and hiding.
-		m_nRecentDamage += info.GetDamage();
-		m_flRecentDamageTime = gpGlobals->curtime;
-	}
+		if ( HasSpawnFlags( SF_METROPOLICE_ARREST_ENEMY ) )
+		{
+			EnemyResistingArrest();
+		}
 
-	return BaseClass::OnTakeDamage_Alive( info ); 
+	#if 0
+		// Die instantly from a hit in idle/alert states
+		if( m_NPCState == NPC_STATE_IDLE || m_NPCState == NPC_STATE_ALERT )
+		{
+			info.SetDamage( m_iHealth );
+		}
+	#endif //0
+
+		if (info.GetAttacker() == GetEnemy())
+		{
+			// Keep track of recent damage by my attacker. If it seems like we're
+			// being killed, consider running off and hiding.
+			m_nRecentDamage += info.GetDamage();
+			m_flRecentDamageTime = gpGlobals->curtime;
+		}
+
+		return BaseClass::OnTakeDamage_Alive( info );
+	}
 }
 
 
@@ -4978,7 +5017,11 @@ void CNPC_MetroPolice::GatherConditions( void )
 		ClearCondition( COND_METROPOLICE_PLAYER_TOO_CLOSE );
 	}
 
-	CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+#else
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( 1 );
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	
 	// FIXME: Player can be NULL here during level transitions.
 	if ( !pPlayer )
@@ -5111,7 +5154,11 @@ void CNPC_MetroPolice::VPhysicsCollision( int index, gamevcollisionevent_t *pEve
 
 	if ( pEvent->pObjects[otherIndex]->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 	{
+#ifdef TF_CLASSIC
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetNearestPlayer( GetAbsOrigin(), TF_TEAM_RED ) );
+#else
 		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player *>(UTIL_PlayerByIndex( 1 ));
+#endif
 
 		// See if it's being held by the player
 		if ( pPlayer != NULL && pPlayer->IsHoldingEntity( pHitEntity ) )

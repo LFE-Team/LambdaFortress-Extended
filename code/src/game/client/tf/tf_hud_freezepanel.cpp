@@ -21,6 +21,7 @@
 #include "view.h"
 #include "ivieweffects.h"
 #include "viewrender.h"
+#include "c_ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -324,6 +325,34 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 				else
 				{
 					m_pBasePanel->SetDialogVariable( "objectkiller", wszLocalized );
+				}
+			}
+			else if ( pKiller->IsNPC() )
+			{
+				C_AI_BaseNPC *pNPC = dynamic_cast<C_AI_BaseNPC *>( pKiller );
+
+				// Set the BG according to the team it's on
+				m_pFreezePanelBG->SetBGImage( pNPC->GetTeamNumber() );
+
+				if ( !pNPC->IsAlive() )
+				{
+					m_pFreezeLabel->SetText( "#FreezePanel_Killer_Dead" );
+				}
+				else
+				{
+					m_pFreezeLabel->SetText( "#FreezePanel_Killer" );
+				}
+
+				const char *pszClassname = pNPC->GetClassname();
+				wchar_t *wszLocalized = g_pVGuiLocalize->Find( pszClassname );
+
+				if ( !wszLocalized )
+				{
+					m_pBasePanel->SetDialogVariable( "killername", pszClassname );
+				}
+				else
+				{
+					m_pBasePanel->SetDialogVariable( "killername", wszLocalized );
 				}
 			}
 			else if ( m_pFreezeLabel )

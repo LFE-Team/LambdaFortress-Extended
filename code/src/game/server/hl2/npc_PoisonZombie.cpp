@@ -132,8 +132,8 @@ static const char *pMoanSounds[] =
 //-----------------------------------------------------------------------------
 // Skill settings.
 //-----------------------------------------------------------------------------
-ConVar sk_zombie_poison_health( "sk_zombie_poison_health", "0");
-ConVar sk_zombie_poison_dmg_spit( "sk_zombie_poison_dmg_spit","0");
+ConVar sk_zombie_poison_health( "sk_zombie_poison_health", "175");
+ConVar sk_zombie_poison_dmg_spit( "sk_zombie_poison_dmg_spit","20");
 
 class CNPC_PoisonZombie : public CAI_BlendingHost<CNPC_BaseZombie>
 {
@@ -697,7 +697,12 @@ void CNPC_PoisonZombie::HandleAnimEvent( animevent_t *pEvent )
 
 		if ( IsOnFire() )
 		{
+#ifdef TF_CLASSIC
+			pCrab->Ignite( m_flFlameRemoveTime - gpGlobals->curtime );
+			pCrab->SetBurnAttacker( m_hBurnAttacker );
+#else
 			pCrab->Ignite( 100.0 );
+#endif
 		}
 
 		CBaseEntity *pEnemy = GetEnemy();

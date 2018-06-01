@@ -119,6 +119,7 @@ bool CBaseHLCombatWeapon::Deploy( void )
 {
 	// If we should be lowered, deploy in the lowered position
 	// We have to ask the player if the last time it checked, the weapon was lowered
+#if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
 	if ( GetOwner() && GetOwner()->IsPlayer() )
 	{
 		CHL2_Player *pPlayer = assert_cast<CHL2_Player*>( GetOwner() );
@@ -139,6 +140,7 @@ bool CBaseHLCombatWeapon::Deploy( void )
 			}
 		}
 	}
+#endif
 
 	m_bLowered = false;
 	return BaseClass::Deploy();
@@ -191,7 +193,7 @@ void CBaseHLCombatWeapon::WeaponIdle( void )
 	//See if we should idle high or low
 	if ( WeaponShouldBeLowered() )
 	{
-#if !defined( CLIENT_DLL )
+#if !defined( CLIENT_DLL ) && defined( HL2_DLL )
 		CHL2_Player *pPlayer = dynamic_cast<CHL2_Player*>(GetOwner());
 
 		if( pPlayer )
@@ -236,7 +238,7 @@ float	g_verticalBob;
 #define	HL2_BOB			0.002f
 #define	HL2_BOB_UP		0.5f
 
-
+#ifdef HL2_CLIENT_DLL
 static ConVar	cl_bobcycle( "cl_bobcycle","0.8" );
 static ConVar	cl_bob( "cl_bob","0.002" );
 static ConVar	cl_bobup( "cl_bobup","0.5" );
@@ -248,6 +250,7 @@ static ConVar	v_ipitch_cycle( "v_ipitch_cycle", "1"/*, FCVAR_UNREGISTERED*/ );
 static ConVar	v_iyaw_level( "v_iyaw_level", "0.3"/*, FCVAR_UNREGISTERED*/ );
 static ConVar	v_iroll_level( "v_iroll_level", "0.1"/*, FCVAR_UNREGISTERED*/ );
 static ConVar	v_ipitch_level( "v_ipitch_level", "0.3"/*, FCVAR_UNREGISTERED*/ );
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 

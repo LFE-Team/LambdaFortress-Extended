@@ -12,6 +12,7 @@
 #endif
 
 #include "tf_dialogpanelbase.h"
+#include <vgui/KeyCode.h>
 
 enum OptionPanel
 {
@@ -47,6 +48,7 @@ public:
 	MESSAGE_FUNC(OnDefaultPressed, "OnDefaultPressed");
 	MESSAGE_FUNC(OnGameUIHidden, "GameUIHidden");	// called when the GameUI is hidden
 
+	virtual void OnKeyCodeTyped(vgui::KeyCode code);
 private:
 	void SetCurrentPanel(OptionPanel pCurrentPanel);
 	void AddPanel(CTFDialogPanelBase *m_pPanel, int iPanel);

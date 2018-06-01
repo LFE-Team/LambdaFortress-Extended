@@ -13,6 +13,7 @@
 #include "world.h"
 #include "explode.h"
 #include "triggers.h"
+#include "ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -108,7 +109,7 @@ public:
 	void Spawn( void )
 	{
 		BaseClass::Spawn();
-		AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
+		AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS );
 		InitTrigger();
 	}
 
@@ -730,6 +731,11 @@ void CObjectDispenser::StartHealing( CBaseEntity *pOther )
 	if ( pPlayer )
 	{
 		pPlayer->m_Shared.Heal( GetOwner(), GetHealRate(), true );
+	}
+	else if ( pOther && pOther->IsNPC() )
+	{
+		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pOther );
+		pNPC->Heal( GetOwner(), obj_dispenser_heal_rate.GetFloat(), true );
 	}
 }
 

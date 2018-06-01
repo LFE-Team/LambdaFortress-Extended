@@ -228,6 +228,7 @@ protected:
 	virtual bool HandleJumping( Activity &idealActivity );
 	virtual bool HandleDucking( Activity &idealActivity );
 	virtual bool HandleMoving( Activity &idealActivity );
+	virtual bool HandleVehicle( Activity &idealActivity );
 	virtual bool HandleSwimming( Activity &idealActivity );
 	virtual bool HandleDying( Activity &idealActivity );
 

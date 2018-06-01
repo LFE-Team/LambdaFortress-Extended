@@ -15,164 +15,164 @@ extern ConVar npc_alyx_readiness;
 class CNPC_Alyx : public CNPC_PlayerCompanion
 {
 public:
-	DECLARE_CLASS( CNPC_Alyx, CNPC_PlayerCompanion );
+	DECLARE_CLASS(CNPC_Alyx, CNPC_PlayerCompanion);
 
 	// fast class list
 	CNPC_Alyx *m_pNext;
 
-	virtual void	ModifyOrAppendCriteria( AI_CriteriaSet &set );
+	virtual void	ModifyOrAppendCriteria(AI_CriteriaSet &set);
 
-	bool ForceVehicleInteraction( const char *lpszInteractionName, CBaseCombatCharacter *pOther );
+	bool ForceVehicleInteraction(const char *lpszInteractionName, CBaseCombatCharacter *pOther);
 
-	CNPC_Alyx( );
-	~CNPC_Alyx( );
+	CNPC_Alyx();
+	~CNPC_Alyx();
 
-	static CNPC_Alyx *GetAlyx( void );
+	static CNPC_Alyx *GetAlyx(void);
 
 	bool	CreateBehaviors();
-	void	Spawn( void );
-	void	Activate( void );
-	void	StopLoopingSounds( void );
+	void	Spawn(void);
+	void	Activate(void);
+	void	StopLoopingSounds(void);
 	void	SelectModel();
-	void	Precache( void );
-	void	SetupAlyxWithoutParent( void );
-	void	CreateEmpTool( void );
-	void	PrescheduleThink( void );
+	void	Precache(void);
+	void	SetupAlyxWithoutParent(void);
+	void	CreateEmpTool(void);
+	void	PrescheduleThink(void);
 	void	GatherConditions();
-	bool	ShouldPlayerAvoid( void );
-	void	AnalyzeGunfireSound( CSound *pSound );
-	bool	IsValidEnemy( CBaseEntity *pEnemy );
-	void	Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info );
-	void	Event_Killed( const CTakeDamageInfo &info );
-	void	EnemyIgnited( CAI_BaseNPC *pVictim );
-	void	CombineBallSocketed( int iNumBounces );
-	void	AimGun( void );
-	Vector  GetActualShootPosition( const Vector &shootOrigin );
-	float	MaxYawSpeed( void );
+	bool	ShouldPlayerAvoid(void);
+	void	AnalyzeGunfireSound(CSound *pSound);
+	bool	IsValidEnemy(CBaseEntity *pEnemy);
+	void	Event_KilledOther(CBaseEntity *pVictim, const CTakeDamageInfo &info);
+	void	Event_Killed(const CTakeDamageInfo &info);
+	void	EnemyIgnited(CAI_BaseNPC *pVictim);
+	void	CombineBallSocketed(int iNumBounces);
+	void	AimGun(void);
+	Vector  GetActualShootPosition(const Vector &shootOrigin);
+	float	MaxYawSpeed(void);
 	void	OnUpdateShotRegulator();
-	bool	IsCrouchedActivity( Activity activity );
+	bool	IsCrouchedActivity(Activity activity);
 	bool	OnBeginMoveAndShoot();
-	void	SpeakAttacking( void );
+	void	SpeakAttacking(void);
 
 	virtual float	GetJumpGravity() const		{ return 1.8f; }
 
 	// Crouching
-	Vector  GetCrouchEyeOffset( void ) { return Vector(0,0,50); }
-	Vector  GetCrouchGunOffset( void ) { return Vector(0,0,40); }
-	bool	EnemyIsValidCrouchTarget( CBaseEntity *pEnemy );
-	bool	Stand( void );
-	bool	Crouch( void );
-	void	DesireCrouch( void );
+	Vector  GetCrouchEyeOffset(void) { return Vector(0, 0, 50); }
+	Vector  GetCrouchGunOffset(void) { return Vector(0, 0, 40); }
+	bool	EnemyIsValidCrouchTarget(CBaseEntity *pEnemy);
+	bool	Stand(void);
+	bool	Crouch(void);
+	void	DesireCrouch(void);
 
 	// Custom AI
-	void	DoCustomCombatAI( void );
-	void	DoMobbedCombatAI( void );
-	void	DoCustomSpeechAI( void );
+	void	DoCustomCombatAI(void);
+	void	DoMobbedCombatAI(void);
+	void	DoCustomSpeechAI(void);
 
-	Disposition_t	IRelationType( CBaseEntity *pTarget );
-	int				IRelationPriority( CBaseEntity *pTarget );
+	Disposition_t	IRelationType(CBaseEntity *pTarget);
+	int				IRelationPriority(CBaseEntity *pTarget);
 
-	CAI_FollowBehavior &GetFollowBehavior( void );
+	CAI_FollowBehavior &GetFollowBehavior(void);
 
-	Class_T Classify ( void );
-	bool	FValidateHintType( CAI_Hint *pHint );
+	Class_T Classify(void);
+	bool	FValidateHintType(CAI_Hint *pHint);
 	int		ObjectCaps();
-	void	HandleAnimEvent( animevent_t *pEvent );
-	bool	FInViewCone( CBaseEntity *pEntity );
-	bool	QuerySeeEntity( CBaseEntity *pEntity, bool bOnlyHateOrFearIfNPC = false );
-	bool	CanSeeEntityInDarkness( CBaseEntity *pEntity );
-	bool	IsCoverPosition( const Vector &vecThreat, const Vector &vecPosition );
-	Activity NPC_TranslateActivity ( Activity activity );
+	void	HandleAnimEvent(animevent_t *pEvent);
+	bool	FInViewCone(CBaseEntity *pEntity);
+	bool	QuerySeeEntity(CBaseEntity *pEntity, bool bOnlyHateOrFearIfNPC = false);
+	bool	CanSeeEntityInDarkness(CBaseEntity *pEntity);
+	bool	IsCoverPosition(const Vector &vecThreat, const Vector &vecPosition);
+	Activity NPC_TranslateActivity(Activity activity);
 	bool	ShouldDeferToFollowBehavior();
 	void	BuildScheduleTestBits();
-	bool	ShouldBehaviorSelectSchedule( CAI_BehaviorBase *pBehavior );
-	int		SelectSchedule( void );
-	int		SelectScheduleDanger( void );
-	int		TranslateSchedule( int scheduleType );
-	void	StartTask( const Task_t *pTask );
-	void	RunTask( const Task_t *pTask );
-	void	OnStateChange( NPC_STATE OldState, NPC_STATE NewState );
-	float	LengthOfLastCombat( void ) const;
+	bool	ShouldBehaviorSelectSchedule(CAI_BehaviorBase *pBehavior);
+	int		SelectSchedule(void);
+	int		SelectScheduleDanger(void);
+	int		TranslateSchedule(int scheduleType);
+	void	StartTask(const Task_t *pTask);
+	void	RunTask(const Task_t *pTask);
+	void	OnStateChange(NPC_STATE OldState, NPC_STATE NewState);
+	float	LengthOfLastCombat(void) const;
 	// bool	IsNavigationUrgent();
 
-	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
-	bool	CanBeHitByMeleeAttack( CBaseEntity *pAttacker );
-	int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
+	void	TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
+	bool	CanBeHitByMeleeAttack(CBaseEntity *pAttacker);
+	int		OnTakeDamage_Alive(const CTakeDamageInfo &info);
 	bool	FCanCheckAttacks();
-	float	GetAttackDamageScale( CBaseEntity *pVictim );
+	float	GetAttackDamageScale(CBaseEntity *pVictim);
 
 
 	bool	HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
-	virtual bool SpeakIfAllowed( AIConcept_t concept, const char *modifiers = NULL, bool bRespondingToPlayer = false, char *pszOutResponseChosen = NULL, size_t bufsize = 0 );
-	
+	virtual bool SpeakIfAllowed(AIConcept_t concept, const char *modifiers = NULL, bool bRespondingToPlayer = false, char *pszOutResponseChosen = NULL, size_t bufsize = 0);
+
 	void	HolsterPistol();
 	void	DrawPistol();
-	void	Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget = NULL, const Vector *pVelocity = NULL );
+	void	Weapon_Drop(CBaseCombatWeapon *pWeapon, const Vector *pvecTarget = NULL, const Vector *pVelocity = NULL);
 
-	void	SetEMPHolstered( bool bHolstered ) { m_bIsEMPHolstered = bHolstered; }
+	void	SetEMPHolstered(bool bHolstered) { m_bIsEMPHolstered = bHolstered; }
 	bool	IsEMPHolstered() { return (!m_hEmpTool || m_hEmpTool->GetParent() != this || m_bIsEMPHolstered); }
 
 	float	GetReadinessDecay() { return 60.0f; }
 	virtual bool	IsAllowedToAim();
 
-	virtual void	PainSound( const CTakeDamageInfo &info );
-    virtual void	DeathSound( const CTakeDamageInfo &info );
+	virtual void	PainSound(const CTakeDamageInfo &info);
+	virtual void	DeathSound(const CTakeDamageInfo &info);
 
 	// Hacking and object interaction
 	void	SearchForInteractTargets();
-	bool	IsValidInteractTarget( CBaseEntity *pTarget );
-	bool	CanInteractWithTarget( CBaseEntity *pTarget );
-	void	SetInteractTarget( CBaseEntity *pTarget );
+	bool	IsValidInteractTarget(CBaseEntity *pTarget);
+	bool	CanInteractWithTarget(CBaseEntity *pTarget);
+	void	SetInteractTarget(CBaseEntity *pTarget);
 	bool	HasInteractTarget() { return m_hHackTarget != NULL; }
 	CBaseEntity *GetInteractTarget() { return m_hHackTarget; }
-	void	EmpZapTarget( CBaseEntity *pTarget );
+	void	EmpZapTarget(CBaseEntity *pTarget);
 
-	virtual void OnSeeEntity( CBaseEntity *pEntity );
+	virtual void OnSeeEntity(CBaseEntity *pEntity);
 
-	void InputAllowInteraction( inputdata_t &inputdata )
+	void InputAllowInteraction(inputdata_t &inputdata)
 	{
 		m_bInteractionAllowed = true;
 	}
-	void InputDisallowInteraction( inputdata_t &inputdata )
+	void InputDisallowInteraction(inputdata_t &inputdata)
 	{
 		m_bInteractionAllowed = false;
 	}
-	void InputAllowDarknessSpeech( inputdata_t &inputdata )
+	void InputAllowDarknessSpeech(inputdata_t &inputdata)
 	{
 		m_bDarknessSpeechAllowed = inputdata.value.Bool();
 	}
-	void InputGiveEMP( inputdata_t &inputdata );
-	void InputVehiclePunted( inputdata_t &inputdata );
-	void InputOutsideTransition( inputdata_t &inputdata );
+	void InputGiveEMP(inputdata_t &inputdata);
+	void InputVehiclePunted(inputdata_t &inputdata);
+	void InputOutsideTransition(inputdata_t &inputdata);
 
-	virtual void	OnGivenWeapon( CBaseCombatWeapon *pNewWeapon );
-	virtual void	OnChangeActiveWeapon( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon );
-	virtual void	Weapon_Equip( CBaseCombatWeapon *pWeapon );
-	virtual bool	Weapon_CanUse( CBaseCombatWeapon *pWeapon );
+	virtual void	OnGivenWeapon(CBaseCombatWeapon *pNewWeapon);
+	virtual void	OnChangeActiveWeapon(CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon);
+	virtual void	Weapon_Equip(CBaseCombatWeapon *pWeapon);
+	virtual bool	Weapon_CanUse(CBaseCombatWeapon *pWeapon);
 
 	// Blinding
-	virtual void PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot );
-	void		 CheckBlindedByFlare( void );
-	bool		 CanBeBlindedByFlashlight( bool bCheckLightSources );
-	bool		 PlayerFlashlightOnMyEyes( CBasePlayer *pPlayer );
-	bool		 BlindedByFlare( void );
-	bool		 CanReload( void );
+	virtual void PlayerHasIlluminatedNPC(CBasePlayer *pPlayer, float flDot);
+	void		 CheckBlindedByFlare(void);
+	bool		 CanBeBlindedByFlashlight(bool bCheckLightSources);
+	bool		 PlayerFlashlightOnMyEyes(CBasePlayer *pPlayer);
+	bool		 BlindedByFlare(void);
+	bool		 CanReload(void);
 
-	virtual bool PickTacticalLookTarget( AILookTargetArgs_t *pArgs );
-	virtual void OnSelectedLookTarget( AILookTargetArgs_t *pArgs );
-	virtual bool IsReadinessCapable( void );
+	virtual bool PickTacticalLookTarget(AILookTargetArgs_t *pArgs);
+	virtual void OnSelectedLookTarget(AILookTargetArgs_t *pArgs);
+	virtual bool IsReadinessCapable(void);
 
-	virtual	void ReadinessLevelChanged( int iPriorLevel );
+	virtual	void ReadinessLevelChanged(int iPriorLevel);
 
 	bool IsAllowedToInteract();
-	virtual void	BarnacleDeathSound( void );
+	virtual void	BarnacleDeathSound(void);
 
-	virtual const char *GetDeathMessageText( void ) { return "GAMEOVER_ALYXDEAD"; }
+	virtual const char *GetDeathMessageText(void) { return "GAMEOVER_ALYXDEAD"; }
 
-	PassengerState_e	GetPassengerState( void );
+	PassengerState_e	GetPassengerState(void);
 
-	void				Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	bool				PlayerInSpread( const Vector &sourcePos, const Vector &targetPos, float flSpread, float maxDistOffCenter, bool ignoreHatedPlayers );
+	void				Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+	bool				PlayerInSpread(const Vector &sourcePos, const Vector &targetPos, float flSpread, float maxDistOffCenter, bool ignoreHatedPlayers);
 
 private:
 	EHANDLE	m_hEmpTool;
@@ -228,13 +228,13 @@ private:
 	COutputEvent			m_OnFinishInteractWithObject;
 	COutputEvent			m_OnPlayerUse;
 
-	bool	RunningPassengerBehavior( void );
+	bool	RunningPassengerBehavior(void);
 
-	WeaponType_t ComputeWeaponType( CBaseEntity *pWeapon = NULL );
+	WeaponType_t ComputeWeaponType(CBaseEntity *pWeapon = NULL);
 	WeaponType_t GetWeaponType() { return (WeaponType_t)m_WeaponType; }
-	bool HasShotgun()	{ Assert( m_WeaponType == ComputeWeaponType() ); return ( m_WeaponType == WT_SHOTGUN ); }
-	bool HasAlyxgun()	{ Assert( m_WeaponType == ComputeWeaponType() ); return ( m_WeaponType == WT_ALYXGUN ); }
-	bool HasAR2()		{ Assert( m_WeaponType == ComputeWeaponType() ); return ( m_WeaponType == WT_AR2 ); }
+	bool HasShotgun()	{ Assert(m_WeaponType == ComputeWeaponType()); return (m_WeaponType == WT_SHOTGUN); }
+	bool HasAlyxgun()	{ Assert(m_WeaponType == ComputeWeaponType()); return (m_WeaponType == WT_ALYXGUN); }
+	bool HasAR2()		{ Assert(m_WeaponType == ComputeWeaponType()); return (m_WeaponType == WT_AR2); }
 
 private:
 	enum
@@ -268,9 +268,9 @@ private:
 		SCHED_ALYX_FALL_TO_GROUND,
 	};
 
-	enum 
+	enum
 	{
-		
+
 		TASK_ALYX_BEGIN_INTERACTION = BaseClass::NEXT_TASK,
 		TASK_ALYX_COMPLETE_INTERACTION,
 		TASK_ALYX_ANNOUNCE_HACK,

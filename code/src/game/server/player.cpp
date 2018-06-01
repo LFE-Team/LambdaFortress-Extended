@@ -77,9 +77,13 @@
 // NVNT haptic utils
 #include "haptics/haptic_utils.h"
 
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 #include "combine_mine.h"
 #include "weapon_physcannon.h"
+#endif
+
+#ifdef TF_CLASSIC
+#include "tf_gamerules.h"
 #endif
 
 ConVar autoaim_max_dist( "autoaim_max_dist", "2160" ); // 2160 = 180 feet
@@ -594,6 +598,7 @@ CBasePlayer::CBasePlayer( )
 
 	m_bForceOrigin = false;
 	m_hVehicle = NULL;
+	m_hUseEntity = NULL;
 	m_pCurrentCommand = NULL;
 	m_iLockViewanglesTickNumber = 0;
 	m_qangLockViewangles.Init();
@@ -2806,7 +2811,7 @@ bool CBasePlayer::IsUseableEntity( CBaseEntity *pEntity, unsigned int requiredCa
 bool CBasePlayer::CanPickupObject( CBaseEntity *pObject, float massLimit, float sizeLimit )
 {
 	// UNDONE: Make this virtual and move to HL2 player
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 	//Must be valid
 	if ( pObject == NULL )
 		return false;
@@ -5100,7 +5105,7 @@ void CBasePlayer::Precache( void )
 	enginesound->PrecacheSentenceGroup( "HEV" );
 
 	// These are always needed
-#if !defined ( TF_DLL ) && !defined ( TF_CLASSIC )
+#if !defined (TF_DLL)
 	PrecacheParticleSystem( "slime_splash_01" );
 	PrecacheParticleSystem( "slime_splash_02" );
 	PrecacheParticleSystem( "slime_splash_03" );
@@ -5453,9 +5458,11 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 		m_Local.m_iHideHUD |= HIDEHUD_INVEHICLE;
 	}
 
-	if ( !pVehicle->IsPassengerVisible( nRole ) )
+	if ( !pVehicle->IsPassengerVisible(nRole ))
 	{
-		AddEffects( EF_NODRAW );
+#ifndef TF_CLASSIC
+		AddEffects(EF_NODRAW); // IT'S MULTIPLAYER DO NOT NODRAW THE BOIS
+#endif
 	}
 
 	// Put us in the vehicle
@@ -7739,6 +7746,12 @@ void CRevertSaved::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 
 void CRevertSaved::InputReload( inputdata_t &inputdata )
 {
+#ifdef TF_CLASSIC
+	if ( TFGameRules()->IsCoOpGameRunning() )
+	{
+		TFGameRules()->SetWinningTeam( TF_COMBINE_TEAM, WINREASON_NONE );
+	}
+#else
 	UTIL_ScreenFadeAll( m_clrRender, Duration(), HoldTime(), FFADE_OUT );
 
 #ifdef HL1_DLL
@@ -7761,6 +7774,7 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 		g_ServerGameDLL.m_fAutoSaveDangerousTime = 0.0f;
 		g_ServerGameDLL.m_fAutoSaveDangerousMinHealthToCommit = 0.0f;
 	}
+#endif
 }
 
 #ifdef HL1_DLL
@@ -7948,8 +7962,8 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 		SendPropDataTable	( SENDINFO_DT(m_Local), &REFERENCE_SEND_TABLE(DT_Local) ),
 		
-// If HL2_DLL is defined, then baseflex.cpp already sends these.
-#ifndef HL2_DLL
+// If HL2_DLL or TF_CLASSIC is defined, then baseflex.cpp already sends these.
+#if !defined (HL2_DLL) && !defined (TF_CLASSIC)
 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecViewOffset, 0), 8, SPROP_ROUNDDOWN, -32.0, 32.0f),
 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecViewOffset, 1), 8, SPROP_ROUNDDOWN, -32.0, 32.0f),
 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecViewOffset, 2), 20, SPROP_CHANGES_OFTEN,	0.0f, 256.0f),

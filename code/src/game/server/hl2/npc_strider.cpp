@@ -108,6 +108,10 @@ ConVar sk_strider_num_missiles3("sk_strider_num_missiles3", "7");
 ConVar strider_missile_suppress_dist( "strider_missile_suppress_dist", "240" );
 ConVar strider_missile_suppress_time( "strider_missile_suppress_time", "3" );
 
+#ifdef TF_CLASSIC
+ConVar sk_strider_health_alt( "sk_strider_health_alt", "300" );
+#endif
+
 
 //-----------------------------------------------------------------------------
 
@@ -505,6 +509,9 @@ void CNPC_Strider::Spawn()
 	
 	m_iHealth = sk_strider_health.GetFloat();
 	m_iMaxHealth = 500;
+#ifdef TF_CLASSIC
+	m_iHealthAlt = sk_strider_health_alt.GetInt();
+#endif
 
 	m_flFieldOfView = 0.0; // 180 degrees
 
@@ -2409,16 +2416,6 @@ bool CNPC_Strider::IsValidEnemy( CBaseEntity *pTarget )
 			return false;
 	}
 
-	CBaseCombatCharacter *pEnemy = ToBaseCombatCharacter( pTarget );
-	if ( pEnemy )
-	{
-		// Test our enemy filter
-		if ( m_hEnemyFilter.Get()!= NULL && m_hEnemyFilter->PassesFilter( this, pEnemy ) == false )
-			return false;
-
-		return true;
-	}
-
 	return BaseClass::IsValidEnemy( pTarget );
 }
 
@@ -3050,18 +3047,20 @@ void CNPC_Strider::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &
 
 //---------------------------------------------------------
 //---------------------------------------------------------
-int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &info )
+int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
 	// don't take damage from my own weapons!!!
-	if ( info.GetInflictor() && info.GetInflictor()->GetOwnerEntity() == this )
+	if ( inputInfo.GetInflictor() && inputInfo.GetInflictor()->GetOwnerEntity() == this )
 		return 0;
 
 	// special interaction with combine balls
-	if ( UTIL_IsCombineBall( info.GetInflictor() ) )
-		return TakeDamageFromCombineBall( info );
+	if ( UTIL_IsCombineBall( inputInfo.GetInflictor() ) )
+		return TakeDamageFromCombineBall( inputInfo );
 
-	if ( info.GetDamageType() == DMG_GENERIC )
-		return BaseClass::OnTakeDamage_Alive( info );
+	if ( inputInfo.GetDamageType() == DMG_GENERIC )
+		return BaseClass::OnTakeDamage_Alive( inputInfo );
+
+	CTakeDamageInfo info = inputInfo;
 
 	if( IsUsingAggressiveBehavior() )
 	{
@@ -3071,6 +3070,29 @@ int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			UpdateEnemyMemory( info.GetAttacker(), info.GetAttacker()->GetAbsOrigin() );
 		}
 	}
+
+#ifdef TF_CLASSIC
+	// Bullet damage reduces alternative health counter.
+	// Once alt health reaches 0 explosion is spawned and alt health is reset.
+	if ( (info.GetDamageType() & DMG_BULLET) && m_takedamage != DAMAGE_EVENTS_ONLY )
+	{
+		m_iHealthAlt -= info.GetDamage();
+		if ( m_iHealthAlt <= 0 )
+		{
+			// HACK: create fake explosion, change damage type to DMG_BLAST and set damage to 100.
+			ExplosionCreate( info.GetDamagePosition(), GetAbsAngles(), info.GetAttacker(), 100, 200, false );
+			info.SetDamageType( DMG_BLAST );
+			info.SetDamage( 100 );
+			info.SetMaxDamage( 100 );
+			m_iHealthAlt = sk_strider_health_alt.GetInt();
+		}
+		else
+		{
+			// Don't count this as real damage.
+			return 0;
+		}
+	}
+#endif
 
 	//int healthIncrement = 5 - ( m_iHealth / ( m_iMaxHealth / 5 ) );
 	if ( (info.GetDamageType() & DMG_BLAST) && info.GetMaxDamage() > 50 )
@@ -3114,7 +3136,8 @@ int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 				}
 			}
 
-			m_iHealth -= damage;
+			if ( m_takedamage != DAMAGE_EVENTS_ONLY )
+				m_iHealth -= damage;
 
 			m_OnDamaged.FireOutput( info.GetAttacker(), this);
 
@@ -3351,7 +3374,11 @@ bool CNPC_Strider::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &for
 	{
 		// Otherwise just keel over
 		CRagdollProp *pRagdoll = NULL;
+#ifdef TF_CLASSIC
+		CBasePlayer *pPlayer = NULL;
+#else
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 		if ( pPlayer && mat_dxlevel.GetInt() > 0 )
 		{
 			int dxlevel = mat_dxlevel.GetInt();
@@ -3793,6 +3820,10 @@ void CNPC_Strider::DoMuzzleFlash( void )
 
 	data.m_nAttachmentIndex = LookupAttachment( "MiniGun" );
 	data.m_nEntIndex = entindex();
+#ifdef TF_CLASSIC
+	// m_vOrigin must be set in multiplayer so AddRecipientsByPAS() adds players properly.
+	GetAttachment( "minigun", data.m_vOrigin );
+#endif
 	DispatchEffect( "StriderMuzzleFlash", data );
 }
 
@@ -4777,7 +4808,7 @@ void CNPC_Strider::StriderBusterAttached( CBaseEntity *pAttached )
 	m_PlayerFreePass.Revoke();
 
 	variant_t target;
-	target.SetString( AllocPooledString( "!player" ) );
+	target.SetString( AllocPooledString( "player" ) );
 	g_EventQueue.AddEvent( this, "UpdateEnemyMemory", target, 1.0, this, this );
 }
 

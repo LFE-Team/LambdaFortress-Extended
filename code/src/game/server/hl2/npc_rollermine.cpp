@@ -44,8 +44,8 @@
 #define ROLLERMINE_MAX_TORQUE_FACTOR	5
 extern short g_sModelIndexWExplosion;
 
-ConVar	sk_rollermine_shock( "sk_rollermine_shock","0");
-ConVar	sk_rollermine_stun_delay("sk_rollermine_stun_delay", "1");
+ConVar	sk_rollermine_shock( "sk_rollermine_shock","10");
+ConVar	sk_rollermine_stun_delay("sk_rollermine_stun_delay", "3");
 ConVar	sk_rollermine_vehicle_intercept( "sk_rollermine_vehicle_intercept","1");
 
 enum
@@ -249,11 +249,23 @@ public:
 		if( !m_bTurnedOn )
 			return CLASS_NONE;
 
-		//About to blow up after being hacked so do damage to the player.
-		if ( m_bHackedByAlyx && ( m_flPowerDownDetonateTime > 0.0f && m_flPowerDownDetonateTime <= gpGlobals->curtime ) )
-			return CLASS_COMBINE;
+		char szMapName[256];
+		Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+		Q_strlower(szMapName);
 
-		return ( m_bHeld || m_bHackedByAlyx ) ? CLASS_HACKED_ROLLERMINE : CLASS_COMBINE; 
+		if( !Q_strnicmp( szMapName, "ep1", 3 ) )
+		{
+			return CLASS_PLAYER_ALLY;
+		}
+		else
+		{
+		
+			//About to blow up after being hacked so do damage to the player.
+			if ( m_bHackedByAlyx && ( m_flPowerDownDetonateTime > 0.0f && m_flPowerDownDetonateTime <= gpGlobals->curtime ) )
+				return CLASS_COMBINE;
+
+			return ( m_bHeld || m_bHackedByAlyx ) ? CLASS_PLAYER_ALLY : CLASS_COMBINE;
+		}
 	}
 
 	virtual bool ShouldGoToIdleState() 
@@ -933,7 +945,7 @@ int CNPC_RollerMine::GetHackedIdleSchedule( void )
 		return SCHED_NONE;
 
 	// Are we near the player?
-	CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 	if ( !pPlayer )
 		return SCHED_NONE;
 
@@ -1557,7 +1569,7 @@ void CNPC_RollerMine::RunTask( const Task_t *pTask )
 				return;
 			}
 
-			CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 			if ( !pPlayer || m_bHeld || m_hVehicleStuckTo )
 			{
 				TaskFail( FAIL_NO_TARGET );

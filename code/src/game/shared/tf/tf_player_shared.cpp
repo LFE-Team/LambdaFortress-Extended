@@ -44,6 +44,7 @@
 #include "tf_gamestats.h"
 #include "tf_playerclass.h"
 #include "tf_weapon_builder.h"
+#include "tf_weapon_physcannon.h"
 #endif
 
 ConVar tf_spy_invis_time( "tf_spy_invis_time", "1.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Transition time in and out of spy invisibility", true, 0.1, true, 5.0 );
@@ -132,6 +133,7 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerSharedLocal )
 	RecvPropInt( RECVINFO( m_iDesiredWeaponID ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_nStreaks ), RecvPropInt( RECVINFO( m_nStreaks[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_flCondExpireTimeLeft ), RecvPropFloat( RECVINFO( m_flCondExpireTimeLeft[0] ) ) ),
+	RecvPropInt( RECVINFO( m_iLives ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
@@ -152,6 +154,7 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropBool( RECVINFO( m_bCarryingObject ) ),
 	RecvPropInt( RECVINFO( m_nTeamTeleporterUsed ) ),
 	RecvPropInt( RECVINFO( m_iRespawnParticleID ) ),
+	RecvPropInt( RECVINFO( m_bInCutScene ) ),
 	// Spy.
 	RecvPropTime( RECVINFO( m_flInvisChangeCompleteTime ) ),
 	RecvPropInt( RECVINFO( m_nDisguiseTeam ) ),
@@ -195,6 +198,7 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerSharedLocal )
 	SendPropInt( SENDINFO( m_iDesiredWeaponID ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_nStreaks ), SendPropInt( SENDINFO_ARRAY( m_nStreaks ) ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_flCondExpireTimeLeft ), SendPropFloat( SENDINFO_ARRAY( m_flCondExpireTimeLeft ) ) ),
+	SendPropInt( SENDINFO( m_iLives ), 8 ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
@@ -215,6 +219,7 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropBool( SENDINFO( m_bCarryingObject ) ),
 	SendPropInt( SENDINFO( m_nTeamTeleporterUsed ), 3, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iRespawnParticleID ), -1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_bInCutScene ), 1, SPROP_UNSIGNED ),
 	// Spy
 	SendPropTime( SENDINFO( m_flInvisChangeCompleteTime ) ),
 	SendPropInt( SENDINFO( m_nDisguiseTeam ), 3, SPROP_UNSIGNED ),
@@ -250,6 +255,7 @@ CTFPlayerShared::CTFPlayerShared()
 	m_flStealthNextChangeTime = 0.0f;
 	m_iCritMult = 0;
 	m_flInvisibility = 0.0f;
+	m_iLives = -1;
 
 	m_iDesiredWeaponID = -1;
 	m_iRespawnParticleID = 0;
@@ -2031,6 +2037,18 @@ void CTFPlayerShared::Disguise( int nTeam, int nClass )
 		return;
 	}
 
+	// Can't disguise while holding something with gravity gun.
+	CTFWeaponBase *pWeapon = m_pOuter->GetActiveTFWeapon();
+	if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_PHYSCANNON ) )
+	{
+		CWeaponPhysCannon *pGravGun = static_cast<CWeaponPhysCannon *>( pWeapon );
+
+		if ( pGravGun->m_hAttachedObject.Get() )
+		{
+			return;
+		}
+	}
+
 	m_nDesiredDisguiseClass = nClass;
 	m_nDesiredDisguiseTeam = nTeam;
 
@@ -2910,7 +2928,7 @@ void CTFPlayer::FireBullet( const FireBulletsInfo_t &info, bool bDoEffects, int 
 	Vector vecStart = info.m_vecSrc;
 	Vector vecEnd = vecStart + info.m_vecDirShooting * info.m_flDistance;
 	trace_t trace;
-	UTIL_TraceLine( vecStart, vecEnd, ( MASK_SOLID | CONTENTS_HITBOX ), this, COLLISION_GROUP_NONE, &trace );
+	UTIL_TraceLine( vecStart, vecEnd, ( MASK_SOLID ), this, COLLISION_GROUP_NONE, &trace );
 
 #ifdef GAME_DLL
 	if ( tf_debug_bullets.GetBool() )
@@ -3582,6 +3600,9 @@ bool CTFPlayer::CanAttack( void )
 		return false;
 	}
 
+	if ( m_Shared.IsInCutScene() )
+		return false;
+
 	return true;
 }
 
@@ -3780,6 +3801,9 @@ bool CTFPlayer::CanGoInvisible( void )
 		return false;
 	}
 
+	if ( m_Shared.IsInCutScene() )
+		return false;
+
 	return true;
 }
 
@@ -3808,6 +3832,45 @@ Vector CTFPlayer::GetClassEyeHeight( void )
 		return VEC_VIEW_SCALED( this );
 
 	return ( g_TFClassViewVectors[pClass->GetClassIndex()] * GetModelScale() );
+}
+
+CTFWeaponBase *CTFPlayer::Weapon_OwnsThisID( int iWeaponID )
+{
+	for (int i = 0;i < WeaponCount(); i++) 
+	{
+		CTFWeaponBase *pWpn = ( CTFWeaponBase *)GetWeapon( i );
+
+		if ( pWpn == NULL )
+			continue;
+
+		if ( pWpn->GetWeaponID() == iWeaponID )
+		{
+			return pWpn;
+		}
+	}
+
+	return NULL;
+}
+
+CTFWeaponBase *CTFPlayer::Weapon_GetWeaponByType( int iType )
+{
+	for (int i = 0;i < WeaponCount(); i++) 
+	{
+		CTFWeaponBase *pWpn = ( CTFWeaponBase *)GetWeapon( i );
+
+		if ( pWpn == NULL )
+			continue;
+
+		int iWeaponRole = pWpn->GetTFWpnData().m_iWeaponType;
+
+		if ( iWeaponRole == iType )
+		{
+			return pWpn;
+		}
+	}
+
+	return NULL;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -3844,45 +3907,6 @@ CWeaponMedigun *CTFPlayer::GetMedigun( void )
 		return static_cast<CWeaponMedigun *>( pWeapon );
 
 	return NULL;
-}
-
-CTFWeaponBase *CTFPlayer::Weapon_OwnsThisID( int iWeaponID )
-{
-	for ( int i = 0; i < WeaponCount(); i++ )
-	{
-		CTFWeaponBase *pWpn = (CTFWeaponBase *)GetWeapon( i );
-
-		if ( pWpn == NULL )
-			continue;
-
-		if ( pWpn->GetWeaponID() == iWeaponID )
-		{
-			return pWpn;
-		}
-	}
-
-	return NULL;
-}
-
-CTFWeaponBase *CTFPlayer::Weapon_GetWeaponByType( int iType )
-{
-	for ( int i = 0; i < WeaponCount(); i++ )
-	{
-		CTFWeaponBase *pWpn = (CTFWeaponBase *)GetWeapon( i );
-
-		if ( pWpn == NULL )
-			continue;
-
-		int iWeaponRole = pWpn->GetTFWpnData().m_iWeaponType;
-
-		if ( iWeaponRole == iType )
-		{
-			return pWpn;
-		}
-	}
-
-	return NULL;
-
 }
 
 CEconEntity *CTFPlayer::GetEntityForLoadoutSlot( int iSlot )

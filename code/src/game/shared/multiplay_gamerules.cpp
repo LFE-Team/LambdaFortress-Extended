@@ -720,7 +720,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			IScorer *pScorerInterface = dynamic_cast<IScorer*>( pKiller );
 			if ( pScorerInterface )
 			{
-				CBasePlayer *pPlayer = pScorerInterface->GetScorer();
+				CBasePlayer *pPlayer = ToBasePlayer( pScorerInterface->GetScorer() );
 				if ( pPlayer )
 					return pPlayer;
 			}
@@ -729,7 +729,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			pScorerInterface = dynamic_cast<IScorer*>( pInflictor );
 			if ( pScorerInterface )
 			{
-				CBasePlayer *pPlayer = pScorerInterface->GetScorer();
+				CBasePlayer *pPlayer = ToBasePlayer( pScorerInterface->GetScorer() );
 				if ( pPlayer )
 					return pPlayer;
 			}

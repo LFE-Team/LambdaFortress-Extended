@@ -7,6 +7,7 @@
 #include "tf_gamerules.h"
 #include "tf_weapon_knife.h"
 #include "decals.h"
+#include "ai_basenpc_shared.h"
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -98,9 +99,9 @@ void CTFKnife::PrimaryAttack( void )
 	if ( DoSwingTrace( trace ) == true )
 	{
 		// we will hit something with the attack
-		if( trace.m_pEnt && trace.m_pEnt->IsPlayer() )
+		if( trace.m_pEnt && ( trace.m_pEnt->IsPlayer() || trace.m_pEnt->IsNPC() ) )
 		{
-			CTFPlayer *pTarget = ToTFPlayer( trace.m_pEnt );
+			CBaseCombatCharacter *pTarget = trace.m_pEnt->MyCombatCharacterPointer();
 
 			if ( pTarget && pTarget->GetTeamNumber() != pPlayer->GetTeamNumber() )
 			{
@@ -151,7 +152,7 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 
-	if ( pOwner && pTarget->IsPlayer() )
+	if ( pOwner && pTarget->IsPlayer() || pTarget->IsNPC() )
 	{
 		// Since Swing and Smack are done in the same frame now we don't need to run additional checks anymore.
 		if ( m_iWeaponMode == TF_WEAPON_SECONDARY_MODE && m_hBackstabVictim.Get() == pTarget )

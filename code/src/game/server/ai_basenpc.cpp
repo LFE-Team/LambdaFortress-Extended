@@ -23,8 +23,10 @@
 #include "game.h"
 #include "shot_manipulator.h"
 
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 #include "ai_interactions.h"
+#endif
+#ifdef HL2_DLL
 #include "hl2_gamerules.h"
 #endif // HL2_DLL
 
@@ -70,7 +72,7 @@
 #include "checksum_crc.h"
 #include "iservervehicle.h"
 #include "filters.h"
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 #include "npc_bullseye.h"
 #include "hl2_player.h"
 #include "weapon_physcannon.h"
@@ -87,6 +89,8 @@
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
 
+#include "tf_gamerules.h"
+
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
 #endif
@@ -99,6 +103,11 @@
 #include "collisionutils.h"
 
 extern ConVar sk_healthkit;
+extern ConVar tf_boost_drain_time;
+extern ConVar tf_invuln_time;
+extern ConVar tf_damage_disablespread;
+extern ConVar tf_damage_range;
+extern ConVar tf_damage_lineardist;
 
 // dvs: for opening doors -- these should probably not be here
 #include "ai_route.h"
@@ -106,6 +115,17 @@ extern ConVar sk_healthkit;
 
 #include "utlbuffer.h"
 #include "gamestats.h"
+
+#ifdef TF_CLASSIC
+#include "tf_weaponbase.h"
+#include "tf_team.h"
+#include "tf_obj.h"
+#include "tf_gamerules.h"
+#include "tf_weapon_medigun.h"
+#include "triggers.h"
+#include "tf_gamestats.h"
+#include "tf_shareddefs.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -210,6 +230,51 @@ bool AIStrongOpt( void )
 {
 	return ai_strong_optimizations.GetBool();
 }
+
+#ifdef TF_CLASSIC
+// Make sure you keep this in sync with the class table in basentity.h!
+int g_TFClassTeams[] =
+{
+	TEAM_UNASSIGNED,	//CLASS_NONE,				
+	TEAM_UNASSIGNED,	//CLASS_PLAYER, (Not used)		
+	TF_TEAM_RED,	//CLASS_PLAYER_ALLY,
+	TF_TEAM_RED,	//CLASS_PLAYER_ALLY_VITAL,
+	TF_TEAM_YELLOW,	//CLASS_ANTLION,
+	TEAM_UNASSIGNED,	//CLASS_BARNACLE,
+	TEAM_UNASSIGNED,	//CLASS_BULLSEYE,
+	//TEAM_UNASSIGNED,	////CLASS_BULLSQUID,	
+	TF_TEAM_RED,	//CLASS_CITIZEN_PASSIVE,	
+	TF_TEAM_RED,	//CLASS_CITIZEN_REBEL,
+	TF_TEAM_BLUE,	//CLASS_COMBINE,
+	TF_TEAM_BLUE,	//CLASS_COMBINE_GUNSHIP,
+	TF_TEAM_RED,	//CLASS_CONSCRIPT,
+	TF_TEAM_GREEN,	//CLASS_HEADCRAB,
+	//TEAM_UNASSIGNED,	////CLASS_HOUNDEYE,
+	TF_TEAM_BLUE,	//CLASS_MANHACK,
+	TF_TEAM_BLUE,	//CLASS_METROPOLICE,		
+	TF_TEAM_BLUE,	//CLASS_MILITARY,		
+	TF_TEAM_BLUE,	//CLASS_SCANNER,		
+	TF_TEAM_BLUE,	//CLASS_STALKER,		
+	TF_TEAM_RED,	//CLASS_VORTIGAUNT,
+	TF_TEAM_GREEN,	//CLASS_ZOMBIE,
+	TF_TEAM_BLUE,	//CLASS_PROTOSNIPER,
+	TEAM_UNASSIGNED,	//CLASS_MISSILE,
+	TEAM_UNASSIGNED,	//CLASS_FLARE,
+	TEAM_UNASSIGNED,	//CLASS_EARTH_FAUNA,
+	TF_TEAM_RED,	//CLASS_HACKED_ROLLERMINE,
+	TF_TEAM_BLUE,	//CLASS_COMBINE_HUNTER,
+	TF_TEAM_BLUE,	//CLASS_MACHINE_HL1,
+	TF_TEAM_RED,	//CLASS_HUMAN_PASSIVE,
+	TF_TEAM_BLUE,	//CLASS_HUMAN_MILITARY,
+	TF_TEAM_GREEN,	//CLASS_ALIEN_MILITARY,
+	TF_TEAM_YELLOW,	//CLASS_ALIEN_MONSTER,
+	TF_TEAM_YELLOW,	//CLASS_ALIEN_PREY,
+	TF_TEAM_YELLOW,	//CLASS_ALIEN_PREDATOR,
+	TEAM_UNASSIGNED,	//CLASS_INSECT,
+	TF_TEAM_RED,	//CLASS_PLAYER_BIOWEAPON,
+	TF_TEAM_GREEN,	//CLASS_ALIEN_BIOWEAPON,
+};
+#endif
 
 //-----------------------------------------------------------------------------
 //
@@ -542,6 +607,17 @@ void CAI_BaseNPC::CleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput )
 		}
 
 		RemoveActorFromScriptedScenes( this, false /*all scenes*/ );
+
+#ifdef TF_CLASSIC
+		RemoveAllCond();
+
+		// Remove from team
+		CTFTeam *pTFTeam = ( CTFTeam * )GetTeam();
+		if ( pTFTeam )
+		{
+			pTFTeam->RemoveNPC( this );
+		}
+#endif
 	}
 	else
 		DevMsg( "Unexpected double-death-cleanup\n" );
@@ -583,6 +659,65 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	Wake( false );
+
+#ifdef TF_CLASSIC
+	int killer_index = 0;
+
+	// Find the killer & the scorer
+	CAI_BaseNPC *pVictim = this;
+	CBaseEntity *pInflictor = info.GetInflictor();
+	CBaseEntity *pKiller = info.GetAttacker();
+	CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
+	CBaseEntity *pAssister = TFGameRules()->GetAssister( pVictim, pKiller, pInflictor );
+	int iWeaponID = TF_WEAPON_NONE;
+	// Work out what killed the player, and send a message to all clients about it
+	const char *killer_weapon_name = TFGameRules()->GetKillingWeaponName( info, NULL, iWeaponID );
+
+	if ( pScorer )	// Is the killer a client?
+	{
+		killer_index = pScorer->entindex();
+	}
+	else if ( pKiller && pKiller->IsNPC() )
+	{
+		killer_index = pKiller->entindex();
+	}
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "npc_death" );
+
+	if ( event )
+	{
+		event->SetInt( "victim_index", pVictim->entindex() );
+		event->SetString( "victim_name", pVictim->GetClassname() );
+		event->SetInt( "victim_team", pVictim->GetTeamNumber() );
+		event->SetInt( "attacker_index", killer_index );
+		event->SetString( "attacker_name", pKiller ? pKiller->GetClassname() : NULL );
+		event->SetInt( "attacker_team", pKiller ? pKiller->GetTeamNumber() : 0 );
+		event->SetInt( "assister_index", pAssister ? pAssister->entindex() : -1 );
+		event->SetString( "assister_name", pAssister ? pAssister->GetClassname() : NULL );
+		event->SetInt( "assister_team", pAssister ? pAssister->GetTeamNumber() : 0 );
+		event->SetString( "weapon", killer_weapon_name );
+		event->SetInt( "damagebits", info.GetDamageType() );
+		event->SetInt( "customkill", info.GetDamageCustom() );
+		event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
+
+		gameeventmanager->FireEvent( event );
+	}
+
+	// Ragdoll should burn if NPC burned to death.
+	m_bBurningDeath = IsOnFire() || ( info.GetDamageType() & (DMG_BURN | DMG_IGNITE) );
+
+	DeathNotice( info );
+
+	if ( TFGameRules() )
+		TFGameRules()->NPCKilled( this, info );
+
+	CTFPlayer *pPlayerScorer = ToTFPlayer( pScorer );
+	if ( pPlayerScorer )
+	{
+		CTF_GameStats.Event_PlayerKilledNPC( pPlayerScorer, this );
+		pPlayerScorer->Event_KilledOther(this, info);
+	}
+#endif
 	
 	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
 	SelectDeathPose( info );
@@ -640,10 +775,30 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 
 void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool bCalledByLevelDesigner )
 {
-	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
+#ifdef TF_CLASSIC
+	// Don't bother igniting NPCs who have just been killed by the fire damage.
+	if ( !IsAlive() )
+		return;
 
-#ifdef HL2_EPISODIC
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	if ( !AllowedToIgnite() && !bCalledByLevelDesigner )
+		return;
+
+	if ( !IsOnFire() )
+	{
+		// Start burning
+		AddCond( TF_COND_BURNING );
+		m_flFlameBurnTime = gpGlobals->curtime;	//asap
+	}
+	
+	m_flFlameRemoveTime = gpGlobals->curtime + flFlameLifetime;
+	// Default attacker to world, Ignite calls from TF2 code need to change this.
+	m_hBurnAttacker = GetContainingEntity( INDEXENT(0) );
+#else
+	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
+#endif
+
+#ifdef TF_CLASSIC
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
 	if ( pPlayer->IRelationType( this ) != D_LI )
 	{
 		CNPC_Alyx *alyx = CNPC_Alyx::GetAlyx();
@@ -682,7 +837,7 @@ bool CAI_BaseNPC::PassesDamageFilter( const CTakeDamageInfo &info )
 		{
 			m_fNoDamageDecal = true;
 
-			if ( npcEnemy && npcEnemy->IsPlayer() )
+			if ( npcEnemy && npcEnemy->IsPlayer() && !InSameTeam(npcEnemy) )
 			{
 				m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
 				// This also counts as being harmed by player's squad.
@@ -699,6 +854,207 @@ bool CAI_BaseNPC::PassesDamageFilter( const CTakeDamageInfo &info )
 		return false;
 	}
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// Input  :
+// Output :
+//-----------------------------------------------------------------------------
+int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
+{
+	CTakeDamageInfo info = inputInfo;
+
+#ifdef TF_CLASSIC
+	CBaseEntity *pAttacker = info.GetAttacker();
+	//CBaseEntity *pInflictor = info.GetInflictor();
+	CTFWeaponBase *pWeapon = NULL;
+
+	if ( inputInfo.GetWeapon() )
+	{
+		pWeapon = dynamic_cast<CTFWeaponBase *>( inputInfo.GetWeapon() );
+	}
+	else if ( pAttacker && pAttacker->IsPlayer() )
+	{
+		// Assume that player used his currently active weapon.
+		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
+	}
+
+	AddDamagerToHistory( info.GetAttacker() );
+
+	int bitsDamage = inputInfo.GetDamageType();
+
+	// If we're invulnerable, force ourselves to only take damage events only, so we still get pushed
+	if ( IsInvulnerable() )
+	{
+		bool bAllowDamage = false;
+
+		// check to see if our attacker is a trigger_hurt entity (and allow it to kill us even if we're invuln)
+		if ( pAttacker && pAttacker->IsSolidFlagSet( FSOLID_TRIGGER ) )
+		{
+			CTriggerHurt *pTrigger = dynamic_cast<CTriggerHurt *>( pAttacker );
+			if ( pTrigger )
+			{
+				bAllowDamage = true;
+			}
+		}
+
+		// Ubercharge does not save from telefrags.
+		if ( info.GetDamageCustom() == TF_DMG_TELEFRAG )
+		{
+			bAllowDamage = true;
+		}
+
+		if ( !bAllowDamage )
+		{
+			int iOldTakeDamage = m_takedamage;
+			m_takedamage = DAMAGE_EVENTS_ONLY;
+			// NOTE: Deliberately skip base player OnTakeDamage, because we don't want all the stuff it does re: suit voice
+			CBaseCombatCharacter::OnTakeDamage( info );
+			m_takedamage = iOldTakeDamage;
+			return 0;
+		}
+	}
+
+	// Handle on-hit effects.
+	if ( pWeapon && pAttacker != this )
+	{
+		// Notify the damaging weapon.
+		pWeapon->ApplyOnHitAttributes( this, info );
+	}
+
+	// If we're not damaging ourselves, apply randomness
+	if ( info.GetAttacker() != this && !(bitsDamage & (DMG_DROWN | DMG_FALL)) ) 
+	{
+		float flDamage = info.GetDamage();
+		if ( bitsDamage & DMG_CRITICAL )
+		{
+			flDamage = info.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
+
+			// Show the attacker
+			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
+			{
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
+				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
+
+				CSingleUserRecipientFilter filter( (CBasePlayer*)info.GetAttacker() );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+				EmitSound_t params;
+				params.m_flSoundTime = 0;
+				params.m_pSoundName = "TFPlayer.CritHit";
+				EmitSound( filter, info.GetAttacker()->entindex(), params );
+			}
+		}
+		else
+		{
+			float flRandomDamage = info.GetDamage() * tf_damage_range.GetFloat();
+			if ( tf_damage_lineardist.GetBool() )
+			{
+				float flBaseDamage = info.GetDamage() - flRandomDamage;
+				flDamage = flBaseDamage + RandomFloat( 0, flRandomDamage * 2 );
+			}
+			else
+			{
+				float flMin = 0.4;
+				float flMax = 0.6;
+				float flCenter = 0.5;
+
+				if ( bitsDamage & DMG_USEDISTANCEMOD )
+				{
+					float flDistance = max( 1.0, ( WorldSpaceCenter() - pAttacker->WorldSpaceCenter() ).Length() );
+					float flOptimalDistance = 512.0;
+
+					flCenter = RemapValClamped( flDistance / flOptimalDistance, 0.0, 2.0, 1.0, 0.0 );
+					if ( bitsDamage & DMG_NOCLOSEDISTANCEMOD )
+					{
+						if ( flCenter > 0.5 )
+						{
+							// Reduce the damage bonus at close range
+							flCenter = RemapVal( flCenter, 0.5, 1.0, 0.5, 0.65 );
+						}
+					}
+					flMin = max( 0.0, flCenter - 0.1 );
+					flMax = min( 1.0, flCenter + 0.1 );
+				}
+
+				//Msg("Range: %.2f - %.2f\n", flMin, flMax );
+				float flRandomVal;
+
+				if ( tf_damage_disablespread.GetBool() )
+				{
+					flRandomVal = flCenter;
+				}
+				else
+				{
+					flRandomVal = RandomFloat( flMin, flMax );
+				}
+
+				if ( flRandomVal > 0.5 )
+				{
+					// Rocket launcher, Sticky launcher and Scattergun have different short range bonuses
+					if ( pWeapon )
+					{
+						switch ( pWeapon->GetWeaponID() )
+						{
+						case TF_WEAPON_ROCKETLAUNCHER:
+						case TF_WEAPON_PIPEBOMBLAUNCHER:
+							// Rocket launcher and sticky launcher only have half the bonus of the other weapons at short range
+							flRandomDamage *= 0.5;
+							break;
+						case TF_WEAPON_SCATTERGUN:
+							// Scattergun gets 50% bonus of other weapons at short range
+							flRandomDamage *= 1.5;
+							break;
+
+						case TF_WEAPON_SHOTGUN_PRIMARY:
+						case TF_WEAPON_SHOTGUN_SOLDIER:
+						case TF_WEAPON_SHOTGUN_HWG:
+						case TF_WEAPON_SHOTGUN_PYRO:
+							// Shotguns gets 30% bonus of other weapons at short range
+							flRandomDamage *= 1.0;
+							break;
+						}
+					}
+				}
+
+				float flOut = SimpleSplineRemapValClamped( flRandomVal, 0, 1, -flRandomDamage, flRandomDamage );
+				flDamage = info.GetDamage() + flOut;
+			}
+		}
+		info.SetDamage( flDamage );
+	}
+
+	int iOldHealth = m_iHealth;
+#endif
+	
+	int ret = BaseClass::OnTakeDamage( info );
+
+#ifdef TF_CLASSIC
+	if ( !ret )
+		return 0;
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "npc_hurt" );
+	if ( event )
+	{
+		event->SetInt( "victim_index", entindex() );
+		event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
+
+		event->SetInt( "health", max( 0, m_iHealth ) );
+		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
+		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+
+		// HLTV event priority, not transmitted
+		event->SetInt( "priority", 5 );
+
+		gameeventmanager->FireEvent( event );
+	}
+
+	return ret;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -766,10 +1122,10 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// only fire once per frame
 		m_OnDamaged.FireOutput( info.GetAttacker(), this);
 
-		if( info.GetAttacker()->IsPlayer() )
+		if( info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
 		{
 			m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
-			
+
 			// This also counts as being harmed by player's squad.
 			m_OnDamagedByPlayerSquad.FireOutput( info.GetAttacker(), this );
 		}
@@ -777,9 +1133,15 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		{
 			// See if the person that injured me is an NPC.
 			CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
+#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 			CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+			if( pAttacker && pAttacker->IsAlive() && UTIL_GetNearestPlayer( GetAbsOrigin() ) ) 
+#else
 			if( pAttacker && pAttacker->IsAlive() && pPlayer )
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 			{
 				if( pAttacker->GetSquad() != NULL && pAttacker->IsInPlayerSquad() )
 				{
@@ -893,6 +1255,14 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	//  Insert a combat sound so that nearby NPCs know I've been hit
 	// ---------------------------------------------------------------
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 1024, 0.5, this, SOUNDENT_CHANNEL_INJURY );
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
+	if ( pTFAttacker )
+	{
+		pTFAttacker->RecordDamageEvent( info, (m_iHealth <= 0) );
+	}
+#endif
 
 	return 1;
 }
@@ -1151,7 +1521,41 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 		break;
 
 	case HITGROUP_HEAD:
+#ifdef TF_CLASSIC
+		// If we're attacked by a TF2 player then only the sniper can do headshot damage.
+		if ( info.GetAttacker()->IsPlayer() )
+		{
+			CTFPlayer *pAttacker = ToTFPlayer( info.GetAttacker() );
+			if ( subInfo.GetDamageType() & DMG_USE_HITLOCATIONS )
+			{
+				CTFWeaponBase *pWpn = pAttacker->GetActiveTFWeapon();
+				bool bCritical = true;
+
+				if ( pWpn && !pWpn->CanFireCriticalShot( true ) )
+				{
+					bCritical = false;
+				}
+
+				if ( bCritical )
+				{
+					subInfo.AddDamageType( DMG_CRITICAL );
+					subInfo.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
+
+					// play the critical shot sound to the shooter	
+					if ( pWpn )
+					{
+						pWpn->WeaponSound( BURST );
+					}
+				}
+			}
+		}
+		else
+		{
+			subInfo.ScaleDamage( GetHitgroupDamageMultiplier(ptr->hitgroup, info) );
+		}
+#else
 		subInfo.ScaleDamage( GetHitgroupDamageMultiplier(ptr->hitgroup, info) );
+#endif
 		if( bDebug ) DevMsg("Hit Location: Head\n");
 		break;
 
@@ -1182,6 +1586,14 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 		break;
 	}
 
+#ifdef TF_CLASSIC
+	if ( InCond( TF_COND_INVULNERABLE ) )
+	{ 
+		// Make bullet impacts
+		g_pEffects->Ricochet( ptr->endpos - (vecDir * 8), -vecDir );
+	}
+	else
+#endif
 	if ( subInfo.GetDamage() >= 1.0 && !(subInfo.GetDamageType() & DMG_SHOCK ) )
 	{
 		if( !IsPlayer() || ( IsPlayer() && g_pGameRules->IsMultiplayer() ) )
@@ -1438,7 +1850,7 @@ void CAI_BaseNPC::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::FireBullets( const FireBulletsInfo_t &info )
 {
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 	// If we're shooting at a bullseye, become perfectly accurate if the bullseye demands it
 	if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
 	{
@@ -1998,7 +2410,7 @@ void CAI_BaseNPC::OnLooked( int iDistance )
 
 	while( pSightEnt )
 	{
-		if ( pSightEnt->IsPlayer() )
+		if ( pSightEnt->IsPlayer() && !InSameTeam(pSightEnt) )
 		{
 			// if we see a client, remember that (mostly for scripted AI)
 			SetCondition(COND_SEE_PLAYER);
@@ -3110,7 +3522,11 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 
 	//---------------------------------
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );  
+#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer(); 
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	static Vector vPlayerEyePosition;
 	static Vector vPlayerForward;
 	static int iPrevFrame = -1;
@@ -3354,7 +3770,11 @@ void CAI_BaseNPC::UpdateSleepState( bool bInPVS )
 {
 	if ( GetSleepState() > AISS_AWAKE )
 	{
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 		CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		if ( !pLocalPlayer )
 		{
 			if ( gpGlobals->maxClients > 1 )
@@ -3554,7 +3974,11 @@ void CAI_BaseNPC::RebalanceThinks()
 
 		int i;
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		Vector vPlayerForward;
 		Vector vPlayerEyePosition;
 
@@ -3835,7 +4259,11 @@ void CAI_BaseNPC::SetPlayerAvoidState( void )
 
 		GetPlayerAvoidBounds( &vMins, &vMaxs );
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 		CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 		if ( pLocalPlayer )
 		{
@@ -3920,6 +4348,7 @@ void CAI_BaseNPC::NPCThink( void )
 	UpdateSleepState( bInPVS );
 
 	//---------------------------------
+
 	bool bRanDecision = false;
 
 	if ( GetEfficiency() < AIE_DORMANT && GetSleepState() == AISS_AWAKE )
@@ -4774,6 +5203,17 @@ void CAI_BaseNPC::PrescheduleThink( void )
 			m_iDesiredWeaponState = DESIREDWEAPONSTATE_IGNORE;
 		}
 	}
+
+#ifdef TF_CLASSIC
+	m_flPlaybackRate = 1.0;
+	m_flGroundSpeed = 1.0;
+
+	if ( InCond( TF_COND_SLOWED ) )
+	{
+		m_flPlaybackRate = 0.6;
+		m_flGroundSpeed = 0.6;
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -5569,7 +6009,7 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 			{
 				AI_PROFILE_SCOPE(CAI_BaseNPC_GatherEnemyConditions_Outputs);
 				// Send output event
-				if (GetEnemy()->IsPlayer())
+				if (GetEnemy()->IsPlayer() && !InSameTeam(pEnemy) )
 				{
 					m_OnLostPlayerLOS.FireOutput( GetEnemy(), this );
 				}
@@ -5599,7 +6039,7 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 				EHANDLE hEnemy;
 				hEnemy.Set( GetEnemy() );
 
-				if (GetEnemy()->IsPlayer())
+				if (GetEnemy()->IsPlayer() && !InSameTeam(hEnemy))
 				{
 					m_OnFoundPlayer.Set(hEnemy, this, this);
 					m_OnFoundEnemy.Set(hEnemy, this, this);
@@ -5879,7 +6319,7 @@ void CAI_BaseNPC::CheckTarget( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 CAI_BaseNPC *CAI_BaseNPC::CreateCustomTarget( const Vector &vecOrigin, float duration )
 {
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 	CNPC_Bullseye *pTarget = (CNPC_Bullseye*)CreateEntityByName( "npc_bullseye" );
 
 	ASSERT( pTarget != NULL );
@@ -6309,6 +6749,10 @@ void CAI_BaseNPC::AdvanceToIdealActivity(void)
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::MaintainActivity(void)
 {
+#ifdef TF_CLASSIC
+	m_flPlaybackRate = 1.0;
+	m_flGroundSpeed = 1.0;
+#endif
 	AI_PROFILE_SCOPE( CAI_BaseNPC_MaintainActivity );
 
 	if ( m_lifeState == LIFE_DEAD )
@@ -6372,6 +6816,16 @@ void CAI_BaseNPC::MaintainActivity(void)
 			AdvanceToIdealActivity();
 		}
 	}
+#ifdef TF_CLASSIC
+	if ( InCond( TF_COND_SLOWED ) )
+	{
+		if ( GetActivity() == ACT_RUN || GetActivity() == ACT_WALK )
+		{
+			m_flPlaybackRate = 0.6;
+			m_flGroundSpeed = 0.6;
+		}
+	}
+#endif
 }
 
 
@@ -7661,6 +8115,80 @@ bool CAI_BaseNPC::IsValidEnemy( CBaseEntity *pEnemy )
 	// Test our enemy filter
 	if ( m_hEnemyFilter.Get()!= NULL && m_hEnemyFilter->PassesFilter( this, pEnemy ) == false )
 		return false;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pEnemyTFPlayer = ToTFPlayer( pEnemy );
+
+	if ( pEnemyTFPlayer && !pEnemyTFPlayer->InSameTeam( pEnemy ) )
+		return true;
+
+	if ( pEnemyTFPlayer && pEnemyTFPlayer->m_Shared.GetPercentInvisible() > 0.5 )
+		return false;
+
+	// Don't target players disguised as our team member but keep attacking if they disguise while being our target.
+	if ( pEnemyTFPlayer && pEnemyTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pEnemyTFPlayer->m_Shared.GetDisguiseTeam() == GetTeamNumber() && pEnemyTFPlayer != GetEnemy() )
+		return false;
+
+	if ( pEnemy->IsBaseObject() && !InSameTeam(pEnemy) )
+	{
+		CBaseObject *pEnemyObject = assert_cast<CBaseObject *>( pEnemy );
+
+		// Ignore objects being placed, they are not real objects yet. actually don't ignore them or hell will happen.
+		//if ( pEnemyObject->IsPlacing() )
+		//	return false;
+
+		// Ignore sappers.
+		if ( pEnemyObject->IsDisabled() )
+			return false;
+	}
+/*
+	CUtlVector<CTFTeam *> pTeamList;
+	CTFTeam *pTeam = this->GetTFTeam();
+
+	if ( pTeam )
+		pTeam->GetOpposingTFTeamList( &pTeamList );
+	else
+		return false;
+
+	for (int i = 0; i < pTeamList.Size(); i++)
+	{
+		int nTeamCount = pTeamList[i]->GetNumPlayers();
+		for (int iPlayer = 0; iPlayer < nTeamCount; ++iPlayer)
+		{
+			CTFPlayer *pEnemyTFPlayer = static_cast<CTFPlayer*>(pTeamList[i]->GetPlayer(iPlayer));
+			if (pEnemyTFPlayer == NULL)
+				continue;
+
+			// Make sure the player is alive.
+			if (!pEnemyTFPlayer->IsAlive())
+				continue;
+
+			if (pEnemyTFPlayer->GetFlags() & FL_NOTARGET)
+				continue;
+			
+			// ignore cloak.
+			if ( pEnemyTFPlayer && pEnemyTFPlayer->m_Shared.GetPercentInvisible() > 0.5 )
+				return false;
+		}
+
+		// If we already have a target, don't check objects.
+		if (pEnemy == NULL)
+		{
+			int nTeamObjectCount = pTeamList[i]->GetNumObjects();
+			for ( int iObject = 0; iObject < nTeamObjectCount; ++iObject )
+			{
+				CBaseObject *pEnemyObject = pTeamList[i]->GetObject( iObject );
+				if ( !pEnemyObject )
+					continue;
+				
+				// Ignore sappers.
+				if ( pEnemyObject->IsDisabled() )
+					return false;
+			}
+		}
+	}
+*/
+#endif
 
 	return true;
 }
@@ -9517,7 +10045,7 @@ Vector CAI_BaseNPC::GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::CollectShotStats( const Vector &vecShootOrigin, const Vector &vecShootDir )
 {
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 	if( ai_shot_stats.GetBool() != 0 && GetEnemy()->IsPlayer() )
 	{
 		int iterations = ai_shot_stats_term.GetInt();
@@ -9558,7 +10086,7 @@ void CAI_BaseNPC::CollectShotStats( const Vector &vecShootOrigin, const Vector &
 #endif
 }
 
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 //-----------------------------------------------------------------------------
 // Purpose: Return the actual position the NPC wants to fire at when it's trying
 //			to hit it's current enemy.
@@ -9908,7 +10436,11 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 {
 	if ( !stricmp( name, "!player" ))
 	{
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		return UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 		return ( CBaseEntity * )AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 	else if ( !stricmp( name, "!enemy" ) )
 	{
@@ -9923,7 +10455,11 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 	{
 		// FIXME: look at CBaseEntity *CNPCSimpleTalker::FindNearestFriend(bool fPlayer)
 		// punt for now
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		return UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 		return ( CBaseEntity * )AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 	else if (!stricmp( name, "self" ))
 	{
@@ -9943,7 +10479,11 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 		{
 			DevMsg( "ERROR: \"player\" is no longer used, use \"!player\" in vcd instead!\n" );
 		}
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		return UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 		return ( CBaseEntity * )AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 	else
 	{
@@ -10200,6 +10740,26 @@ bool CAI_BaseNPC::ShouldChooseNewEnemy()
 	m_EnemiesSerialNumber = GetEnemies()->GetSerialNumber();
 
 	return true;
+}
+bool CAI_BaseNPC::ShouldCollide(int collisionGroup, int contentsMask) const
+{
+	if (((collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT) && tf_avoidteammates.GetBool()) ||
+		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
+	{
+		switch (GetTeamNumber())
+		{
+		case TF_TEAM_RED:
+			if (!(contentsMask & CONTENTS_REDTEAM))
+				return false;
+			break;
+
+		case TF_TEAM_BLUE:
+			if (!(contentsMask & CONTENTS_BLUETEAM))
+				return false;
+			break;
+		}
+	}
+	return BaseClass::ShouldCollide(collisionGroup, contentsMask);
 }
 
 //-------------------------------------
@@ -10703,6 +11263,7 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_KEYFIELD( m_iszEnemyFilterName,		FIELD_STRING, "enemyfilter" ),
 	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
+	DEFINE_ARRAY( m_szClassname,				FIELD_STRING, 128 ),
 
 	// Satisfy classcheck
 	// DEFINE_FIELD( m_ScheduleHistory, CUtlVector < AIScheduleChoice_t > ),
@@ -10800,11 +11361,21 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropBool( SENDINFO( m_bFadeCorpse ) ),
 	SendPropInt( SENDINFO( m_iDeathPose ), ANIMATION_SEQUENCE_BITS ),
 	SendPropInt( SENDINFO( m_iDeathFrame ), 5 ),
+	SendPropInt(SENDINFO( m_iHealth ), 13 ),
+	SendPropInt(SENDINFO( m_iMaxHealth ), 13 ),
 	SendPropBool( SENDINFO( m_bSpeedModActive ) ),
 	SendPropInt( SENDINFO( m_iSpeedModRadius ) ),
 	SendPropInt( SENDINFO( m_iSpeedModSpeed ) ),
 	SendPropBool( SENDINFO( m_bImportanRagdoll ) ),
 	SendPropFloat( SENDINFO( m_flTimePingEffect ) ),
+	SendPropString( SENDINFO( m_szClassname ) ),
+
+#ifdef TF_CLASSIC
+	SendPropInt( SENDINFO( m_nPlayerCond ), TF_COND_LAST, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO( m_nNumHealers ), 5, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropBool( SENDINFO( m_bBurningDeath ) ),
+	SendPropInt( SENDINFO( m_nTFFlags ) )
+#endif
 END_SEND_TABLE()
 
 //-------------------------------------
@@ -10849,7 +11420,23 @@ END_DATADESC()
 void CAI_BaseNPC::PostConstructor( const char *szClassname )
 {
 	BaseClass::PostConstructor( szClassname );
+	// Ugly hack to get NPC classname on client side. Unfortunately, I don't see any other way,
+	// other than adding a stub client class for every HL2 NPC. (Nicknine)
+	Q_strncpy( m_szClassname.GetForModify(), szClassname, 128 );
 	CreateComponents();
+
+#ifdef TF_CLASSIC
+	// Not the best place to put this but it's the only way to make sure NPC gets assigned to a team.
+	for ( int i = 0; g_aNPCData[i].pszName != NULL; i++ )
+	{
+		if ( ClassMatches( g_aNPCData[i].pszName ) )
+		{
+			ChangeTeam( g_aNPCData[i].iTeam );
+			m_nTFFlags = g_aNPCData[i].nFlags;
+			break;
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -11386,6 +11973,14 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_bInChoreo = true; // assume so until call to UpdateEfficiency()
 	
 	SetCollisionGroup( COLLISION_GROUP_NPC );
+
+#ifdef TF_CLASSIC
+	m_nPlayerCond = 0;
+	m_bBurningDeath = false;
+	m_nTFFlags = 0;
+	memset( m_flChargeOffTime, 0, sizeof( m_flChargeOffTime ) );
+	memset( m_bChargeSounds, 0, sizeof( m_bChargeSounds ) );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -11734,7 +12329,7 @@ void CAI_BaseNPC::CleanupScriptsOnTeleport( bool bEnrouteAsWell )
 //-----------------------------------------------------------------------------
 bool CAI_BaseNPC::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
 {
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 	if ( interactionType == g_interactionBarnacleVictimGrab )
 	{
 		// Make the victim stop thinking so they're as good as dead without 
@@ -11916,7 +12511,11 @@ bool CAI_BaseNPC::CineCleanup()
 			{
 				SetLocalOrigin( origin );
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetNearestVisiblePlayer( this ) ); 
+#else
 				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetLocalPlayer() );
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 				// Origin in solid?  Set to org at the end of the sequence
 				if ( ( drop < 0 ) || sv_test_scripted_sequences.GetBool() )
@@ -11993,7 +12592,11 @@ void CAI_BaseNPC::Teleport( const Vector *newPosition, const QAngle *newAngles, 
 
 bool CAI_BaseNPC::FindSpotForNPCInRadius( Vector *pResult, const Vector &vStartPos, CAI_BaseNPC *pNPC, float radius, bool bOutOfPlayerViewcone )
 {
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pNPC->GetAbsOrigin()); 
+#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	QAngle fan;
 
 	fan.x = 0;
@@ -12527,6 +13130,12 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 { 
 	if ( pPlayer == NULL )
 	{
+#ifdef TF_CLASSIC
+		// Difficult to handle in TF2C since players can join different teams
+		// to ally themselves with different factions. For now, just check if they are on RED.
+		if ( GetTeamNumber() == TF_STORY_TEAM )
+			return true;
+#endif
 		// in multiplayer mode we need a valid pPlayer 
 		// or override this virtual function
 		if ( !AI_IsSinglePlayer() )
@@ -12678,8 +13287,19 @@ void CAI_BaseNPC::TestPlayerPushing( CBaseEntity *pEntity )
 	if ( HasSpawnFlags( SF_NPC_NO_PLAYER_PUSHAWAY ) )
 		return;
 
+#ifdef TF_CLASSIC
+	// Don't give way to spectators.
+	if ( !pEntity->IsAlive() )
+		return;
+
+	// Don't give way to enemy players.
+	if ( GetTeamNumber() != pEntity->GetTeamNumber() )
+		return;
+#endif
+
 	// Heuristic for determining if the player is pushing me away
 	CBasePlayer *pPlayer = ToBasePlayer( pEntity );
+
 	if ( pPlayer && !( pPlayer->GetFlags() & FL_NOTARGET ) )
 	{
 		if ( (pPlayer->m_nButtons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT)) || 
@@ -12827,7 +13447,11 @@ bool CAI_BaseNPC::FindNearestValidGoalPos( const Vector &vTestPoint, Vector *pRe
 
 	if ( vCandidate != vec3_invalid )
 	{
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, UTIL_GetNearestPlayer( GetAbsOrigin() ), 5*12, NAV_NONE, true ); 
+#else
 		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, AI_GetSinglePlayer(), 5*12, NAV_NONE, true );
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		if ( pPathToPoint )
 		{
 			GetPathfinder()->UnlockRouteNodes( pPathToPoint );
@@ -13967,7 +14591,7 @@ void CAI_BaseNPC::PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot )
 		if ( pInteraction->iLoopBreakTriggerMethod & SNPCINT_LOOPBREAK_ON_FLASHLIGHT_ILLUM )
 		{
 			// Only do this in alyx darkness mode
-			if ( HL2GameRules()->IsAlyxInDarknessMode() )
+			if ( TFGameRules()->IsAlyxInDarknessMode() )
 			{
 				// Can only break when we're in the action anim
 				if ( m_hCine->IsPlayingAction() )
@@ -14140,3 +14764,622 @@ bool CAI_BaseNPC::IsInChoreo() const
 {
 	return m_bInChoreo;
 }
+
+#ifdef TF_CLASSIC
+void CAI_BaseNPC::ChangeTeam( int iTeamNum )
+{
+	CTFTeam *pTeam = ( CTFTeam * )GetGlobalTeam( iTeamNum );
+	CTFTeam *pExisting = ( CTFTeam * )GetTeam();
+
+	if ( !pTeam )
+	{
+		//Warning( "CAI_BaseNPC::ChangeTeam( %d ) - invalid team index.\n", iTeamNum );
+		// Just change team number.
+		BaseClass::ChangeTeam( iTeamNum );
+		return;
+	}
+
+	// Already on this team
+	if ( GetTeamNumber() == iTeamNum )
+		return;
+
+	// Remove him from his current team
+	if ( pExisting )
+	{
+		pExisting->RemoveNPC( this );
+	}
+
+	// Are we being added to a team?
+	if ( pTeam )
+	{
+		pTeam->AddNPC( this );
+	}
+
+	BaseClass::ChangeTeam( iTeamNum );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Send out npc_death event.
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::DeathNotice( const CTakeDamageInfo &info )
+{
+	// Bullseyes shouldn't send death notices.
+	if ( Classify() == CLASS_BULLSEYE )
+		return;
+/* // moved to Event_Killed.
+	int killer_index = 0;
+
+	// Find the killer & the scorer
+	CAI_BaseNPC *pVictim = this;
+	CBaseEntity *pInflictor = info.GetInflictor();
+	CBaseEntity *pKiller = info.GetAttacker();
+	CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
+	CBaseEntity *pAssister = TFGameRules()->GetAssister( pVictim, pKiller, pInflictor );
+
+	// Work out what killed the player, and send a message to all clients about it
+	const char *killer_weapon_name = TFGameRules()->GetKillingWeaponName( info, NULL );
+
+	if ( pScorer )	// Is the killer a client?
+	{
+		killer_index = pScorer->entindex();
+	}
+	else if ( pKiller && pKiller->IsNPC() )
+	{
+		killer_index = pKiller->entindex();
+	}
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "npc_death" );
+
+	if ( event )
+	{
+		event->SetInt( "victim_index", pVictim->entindex() );
+		event->SetString( "victim_name", pVictim->GetClassname() );
+		event->SetInt( "victim_team", pVictim->GetTeamNumber() );
+		event->SetInt( "attacker_index", killer_index );
+		event->SetString( "attacker_name", pKiller ? pKiller->GetClassname() : NULL );
+		event->SetInt( "attacker_team", pKiller ? pKiller->GetTeamNumber() : 0 );
+		event->SetInt( "assister_index", pAssister ? pAssister->entindex() : -1 );
+		event->SetString( "assister_name", pAssister ? pAssister->GetClassname() : NULL );
+		event->SetInt( "assister_team", pAssister ? pAssister->GetTeamNumber() : 0 );
+		event->SetString( "weapon", killer_weapon_name );
+		event->SetInt( "damagebits", info.GetDamageType() );
+		event->SetInt( "customkill", info.GetDamageCustom() );
+		event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
+
+		gameeventmanager->FireEvent( event );
+	}
+*/ // moved to Event_Killed.
+}
+
+int CAI_BaseNPC::TakeHealth( float flHealth, int bitsDamageType )
+{
+	int bResult = false;
+
+	// If the bit's set, add over the max health
+	if ( bitsDamageType & DMG_IGNORE_MAXHEALTH )
+	{
+		m_iHealth += flHealth;
+		bResult = true;
+	}
+	else
+	{
+		float flHealthToAdd = flHealth;
+		float flMaxHealth = GetMaxHealth();
+		
+		// don't want to add more than we're allowed to have
+		if ( flHealthToAdd > flMaxHealth - m_iHealth )
+		{
+			flHealthToAdd = flMaxHealth - m_iHealth;
+		}
+
+		if ( flHealthToAdd <= 0 )
+		{
+			bResult = false;
+		}
+		else
+		{
+			bResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
+		}
+	}
+
+	return bResult;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Heal NPCs.
+// pPlayer is person who healed us
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::Heal( CTFPlayer *pPlayer, float flAmount, bool bDispenserHeal /* = false */ )
+{
+	Assert( FindHealerIndex(pPlayer) == m_aHealers.InvalidIndex() );
+
+	healers_t newHealer;
+	newHealer.pPlayer = pPlayer;
+	newHealer.flAmount = flAmount;
+	newHealer.bDispenserHeal = bDispenserHeal;
+	newHealer.iRecentAmount = 0;
+	newHealer.flNextNofityTime = gpGlobals->curtime + 1.0f;
+	m_aHealers.AddToTail( newHealer );
+
+	AddCond( TF_COND_HEALTH_BUFF, PERMANENT_CONDITION );
+
+	RecalculateChargeEffects();
+
+	m_nNumHealers = m_aHealers.Count();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Heal NPCs.
+// pPlayer is person who healed us
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::StopHealing( CTFPlayer *pPlayer )
+{
+	int iIndex = FindHealerIndex(pPlayer);
+	Assert( iIndex != m_aHealers.InvalidIndex() );
+
+	m_aHealers.Remove( iIndex );
+
+	if ( !m_aHealers.Count() )
+	{
+		RemoveCond( TF_COND_HEALTH_BUFF );
+	}
+
+	RecalculateChargeEffects();
+
+	m_nNumHealers = m_aHealers.Count();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+medigun_charge_types CAI_BaseNPC::GetChargeEffectBeingProvided( CTFPlayer *pPlayer )
+{
+	if ( !pPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
+		return TF_CHARGE_NONE;
+
+	CTFWeaponBase *pWpn = pPlayer->GetActiveTFWeapon();
+	if ( !pWpn )
+		return TF_CHARGE_NONE;
+
+	CWeaponMedigun *pMedigun = dynamic_cast <CWeaponMedigun*>( pWpn );
+	if ( pMedigun && pMedigun->IsReleasingCharge() )
+		return pMedigun->GetChargeType();
+
+	return TF_CHARGE_NONE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::RecalculateChargeEffects( bool bInstantRemove )
+{
+	bool bShouldCharge[TF_CHARGE_COUNT] = { };
+	CTFPlayer *pProviders[TF_CHARGE_COUNT] = { };
+
+		// Check players healing us.
+		for ( int i = 0; i < m_aHealers.Count(); i++ )
+		{
+			CTFPlayer *pPlayer = ToTFPlayer( m_aHealers[i].pPlayer );
+			if ( !pPlayer )
+				continue;
+
+			medigun_charge_types chargeType = GetChargeEffectBeingProvided( pPlayer );
+
+			if ( chargeType != TF_CHARGE_NONE )
+			{
+				bShouldCharge[chargeType] = true;
+				pProviders[chargeType] = pPlayer;
+			}
+		}
+
+
+	for ( int i = 0; i < TF_CHARGE_COUNT; i++ )
+	{
+		float flRemoveTime = ( i == TF_CHARGE_INVULNERABLE ) ? tf_invuln_time.GetFloat() : 0.0f;
+		SetChargeEffect( (medigun_charge_types)i, bShouldCharge[i], bInstantRemove, g_MedigunEffects[i], flRemoveTime, pProviders[i] );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider )
+{
+	if ( InCond( chargeEffect.condition_enable ) == bShouldCharge )
+	{
+		if ( bShouldCharge && m_flChargeOffTime[chargeType] != 0.0f )
+		{
+			m_flChargeOffTime[chargeType] = 0.0f;
+
+			if ( chargeEffect.condition_disable != TF_COND_LAST )
+				RemoveCond( chargeEffect.condition_disable );
+		}
+		return;
+	}
+
+	if ( bShouldCharge )
+	{
+		Assert( chargeType != TF_CHARGE_INVULNERABLE );
+
+		if ( m_flChargeOffTime[chargeType] != 0.0f )
+		{
+			StopSound( chargeEffect.sound_disable );
+
+			m_flChargeOffTime[chargeType] = 0.0f;
+
+			if ( chargeEffect.condition_disable != TF_COND_LAST )
+				RemoveCond( chargeEffect.condition_disable );
+		}
+
+		// Charge on.
+		AddCond( chargeEffect.condition_enable );
+
+		CSingleUserRecipientFilter filter( pProvider );
+		EmitSound( filter, entindex(), chargeEffect.sound_enable );
+		m_bChargeSounds[chargeType] = true;
+	}
+	else
+	{
+		if ( m_bChargeSounds[chargeType] )
+		{
+			StopSound( chargeEffect.sound_enable );
+			m_bChargeSounds[chargeType] = false;
+		}
+
+		if ( m_flChargeOffTime[chargeType] == 0.0f )
+		{
+			CSingleUserRecipientFilter filter( pProvider );
+			EmitSound( filter, entindex(), chargeEffect.sound_disable );
+		}
+
+		if ( bInstantRemove )
+		{
+			m_flChargeOffTime[chargeType] = 0.0f;
+			RemoveCond( chargeEffect.condition_enable );
+
+			if ( chargeEffect.condition_disable != TF_COND_LAST )
+				RemoveCond( chargeEffect.condition_disable );
+		}
+		else
+		{
+			// Already turning it off?
+			if ( m_flChargeOffTime[chargeType] != 0.0f )
+				return;
+
+			if ( chargeEffect.condition_disable != TF_COND_LAST )
+				AddCond( chargeEffect.condition_disable );
+
+			m_flChargeOffTime[chargeType] = gpGlobals->curtime + flRemoveTime;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int	CAI_BaseNPC::FindHealerIndex( CTFPlayer *pPlayer )
+{
+	for ( int i = 0; i < m_aHealers.Count(); i++ )
+	{
+		if ( m_aHealers[i].pPlayer == pPlayer )
+			return i;
+	}
+
+	return m_aHealers.InvalidIndex();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns the first healer in the healer array.  Note that this
+//		is an arbitrary healer.
+//-----------------------------------------------------------------------------
+EHANDLE CAI_BaseNPC::GetFirstHealer()
+{
+	if ( m_aHealers.Count() > 0 )
+		return m_aHealers.Head().pPlayer;
+
+	return NULL;
+}
+
+void CAI_BaseNPC::ConditionGameRulesThink( void )
+{
+	/*
+	if ( m_flNextCritUpdate < gpGlobals->curtime )
+	{
+		UpdateCritMult();
+		m_flNextCritUpdate = gpGlobals->curtime + 0.5;
+	}
+	*/
+
+	/*
+	for ( int i=0;i<TF_COND_LAST;i++ )
+	{
+		if ( m_nPlayerCond & (1<<i) )
+		{
+			// Ignore permanent conditions
+			if ( m_flCondExpireTimeLeft[i] != PERMANENT_CONDITION )
+			{
+				float flReduction = gpGlobals->frametime;
+
+				// If we're being healed, we reduce bad conditions faster
+				if ( i > TF_COND_HEALTH_BUFF && m_aHealers.Count() > 0 )
+				{
+					flReduction += (m_aHealers.Count() * flReduction * 4);
+				}
+
+				m_flCondExpireTimeLeft[i] = max( m_flCondExpireTimeLeft[i] - flReduction, 0 );
+
+				if ( m_flCondExpireTimeLeft[i] == 0 )
+				{
+					RemoveCond( i );
+				}
+			}
+		}
+	}*/
+
+	int i;
+	for ( i = 0; i < TF_COND_LAST; i++ )
+	{
+		if ( InCond( i ) )
+		{
+			// Ignore permanent conditions
+			if ( m_flCondExpireTimeLeft[i] != PERMANENT_CONDITION )
+			{
+				float flReduction = gpGlobals->frametime;
+
+				if ( ConditionExpiresFast( i ) )
+				{
+					// If we're being healed, we reduce bad conditions faster
+					if ( m_aHealers.Count() > 0 )
+					{
+						if ( i == TF_COND_URINE )
+							flReduction *= m_aHealers.Count() + 1;
+						else
+							flReduction += ( m_aHealers.Count() * flReduction * 4 );
+					}
+				}
+
+				//m_flCondExpireTimeLeft.Set( i, max( m_flCondExpireTimeLeft[i] - flReduction, 0 ) );
+				m_flCondExpireTimeLeft[i] = max( m_flCondExpireTimeLeft[i] - flReduction, 0 );
+
+				if ( m_flCondExpireTimeLeft[i] == 0 )
+				{
+					RemoveCond( i );
+				}
+			}
+		}
+	}
+
+	// Our health will only decay ( from being medic buffed ) if we are not being healed by a medic
+	// Dispensers can give us the TF_COND_HEALTH_BUFF, but will not maintain or give us health above 100%s
+	bool bDecayHealth = true;
+
+	// If we're being healed, heal ourselves
+	if ( InCond( TF_COND_HEALTH_BUFF ) )
+	{
+		// Heal faster if we haven't been in combat for a while
+		float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
+		float flScale = RemapValClamped( flTimeSinceDamage, 10, 15, 1.0, 3.0 );
+
+		bool bHasFullHealth = GetHealth() >= GetMaxHealth();
+
+		float fTotalHealAmount = 0.0f;
+		for ( int i = 0; i < m_aHealers.Count(); i++ )
+		{
+			Assert( m_aHealers[i].pPlayer );
+
+			// Dispensers don't heal above 100%
+			if ( bHasFullHealth && m_aHealers[i].bDispenserHeal )
+			{
+				continue;
+			}
+
+			// Being healed by a medigun, don't decay our health
+			bDecayHealth = false;
+
+			// Dispensers heal at a constant rate
+			if ( m_aHealers[i].bDispenserHeal )
+			{
+				// Dispensers heal at a slower rate, but ignore flScale
+				m_flHealFraction += gpGlobals->frametime * m_aHealers[i].flAmount;
+			}
+			else	// player heals are affected by the last damage time
+			{
+				m_flHealFraction += gpGlobals->frametime * m_aHealers[i].flAmount * flScale;
+			}
+
+			fTotalHealAmount += m_aHealers[i].flAmount;
+		}
+
+		int nHealthToAdd = (int)m_flHealFraction;
+		if ( nHealthToAdd > 0 )
+		{
+			m_flHealFraction -= nHealthToAdd;
+
+			int iBoostMax = GetMaxBuffedHealth();
+
+			// Cap it to the max we'll boost a player's health
+			nHealthToAdd = clamp( nHealthToAdd, 0, iBoostMax - GetHealth() );
+
+			TakeHealth( nHealthToAdd, DMG_IGNORE_MAXHEALTH );
+		}
+
+		if ( InCond( TF_COND_BURNING ) )
+		{
+			// Reduce the duration of this burn 
+			float flReduction = 2;	 // ( flReduction + 1 ) x faster reduction
+			m_flFlameRemoveTime -= flReduction * gpGlobals->frametime;
+		}
+	}
+/*
+	if ( InCond( TF_COND_INVULNERABLE )  )
+	{
+		bool bRemoveInvul = false;
+
+		if ( ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && ( TFGameRules()->GetWinningTeam() != GetTeamNumber() ) )
+		{
+			bRemoveInvul = true;
+		}
+		
+		if ( m_flInvulnerableOffTime )
+		{
+			if ( gpGlobals->curtime > m_flInvulnerableOffTime )
+			{
+				bRemoveInvul = true;
+			}
+		}
+
+		if ( bRemoveInvul == true )
+		{
+			m_flInvulnerableOffTime = 0;
+			RemoveCond( TF_COND_INVULNERABLE_WEARINGOFF );
+			RemoveCond( TF_COND_INVULNERABLE );
+		}
+	}
+*/
+	if ( bDecayHealth )
+	{
+		// If we're not being buffed, our health drains back to our max
+		if ( GetHealth() > GetMaxHealth() )
+		{
+			float flBoostMaxAmount = GetMaxBuffedHealth() - GetMaxHealth();
+			m_flHealFraction += ( gpGlobals->frametime * ( flBoostMaxAmount / tf_boost_drain_time.GetFloat() ) );
+
+			int nHealthToDrain = (int)m_flHealFraction;
+			if ( nHealthToDrain > 0 )
+			{
+				m_flHealFraction -= nHealthToDrain;
+
+				// Manually subtract the health so we don't generate pain sounds / etc
+				m_iHealth -= nHealthToDrain;
+			}
+		}
+	}
+
+	if ( GetHealth() > GetMaxHealth() )
+	{
+		if ( !InCond( TF_COND_HEALTH_OVERHEALED ) )
+		{
+			AddCond( TF_COND_HEALTH_OVERHEALED );
+		}
+	}
+	else
+	{
+		if ( InCond( TF_COND_HEALTH_OVERHEALED ) )
+		{
+			RemoveCond( TF_COND_HEALTH_OVERHEALED );
+		}
+	}
+
+	if ( InCond( TF_COND_BURNING ) )
+	{
+		// If we're underwater, put the fire out
+		if ( gpGlobals->curtime > m_flFlameRemoveTime || GetWaterLevel() >= WL_Waist )
+		{
+			// Calling Extinguish since some NPCs use that.
+			Extinguish();
+		}
+		else if ( ( gpGlobals->curtime >= m_flFlameBurnTime ) )
+		{
+			float flBurnDamage = TF_BURNING_DMG;
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hBurnWeapon, flBurnDamage, mult_wpn_burndmg );
+
+			CTakeDamageInfo info( m_hBurnAttacker, m_hBurnAttacker, m_hBurnWeapon, flBurnDamage, DMG_BURN | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BURNING );
+			TakeDamage( info );
+			m_flFlameBurnTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
+		}
+	}
+
+	TestAndExpireChargeEffect( TF_CHARGE_INVULNERABLE );
+	TestAndExpireChargeEffect( TF_CHARGE_CRITBOOSTED );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Adds this damager to the history list of characters who damaged NPC
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::AddDamagerToHistory( EHANDLE hDamager )
+{
+	// sanity check: ignore damager if it is on our team.  (Catch-all for 
+	// damaging self in rocket jumps, etc.)
+	if ( !hDamager || ( !hDamager->IsPlayer() && !hDamager->IsNPC() ) || hDamager->GetTeamNumber() == GetTeamNumber() )
+		return;
+
+	// If this damager is different from the most recent damager, shift the
+	// damagers down and drop the oldest damager.  (If this damager is already
+	// the most recent, we will just update the damage time but not remove
+	// other damagers from history.)
+	if ( m_DamagerHistory[0].hDamager != hDamager )
+	{
+		for ( int i = 1; i < ARRAYSIZE( m_DamagerHistory ); i++ )
+		{
+			m_DamagerHistory[i] = m_DamagerHistory[i-1];
+		}		
+	}	
+	// set this damager as most recent and note the time
+	m_DamagerHistory[0].hDamager = hDamager;
+	m_DamagerHistory[0].flTimeDamage = gpGlobals->curtime;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Clears damager history
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::ClearDamagerHistory()
+{
+	for ( int i = 0; i < ARRAYSIZE( m_DamagerHistory ); i++ )
+	{
+		m_DamagerHistory[i].Reset();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::TestAndExpireChargeEffect( medigun_charge_types chargeType )
+{
+	if ( InCond( g_MedigunEffects[chargeType].condition_enable ) )
+	{
+		bool bRemoveCharge = false;
+
+		if ( ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && ( TFGameRules()->GetWinningTeam() != GetTeamNumber() ) )
+		{
+			bRemoveCharge = true;
+		}
+
+		if ( m_flChargeOffTime[chargeType] != 0.0f )
+		{
+			if ( gpGlobals->curtime > m_flChargeOffTime[chargeType] )
+			{
+				bRemoveCharge = true;
+			}
+		}
+
+		if ( bRemoveCharge == true )
+		{
+			m_flChargeOffTime[chargeType] = 0.0f;
+
+			if ( g_MedigunEffects[chargeType].condition_disable != TF_COND_LAST )
+			{
+				RemoveCond( g_MedigunEffects[chargeType].condition_disable );
+			}
+
+			RemoveCond( g_MedigunEffects[chargeType].condition_enable );
+		}
+	}
+	else if ( m_bChargeSounds[chargeType] )
+	{
+		// If we're still playing charge sound but not actually charged, stop the sound.
+		// This can happen if player respawns while crit boosted.
+		StopSound( g_MedigunEffects[chargeType].sound_enable );
+		m_bChargeSounds[chargeType] = false;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CTFTeam *CAI_BaseNPC::GetTFTeam( void )
+{
+	CTFTeam *pTeam = dynamic_cast<CTFTeam *>( GetTeam() );
+	Assert( pTeam );
+	return pTeam;
+}
+#endif

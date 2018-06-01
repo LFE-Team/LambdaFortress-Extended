@@ -728,3 +728,17 @@ void CTFLoadoutPanel::SetWeaponPreset( int iClass, int iSlot, int iPreset )
 
 	DefaultLayout();
 }
+
+void CTFLoadoutPanel::OnKeyCodeTyped( vgui::KeyCode code )
+{
+	// force ourselves to be closed if the escape key it pressed
+	if ( code == KEY_ESCAPE )
+	{
+		Hide();
+		MAINMENU_ROOT->HidePanel( SHADEBACKGROUND_MENU );
+	}
+	else
+	{
+		BaseClass::OnKeyCodeTyped(code);
+	}
+}

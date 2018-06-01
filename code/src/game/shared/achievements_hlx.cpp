@@ -10,7 +10,7 @@
 #ifdef GAME_DLL
 
 // this gets compiled in for HL2 + Ep(X) only
-#if ( defined( HL2_DLL ) || defined( HL2_EPISODIC ) ) && ( !defined ( PORTAL ) )
+#if ( defined( HL2_DLL ) || defined( HL2_EPISODIC ) ) && ( !defined( PORTAL ) || !defined( TF_CLASSIC ) )
 
 #include "baseachievement.h"
 #include "prop_combine_ball.h"
@@ -126,12 +126,21 @@ protected:
 		{
 			CBaseEntity *pThrower = pGrenade->GetThrower();
 			CBaseEntity *pOriginalThrower = pGrenade->GetOriginalThrower();
-			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+			#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
+				CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+			#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 			// check if player was most recent thrower, but the victim was the original thrower
-			if ( ( pPlayer == pThrower ) && ( pOriginalThrower == pVictim ) )
-			{
-				IncrementCount();
-			}				
+			#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+				if ( pThrower->IsPlayer() && ( pOriginalThrower == pVictim ) )
+				{
+					IncrementCount();
+				}	
+			#else
+				if ( ( pPlayer == pThrower ) && ( pOriginalThrower == pVictim ) )
+				{
+					IncrementCount();
+				}
+			#endif //SecobMod__Enable_Fixed_Multiplayer_AI					
 		}			
 	}
 };

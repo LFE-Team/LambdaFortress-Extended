@@ -43,6 +43,7 @@ public:
 	Class_T Classify ( void );
 	void	HandleAnimEvent( animevent_t *pEvent );
 	int		GetSoundInterests ( void );
+	virtual bool		IsDeflectable() { return false; }
 
 	
 	void	TempGunEffect( void );
@@ -86,6 +87,7 @@ void CGenericActor::HandleAnimEvent( animevent_t *pEvent )
 {
 	BaseClass::HandleAnimEvent( pEvent );
 }
+
 
 //=========================================================
 // GetSoundInterests - generic NPC can't hear.

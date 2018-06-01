@@ -130,9 +130,9 @@ ConVar	sk_helicopter_firingcone( "sk_helicopter_firingcone","20.0", 0, "The angl
 ConVar	sk_helicopter_burstcount( "sk_helicopter_burstcount","12", 0, "How many shot bursts to fire after charging up. The bigger the number, the longer the firing is" );
 ConVar	sk_helicopter_roundsperburst( "sk_helicopter_roundsperburst","5", 0, "How many shots to fire in a single burst" );
 
-ConVar	sk_helicopter_grenadedamage( "sk_helicopter_grenadedamage","25.0", 0, "The amount of damage the helicopter grenade deals." );
-ConVar	sk_helicopter_grenaderadius( "sk_helicopter_grenaderadius","275.0", 0, "The damage radius of the helicopter grenade." );
-ConVar	sk_helicopter_grenadeforce( "sk_helicopter_grenadeforce","55000.0", 0, "The physics force that the helicopter grenade exerts." );
+ConVar	sk_helicopter_grenadedamage( "sk_helicopter_grenadedamage","30", 0, "The amount of damage the helicopter grenade deals." );
+ConVar	sk_helicopter_grenaderadius( "sk_helicopter_grenaderadius","275", 0, "The damage radius of the helicopter grenade." );
+ConVar	sk_helicopter_grenadeforce( "sk_helicopter_grenadeforce","55000", 0, "The physics force that the helicopter grenade exerts." );
 ConVar	sk_helicopter_grenade_puntscale( "sk_helicopter_grenade_puntscale","1.5", 0, "When physpunting a chopper's grenade, scale its velocity by this much." );
 
 // Number of bomb hits it takes to kill a chopper on each skill level.
@@ -2031,6 +2031,10 @@ void CNPC_AttackHelicopter::DoMuzzleFlash( void )
 
 	data.m_nAttachmentIndex = LookupAttachment( "muzzle" );
 	data.m_nEntIndex = entindex();
+#ifdef TF_CLASSIC
+	// m_vOrigin must be set in multiplayer so AddRecipientsByPAS() adds players properly.
+	GetAttachment( "muzzle", data.m_vOrigin );
+#endif
 	DispatchEffect( "ChopperMuzzleFlash", data );
 }
 
@@ -3472,6 +3476,9 @@ void CNPC_AttackHelicopter::DropCorpse( int nDamage )
 //-----------------------------------------------------------------------------
 void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
+#ifdef TF_CLASSIC
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
+#else
 	// Take no damage from trace attacks unless it's blast damage. RadiusDamage() sometimes calls
 	// TraceAttack() as a means for delivering blast damage. Usually when the explosive penetrates
 	// the target. (RPG missiles do this sometimes).
@@ -3481,6 +3488,7 @@ void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vect
 	{
 		BaseClass::BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 	}
+#endif
 }
 
 
@@ -3489,6 +3497,7 @@ void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vect
 //-----------------------------------------------------------------------------
 int CNPC_AttackHelicopter::OnTakeDamage( const CTakeDamageInfo &info )
 {
+#ifndef TF_CLASSIC
 	// We don't take blast damage from anything but the airboat or missiles (or myself!)
 	if( info.GetInflictor() != this )
 	{
@@ -3497,7 +3506,7 @@ int CNPC_AttackHelicopter::OnTakeDamage( const CTakeDamageInfo &info )
 			( info.GetAttacker()->Classify() != CLASS_MISSILE ) )
 			return 0;
 	}
-
+#endif
 	if ( m_bIndestructible )
 	{
 		if ( GetHealth() < info.GetDamage() )

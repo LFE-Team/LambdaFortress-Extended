@@ -203,30 +203,22 @@ void CNPC_GroundTurret::PostNPCInit()
 
 //---------------------------------------------------------
 //---------------------------------------------------------
+/*
 int CNPC_GroundTurret::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
-	if( !info.GetInflictor() )
+	if( info.GetAttacker()->GetTeamNumber() == 3 )
 	{
 		return 0;
 	}
-
-	// Only take damage from self (kill input from my bullseye) or missiles.
-	if( info.GetInflictor() != this && info.GetInflictor()->Classify() != CLASS_MISSILE )
+	else
 	{
-		return 0;
+
+		return BaseClass::OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	}
-
-	CTakeDamageInfo infoCopy = info;
-
-	if( info.GetInflictor() == this )
-	{
-		// Taking damage from myself, make sure it's fatal.
-		infoCopy.SetDamage( GetHealth() );
-		infoCopy.SetDamageType( DMG_REMOVENORAGDOLL | DMG_GENERIC );
-	}
-
-	return BaseClass::OnTakeDamage_Alive( infoCopy );
 }
+*/
+
+
 
 //---------------------------------------------------------
 //---------------------------------------------------------

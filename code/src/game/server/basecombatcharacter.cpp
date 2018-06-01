@@ -54,6 +54,13 @@
 	#include "portal_shareddefs.h"
 #endif
 
+#ifdef TF_CLASSIC
+#include "tf_shareddefs.h"
+#include "tf_obj.h"
+#include "tf_gamerules.h"
+
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -255,6 +262,18 @@ bool CBaseCombatCharacter::HasHumanGibs( void )
 		return true;
 	}
 
+#elif defined( TF_CLASSIC )
+	Class_T myClass = Classify();
+	if ( myClass == CLASS_CITIZEN_PASSIVE   ||
+		 myClass == CLASS_CITIZEN_REBEL		||
+		 myClass == CLASS_COMBINE			||
+		 myClass == CLASS_CONSCRIPT			||
+		 myClass == CLASS_METROPOLICE		||
+		 myClass == CLASS_HUMAN_MILITARY	||
+		 myClass == CLASS_PLAYER_ALLY		||
+		 myClass == CLASS_HUMAN_PASSIVE		||
+		 myClass == CLASS_PLAYER )	
+		 return true;
 #endif
 
 	return false;
@@ -283,6 +302,21 @@ bool CBaseCombatCharacter::HasAlienGibs( void )
 		 myClass == CLASS_ALIEN_PREY )
 	{
 		return true;
+	}
+#elif defined( TF_CLASSIC )
+	Class_T myClass = Classify();
+	if ( myClass == CLASS_BARNACLE		 || 
+		 myClass == CLASS_STALKER		 ||
+		 myClass == CLASS_ZOMBIE		 ||
+		 myClass == CLASS_VORTIGAUNT	 ||
+		 myClass == CLASS_ALIEN_MILITARY ||
+		 myClass == CLASS_ALIEN_MONSTER ||
+		 myClass == CLASS_INSECT ||
+		 myClass == CLASS_ALIEN_PREDATOR ||
+		 myClass == CLASS_ALIEN_PREY ||
+		 myClass == CLASS_HEADCRAB )
+	{
+		 return true;
 	}
 #endif
 
@@ -332,7 +366,7 @@ bool CBaseCombatCharacter::FVisible( CBaseEntity *pEntity, int traceMask, CBaseE
 	VPROF( "CBaseCombatCharacter::FVisible" );
 
 	if ( traceMask != MASK_BLOCKLOS || !ShouldUseVisibilityCache() || pEntity == this
-#if defined(HL2_DLL)
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 		 || Classify() == CLASS_BULLSEYE || pEntity->Classify() == CLASS_BULLSEYE 
 #endif
 		 )
@@ -1531,7 +1565,7 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 
 #ifdef HL2_EPISODIC
 	// Burning corpses are server-side in episodic, if we're in darkness mode
-	if ( IsOnFire() && HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( IsOnFire() && TFGameRules()->IsAlyxInDarknessMode() )
 	{
 		CBaseEntity *pRagdoll = CreateServerRagdoll( this, m_nForceBone, newinfo, COLLISION_GROUP_DEBRIS );
 		FixupBurningServerRagdoll( pRagdoll );
@@ -1645,7 +1679,7 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 				pDroppedWeapon->Dissolve( NULL, gpGlobals->curtime, false, nDissolveType );
 			}
 		}
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 		else if ( PlayerHasMegaPhysCannon() )
 		{
 			if ( pDroppedWeapon )
@@ -1916,7 +1950,11 @@ void CBaseCombatCharacter::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector
 			{
 				// Drop enough ammo to kill 2 of me.
 				// Figure out how much damage one piece of this type of ammo does to this type of enemy.
-				float flAmmoDamage = g_pGameRules->GetAmmoDamage( UTIL_PlayerByIndex(1), this, pWeapon->GetPrimaryAmmoType() );
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI				
+				float flAmmoDamage = g_pGameRules->GetAmmoDamage( UTIL_GetNearestPlayer( GetAbsOrigin() ), this, pWeapon->GetPrimaryAmmoType() ); 
+#else
+				float flAmmoDamage = g_pGameRules->GetAmmoDamage( UTIL_PlayerByIndex(1), this, pWeapon->GetPrimaryAmmoType() );							
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 				pWeapon->m_iClip1 = (GetMaxHealth() / flAmmoDamage) * 2;
 			}
 		}
@@ -2745,7 +2783,39 @@ Relationship_t *CBaseCombatCharacter::FindEntityRelationship( CBaseEntity *pTarg
 Disposition_t CBaseCombatCharacter::IRelationType ( CBaseEntity *pTarget )
 {
 	if ( pTarget )
+	{
+#ifdef TF_CLASSIC
+		// Change relationship based on our and their teams.
+		// Note that this does not affect NPC-to-NPC relatioships.
+		bool bTeamOverride = ( ( ( IsPlayer() && pTarget->IsNPC() ) ||
+			( IsNPC() && ( pTarget->IsPlayer() || pTarget->IsBaseObject() ) ) ) &&
+			( GetTeamNumber() && pTarget->GetTeamNumber() ) );
+
+		if ( bTeamOverride )
+		{
+			if ( pTarget->GetTeamNumber() == GetTeamNumber() )
+			{
+				// We always like teammates.
+				return D_LI;
+			}
+			else
+			{
+				// Hate characters from enemy teams but check custom relatioships first.
+				Disposition_t disp = FindEntityRelationship( pTarget )->disposition;
+
+				if ( disp != GetDefaultRelationshipDisposition( pTarget->Classify() ) )
+				{
+					return disp;
+				}
+
+				// If none found hate them.
+				return D_HT;
+			}
+		}
+#endif
+
 		return FindEntityRelationship( pTarget )->disposition;
+	}
 	return D_NU;
 }
 
@@ -2757,7 +2827,22 @@ Disposition_t CBaseCombatCharacter::IRelationType ( CBaseEntity *pTarget )
 int CBaseCombatCharacter::IRelationPriority( CBaseEntity *pTarget )
 {
 	if ( pTarget )
+	{
+#ifdef TF_CLASSIC
+		// Special case for TF2 buildings: if this is not a sentry gun they have
+		// lower priority so NPCs don't attack dispensers and teleporters over players.
+		if ( pTarget->IsBaseObject() )
+		{
+			CBaseObject *pObject = assert_cast<CBaseObject *>( pTarget );
+
+			if ( pObject && pObject->GetType() != OBJ_SENTRYGUN )
+				return -1;
+
+			return 0;
+		}
+#endif
 		return FindEntityRelationship( pTarget )->priority;
+	}
 	return 0;
 }
 
@@ -2837,7 +2922,7 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 {
 	bool bConservative = false;
 
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 	if( hl2_episodic.GetBool() && !GetActiveWeapon() )
 	{
 		// Unarmed citizens are conservative in their weapon finding
@@ -3038,7 +3123,7 @@ float CBaseCombatCharacter::CalculatePhysicsStressDamage( vphysics_objectstress_
 
 void CBaseCombatCharacter::ApplyStressDamage( IPhysicsObject *pPhysics, bool bRequireLargeObject )
 {
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 	if( Classify() == CLASS_PLAYER_ALLY || Classify() == CLASS_PLAYER_ALLY_VITAL )
 	{
 		// Bypass stress completely for allies and vitals.
