@@ -257,10 +257,10 @@
 		}
 	}
 
-	"SinglePlayerButton"
+	"ResumeButton"
 	{
 		"ControlName"			"CTFAdvButton"
-		"fieldName"				"SinglePlayerButton"
+		"fieldName"				"ResumeButton"
 		"xpos"			"160"
 		"ypos"			"190"
 		"zpos"			"11"
@@ -273,27 +273,21 @@
 
 		"SubButton"
 		{
-			"labelText" 		"???"
+			"labelText" 		"#GameUI_GameMenu_ResumeGame"
 			"xshift" 			"10"
-			"yshift" 			"0"	
-			"textAlignment"		"west"	
+			"yshift" 			"0"
+			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
-			//"defaultFgColor_override"		"MainMenuTextDefault"
-			//"armedFgColor_override"			"MainMenuTextArmed"
-			//"depressedFgColor_override"		"MainMenuTextDepressed"	
 			"defaultFgColor_override"		"MainMenuTextDefault"
-			"armedFgColor_override"			"MainMenuTextDefault"
-			"depressedFgColor_override"		"MainMenuTextDefault"	
-			"border_default"	"MainMenuAdvButtonDepressed"
-			"border_armed"		"MainMenuAdvButtonDepressed"
-			"border_depressed"	"MainMenuAdvButtonDepressed"	
+			"armedFgColor_override"			"MainMenuTextArmed"
+			"depressedFgColor_override"		"MainMenuTextDepressed"	
 		}
-
+		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_practice"
-			"imagewidth"		"16"
-		}		
+			"image" 			"../vgui/icon_resume"
+			"imagewidth"		"1^"	
+		}	
 	}
 
 	"MultiplayerGameButton"
@@ -308,13 +302,12 @@
 		"visible"				"1"
 		"enabled"				"1"
 		"bordervisible"			"1"
-		//"command"			"newcreategame"
-		"command"			"gamemenucommand OpenCreateMultiplayerGameDialog"
+		"command"			"gamemenucommand openplayerlistdialog"
 		
 		"SubButton"
 		{
 			"labelText" 		""
-			"tooltip" 			"#MMenu_PlayList_CreateServer_Button"
+			"tooltip" 			"Mute Players"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			"defaultFgColor_override"		"MainMenuTextArmed"
@@ -326,7 +319,7 @@
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_create"
+			"image" 			"../vgui/glyph_muted"
 			"imagewidth"		"16"	
 		}
 	}
