@@ -1292,7 +1292,6 @@ EXPOSE_INTERFACE( CProxyModelGlowColor, IMaterialProxy, "ModelGlowColor" IMATERI
 
 //-----------------------------------------------------------------------------
 // Purpose: Used for coloring items 
-//			Right now, it's only used for the mercenary
 //-----------------------------------------------------------------------------
 class CProxyItemTintColor : public CResultProxy
 {

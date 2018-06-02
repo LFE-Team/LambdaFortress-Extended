@@ -90,7 +90,7 @@ void CTFRGBPanel::OnDataChanged()
 	Color clr(m_pRedScrollBar->GetValue(), m_pGrnScrollBar->GetValue(), m_pBluScrollBar->GetValue(), 255);
 	m_pColorBG->SetFillColor(clr);
 	PostActionSignal(new KeyValues("ControlModified"));
-
+	/*
 	m_pParticlesPanel->Update();
 	char chParticleName[64];
 	ConVar *tf2c_setmercparticle = cvar->FindVar("tf2c_setmercparticle");
@@ -100,7 +100,7 @@ void CTFRGBPanel::OnDataChanged()
 	if ( !iParticleID )
 		return;
 	Q_snprintf(chParticleName, sizeof(chParticleName), "dm_respawn_%02d", iParticleID);
-	m_pParticlesPanel->SetParticleName(chParticleName);
+	/_pParticlesPanel->SetParticleName(chParticleName);*/
 };
 
 void CTFRGBPanel::OnCommand(const char* command)

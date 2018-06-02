@@ -48,8 +48,6 @@ static int iRemapIndexToClass[TF_CLASS_MENU_BUTTONS] =
 	TF_CLASS_SNIPER,
 	TF_CLASS_SPY,
 	0,
-	0,
-	0,
 	TF_CLASS_RANDOM
 };
 
@@ -70,8 +68,6 @@ static char* pszHoverupSound[TF_CLASS_MENU_BUTTONS] =
 	"music.class_menu_08",
 	"music.class_menu_09",
 	"music.class_menu_09",
-	"music.class_menu_09",
-	"music.class_menu_69"
 };
 
 int GetIndexForClass( int iClass )

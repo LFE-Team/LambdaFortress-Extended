@@ -45,7 +45,7 @@ acttable_t CTFPistol::m_acttable[] =
 	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_MP_ATTACK_CROUCH_SECONDARY2, false },
 };
 
-IMPLEMENT_DM_ACTTABLE( CTFPistol );
+IMPLEMENT_ACTTABLE( CTFPistol );
 
 //-----------------------------------------------------------------------------
 // Purpose:

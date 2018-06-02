@@ -83,8 +83,6 @@ static int g_TauntCamAchievements[] =
 	0,		// TF_CLASS_SPY,
 	0,		// TF_CLASS_ENGINEER,
 
-	0,		// TF_CLASS_CIVILIAN,
-	0,		// TF_CLASS_MERCENARY,
 	0,		// TF_CLASS_COUNT_ALL,
 };
 
@@ -225,8 +223,6 @@ Vector g_TFClassViewVectors[TF_CLASS_COUNT_ALL] =
 	Vector( 0, 0, 68 ),		// TF_CLASS_PYRO,
 	Vector( 0, 0, 75 ),		// TF_CLASS_SPY,
 	Vector( 0, 0, 68 ),		// TF_CLASS_ENGINEER,
-	Vector( 0, 0, 65 ),		// TF_CLASS_CIVILIAN,			
-	Vector( 0, 0, 68 ),		// TF_CLASS_MERCENARY,
 };
 
 const CViewVectors *CTFGameRules::GetViewVectors() const
@@ -813,9 +809,6 @@ public:
 			case TF_CLASS_SCOUT:
 				result = m_nScoutLimit;
 				break;
-			case TF_CLASS_MERCENARY:
-				result = m_nMercenaryLimit;
-				break;
 			}
 		}
 		else
@@ -837,7 +830,6 @@ private:
 	int		m_nMedicLimit;
 	int		m_nSniperLimit;
 	int		m_nSpyLimit;
-	int		m_nMercenaryLimit;
 };
 
 LINK_ENTITY_TO_CLASS(tf_logic_classlimits, CTFClassLimits);
@@ -853,7 +845,6 @@ DEFINE_KEYFIELD(m_nEngineerLimit,	FIELD_INTEGER, "EngineerLimit"),
 DEFINE_KEYFIELD(m_nMedicLimit,		FIELD_INTEGER, "MedicLimit"),
 DEFINE_KEYFIELD(m_nSniperLimit,		FIELD_INTEGER, "SniperLimit"),
 DEFINE_KEYFIELD(m_nSpyLimit,		FIELD_INTEGER, "SpyLimit"),
-DEFINE_KEYFIELD(m_nMercenaryLimit,	FIELD_INTEGER, "MercenaryLimit"),
 END_DATADESC()
 
 void CTFClassLimits::Spawn(void)
@@ -1659,8 +1650,6 @@ void CTFGameRules::Activate()
 	}
 }
 
-extern ConVar tf2c_allow_special_classes;
-
 int CTFGameRules::GetClassLimit( int iDesiredClassIndex, int iTeam )
 {
 	int result = -1;
@@ -1706,13 +1695,6 @@ int CTFGameRules::GetClassLimit( int iDesiredClassIndex, int iTeam )
 		{
 			result = -1;
 		}
-	}
-	else if (iDesiredClassIndex == TF_CLASS_CIVILIAN)
-	{
-		if (!tf2c_allow_special_classes.GetBool())
-			return 1;
-		else
-			return -1;
 	}
 	else if ( IsInHighlanderMode() )
 	{
@@ -4461,9 +4443,6 @@ static const char *g_aTaggedConVars[] =
 
 	"tf2c_duckjump",
 	"duckjump",
-
-	"tf2c_allow_special_classes",
-	"specialclasses",
 
 	"tf2c_airblast",
 	"noairblast",

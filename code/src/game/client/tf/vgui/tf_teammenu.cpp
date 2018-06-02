@@ -1100,6 +1100,11 @@ void CTFFourTeamMenu::OnTick()
 			}
 		}
 	}
+
+	if (TFGameRules() && TFGameRules()->IsCoOp())
+	{
+		m_bBlueDisabled = true;
+	}
 }
 
 

@@ -109,23 +109,11 @@ void CTFGrenadeStickybombProjectile::CreateTrails( void )
 {
 	CNewParticleEffect *pParticle = ParticleProp()->Create( GetTrailParticleName(), PATTACH_ABSORIGIN_FOLLOW );
 
-	C_TFPlayer *pPlayer = ToTFPlayer( GetThrower() );
-
-	if ( pPlayer )
-	{
-		pPlayer->m_Shared.SetParticleToMercColor( pParticle );
-	}
-
 	if ( m_bCritical )
 	{
 		const char *pszEffectName = ConstructTeamParticle( "critical_grenade_%s", GetTeamNumber(), true );
 
 		pParticle = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
-
-		if ( pPlayer )
-		{
-			pPlayer->m_Shared.SetParticleToMercColor( pParticle );
-		}
 	}
 }
 

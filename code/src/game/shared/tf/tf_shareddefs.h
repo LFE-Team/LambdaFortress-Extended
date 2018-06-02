@@ -89,7 +89,7 @@ enum
 #define PANEL_FOURTEAMSCOREBOARD "fourteamscoreboard"
 #define PANEL_FOURTEAMSELECT	"fourteamselect"
 #define PANEL_DEATHMATCHSCOREBOARD "deathmatchscoreboard"
-#define PANEL_DEATHMATCHTEAMSELECT "deathmatchteamselect"
+#define PANEL_ARENATEAMSELECT "arenateamselect"
 
 // file we'll save our list of viewed intro movies in
 #define MOVIES_FILE				"viewed.res"
@@ -117,7 +117,7 @@ enum
 #define TF_CLASS_COUNT			( TF_CLASS_COUNT_ALL - 1 )
 
 #define TF_FIRST_NORMAL_CLASS	( TF_CLASS_UNDEFINED + 1 )
-#define TF_LAST_NORMAL_CLASS	( TF_CLASS_CIVILIAN - 1 )
+#define TF_LAST_NORMAL_CLASS	( TF_CLASS_ENGINEER - 1 )
 
 #define	TF_CLASS_MENU_BUTTONS	( TF_CLASS_RANDOM + 1 )
 
@@ -137,8 +137,6 @@ enum
 
 	// Add any new classes after Engineer.
 	// The following classes are not available in normal play.
-	TF_CLASS_CIVILIAN,
-	TF_CLASS_MERCENARY,
 	TF_CLASS_COUNT_ALL,
 
 	TF_CLASS_RANDOM
@@ -176,7 +174,6 @@ enum
 	TF_GAMETYPE_RD,
 	TF_GAMETYPE_PASSTIME,
 	TF_GAMETYPE_PD,
-	TF_GAMETYPE_DM,
 	TF_GAMETYPE_COOP,
 	TF_GAMETYPE_VS,
 };

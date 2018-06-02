@@ -124,13 +124,11 @@ void CTFDeathMatchScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme 
 		m_iImageDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dead", true ) );
 		m_iImageDominated = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dominated", true ) );
 		m_iImageNemesis = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis", true ) );
-
-		// We're skipping the mercenary, as he shouldn't have a visible class emblem during regular gameplay
-		for ( int i = TF_CLASS_SCOUT; i < TF_CLASS_MERCENARY; i++ )
+		for (int i = 0; i < TF_CLASS_COUNT_ALL; i++)
 		{
 			m_iClassEmblem[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblems[i - 1], true ) );
 			m_iClassEmblemDead[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblemsDead[i - 1], true ) );
-		}
+			}
 
 		// resize the images to our resolution
 		for ( int i = 1; i < m_pImageList->GetImageCount(); i++ )

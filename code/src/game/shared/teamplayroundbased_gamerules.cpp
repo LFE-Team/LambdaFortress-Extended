@@ -3652,35 +3652,32 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 	}
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
-	// In Versus don't allow joining BLU unless there's min amount of players on RED.
+	// In Co-Op we only allow players to join red team.
 	if ( TFGameRules()->IsCoOp() )
 	{
+		// Always allow joining Rebels.
 		if ( iNewTeam == TF_COMBINE_TEAM )
+			return false;
+	}
+
+	// In Versus don't allow joining BLU unless there's min amount of players on RED.
+	if ( TFGameRules()->IsVersus() )
+	{
+		CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
+		Assert( pRebels );
+
+		int iRebelPlayers = pRebels->GetNumPlayers();
+
+		if ( iCurrentTeam == TF_STORY_TEAM )
 		{
-			if ( TFGameRules()->IsVersus() )
-			{
-				CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
-				Assert( pRebels );
-
-				int iRebelPlayers = pRebels->GetNumPlayers();
-
-				if ( iCurrentTeam == TF_STORY_TEAM )
-				{
-					iRebelPlayers -= 1;
-				}
-
-				if ( iRebelPlayers < lf_coop_min_red_players.GetInt() )
-					return true;
-			}
-			else
-			{
-				// Don't allow joining Combine outside of Versus mode.
-				return true;
-			}
+			iRebelPlayers -= 1;
 		}
 
-		// Always allow joining Rebels.
-		return false;
+		if ( iRebelPlayers < lf_coop_min_red_players.GetInt() )
+			return true;
+
+		// Allow joining Combine in Versus mode.
+		return true;
 	}
 #endif
 

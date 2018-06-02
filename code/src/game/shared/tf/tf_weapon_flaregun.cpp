@@ -31,6 +31,8 @@ acttable_t CTFFlareGun::m_acttable[] =
 	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_MP_ATTACK_CROUCH_SECONDARY2, false },
 };
 
+IMPLEMENT_ACTTABLE( CTFFlareGun );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -46,5 +48,3 @@ void CTFFlareGun::Spawn( void )
 {
 	BaseClass::Spawn();
 }
-
-IMPLEMENT_DM_ACTTABLE( CTFFlareGun );

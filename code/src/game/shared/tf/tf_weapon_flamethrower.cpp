@@ -1175,8 +1175,6 @@ void CTFFlameThrower::RestartParticleEffect( void )
 		m_pFlameEffect = pModel->ParticleProp()->Create( pszParticleEffect, PATTACH_POINT_FOLLOW, "muzzle" );
 		m_hFlameEffectHost = pModel;
 	}
-
-	pOwner->m_Shared.SetParticleToMercColor( m_pFlameEffect );
 }
 
 #else

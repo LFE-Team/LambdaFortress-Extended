@@ -27,13 +27,12 @@ public:
 	DECLARE_CLASS( CTFRevolver, CTFWeaponBaseGun );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CTFRevolver() {}
 	~CTFRevolver() {}
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_REVOLVER; }
-
-	DECLARE_DM_ACTTABLE();
 
 private:
 

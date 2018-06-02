@@ -128,8 +128,6 @@ extern ConVar tf_gravetalk;
 // Team Fortress 2 Classic commands
 ConVar tf2c_random_weapons( "tf2c_random_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with random loadout. CURRENTLY BROKEN!!!" );
 
-
-ConVar tf2c_allow_special_classes( "tf2c_allow_special_classes", "0", FCVAR_NOTIFY, "Enables gamemode specific classes (Civilian, Mercenary, ...) in normal gameplay." );
 ConVar tf2c_force_stock_weapons( "tf2c_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
 ConVar tf2c_legacy_weapons( "tf2c_legacy_weapons", "0", FCVAR_DEVELOPMENTONLY, "Disables all new weapons as well as Econ Item System." );
 ConVar tf2c_dm_spawnprotecttime( "tf2c_dm_spawnprotecttime", "5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time (in seconds) that the DM spawn protection lasts" );
@@ -999,6 +997,8 @@ void CTFPlayer::PrecachePlayerModels( void )
 
 	PrecacheModel( TF_SPY_MASK_MODEL );
 	PrecacheModel( TF_POWERUP_SHIELD_MODEL );
+	PrecacheModel( "models/props_trainyard/bomb_cart_red.mdl" );
+	PrecacheModel( "models/props_trainyard/bomb_cart.mdl" );
 
 	// Precache player class sounds
 	for ( i = TF_FIRST_NORMAL_CLASS; i < TF_CLASS_COUNT_ALL; ++i )
@@ -2840,8 +2840,7 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 
 	if ( stricmp( pClassName, "random" ) != 0 )
 	{
-		// Allow players to join the mercenary and civilian class if the cvar is enabled
-		int iLastClass = tf2c_allow_special_classes.GetBool() ? TF_CLASS_COUNT : TF_LAST_NORMAL_CLASS;
+		int iLastClass = TF_LAST_NORMAL_CLASS;
 
 		int i = 0;
 
@@ -3407,7 +3406,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	{
 		if ( !PlayerHasPowerplay() )
 		{
-			return true;
+			return false;
 		}
 		else 
 		{
@@ -3434,7 +3433,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	{
 		if ( !PlayerHasPowerplay() )
 		{
-			return true;
+			return false;
 		}
 		else
 		{
@@ -3457,11 +3456,11 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			}
 		}
 	}
-	else if ( FStrEq( pcmd, "condump_vrl" ) )
+	else if ( FStrEq( pcmd, "condump_train" ) )
 	{
-		if ( !PlayerHasPowerplay() )
+		if ( !PlayerIsDevTrain() )
 		{
-			return true;
+			return false;
 		}
 		else 
 		{
@@ -3472,45 +3471,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 					CTFPlayer *pTeamPlayer = ToTFPlayer( GetTeam()->GetPlayer(i) );
 					if ( pTeamPlayer )
 					{
-						int iItemID = 9001;
-						CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
-
-						CEconItemView econItem( iItemID );
-
-						// Nuke whatever we have in this slot.
-						int iClass = pTeamPlayer->GetPlayerClass()->GetClassIndex();
-						int iSlot = pItemDef->GetLoadoutSlot( iClass );
-						CEconEntity *pEntity = pTeamPlayer->GetEntityForLoadoutSlot( iSlot );
-
-						if ( pEntity )
-						{
-							CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
-
-							if ( pWeapon )
-							{
-								if ( pWeapon == pTeamPlayer->GetActiveWeapon() )
-									pWeapon->Holster();
-
-								pTeamPlayer->Weapon_Detach( pWeapon );
-								UTIL_Remove( pWeapon );
-							}
-						}
-
-						const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
-						CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pTeamPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
-
-						if ( pEconEnt )
-						{
-							pEconEnt->GiveTo( pTeamPlayer );
-
-							CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
-							if ( pWeapon )
-							{
-								// Give full ammo for this weapon.
-								int iAmmoType = pWeapon->GetPrimaryAmmoType();
-								pTeamPlayer->SetAmmoCount( pTeamPlayer->GetMaxAmmo( iAmmoType ), iAmmoType );
-							}
-						}
+						pTeamPlayer->SetModel( "models/props_trainyard/bomb_cart_red.mdl" );
 					}
 				}
 				return true;
@@ -4022,7 +3983,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	// if this is our own rocket and we're in mid-air, scale down the damage
-	if ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_MERCENARY ) || IsPlayerClass( TF_CLASS_DEMOMAN ) )
+	if ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_DEMOMAN ) )
 	{
 		if ( ( info.GetDamageType() & DMG_BLAST ) && pAttacker == this && GetGroundEntity() == NULL )
 		{
@@ -4653,7 +4614,7 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir
 	vecForce.Init();
 	if ( pAttacker == this )
 	{
-		if ( ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_MERCENARY ) ) && ( info.GetDamageType() & DMG_BLAST ) )
+		if ( IsPlayerClass( TF_CLASS_SOLDIER ) && ( info.GetDamageType() & DMG_BLAST ) )
 		{
 			// Since soldier only takes reduced self-damage while in mid-air we have to accomodate for that.
 			float flScale = 1.0f;
@@ -9052,6 +9013,83 @@ CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nF
 
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer )
+		return;
+
+	int iItemID = atoi( args[1] );
+	CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
+	if ( !pItemDef )
+		return;
+
+	CEconItemView econItem( iItemID );
+
+	bool bAddedAttributes = false;
+
+	// Additonal params are attributes.
+	for ( int i = 3; i + 1 < args.ArgC(); i += 2 )
+	{
+		int iAttribIndex = atoi( args[i] );
+		float flValue = atof( args[i + 1] );
+
+		CEconItemAttribute econAttribute( iAttribIndex, flValue );
+		econAttribute.m_strAttributeClass = AllocPooledString( econAttribute.attribute_class );
+		bAddedAttributes = econItem.AddAttribute( &econAttribute );
+	}
+
+	econItem.SkipBaseAttributes( bAddedAttributes );
+
+	// Nuke whatever we have in this slot.
+	int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
+	int iSlot = pItemDef->GetLoadoutSlot( iClass );
+	CEconEntity *pEntity = pPlayer->GetEntityForLoadoutSlot( iSlot );
+
+	if ( pEntity )
+	{
+		CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
+
+		if ( pWeapon )
+		{
+			if ( pWeapon == pPlayer->GetActiveWeapon() )
+				pWeapon->Holster();
+
+			pPlayer->Weapon_Detach( pWeapon );
+			UTIL_Remove( pWeapon );
+		}
+		else if ( pEntity->IsWearable() )
+		{
+			CEconWearable *pWearable = static_cast<CEconWearable *>( pEntity );
+			pPlayer->RemoveWearable( pWearable );
+		}
+		else
+		{
+			AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
+			UTIL_Remove( pEntity );
+		}
+	}
+
+	const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
+	CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
+
+	if ( pEconEnt )
+	{
+		pEconEnt->GiveTo( pPlayer );
+
+		CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
+		if ( pWeapon )
+		{
+			// Give full ammo for this weapon.
+			int iAmmoType = pWeapon->GetPrimaryAmmoType();
+			pPlayer->SetAmmoCount( pPlayer->GetMaxAmmo( iAmmoType ), iAmmoType );
+		}
+	}
+}
+
+CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
+{
+	if ( args.ArgC() < 2 )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
+	if ( !pPlayer->m_bIsPlayerADev )
 		return;
 
 	int iItemID = atoi( args[1] );

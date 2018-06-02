@@ -184,7 +184,7 @@ public:
 	CTFArenaTeamMenu(IViewPort *pViewPort);
 	~CTFArenaTeamMenu();
 
-	virtual const char *GetName(void) { return PANEL_DEATHMATCHTEAMSELECT; }
+	virtual const char *GetName(void) { return PANEL_ARENATEAMSELECT; }
 	void Update();
 	void ShowPanel(bool bShow);
 

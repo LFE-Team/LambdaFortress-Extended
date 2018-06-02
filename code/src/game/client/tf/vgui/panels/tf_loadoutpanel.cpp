@@ -28,8 +28,6 @@ static const char *pszClassModels[TF_CLASS_COUNT_ALL] =
 	"models/player/pyro.mdl",
 	"models/player/spy.mdl",
 	"models/player/engineer.mdl",
-	"models/player/civilian.mdl",
-	"models/player/merc_deathmatch.mdl",
 };
 
 static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
@@ -82,16 +80,6 @@ static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
 	},
-	{
-		TF_LOADOUT_SLOT_MELEE,
-		-1,
-		-1,
-	},
-	{
-		TF_LOADOUT_SLOT_MELEE,
-		-1,
-		-1,
-	}
 };
 
 struct _WeaponData
@@ -335,10 +323,6 @@ void CTFLoadoutPanel::OnCommand( const char* command )
 	else if ( !Q_strcmp( command, "select_spy" ) )
 	{
 		SetCurrentClass( TF_CLASS_SPY );
-	}
-	else if ( !Q_strcmp( command, "select_merc" ) )
-	{
-		SetCurrentClass( TF_CLASS_MERCENARY );
 	}
 	else
 	{
@@ -585,11 +569,7 @@ void CTFLoadoutPanel::SetModelClass( int iClass )
 	int nSkin = 0;
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if ( iClass == TF_CLASS_MERCENARY )
-	{
-		nSkin = 8;
-	}
-	else if ( pPlayer )
+	if ( pPlayer )
 	{
 		switch ( pPlayer->GetTeamNumber() )
 		{
@@ -617,7 +597,7 @@ void CTFLoadoutPanel::UpdateModelPanels()
 
 	m_pClassModelPanel->SetVisible( true );
 	m_pWeaponSetPanel->SetVisible( iClassIndex <= TF_LAST_NORMAL_CLASS );
-	m_pRGBPanel->SetVisible( iClassIndex == TF_CLASS_MERCENARY );
+	m_pRGBPanel->SetVisible( false );
 
 	SetModelClass( iClassIndex );
 	UpdateModelWeapons();

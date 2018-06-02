@@ -210,7 +210,7 @@ void CWeaponSpawner::EndTouch( CBaseEntity *pOther )
 {
 	CTFPlayer *pTFPlayer = dynamic_cast<CTFPlayer*>( pOther );
 
-	if ( ValidTouch( pTFPlayer ) && pTFPlayer->IsPlayerClass( TF_CLASS_MERCENARY ) )
+	if ( ValidTouch( pTFPlayer ) )
 	{
 		int iCurrentWeaponID = pTFPlayer->m_Shared.GetDesiredWeaponIndex();
 		if ( iCurrentWeaponID == m_nItemID )
@@ -230,9 +230,9 @@ bool CWeaponSpawner::MyTouch( CBasePlayer *pPlayer )
 
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 
-	if ( ValidTouch( pTFPlayer ) && pTFPlayer->IsPlayerClass( TF_CLASS_MERCENARY ) )
+	if ( ValidTouch( pTFPlayer ) )
 	{
-		int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( TF_CLASS_MERCENARY );
+		int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( TF_CLASS_COUNT );
 		CTFWeaponBase *pWeapon = (CTFWeaponBase *)pTFPlayer->GetEntityForLoadoutSlot( iSlot );
 
 		if ( pWeapon )
