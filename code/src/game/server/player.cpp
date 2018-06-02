@@ -88,6 +88,7 @@
 
 ConVar autoaim_max_dist( "autoaim_max_dist", "2160" ); // 2160 = 180 feet
 ConVar autoaim_max_deflect( "autoaim_max_deflect", "0.99" );
+ConVar sv_hl2_beta("sv_hl2_beta", "0");
 
 #ifdef CSTRIKE_DLL
 ConVar	spec_freeze_time( "spec_freeze_time", "5.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );

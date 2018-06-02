@@ -177,6 +177,7 @@ enum PlayerConnectedState
 
 extern bool gInitHUD;
 extern ConVar *sv_cheats;
+extern ConVar sv_hl2_beta;
 
 class CBasePlayer;
 class CPlayerInfo : public IBotController, public IPlayerInfo
