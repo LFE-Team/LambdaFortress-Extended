@@ -1,0 +1,5 @@
+"UnlitGeneric"
+{
+	"$basetexture"		"backpack/workshop/weapons/c_models/c_crossing_guard/c_crossing_guard_large"
+	"$translucent"		"1"
+}

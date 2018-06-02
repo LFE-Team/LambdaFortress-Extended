@@ -452,9 +452,6 @@ void CTFGameMovement::PreventBunnyJumping()
 	// Speed at which bunny jumping is limited
 	float maxscaledspeed = tf2c_bunnyjump_max_speed_factor.GetFloat() * player->m_flMaxspeed;
 
-	if (TFGameRules()->IsDeathmatch())
-		maxscaledspeed = 1.50f * player->m_flMaxspeed;
-
 	if ( maxscaledspeed <= 0.0f )
 		return;
 
@@ -493,7 +490,7 @@ bool CTFGameMovement::CheckJumpButton()
 	if ( player->GetFlags() & FL_DUCKING )
 	{
 		// Let a scout do it.
-		bool bAllow = (bScout && !bOnGround) || tf2c_duckjump.GetBool() || TFGameRules()->IsDeathmatch();
+		bool bAllow = (bScout && !bOnGround) || tf2c_duckjump.GetBool();
 
 		if ( !bAllow )
 			return false;
@@ -510,7 +507,7 @@ bool CTFGameMovement::CheckJumpButton()
 		if ( !bOnGround )
 			return false;
 
-		if ( !tf2c_autojump.GetBool() && !TFGameRules()->IsDeathmatch() )
+		if ( !tf2c_autojump.GetBool())
 			return false;
 	}
 

@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack\weapons\c_models\c_dex_arm\c_dex_arm_large"
+	$translucent 1
+	$vertexcolor 1
+}

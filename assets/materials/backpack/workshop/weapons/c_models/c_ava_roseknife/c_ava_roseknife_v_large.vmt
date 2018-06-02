@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_ava_roseknife/c_ava_roseknife_v_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

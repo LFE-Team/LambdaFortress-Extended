@@ -408,12 +408,7 @@ int CTFViewModel::GetSkin()
 	CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );
 	if ( pPlayer )
 	{
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			// Merc arms are team colored so use the colored skin for all weapons.
-			nSkin = 4;
-		}
-		else if ( pWeapon->GetTFWpnData().m_bHasTeamSkins_Viewmodel )
+		if ( pWeapon->GetTFWpnData().m_bHasTeamSkins_Viewmodel )
 		{
 			switch ( pPlayer->GetTeamNumber() )
 			{

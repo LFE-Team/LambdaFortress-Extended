@@ -663,7 +663,7 @@ void CTFFlameThrower::DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker,
 	if ( !TFGameRules() )
 		return;
 
-	if ( ( pEntity->GetTeamNumber() == pAttacker->GetTeamNumber() ) && !TFGameRules()->IsDeathmatch() )
+	if ( ( pEntity->GetTeamNumber() == pAttacker->GetTeamNumber() ) )
 		return;
 
 	pEntity->Deflected( pAttacker, vecDir );

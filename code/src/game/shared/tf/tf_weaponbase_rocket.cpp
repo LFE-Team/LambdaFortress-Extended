@@ -165,7 +165,7 @@ void CTFBaseRocket::Spawn( void )
 
 	// Don't collide with players on the owner's team for the first bit of our life
 	m_flCollideWithTeammatesTime = gpGlobals->curtime + 0.25;
-	m_bCollideWithTeammates = TFGameRules()->IsDeathmatch() ? true : false;
+	m_bCollideWithTeammates = false;
 
 #endif
 }
@@ -602,7 +602,7 @@ void CTFBaseRocket::FlyThink( void )
 			if ( pPlayer == GetOwnerEntity() )
 				continue;
 
-			if ( pPlayer->GetTeamNumber() == GetTeamNumber() && !TFGameRules()->IsDeathmatch() )
+			if ( pPlayer->GetTeamNumber() == GetTeamNumber() )
 				continue;
 
 			Vector vecTarget;

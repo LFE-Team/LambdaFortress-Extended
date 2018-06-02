@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_wheel_shield/c_wheel_shield"
+	$translucent 1
+	$vertexcolor 1
+}

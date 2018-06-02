@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$basetexture"		"backpack/workshop/weapons/c_models/c_rr_crossing_sign/c_rr_crossing_sign"
+	"$translucent"		"1"
+	"$vertexcolor"		"1"
+}

@@ -323,9 +323,9 @@ void CTFMapInfoMenu::LoadMapPage( const char *mapName )
 			{
 				pszGameTypeAbbreviation = "payload";
 			}
-			else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_DM )
+			else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_VS )
 			{
-				pszGameTypeAbbreviation = "dm";
+				pszGameTypeAbbreviation = "vs";
 			}
 
 			Q_snprintf( mapLocalizationString, sizeof( mapLocalizationString ), "default_%s_description", pszGameTypeAbbreviation );
@@ -473,11 +473,6 @@ static s_MapInfo s_Maps[] = {
     //---------------------- ARENA maps ----------------------
     "arena_sawmill",        "Sawmill (Arena)",  "#Gametype_Arena",              "Valve",
     //---------------------- DM maps ----------------------
-    "dm_wiseau",             "Wiseau",           "#Gametype_Deathmatch",         "MacD11, iiboharz",
-    "dm_grain",              "Grain",            "#Gametype_Deathmatch",         "Muddy",
-    "dm_parley",             "Parley",           "#Gametype_Deathmatch",         "DrPyspy",
-    "dm_ravine",             "Ravine",           "#Gametype_Deathmatch",         "Snowshoe, Valve",
-    "dm_2fort",              "2Fort (DM)",       "#Gametype_Deathmatch",         "iiboharz, Valve",
 };
 
 static s_MapTypeInfo s_MapTypes[] = {
@@ -489,9 +484,6 @@ static s_MapTypeInfo s_MapTypes[] = {
 	"arena_",	6, "#Gametype_Arena",
 	"tr_",		3, "#Gametype_Training",
 	"tc_",		3, "#TF_TerritoryControl",
-	"dm_",		3, "#Gametype_Deathmatch",
-	"vip_",		4, "#Gametype_VIP",
-	"esp_",		4, "#Gametype_Espionage",
 };
 
 //-----------------------------------------------------------------------------

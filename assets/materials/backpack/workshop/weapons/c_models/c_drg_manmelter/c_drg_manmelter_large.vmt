@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_drg_manmelter/c_drg_manmelter_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

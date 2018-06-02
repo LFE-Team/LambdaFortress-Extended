@@ -690,6 +690,7 @@ private:
 public:
 	bool				SetPowerplayEnabled( bool bOn );
 	bool				PlayerHasPowerplay( void );
+	bool				PlayerIsDevTrain( void );
 	void				PowerplayThink( void );
 	float				m_flPowerPlayTime;
 	

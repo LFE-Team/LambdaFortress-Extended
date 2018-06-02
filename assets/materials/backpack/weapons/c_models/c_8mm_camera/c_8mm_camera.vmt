@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_8mm_camera/c_8mm_camera"
+	$translucent 1
+	$vertexcolor 1
+}

@@ -857,10 +857,6 @@ bool CTFWeaponBase::CalcIsAttackCriticalHelper()
 	if ( !pPlayer )
 		return false;
 
-	// Random crits are disabled in DM due to balancing reasons
-	if ( TFGameRules()->IsDeathmatch() )
-		return false;
-
 	// Don't bother checking if random crits are off.
 	if ( !tf_weapon_criticals.GetBool() )
 		return false;

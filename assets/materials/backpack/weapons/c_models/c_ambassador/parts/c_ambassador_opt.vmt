@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_ambassador/parts/c_ambassador_opt"
+	"$translucent" 1
+	"$vertexcolor" 1
+}
+

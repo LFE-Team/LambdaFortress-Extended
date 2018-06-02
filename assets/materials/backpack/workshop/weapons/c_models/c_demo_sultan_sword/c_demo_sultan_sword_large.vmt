@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_demo_sultan_sword/c_demo_sultan_sword_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

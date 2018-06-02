@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_paratrooper_pack/c_paratrooper_pack"
+	"$translucent" "1"
+	"$vertexcolor" "1"
+}

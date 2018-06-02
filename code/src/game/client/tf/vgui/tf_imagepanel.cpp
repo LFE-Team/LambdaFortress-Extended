@@ -65,15 +65,7 @@ void CTFImagePanel::UpdateBGImage( void )
 {
 	if ( m_iBGTeam >= 0 && m_iBGTeam < TF_TEAM_COUNT )
 	{
-		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
-			int iColorIndex = ( tf2c_coloredhud.GetBool() ? IMAGE_BG_EMPTY : IMAGE_BG_DEATHMATCH );
-			if ( m_szTeamBG[iColorIndex][0] != '\0' )
-			{
-				SetImage( m_szTeamBG[iColorIndex] );
-			}
-		}
-		else if ( m_szTeamBG[m_iBGTeam] && m_szTeamBG[m_iBGTeam][0] )
+		if ( m_szTeamBG[m_iBGTeam] && m_szTeamBG[m_iBGTeam][0] )
 		{
 			SetImage( m_szTeamBG[m_iBGTeam] );
 		}

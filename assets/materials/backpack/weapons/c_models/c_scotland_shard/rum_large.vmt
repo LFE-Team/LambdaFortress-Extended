@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack\weapons\c_models\c_scotland_shard\rum_large"
+	$translucent 1
+	$vertexcolor 1
+}

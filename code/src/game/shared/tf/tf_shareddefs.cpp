@@ -45,11 +45,6 @@ const char *g_aTeamParticleNames[TF_TEAM_COUNT] =
 
 const char *GetTeamParticleName( int iTeam, bool bDeathmatchOverride /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
 {
-	if ( bDeathmatchOverride && TFGameRules() && TFGameRules()->IsDeathmatch() )
-	{
-		return "dm";
-	}
-
 	return pNames[iTeam];
 }
 
@@ -170,9 +165,8 @@ const char *g_aGameTypeNames[] =
 	"#GameType_Passtime",
 	"#GameType_PlayerDestruction",
 	"#Gametype_MVM",
-	"#Gametype_DM",
-	"#Gametype_VIP",
 	"#Gametype_COOP",
+	"#Gametype_VS",
 };
 
 //-----------------------------------------------------------------------------

@@ -147,6 +147,11 @@ bool RagdollManager_SaveImportant( CAI_BaseNPC *pNPC );
 
 #define FINDNAMEDENTITY_MAX_ENTITIES	32		// max number of entities to be considered for random entity selection in FindNamedEntity
 
+#ifdef TF_CLASSIC
+#define NPC_DAMAGE_FORCE_SCALE_SELF				9
+extern ConVar tf_damageforcescale_other;
+#endif
+
 extern bool			g_fDrawLines;
 extern short		g_sModelIndexLaser;		// holds the index for the laser beam
 extern short		g_sModelIndexLaserDot;	// holds the index for the laser beam dot
@@ -785,9 +790,10 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 
 	if ( !IsOnFire() )
 	{
+		CTakeDamageInfo info;
+		CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
 		// Start burning
-		AddCond( TF_COND_BURNING );
-		m_flFlameBurnTime = gpGlobals->curtime;	//asap
+		Burn( pTFAttacker );
 	}
 	
 	m_flFlameRemoveTime = gpGlobals->curtime + flFlameLifetime;
@@ -1064,6 +1070,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
+#ifdef HL2_DLL
 	Forget( bits_MEMORY_INCOVER );
 
 	if ( !BaseClass::OnTakeDamage_Alive( info ) )
@@ -1133,15 +1140,9 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		{
 			// See if the person that injured me is an NPC.
 			CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 			CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			if( pAttacker && pAttacker->IsAlive() && UTIL_GetNearestPlayer( GetAbsOrigin() ) ) 
-#else
 			if( pAttacker && pAttacker->IsAlive() && pPlayer )
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 			{
 				if( pAttacker->GetSquad() != NULL && pAttacker->IsInPlayerSquad() )
 				{
@@ -1256,17 +1257,282 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// ---------------------------------------------------------------
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 1024, 0.5, this, SOUNDENT_CHANNEL_INJURY );
 
-#ifdef TF_CLASSIC
-	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
+#elif TF_CLASSIC
+
+	CBaseEntity *pAttacker = info.GetAttacker();
+	CBaseEntity *pInflictor = info.GetInflictor();
+	CBaseEntity *pWeapon = info.GetWeapon();
+	float flDamage = info.GetDamage();
+
+	Vector vecDir = vec3_origin;
+	if ( pInflictor )
+	{
+		vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
+		VectorNormalize( vecDir );
+	}
+	g_vecAttackDir = vecDir;
+
+	Forget( bits_MEMORY_INCOVER );
+
+	if ( !BaseClass::OnTakeDamage_Alive( info ) )
+		return 0;
+
+	if ( GetSleepState() == AISS_WAITING_FOR_THREAT )
+		Wake();
+
+	// NOTE: This must happen after the base class is called; we need to reduce
+	// health before the pain sound, since some NPCs use the final health
+	// level as a modifier to determine which pain sound to use.
+
+	// REVISIT: Combine soldiers shoot each other a lot and then talk about it
+	// this improves that case a bunch, but it seems kind of harsh.
+	if ( !m_pSquad || !m_pSquad->SquadIsMember( pAttacker ) )
+	{
+		PainSound( info );// "Ouch!"
+	}
+
+	// See if we're running a dynamic interaction that should break when I am damaged.
+	if ( IsActiveDynamicInteraction() )
+	{
+		ScriptedNPCInteraction_t *pInteraction = GetRunningDynamicInteraction();
+		if ( pInteraction->iLoopBreakTriggerMethod & SNPCINT_LOOPBREAK_ON_DAMAGE )
+		{
+			// Can only break when we're in the action anim
+			if ( m_hCine->IsPlayingAction() )
+			{
+				m_hCine->StopActionLoop( true );
+			}
+		}
+	}
+
+	// If we're not allowed to die, refuse to die
+	// Allow my interaction partner to kill me though
+	if ( m_iHealth <= 0 && HasInteractionCantDie() && pAttacker != m_hInteractionPartner )
+	{
+		m_iHealth = 1;
+	}
+
+	// -----------------------------------
+	//  Fire outputs
+ 	// -----------------------------------
+	if ( m_flLastDamageTime != gpGlobals->curtime )
+	{
+		// only fire once per frame
+		m_OnDamaged.FireOutput( pAttacker, this);
+
+		if( pAttacker->IsPlayer() || pAttacker->IsBaseObject() )
+		{
+			m_OnDamagedByPlayer.FireOutput( pAttacker, this );
+
+			// This also counts as being harmed by player's squad.
+			m_OnDamagedByPlayerSquad.FireOutput( pAttacker, this );
+		}
+		else
+		{
+			// See if the person that injured me is an NPC.
+			CAI_BaseNPC *pNPCAttacker = dynamic_cast<CAI_BaseNPC *>( pAttacker );
+
+			if( pNPCAttacker && pNPCAttacker->IsAlive() && UTIL_GetNearestPlayer( GetAbsOrigin() ) ) 
+			{
+				if( pNPCAttacker->GetSquad() != NULL && pNPCAttacker->IsInPlayerSquad() )
+				{
+					m_OnDamagedByPlayerSquad.FireOutput( pAttacker, this );
+				}
+			}
+		}
+	}
+
+	if( (info.GetDamageType() & DMG_CRUSH) && !(info.GetDamageType() & DMG_PHYSGUN) && flDamage >= MIN_PHYSICS_FLINCH_DAMAGE )
+	{
+		SetCondition( COND_PHYSICS_DAMAGE );
+	}
+
+	if ( m_iHealth <= ( m_iMaxHealth / 2 ) )
+	{
+		m_OnHalfHealth.FireOutput( pAttacker, this );
+	}
+
+	// react to the damage (get mad)
+	if ( ( (GetFlags() & FL_NPC) == 0 ) || !pAttacker )
+		return 1;
+
+	// If the attacker was an NPC or client update my position memory
+	if ( pAttacker->GetFlags() & (FL_NPC | FL_CLIENT) )
+	{
+		// ------------------------------------------------------------------
+		//				DO NOT CHANGE THIS CODE W/O CONSULTING
+		// Only update information about my attacker I don't see my attacker
+		// ------------------------------------------------------------------
+		if ( !FInViewCone( pAttacker ) || !FVisible( pAttacker ) )
+		{
+			// -------------------------------------------------------------
+			//  If I have an inflictor (enemy / grenade) update memory with
+			//  position of inflictor, otherwise update with an position
+			//  estimate for where the attack came from
+			// ------------------------------------------------------
+			Vector vAttackPos;
+			if ( pInflictor )
+			{
+				vAttackPos = pInflictor->GetAbsOrigin();
+			}
+			else
+			{
+				vAttackPos = (GetAbsOrigin() + ( g_vecAttackDir * 64 ));
+			}
+
+
+			// ----------------------------------------------------------------
+			//  If I already have an enemy, assume that the attack
+			//  came from the enemy and update my enemy's position
+			//  unless I already know about the attacker or I can see my enemy
+			// ----------------------------------------------------------------
+			if ( GetEnemy() != NULL							&&
+				!GetEnemies()->HasMemory( pAttacker )			&&
+				!HasCondition(COND_SEE_ENEMY)	)
+			{
+				UpdateEnemyMemory(GetEnemy(), vAttackPos, GetEnemy());
+			}
+			// ----------------------------------------------------------------
+			//  If I already know about this enemy, update his position
+			// ----------------------------------------------------------------
+			else if (GetEnemies()->HasMemory( pAttacker ))
+			{
+				UpdateEnemyMemory( pAttacker, vAttackPos );
+			}
+			// -----------------------------------------------------------------
+			//  Otherwise just note the position, but don't add enemy to my list
+			// -----------------------------------------------------------------
+			else
+			{
+				UpdateEnemyMemory(NULL, vAttackPos);
+			}
+		}
+
+		// add pain to the conditions
+		if ( IsLightDamage( info ) )
+		{
+			SetCondition( COND_LIGHT_DAMAGE );
+		}
+		if ( IsHeavyDamage( info ) )
+		{
+			SetCondition( COND_HEAVY_DAMAGE );
+		}
+
+		ForceGatherConditions();
+
+		// Keep track of how much consecutive damage I have recieved
+		if ((gpGlobals->curtime - m_flLastDamageTime) < 1.0)
+		{
+			m_flSumDamage += flDamage;
+		}
+		else
+		{
+			m_flSumDamage = flDamage;
+		}
+		m_flLastDamageTime = gpGlobals->curtime;
+		if ( pAttacker && pAttacker->IsPlayer() )
+			m_flLastPlayerDamageTime = gpGlobals->curtime;
+		GetEnemies()->OnTookDamageFrom( pAttacker );
+
+		if (m_flSumDamage > m_iMaxHealth*0.3)
+		{
+			SetCondition(COND_REPEATED_DAMAGE);
+		}
+	
+		NotifyFriendsOfDamage( pAttacker );
+	}
+
+	// ---------------------------------------------------------------
+	//  Insert a combat sound so that nearby NPCs know I've been hit
+	// ---------------------------------------------------------------
+	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 1024, 0.5, this, SOUNDENT_CHANNEL_INJURY );
+
+	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
 	if ( pTFAttacker )
 	{
 		pTFAttacker->RecordDamageEvent( info, (m_iHealth <= 0) );
+	}
+
+	bool bIgniting = false;
+
+	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
+	{
+		// Start burning if we took ignition damage
+		bIgniting = ( ( info.GetDamageType() & DMG_IGNITE ) && ( GetWaterLevel() < WL_Waist ) );
+	}
+
+	m_flLastDamageTime = gpGlobals->curtime;
+
+	// Apply a damage force.
+	if ( !pAttacker )
+		return 0;
+
+	ApplyPushFromDamage( info, vecDir );
+
+	if ( bIgniting )
+	{
+		CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
+		Burn( ToTFPlayer( pAttacker ), pTFWeapon );
 	}
 #endif
 
 	return 1;
 }
 
+static float NPCDamageForce( const Vector &size, float damage, float scale )
+{ 
+	float force;
+
+	force = damage * ((32 * 32 * 72.0) / (size.x * size.y * size.z)) * scale;
+	//force = damage * ((48 * 48 * 82.0) / (size.x * size.y * size.z)) * scale;
+	
+	if ( force > 1000.0) 
+	{
+		force = 1000.0;
+	}
+
+	return force;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir )
+{
+	CBaseEntity *pAttacker = info.GetAttacker();
+	CBaseEntity *pInflictor = info.GetInflictor();
+
+	if ( info.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE )
+		return;
+
+	if( !pInflictor ||
+		( GetMoveType() != MOVETYPE_WALK ) ||
+		( pAttacker->IsSolidFlagSet( FSOLID_TRIGGER ) ) ||
+		( InCond( TF_COND_DISGUISED ) ) )
+		return;
+
+	Vector vecForce;
+	vecForce.Init();
+	if ( pAttacker == this )
+	{
+		vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), NPC_DAMAGE_FORCE_SCALE_SELF );
+
+	}
+	else
+	{
+		// Sentryguns push a lot harder
+		if ( ( info.GetDamageType() & DMG_BULLET ) && pInflictor->IsBaseObject() )
+		{
+			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), 16 );
+		}
+		else
+		{
+			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), tf_damageforcescale_other.GetFloat() );
+		}
+	}
+
+	ApplyAbsVelocityImpulse( vecForce );
+}
 
 //=========================================================
 // OnTakeDamage_Dying - takedamage function called when a npc's
@@ -1503,6 +1769,10 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	SetLastHitGroup( ptr->hitgroup );
 	m_nForceBone = ptr->physicsbone;		// save this bone for physics forces
 
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
+#endif
+
 	Assert( m_nForceBone > -255 && m_nForceBone < 256 );
 
 	bool bDebug = showhitlocation.GetBool();
@@ -1525,10 +1795,9 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 		// If we're attacked by a TF2 player then only the sniper can do headshot damage.
 		if ( info.GetAttacker()->IsPlayer() )
 		{
-			CTFPlayer *pAttacker = ToTFPlayer( info.GetAttacker() );
 			if ( subInfo.GetDamageType() & DMG_USE_HITLOCATIONS )
 			{
-				CTFWeaponBase *pWpn = pAttacker->GetActiveTFWeapon();
+				CTFWeaponBase *pWpn = pTFAttacker->GetActiveTFWeapon();
 				bool bCritical = true;
 
 				if ( pWpn && !pWpn->CanFireCriticalShot( true ) )
@@ -1631,6 +1900,13 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	{
 		subInfo.SetInflictor( info.GetAttacker() );
 	}
+
+#ifdef TF_CLASSIC
+	if ( pTFAttacker && pTFAttacker->GetActiveTFWeapon() && pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_HAMMERFISTS )
+	{
+		Burn( pTFAttacker, pTFAttacker->GetActiveTFWeapon() );
+	}
+#endif
 
 	AddMultiDamage( subInfo, this );
 }

@@ -457,12 +457,6 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 		int nModelIndex = modelinfo->GetModelIndex( pData->GetModelName() );
 		SetModelIndex( nModelIndex );	
 
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			m_nSkin = 8;
-		}
-		else
-		{
 			switch ( m_iTeam )
 			{
 			case TF_TEAM_RED:
@@ -481,7 +475,6 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 				m_nSkin = 5;
 				break;
 			}
-		}
 	}
 
 #ifdef _DEBUG
@@ -1322,9 +1315,9 @@ public:
 		C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
 		if ( !pEntity )
 			return;
-
+		/*
 		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
+		{*/
 			Vector vecColor = pEntity->GetItemTintColor();
 
 			if ( vecColor == vec3_origin )
@@ -1339,7 +1332,7 @@ public:
 
 			m_pResult->SetVecValue( vecColor.x, vecColor.y, vecColor.z );
 			return;
-		}
+		//}
 
 		m_pResult->SetVecValue( 1, 1, 1 );
 	}
@@ -2157,12 +2150,6 @@ void C_TFPlayer::InitInvulnerableMaterial( void )
 
 	const char *pszMaterial = NULL;
 
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		pszMaterial = "models/effects/invulnfx_custom.vmt";
-	}
-	else
-	{
 		int iVisibleTeam = GetTeamNumber();
 		// if this player is disguised and on the other team, use disguise team
 		if ( m_Shared.InCond( TF_COND_DISGUISED ) && IsEnemyPlayer() )
@@ -2187,7 +2174,6 @@ void C_TFPlayer::InitInvulnerableMaterial( void )
 		default:
 			break;
 		}
-	}
 
 	if ( pszMaterial )
 	{
@@ -2440,10 +2426,6 @@ bool C_TFPlayer::IsEnemyPlayer( void )
 
 	if ( !pLocalPlayer )
 		return false;
-
-	// In Deathmatch, everyone is an enemy. Except for ourselves.
-	if ( TFGameRules()->IsDeathmatch() && pLocalPlayer != this && pLocalPlayer->GetTeamNumber() >= FIRST_GAME_TEAM )
-		return true;
 
 	switch ( pLocalPlayer->GetTeamNumber() )
 	{
@@ -3785,12 +3767,6 @@ void C_TFPlayer::CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVel
 	{
 		C_BaseAnimating *pGib = static_cast<C_BaseAnimating *>( m_hSpawnedGibs[i].Get() );
 
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			pGib->m_nSkin = 4;
-		}
-		else
-		{
 			switch ( GetTeamNumber() )
 			{
 			case TF_TEAM_RED:
@@ -3809,7 +3785,6 @@ void C_TFPlayer::CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVel
 				pGib->m_nSkin = 0;
 				break;
 			}
-		}
 	}
 
 	DropPartyHat( breakParams, vecBreakVelocity );
@@ -3893,11 +3868,6 @@ bool C_TFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
 		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
 	{
-		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
-			// Collide with everyone in deathmatch.
-			return BaseClass::ShouldCollide( collisionGroup, contentsMask );
-		}
 
 		switch( GetTeamNumber() )
 		{
@@ -3942,12 +3912,6 @@ int C_TFPlayer::GetSkin()
 
 	int nSkin;
 
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		nSkin = 8;
-	}
-	else
-	{
 		int iVisibleTeam = GetTeamNumber();
 
 		// if this player is disguised and on the other team, use disguise team
@@ -3978,12 +3942,11 @@ int C_TFPlayer::GetSkin()
 			nSkin = 0;
 			break;
 		}
-	}
 
 	// 3 and 4 are invulnerable
 	if ( m_Shared.IsInvulnerable() && ( !m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE ) || gpGlobals->curtime - m_flLastDamageTime < 2.0f ) )
 	{
-		nSkin = TFGameRules()->IsDeathmatch() ? 9 : nSkin + 2;
+		nSkin = nSkin + 2;
 	}
 
 	return nSkin;
@@ -4058,7 +4021,7 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 		LoadInventory();
 	}
-
+	/*
 	if ( TFGameRules()->IsDeathmatch() && GetTeamNumber() == TF_TEAM_RED && ( !IsLocalPlayer() || !InFirstPersonView() ) )
 	{
 		char szParticleName[128];
@@ -4069,7 +4032,7 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 		m_Shared.SetParticleToMercColor( pEffect );
 	}
-
+	*/
 	UpdateVisibility();
 
 	m_hFirstGib = NULL;

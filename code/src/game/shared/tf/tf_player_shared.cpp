@@ -57,7 +57,6 @@ ConVar tf_invuln_time( "tf_invuln_time", "1.0", FCVAR_DEVELOPMENTONLY | FCVAR_RE
 
 #ifdef GAME_DLL
 ConVar tf_boost_drain_time( "tf_boost_drain_time", "15.0", FCVAR_DEVELOPMENTONLY, "Time it takes for a full health boost to drain away from a player.", true, 0.1, false, 0 );
-ConVar tf2c_dm_boost_drain_time( "tf2c_dm_boost_drain_time", "30.0", FCVAR_DEVELOPMENTONLY, "Time it takes for a full health boost to drain away from a player in Deathmatch.", true, 0.1, false, 0 );
 ConVar tf_debug_bullets( "tf_debug_bullets", "0", FCVAR_DEVELOPMENTONLY, "Visualize bullet traces." );
 ConVar tf_damage_events_track_for( "tf_damage_events_track_for", "30", FCVAR_DEVELOPMENTONLY );
 #endif
@@ -833,10 +832,6 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 int CTFPlayerShared::GetMaxBuffedHealth( void )
 {
 	float flBoostMax = m_pOuter->GetMaxHealth() * tf_max_health_boost.GetFloat();
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		flBoostMax = m_pOuter->GetMaxHealth() * tf2c_dm_max_health_boost.GetFloat();
-	}
 
 	int iRoundDown = floor( flBoostMax / 5 );
 	iRoundDown = iRoundDown * 5;
@@ -1024,14 +1019,7 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		{
 			float flBoostMaxAmount = GetMaxBuffedHealth() - m_pOuter->GetMaxHealth();
 			// TF2C DM has slower overheal decay
-			if ( TFGameRules()->GetGameType() == TF_GAMETYPE_DM )
-			{
-				m_flHealFraction += ( gpGlobals->frametime * ( flBoostMaxAmount / tf2c_dm_boost_drain_time.GetFloat() ) );
-			}
-			else
-			{
-				m_flHealFraction += ( gpGlobals->frametime * ( flBoostMaxAmount / tf_boost_drain_time.GetFloat() ) );
-			}
+			m_flHealFraction += ( gpGlobals->frametime * ( flBoostMaxAmount / tf_boost_drain_time.GetFloat() ) );
 
 			int nHealthToDrain = (int)m_flHealFraction;
 			if ( nHealthToDrain > 0 )
@@ -2352,11 +2340,12 @@ void CTFPlayerShared::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::SetParticleToMercColor( CNewParticleEffect *pParticle )
 {
+	/*
 	if ( pParticle && TFGameRules() && TFGameRules()->IsDeathmatch() )
 	{
 		pParticle->SetControlPoint( CUSTOM_COLOR_CP1, m_pOuter->m_vecPlayerColor );
 		return true;
-	}
+	}*/
 
 	return false;
 }
@@ -2695,7 +2684,7 @@ CTFWeaponBase *CTFPlayerShared::GetActiveTFWeapon() const
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::IsAlly( CBaseEntity *pEntity )
 {
-	return ( pEntity->GetTeamNumber() == m_pOuter->GetTeamNumber() && !TFGameRules()->IsDeathmatch() );
+	return ( pEntity->GetTeamNumber() == m_pOuter->GetTeamNumber() );
 }
 
 //-----------------------------------------------------------------------------

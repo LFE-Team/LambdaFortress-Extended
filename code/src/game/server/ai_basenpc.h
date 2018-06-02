@@ -1799,6 +1799,9 @@ public:
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dying( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dead( const CTakeDamageInfo &info );
+#ifdef TF_CLASSIC
+	void				ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir );
+#endif
 
 	virtual void		NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity );
 	virtual void		OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttacker );

@@ -830,7 +830,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 			}
 			return;
 			break;
-
+			/*
 		case TF_GAMETYPE_DM:
 			// turn on the DM specific HUD
 			if ( m_pDMPanel && !m_pDMPanel->IsVisible() )
@@ -839,7 +839,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 			}
 			return;
 			break;
-
+			*/
 		default:
 			break;
 		}
@@ -890,7 +890,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 				}
 			}
 			break;
-
+			/*
 		case TF_GAMETYPE_DM:
 			// turn on the DM specific HUD
 			if ( m_pDMPanel && !m_pDMPanel->IsVisible() )
@@ -898,7 +898,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 				m_pDMPanel->SetVisible( true );
 			}
 			break;
-
+			*/
 		default:
 			break;
 

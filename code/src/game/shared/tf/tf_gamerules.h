@@ -329,7 +329,6 @@ public:
 	virtual bool	IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 
 	virtual bool	IsFourTeamGame( void ) { return m_bFourTeamMode; };
-	virtual bool	IsDeathmatch( void ) { return m_nGameType == TF_GAMETYPE_DM; };
 	virtual bool    IsMannVsMachineMode( void ) { return false; };
 	virtual bool	IsInArenaMode( void ) { return m_nGameType == TF_GAMETYPE_ARENA; }
 	virtual bool	IsInKothMode( void ) { return m_bPlayingKoth; }
@@ -341,7 +340,7 @@ public:
 
 	bool IsCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP ); }
 	bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
-	bool IsVersus( void ) { return false; }
+	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
 #ifdef CLIENT_DLL
 

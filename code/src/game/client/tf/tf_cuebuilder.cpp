@@ -227,9 +227,9 @@ void CTFCueBuilder::FireGameEvent( IGameEvent *event )
 
 	if ( !TFGameRules() )
 		return;
-
+	/*
 	const char *type = event->GetName();
-
+	
 	if (0 == Q_strcmp(type, "localplayer_changeteam"))
 	{
 		if (TFGameRules()->IsDeathmatch())
@@ -299,7 +299,7 @@ void CTFCueBuilder::FireGameEvent( IGameEvent *event )
 				SetMood(MOOD_DANGER);
 			}
 		}
-	}
+	}*/
 }
 
 void CTFCueBuilder::AddTrack(const char* name, CueTrack* pCueTrack)

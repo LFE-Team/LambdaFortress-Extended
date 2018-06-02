@@ -117,6 +117,7 @@ ConVar tf_gamemode_rd( "tf_gamemode_rd", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED |
 ConVar tf_gamemode_payload( "tf_gamemode_payload", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_mvm( "tf_gamemode_mvm", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_passtime( "tf_gamemode_passtime", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar lf_versus( "lf_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -744,9 +745,23 @@ public:
 	void	Spawn(void);
 };
 
-LINK_ENTITY_TO_CLASS(lf_logic_coop, CTFLogicCoOp);
+LINK_ENTITY_TO_CLASS(lfe_logic_coop, CTFLogicCoOp);
 
 void CTFLogicCoOp::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
+class CTFLogicVersus : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicVersus, CBaseEntity);
+	void	Spawn(void);
+};
+
+LINK_ENTITY_TO_CLASS(lfe_logic_versus, CTFLogicVersus);
+
+void CTFLogicVersus::Spawn(void)
 {
 	BaseClass::Spawn();
 }
@@ -1522,8 +1537,6 @@ static const char *s_PreserveEnts[] =
 	"tf_player_manager",
 	"tf_team",
 	"tf_objective_resource",
-	//"keyframe_rope",
-	//"move_rope",
 	"tf_viewmodel",
 	"tf_logic_training",
 	"tf_logic_training_mode",
@@ -1544,10 +1557,7 @@ static const char *s_PreserveEnts[] =
 	"entity_rocket",
 	"entity_carrier",
 	"entity_sign",
-	"entity_suacer",
-	//"info_ladder",
-	"info_player_deathmatch",
-	//"prop_vehicle_jeep",
+	"entity_saucer",
 	"", // END Marker
 };
 
@@ -1568,15 +1578,26 @@ void CTFGameRules::Activate()
 	tf_gamemode_mvm.SetValue( 0 );
 	tf_gamemode_rd.SetValue( 0 );
 	tf_gamemode_passtime.SetValue( 0 );
+	lf_versus.SetValue( 0 );
 
 	SetMultipleTrains( false );
 
-	if ( lf_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lf_logic_coop" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d2_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d3_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep2_", 3 ) )
+	if ( lf_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d2_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d3_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep2_", 3 ) )
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
-		lf_coop.SetValue( 0 );
+		lf_coop.SetValue( 1 );
 		Msg( "Executing server coop config file\n", 1 );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+
+	if ( lf_versus.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_versus" ) )
+	{
+		m_nGameType.Set( TF_GAMETYPE_VS );
+		lf_versus.SetValue( 1 );
+		Msg( "Executing server versus config file\n", 1 );
+		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
@@ -2599,15 +2620,6 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 						return;
 				}
 			}
-		}
-
-		if ( IsDeathmatch() && CountActivePlayers() > 0 && !g_fGameOver )
-		{
-			if ( CheckFragLimit() )
-				return;
-
-			if ( CheckTimeLimit() )
-				return;
 		}
 
 		if (physcannon_mega_enabled.GetBool() == true)
@@ -3961,8 +3973,8 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 
 	int CTFGameRules::PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget)
 	{
-		if ( IsDeathmatch() )
-			return GR_NOTTEAMMATE;
+		//if ( IsDeathmatch() )
+		//	return GR_NOTTEAMMATE;
 
 		return BaseClass::PlayerRelationship(pPlayer, pTarget);
 	}
@@ -6937,6 +6949,9 @@ const char *CTFGameRules::GetGameDescription(void)
 			break;
 		case TF_GAMETYPE_COOP:
 			return "LF (Co-Op)";
+			break;
+		case TF_GAMETYPE_VS:
+			return "LF (Versus)";
 			break;
 		case TF_GAMETYPE_MVM:
 			return "Implying we will ever have this";

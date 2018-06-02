@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack\weapons\c_models\c_drg_righteousbison/c_drg_righteousbison_large"
+	$translucent 1
+	$vertexcolor 1
+}

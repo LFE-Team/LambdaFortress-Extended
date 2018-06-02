@@ -19,7 +19,7 @@ static void OnPauseBlogToggle(IConVar *var, const char *pOldValue, float flOldVa
 	GET_MAINMENUPANEL(CTFPauseMenuPanel)->ShowBlogPanel(((ConVar*)var)->GetBool());
 }
 ConVar lf_pausemenu_music("lf_pausemenu_music", "0", FCVAR_ARCHIVE, "Toggle music in the pause menu");
-ConVar lf_pausemenu_showblog("lf_pausemenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnBlogToggle);
+ConVar lf_pausemenu_showblog("lf_pausemenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnPauseBlogToggle);
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor

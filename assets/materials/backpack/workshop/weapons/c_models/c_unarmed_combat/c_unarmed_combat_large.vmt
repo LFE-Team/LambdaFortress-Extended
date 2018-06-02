@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_unarmed_combat/c_unarmed_combat_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

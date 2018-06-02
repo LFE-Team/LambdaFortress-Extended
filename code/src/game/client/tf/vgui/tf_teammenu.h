@@ -175,14 +175,14 @@ private:
 //-----------------------------------------------------------------------------
 // Purpose: Displays the arena team menu
 //-----------------------------------------------------------------------------
-class CTFDeathmatchTeamMenu : public CTeamMenu
+class CTFArenaTeamMenu : public CTeamMenu
 {
 private:
-	DECLARE_CLASS_SIMPLE(CTFDeathmatchTeamMenu, CTeamMenu);
+	DECLARE_CLASS_SIMPLE(CTFArenaTeamMenu, CTeamMenu);
 
 public:
-	CTFDeathmatchTeamMenu(IViewPort *pViewPort);
-	~CTFDeathmatchTeamMenu();
+	CTFArenaTeamMenu(IViewPort *pViewPort);
+	~CTFArenaTeamMenu();
 
 	virtual const char *GetName(void) { return PANEL_DEATHMATCHTEAMSELECT; }
 	void Update();

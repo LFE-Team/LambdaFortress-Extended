@@ -1,0 +1,5 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack\weapons\c_models\c_xms_energy_drink\c_xms_energy_drink_large"
+	$translucent 1
+}

@@ -397,23 +397,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 				{
 					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_AutoTeam" ), 2, wszPlayerName, wszTeam );
 				}
-				else if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-				{
-					if ( iTeam >= FIRST_GAME_TEAM )
-					{
-						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_Deathmatch" ), 1, wszPlayerName );
-					}
-					else
-					{
-						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_Deathmatch_Spectator" ), 1, wszPlayerName );
-					}
-
-					C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
-					if ( tf_PR )
-					{
-						col = tf_PR->GetPlayerColor( iPlayerIndex );
-					}
-				}
 				else
 				{
 					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_Team" ), 2, wszPlayerName, wszTeam );

@@ -205,23 +205,7 @@ CON_COMMAND_F( bot, "Add a bot.", FCVAR_CHEAT )
 		// Pick a random color if one is not specified.
 		Vector vecColor = vec3_origin;
 		int iRespawnParticle = 1;
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			pVal = args.FindArg( "-color" );
-			if ( pVal )
-			{
-				UTIL_StringToVector( vecColor.Base(), pVal );
-			}
-			else
-			{
-				for ( int i = 0; i < 3; i++ )
-					vecColor[i] = floorf( RandomFloat( 1, 255 ) );
-			}
 
-			vecColor /= 255.0f;
-
-			iRespawnParticle = args.FindArgInt( "-respawn", RandomInt( 1, 42 ) );
-		}
 
 		BotPutInServer( bFrozen, iTeam, iClass, pName, vecColor, iRespawnParticle );
 	}

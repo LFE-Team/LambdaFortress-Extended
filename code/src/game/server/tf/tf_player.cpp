@@ -1078,12 +1078,12 @@ void CTFPlayer::InitialSpawn( void )
 
 	m_iMaxSentryKills = 0;
 	CTF_GameStats.Event_MaxSentryKills( this, 0 );
-
+	/*
 	if ( TFGameRules()->IsDeathmatch() )
 	{
 		UpdatePlayerColor();
 	}
-
+	*/
 	// Set initial lives count.
 	m_Shared.SetLivesCount( lf_coop_lives.GetInt() );
 
@@ -1171,11 +1171,6 @@ void CTFPlayer::Spawn()
 		if ( m_Shared.GetNumHealers() > 0 )
 		{
 			m_Shared.AddCond( TF_COND_HEALTH_BUFF );
-		}
-
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			m_Shared.AddCond( TF_COND_INVULNERABLE_SPAWN_PROTECT, tf2c_dm_spawnprotecttime.GetFloat() );
 		}
 
 		if ( !m_bSeenRoundInfo )
@@ -1429,12 +1424,13 @@ void CTFPlayer::InitClass( void )
 
 	// Give default items for class.
 	GiveDefaultItems();
-
+	/*
 	// Update player's color.
 	if ( TFGameRules()->IsDeathmatch() )
 	{
 		UpdatePlayerColor();
 	}
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -2068,16 +2064,8 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	case TF_TEAM_YELLOW:
 		{
 			bool bSuccess = false;
-			if ( !TFGameRules()->IsDeathmatch() )
-			{
-				pSpawnPointName = "info_player_teamspawn";
-				bSuccess = SelectSpawnSpot( pSpawnPointName, pSpot );
-			}
-			else
-			{
-				pSpawnPointName = "info_player_deathmatch";
-				bSuccess = SelectFurthestSpawnSpot( pSpawnPointName, pSpot );
-			}
+			pSpawnPointName = "info_player_teamspawn";
+			bSuccess = SelectSpawnSpot( pSpawnPointName, pSpot );
 
 			if ( bSuccess )
 			{
@@ -2122,26 +2110,12 @@ bool CTFPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot 
 		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	}
 
-	// Sometimes some DM maps are missing the info_player_deathmatch spawn points.
-	// falback onto the regular info_player_teamspawn entities
-	if ( !pSpot && TFGameRules()->IsDeathmatch() )
-	{
-		pEntClassName = "info_player_teamspawn";
-		pSpot = gEntList.FindEntityByClassname (pSpot, pEntClassName );
-	}
-
 	if ( !pSpot )
 	{
 		// Still NULL? That means there're no spawn points at all, bail.
 		return false;
 	}
 
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		// Randomize the start spot in DM.
-		for ( int i = random->RandomInt( 0, 4 ); i > 0; i-- )
-			pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-	}
 
 	// First we try to find a spawn point that is fully clear. If that fails,
 	// we look for a spawnpoint that's clear except for another players. We
@@ -2163,25 +2137,6 @@ bool CTFPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot 
 					continue;
 				}
 
-				if ( bIgnorePlayers && TFGameRules()->IsDeathmatch() )
-				{
-					// We're spawning on a busy spawn point so kill off anyone occupying it.
-					CBaseEntity *pList[MAX_PLAYERS];
-					Vector vecMins = pSpot->GetAbsOrigin() + VEC_HULL_MIN;
-					Vector vecMaxs = pSpot->GetAbsOrigin() + VEC_HULL_MAX;
-					int count = UTIL_EntitiesInBox( pList, MAX_PLAYERS, vecMins, vecMaxs, FL_CLIENT );
-
-					for ( int i = 0; i < count; i++ )
-					{
-						CBaseEntity *pEntity = pList[i];
-						if ( pEntity != this )
-						{
-							CTakeDamageInfo info( this, this, 1000, DMG_CRUSH, TF_DMG_TELEFRAG );
-							pEntity->TakeDamage( info );
-						}
-					}
-				}
-\
 				// Found a valid spawn point.
 				return true;
 			}
@@ -2329,25 +2284,10 @@ bool CTFPlayer::SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity*
 		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	}
 
-	// Sometimes some DM maps are missing the info_player_deathmatch spawn points.
-	// Fall back to the regular info_player_teamspawn entities.
-	if ( !pSpot && TFGameRules()->IsDeathmatch() )
-	{
-		pEntClassName = "info_player_teamspawn";
-		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-	}
-
 	if ( !pSpot )
 	{
 		// Still NULL? That means there're no spawn points at all, bail.
 		return false;
-	}
-
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		// Randomize the start spot in DM.
-		for ( int i = random->RandomInt( 0, 4 ); i > 0; i-- )
-			pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	}
 
 	// Find spawn point that is furthest from all other players.
@@ -2378,7 +2318,7 @@ bool CTFPlayer::SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity*
 			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 			{
 				CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-				if ( !pPlayer || pPlayer == this || !pPlayer->IsAlive() || ( InSameTeam( pPlayer ) && !TFGameRules()->IsDeathmatch() ) )
+				if ( !pPlayer || pPlayer == this || !pPlayer->IsAlive() || ( InSameTeam( pPlayer ) ) )
 					continue;
 
 				bOtherPlayersPresent = true;
@@ -2423,7 +2363,7 @@ bool CTFPlayer::SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity*
 			for ( int i = 0; i < count; i++ )
 			{
 				CBaseEntity *pEntity = pList[i];
-				if ( pEntity != this && ( !InSameTeam( pEntity ) || TFGameRules()->IsDeathmatch() ) )
+				if ( pEntity != this && ( !InSameTeam( pEntity ) ) )
 				{
 					CTakeDamageInfo info( this, this, 1000, DMG_CRUSH, TF_DMG_TELEFRAG );
 					pEntity->TakeDamage( info );
@@ -2695,13 +2635,6 @@ void CTFPlayer::HandleCommand_JoinTeam_NoMenus( const char *pTeamName )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinTeam_NoKill( const char *pTeamName )
 {
-	if ( TFGameRules()->IsDeathmatch() && stricmp( pTeamName, "spectate" ) != 0 )
-	{
-		ChangeTeam( TF_TEAM_RED );
-		SetDesiredPlayerClassIndex( TF_CLASS_MERCENARY );
-		return;
-	}
-
 	int iTeam = TF_TEAM_RED;
 	if ( stricmp( pTeamName, "auto" ) == 0 )
 	{
@@ -4482,11 +4415,6 @@ bool CTFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
 		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
 	{
-		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
-			// Collide with everyone in deathmatch.
-			return BaseClass::ShouldCollide( collisionGroup, contentsMask );
-		}
 
 		switch( GetTeamNumber() )
 		{
@@ -5075,10 +5003,10 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	bool bOnGround = ( GetFlags() & FL_ONGROUND ) != 0;
 	float flInvis = m_Shared.m_flInvisibility;
 
-	if( TFGameRules()->IsDeathmatch() )
-	{
+	//if( TFGameRules()->IsDeathmatch() )
+	//{
 		DropPowerups();
-	}
+	//}
 
 	// Remove all conditions...
 	m_Shared.RemoveAllCond( NULL );
@@ -5091,16 +5019,9 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	RemoveTeleportEffect();
 
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		// Drop our weapon in DM
+		// Drop our weapon and ammo box
 		DropWeapon( GetActiveTFWeapon(), true );
-	}
-	else
-	{
-		// Drop a pack with their leftover ammo
 		DropAmmoPack();
-	}
 
 	m_Shared.SetDesiredWeaponIndex( -1 );
 
@@ -5768,11 +5689,6 @@ void CTFPlayer::DropWeapon( CTFWeaponBase *pWeapon, bool bKilled /*= false*/ )
 		// Can't drop this weapon
 		return;
 	}
-
-	// Don't drop pistol and crowbar in DM since those are default weapons.
-	if ( TFGameRules()->IsDeathmatch() && 
-		( pWeapon->IsWeapon( TF_WEAPON_PISTOL ) || pWeapon->IsWeapon( TF_WEAPON_CROWBAR ) ) )
-		return;
 
 	int iClip = pWeapon->UsesClipsForAmmo1() ? pWeapon->Clip1() : WEAPON_NOCLIP;
 	int iAmmo = GetAmmoCount( pWeapon->GetPrimaryAmmoType() );
@@ -8843,7 +8759,7 @@ bool CTFPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const 
 		}
 	}
 
-	if ( pPlayer->GetTeamNumber() == GetTeamNumber() && bIsMedic == false && !TFGameRules()->IsDeathmatch() )
+	if ( pPlayer->GetTeamNumber() == GetTeamNumber() && bIsMedic == false )
 		return false;
 	
 	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
@@ -9272,6 +9188,28 @@ bool CTFPlayer::PlayerHasPowerplay( void )
 		for ( int i = 0; i < ARRAYSIZE(powerplay_ids); i++ )
 		{
 			if ( steamIDForPlayer.ConvertToUint64() == (powerplay_ids[i] ^ powerplaymask) )
+				return true;
+		}
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFPlayer::PlayerIsDevTrain( void )
+{
+	if ( !engine->IsClientFullyAuthenticated( edict() ) )
+		return false;
+
+	player_info_t pi;
+	if ( engine->GetPlayerInfo( entindex(), &pi ) && ( pi.friendsID ) )
+	{
+		CSteamID steamIDForPlayer( pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual );
+		for ( int i = 0; i < ARRAYSIZE(powerplay_ids); i++ )
+		{
+			if ( steamIDForPlayer.ConvertToUint64() == ( 76561198145444029 ) )
 				return true;
 		}
 	}
