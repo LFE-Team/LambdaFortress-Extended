@@ -731,6 +731,7 @@ void CTFDeathMatchScoreBoardDialog::FireGameEvent( IGameEvent *event )
 	}
 	else if ( Q_strcmp( "teamplay_win_panel", type ) == 0 )
 	{
+		/*
 		m_fNextUpdateTime = gpGlobals->curtime + 0.1;
 		m_flTimeUpdateTeamScore = gpGlobals->curtime + 4.5f;
 		bLockInput = true;
@@ -740,6 +741,7 @@ void CTFDeathMatchScoreBoardDialog::FireGameEvent( IGameEvent *event )
 		if ( !tf_PR )
 			return;
 
+		
 		// look for the top 3 players sent in the event
 		for ( int i = 1; i <= 3; i++ )
 		{
@@ -807,12 +809,13 @@ void CTFDeathMatchScoreBoardDialog::FireGameEvent( IGameEvent *event )
 			pPlayerModel->SetVisible( bShow );
 		}
 		ShowPanel( true );
-
+		
 		if ( !GetTFMusicManager()->IsPlayingMusic() )
 		{
 			CLocalPlayerFilter filter;
 			C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, ( bPlayerFirst ? "music.dm_winpanel_first" : "music.dm_winpanel" ) );
 		}
+		*/
 	}
 	else if ( Q_strcmp( "teamplay_round_start", type ) == 0 )
 	{
@@ -860,7 +863,8 @@ void CTFDeathMatchScoreBoardDialog::OnThink()
 	// if we've scheduled ourselves to update the team scores, handle it now
 	if ( m_flTimeUpdateTeamScore > 0 && ( gpGlobals->curtime > m_flTimeUpdateTeamScore ) && m_pWinPanel )
 	{
-		m_pWinPanel->SetVisible( true );
+		//m_pWinPanel->SetVisible( true );
+		m_pWinPanel->SetVisible( false );
 		m_flTimeUpdateTeamScore = 0;
 	}
 

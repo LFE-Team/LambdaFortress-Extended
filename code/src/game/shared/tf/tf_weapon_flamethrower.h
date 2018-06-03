@@ -67,6 +67,7 @@ public:
 	Vector			GetVisualMuzzlePos();
 	Vector			GetFlameOriginPos();
 
+	bool			IsBehindAndFacingTarget( CBaseEntity *pTarget );
 	// Client specific.
 #if defined( CLIENT_DLL )
 	virtual bool	Deploy( void );

@@ -28,6 +28,7 @@ static const char *pszClassModels[TF_CLASS_COUNT_ALL] =
 	"models/player/pyro.mdl",
 	"models/player/spy.mdl",
 	"models/player/engineer.mdl",
+	"",
 };
 
 static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
@@ -79,6 +80,9 @@ static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+	},
+	{
+		-1, -1, -1,
 	},
 };
 

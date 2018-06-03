@@ -2051,6 +2051,39 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 			}
 		}
 	}
+
+	float flAddSpeed = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddSpeed, speed_boost_on_hit );
+	if ( flAddSpeed )
+	{
+		if ( pOwner )
+		{
+			pOwner->m_Shared.AddCond( TF_COND_SPEED_BOOST, flAddSpeed );
+		}
+	}
+
+	float flAddCloak = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddCloak, add_cloak_on_hit );
+	if ( flAddCloak )
+	{
+		if ( pOwner->m_Shared.GetSpyCloakMeter() )
+		{
+			if ( flAddCloak < 100.0f )
+			{
+				pOwner->m_Shared.SetSpyCloakMeter( flAddCloak );
+			}
+		}
+	}
+
+	float flAddJarate = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddJarate, add_cloak_on_hit );
+	if ( flAddJarate )
+	{
+		if ( pOwner )
+		{
+			pOwner->m_Shared.AddCond( TF_COND_URINE, flAddJarate );
+		}
+	}
 }
 
 #else

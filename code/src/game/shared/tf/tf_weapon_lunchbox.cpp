@@ -9,6 +9,7 @@
 #ifdef GAME_DLL
 #include "tf_player.h"
 #include "tf_powerup.h"
+#include "entity_healthkit.h"
 #else
 #include "c_tf_player.h"
 #endif
@@ -61,7 +62,7 @@ void CTFLunchBox::SecondaryAttack( void )
 	// A bit below the eye position.
 	vecSrc.z -= 8.0f;
 
-	CTFPowerup *pPowerup = static_cast<CTFPowerup *>( CBaseEntity::Create( "item_healthkit_medium", vecSrc, vec3_angle, pOwner ) );
+	CHealthKitMedium *pPowerup = static_cast<CHealthKitMedium *>( CBaseEntity::Create( "item_healthkit_medium", vecSrc, vec3_angle, pOwner ) );
 	if ( !pPowerup )
 		return;
 

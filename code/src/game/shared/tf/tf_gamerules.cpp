@@ -82,6 +82,7 @@ static int g_TauntCamAchievements[] =
 	0,		// TF_CLASS_PYRO,
 	0,		// TF_CLASS_SPY,
 	0,		// TF_CLASS_ENGINEER,
+	0,		// TF_CLASS_CIVILIAN,
 
 	0,		// TF_CLASS_COUNT_ALL,
 };
@@ -223,6 +224,7 @@ Vector g_TFClassViewVectors[TF_CLASS_COUNT_ALL] =
 	Vector( 0, 0, 68 ),		// TF_CLASS_PYRO,
 	Vector( 0, 0, 75 ),		// TF_CLASS_SPY,
 	Vector( 0, 0, 68 ),		// TF_CLASS_ENGINEER,
+	Vector( 0, 0, 65 ),		// TF_CLASS_CIVILIAN,
 };
 
 const CViewVectors *CTFGameRules::GetViewVectors() const
@@ -4201,14 +4203,6 @@ QAngle CTFGameRules::VecItemRespawnAngles( CItem *pItem )
 
 int CTFGameRules::ItemShouldRespawn( CItem *pItem )
 {
-#if 0
-	// Items never respawn in co-op.
-	if ( GetGameType() == TF_GAMETYPE_COOP )
-	{
-		return GR_ITEM_RESPAWN_NO;
-	}
-#endif
-
 	// TEMP - don't respawn non-TF items.
 	if ( dynamic_cast<CTFPowerup *>( pItem ) == NULL )
 	{

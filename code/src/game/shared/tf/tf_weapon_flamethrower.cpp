@@ -1208,6 +1208,42 @@ void CTFFlameThrower::HitTargetThink( void )
 }
 #endif
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CTFFlameThrower::IsBehindAndFacingTarget( CBaseEntity *pTarget )
+{
+	Assert( pTarget );
+
+	// Get the forward view vector of the target, ignore Z
+	Vector vecVictimForward;
+	AngleVectors( pTarget->EyeAngles(), &vecVictimForward );
+	vecVictimForward.z = 0.0f;
+	vecVictimForward.NormalizeInPlace();
+
+	// Get a vector from my origin to my targets origin
+	Vector vecToTarget;
+	vecToTarget = pTarget->WorldSpaceCenter() - GetOwner()->WorldSpaceCenter();
+	vecToTarget.z = 0.0f;
+	vecToTarget.NormalizeInPlace();
+
+	// Get a forward vector of the attacker.
+	Vector vecOwnerForward;
+	AngleVectors( GetOwner()->EyeAngles(), &vecOwnerForward );
+	vecOwnerForward.z = 0.0f;
+	vecOwnerForward.NormalizeInPlace();
+
+	float flDotOwner = DotProduct( vecOwnerForward, vecToTarget );
+	float flDotVictim = DotProduct( vecVictimForward, vecToTarget );
+
+	// Make sure they're actually facing the target.
+	// This needs to be done because lag compensation can place target slightly behind the attacker.
+	if ( flDotOwner > 1.0 )
+		return ( flDotVictim > -0.1 );
+
+	return false;
+}
+
 #ifdef GAME_DLL
 
 IMPLEMENT_AUTO_LIST( ITFFlameEntityAutoList );
@@ -1493,6 +1529,21 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 	UTIL_TraceLine( WorldSpaceCenter(), pOther->WorldSpaceCenter(), MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &pTrace );
 
 	pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+
+	int iBehindTarget = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), iBehindTarget, set_flamethrower_back_crit );
+	if ( iBehindTarget == 1 )
+	{
+		trace_t trace;
+		//CBaseCombatCharacter *pTarget = trace.m_pEnt->MyCombatCharacterPointer();
+		if ( m_hLauncher.Get() && m_hLauncher->IsBehindAndFacingTarget( trace.m_pEnt ) )
+		{
+			CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, m_iDmgType, DMG_CRITICAL );
+			info.SetReportedPosition( pAttacker->GetAbsOrigin() );
+			pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+		}
+	}
+
 	ApplyMultiDamage();
 
 	// It's better to ignite NPC here rather than NPC code.

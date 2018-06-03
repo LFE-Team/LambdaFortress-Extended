@@ -886,7 +886,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
 	}
 
-	AddDamagerToHistory( info.GetAttacker() );
+	AddDamagerToHistory( pAttacker );
 
 	int bitsDamage = inputInfo.GetDamageType();
 
@@ -930,7 +930,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	// If we're not damaging ourselves, apply randomness
-	if ( info.GetAttacker() != this && !(bitsDamage & (DMG_DROWN | DMG_FALL)) ) 
+	if ( pAttacker != this && !(bitsDamage & (DMG_DROWN | DMG_FALL)) ) 
 	{
 		float flDamage = info.GetDamage();
 		if ( bitsDamage & DMG_CRITICAL )
@@ -938,7 +938,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			flDamage = info.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
 
 			// Show the attacker
-			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
+			if ( pAttacker && pAttacker->IsPlayer() )
 			{
 				CEffectData	data;
 				data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
@@ -946,13 +946,13 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				data.m_vAngles = vec3_angle;
 				data.m_nEntIndex = 0;
 
-				CSingleUserRecipientFilter filter( (CBasePlayer*)info.GetAttacker() );
+				CSingleUserRecipientFilter filter( (CBasePlayer*) pAttacker );
 				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
 
 				EmitSound_t params;
 				params.m_flSoundTime = 0;
 				params.m_pSoundName = "TFPlayer.CritHit";
-				EmitSound( filter, info.GetAttacker()->entindex(), params );
+				EmitSound( filter, pAttacker->entindex(), params );
 			}
 		}
 		else
@@ -1034,7 +1034,6 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		info.SetDamage( flDamage );
 	}
 
-	int iOldHealth = m_iHealth;
 #endif
 	
 	int ret = BaseClass::OnTakeDamage( info );
@@ -1042,22 +1041,6 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 #ifdef TF_CLASSIC
 	if ( !ret )
 		return 0;
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "npc_hurt" );
-	if ( event )
-	{
-		event->SetInt( "victim_index", entindex() );
-		event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
-
-		event->SetInt( "health", max( 0, m_iHealth ) );
-		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
-		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
-
-		// HLTV event priority, not transmitted
-		event->SetInt( "priority", 5 );
-
-		gameeventmanager->FireEvent( event );
-	}
 
 	return ret;
 #endif
@@ -1453,6 +1436,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		pTFAttacker->RecordDamageEvent( info, (m_iHealth <= 0) );
 	}
 
+	int iOldHealth = m_iHealth;
 	bool bIgniting = false;
 
 	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
@@ -1473,6 +1457,22 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
 		Burn( ToTFPlayer( pAttacker ), pTFWeapon );
+	}
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "npc_hurt" );
+	if ( event )
+	{
+		event->SetInt( "victim_index", entindex() );
+		event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
+
+		event->SetInt( "health", max( 0, m_iHealth ) );
+		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
+		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+
+		// HLTV event priority, not transmitted
+		event->SetInt( "priority", 5 );
+
+		gameeventmanager->FireEvent( event );
 	}
 #endif
 

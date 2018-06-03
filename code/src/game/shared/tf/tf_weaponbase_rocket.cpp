@@ -444,6 +444,26 @@ void CTFBaseRocket::Explode( trace_t *pTrace, CBaseEntity *pOther )
 		UTIL_DecalTrace( pTrace, "Scorch" );
 	}
 
+	float flAddHealth = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hLauncher.Get(), flAddHealth, add_health_on_radius_damage );
+	if ( flAddHealth )
+	{
+		int iHealthRestored = pAttacker->TakeHealth( flAddHealth, DMG_GENERIC );
+
+		if ( iHealthRestored )
+		{
+			IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
+
+			if ( event )
+			{
+				event->SetInt( "amount", iHealthRestored );
+				event->SetInt( "entindex", pAttacker->entindex() );
+
+				gameeventmanager->FireEvent( event );
+			}
+		}
+	}
+
 	// Remove the rocket.
 	UTIL_Remove( this );
 }

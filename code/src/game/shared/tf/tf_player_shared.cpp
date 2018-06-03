@@ -3198,6 +3198,14 @@ void CTFPlayer::TeamFortress_SetSpeed()
 
 	CALL_ATTRIB_HOOK_FLOAT( maxfbspeed, mult_player_movespeed );
 
+	CTFWeaponBase *pWeapon = GetActiveTFWeapon();
+
+	// lazy enough
+	//if ( IsAlive() && !pWeapon->OnActiveStateChanged( WEAPON_NOT_CARRIED ) )
+	//{
+		CALL_ATTRIB_HOOK_FLOAT( maxfbspeed, mult_player_movespeed_active );
+	//}
+
 	// 50% speed boost from the power-up.
 	if ( m_Shared.InCond( TF_COND_POWERUP_SPEEDBOOST ) )
 	{
@@ -3229,8 +3237,6 @@ void CTFPlayer::TeamFortress_SetSpeed()
 	// if they're aiming or spun up, reduce their speed
 	if ( m_Shared.InCond( TF_COND_AIMING ) )
 	{
-		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-
 		// Heavy moves slightly faster spun-up
 		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_MINIGUN ) )
 		{
@@ -3256,9 +3262,14 @@ void CTFPlayer::TeamFortress_SetSpeed()
 			maxfbspeed = tf_spy_max_cloaked_speed.GetFloat();
 	}
 
+	if ( m_Shared.InCond( TF_COND_SPEED_BOOST ) )
+	{
+		maxfbspeed *= 1.5f;
+	}
+
 	if ( m_Shared.InCond( TF_COND_POWERUP_RAGEMODE ) )
 	{
-		maxfbspeed *= 1.3f;
+		maxfbspeed *= maxfbspeed;
 	}
 
 	if ( m_Shared.InCond( TF_COND_DISGUISED_AS_DISPENSER ) )

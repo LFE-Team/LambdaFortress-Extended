@@ -144,12 +144,12 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	Reset();
 
-	if ( TFGameRules() && ( TFGameRules()->IsCoOp() && !TFGameRules()->IsVersus() ) )
+	if ( TFGameRules() && ( TFGameRules()->IsCoOp() ) )
 	{
 		LoadControlSettings( "Resource/UI/scoreboard_coop.res" );
 		m_pPlayerListBlue->SetVisible( false );
 	}
-	else if ( TFGameRules() && ( !TFGameRules()->IsCoOp() && TFGameRules()->IsVersus() ) )
+	else if ( TFGameRules() && ( TFGameRules()->IsVersus() ) )
 	{
 		LoadControlSettings( "Resource/UI/scoreboard_vs.res" );
 	}
