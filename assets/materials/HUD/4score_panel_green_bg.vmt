@@ -1,0 +1,17 @@
+"UnlitGeneric"
+{
+	"$translucent" 1
+	"$baseTexture" "hud\score_gradient_green"
+	//"$detail" "hud\leaderboard_area_team"
+	"$detail" "hud\leaderboard_4team"
+	$detailscale 1
+	$detailblendmode 8
+	$distancealphafromdetail 1
+
+//	"$vertexcolor" 1
+	$distancealpha 1
+	"$no_fullbright" 1
+	"$ignorez" 1
+	"%keywords" "tf"
+}
+

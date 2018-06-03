@@ -302,6 +302,10 @@ public:
 	virtual void	Init( void );
 	virtual void	Shutdown( void );
 
+	#ifdef SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
+		virtual void    MP_PostSimulate();
+	#endif //SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
+
 	const CViewSetup *GetPlayerViewSetup( ) const;
 
 	virtual void	StartPitchDrift( void );

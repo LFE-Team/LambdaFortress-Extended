@@ -55,6 +55,7 @@ int AE_FASTZOMBIE_VEHICLE_LEAP;
 int AE_FASTZOMBIE_VEHICLE_SS_DIE;	// Killed while doing scripted sequence on vehicle
 
 #endif // HL2_EPISODIC
+ConVar sk_fastzombie_health( "sk_fastzombie_health", "50" );
 
 enum
 {
@@ -670,7 +671,7 @@ void CFastZombie::Spawn( void )
 	SetBloodColor( BLOOD_COLOR_YELLOW );
 #endif // HL2_EPISODIC
 
-	m_iHealth			= 50;
+	m_iHealth			= sk_fastzombie_health.GetFloat();
 	m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();
@@ -918,8 +919,11 @@ void CFastZombie::DeathSound( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CFastZombie::AlertSound( void )
 {
+#ifdef TF_CLASSIC
+	CBaseEntity *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
+#else
 	CBaseEntity *pPlayer = AI_GetSinglePlayer();
-
+#endif
 	if( pPlayer )
 	{
 		// Measure how far the player is, and play the appropriate type of alert sound. 

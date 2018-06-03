@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_acr_hookblade/c_acr_hookblade_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

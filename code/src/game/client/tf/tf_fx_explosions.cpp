@@ -161,16 +161,9 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 		pszEffect = pszFormat;
 	}
 
-	C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
+	//C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
 
-	if ( TFGameRules()->IsDeathmatch() && bColored && tf_PR )
-	{
-		DispatchParticleEffect( pszEffect, vecOrigin, angExplosion, tf_PR->GetPlayerColorVector( iPlayerIndex ), vec3_origin, true );
-	}
-	else
-	{
-		DispatchParticleEffect( pszEffect, vecOrigin, angExplosion );
-	}
+	DispatchParticleEffect( pszEffect, vecOrigin, angExplosion );
 }
 
 //-----------------------------------------------------------------------------

@@ -25,7 +25,7 @@ public:
 	void PostNPCInit();
 
 	// Damage & Death
-	virtual int OnTakeDamage_Alive( const CTakeDamageInfo &info );
+	//virtual int OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	void Event_Killed( const CTakeDamageInfo &info );
 	void DeathEffects();
 	bool CanBecomeRagdoll( void ) { return false; }

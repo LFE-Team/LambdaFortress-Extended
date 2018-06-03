@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_madmilk/c_madmilk_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

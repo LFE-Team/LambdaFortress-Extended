@@ -1,0 +1,27 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\items/crystal_ball_wood"
+	"$selfillum" "1"
+
+	"$bumpmap" "effects/flat_normal"
+	
+	"$phong" "1"
+	"$phongexponent" "125"
+	"$phongboost" ".25"	
+	"$lightwarptexture" "models/player/pyro/pyro_lightwarp"
+	"$phongfresnelranges"	"[1.25 .5 2]"
+	
+	"$rimlight" "1"												// To enable rim lighting (requires phong)
+	"$rimlightexponent" "15"										// Exponent for phong component of rim lighting	
+	"$rimlightboost" "4"										// Boost for ambient cube component of rim lighting
+	
+	"Sine"
+	{
+		"resultVar" "$selfillum"
+		"sineperiod" "1"
+		"sinemin" ".2"
+		"sinemax" "1"
+	}
+
+
+}

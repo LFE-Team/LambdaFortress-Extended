@@ -1,0 +1,180 @@
+"VertexlitGeneric"
+{
+	"$baseTexture" "models/weapons/c_items/c_big_mallet"
+	"$lightwarptexture" "models/weapons/c_items/c_ambassador_lightwarp"
+//	"$phongwarptexture"  "models/weapons/c_items/c_ambassador_phongwarp"
+	"$basemapalphaphongmask" "1"
+
+
+	"$selfillum" "1"
+	"$selfillumtint" "[2 1 18]"
+	"$selfIllumFresnel" "1"
+	"$selfIllumFresnelMinMaxExp" "[0 10 20]" // 0.0 1.0 1.0 is the default
+	"$invulnlevel" "0"
+	"$invulnexponent" "1"
+	"$invulnfmax" "1"
+	"$invulnscale" "0"
+	"$invulnphong" "1"
+
+	"$selfillumtintvar" "[2 1 18]"
+
+	"$half" "0.5"
+
+	"$invulnphongfading" "0"
+	"$invulnphongfull" "1"
+	"$invulnphongoutput" "1" 
+
+	"$invulnexponentfading" "11"
+	"$invulnexponentfull" "53"
+	"$invulnexponentoutput" "1"
+	
+	"$invulnfmaxfading" ".5"
+	"$invulnfmaxfull" "11"
+	"$invulnfmaxoutput" "1"
+
+
+	"$phong" "1"
+	"$phongexponent" "20"
+	"$phongboost" "1.3"	
+	"$phongfresnelranges"	"[.3 1 8]"
+	"$halflambert" "0"
+
+	"360?$color2" "[ 0.9 0.8 0.8 ]"
+
+	"$glowcolor" "1"
+	
+	"$rimlightexponent" "4"
+	"$rimlightboost" "2"
+
+	// Cloaking
+	"$cloakPassEnabled" "1"
+	"$sheenPassEnabled" "1"
+
+	"$sheenmap" 		"cubemaps\cubemap_sheen001"
+	"$sheenmapmask" 		"Effects\AnimatedSheen\animatedsheen0"
+	"$sheenmaptint" 		"[ 1 1 1 ]"
+	"$sheenmapmaskframe" 	"0"
+	"$sheenindex" 		"0"
+
+	"$yellow" "0"
+
+	"Proxies"
+	{
+		"AnimatedWeaponSheen"
+		{
+			"animatedtexturevar" 		"$sheenmapmask"
+			"animatedtextureframenumvar" 	"$sheenmapmaskframe"
+			"animatedtextureframerate" 		"40"
+		}
+		"invis"
+		{
+		}
+		"ModelGlowColor"
+		{
+			"resultVar" "$glowcolor"
+		}
+		"Add"
+		{
+			"srcVar1"  "$glowcolor"
+			"srcVar2"  "$selfillumtintvar" 
+			"resultVar" "$selfillumtint"
+		}
+		"Equals"
+		{
+			"srcVar1"  "$glowcolor"
+			"resultVar" "$color2"
+		}
+		"YellowLevel"
+		{
+			"resultVar" "$yellow"
+		}
+		"Multiply"
+		{
+			"srcVar1" "$color2"
+			"srcVar2" "$yellow"
+			"resultVar" "$color2"
+		}
+
+//------------------------
+
+		"LessOrEqual"
+		{
+			"srcVar1"	"$invulnlevel"
+			"srcVar2"	"$half"
+			"lessEqualVar"	"$invulnphongfading"
+			"greaterVar"	"$invulnphongfull"
+			"resultVar"	"$invulnphongoutput"
+		}
+		"LessOrEqual"
+		{
+			"srcVar1"	"$invulnlevel"
+			"srcVar2"	"$half"
+			"lessEqualVar"	"$invulnfmaxfading"
+			"greaterVar"	"$invulnfmaxfull"
+			"resultVar"	"$invulnfmaxoutput"
+		}
+		"LessOrEqual"
+		{
+			"srcVar1"	"$invulnlevel"
+			"srcVar2"	"$half"
+			"lessEqualVar"	"$invulnexponentfading"
+			"greaterVar"	"$invulnexponentfull"
+			"resultVar"	"$invulnexponentoutput"
+		}
+		"Sine"
+		{
+			"resultVar" "$invulnfmax"
+			"sineperiod" ".4"
+			"sinemin" "$invulnfmaxoutput"
+			"sinemax" "8"
+		}
+		"Sine"
+		{
+			"resultVar" "$invulnphong"
+			"sineperiod" ".14"
+			"sinemin" "$invulnphongoutput"
+			"sinemax" "1"
+		}
+		"Sine"
+		{
+			"resultVar" "$invulnexponent"
+			"sineperiod" "1.7"
+			"sinemin" "$invulnexponentoutput"
+			"sinemax" "12"
+		}
+
+		"Sine"
+		{
+			"sineperiod" ".2"
+			"sinemin" "1"
+			"sinemax" "122"
+			"resultVar" "$rimlightexponent" 
+		}
+
+		"Sine"
+		{
+			"sineperiod" "1.4"
+			"sinemin" "0"
+			"sinemax" "22"
+			"resultVar" "$rimlightboost" 
+		}
+
+
+		"Equals"
+		{
+			"srcVar1" "$invulnexponent"
+			"resultVar" "$selfillumfresnelminmaxexp[2]"
+		}
+		"Equals"
+		{
+			"srcVar1" "$invulnfmax"
+			"resultVar" "$selfillumfresnelminmaxexp[1]"
+		}
+		"Equals"
+		{
+			"srcVar1" "$invulnphong"
+			"resultVar" "$phongboost" 
+		}
+	}
+}
+

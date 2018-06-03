@@ -359,10 +359,12 @@ void C_PropAirboat::DampenEyePosition( Vector &vecVehicleEyePos, QAngle &vecVehi
 	// Keep static the sideways motion.
 
 	// Dampen forward/backward motion.
+#ifndef TF_CLASSIC_CLIENT
 	DampenForwardMotion( vecVehicleEyePos, vecVehicleEyeAngles, flFrameTime );
-
+#endif
 	// Blend up/down motion.
 	DampenUpMotion( vecVehicleEyePos, vecVehicleEyeAngles, flFrameTime );
+
 }
 
 

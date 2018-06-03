@@ -17,6 +17,7 @@
 #include "c_team.h"
 // Server specific.
 #else
+#include "soundent.h"
 #include "tf_player.h"
 #include "IEffects.h"
 #include "props.h"
@@ -108,23 +109,11 @@ void CTFGrenadeStickybombProjectile::CreateTrails( void )
 {
 	CNewParticleEffect *pParticle = ParticleProp()->Create( GetTrailParticleName(), PATTACH_ABSORIGIN_FOLLOW );
 
-	C_TFPlayer *pPlayer = ToTFPlayer( GetThrower() );
-
-	if ( pPlayer )
-	{
-		pPlayer->m_Shared.SetParticleToMercColor( pParticle );
-	}
-
 	if ( m_bCritical )
 	{
 		const char *pszEffectName = ConstructTeamParticle( "critical_grenade_%s", GetTeamNumber(), true );
 
 		pParticle = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
-
-		if ( pPlayer )
-		{
-			pPlayer->m_Shared.SetParticleToMercColor( pParticle );
-		}
 	}
 }
 
@@ -322,6 +311,9 @@ void CTFGrenadeStickybombProjectile::VPhysicsCollision( int index, gamevcollisio
 		m_bUseImpactNormal = true;
 		pEvent->pInternalData->GetSurfaceNormal( m_vecImpactNormal );
 		m_vecImpactNormal.Negate();
+
+		CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 400, 5, this );
+		m_bHasWarnedAI = true;
 	}
 }
 

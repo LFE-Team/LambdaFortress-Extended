@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//====== Copyright Â© 1996-2004, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -45,11 +45,6 @@ const char *g_aTeamParticleNames[TF_TEAM_COUNT] =
 
 const char *GetTeamParticleName( int iTeam, bool bDeathmatchOverride /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
 {
-	if ( bDeathmatchOverride && TFGameRules() && TFGameRules()->IsDeathmatch() )
-	{
-		return "dm";
-	}
-
 	return pNames[iTeam];
 }
 
@@ -108,8 +103,6 @@ const char *g_aPlayerClassNames[] =
 	"#TF_Class_Name_Pyro",
 	"#TF_Class_Name_Spy",
 	"#TF_Class_Name_Engineer",
-	"#TF_Class_Name_Civilian",
-	"#TF_Class_Name_Mercenary"
 };
 
 const char *g_aPlayerClassEmblems[] =
@@ -123,7 +116,6 @@ const char *g_aPlayerClassEmblems[] =
 	"../hud/leaderboard_class_pyro",
 	"../hud/leaderboard_class_spy",
 	"../hud/leaderboard_class_engineer",
-	"../hud/leaderboard_class_civilian",
 };
 
 const char *g_aPlayerClassEmblemsDead[] =
@@ -137,7 +129,6 @@ const char *g_aPlayerClassEmblemsDead[] =
 	"../hud/leaderboard_class_pyro_d",
 	"../hud/leaderboard_class_spy_d",
 	"../hud/leaderboard_class_engineer_d",
-	"../hud/leaderboard_class_civilian_d",
 };
 
 const char *g_aPlayerClassNames_NonLocalized[] =
@@ -152,8 +143,6 @@ const char *g_aPlayerClassNames_NonLocalized[] =
 	"Pyro",
 	"Spy",
 	"Engineer",
-	"Civilian",
-	"Mercenary"
 };
 
 //-----------------------------------------------------------------------------
@@ -170,8 +159,8 @@ const char *g_aGameTypeNames[] =
 	"#GameType_Passtime",
 	"#GameType_PlayerDestruction",
 	"#Gametype_MVM",
-	"#Gametype_DM",
-	"#Gametype_VIP",
+	"#Gametype_COOP",
+	"#Gametype_VS",
 };
 
 //-----------------------------------------------------------------------------
@@ -231,8 +220,6 @@ struct pszWpnEntTranslationListEntry
 	const char *weapon_pyro;
 	const char *weapon_spy;
 	const char *weapon_engineer;
-	const char *weapon_civilian;
-	const char *weapon_mercenary;
 };
 static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 {
@@ -247,8 +234,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_shotgun_pyro",		// Pyro
 	"tf_weapon_shotgun_primary",	// Spy
 	"tf_weapon_shotgun_primary",	// Engineer
-	"tf_weapon_shotgun_primary",	// Civilian
-	"tf_weapon_shotgun_soldier",	// Mercenary
 
 	"tf_weapon_pistol",				// Base weapon to translate
 	NULL,
@@ -261,8 +246,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_pistol",				// Pyro
 	"tf_weapon_pistol",				// Spy
 	"tf_weapon_pistol",				// Engineer
-	"tf_weapon_pistol",				// Civilian
-	"tf_weapon_pistol",				// Mercenary
 
 	"tf_weapon_shovel",				// Base weapon to translate
 	NULL,
@@ -275,8 +258,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_shovel",				// Pyro
 	"tf_weapon_shovel",				// Spy
 	"tf_weapon_shovel",				// Engineer
-	"tf_weapon_shovel",				// Civilian
-	"tf_weapon_shovel",				// Mercenary
 
 	"tf_weapon_bottle",				// Base weapon to translate
 	NULL,
@@ -289,8 +270,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_bottle",				// Pyro
 	"tf_weapon_bottle",				// Spy
 	"tf_weapon_bottle",				// Engineer
-	"tf_weapon_bottle",				// Civilian
-	"tf_weapon_bottle",				// Mercenary
 
 	"saxxy",						// Base weapon to translate
 	NULL,
@@ -303,8 +282,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_fireaxe",			// Pyro
 	"tf_weapon_knife",				// Spy
 	"tf_weapon_wrench",				// Engineer
-	"tf_weapon_umbrella",			// Civilian
-	"tf_weapon_crowbar",			// Mercenary
 
 	"tf_weapon_throwable",			// Base weapon to translate
 	NULL,
@@ -313,8 +290,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_throwable", //UNK_10D88B2
 	"tf_weapon_throwable", //UNK_10D88B2
 	"tf_weapon_throwable", //UNK_10D88D0
-	"tf_weapon_throwable", //UNK_10D88B2
-	"tf_weapon_throwable", //UNK_10D88B2
 	"tf_weapon_throwable", //UNK_10D88B2
 	"tf_weapon_throwable", //UNK_10D88B2
 	"tf_weapon_throwable", //UNK_10D88B2
@@ -331,8 +306,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_parachute_secondary",	// Pyro
 	"tf_weapon_parachute_secondary",	// Spy
 	0,									// Engineer
-	"tf_weapon_parachute_secondary",	// Civilian
-	"tf_weapon_parachute_secondary",	// Mercenary
 
 	"tf_weapon_revolver",			// Base weapon to translate
 	NULL,
@@ -345,8 +318,6 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_revolver",			// Pyro
 	"tf_weapon_revolver",			// Spy
 	"tf_weapon_revolver_secondary",	// Engineer
-	"tf_weapon_revolver",			// Civilian
-	"tf_weapon_revolver",			// Mercenary
 };
 
 //-----------------------------------------------------------------------------
@@ -422,6 +393,9 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_DISPLACER",
 	"TF_WEAPON_DISPLACER_BOMB",
 
+	"TF_WEAPON_PHYSCANNON",
+	"TF_WEAPON_PHYSGUN",
+
 	"TF_WEAPON_COUNT",	// end marker, do not add below here
 };
 
@@ -438,11 +412,11 @@ int g_aWeaponDamageTypes[] =
 	DMG_CLUB,		// TF_WEAPON_SHOVEL,
 	DMG_CLUB,		// TF_WEAPON_WRENCH,
 	DMG_SLASH,		// TF_WEAPON_BONESAW,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_PRIMARY,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_SOLDIER,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_HWG,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_PYRO,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,  // TF_WEAPON_SCATTERGUN,
+	DMG_BULLET | DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_PRIMARY,
+	DMG_BULLET | DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_SOLDIER,
+	DMG_BULLET | DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_HWG,
+	DMG_BULLET | DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_PYRO,
+	DMG_BULLET | DMG_BUCKSHOT | DMG_USEDISTANCEMOD,  // TF_WEAPON_SCATTERGUN,
 	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_SNIPERRIFLE,
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_MINIGUN,
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_SMG,
@@ -494,6 +468,9 @@ int g_aWeaponDamageTypes[] =
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_ASSAULTRIFLE
 	DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_DISPLACER
 	DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_DISPLACER_BOMB
+
+	DMG_GENERIC,	// TF_WEAPON_PHYSCANNON
+	DMG_GENERIC,	// TF_WEAPON_PHYSGUN
 
 	// This is a special entry that must match with TF_WEAPON_COUNT
 	// to protect against updating the weapon list without updating this list
@@ -1013,12 +990,10 @@ bool ClassCanBuild( int iClass, int iObjectType )
 		// Hit the end?
 		if ( g_TFClassInfos[iClass].m_pClassObjects[i] == OBJ_LAST )
 			return false;
-
 		// Found it?
 		if ( g_TFClassInfos[iClass].m_pClassObjects[i] == iObjectType )
 			return true;
 	}
-
 	return false;
 	*/
 

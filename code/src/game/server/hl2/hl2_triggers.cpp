@@ -463,6 +463,13 @@ void CTriggerPhysicsTrap::Touch( CBaseEntity *pOther )
 		PhysCannonBeginUpgrade( pAnim );
 		return;
 	}
+#elif TF_CLASSIC
+	// HACK: Upgrade the physcannon
+	if ( FClassnameIs( pAnim, "tf_weapon_physcannon" ) )
+	{
+		PhysCannonBeginUpgrade( pAnim );
+		return;
+	}
 #endif
 
 	pAnim->Dissolve( NULL, gpGlobals->curtime, false, m_nDissolveType );

@@ -86,9 +86,9 @@ public:
 	const char		*GetTracerType( void ) { return "AR2Tracer"; }
 	void			DoImpactEffect( trace_t &tr, int nDamageType );
 
-	bool HeadlightIsOn( void ) { return m_bHeadlightIsOn; }
-	void HeadlightTurnOn( void ) { m_bHeadlightIsOn = true; }
-	void HeadlightTurnOff( void ) { m_bHeadlightIsOn = false; }
+	bool HeadlightIsOn(void) { return m_bHeadlightIsOn; }
+	void HeadlightTurnOn(void);
+	void HeadlightTurnOff(void);
 
 private:
 

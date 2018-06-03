@@ -22,13 +22,12 @@ public:
 	DECLARE_CLASS( CTFFlareGun, CTFWeaponBaseGun );
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CTFFlareGun();
 
 	virtual void	Spawn( void );
 	virtual int		GetWeaponID( void ) const { return TF_WEAPON_FLAREGUN; }
-
-	DECLARE_DM_ACTTABLE();
 };
 
 #endif // TF_WEAPON_FLAREGUN_H

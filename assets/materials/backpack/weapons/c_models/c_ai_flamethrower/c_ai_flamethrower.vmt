@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_ai_flamethrower/c_ai_flamethrower"
+	$translucent 1
+	$vertexcolor 1
+}

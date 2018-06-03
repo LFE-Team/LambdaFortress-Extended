@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack\weapons\c_models\c_shogun_warfan/c_shogun_warfan"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

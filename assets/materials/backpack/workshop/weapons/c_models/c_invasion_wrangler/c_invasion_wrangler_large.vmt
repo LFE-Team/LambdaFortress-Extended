@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_invasion_wrangler/c_invasion_wrangler_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

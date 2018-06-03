@@ -20,9 +20,6 @@ CTFMusicManager *GetTFMusicManager( void )
 
 static void MusicManagerToggle( IConVar *var, const char *pOldValue, float flOldValue )
 {
-	if ( !TFGameRules() || !TFGameRules()->IsDeathmatch() )
-		return;
-
 	ConVar *pCvar = (ConVar *)var;
 	if ( pCvar->GetBool() )
 	{
@@ -219,9 +216,6 @@ void CTFMusicManager::Update( float flFrameTime )
 void CTFMusicManager::FireGameEvent( IGameEvent *event )
 {
 	if ( !tf2c_music_manager.GetBool() )
-		return;
-
-	if ( !TFGameRules() || !TFGameRules()->IsDeathmatch() )
 		return;
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();

@@ -250,7 +250,7 @@ void CTFWeaponDisplacer::FinishTeleport( void )
 			for ( int i = 0; i < count; i++ )
 			{
 				CBaseEntity *pEntity = pList[i];
-				if ( pEntity != this && ( !InSameTeam( pEntity ) || TFGameRules()->IsDeathmatch() ) )
+				if ( pEntity != this && ( !InSameTeam( pEntity ) ) )
 				{
 					CTakeDamageInfo info( this, this, 1000, DMG_CRUSH, TF_DMG_TELEFRAG );
 					pEntity->TakeDamage( info );

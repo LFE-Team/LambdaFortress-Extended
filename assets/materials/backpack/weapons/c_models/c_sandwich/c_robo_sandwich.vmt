@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_sandwich/c_robo_sandwich"
+	$translucent 1
+	$vertexcolor 1
+}

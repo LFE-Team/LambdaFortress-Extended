@@ -841,7 +841,12 @@ bool CBaseAnimating::BecomeRagdollOnClient( const Vector &force )
 		//UTIL_SetSize( this, vec3_origin, vec3_origin );
 		SetThink( NULL );
 	
-		SetNextThink( gpGlobals->curtime + 2.0f );
+#ifdef TF_CLASSIC
+		// 10 seconds to give more time for freezecam.
+		SetNextThink( gpGlobals->curtime + 10.0f );
+#else
+ 		SetNextThink( gpGlobals->curtime + 2.0f );
+#endif
 		//If we're here, then we can vanish safely
 		SetThink( &CBaseEntity::SUB_Remove );
 

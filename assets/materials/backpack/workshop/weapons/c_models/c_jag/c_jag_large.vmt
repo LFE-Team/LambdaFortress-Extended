@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_jag/c_jag_large"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

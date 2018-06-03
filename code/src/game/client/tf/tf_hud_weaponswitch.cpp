@@ -270,7 +270,7 @@ void CTFHudWeaponSwitch::OnTick()
 		m_pWeaponTo->SetWeapon( m_pItemDefTo );
 	}
 
-	int iSlot = pItemTo->GetLoadoutSlot( TF_CLASS_MERCENARY );
+	int iSlot = pItemTo->GetLoadoutSlot( TF_CLASS_COUNT );
 	C_EconEntity *pWeaponFrom = pPlayer->GetEntityForLoadoutSlot( iSlot );
 	if ( !pWeaponFrom )
 		return;

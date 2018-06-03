@@ -173,21 +173,6 @@ Color CHudChat::GetClientColor( int clientIndex )
 		C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( clientIndex ) );
 		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
-		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
-			// Show their chosen player color in DM unless they're in spec.
-			C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
-
-			if ( tf_PR && iTeam >= FIRST_GAME_TEAM )
-			{
-				return tf_PR->GetPlayerColor( clientIndex );
-			}
-			else
-			{
-				return g_ColorGrey;
-			}
-		}
-
 		if ( IsVoiceSubtitle() == true )
 		{
 			// if this player is on the other team, disguised as my team, show disguised color

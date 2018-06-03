@@ -24,6 +24,8 @@
 #include "tf_weapon_medigun.h"
 #include "ihasattributes.h"
 #include "c_tf_spymask.h"
+#include "hl_movedata.h"
+#include "beamdraw.h"
 
 class C_MuzzleFlashModel;
 class C_BaseObject;
@@ -64,11 +66,17 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual void ProcessMuzzleFlashEvent();
 	virtual void ValidateModelIndex( void );
+	virtual void NotifyShouldTransmit( ShouldTransmitState_t state );
 
 	virtual Vector GetObserverCamOrigin( void );
 	virtual int DrawModel( int flags );
-
+	virtual void AddEntity( void );
 	virtual bool CreateMove( float flInputSampleTime, CUserCmd *pCmd );
+
+	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles; }
+
+	// Called when not in tactical mode. Allows view to be overriden for things like driving a tank.
+	virtual void				OverrideView( CViewSetup *pSetup );
 
 	virtual bool IsAllowedToSwitchWeapons( void );
 
@@ -157,6 +165,7 @@ public:
 		const Vector& decalCenter, int hitbox, int decalIndex, bool doTrace, trace_t& tr, int maxLODToDecal = ADDDECAL_TO_ALL_LODS );
 
 	virtual void CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	virtual void CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 	virtual Vector GetChaseCamViewOffset( CBaseEntity *target );
 
 	void ClientPlayerRespawn( void );
@@ -194,6 +203,20 @@ public:
 	bool			ShouldAutoReload( void ){ return cl_autoreload.GetBool(); }
 	bool			ShouldFlipViewModel( void ) { return cl_flipviewmodels.GetBool(); }
 
+	bool			IsSearchingSpawn( void ) { return m_bSearchingSpawn; }
+
+	// HL2 ladder related methods
+	LadderMove_t		*GetLadderMove() { return &m_LadderMove; }
+	virtual void		ExitLadder();
+
+	// Flashlight
+	void	Flashlight( void );
+	void	UpdateFlashlight( void );
+
+	void ReleaseFlashlight( void );
+	Beam_t	*m_pFlashlightBeam;
+
+	virtual bool ShouldReceiveProjectedTextures( int flags );
 public:
 	// Shared functions
 	void			TeamFortress_SetSpeed();
@@ -297,7 +320,7 @@ private:
 	QAngle				m_angTauntEngViewAngles;
 
 public:
-
+	QAngle		m_vecUseAngles;
 	Vector				m_vecPlayerColor;
 
 private:
@@ -406,6 +429,8 @@ public:
 	int				m_nForceTauntCam;
 	float			m_flLastDamageTime;
 
+	bool			m_bSearchingSpawn;
+
 	CHandle<C_TFSpyMask> m_hSpyMask;
 	CHandle<C_PlayerAttachedModel> m_hPowerupShield;
 
@@ -416,6 +441,20 @@ public:
 
 	CAttributeManager m_AttributeManager;
 
+	// HL2 Ladder related data
+	EHANDLE			m_hLadder;
+	LadderMove_t	m_LadderMove;
+
+	virtual void CalcVehicleView(IClientVehicle* pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov);
+	virtual void CalcPlayerView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	virtual void CalcViewRoll(QAngle& eyeAngles);
+	virtual void CalcViewBob(Vector& eyeOrigin);
+	virtual void CalcViewIdle(QAngle& eyeAngles);
+
+	float ViewBob;
+	double BobTime;
+	float BobLastTime;
+	float IdleScale;
 private:
 
 	float m_flWaterImpactTime;

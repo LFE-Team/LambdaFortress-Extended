@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_ttg_watch/c_ttg_watch"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

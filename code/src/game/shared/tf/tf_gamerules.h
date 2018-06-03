@@ -177,6 +177,9 @@ public:
 	CTeamRoundTimer* GetGreenKothRoundTimer( void ) { return m_hGreenKothTimer.Get(); }
 	CTeamRoundTimer* GetYellowKothRoundTimer( void ) { return m_hYellowKothTimer.Get(); }
 
+	bool	MegaPhyscannonActive(void) { return m_bMegaPhysgun; }
+
+	CNetworkVar(bool, m_bMegaPhysgun);
 
 #ifdef GAME_DLL
 public:
@@ -187,6 +190,27 @@ public:
 
 	virtual void	FrameUpdatePostEntityThink();
 
+	// HL2 NPC stuff
+	virtual void SetSkillLevel( int iLevel )
+	{
+		int oldLevel = g_iSkillLevel;
+
+		iLevel = clamp( iLevel, 1, 2 );
+
+		g_iSkillLevel = iLevel;
+
+		if ( g_iSkillLevel != oldLevel )
+		{
+			OnSkillLevelChanged( g_iSkillLevel );
+		}
+	}
+
+	bool	NPC_ShouldDropHealth(CBasePlayer *pRecipient);
+	void	NPC_DroppedHealth(void);
+
+private:
+	float	m_flLastHealthDropTime;
+public:
 	// Called when a new round is being initialized
 	virtual void	SetupOnRoundStart( void );
 
@@ -208,6 +232,9 @@ public:
 	// Called when a round has entered stalemate mode (timer has run out)
 	virtual void	SetupOnStalemateStart( void );
 	virtual void	SetupOnStalemateEnd( void );
+
+	virtual bool IsAlyxInDarknessMode();
+	virtual bool ShouldBurningPropsEmitLight();
 
 	void			RecalculateControlPointState( void );
 
@@ -302,7 +329,6 @@ public:
 	virtual bool	IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
 
 	virtual bool	IsFourTeamGame( void ) { return m_bFourTeamMode; };
-	virtual bool	IsDeathmatch( void ) { return m_nGameType == TF_GAMETYPE_DM; };
 	virtual bool    IsMannVsMachineMode( void ) { return false; };
 	virtual bool	IsInArenaMode( void ) { return m_nGameType == TF_GAMETYPE_ARENA; }
 	virtual bool	IsInKothMode( void ) { return m_bPlayingKoth; }
@@ -311,6 +337,10 @@ public:
 	virtual bool	IsCompetitiveMode( void ) { return m_bCompetitiveMode; };
 	virtual bool	IsInHybridCTF_CPMode( void ) { return m_bPlayingHybrid_CTF_CP; };
 	virtual bool	IsInSpecialDeliveryMode( void ) { return m_bPlayingSpecialDeliveryMode; };
+
+	bool IsCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP ); }
+	bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
+	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
 #ifdef CLIENT_DLL
 
@@ -334,6 +364,8 @@ public:
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
 	virtual void Think();
 
+	virtual void InitDefaultAIRelationships( void );
+
 	bool CheckWinLimit();
 	bool CheckFragLimit();
 	bool CheckCapsPerRound();
@@ -344,6 +376,7 @@ public:
 	CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
 	bool IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer, bool bIgnorePlayers );
 
+	virtual int ItemShouldRespawn( CItem *pItem );
 	virtual float FlItemRespawnTime( CItem *pItem );
 	virtual Vector VecItemRespawnSpot( CItem *pItem );
 	virtual QAngle VecItemRespawnAngles( CItem *pItem );
@@ -369,6 +402,7 @@ public:
 	virtual void CreateStandardEntities();
 
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
+	virtual void NPCKilled( CAI_BaseNPC *pVictim, const CTakeDamageInfo &info );
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	virtual CBasePlayer *GetDeathScorer( CBaseEntity *pKiller, CBaseEntity *pInflictor, CBaseEntity *pVictim );
 
@@ -376,7 +410,8 @@ public:
 
 	const char *GetKillingWeaponName( const CTakeDamageInfo &info, CTFPlayer *pVictim, int &iWeaponID );
 	CBasePlayer *GetAssister( CBasePlayer *pVictim, CBasePlayer *pScorer, CBaseEntity *pInflictor );
-	CTFPlayer *GetRecentDamager( CTFPlayer *pVictim, int iDamager, float flMaxElapsed );
+	CBaseEntity *GetAssister( CBaseEntity *pVictim, CBaseEntity *pKiller, CBaseEntity *pInflictor );
+	CBaseEntity *GetRecentDamager( CBaseEntity *pVictim, int iDamager, float flMaxElapsed );
 
 	virtual void ClientDisconnected( edict_t *pClient );
 
@@ -470,6 +505,8 @@ inline CTFGameRules* TFGameRules()
 #ifdef GAME_DLL
 bool EntityPlacementTest( CBaseEntity *pMainEnt, const Vector &vOrigin, Vector &outPos, bool bDropToGround );
 #endif
+
+extern ConVar lf_coop_min_red_players;
 
 #ifdef CLIENT_DLL
 void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );

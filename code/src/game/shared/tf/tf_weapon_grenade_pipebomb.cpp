@@ -81,23 +81,11 @@ void CTFGrenadePipebombProjectile::CreateTrails( void )
 {
 	CNewParticleEffect *pParticle = ParticleProp()->Create( GetTrailParticleName(), PATTACH_ABSORIGIN_FOLLOW );
 
-	C_TFPlayer *pPlayer = ToTFPlayer( GetThrower() );
-
-	if ( pPlayer )
-	{
-		pPlayer->m_Shared.SetParticleToMercColor( pParticle );
-	}
-
 	if ( m_bCritical )
 	{
 		const char *pszEffectName = ConstructTeamParticle(  "critical_pipe_%s", GetTeamNumber(), true );
 
 		pParticle = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
-
-		if ( pPlayer )
-		{
-			pPlayer->m_Shared.SetParticleToMercColor( pParticle );
-		}
 	}
 }
 
@@ -257,7 +245,7 @@ void CTFGrenadePipebombProjectile::PipebombTouch( CBaseEntity *pOther )
 		return;
 
 	// Blow up if we hit an enemy we can damage
-	if ( pOther->GetTeamNumber() && ( pOther->GetTeamNumber() != GetTeamNumber() || TFGameRules()->IsDeathmatch() ) && pOther->m_takedamage != DAMAGE_NO )
+	if ( pOther->GetTeamNumber() && ( pOther->GetTeamNumber() != GetTeamNumber() ) && pOther->m_takedamage != DAMAGE_NO )
 	{
 		// Check to see if this is a respawn room.
 		if ( !pOther->IsPlayer() )

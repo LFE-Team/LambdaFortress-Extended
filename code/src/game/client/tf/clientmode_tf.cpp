@@ -50,6 +50,8 @@
 #include "c_tf_team.h"
 #include "c_tf_playerresource.h"
 
+#include "vgui/lf_loadingprogress.h"
+
 #if defined( _X360 )
 #include "tf_clientscoreboard.h"
 #endif
@@ -179,7 +181,7 @@ void ClientModeTFNormal::Init()
 		if ( NULL != m_pGameUI )
 		{
 			// insert stats summary panel as the loading background dialog
-			CTFStatsSummaryPanel *pPanel = GStatsSummaryPanel();
+			CTFLoadingProgress *pPanel = GLoadingProgress();
 			pPanel->InvalidateLayout( false, true );
 			pPanel->SetVisible( false );
 			pPanel->MakePopup( false );
@@ -394,23 +396,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 				if ( bAutoTeamed )
 				{
 					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_AutoTeam" ), 2, wszPlayerName, wszTeam );
-				}
-				else if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-				{
-					if ( iTeam >= FIRST_GAME_TEAM )
-					{
-						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_Deathmatch" ), 1, wszPlayerName );
-					}
-					else
-					{
-						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_Deathmatch_Spectator" ), 1, wszPlayerName );
-					}
-
-					C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
-					if ( tf_PR )
-					{
-						col = tf_PR->GetPlayerColor( iPlayerIndex );
-					}
 				}
 				else
 				{

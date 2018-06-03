@@ -45,7 +45,7 @@ void CTFImageColoredPanel::PaintBackground()
 	C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
 
 	//disable for deathmatch for now
-	if ( !tf_PR || !tf2c_coloredhud.GetBool() || !TFGameRules() || !TFGameRules()->IsDeathmatch() )
+	if ( !tf_PR || !tf2c_coloredhud.GetBool() || !TFGameRules() )
 	{
 		SetDrawColor( Color( 0, 0, 0, 0 ) );
 	}

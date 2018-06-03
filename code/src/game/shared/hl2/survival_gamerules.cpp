@@ -1,7 +1,7 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 #include "cbase.h"
 
-#ifdef HL2_EPISODIC
+#ifdef NONE
 
 #include "hl2_gamerules.h"
 #include "ammodef.h"

@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack\weapons\c_models\c_shogun_kunai/c_shogun_kunai"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

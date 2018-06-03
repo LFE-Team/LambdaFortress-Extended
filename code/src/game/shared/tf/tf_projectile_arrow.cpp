@@ -12,6 +12,7 @@
 #include "props_shared.h"
 #include "tf_player.h"
 #include "debugoverlay_shared.h"
+#include "te_effect_dispatch.h"
 #endif
 
 #ifdef GAME_DLL
@@ -155,12 +156,14 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 {
 	// Verify a correct "other."
 	Assert( pOther );
-	if ( pOther->IsSolidFlagSet( FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS ) )
+	if ( !pOther->IsSolid() || pOther->IsSolidFlagSet( FSOLID_VOLUME_CONTENTS ) )
 		return;
 
 	// Handle hitting skybox (disappear).
-	trace_t *pTrace = const_cast<trace_t *>( &CBaseEntity::GetTouchTrace() );
-	if ( pTrace->surface.flags & SURF_SKY )
+	const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
+	//trace_t *pNewTrace = const_cast<trace_t*>( pTrace );
+
+	if( pTrace->surface.flags & SURF_SKY )
 	{
 		UTIL_Remove( this );
 		return;
@@ -170,6 +173,13 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	SetModelName( NULL_STRING );
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	m_takedamage = DAMAGE_NO;
+
+	if ( pOther->IsWorld() )
+	{
+		SetAbsVelocity( vec3_origin	);
+		AddSolidFlags( FSOLID_NOT_SOLID );
+		return;
+	}
 
 	// Damage.
 	CBaseEntity *pAttacker = GetOwnerEntity();
@@ -188,7 +198,7 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 
 	if ( pPlayer )
 	{
-#if 0
+//#if 0
 		CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
 		if ( !pStudioHdr )
 			return;
@@ -205,6 +215,8 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 		trace_t trFly;
 		UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * 16.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &trFly );
 
+		//trFly->hitgroup = HITGROUP_HEAD;
+
 		QAngle angHit;
 		trace_t trHit;
 		float flClosest = FLT_MAX;
@@ -217,7 +229,7 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 			pPlayer->GetBonePosition( pBox->bone, boxPosition, boxAngles );
 
 			trace_t tr;
-			UTIL_TraceLine( trFly.endpos, boxPosition, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+			//UTIL_TraceLine( trFly.endpos, boxPosition, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 			float flLengthSqr = ( tr.endpos - trFly.endpos ).LengthSqr();
 
 			if ( flLengthSqr < flClosest )
@@ -239,7 +251,8 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 		Vector vecHitDir = trHit.plane.normal * -1.0f;
 		AngleVectors( angHit, &vecHitDir );
 		SetAbsAngles( angHit );
-#else
+//#else
+	/*
 		trace_t trPlayerHit;
 		// Trace ahead to see if we're going to hit player's hitbox.
 		UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * gpGlobals->frametime, MASK_SHOT, this, COLLISION_GROUP_NONE, &trPlayerHit );
@@ -247,7 +260,8 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 			return;
 
 		trHit = trPlayerHit;
-#endif
+	*/
+//#endif
 		pPlayer->EmitSound( "Weapon_Arrow.ImpactFlesh" );
 	}
 	else if ( pOther->IsBaseObject() )
@@ -256,7 +270,76 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	}
 	else
 	{
-		EmitSound( "Weapon_Arrow.ImpactConcrete" );
+		trace_t	tr;
+		tr = BaseClass::GetTouchTrace();
+
+		// See if we struck the world
+		if ( pOther->GetMoveType() == MOVETYPE_NONE && !( tr.surface.flags & SURF_SKY ) )
+		{
+			EmitSound( "Weapon_Arrow.ImpactConcrete" );
+
+			// if what we hit is static architecture, can stay around for a while.
+			Vector vecDir = GetAbsVelocity();
+			float speed = VectorNormalize( vecDir );
+
+			// See if we should reflect off this surface
+			float hitDot = DotProduct( tr.plane.normal, -vecDir );
+			
+			if ( ( hitDot < 0.5f ) && ( speed > 100 ) )
+			{
+				Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
+				
+				QAngle reflectAngles;
+
+				VectorAngles( vReflection, reflectAngles );
+
+				SetLocalAngles( reflectAngles );
+
+				SetAbsVelocity( vReflection * speed * 0.75f );
+
+				// Start to sink faster
+				SetGravity( 1.0f );
+			}
+			else
+			{
+				SetThink( &CTFProjectile_Arrow::SUB_Remove );
+				SetNextThink( gpGlobals->curtime + 2.0f );
+				
+				//FIXME: We actually want to stick (with hierarchy) to what we've hit
+				SetMoveType( MOVETYPE_NONE );
+			
+				Vector vForward;
+
+				AngleVectors( GetAbsAngles(), &vForward );
+				VectorNormalize ( vForward );
+
+				/*
+				CEffectData	data;
+
+				data.m_vOrigin = tr.endpos;
+				data.m_vNormal = vForward;
+				data.m_nEntIndex = 0;
+				*/
+				//DispatchEffect( "BoltImpact", data );
+				
+				UTIL_ImpactTrace( &tr, DMG_BULLET );
+
+				AddEffects( EF_NODRAW );
+				SetTouch( NULL );
+				SetThink( &CTFProjectile_Arrow::SUB_Remove );
+				SetNextThink( gpGlobals->curtime + 2.0f );
+			}
+		}
+		else
+		{
+			// Put a mark unless we've hit the sky
+			if ( ( tr.surface.flags & SURF_SKY ) == false )
+			{
+				UTIL_ImpactTrace( &tr, DMG_BULLET );
+			}
+
+			UTIL_Remove( this );
+		}
 	}
 
 	// Do damage.

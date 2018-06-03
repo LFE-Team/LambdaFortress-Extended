@@ -1,0 +1,19 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\items/ammopack_bow"
+	"$selfillum" "1"
+
+
+	// Use separate self-illum mask on Pre DX9 hardware
+	">=DX90"
+	{
+		"$baseTexture" 		"models\items/ammopack_bow"
+		"$selfillummask" 	"models\items/ammopack_bow"
+	}
+
+	// Use redundant self-illum in base alpha on Pre DX9 hardware
+	"<DX90"
+	{
+		"$baseTexture" 	"models\items/ammopack_bow"
+	}
+}

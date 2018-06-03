@@ -88,6 +88,40 @@ void CNPC_Kleiner::Spawn()
 
 	Precache();
 	SetModel( szModel );
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	if( !Q_strnicmp( szMapName, "d1", 2 ) && ( !szModel || !*szModel ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/kleiner.mdl");
+		SetModel("models/hl2/kleiner.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "d2", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/kleiner.mdl");
+		SetModel("models/hl2/kleiner.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "d3", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/kleiner.mdl");
+		SetModel("models/hl2/kleiner.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "ep1", 3 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/ep1/kleiner.mdl");
+		SetModel("models/ep1/kleiner.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "ep2", 3 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/ep2/kleiner.mdl");
+		SetModel("models/ep2/kleiner.mdl");
+	}
 
 	BaseClass::Spawn();
 
@@ -116,6 +150,9 @@ void CNPC_Kleiner::Spawn()
 void CNPC_Kleiner::Precache()
 {
 	PrecacheModel( STRING( GetModelName() ) );
+	PrecacheModel("models/hl2/kleiner.mdl");
+	PrecacheModel("models/ep1/kleiner.mdl");
+	PrecacheModel("models/ep2/kleiner.mdl");
 	
 	BaseClass::Precache();
 }	

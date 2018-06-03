@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_pocket_watch/parts/c_pocket_watch_large"
+	"$translucent" 1
+	$vertexcolor 1
+}

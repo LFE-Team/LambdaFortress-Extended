@@ -1,0 +1,18 @@
+"VertexLitGeneric"
+    {
+	"$basetexture"	"models\weapons\c_items\c_chainarm"
+$translucent 	1
+									
+	"Proxies"
+	{
+
+
+          "TextureScroll"
+       {
+          "texturescrollvar" "$basetexturetransform"
+          "texturescrollrate" 0.55
+          "texturescrollangle" -90
+       } 
+}
+
+}

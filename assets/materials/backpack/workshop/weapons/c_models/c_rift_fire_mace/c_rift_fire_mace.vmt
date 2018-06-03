@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_rift_fire_mace/c_rift_fire_mace"
+	"$translucent" 1
+	"$vertexcolor" 1
+}
+

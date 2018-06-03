@@ -19,12 +19,15 @@
 #include "engine/IEngineSound.h"
 #include "in_buttons.h"
 
+#ifdef TF_CLASSIC
+#include "tf_player.h"
+#endif
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-static ConVar	sk_suitcharger( "sk_suitcharger","0" );
-static ConVar	sk_suitcharger_citadel( "sk_suitcharger_citadel","0" );
-static ConVar	sk_suitcharger_citadel_maxarmor( "sk_suitcharger_citadel_maxarmor","0" );
+static ConVar	sk_suitcharger( "sk_suitcharger","30" );
+static ConVar	sk_suitcharger_citadel( "sk_suitcharger_citadel","200" );
+static ConVar	sk_suitcharger_citadel_maxarmor( "sk_suitcharger_citadel_maxarmor","200" );
 
 #define SF_CITADEL_RECHARGER	0x2000
 #define SF_KLEINER_RECHARGER	0x4000 // Gives only 25 health
@@ -205,6 +208,14 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	if ( !pActivator || !pActivator->IsPlayer() )
 		return;
 
+	// if there is no juice left, turn it off
+	if (m_iJuice <= 0)
+	{
+		m_nState = 1;			
+		Off();
+	}
+
+#ifndef TF_CLASSIC
 	// Only usable if you have the HEV suit on
 	if ( !((CBasePlayer *)pActivator)->IsSuitEquipped() )
 	{
@@ -214,13 +225,6 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 			EmitSound( "SuitRecharge.Deny" );
 		}
 		return;
-	}
-
-	// if there is no juice left, turn it off
-	if (m_iJuice <= 0)
-	{
-		m_nState = 1;			
-		Off();
 	}
 
 	// if the player doesn't have the suit, or there is no juice left, make the deny noise
@@ -297,6 +301,81 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	float flRemaining = m_iJuice / MaxJuice();
 	m_OutRemainingCharge.Set(flRemaining, pActivator, this);
 
+#else
+
+	// if there is no juice left, make the deny noise
+	if ( m_iJuice <= 0 )
+	{
+		if (m_flSoundTime <= gpGlobals->curtime)
+		{
+			m_flSoundTime = gpGlobals->curtime + 0.62;
+			EmitSound( "SuitRecharge.Deny" );
+		}
+		return;
+	}
+
+	SetNextThink( gpGlobals->curtime + 0.25 );
+	SetThink(&CRecharge::Off);
+
+	// Time to recharge yet?
+	if (m_flNextCharge >= gpGlobals->curtime)
+		return;
+
+	// Make sure that we have a caller
+	if (!pActivator)
+		return;
+
+	m_hActivator = pActivator;
+
+	//only recharge the player
+	if (!m_hActivator->IsPlayer() )
+		return;
+	
+	// Play the on sound or the looping charging sound
+	if (!m_iOn)
+	{
+		m_iOn++;
+		EmitSound( "SuitRecharge.Start" );
+		m_flSoundTime = 0.56 + gpGlobals->curtime;
+
+		m_OnPlayerUse.FireOutput( pActivator, this );
+	}
+
+	if ((m_iOn == 1) && (m_flSoundTime <= gpGlobals->curtime))
+	{
+		m_iOn++;
+		CPASAttenuationFilter filter( this, "SuitRecharge.ChargingLoop" );
+		filter.MakeReliable();
+		EmitSound( filter, entindex(), "SuitRecharge.ChargingLoop" );
+	}
+
+	CTFPlayer *pl = (CTFPlayer *) m_hActivator.Get();
+
+	// charge the player
+	int iHealthToAdd = pl->GetMaxHealth();
+	int iHealthRestored = 0;
+
+	int nMaxArmor = 100;
+	if ( HasSpawnFlags(	SF_CITADEL_RECHARGER ) )
+	{
+		nMaxArmor = sk_suitcharger_citadel_maxarmor.GetInt();
+		iHealthToAdd = pl->m_Shared.GetMaxBuffedHealth();
+
+		// Also give health for the citadel version.
+		if( pActivator->GetHealth() < pActivator->GetMaxHealth() )
+		{
+			pActivator->TakeHealth( 5, DMG_GENERIC );
+		}
+	}
+
+	UpdateJuice( m_iJuice - iHealthToAdd );
+	iHealthToAdd = clamp( iHealthToAdd, 0, pl->m_Shared.GetMaxBuffedHealth() - pl->GetHealth() );
+	iHealthRestored = pl->TakeHealth( iHealthToAdd, DMG_IGNORE_MAXHEALTH );
+
+	// Send the output.
+	float flRemaining = m_iJuice / MaxJuice();
+	m_OutRemainingCharge.Set(flRemaining, pActivator, this);
+#endif
 	// govern the rate of charge
 	m_flNextCharge = gpGlobals->curtime + 0.1;
 }
@@ -592,7 +671,7 @@ void CNewRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	// if it's not a player, ignore
 	if ( !pActivator || !pActivator->IsPlayer() )
 		return;
-
+#ifndef TF_CLASSIC
 	CBasePlayer *pPlayer = static_cast<CBasePlayer *>(pActivator);
 
 	// Reset to a state of continuous use.
@@ -719,6 +798,114 @@ void CNewRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	float flRemaining = m_iJuice / MaxJuice();
 	m_OutRemainingCharge.Set(flRemaining, pActivator, this);
 
+#else
+	CTFPlayer *pPlayer = static_cast<CTFPlayer *>(pActivator);
+
+	// Reset to a state of continuous use.
+	m_iCaps = FCAP_CONTINUOUS_USE;
+
+	if ( m_iOn )
+	{
+		float flCharges = CHARGES_PER_SECOND;
+		float flCalls = CALLS_PER_SECOND;
+
+		if ( HasSpawnFlags( SF_CITADEL_RECHARGER ) )
+			 flCharges = CITADEL_CHARGES_PER_SECOND;
+
+		m_flJuice -= flCharges / flCalls;		
+		StudioFrameAdvance();
+	}
+
+	// if there is no juice left, turn it off
+	if ( m_iJuice <= 0 )
+	{
+		// Start our deny animation over again
+		ResetSequence( LookupSequence( "emptyclick" ) );
+		
+		m_nState = 1;
+		
+		// Shut off
+		Off();
+		
+		// Play a deny sound
+		if ( m_flSoundTime <= gpGlobals->curtime )
+		{
+			m_flSoundTime = gpGlobals->curtime + 0.62;
+			EmitSound( "SuitRecharge.Deny" );
+		}
+
+		return;
+	}
+
+	int iHealthRestored = 0;
+	int iHealthToAdd = pPlayer->GetMaxHealth() * 0.01;
+	iHealthToAdd = clamp( iHealthToAdd, 0, pPlayer->m_Shared.GetMaxBuffedHealth() - pPlayer->GetHealth() );
+
+	if ( HasSpawnFlags(	SF_CITADEL_RECHARGER ) )
+	{
+		//nMaxArmor = sk_suitcharger_citadel_maxarmor.GetInt();
+	}
+
+	// The citadel charger gives more per charge and also gives health
+	if ( HasSpawnFlags(	SF_CITADEL_RECHARGER ) )
+	{
+
+		// Also give health for the citadel version.
+		/*if ( pActivator->GetHealth() < pActivator->GetMaxHealth() && m_flNextCharge < gpGlobals->curtime )
+		{
+			pActivator->TakeHealth( 5, DMG_GENERIC );
+		}*/
+	}
+
+	// If we're over our limit, debounce our keys
+	if ( pPlayer->GetHealth() >= pPlayer->m_Shared.GetMaxBuffedHealth() )
+	{
+		// Citadel charger must also be at max health
+		if ( !HasSpawnFlags(SF_CITADEL_RECHARGER) || ( HasSpawnFlags( SF_CITADEL_RECHARGER ) ) )
+		{
+			// Make the user re-use me to get started drawing health.
+			pPlayer->m_afButtonPressed &= ~IN_USE;
+			m_iCaps = FCAP_IMPULSE_USE;
+			
+			EmitSound( "SuitRecharge.Deny" );
+			return;
+		}
+	}
+
+	// This is bumped out if used within the time period
+	SetNextThink( gpGlobals->curtime + CHARGE_RATE );
+	SetThink( &CNewRecharge::Off );
+
+	// Time to recharge yet?
+	if ( m_flNextCharge >= gpGlobals->curtime )
+		return;
+	
+	// Play the on sound or the looping charging sound
+	if ( !m_iOn )
+	{
+		m_iOn++;
+		EmitSound( "SuitRecharge.Start" );
+		m_flSoundTime = 0.56 + gpGlobals->curtime;
+
+		m_OnPlayerUse.FireOutput( pActivator, this );
+	}
+
+	if ((m_iOn == 1) && (m_flSoundTime <= gpGlobals->curtime))
+	{
+		m_iOn++;
+		CPASAttenuationFilter filter( this, "SuitRecharge.ChargingLoop" );
+		filter.MakeReliable();
+		EmitSound( filter, entindex(), "SuitRecharge.ChargingLoop" );
+	}
+
+	// Give OverHeal if we need it
+	UpdateJuice( m_iJuice - iHealthToAdd );
+	iHealthRestored = pPlayer->TakeHealth( iHealthToAdd, DMG_IGNORE_MAXHEALTH );
+
+	// Send the output.
+	float flRemaining = m_iJuice / MaxJuice();
+	m_OutRemainingCharge.Set(flRemaining, pActivator, this);
+#endif
 	// govern the rate of charge
 	m_flNextCharge = gpGlobals->curtime + 0.1;
 }

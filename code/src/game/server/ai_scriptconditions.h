@@ -34,14 +34,18 @@ public:
 		m_distSq = dist * dist;
 	}
 
-	bool Check( CBaseEntity *pEntity1, CBaseEntity *pEntity2 )
+	bool Check(CBaseEntity *pEntity1, CBaseEntity *pEntity2)
 	{
-		if ( m_distSq != 0 )
+		if (m_distSq != 0)
 		{
-			float distSq = ( pEntity1->GetAbsOrigin() - pEntity2->GetAbsOrigin() ).LengthSqr();
-			bool fInside = ( distSq < m_distSq );
+			////SecobMod__Information: To prevent the code crashing if pEntity1 is NULL, return false.
+			if (pEntity1 == NULL)
+				return false;
 
-			return ( m_fInside == fInside );
+			float distSq = (pEntity1->GetAbsOrigin() - pEntity2->GetAbsOrigin()).LengthSqr();
+			bool fInside = (distSq < m_distSq);
+
+			return (m_fInside == fInside);
 		}
 		return true;
 	}

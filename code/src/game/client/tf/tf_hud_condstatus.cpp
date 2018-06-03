@@ -115,9 +115,6 @@ CTFHudCondStatus::~CTFHudCondStatus()
 //-----------------------------------------------------------------------------
 bool CTFHudCondStatus::ShouldDraw( void )
 {
-	if ( !TFGameRules() || !TFGameRules()->IsDeathmatch() )
-		return false;
-
 	return CHudElement::ShouldDraw();
 }
 

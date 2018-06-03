@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_candy_cane/c_candy_cane"
+	"$translucent" 1
+	"$vertexcolor"	1
+}

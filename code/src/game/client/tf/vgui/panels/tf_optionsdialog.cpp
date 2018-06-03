@@ -181,6 +181,7 @@ void CTFOptionsDialog::OnCancelPressed()
 	for (int i = 0; i < PANEL_COUNT; i++)
 		GetPanel(i)->OnResetData();
 	Hide();
+	MAINMENU_ROOT->ShowPanel( CURRENT_MENU );
 }
 
 
@@ -224,5 +225,20 @@ void CTFOptionsDialog::OnGameUIHidden()
 		{
 			PostMessage(pChild, new KeyValues("GameUIHidden"));
 		}
+	}
+}
+
+
+void CTFOptionsDialog::OnKeyCodeTyped( vgui::KeyCode code )
+{
+	// force ourselves to be closed if the escape key it pressed
+	if ( code == KEY_ESCAPE )
+	{
+		Hide();
+		MAINMENU_ROOT->ShowPanel( CURRENT_MENU );
+	}
+	else
+	{
+		BaseClass::OnKeyCodeTyped(code);
 	}
 }

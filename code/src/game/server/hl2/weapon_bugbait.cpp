@@ -82,7 +82,7 @@ BEGIN_DATADESC( CWeaponBugBait )
 	DEFINE_FIELD( m_bEmitSpores,		FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bDrawBackFinished,	FIELD_BOOLEAN ),
 
-	DEFINE_FUNCTION( BugbaitStickyTouch ),
+	DEFINE_ENTITYFUNC( BugbaitStickyTouch ),
 
 END_DATADESC()
 

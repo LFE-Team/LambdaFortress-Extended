@@ -24,7 +24,7 @@
 // ACT_FLINCH_PHYSICS
 
 
-ConVar	sk_zombie_health( "sk_zombie_health","0");
+ConVar	sk_zombie_health( "sk_zombie_health","50");
 
 envelopePoint_t envZombieMoanVolumeFast[] =
 {
@@ -785,7 +785,7 @@ void CZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool b
 {
  	if( !IsOnFire() && IsAlive() )
 	{
-		BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
+		//BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
 		if ( !UTIL_IsLowViolence() )
 		{

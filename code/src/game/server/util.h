@@ -229,6 +229,12 @@ CBasePlayer *UTIL_PlayerBySteamID( const CSteamID &steamID );
 // not useable in multiplayer - see UTIL_GetListenServerHost()
 CBasePlayer* UTIL_GetLocalPlayer( void );
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+// helper functions added for replacing the above 
+CBasePlayer *UTIL_GetNearestPlayer( const Vector &origin, int iTeam = TEAM_ANY );
+CBasePlayer *UTIL_GetNearestVisiblePlayer( CBaseEntity *pLooker, int mask = MASK_SOLID_BRUSHONLY, int iTeam = TEAM_ANY );
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+
 // get the local player on a listen server
 CBasePlayer *UTIL_GetListenServerHost( void );
 

@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/weapons/v_umbrella/chrome2"
+	"$envmap" "models/weapons/v_umbrella/chrome2"
+}

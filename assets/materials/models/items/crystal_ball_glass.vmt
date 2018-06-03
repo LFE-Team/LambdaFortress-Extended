@@ -1,0 +1,34 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\items/crystal_ball_glass"
+	"$selfillum" "1"
+	"$additive" "1"
+
+	"$envmap" "cubemaps/cubemap_gold001"
+	"$envmapsaturation"     "1"
+	"$EnvmapTint" "[.25 .25 .25]"
+
+	"$bumpmap" "effects/flat_normal"
+		
+	"$phong" "1"
+	"$phongexponent" "125"
+	"$phongboost" "5"	
+	"$lightwarptexture" "models/player/pyro/pyro_lightwarp"
+	"$phongfresnelranges"	"[1.25 .5 2]"
+	
+	"$rimlight" "1"												// To enable rim lighting (requires phong)
+	"$rimlightexponent" "55"										// Exponent for phong component of rim lighting	
+	"$rimlightboost" "5"										// Boost for ambient cube component of rim lighting
+	
+	"Proxies"
+	{
+		"Sine"
+		{
+			"sineperiod" "2.5"
+			"sinemin" ".5"
+			"sinemax" "2"
+			"resultVar" "$selfillumtint"
+		}
+	}
+
+}

@@ -117,7 +117,7 @@ AngularImpulse Pickup_PhysGunLaunchAngularImpulse( CBaseEntity *pObject, PhysGun
 
 Vector Pickup_DefaultPhysGunLaunchVelocity( const Vector &vecForward, float flMass )
 {
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 	// Calculate the velocity based on physcannon rules
 	float flForceMax = physcannon_maxforce.GetFloat();
 	float flForce = flForceMax;

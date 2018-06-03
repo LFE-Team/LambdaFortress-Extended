@@ -3487,7 +3487,7 @@ void CNPC_Hunter::StartTask( const Task_t *pTask )
 		{
 			SetLastAttackTime( gpGlobals->curtime );
 			
-			if ( GetEnemy() && GetEnemy()->IsPlayer() )
+			if ( GetEnemy() && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
 			{
 				ResetIdealActivity( ( Activity )ACT_HUNTER_MELEE_ATTACK1_VS_PLAYER );
 			}
@@ -5338,7 +5338,7 @@ void CNPC_Hunter::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 
 	// Even though the damage might not hurt us, we want to react to it
 	// if it's from the player.
-	if ( info.GetAttacker()->IsPlayer() )
+	if ( info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
 	{
 		if ( !HasMemory( bits_MEMORY_PROVOKED ) )
 		{
@@ -5793,7 +5793,7 @@ void CNPC_Hunter::Event_Killed( const CTakeDamageInfo &info )
 		if ( AIGetNumFollowers( m_EscortBehavior.GetFollowTarget(), m_iClassname ) == 1 )
 		{
 			m_EscortBehavior.GetEscortTarget()->AlertSound();
-			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
+			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
 			{
 				m_EscortBehavior.GetEscortTarget()->UpdateEnemyMemory( UTIL_GetLocalPlayer(), UTIL_GetLocalPlayer()->GetAbsOrigin(), this );
 			}
@@ -6649,7 +6649,7 @@ Activity CNPC_Hunter::GetDeathActivity()
 //-----------------------------------------------------------------------------
 void CAI_HunterEscortBehavior::OnDamage( const CTakeDamageInfo &info )
 {
-	if ( info.GetDamage() > 0 && info.GetAttacker()->IsPlayer() &&
+	if ( info.GetDamage() > 0 && info.GetAttacker()->IsPlayer() /*|| info.GetAttacker()->IsBaseObject()*/ &&
 		GetFollowTarget() && ( AIGetNumFollowers( GetFollowTarget() ) > 1 ) &&
 		( GetOuter()->GetSquad()->GetSquadSoundWaitTime() <= gpGlobals->curtime ) ) // && !FarFromFollowTarget()
 	{
@@ -6721,7 +6721,7 @@ void CAI_HunterEscortBehavior::GatherConditions( void )
 
 	BaseClass::GatherConditions();
 
-	if ( GetEnemy() && GetEnemy()->IsPlayer() && HasCondition( COND_SEE_ENEMY ) )
+	if ( GetEnemy() && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && HasCondition( COND_SEE_ENEMY ) )
 	{
 		if ( GetOuter()->GetSquad()->GetSquadSoundWaitTime() <= gpGlobals->curtime && ((CBasePlayer *)GetEnemy())->IsInAVehicle() )
 		{

@@ -278,7 +278,18 @@
 	}
 }
 
-//=========================================================================
+"TFPlayer.FlareImpact"
+{
+	"soundlevel"		"SNDLVL_75dB"
+	"volume"		"0.7"
+	"pitch"			"PITCH_NORM"
+	"rndwave"
+	{
+		"wave"		"player/pl_impact_flare1.wav"
+		"wave"		"player/pl_impact_flare2.wav"
+		"wave"		"player/pl_impact_flare3.wav"
+	}
+}
 
 "TFPlayer.Drown"
 {
@@ -324,6 +335,15 @@
 
 //	2014
 	"wave"		"player/pain.wav"
+}
+
+"TFPlayer.FlameOut"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NORM"
+	"pitch"		"PITCh_NORM"
+	"wave"		")player/flame_out.wav"
 }
 
 "TFPlayer.AttackerPain"
@@ -515,7 +535,7 @@
 {
 	"channel"	"CHAN_STATIC"
 	"volume"	"1"
-	"soundlevel"  	"SNDLVL_65dB"
+	"soundlevel"  	"SNDLVL_85dB"
 	"wave"		"player/spy_cloak.wav"
 }
 
@@ -523,7 +543,7 @@
 {
 	"channel"	"CHAN_STATIC"
 	"volume"	"1"
-	"soundlevel"  	"SNDLVL_65dB"
+	"soundlevel"  	"SNDLVL_85dB"
 	"wave"		"player/spy_Uncloak.wav"
 }
 

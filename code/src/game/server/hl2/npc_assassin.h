@@ -1,9 +1,9 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//=============================================================================
 
 #ifndef NPC_ASSASSIN_H
 #define NPC_ASSASSIN_H
@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#include "ai_basenpc.h"
+#include "AI_BaseNPC.h"
 #include "Sprite.h"
 #include "SpriteTrail.h"
 #include "soundent.h"
@@ -57,6 +57,7 @@ public:
 	void		Event_Killed( const CTakeDamageInfo &info );
 
 	bool		FValidateHintType ( CAI_Hint *pHint );
+	bool		FInAimCone( const Vector &vecSpot );
 	bool		IsJumpLegal(const Vector &startPos, const Vector &apex, const Vector &endPos) const;
 	bool		MovementCost( int moveType, const Vector &vecStart, const Vector &vecEnd, float *pCost );
 

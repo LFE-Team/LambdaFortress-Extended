@@ -2969,8 +2969,10 @@ private:
 
 	void ClearInstanced()
 	{
-		int c = m_InstancedSystems.Count();
-		for ( int i = c - 1 ; i >= 0; i-- )
+		// using Count() is an incorrect way to iterate over CUtlDict since if the element number goes down, 
+		// Count() will no longer be a valid last index!!!
+		// The correct way is below.
+		for ( int i = m_InstancedSystems.First(); i != m_InstancedSystems.InvalidIndex(); i = m_InstancedSystems.Next(i) )
 		{
 			CInstancedResponseSystem *sys = m_InstancedSystems[ i ];
 			sys->Release();
@@ -3041,7 +3043,7 @@ CON_COMMAND( rr_reloadresponsesystems, "Reload all response system scripts." )
 
 	defaultresponsesytem.ReloadAllResponseSystems();
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#if defined( TF_DLL ) || defined( TF_CLASSIC )
 	// This is kind of hacky, but I need to get it in for now!
 	if( g_pGameRules->IsMultiplayer() )
 	{

@@ -33,6 +33,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_PropCombineBall, DT_PropCombineBall, CPropCombineBal
 	RecvPropFloat( RECVINFO( m_flRadius ) ),
 	RecvPropBool( RECVINFO( m_bHeld ) ),
 	RecvPropBool( RECVINFO( m_bLaunched ) ),
+	RecvPropInt( RECVINFO( m_iDeflected ) ),
 END_RECV_TABLE()
 
 //-----------------------------------------------------------------------------

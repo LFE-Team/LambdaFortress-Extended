@@ -12,14 +12,14 @@ using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define BLOG_URL "http://tf2classic.com/?nolinks=1&noheader=1&nofooter=1&fillwrapper=1"
+#define BLOG_URL "https://www.reddit.com/r/tf2/?nolinks=1&noheader=1&nofooter=1&fillwrapper=1"
 
 static void OnBlogToggle(IConVar *var, const char *pOldValue, float flOldValue)
 {
 	GET_MAINMENUPANEL(CTFMainMenuPanel)->ShowBlogPanel(((ConVar*)var)->GetBool());
 }
-ConVar tf2c_mainmenu_music("tf2c_mainmenu_music", "1", FCVAR_ARCHIVE, "Toggle music in the main menu");
-ConVar tf2c_mainmenu_showblog("tf2c_mainmenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnBlogToggle);
+ConVar lf_mainmenu_music("lf_mainmenu_music", "1", FCVAR_ARCHIVE, "Toggle music in the main menu");
+ConVar lf_mainmenu_showblog("lf_mainmenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnBlogToggle);
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -92,7 +92,7 @@ void CTFMainMenuPanel::PerformLayout()
 		(steamapicontext->SteamFriends() ? steamapicontext->SteamFriends()->GetPersonaName() : "Unknown"));
 	SetDialogVariable("nickname", szNickName);
 
-	ShowBlogPanel(tf2c_mainmenu_showblog.GetBool() || GetNotificationManager()->IsOutdated());
+	ShowBlogPanel(lf_mainmenu_showblog.GetBool() || GetNotificationManager()->IsOutdated());
 	OnNotificationUpdate();
 	AutoLayout();
 
@@ -136,6 +136,10 @@ void CTFMainMenuPanel::OnCommand(const char* command)
 	{
 		MAINMENU_ROOT->ShowPanel(OPTIONSDIALOG_MENU);
 	}
+	else if (!Q_strcmp(command, "newcreategame"))
+	{
+		MAINMENU_ROOT->ShowPanel(CREATESERVER_MENU);
+	}
 	else if (!Q_strcmp(command, "newloadout"))
 	{
 		MAINMENU_ROOT->ShowPanel(LOADOUT_MENU);
@@ -177,7 +181,7 @@ void CTFMainMenuPanel::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (tf2c_mainmenu_music.GetBool() && !bInGameLayout)
+	if (lf_mainmenu_music.GetBool() && !bInGameLayout)
 	{
 		if ((m_psMusicStatus == MUSIC_FIND || m_psMusicStatus == MUSIC_STOP_FIND) && !enginesound->IsSoundStillPlaying(m_nSongGuid))
 		{
@@ -222,20 +226,20 @@ void CTFMainMenuPanel::OnThink()
 void CTFMainMenuPanel::Show()
 {
 	BaseClass::Show();
-	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 255, 0.0f, 0.5f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE);
+	//vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 255, 0.0f, 0.5f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE);
 };
 
 void CTFMainMenuPanel::Hide()
 {
 	BaseClass::Hide();
-	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 0, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR);
+	//vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 0, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR);
 };
 
 
 void CTFMainMenuPanel::DefaultLayout()
 {
 	BaseClass::DefaultLayout();
-	ShowBlogPanel(tf2c_mainmenu_showblog.GetBool());
+	ShowBlogPanel(lf_mainmenu_showblog.GetBool());
 };
 
 void CTFMainMenuPanel::GameLayout()

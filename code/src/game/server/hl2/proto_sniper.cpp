@@ -39,6 +39,12 @@
 
 #include "collisionutils.h"
 
+#ifdef TF_CLASSIC
+#include "tf_obj.h"
+#include "tf_obj_sentrygun.h"
+#include "tf_player.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -261,6 +267,10 @@ public:
 	int DrawDebugTextOverlays();
 
 	void NotifyShotMissedTarget();
+
+#ifdef TF_CLASSIC
+	virtual int UpdateTransmitState( void );
+#endif
 
 private:
 	
@@ -1283,19 +1293,19 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	CTakeDamageInfo newInfo = info;
 
 	// Allow SetHealth() & npc_kill inputs to hurt the sniper
-	if ( info.GetDamageType() == DMG_GENERIC && info.GetInflictor() == this )
+	if ( info.GetDamageType() == DMG_BULLET && info.GetInflictor() == this )
 		return CAI_BaseNPC::OnTakeDamage_Alive( newInfo );
 
-	if( !(info.GetDamageType() & (DMG_BLAST|DMG_BURN) ) )
+	if( !(info.GetDamageType() & (DMG_BULLET|DMG_BLAST) ) )
 	{
 		// Only blasts and burning hurt
-		return 0;
+		return 10;
 	}
 
-	if( (info.GetDamageType() & DMG_BLAST) && info.GetDamage() < m_iHealth )
+	if( (info.GetDamageType() & DMG_BULLET|DMG_BLAST) && info.GetDamage() < m_iHealth )
 	{
 		// Only blasts powerful enough to kill hurt
-		return 0;
+		return 10;
 	}
 
 	float flDist = GetAbsOrigin().DistTo( info.GetInflictor()->GetAbsOrigin() );
@@ -1305,10 +1315,10 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// susceptible to a grenade that lands in his nest, but not to a large explosion
 		// that goes off elsewhere and just happens to be able to trace into the sniper's 
 		// nest.
-		return 0;
+		return 10;
 	}
 
-	if( info.GetDamageType() & DMG_BURN )
+	if( info.GetDamageType() & DMG_BULLET|DMG_BLAST )
 	{
 		newInfo.SetDamage( m_iHealth );
 	}
@@ -1394,7 +1404,8 @@ int CProtoSniper::SelectSchedule ( void )
 		// Reload is absolute priority.
 		return SCHED_RELOAD;
 	}
-
+	//SecobMod__Information: The condition area below when used in mp caused the sniper to fail terribly. Removing it from working with the AI enabled really improves snipers.
+#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 	if( !AI_GetSinglePlayer()->IsAlive() && m_bKilledPlayer )
 	{
 		if( HasCondition(COND_IN_PVS) )
@@ -1402,7 +1413,8 @@ int CProtoSniper::SelectSchedule ( void )
 			return SCHED_PSNIPER_PLAYER_DEAD;
 		}
 	}
-	
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+
 	if( HasCondition( COND_HEAR_DANGER ) )
 	{
 		// Next priority is to be suppressed!
@@ -2605,10 +2617,18 @@ Vector CProtoSniper::LeadTarget( CBaseEntity *pTarget )
 CBaseEntity *CProtoSniper::PickDeadPlayerTarget()
 {
 	const int iSearchSize = 32;
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	CBaseEntity *pTarget = UTIL_GetNearestVisiblePlayer(this); 
+	CBaseEntity *pEntities[ iSearchSize ];
+
+	int iNumEntities = UTIL_EntitiesInSphere( pEntities, iSearchSize, pTarget->GetAbsOrigin(), 180.0f, 0 ); 
+#else
 	CBaseEntity *pTarget = AI_GetSinglePlayer();
 	CBaseEntity *pEntities[ iSearchSize ];
 
 	int iNumEntities = UTIL_EntitiesInSphere( pEntities, iSearchSize, AI_GetSinglePlayer()->GetAbsOrigin(), 180.0f, 0 );
+
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	// Not very robust, but doesn't need to be. Randomly select a nearby object in the list that isn't an NPC.
 	if( iNumEntities > 0 )
@@ -2900,6 +2920,20 @@ void CProtoSniper::NotifyShotMissedTarget()
 	// miss zombie and zombines over and over because of the large amount of head movement
 	// in these NPCs' walk and run animations.
 }
+
+#ifdef TF_CLASSIC
+int CProtoSniper::UpdateTransmitState( void )
+{
+	// Hidden sniper is invisible but he needs to be transmitted to the victim
+	// for freezecam to work.
+	if ( m_spawnflags & SF_SNIPER_HIDDEN )
+	{
+		return SetTransmitState( FL_EDICT_FULLCHECK );
+	}
+
+	return BaseClass::UpdateTransmitState();
+}
+#endif
 
 //-----------------------------------------------------------------------------
 //

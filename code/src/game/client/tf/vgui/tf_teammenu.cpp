@@ -318,10 +318,6 @@ void CTFTeamMenu::ShowPanel( bool bShow )
 		{
 			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSELECT, true );
 		}
-		else if (TFGameRules()->IsDeathmatch())
-		{
-			gViewPortInterface->ShowPanel( PANEL_DEATHMATCHTEAMSELECT, true );
-		}
 		else
 		{
 			if (TFGameRules()->State_Get() == GR_STATE_TEAM_WIN &&
@@ -392,10 +388,6 @@ void CTFTeamMenu::ShowPanel( bool bShow )
 		if ( TFGameRules()->IsFourTeamGame() )
 		{
 			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSELECT, false );
-		}
-		else if ( TFGameRules()->IsDeathmatch() )
-		{
-			gViewPortInterface->ShowPanel( PANEL_DEATHMATCHTEAMSELECT, false );
 		}
 		else
 		{
@@ -694,11 +686,6 @@ void CTFTeamMenu::OnTick()
 	if ( ( bUnbalanced && iHeavyTeam == TF_TEAM_RED ) || ( pRules->WouldChangeUnbalanceTeams( TF_TEAM_RED, iCurrentTeam ) ) )
 	{
 		m_bRedDisabled = true;
-	}
-
-	if ( ( bUnbalanced && iHeavyTeam == TF_TEAM_BLUE ) || ( pRules->WouldChangeUnbalanceTeams( TF_TEAM_BLUE, iCurrentTeam ) ) )
-	{
-		m_bBlueDisabled = true;
 	}
 
 	if ( TFGameRules() )
@@ -1113,6 +1100,11 @@ void CTFFourTeamMenu::OnTick()
 			}
 		}
 	}
+
+	if (TFGameRules() && TFGameRules()->IsCoOp())
+	{
+		m_bBlueDisabled = true;
+	}
 }
 
 
@@ -1120,7 +1112,7 @@ void CTFFourTeamMenu::OnTick()
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CTFDeathmatchTeamMenu::CTFDeathmatchTeamMenu(IViewPort *pViewPort) : CTeamMenu(pViewPort)
+CTFArenaTeamMenu::CTFArenaTeamMenu(IViewPort *pViewPort) : CTeamMenu(pViewPort)
 {
 	SetMinimizeButtonVisible(false);
 	SetMaximizeButtonVisible(false);
@@ -1143,14 +1135,14 @@ CTFDeathmatchTeamMenu::CTFDeathmatchTeamMenu(IViewPort *pViewPort) : CTeamMenu(p
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
 //-----------------------------------------------------------------------------
-CTFDeathmatchTeamMenu::~CTFDeathmatchTeamMenu()
+CTFArenaTeamMenu::~CTFArenaTeamMenu()
 {
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::ApplySchemeSettings(IScheme *pScheme)
+void CTFArenaTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
@@ -1162,7 +1154,7 @@ void CTFDeathmatchTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::ShowPanel(bool bShow)
+void CTFArenaTeamMenu::ShowPanel(bool bShow)
 {
 	if ( BaseClass::IsVisible() == bShow )
 		return;
@@ -1229,7 +1221,7 @@ void CTFDeathmatchTeamMenu::ShowPanel(bool bShow)
 //-----------------------------------------------------------------------------
 // Purpose: called to update the menu with new information
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::Update(void)
+void CTFArenaTeamMenu::Update(void)
 {
 	BaseClass::Update();
 
@@ -1254,7 +1246,7 @@ void CTFDeathmatchTeamMenu::Update(void)
 //-----------------------------------------------------------------------------
 // Purpose: chooses and loads the text page to display that describes mapName map
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::LoadMapPage(const char *mapName)
+void CTFArenaTeamMenu::LoadMapPage(const char *mapName)
 {
 
 }
@@ -1262,7 +1254,7 @@ void CTFDeathmatchTeamMenu::LoadMapPage(const char *mapName)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::OnKeyCodePressed(KeyCode code)
+void CTFArenaTeamMenu::OnKeyCodePressed(KeyCode code)
 {
 	if ((m_iTeamMenuKey != BUTTON_CODE_INVALID && m_iTeamMenuKey == code) ||
 		code == KEY_XBUTTON_BACK ||
@@ -1346,7 +1338,7 @@ void CTFDeathmatchTeamMenu::OnKeyCodePressed(KeyCode code)
 //-----------------------------------------------------------------------------
 // Purpose: Called when the user picks a team
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::OnCommand(const char *command)
+void CTFArenaTeamMenu::OnCommand(const char *command)
 {
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
@@ -1387,7 +1379,7 @@ void CTFDeathmatchTeamMenu::OnCommand(const char *command)
 //-----------------------------------------------------------------------------
 // Frame-based update
 //-----------------------------------------------------------------------------
-void CTFDeathmatchTeamMenu::OnTick()
+void CTFArenaTeamMenu::OnTick()
 {
 
 }

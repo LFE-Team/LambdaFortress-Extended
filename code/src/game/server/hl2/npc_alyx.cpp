@@ -22,6 +22,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar sk_alyx_health( "sk_alyx_health","80");
+
 LINK_ENTITY_TO_CLASS( npc_alyx, CNPC_Alyx );
 
 BEGIN_DATADESC( CNPC_Alyx )
@@ -127,7 +129,7 @@ void CNPC_Alyx::Spawn()
 
 	AddEFlags( EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL | EFL_NO_PHYSCANNON_INTERACTION );
 
-	m_iHealth			= 80;
+	m_iHealth			= sk_alyx_health.GetFloat();
 
 	NPCInit();
 }

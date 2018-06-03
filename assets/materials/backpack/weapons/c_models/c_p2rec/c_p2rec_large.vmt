@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_p2rec/c_p2rec_large"
+	$translucent 1
+	$vertexcolor 1
+}

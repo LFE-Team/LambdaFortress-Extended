@@ -343,11 +343,15 @@ void CNPC_EnemyFinder::StartNPC ( void )
 	AddSpawnFlags(SF_NPC_FALL_TO_GROUND);	// this prevents CAI_BaseNPC from slamming the finder to 
 											// the ground just because it's not MOVETYPE_FLY
 	BaseClass::StartNPC();
-
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	if ( m_PlayerFreePass.GetParams().duration > 0.1 ) 
+	{
+		m_PlayerFreePass.SetPassTarget( UTIL_GetNearestPlayer( GetAbsOrigin() ) ); 
+#else
 	if ( AI_IsSinglePlayer() && m_PlayerFreePass.GetParams().duration > 0.1 )
 	{
 		m_PlayerFreePass.SetPassTarget( UTIL_PlayerByIndex(1) );
-
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		AI_FreePassParams_t freePassParams = m_PlayerFreePass.GetParams();
 
 		freePassParams.coverDist = 120;
@@ -415,8 +419,11 @@ bool CNPC_EnemyFinder::ShouldAlwaysThink()
 {
 	if ( BaseClass::ShouldAlwaysThink() )
 		return true;
-		
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	if ( pPlayer && IRelationType( pPlayer ) == D_HT )
 	{
 		float playerDistSqr = GetAbsOrigin().DistToSqr( pPlayer->GetAbsOrigin() );

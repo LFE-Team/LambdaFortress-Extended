@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_persian_shield/c_persian_shield"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

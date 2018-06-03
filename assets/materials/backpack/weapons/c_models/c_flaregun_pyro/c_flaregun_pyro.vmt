@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_flaregun_pyro/c_flaregun_pyro"
+	"$translucent" 1
+	"$vertexcolor" 1
+}
+

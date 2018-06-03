@@ -2173,6 +2173,12 @@ void OnRenderStart()
 
 	C_BaseAnimating::ThreadedBoneSetup();
 
+	#ifdef SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
+		 //Tony; in multiplayer do some extra stuff. like re-calc the view if in a vehicle!
+    	if ( engine->GetMaxClients() > 1 )
+    	view->MP_PostSimulate();
+	#endif //SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
+
 	{
 		VPROF_("Client TempEnts", 0, VPROF_BUDGETGROUP_CLIENT_SIM, false, BUDGETFLAG_CLIENT);
 		// This creates things like temp entities.

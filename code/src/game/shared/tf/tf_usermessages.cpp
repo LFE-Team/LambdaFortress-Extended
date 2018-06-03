@@ -105,6 +105,13 @@ void RegisterUserMessages()
 	usermessages->Register("EOTLDuckEvent", 7);
 	usermessages->Register("PlayerPickupWeapon", -1);
 	usermessages->Register("QuestObjectiveCompleted", 14);
+
+	//HL2 Only Messages
+	//usermessages->Register("Battery", 2);
+	usermessages->Register("SquadMemberDied", 0);
+	usermessages->Register("CreditsMsg", 1);
+	usermessages->Register("LogoTimeMsg", 4);
+	usermessages->Register("UpdateJalopyRadar", -1);
 #ifndef _X360
 	// NVNT register haptic user messages
 	RegisterHapticMessages();

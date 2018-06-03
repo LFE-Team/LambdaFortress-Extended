@@ -30,7 +30,7 @@
 #include "world.h"
 #include "npc_bullseye.h"
 #include "physics_npc_solver.h"
-#include "hl2_gamerules.h"
+#include "tf_gamerules.h"
 #include "decals.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -185,10 +185,10 @@ int ACT_HEADCRAB_CEILING_LAND;
 //-----------------------------------------------------------------------------
 // Skill settings.
 //-----------------------------------------------------------------------------
-ConVar	sk_headcrab_health( "sk_headcrab_health","0");
-ConVar	sk_headcrab_fast_health( "sk_headcrab_fast_health","0");
-ConVar	sk_headcrab_poison_health( "sk_headcrab_poison_health","0");
-ConVar	sk_headcrab_melee_dmg( "sk_headcrab_melee_dmg","0");
+ConVar	sk_headcrab_health( "sk_headcrab_health","10");
+ConVar	sk_headcrab_fast_health( "sk_headcrab_fast_health","10");
+ConVar	sk_headcrab_poison_health( "sk_headcrab_poison_health","35");
+ConVar	sk_headcrab_melee_dmg( "sk_headcrab_melee_dmg","5");
 ConVar	sk_headcrab_poison_npc_damage( "sk_headcrab_poison_npc_damage", "0" );
 
 BEGIN_DATADESC( CBaseHeadcrab )
@@ -1305,7 +1305,7 @@ void CBaseHeadcrab::JumpFromCanister()
 void CBaseHeadcrab::DropFromCeiling( void )
 {
 #ifdef HL2_EPISODIC
-	if ( HL2GameRules()->IsAlyxInDarknessMode() )
+	if ( TFGameRules()->IsAlyxInDarknessMode() )
 	{
 		if ( IsHangingFromCeiling() )
 		{
@@ -1883,7 +1883,7 @@ int CBaseHeadcrab::SelectSchedule( void )
 	{
 		bool bIsAlyxInDarknessMode = false;
 #ifdef HL2_EPISODIC
-		bIsAlyxInDarknessMode = HL2GameRules()->IsAlyxInDarknessMode();
+		bIsAlyxInDarknessMode = TFGameRules()->IsAlyxInDarknessMode();
 #endif // HL2_EPISODIC
 
 		if ( bIsAlyxInDarknessMode == false && ( HasCondition( COND_CAN_RANGE_ATTACK1 ) || HasCondition( COND_NEW_ENEMY ) ) )
@@ -2065,7 +2065,7 @@ void CBaseHeadcrab::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, 
 	if( !bWasOnFire )
 	{
 #ifdef HL2_EPISODIC
-		if ( HL2GameRules()->IsAlyxInDarknessMode() == true )
+		if ( TFGameRules()->IsAlyxInDarknessMode() == true )
 		{
 			GetEffectEntity()->AddEffects( EF_DIMLIGHT );
 		}

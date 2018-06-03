@@ -35,6 +35,10 @@
 #include "grenade_spit.h"
 #endif
 
+#ifdef TF_CLASSIC
+#include "tf_shareddefs.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -42,9 +46,9 @@
 ConVar	g_debug_antlion( "g_debug_antlion", "0" );
 
 // base antlion stuff
-ConVar	sk_antlion_health( "sk_antlion_health", "0" );
-ConVar	sk_antlion_swipe_damage( "sk_antlion_swipe_damage", "0" );
-ConVar	sk_antlion_jump_damage( "sk_antlion_jump_damage", "0" );
+ConVar	sk_antlion_health( "sk_antlion_health", "30" );
+ConVar	sk_antlion_swipe_damage( "sk_antlion_swipe_damage", "5" );
+ConVar	sk_antlion_jump_damage( "sk_antlion_jump_damage", "5" );
 ConVar  sk_antlion_air_attack_dmg( "sk_antlion_air_attack_dmg", "0" );
 
 
@@ -368,6 +372,8 @@ void CNPC_Antlion::Spawn( void )
 //-----------------------------------------------------------------------------
 void CNPC_Antlion::Activate( void )
 {
+	// This is redundant in TF2C since relationships are controlled by teams.
+#ifndef TF_CLASSIC
 	// If we're friendly to the player, setup a relationship to reflect it
 	if ( IsAllied() )
 	{
@@ -382,8 +388,18 @@ void CNPC_Antlion::Activate( void )
 			}
 		}
 	}
+#endif //TF_CLASSIC
 
 	BaseClass::Activate();
+
+#ifdef TF_CLASSIC
+	// If we're allied with player, join team RED.
+	// We're calling this after BaseClass since it changes team back to default one
+	if ( IsAllied() )
+	{
+		ChangeTeam( TF_TEAM_RED );
+	}
+#endif
 }
 
 
@@ -3634,7 +3650,7 @@ void CNPC_Antlion::BuildScheduleTestBits( void )
 bool CNPC_Antlion::IsValidEnemy( CBaseEntity *pEnemy )
 {
 	//See if antlions are friendly to the player in this map
-	if ( IsAllied() && pEnemy->IsPlayer() )
+	if ( IsAllied() && pEnemy->IsPlayer() && pEnemy->GetTeamNumber() == GetTeamNumber() )
 		return false;
 
 	if ( pEnemy->IsWorld() )
@@ -5101,3 +5117,8 @@ float AntlionWorkerBurstRadius( void )
 	return sk_antlion_worker_burst_radius.GetFloat();
 }
 #endif // HL2_EPISODIC
+
+void CNPC_Antlion::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	return Flip();
+}

@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_hippocrates_bust/c_hippocrates_bust"
+	$translucent 1
+	$vertexcolor 1
+}

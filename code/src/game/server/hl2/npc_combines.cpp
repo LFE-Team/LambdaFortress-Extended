@@ -8,6 +8,7 @@
 #include "ai_hull.h"
 #include "ai_motor.h"
 #include "npc_combines.h"
+#include "npc_talker.h"
 #include "bitstring.h"
 #include "engine/IEngineSound.h"
 #include "soundent.h"
@@ -21,18 +22,22 @@
 #include "Sprite.h"
 #include "soundenvelope.h"
 #include "weapon_physcannon.h"
+#ifdef HL2_DLL
 #include "hl2_gamerules.h"
+#elif defined(TF_CLASSIC)
+#include "tf_gamerules.h"
+#endif
 #include "gameweaponmanager.h"
 #include "vehicle_base.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar	sk_combine_s_health( "sk_combine_s_health","0");
-ConVar	sk_combine_s_kick( "sk_combine_s_kick","0");
+ConVar	sk_combine_s_health( "sk_combine_s_health","50");
+ConVar	sk_combine_s_kick( "sk_combine_s_kick","10");
 
-ConVar sk_combine_guard_health( "sk_combine_guard_health", "0");
-ConVar sk_combine_guard_kick( "sk_combine_guard_kick", "0");
+ConVar sk_combine_guard_health( "sk_combine_guard_health", "70");
+ConVar sk_combine_guard_kick( "sk_combine_guard_kick", "15");
  
 // Whether or not the combine guard should spawn health on death
 ConVar combine_guard_spawn_health( "combine_guard_spawn_health", "1" );
@@ -76,8 +81,24 @@ void CNPC_CombineS::Spawn( void )
 	CapabilitiesAdd( bits_CAP_ANIMATEDFACE );
 	CapabilitiesAdd( bits_CAP_MOVE_SHOOT );
 	CapabilitiesAdd( bits_CAP_DOORS_GROUP );
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	if( !Q_strnicmp( szMapName, "ep2", 3 ) && IsElite() )
+	{
+		// ep2 model
+		PrecacheModel("models/combine_super_soldier_ep2.mdl");
+		SetModel("models/combine_super_soldier_ep2.mdl");
+	}
+	else if ( !Q_strnicmp( szMapName, "ep2", 3 ) && !IsElite() )
+	{
+		PrecacheModel("models/combine_soldier_ep2.mdl");
+		SetModel("models/combine_soldier_ep2.mdl");
+	}
 
 	BaseClass::Spawn();
+	SetUse( &CNPCSimpleTalker::FollowerUse );	
 
 #if HL2_EPISODIC
 	if (m_iUseMarch && !HasSpawnFlags(SF_NPC_START_EFFICIENT))
@@ -180,6 +201,21 @@ void CNPC_CombineS::PrescheduleThink( void )
 // Purpose: Allows for modification of the interrupt mask for the current schedule.
 //			In the most cases the base implementation should be called first.
 //-----------------------------------------------------------------------------
+
+
+int CNPC_CombineS::OnTakeDamage_Alive( const CTakeDamageInfo &info )
+{
+		if( info.GetAttacker()->GetTeamNumber() == 3 )
+		{
+			return 0;
+		}
+		else
+		{
+			return BaseClass::OnTakeDamage_Alive( info );
+		}
+}
+
+
 void CNPC_CombineS::BuildScheduleTestBits( void )
 {
 	//Interrupt any schedule with physics danger (as long as I'm not moving or already trying to block)
@@ -190,6 +226,7 @@ void CNPC_CombineS::BuildScheduleTestBits( void )
 
 	BaseClass::BuildScheduleTestBits();
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -338,27 +375,30 @@ void CNPC_CombineS::Event_Killed( const CTakeDamageInfo &info )
 				}
 			}
 		}
-
-		CHalfLife2 *pHL2GameRules = static_cast<CHalfLife2 *>(g_pGameRules);
-
+#ifdef HL2_DLL
+		CHalfLife2 *pGameRules = static_cast<CHalfLife2 *>(g_pGameRules);
+#elif defined(TF_CLASSIC)
+		CTFGameRules *pGameRules = TFGameRules();
+#endif
 		// Attempt to drop health
-		if ( pHL2GameRules->NPC_ShouldDropHealth( pPlayer ) )
+		if ( pGameRules->NPC_ShouldDropHealth( pPlayer ) )
 		{
 			DropItem( "item_healthvial", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
-			pHL2GameRules->NPC_DroppedHealth();
+			pGameRules->NPC_DroppedHealth();
 		}
-		
+		// Don't drop grenades in TF2C, TF2 players don't need that.
+#ifndef TF_CLASSIC
 		if ( HasSpawnFlags( SF_COMBINE_NO_GRENADEDROP ) == false )
 		{
 			// Attempt to drop a grenade
-			if ( pHL2GameRules->NPC_ShouldDropGrenade( pPlayer ) )
+			if ( pGameRules->NPC_ShouldDropGrenade( pPlayer ) )
 			{
 				DropItem( "weapon_frag", WorldSpaceCenter()+RandomVector(-4,4), RandomAngle(0,360) );
-				pHL2GameRules->NPC_DroppedGrenade();
+				pGameRules->NPC_DroppedGrenade();
 			}
 		}
+#endif
 	}
-
 	BaseClass::Event_Killed( info );
 }
 

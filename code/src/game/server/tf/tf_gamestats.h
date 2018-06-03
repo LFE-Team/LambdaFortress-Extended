@@ -74,6 +74,7 @@ public:
 	void Event_PlayerRevenge( CTFPlayer *pAttacker );
 	void Event_MaxSentryKills( CTFPlayer *pAttacker, int iMaxKills );
 	void Event_PlayerAwardBonusPoints( CTFPlayer *pPlayer, CBaseEntity *pAwarder, int iAmount );
+	void Event_PlayerKilledNPC( CTFPlayer *pPlayer, CAI_BaseNPC *pNPC );
 
 	virtual void FrameUpdatePostEntityThink();
 

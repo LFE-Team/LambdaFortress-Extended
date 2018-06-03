@@ -139,14 +139,6 @@ void CTFProjectile_Plasma::CreateTrails( void )
 {
 	if ( IsDormant() )
 		return;
-
-	CNewParticleEffect *pParticle = ParticleProp()->Create( "mlg_trail_primary", PATTACH_ABSORIGIN_FOLLOW );
-
-	C_TFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-	if ( pOwner )
-	{
-		pOwner->m_Shared.SetParticleToMercColor( pParticle );
-	}
 }
 
 #endif
@@ -231,14 +223,6 @@ void CTFProjectile_PlasmaBomb::CreateTrails( void )
 {
 	if ( IsDormant() )
 		return;
-
-	CNewParticleEffect *pParticle = ParticleProp()->Create( "mlg_trail_secondary", PATTACH_ABSORIGIN_FOLLOW );
-
-	C_TFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-	if ( pOwner )
-	{
-		pOwner->m_Shared.SetParticleToMercColor( pParticle );
-	}
 }
 
 #endif

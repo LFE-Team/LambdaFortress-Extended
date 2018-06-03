@@ -177,6 +177,7 @@ enum PlayerConnectedState
 
 extern bool gInitHUD;
 extern ConVar *sv_cheats;
+extern ConVar sv_hl2_beta;
 
 class CBasePlayer;
 class CPlayerInfo : public IBotController, public IPlayerInfo
@@ -440,7 +441,7 @@ public:
 	virtual void			FlashlightTurnOff( void ) { };
 	virtual bool			IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flReturnDot ) {return false; }
 	
-	void					UpdatePlayerSound ( void );
+	virtual void					UpdatePlayerSound ( void );
 	virtual void			UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity );
 	virtual void			PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 	virtual const char	   *GetOverrideStepSound( const char *pszBaseStepSoundName ) { return pszBaseStepSoundName; }

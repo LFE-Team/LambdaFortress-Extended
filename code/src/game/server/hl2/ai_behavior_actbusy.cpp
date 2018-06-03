@@ -703,7 +703,7 @@ bool CAI_ActBusyBehavior::ShouldIgnoreSound( CSound *pSound )
 //-----------------------------------------------------------------------------
 void CAI_ActBusyBehavior::OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttacker )
 {
-	if( IsCombatActBusy() && pSquadmate->IsPlayer() && IsInSafeZone( pAttacker ) )
+	if (IsCombatActBusy() && pSquadmate->IsPlayer() || pSquadmate->IsBaseObject() && IsInSafeZone(pAttacker))
 	{
 		SetCondition( COND_ACTBUSY_AWARE_OF_ENEMY_IN_SAFE_ZONE ); // Break the actbusy, if we're running it.
 		m_flDeferUntil = gpGlobals->curtime + 4.0f;	// Stop actbusying and go deal with that enemy!!
@@ -804,7 +804,7 @@ void CAI_ActBusyBehavior::GatherConditions( void )
 				SetCondition( COND_ACTBUSY_LOST_SEE_ENTITY );
 				m_hActBusyGoal->NPCLostSeeEntity( GetOuter() );
 
-				if( IsCombatActBusy() && (GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL && m_hSeeEntity->IsPlayer()) )
+				if( IsCombatActBusy() && (GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL && m_hSeeEntity->IsPlayer() || m_hSeeEntity->IsBaseObject()) )
 				{
 					// Defer any actbusying for several seconds. This serves as a heuristic for waiting
 					// for the player to settle after moving out of the room. This helps Alyx pick a more

@@ -60,9 +60,9 @@
 #include "materialsystem/imaterialvar.h"
 #include "c_tf_team.h"
 #include "tf_viewmodel.h"
-
+#include "iviewrender_beams.h"			// flashlight beam
 #include "tf_inventory.h"
-
+#include "flashlighteffect.h"
 #if defined( CTFPlayer )
 #undef CTFPlayer
 #endif
@@ -86,9 +86,9 @@ ConVar cl_autorezoom( "cl_autorezoom", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "Whe
 ConVar cl_autoreload( "cl_autoreload", "1",  FCVAR_USERINFO | FCVAR_ARCHIVE, "When set to 1, clip-using weapons will automatically be reloaded whenever they're not being fired." );
 
 ConVar tf2c_model_muzzleflash("tf2c_model_muzzleflash", "0", FCVAR_ARCHIVE, "Use the tf2 beta model based muzzleflash");
-ConVar tf2c_muzzlelight("tf2c_muzzlelight", "0", FCVAR_ARCHIVE, "Enable dynamic lights for muzzleflashes and the flamethrower");
+ConVar lf_muzzlelight("lf_muzzlelight", "0", FCVAR_ARCHIVE, "Enable dynamic lights for muzzleflashes and the flamethrower");
 
-ConVar tf2c_dev_mark( "tf2c_dev_mark", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );
+ConVar lf_dev_mark( "lf_dev_mark", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );
 
 static void OnMercParticleChange( IConVar *var, const char *pOldValue, float flOldValue )
 {
@@ -128,6 +128,7 @@ const char *pszHeadLabelNames[] =
 #define TF_PLAYER_HEAD_LABEL_GREEN 2
 #define TF_PLAYER_HEAD_LABEL_YELLOW 3
 
+#define TF_FLASHLIGHT_DISTANCE		1000
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheInvuln )
 CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_blue.vmt" )
@@ -456,12 +457,6 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 		int nModelIndex = modelinfo->GetModelIndex( pData->GetModelName() );
 		SetModelIndex( nModelIndex );	
 
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			m_nSkin = 8;
-		}
-		else
-		{
 			switch ( m_iTeam )
 			{
 			case TF_TEAM_RED:
@@ -480,7 +475,6 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 				m_nSkin = 5;
 				break;
 			}
-		}
 	}
 
 #ifdef _DEBUG
@@ -1012,6 +1006,22 @@ public:
 				m_pResult->SetFloatValue( 0.0 );
 			}
 		}
+		else if ( pEntity->IsNPC() )
+		{
+			// See if it's NPC.
+			C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEntity );
+			if ( pNPC->IsInvulnerable() &&
+				!pNPC->InCond( TF_COND_INVULNERABLE_WEARINGOFF ) &&
+				( !pNPC->InCond( TF_COND_INVULNERABLE_SPAWN_PROTECT ) || pNPC->GetConditionDuration( TF_COND_INVULNERABLE_SPAWN_PROTECT ) > 1.0f ) )
+			{
+				m_pResult->SetFloatValue( 1.0 );
+			}
+			else
+			{
+				m_pResult->SetFloatValue( 0.0 );
+			}
+		}
+
 
 		if ( ToolsEnabled() )
 		{
@@ -1196,6 +1206,7 @@ public:
 		Vector vecColor = Vector( 1, 1, 1 );
 
 		C_TFPlayer *pPlayer = ToTFPlayer( pEntity );;
+		C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEntity );
 
 		if ( !pPlayer )
 		{
@@ -1224,14 +1235,7 @@ public:
 
 		if ( pPlayer && pPlayer->m_Shared.IsCritBoosted() )
 		{
-			if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-			{
-				Vector critColor = pPlayer->m_vecPlayerColor;
-				critColor *= 255;
-				critColor *= 0.30;
-				vecColor = critColor;
-			}
-			else if ( !pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) ||
+			if ( !pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) ||
 				!pPlayer->IsEnemyPlayer() ||
 				pPlayer->GetTeamNumber() == pPlayer->m_Shared.GetDisguiseTeam() )
 			{
@@ -1252,8 +1256,35 @@ public:
 				}
 			}
 		}
+		else if ( pNPC && pNPC->IsCritBoosted() )
+		{
+			if ( !pNPC->InCond( TF_COND_DISGUISED ) )
+			{
+				switch ( pNPC->GetTeamNumber() )
+				{
+				case TF_TEAM_RED:
+					vecColor = Vector( 94, 8, 5 );
+					break;
+				case TF_TEAM_BLUE:
+					vecColor = Vector( 6, 21, 80 );
+					break;
+				case TF_TEAM_GREEN:
+					vecColor = Vector( 1, 28, 9 );
+					break;
+				case TF_TEAM_YELLOW:
+					vecColor = Vector( 28, 28, 9 );
+					break;
+				}
+			}
+		}
 
 		m_pResult->SetVecValue( vecColor.Base(), 3 );
+		/*
+		if ( ToolsEnabled() )
+		{
+			ToolFramework_RecordMaterialParams( GetMaterial() );
+		}
+		*/
 	}
 };
 
@@ -1261,7 +1292,6 @@ EXPOSE_INTERFACE( CProxyModelGlowColor, IMaterialProxy, "ModelGlowColor" IMATERI
 
 //-----------------------------------------------------------------------------
 // Purpose: Used for coloring items 
-//			Right now, it's only used for the mercenary
 //-----------------------------------------------------------------------------
 class CProxyItemTintColor : public CResultProxy
 {
@@ -1284,9 +1314,9 @@ public:
 		C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
 		if ( !pEntity )
 			return;
-
+		/*
 		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
+		{*/
 			Vector vecColor = pEntity->GetItemTintColor();
 
 			if ( vecColor == vec3_origin )
@@ -1301,7 +1331,7 @@ public:
 
 			m_pResult->SetVecValue( vecColor.x, vecColor.y, vecColor.z );
 			return;
-		}
+		//}
 
 		m_pResult->SetVecValue( 1, 1, 1 );
 	}
@@ -1570,6 +1600,7 @@ BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFLocalPlayerExclusive )
 
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 //	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropEHandle( RECVINFO( m_hLadder ) ),
 
 END_RECV_TABLE()
 
@@ -1601,6 +1632,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropDataTable( "tfnonlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFNonLocalPlayerExclusive) ),
 
 	RecvPropInt( RECVINFO( m_iSpawnCounter ) ),
+	RecvPropBool( RECVINFO( m_bSearchingSpawn ) ),
 	RecvPropInt( RECVINFO( m_nForceTauntCam ) ),
 	RecvPropTime( RECVINFO( m_flLastDamageTime ) ),
 	RecvPropBool( RECVINFO( m_bTyping ) ),
@@ -1673,13 +1705,22 @@ C_TFPlayer::C_TFPlayer() :
 
 	m_bTyping = false;
 
+	m_pFlashlightBeam = NULL;
+
 	ListenForGameEvent( "localplayer_changeteam" );
+
+	ConVarRef scissor("r_flashlightscissor");
+	if (scissor.GetBool())
+	{
+		scissor.SetValue("0");
+	}
 }
 
 C_TFPlayer::~C_TFPlayer()
 {
 	ShowNemesisIcon( false );
 	m_PlayerAnimState->Release();
+	ReleaseFlashlight();
 }
 
 
@@ -1846,6 +1887,19 @@ void C_TFPlayer::OnPreDataChanged( DataUpdateType_t updateType )
 	m_hOldActiveWeapon.Set( GetActiveTFWeapon() );
 
 	m_Shared.OnPreDataChanged();
+}
+
+void C_TFPlayer::NotifyShouldTransmit( ShouldTransmitState_t state )
+{
+	if ( state == SHOULDTRANSMIT_END )
+	{
+		if( m_pFlashlightBeam != NULL )
+		{
+			ReleaseFlashlight();
+		}
+	}
+
+	BaseClass::NotifyShouldTransmit( state );
 }
 
 //-----------------------------------------------------------------------------
@@ -2073,6 +2127,17 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 	}
 }
 
+void C_TFPlayer::ReleaseFlashlight( void )
+{
+	if( m_pFlashlightBeam )
+	{
+		m_pFlashlightBeam->flags = 0;
+		m_pFlashlightBeam->die = gpGlobals->curtime - 1;
+
+		m_pFlashlightBeam = NULL;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2084,12 +2149,6 @@ void C_TFPlayer::InitInvulnerableMaterial( void )
 
 	const char *pszMaterial = NULL;
 
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		pszMaterial = "models/effects/invulnfx_custom.vmt";
-	}
-	else
-	{
 		int iVisibleTeam = GetTeamNumber();
 		// if this player is disguised and on the other team, use disguise team
 		if ( m_Shared.InCond( TF_COND_DISGUISED ) && IsEnemyPlayer() )
@@ -2114,7 +2173,6 @@ void C_TFPlayer::InitInvulnerableMaterial( void )
 		default:
 			break;
 		}
-	}
 
 	if ( pszMaterial )
 	{
@@ -2123,6 +2181,25 @@ void C_TFPlayer::InitInvulnerableMaterial( void )
 	else
 	{
 		m_InvulnerableMaterial.Shutdown();
+	}
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void C_TFPlayer::OverrideView( CViewSetup *pSetup )
+{
+	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
+	if ( pWeapon )
+	{
+		// adnan
+		if(pWeapon->OverrideViewAngles()) 
+		{
+			// use the useAngles!
+				// override with the angles the server sends to us as useAngles
+				// use the useAngles only if we're holding and rotating with the grav gun
+			pSetup->angles = m_vecUseAngles;
+		}
 	}
 }
 
@@ -2348,10 +2425,6 @@ bool C_TFPlayer::IsEnemyPlayer( void )
 
 	if ( !pLocalPlayer )
 		return false;
-
-	// In Deathmatch, everyone is an enemy. Except for ourselves.
-	if ( TFGameRules()->IsDeathmatch() && pLocalPlayer != this && pLocalPlayer->GetTeamNumber() >= FIRST_GAME_TEAM )
-		return true;
 
 	switch ( pLocalPlayer->GetTeamNumber() )
 	{
@@ -3437,6 +3510,103 @@ void C_TFPlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& f
 	fov = GetFOV();
 }
 
+extern ConVar spec_freeze_traveltime;
+extern ConVar spec_freeze_time;
+
+//-----------------------------------------------------------------------------
+// Purpose: Calculate the view for the player while he's in freeze frame observer mode
+//-----------------------------------------------------------------------------
+void C_TFPlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
+{
+	C_BaseEntity *pTarget = GetObserverTarget();
+	if ( !pTarget )
+	{
+		CalcDeathCamView( eyeOrigin, eyeAngles, fov );
+		return;
+	}
+
+	// Zoom towards our target
+	float flCurTime = ( gpGlobals->curtime - m_flFreezeFrameStartTime );
+	float flBlendPerc = clamp( flCurTime / spec_freeze_traveltime.GetFloat(), 0.f, 1.f );
+	flBlendPerc = SimpleSpline( flBlendPerc );
+
+	Vector vecCamDesired = pTarget->GetObserverCamOrigin();	// Returns ragdoll origin if they're ragdolled
+	VectorAdd( vecCamDesired, GetChaseCamViewOffset( pTarget ), vecCamDesired );
+	Vector vecCamTarget = vecCamDesired;
+	if ( pTarget->IsAlive() )
+	{
+		// Look at their chest, not their head
+		Vector maxs;
+
+		// Obviously you can't apply player height to NPCs.
+		if ( pTarget->IsNPC() )
+		{
+			maxs = pTarget->WorldAlignMaxs();
+		}
+		else
+		{
+			maxs = pTarget->GetBaseAnimating() ? VEC_HULL_MAX_SCALED( pTarget->GetBaseAnimating() ) : VEC_HULL_MAX;
+		}
+
+		vecCamTarget.z -= ( maxs.z * 0.5 );
+	}
+	else
+	{
+		vecCamTarget.z += pTarget->GetBaseAnimating() ? VEC_DEAD_VIEWHEIGHT_SCALED( pTarget->GetBaseAnimating() ).z : VEC_DEAD_VIEWHEIGHT.z;	// look over ragdoll, not through
+	}
+
+	// Figure out a view position in front of the target
+	Vector vecEyeOnPlane = eyeOrigin;
+	vecEyeOnPlane.z = vecCamTarget.z;
+	Vector vecTargetPos = vecCamTarget;
+	Vector vecToTarget = vecTargetPos - vecEyeOnPlane;
+	VectorNormalize( vecToTarget );
+
+	// Stop a few units away from the target, and shift up to be at the same height
+	vecTargetPos = vecCamTarget - ( vecToTarget * m_flFreezeFrameDistance );
+	float flEyePosZ = pTarget->EyePosition().z;
+	vecTargetPos.z = flEyePosZ + m_flFreezeZOffset;
+
+	// Now trace out from the target, so that we're put in front of any walls
+	trace_t trace;
+	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+	UTIL_TraceHull( vecCamTarget, vecTargetPos, WALL_MIN, WALL_MAX, MASK_SOLID, pTarget, COLLISION_GROUP_NONE, &trace );
+	C_BaseEntity::PopEnableAbsRecomputations();
+	if ( trace.fraction < 1.0 )
+	{
+		// The camera's going to be really close to the target. So we don't end up
+		// looking at someone's chest, aim close freezecams at the target's eyes.
+		vecTargetPos = trace.endpos;
+		vecCamTarget = vecCamDesired;
+
+		// To stop all close in views looking up at character's chins, move the view up.
+		vecTargetPos.z += fabs( vecCamTarget.z - vecTargetPos.z ) * 0.85;
+		C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+		UTIL_TraceHull( vecCamTarget, vecTargetPos, WALL_MIN, WALL_MAX, MASK_SOLID, pTarget, COLLISION_GROUP_NONE, &trace );
+		C_BaseEntity::PopEnableAbsRecomputations();
+		vecTargetPos = trace.endpos;
+	}
+
+	// Look directly at the target
+	vecToTarget = vecCamTarget - vecTargetPos;
+	VectorNormalize( vecToTarget );
+	VectorAngles( vecToTarget, eyeAngles );
+
+	VectorLerp( m_vecFreezeFrameStart, vecTargetPos, flBlendPerc, eyeOrigin );
+
+	if ( flCurTime >= spec_freeze_traveltime.GetFloat() && !m_bSentFreezeFrame )
+	{
+		IGameEvent *pEvent = gameeventmanager->CreateEvent( "freezecam_started" );
+		if ( pEvent )
+		{
+			gameeventmanager->FireEventClientSide( pEvent );
+		}
+
+		m_bSentFreezeFrame = true;
+		view->FreezeFrame( spec_freeze_time.GetFloat() );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Do nothing multiplayer_animstate takes care of animation.
 // Input  : playerAnim - 
@@ -3596,12 +3766,6 @@ void C_TFPlayer::CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVel
 	{
 		C_BaseAnimating *pGib = static_cast<C_BaseAnimating *>( m_hSpawnedGibs[i].Get() );
 
-		if ( TFGameRules()->IsDeathmatch() )
-		{
-			pGib->m_nSkin = 4;
-		}
-		else
-		{
 			switch ( GetTeamNumber() )
 			{
 			case TF_TEAM_RED:
@@ -3620,7 +3784,6 @@ void C_TFPlayer::CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVel
 				pGib->m_nSkin = 0;
 				break;
 			}
-		}
 	}
 
 	DropPartyHat( breakParams, vecBreakVelocity );
@@ -3704,11 +3867,6 @@ bool C_TFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
 		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
 	{
-		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{
-			// Collide with everyone in deathmatch.
-			return BaseClass::ShouldCollide( collisionGroup, contentsMask );
-		}
 
 		switch( GetTeamNumber() )
 		{
@@ -3753,12 +3911,6 @@ int C_TFPlayer::GetSkin()
 
 	int nSkin;
 
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		nSkin = 8;
-	}
-	else
-	{
 		int iVisibleTeam = GetTeamNumber();
 
 		// if this player is disguised and on the other team, use disguise team
@@ -3789,12 +3941,11 @@ int C_TFPlayer::GetSkin()
 			nSkin = 0;
 			break;
 		}
-	}
 
 	// 3 and 4 are invulnerable
 	if ( m_Shared.IsInvulnerable() && ( !m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE ) || gpGlobals->curtime - m_flLastDamageTime < 2.0f ) )
 	{
-		nSkin = TFGameRules()->IsDeathmatch() ? 9 : nSkin + 2;
+		nSkin = nSkin + 2;
 	}
 
 	return nSkin;
@@ -3869,7 +4020,7 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 		LoadInventory();
 	}
-
+	/*
 	if ( TFGameRules()->IsDeathmatch() && GetTeamNumber() == TF_TEAM_RED && ( !IsLocalPlayer() || !InFirstPersonView() ) )
 	{
 		char szParticleName[128];
@@ -3880,7 +4031,7 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 		m_Shared.SetParticleToMercColor( pEffect );
 	}
-
+	*/
 	UpdateVisibility();
 
 	m_hFirstGib = NULL;
@@ -4053,6 +4204,21 @@ Vector C_TFPlayer::GetChaseCamViewOffset( CBaseEntity *target )
 	if ( target->IsBaseObject() )
 		return Vector(0,0,64);
 
+	if ( target->IsNPC() )
+	{
+		if ( target->IsAlive() )
+		{
+			// NPC eye height varies so use GetViewOffset.
+			float flEyeHeight = target->GetViewOffset().z;
+			return Vector( 0, 0, flEyeHeight );
+		}
+		else
+		{
+			// Assume it's ragdoll.
+			return VEC_DEAD_VIEWHEIGHT;
+		}
+	}
+
 	return BaseClass::GetChaseCamViewOffset( target );
 }
 
@@ -4134,6 +4300,63 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 		Vector vel;
 		EstimateAbsVelocity( vel );
 		UpdateStepSound( GetGroundSurface(), GetAbsOrigin(), vel );
+
+		bool bInWater = ( enginetrace->GetPointContents(origin) & CONTENTS_WATER );
+
+		//Msg( "run event ( %d )\n", bInWater ? 1 : 0 );
+
+		if( bInWater )
+		{
+			//run splash
+			CEffectData data;
+
+			//trace up from foot position to the water surface
+			trace_t tr;
+			Vector vecTrace(0,0,1024);
+			UTIL_TraceLine( origin, origin + vecTrace, MASK_WATER, NULL, COLLISION_GROUP_NONE, &tr );
+			if ( tr.fractionleftsolid )
+			{
+				data.m_vOrigin = origin + (vecTrace * tr.fractionleftsolid);
+			}
+			else
+			{
+				data.m_vOrigin = origin;
+			}
+			
+			data.m_vNormal = Vector( 0,0,1 );
+			data.m_flScale = random->RandomFloat( 4.0f, 5.0f );
+			DispatchEffect( "watersplash", data );
+		}		
+	}
+	else if( event == 7002 )
+	{
+		bool bInWater = ( enginetrace->GetPointContents(origin) & CONTENTS_WATER );
+
+		//Msg( "walk event ( %d )\n", bInWater ? 1 : 0 );
+		
+		if( bInWater )
+		{
+			//walk ripple
+			CEffectData data;
+
+			//trace up from foot position to the water surface
+			trace_t tr;
+			Vector vecTrace(0,0,1024);
+			UTIL_TraceLine( origin, origin + vecTrace, MASK_WATER, NULL, COLLISION_GROUP_NONE, &tr );
+			if ( tr.fractionleftsolid )
+			{
+				data.m_vOrigin = origin + (vecTrace * tr.fractionleftsolid);
+			}
+			else
+			{
+				data.m_vOrigin = origin;
+			}
+	
+			data.m_vNormal = Vector( 0,0,1 );
+			data.m_flScale = random->RandomFloat( 4.0f, 7.0f );
+			//DispatchEffect( "waterripple", data );
+			DispatchEffect( "watersplash", data );
+		}
 	}
 	else if ( event == AE_WPN_HIDE )
 	{
@@ -4163,6 +4386,8 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 	}
 	else
 		BaseClass::FireEvent( origin, angles, event, options );
+
+
 }
 
 // Shadows
@@ -4679,4 +4904,324 @@ vgui::IImage* GetDefaultAvatarImage( C_BasePlayer *pPlayer )
 	}
 
 	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Helper to remove from ladder
+//-----------------------------------------------------------------------------
+void C_TFPlayer::ExitLadder()
+{
+	if ( MOVETYPE_LADDER != GetMoveType() )
+		return;
+	
+	SetMoveType( MOVETYPE_WALK );
+	SetMoveCollide( MOVECOLLIDE_DEFAULT );
+	// Remove from ladder
+	m_hLadder = NULL;
+}
+
+void C_TFPlayer::CalcVehicleView(IClientVehicle* pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov)
+{
+	BaseClass::CalcVehicleView(pVehicle, eyeOrigin, eyeAngles, zNear, zFar, fov);
+
+	if (pVehicle != nullptr)
+	{
+		if (pVehicle->GetVehicleEnt() != nullptr)
+		{
+			Vector Velocity;
+			pVehicle->GetVehicleEnt()->EstimateAbsVelocity(Velocity);
+
+			if (Velocity.Length() == 0)
+			{
+				IdleScale += gpGlobals->frametime * 0.05;
+				if (IdleScale > 1.0)
+					IdleScale = 1.0;
+			}
+			else
+			{
+				IdleScale -= gpGlobals->frametime;
+				if (IdleScale < 0.0)
+					IdleScale = 0.0;
+			}
+
+			CalcViewIdle(eyeAngles);
+		}
+	}
+}
+
+void C_TFPlayer::CalcPlayerView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
+{
+	BaseClass::CalcPlayerView(eyeOrigin, eyeAngles, fov);
+
+	Vector Velocity;
+	EstimateAbsVelocity(Velocity);
+
+	if (Velocity.Length() == 0)
+	{
+		IdleScale += gpGlobals->frametime * 0.05;
+		if (IdleScale > 1.0)
+			IdleScale = 1.0;
+	}
+	else
+	{
+		IdleScale -= gpGlobals->frametime;
+		if (IdleScale < 0.0)
+			IdleScale = 0.0;
+	}
+
+	CalcViewBob(eyeOrigin);
+	CalcViewIdle(eyeAngles);
+}
+
+ConVar cl_hl1_rollspeed("cl_hl1_rollspeed", "300.0", FCVAR_USERINFO | FCVAR_ARCHIVE );
+ConVar cl_hl1_rollangle("cl_hl1_rollangle", "0.65", FCVAR_USERINFO | FCVAR_ARCHIVE );
+
+void C_TFPlayer::CalcViewRoll( QAngle& eyeAngles )
+{
+	if (GetMoveType() == MOVETYPE_NOCLIP)
+		return;
+
+	float Side = CalcRoll(GetAbsAngles(), GetAbsVelocity(), cl_hl1_rollangle.GetFloat(), cl_hl1_rollspeed.GetFloat()) * 4.0;
+	eyeAngles[ROLL] += Side;
+
+	if (GetHealth() <= 0)
+	{
+		eyeAngles[ROLL] = 80;
+		return;
+	}
+}
+
+ConVar cl_hl1_bobcycle("cl_hl1_bobcycle", "0.8", FCVAR_USERINFO | FCVAR_ARCHIVE );
+ConVar cl_hl1_bob("cl_hl1_bob", "0.01", FCVAR_USERINFO | FCVAR_ARCHIVE );
+ConVar cl_hl1_bobup("cl_hl1_bobup", "0.5", FCVAR_USERINFO | FCVAR_ARCHIVE );
+
+void C_TFPlayer::CalcViewBob( Vector& eyeOrigin )
+{
+	float Cycle;
+	Vector Velocity;
+
+	if (GetGroundEntity() == nullptr || gpGlobals->curtime == BobLastTime)
+	{
+		eyeOrigin.z += ViewBob;
+		return;
+	}
+
+	BobLastTime = gpGlobals->curtime;
+	BobTime += gpGlobals->frametime;
+
+	Cycle = BobTime - (int)(BobTime / cl_hl1_bobcycle.GetFloat()) * cl_hl1_bobcycle.GetFloat();
+	Cycle /= cl_hl1_bobcycle.GetFloat();
+
+	if (Cycle < cl_hl1_bobup.GetFloat())
+		Cycle = M_PI * Cycle / cl_hl1_bobup.GetFloat();
+	else
+		Cycle = M_PI + M_PI * (Cycle - cl_hl1_bobup.GetFloat()) / (1.0 - cl_hl1_bobup.GetFloat());
+
+	EstimateAbsVelocity(Velocity);
+	Velocity.z = 0;
+
+	ViewBob = sqrt(Velocity.x * Velocity.x + Velocity.y * Velocity.y) * cl_hl1_bob.GetFloat();
+	ViewBob = ViewBob * 0.3 + ViewBob * 0.7 * sin(Cycle);
+	ViewBob = min(ViewBob, 4);
+	ViewBob = max(ViewBob, -7);
+
+	eyeOrigin.z += ViewBob;
+}
+
+ConVar cl_hl1_iyaw_cycle("cl_hl1_iyaw_cycle", "2.0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY );
+ConVar cl_hl1_iroll_cycle("cl_hl1_iroll_cycle", "0.5", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY );
+ConVar cl_hl1_ipitch_cycle("cl_hl1_ipitch_cycle", "1.0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY );
+ConVar cl_hl1_iyaw_level("cl_hl1_iyaw_level", "0.3", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY );
+ConVar cl_hl1_iroll_level("cl_hl1_iroll_level", "0.1", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY );
+ConVar cl_hl1_ipitch_level("cl_hl1_ipitch_level", "0.3", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY );
+
+void C_TFPlayer::CalcViewIdle(QAngle& eyeAngles)
+{
+	eyeAngles[ROLL] += IdleScale * sin(gpGlobals->curtime * cl_hl1_iroll_cycle.GetFloat()) * cl_hl1_iroll_level.GetFloat();
+	eyeAngles[PITCH] += IdleScale * sin(gpGlobals->curtime * cl_hl1_ipitch_cycle.GetFloat()) * cl_hl1_ipitch_level.GetFloat();
+	eyeAngles[YAW] += IdleScale * sin(gpGlobals->curtime * cl_hl1_iyaw_cycle.GetFloat()) * cl_hl1_iyaw_level.GetFloat();
+}
+
+//-----------------------------------------------------------------------------
+// Should this object receive shadows?
+//-----------------------------------------------------------------------------
+bool C_TFPlayer::ShouldReceiveProjectedTextures( int flags )
+{
+	Assert( flags & SHADOW_FLAGS_PROJECTED_TEXTURE_TYPE_MASK );
+
+	if ( IsEffectActive( EF_NODRAW ) )
+		 return false;
+
+	if( flags & SHADOW_FLAGS_FLASHLIGHT )
+	{
+		return true;
+	}
+
+	return BaseClass::ShouldReceiveProjectedTextures( flags );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_TFPlayer::AddEntity( void )
+{
+	BaseClass::AddEntity();
+
+	QAngle vTempAngles = GetLocalAngles();
+	vTempAngles[PITCH] = m_angEyeAngles[PITCH];
+
+	SetLocalAngles( vTempAngles );
+		
+	//m_PlayerAnimState.Update();
+
+	// Zero out model pitch, blending takes care of all of it.
+	SetLocalAnglesDim( X_INDEX, 0 );
+
+	if( this != C_BasePlayer::GetLocalPlayer() )
+	{
+		if ( IsAlive() && IsEffectActive( EF_DIMLIGHT ) )
+		{
+			//int iAttachment = LookupAttachment( "anim_attachment_RH" );
+			// let's attach to the weapon's muzzle instead of our arm.
+			int iAttachment = LookupAttachment( "muzzle" );
+
+			if ( iAttachment < 0 )
+				return;
+
+			Vector vecOrigin;
+			QAngle eyeAngles = m_angEyeAngles;
+/*
+			CTFViewModel *vm = dynamic_cast<CTFViewModel*>(GetViewModel(0));
+			if (vm)
+			{
+				vm->GetAttachment( iAttachment, vecOrigin, eyeAngles );
+			}
+*/
+			CTFWeaponBase *pActiveWpn = GetActiveTFWeapon();
+			if (pActiveWpn)
+			{
+				pActiveWpn->GetAttachment( iAttachment, vecOrigin, eyeAngles );
+			}
+
+			Vector vForward;
+			AngleVectors( eyeAngles, &vForward );
+				
+			trace_t tr;
+			UTIL_TraceLine( vecOrigin, vecOrigin + (vForward * 200), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+
+			if( !m_pFlashlightBeam )
+			{
+				BeamInfo_t beamInfo;
+				beamInfo.m_nType = TE_BEAMPOINTS;
+				beamInfo.m_vecStart = tr.startpos;
+				beamInfo.m_vecEnd = tr.endpos;
+				beamInfo.m_pszModelName = "sprites/glow01.vmt";
+				beamInfo.m_pszHaloName = "sprites/glow01.vmt";
+				beamInfo.m_flHaloScale = 3.0;
+				beamInfo.m_flWidth = 8.0f;
+				beamInfo.m_flEndWidth = 35.0f;
+				beamInfo.m_flFadeLength = 300.0f;
+				beamInfo.m_flAmplitude = 0;
+				beamInfo.m_flBrightness = 60.0;
+				beamInfo.m_flSpeed = 0.0f;
+				beamInfo.m_nStartFrame = 0.0;
+				beamInfo.m_flFrameRate = 0.0;
+				beamInfo.m_flRed = 255.0;
+				beamInfo.m_flGreen = 255.0;
+				beamInfo.m_flBlue = 255.0;
+				beamInfo.m_nSegments = 8;
+				beamInfo.m_bRenderable = true;
+				beamInfo.m_flLife = 0.5;
+				beamInfo.m_nFlags = FBEAM_FOREVER | FBEAM_ONLYNOISEONCE | FBEAM_NOTILE | FBEAM_HALOBEAM;
+				
+				m_pFlashlightBeam = beams->CreateBeamPoints( beamInfo );
+			}
+
+			if( m_pFlashlightBeam )
+			{
+				BeamInfo_t beamInfo;
+				beamInfo.m_vecStart = tr.startpos;
+				beamInfo.m_vecEnd = tr.endpos;
+				beamInfo.m_flRed = 255.0;
+				beamInfo.m_flGreen = 255.0;
+				beamInfo.m_flBlue = 255.0;
+
+				beams->UpdateBeamInfo( m_pFlashlightBeam, beamInfo );
+
+				dlight_t *el = effects->CL_AllocDlight( 0 );
+				el->origin = tr.endpos;
+				el->radius = 50; 
+				el->color.r = 200;
+				el->color.g = 200;
+				el->color.b = 200;
+				el->die = gpGlobals->curtime + 0.1;
+			}
+		}
+		else if ( m_pFlashlightBeam )
+		{
+			ReleaseFlashlight();
+		}
+	}
+}
+
+void C_TFPlayer::UpdateFlashlight()
+{
+	if ( IsEffectActive( EF_DIMLIGHT ) )
+	{
+		if (!m_pFlashlight)
+		{
+			// Turned on the headlight; create it.
+			m_pFlashlight = new CFlashlightEffect(index);
+
+			if (!m_pFlashlight)
+				return;
+
+			m_pFlashlight->TurnOn();
+		}
+		QAngle angLightDir;
+		Vector vecLightOrigin, vecForward, vecRight, vecUp;
+
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if (pWeapon)
+		{
+			C_BaseViewModel  *pVM = GetViewModel();
+			if (pVM)
+			{
+				//If we have a flashlight attachment, use that.
+				if (pVM->LookupAttachment( "muzzle" ) != 0)
+				{
+					pVM->GetAttachment(pVM->LookupAttachment( "muzzle" ), vecLightOrigin, angLightDir);
+				}
+				else
+				{
+					//Looks like we don't have a flashlight attachment. Let's settle with the muzzle.
+					pVM->GetAttachment(1, vecLightOrigin, angLightDir);
+				}
+				//pVM->FormatViewModelAttachment(vecLightOrigin, true);
+			}
+			AngleVectors(angLightDir, &vecForward, &vecRight, &vecUp);
+			EyeVectors(&vecForward, &vecRight, &vecUp);
+			vecLightOrigin = EyePosition();
+		}
+
+		m_pFlashlight->UpdateLight(vecLightOrigin, vecForward, vecRight, vecUp, TF_FLASHLIGHT_DISTANCE);
+	}
+	else if (m_pFlashlight)
+	{
+		// Turned off the flashlight; delete it.
+		delete m_pFlashlight;
+		m_pFlashlight = NULL;
+	}
+
+	BaseClass::UpdateFlashlight();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Creates player flashlight if it's ative
+//-----------------------------------------------------------------------------
+void C_TFPlayer::Flashlight( void )
+{
+	UpdateFlashlight();
+
+	BaseClass::Flashlight();
 }

@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/v_models/v_fist_heavy"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

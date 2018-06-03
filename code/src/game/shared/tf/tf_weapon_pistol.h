@@ -31,6 +31,7 @@ public:
 	DECLARE_CLASS( CTFPistol, CTFWeaponBaseGun );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
+	DECLARE_ACTTABLE();
 
 	CTFPistol() {}
 	~CTFPistol() {}
@@ -38,8 +39,6 @@ public:
 	virtual void	PrimaryAttack( void );
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_PISTOL; }
-
-	DECLARE_DM_ACTTABLE();
 
 private:
 	CTFPistol( const CTFPistol & ) {}

@@ -233,6 +233,12 @@ public:
 	bool	IsPlayerDominatingMe( int iPlayerIndex );
 	void	SetPlayerDominatingMe( CTFPlayer *pPlayer, bool bDominated );
 
+	void	SetLivesCount( int iCount ) { m_iLives = iCount; }
+	int		GetLivesCount( void ) { return m_iLives; }
+
+	void InCutScene( bool cutscene )	{ m_bInCutScene = cutscene; }  
+	bool IsInCutScene( void )	{ return m_bInCutScene; }
+
 	bool	IsCarryingObject( void ) { return m_bCarryingObject; }
 
 #ifdef GAME_DLL
@@ -405,6 +411,9 @@ private:
 
 	CNetworkVar( int, m_nTeamTeleporterUsed );
 
+	CNetworkVar( int, m_iLives );
+
+	CNetworkVar( bool, m_bInCutScene );
 #ifdef GAME_DLL
 	float	m_flNextCritUpdate;
 	CUtlVector<CTFDamageEvent> m_DamageEvents;

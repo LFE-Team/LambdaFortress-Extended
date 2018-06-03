@@ -43,8 +43,8 @@ inline void TraceHull_SkipPhysics( const Vector &vecAbsStart, const Vector &vecA
 					 int collisionGroup, trace_t *ptr, float minMass );
 
 ConVar	g_debug_antlionguard( "g_debug_antlionguard", "0" );
-ConVar	sk_antlionguard_dmg_charge( "sk_antlionguard_dmg_charge", "0" );
-ConVar	sk_antlionguard_dmg_shove( "sk_antlionguard_dmg_shove", "0" );
+ConVar	sk_antlionguard_dmg_charge( "sk_antlionguard_dmg_charge", "20" );
+ConVar	sk_antlionguard_dmg_shove( "sk_antlionguard_dmg_shove", "10" );
 
 #if HL2_EPISODIC
 // When enabled, add code to have the antlion bleed profusely as it is badly injured.
@@ -91,7 +91,7 @@ ConVar	g_antlionguard_hemorrhage( "g_antlionguard_hemorrhage", "1", FCVAR_NONE, 
 #define	ANTLIONGUARD_CHARGE_MIN			256
 #define	ANTLIONGUARD_CHARGE_MAX			2048
 
-ConVar	sk_antlionguard_health( "sk_antlionguard_health", "0" );
+ConVar	sk_antlionguard_health( "sk_antlionguard_health", "500" );
 
 int	g_interactionAntlionGuardFoundPhysicsObject = 0;	// We're moving to a physics object to shove it, don't all choose the same object
 int	g_interactionAntlionGuardShovedPhysicsObject = 0;	// We've punted an object, it is now clear to be chosen by others
@@ -989,7 +989,7 @@ int CNPC_AntlionGuard::SelectUnreachableSchedule( void )
 		return SCHED_ANTLIONGUARD_CHASE_ENEMY_TOLERANCE;
 
 	// Fire that we're unable to reach our target!
-	if ( GetEnemy() && GetEnemy()->IsPlayer() )
+	if ( GetEnemy() && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
 	{
 		m_OnLostPlayer.FireOutput( this, this );
 	}
@@ -1457,8 +1457,10 @@ void CNPC_AntlionGuard::Shove( void )
 
 		// Generate enough force to make a 75kg guy move away at 600 in/sec
 		Vector vecForce = traceDir * ImpulseScale( 75, 600 );
+#ifndef TF_CLASSIC
 		CTakeDamageInfo info( this, this, vecForce, tr.endpos, damage, DMG_CLUB );
 		pHurt->TakeDamage( info );
+#endif
 
 		m_hShoveTarget = NULL;
 
@@ -2561,7 +2563,11 @@ void ApplyChargeDamage( CBaseEntity *pAntlionGuard, CBaseEntity *pTarget, float 
 	Vector vecForce = attackDir * ImpulseScale( 75, 700 );
 
 	// Deal the damage
+#ifdef TF_CLASSIC
+	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, DMG_CLUB | DMG_CRITICAL );
+#else
 	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, DMG_CLUB );
+#endif
 	pTarget->TakeDamage( info );
 
 #if HL2_EPISODIC

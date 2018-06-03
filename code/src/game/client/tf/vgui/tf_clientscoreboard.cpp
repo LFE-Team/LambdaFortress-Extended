@@ -110,14 +110,11 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 		m_iImageDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dead", true ) );
 		m_iImageDominated = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dominated", true ) );
 		m_iImageNemesis = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis", true ) );
-
-		// We're skipping the mercenary, as he shouldn't have a visible class emblem during regular gameplay
-		for (int i = TF_CLASS_SCOUT; i < TF_CLASS_MERCENARY; i++)
+		for (int i = 0; i < TF_CLASS_COUNT_ALL; i++)
 		{
 			m_iClassEmblem[i] = m_pImageList->AddImage(scheme()->GetImage(g_aPlayerClassEmblems[i - 1], true));
 			m_iClassEmblemDead[i] = m_pImageList->AddImage(scheme()->GetImage(g_aPlayerClassEmblemsDead[i - 1], true));
 		}
-
 		// resize the images to our resolution
 		for (int i = 1; i < m_pImageList->GetImageCount(); i++ )
 		{
@@ -146,6 +143,16 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 		m_pSpectatorsInQueue->SetVisible( false );
 
 	Reset();
+
+	if ( TFGameRules() && ( TFGameRules()->IsCoOp() && !TFGameRules()->IsVersus() ) )
+	{
+		LoadControlSettings( "Resource/UI/scoreboard_coop.res" );
+		m_pPlayerListBlue->SetVisible( false );
+	}
+	else if ( TFGameRules() && ( !TFGameRules()->IsCoOp() && TFGameRules()->IsVersus() ) )
+	{
+		LoadControlSettings( "Resource/UI/scoreboard_vs.res" );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -179,10 +186,6 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 		{
 			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSCOREBOARD, true );
 		}
-		else if ( TFGameRules() && TFGameRules()->IsDeathmatch())
-		{
-			gViewPortInterface->ShowPanel( PANEL_DEATHMATCHSCOREBOARD, true );
-		}
 		else
 		{
 			SetVisible(true);
@@ -203,10 +206,6 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 		if (TFGameRules() && TFGameRules()->IsFourTeamGame())
 		{
 			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSCOREBOARD, false );
-		}
-		else if (TFGameRules() && TFGameRules()->IsDeathmatch())
-		{
-			gViewPortInterface->ShowPanel( PANEL_DEATHMATCHSCOREBOARD, false );
 		}
 		else
 		{
@@ -514,7 +513,7 @@ void CTFClientScoreBoardDialog::UpdatePlayerList( void )
 						iClass = tf_PR->GetPlayerClass( playerIndex );
 					}
 
-					if( iClass >= TF_FIRST_NORMAL_CLASS && iClass < TF_CLASS_MERCENARY )
+					if( iClass >= TF_FIRST_NORMAL_CLASS )
 					{
 						//pKeyValues->SetString( "class", g_aPlayerClassNames[iClass] );
 						pKeyValues->SetInt( "class", tf_PR->IsAlive( playerIndex) ? m_iClassEmblem[iClass] : m_iClassEmblemDead[iClass] );

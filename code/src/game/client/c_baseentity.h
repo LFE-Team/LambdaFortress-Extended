@@ -2157,6 +2157,7 @@ inline bool	C_BaseEntity::IsInterpolationEnabled()
 	return s_bInterpolate;
 }
 
+
 //-----------------------------------------------------------------------------
 // Should we be interpolating during this frame? (was EF_NOINTERP)
 //-----------------------------------------------------------------------------

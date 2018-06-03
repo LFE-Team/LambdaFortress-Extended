@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_claidheamohmor/c_claidheamohmor"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

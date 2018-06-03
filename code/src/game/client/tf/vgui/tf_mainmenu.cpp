@@ -9,6 +9,7 @@
 #include "panels/tf_notificationpanel.h"
 #include "panels/tf_shadebackgroundpanel.h"
 #include "panels/tf_optionsdialog.h"
+#include "panels/lf_createmultiplayergame.h"
 #include "panels/tf_quitdialogpanel.h"
 #include "panels/tf_statsummarydialog.h"
 #include "panels/tf_tooltippanel.h"
@@ -41,7 +42,7 @@ void OverrideMainMenu()
 	}
 }
 
-CON_COMMAND(tf2c_mainmenu_reload, "Reload Main Menu")
+CON_COMMAND(lf_mainmenu_reload, "Reload Main Menu")
 {
 	MAINMENU_ROOT->InvalidatePanelsLayout(true, true);
 }
@@ -86,6 +87,7 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	AddMenuPanel(new CTFShadeBackgroundPanel(this, "CTFShadeBackgroundPanel"), SHADEBACKGROUND_MENU);
 	AddMenuPanel(new CTFQuitDialogPanel(this, "CTFQuitDialogPanel"), QUIT_MENU);
 	AddMenuPanel(new CTFOptionsDialog(this, "CTFOptionsDialog"), OPTIONSDIALOG_MENU);
+	AddMenuPanel(new CTFCreateMultiplayerGame(this, "CTFCreateMultiplayerGame"), CREATESERVER_MENU);
 	AddMenuPanel(new CTFStatsSummaryDialog(this, "CTFStatsSummaryDialog"), STATSUMMARY_MENU);
 	AddMenuPanel(new CTFToolTipPanel(this, "CTFToolTipPanel"), TOOLTIP_MENU);
 	AddMenuPanel(new CTFItemToolTipPanel(this, "CTFItemToolTipPanel"), ITEMTOOLTIP_MENU);
@@ -98,6 +100,7 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	HidePanel(NOTIFICATION_MENU);
 	HidePanel(QUIT_MENU);
 	HidePanel(OPTIONSDIALOG_MENU);
+	HidePanel(CREATESERVER_MENU);
 	HidePanel(STATSUMMARY_MENU);
 	HidePanel(TOOLTIP_MENU);
 	HidePanel(ITEMTOOLTIP_MENU);

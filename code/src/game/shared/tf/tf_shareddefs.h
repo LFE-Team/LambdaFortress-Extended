@@ -33,6 +33,9 @@ enum
 
 #define TF_TEAM_AUTOASSIGN (TF_TEAM_COUNT + 1 )
 
+#define TF_STORY_TEAM TF_TEAM_RED
+#define TF_COMBINE_TEAM TF_TEAM_BLUE
+
 extern const char *g_aTeamNames[TF_TEAM_COUNT];
 extern const char *g_aTeamNamesShort[TF_TEAM_COUNT];
 extern const char *g_aTeamParticleNames[TF_TEAM_COUNT];
@@ -86,7 +89,7 @@ enum
 #define PANEL_FOURTEAMSCOREBOARD "fourteamscoreboard"
 #define PANEL_FOURTEAMSELECT	"fourteamselect"
 #define PANEL_DEATHMATCHSCOREBOARD "deathmatchscoreboard"
-#define PANEL_DEATHMATCHTEAMSELECT "deathmatchteamselect"
+#define PANEL_ARENATEAMSELECT "arenateamselect"
 
 // file we'll save our list of viewed intro movies in
 #define MOVIES_FILE				"viewed.res"
@@ -114,7 +117,7 @@ enum
 #define TF_CLASS_COUNT			( TF_CLASS_COUNT_ALL - 1 )
 
 #define TF_FIRST_NORMAL_CLASS	( TF_CLASS_UNDEFINED + 1 )
-#define TF_LAST_NORMAL_CLASS	( TF_CLASS_CIVILIAN - 1 )
+#define TF_LAST_NORMAL_CLASS	( TF_CLASS_ENGINEER - 1 )
 
 #define	TF_CLASS_MENU_BUTTONS	( TF_CLASS_RANDOM + 1 )
 
@@ -134,8 +137,6 @@ enum
 
 	// Add any new classes after Engineer.
 	// The following classes are not available in normal play.
-	TF_CLASS_CIVILIAN,
-	TF_CLASS_MERCENARY,
 	TF_CLASS_COUNT_ALL,
 
 	TF_CLASS_RANDOM
@@ -173,8 +174,8 @@ enum
 	TF_GAMETYPE_RD,
 	TF_GAMETYPE_PASSTIME,
 	TF_GAMETYPE_PD,
-	TF_GAMETYPE_DM,
-	TF_GAMETYPE_VIP,
+	TF_GAMETYPE_COOP,
+	TF_GAMETYPE_VS,
 };
 extern const char *g_aGameTypeNames[];	// localized gametype names
 
@@ -276,7 +277,7 @@ extern const char *g_aAmmoNames[];
 //-----------------------------------------------------------------------------
 // Weapons.
 //-----------------------------------------------------------------------------
-#define TF_PLAYER_WEAPON_COUNT		5
+#define TF_PLAYER_WEAPON_COUNT		7
 #define TF_PLAYER_GRENADE_COUNT		2
 #define TF_PLAYER_BUILDABLE_COUNT	4
 
@@ -371,6 +372,9 @@ enum
 	TF_WEAPON_DISPLACER,
 	TF_WEAPON_DISPLACER_BOMB,
 
+	TF_WEAPON_PHYSCANNON,
+	TF_WEAPON_PHYSGUN,
+
 	TF_WEAPON_COUNT
 };
 
@@ -454,6 +458,8 @@ extern const char *g_szProjectileNames[];
 #define SHOW_DISGUISE_EFFECT 1
 #define TF_DISGUISE_TARGET_INDEX_NONE	( MAX_PLAYERS + 1 )
 #define TF_PLAYER_INDEX_NONE			( MAX_PLAYERS + 1 )
+
+#define PERMANENT_CONDITION		-1
 
 // Most of these conds aren't actually implemented but putting them here for compatibility.
 enum

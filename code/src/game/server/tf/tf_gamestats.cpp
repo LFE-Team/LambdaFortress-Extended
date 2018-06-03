@@ -33,8 +33,6 @@ const char *g_aClassNames[] =
 	"TF_CLASS_PYRO",
 	"TF_CLASS_SPY",
 	"TF_CLASS_ENGINEER",
-	"TF_CLASS_CIVILIAN",
-	"TF_CLASS_MERCENARY"
 };
 
 //-----------------------------------------------------------------------------
@@ -468,6 +466,14 @@ void CTFGameStats::Event_PlayerCreatedBuilding( CTFPlayer *pPlayer, CBaseObject 
 		return;
 
 	IncrementStat( pPlayer, TFSTAT_BUILDINGSBUILT, 1 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGameStats::Event_PlayerKilledNPC( CTFPlayer *pPlayer, CAI_BaseNPC *pNPC )
+{
+	IncrementStat( pPlayer, TFSTAT_KILLS, 1 );
 }
 
 //-----------------------------------------------------------------------------

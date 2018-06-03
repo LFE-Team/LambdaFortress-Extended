@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/workshop/weapons/c_models/c_sydney_sleeper/c_sydney_sleeper"
+	"$translucent" 1
+	"$vertexcolor" 1
+}

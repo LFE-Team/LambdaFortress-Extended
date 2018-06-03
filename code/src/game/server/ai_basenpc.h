@@ -37,6 +37,10 @@
 #include "ai_navigator.h"
 #include "tier1/functors.h"
 
+#ifdef TF_CLASSIC
+#include "ai_basenpc_shared.h"
+#include "tf_player.h"
+#endif
 
 #define PLAYER_SQUADNAME "player_squad"
 
@@ -510,6 +514,8 @@ public:
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
+	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;	
+	virtual bool		IsDeflectable() { return true; }
 
 	//---------------------------------
 	
@@ -905,7 +911,6 @@ public:
 	NPC_STATE			m_NPCState;				// npc's current state
 	float				m_flLastStateChangeTime;
 
-private:
 	NPC_STATE			m_IdealNPCState;		// npc should change to this state
 	AI_Efficiency_t		m_Efficiency;
 	AI_MoveEfficiency_t m_MoveEfficiency;
@@ -1057,7 +1062,11 @@ public:
 	void				SelectDeathPose( const CTakeDamageInfo &info );
 	virtual bool		ShouldPickADeathPose( void ) { return true; }
 
+#ifdef TF_CLASSIC
+	virtual bool		AllowedToIgnite( void ) { return ( m_nTFFlags & TFFL_FIREPROOF ) == 0; }
+#else
 	virtual	bool		AllowedToIgnite( void ) { return false; }
+#endif
 
 protected:
 	virtual float 		GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t type, const Vector &curGoal, const Vector &curTargetPos );
@@ -1738,7 +1747,6 @@ public:
 	bool				BBoxFlat( void );
 
 	//---------------------------------
-
 	virtual void		Ignite( float flFlameLifetime, bool bNPCOnly = true, float flSize = 0.0f, bool bCalledByLevelDesigner = false );
 	virtual bool		PassesDamageFilter( const CTakeDamageInfo &info );
 
@@ -1765,7 +1773,7 @@ public:
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
 
 	virtual Vector		GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy = true );
-#ifdef HL2_DLL
+#if defined (HL2_DLL) || defined (TF_CLASSIC)
 	virtual Vector		GetActualShootPosition( const Vector &shootOrigin );
 	virtual Vector		GetActualShootTrajectory( const Vector &shootOrigin );
 	virtual	Vector		GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
@@ -1787,9 +1795,13 @@ public:
 	//---------------------------------
 	//  Damage
 	//---------------------------------
+	virtual int			OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dying( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dead( const CTakeDamageInfo &info );
+#ifdef TF_CLASSIC
+	void				ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir );
+#endif
 
 	virtual void		NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity );
 	virtual void		OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttacker );
@@ -2122,6 +2134,109 @@ public:
 	void				GetPlayerAvoidBounds( Vector *pMins, Vector *pMaxs );
 
 	void				StartPingEffect( void ) { m_flTimePingEffect = gpGlobals->curtime + 2.0f; DispatchUpdateTransmitState(); }
+
+	CNetworkString( m_szClassname, 128 );
+
+#ifdef TF_CLASSIC
+public:
+	// Team support for TF2C!
+	virtual void		ChangeTeam( int iTeamNum );
+
+public:
+	void	DeathNotice( const CTakeDamageInfo &info );
+
+	// TF2 conditions
+	int		GetCond() const						{ return m_nPlayerCond; }
+	void	SetCond( int nCond )				{ m_nPlayerCond = nCond; }
+	void	AddCond( int nCond, float flDuration = PERMANENT_CONDITION );
+	void	RemoveCond( int nCond );
+	bool	InCond( int nCond );
+	void	RemoveAllCond( void );
+	void	OnConditionAdded( int nCond );
+	void	OnConditionRemoved( int nCond );
+	//void	ConditionThink( void );
+	float	GetConditionDuration( int nCond );
+
+	bool	IsCritBoosted( void );
+	bool	IsInvulnerable( void );
+	bool	IsStealthed( void );
+
+	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
+
+	// TF2 healer and burning handling
+	void	ConditionGameRulesThink( void );
+	void	Heal( CTFPlayer *pPlayer, float flAmount, bool bDispenserHeal = false );
+	void	StopHealing( CTFPlayer *pPlayer );
+	int		FindHealerIndex( CTFPlayer *pPlayer );
+	EHANDLE	GetFirstHealer();
+	int		GetNumHealers( void ) { return m_nNumHealers; }
+
+	virtual int	TakeHealth( float flHealth, int bitsDamageType );
+	int		GetMaxBuffedHealth( void );
+
+	virtual bool	IsOnFire( void ) { return InCond( TF_COND_BURNING ); }
+	virtual void	Extinguish( void ) { RemoveCond( TF_COND_BURNING ); }
+	void	SetBurnAttacker( CBaseEntity *pAttacker ) { m_hBurnAttacker = pAttacker; }
+	void	OnAddBurning( void );
+	void	OnRemoveBurning( void );
+
+	void	OnAddInvulnerable( void );
+	void	OnRemoveInvulnerable( void );
+	void	OnAddSlowed( void );
+	void	OnRemoveSlowed( void );
+	void OnAddCritboosted( void );
+	void OnRemoveCritboosted( void );
+
+	// Damager history, used for TF2 assists.
+	void				AddDamagerToHistory( EHANDLE hDamager );
+	void				ClearDamagerHistory();
+	DamagerHistory_t	&GetDamagerHistory( int i ) { return m_DamagerHistory[i]; }
+
+	bool	AllowBackstab( void ) { return ( m_nTFFlags & TFFL_NOBACKSTAB ) == 0; }
+	bool	IsMech( void ) { return ( m_nTFFlags & TFFL_MECH ) != 0; }
+	bool	CanBeHealed( void ) { return ( m_nTFFlags & TFFL_NOHEALING ) == 0; }
+
+	// Invulnerable.
+	void	TestAndExpireChargeEffect( medigun_charge_types chargeType );
+	void	RecalculateChargeEffects( bool bInstantRemove = false );
+	medigun_charge_types	GetChargeEffectBeingProvided( CTFPlayer *pPlayer );
+	void	SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider );
+
+	CTFTeam *GetTFTeam( void );
+protected:
+	// Burn handling
+	EHANDLE					m_hBurnAttacker;
+	CHandle<CTFWeaponBase>	m_hBurnWeapon;
+	//CNetworkVar( int,		m_nNumFlames );
+	float					m_flFlameBurnTime;
+	float					m_flFlameRemoveTime;
+	CNetworkVar( bool, m_bBurningDeath );
+
+	// Some networked flags used by TF2C like backstab immunity.
+	CNetworkVar( int, m_nTFFlags );
+
+private:
+	CNetworkVar( int, m_nPlayerCond );
+	float m_flCondExpireTimeLeft[TF_COND_LAST];		// Time until each condition expires
+
+	struct healers_t
+	{
+		EHANDLE	pPlayer;
+		float	flAmount;
+		bool	bDispenserHeal;
+		float	iRecentAmount;
+		float	flNextNofityTime;
+	};
+	CUtlVector< healers_t >	m_aHealers;	
+	float					m_flHealFraction;	// Store fractional health amounts
+
+	float		m_flChargeOffTime[TF_CHARGE_COUNT];
+	bool		m_bChargeSounds[TF_CHARGE_COUNT];
+
+	CNetworkVar( int, m_nNumHealers );
+
+	DamagerHistory_t m_DamagerHistory[MAX_DAMAGER_HISTORY];	// history of who has damaged this NPC
+#endif
 };
 
 

@@ -91,6 +91,40 @@ void CNPC_Eli::Spawn()
 
 	Precache();
 	SetModel( szModel );
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	if( !Q_strnicmp( szMapName, "d1", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/eli.mdl");		
+		SetModel("models/hl2/eli.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "d2", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/eli.mdl");		
+		SetModel("models/hl2/eli.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "d3", 2 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/hl2/eli.mdl");
+		SetModel("models/hl2/eli.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "ep1", 3 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/ep1/eli.mdl");
+		SetModel("models/ep1/eli.mdl");
+	}
+	else if( !Q_strnicmp( szMapName, "ep2", 3 ) )
+	{
+		// Streetwar scanners are claw scanners
+		PrecacheModel("models/ep2/eli.mdl");
+		SetModel("models/ep2/eli.mdl");
+	}
 
 	BaseClass::Spawn();
 
@@ -127,6 +161,9 @@ void CNPC_Eli::Spawn()
 void CNPC_Eli::Precache()
 {
 	PrecacheModel( STRING( GetModelName() ) );
+	PrecacheModel("models/hl2/eli.mdl");
+	PrecacheModel("models/ep1/eli.mdl");
+	PrecacheModel("models/ep2/eli.mdl");
 	BaseClass::Precache();
 }	
 

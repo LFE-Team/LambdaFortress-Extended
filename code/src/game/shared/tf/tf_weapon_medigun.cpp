@@ -1,4 +1,4 @@
-﻿//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+﻿//======== Copyright © 1996-2005, Valve Corporation, All rights reserved. ========//
 //
 // Purpose:			The Medic's Medikit weapon
 //					
@@ -11,6 +11,7 @@
 #include "in_buttons.h"
 #include "engine/IEngineSound.h"
 #include "tf_gamerules.h"
+#include "ai_basenpc_shared.h"
 
 #if defined( CLIENT_DLL )
 #include <vgui_controls/Panel.h>
@@ -414,19 +415,29 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 		return false;
 
 	CTFPlayer *pTFPlayer = ToTFPlayer( pTarget );
-	if ( !pTFPlayer )
-		return false;
-
-	bool bStealthed = pTFPlayer->m_Shared.IsStealthed();
-	bool bDisguised = pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED );
-
-	// We can heal teammates and enemies that are disguised as teammates
-	if ( !bStealthed &&
-		( pTFPlayer->InSameTeam( pOwner ) ||
-		( bDisguised && pTFPlayer->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) ) )
+	if ( pTFPlayer )
 	{
-		return true;
+		bool bStealthed = pTFPlayer->m_Shared.IsStealthed();
+		bool bDisguised = pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED );
+ 
+		// We can heal teammates and enemies that are disguised as teammates
+		if ( !bStealthed &&
+			( pTFPlayer->InSameTeam( pOwner ) ||
+			( bDisguised && pTFPlayer->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) ) )
+		{
+			return true;
+		}
 	}
+
+	else if ( pTarget->IsNPC() )	// See if this is NPC.
+ 	{
+		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pTarget );
+		// We can heal teammates only
+		if ( pNPC->InSameTeam( pOwner ) )
+		{
+			return true;
+		}
+ 	}
 
 	return false;
 }
@@ -440,7 +451,7 @@ bool CWeaponMedigun::CouldHealTarget( CBaseEntity *pTarget )
 	if ( !pOwner )
 		return false;
 
-	if ( pTarget->IsPlayer() && pTarget->IsAlive() && !HealingTarget(pTarget) )
+	if ( (pTarget->IsPlayer() || pTarget->IsNPC()) && pTarget->IsAlive() && !HealingTarget(pTarget) )
 		return AllowedToHealTarget( pTarget );
 
 	return false;
@@ -607,9 +618,9 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 	if ( pNewTarget && pNewTarget->IsAlive() )
 	{
 		CTFPlayer *pTFPlayer = ToTFPlayer( pNewTarget );
+		CAI_BaseNPC *pNPC = pNewTarget->MyNPCPointer();
 
 #ifdef GAME_DLL
-		// HACK: For now, just deal with players
 		if ( pTFPlayer )
 		{
 			if ( pTarget != pNewTarget && pNewTarget->IsPlayer() )
@@ -618,6 +629,15 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 			}
 
 			pTFPlayer->m_Shared.RecalculateChargeEffects( false );
+		}
+		else if ( pNPC )
+		{
+			if ( pTarget != pNewTarget && pNewTarget->IsNPC() )
+			{
+				pNPC->Heal( pOwner, GetHealRate() );
+			}
+
+			pNPC->RecalculateChargeEffects( false );
 		}
 
 		if ( m_flReleaseStartedAt && m_flReleaseStartedAt < (gpGlobals->curtime + 0.2) )
@@ -675,6 +695,36 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 					m_flChargeLevel = flNewLevel;
 				}
 			}
+			else if ( pNPC )
+			{
+				int iBoostMax = floor( pNPC->GetMaxBuffedHealth() * 0.95);
+
+				if ( weapon_medigun_charge_rate.GetFloat() )
+				{
+					float flChargeAmount = gpGlobals->frametime / weapon_medigun_charge_rate.GetFloat();
+
+					// Reduced charge for healing fully healed guys
+					if ( pNewTarget->GetHealth() >= iBoostMax && ( TFGameRules() && !TFGameRules()->InSetup() ) )
+					{
+						flChargeAmount *= 0.5;
+					}
+
+					int iTotalHealers = pNPC->GetNumHealers();
+					if ( iTotalHealers > 1 )
+					{
+						flChargeAmount /= (float)iTotalHealers;
+					}
+
+					float flNewLevel = min( m_flChargeLevel + flChargeAmount, 1.0 );
+#ifdef GAME_DLL
+					if ( flNewLevel >= 1.0 && m_flChargeLevel < 1.0 )
+					{
+						pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_CHARGEREADY );
+					}
+#endif
+					m_flChargeLevel = flNewLevel;
+				}
+			}
 		}
 	}
 
@@ -712,6 +762,32 @@ void CWeaponMedigun::AddCharge( float flAmount )
 #endif
 
 	m_flChargeLevel = flNewLevel;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponMedigun::SetCharge( float flAmount )
+{
+#ifdef GAME_DLL
+	CTFPlayer *pPlayer = GetTFPlayerOwner();
+	CTFPlayer *pHealingTarget = ToTFPlayer( m_hHealingTarget );
+
+	if ( !m_bChargeRelease && m_flChargeLevel >= 1.0 && m_flChargeLevel < 1.0 )
+	{
+		if ( pPlayer )
+		{
+			pPlayer->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_CHARGEREADY );
+		}
+
+		if ( pHealingTarget )
+		{
+			pHealingTarget->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_CHARGEREADY );
+		}
+	}
+#endif
+
+	m_flChargeLevel = flAmount;
 }
 
 //-----------------------------------------------------------------------------
@@ -862,7 +938,6 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 #ifdef GAME_DLL
 	if ( m_hHealingTarget )
 	{
-		// HACK: For now, just deal with players
 		if ( m_hHealingTarget->IsPlayer() )
 		{
 			CTFPlayer *pTFPlayer = ToTFPlayer( m_hHealingTarget );
@@ -874,6 +949,15 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 				pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pTFPlayer->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
 				pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_STOPPEDHEALING );
 			}
+		}
+		else if ( m_hHealingTarget->IsNPC() )
+		{
+			CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
+			CAI_BaseNPC *pNPC = m_hHealingTarget->MyNPCPointer();
+			pNPC->StopHealing( pOwner );
+			pNPC->RecalculateChargeEffects( false );
+
+			pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pNPC->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
 		}
 	}
 
@@ -998,11 +1082,19 @@ void CWeaponMedigun::SecondaryAttack( void )
 
 	pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_CHARGEDEPLOYED );
 
-	if ( m_hHealingTarget && m_hHealingTarget->IsPlayer() )
+	if ( m_hHealingTarget )
 	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( m_hHealingTarget );
-		pTFPlayer->m_Shared.RecalculateChargeEffects();
-		pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_CHARGEDEPLOYED );
+		if ( m_hHealingTarget->IsPlayer() )
+		{
+			CTFPlayer *pTFPlayer = ToTFPlayer( m_hHealingTarget );
+			pTFPlayer->m_Shared.RecalculateChargeEffects();
+			pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_CHARGEDEPLOYED );
+		}
+		else if ( m_hHealingTarget->IsNPC() )
+		{
+			CAI_BaseNPC *pNPC = m_hHealingTarget->MyNPCPointer();
+			pNPC->RecalculateChargeEffects();
+		}
 	}
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_chargedeployed" );

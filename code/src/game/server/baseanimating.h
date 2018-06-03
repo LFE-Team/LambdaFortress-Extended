@@ -76,6 +76,8 @@ public:
 	// the transmission of animtime.
 	bool	IsUsingClientSideAnimation()	{ return m_bClientSideAnimation; }
 
+	//SecobMod__Information: Set to match DutchMegas' Collaborate mod code.
+	void SetClientSideAnimation( bool bNewValue ) { m_bClientSideAnimation = bNewValue; };
 
 	// Basic NPC Animation functions
 	virtual float	GetIdealSpeed( ) const;
@@ -291,7 +293,7 @@ public:
 	virtual void IgniteNumHitboxFires( int iNumHitBoxFires );
 	virtual void IgniteHitboxFireScale( float flHitboxFireScale );
 	virtual void Extinguish() { RemoveFlag( FL_ONFIRE ); }
-	bool IsOnFire() { return ( (GetFlags() & FL_ONFIRE) != 0 ); }
+	virtual bool IsOnFire() { return ( (GetFlags() & FL_ONFIRE) != 0 ); }
 	void Scorch( int rate, int floor );
 	void InputIgnite( inputdata_t &inputdata );
 	void InputIgniteLifetime( inputdata_t &inputdata );

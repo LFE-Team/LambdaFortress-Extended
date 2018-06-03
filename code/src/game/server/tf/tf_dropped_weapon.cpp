@@ -102,12 +102,12 @@ bool CTFDroppedWeapon::MyTouch( CBasePlayer *pPlayer )
 
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 
-	if ( ValidTouch( pTFPlayer ) && pTFPlayer->IsPlayerClass( TF_CLASS_MERCENARY ) )
+	if ( ValidTouch( pTFPlayer ) )
 	{
 		// Don't remove weapon while a player is standing over it.
 		SetThink( NULL );
 
-		int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( TF_CLASS_MERCENARY );
+		int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( TF_CLASS_COUNT );
 		CTFWeaponBase *pWeapon = (CTFWeaponBase *)pTFPlayer->GetEntityForLoadoutSlot( iSlot );
 
 		if ( pWeapon )

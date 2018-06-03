@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "backpack/weapons/c_models/c_carnival_mallet/c_carnival_mallet"
+	$translucent 1
+	$vertexcolor 1
+}
