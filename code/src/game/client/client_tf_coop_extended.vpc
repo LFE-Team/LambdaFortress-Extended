@@ -15,7 +15,7 @@ $Configuration
 	$Compiler
 	{
 		$AdditionalIncludeDirectories		"$BASE;tf\vgui,.\tf,$SRCDIR\game\shared\tf,$SRCDIR\game\shared\Multiplayer,$SRCDIR\game\shared\econ,.\hl1,$SRCDIR\game\shared\hl1,.\hl2,$SRCDIR\game\shared\hl2,.\episodic,$SRCDIR\game\shared\episodic"
-		$PreprocessorDefinitions			"$BASE;TF_CLASSIC_CLIENT;HL2_EPISODIC;GLOWS_ENABLE"
+		$PreprocessorDefinitions			"$BASE;TF_CLASSIC_CLIENT;HL2_EPISODIC;HL1_CLIENT_DLL;GLOWS_ENABLE"
 	}
 }
 
@@ -71,12 +71,28 @@ $Project "Client (TF)"
 		{
 			$File	"$SRCDIR\game\shared\hl1\hl1_basecombatweapon_shared.cpp"
 			$File	"$SRCDIR\game\shared\hl1\hl1_basecombatweapon_shared.h"
+			$File	"hl1\hl1_c_rpg_rocket.cpp"
+			$File	"hl1\hl1_c_weapon__stubs.cpp"
+			$File	"hl1\hl1_fx_gauss.cpp"			
 			$File	"hl1\hl1_fx_gibs.cpp"
 			$File	"hl1\hl1_fx_shelleject.cpp"
 			$File	"$SRCDIR\game\shared\hl1\hl1_shareddefs.h"
 			$File	"$SRCDIR\game\shared\hl1\hl1mp_basecombatweapon_shared.cpp"
-			$File	"$SRCDIR\game\shared\hl1\hl1mp_basecombatweapon_shared.h"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_basecombatweapon_shared.h"		
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_357.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_crossbow.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_egon.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_gauss.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_glock.cpp"
 			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_handgrenade.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_hornetgun.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_mp5.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_mp5.h"			
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_rpg.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_rpg.h"			
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_satchel.cpp"
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_satchel.h"			
+			$File	"$SRCDIR\game\shared\hl1\hl1mp_weapon_shotgun.cpp"
 		}
 		
 		$Folder "HL2 DLL"

@@ -4973,8 +4973,8 @@ void C_TFPlayer::CalcPlayerView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	CalcViewIdle(eyeAngles);
 }
 
-ConVar cl_hl1_rollspeed("cl_hl1_rollspeed", "300.0", FCVAR_USERINFO | FCVAR_ARCHIVE );
-ConVar cl_hl1_rollangle("cl_hl1_rollangle", "0.65", FCVAR_USERINFO | FCVAR_ARCHIVE );
+ConVar cl_hl1_rollspeed("cl_hl1_rollspeed", "0", FCVAR_USERINFO | FCVAR_ARCHIVE );
+ConVar cl_hl1_rollangle("cl_hl1_rollangle", "0", FCVAR_USERINFO | FCVAR_ARCHIVE );
 
 void C_TFPlayer::CalcViewRoll( QAngle& eyeAngles )
 {
