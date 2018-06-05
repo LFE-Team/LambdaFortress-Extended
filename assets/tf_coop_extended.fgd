@@ -1,0 +1,968 @@
+//====== FGD. =======
+//
+// Purpose: Lambda Fortress game definition file (.fgd) 
+//
+//=============================================================================
+
+@include "base.fgd"
+@include "halflife2.fgd"
+
+
+//-------------------------------------------------------------------------
+//
+// Base Extra
+//
+//-------------------------------------------------------------------------
+
+@PointClass color(0 0 255) size(-1 -1 -64, 1 1 -8) sidelist(sides) iconsprite("editor/env_cubemap.vmt") = env_cubemap : 
+	"An entity that creates a sample point for the Cubic Environment Map."
+[
+	cubemapsize(choices) : "Cubemap Size" : 0 =
+	[
+		0 : "Default"
+		1 : "1x1"
+		2 : "2x2"
+		3 : "4x4"
+		4 : "8x8"
+		5 : "16x16"
+		6 : "32x32"
+		7 : "64x64"
+		8 : "128x128"
+		9 : "256x256"
+	]
+	sides(sidelist) : "Brush faces": : "(Optional) Brushes faces to directly attach to the env_cubemap. Press Pick then click on faces in the 3D View to select them. Use CTRL while clicking to add or remove from the selection."
+]
+
+//-------------------------------------------------------------------------
+//
+// TF2
+//
+//-------------------------------------------------------------------------
+
+
+@BaseClass = TeamNum
+[
+	TeamNum(choices) : "Team" : 0 : "Team" =
+	[
+		0 : "Any"
+		2 : "RED/Rebel"
+		3 : "BLU/Combine"
+		4 : "GRN/Zombies"
+		5 : "YLW/Antlions"
+	]
+	input SetTeam(integer) : "Changes the entity's team."
+]
+
+@BaseClass = Toggle
+[
+	// Inputs
+	input Toggle(void) : "Toggle the enabled/disabled status of this entity."
+]
+
+@BaseClass = GameType
+[
+	GameType(choices) : "Game Type" : 0 : "Type of game this flag will be used for." =
+	[
+		0 : "Capture The Flag"
+		1 : "Attack/Defend"
+		2 : "Territory Control"
+		3 : "Invade"
+	]
+]
+
+@PointClass base(Targetname, Parentname, TeamNum, EnableDisable, Angles) studio("models/editor/playerstart.mdl") = info_player_teamspawn :
+	"This entity marks the spawn point for Team Fortress players."
+[
+	controlpoint(target_destination) : "Associated Control Point" : : "The team_control_point associated with this spawn. Ownership of control points will control this spawn point's enabled state."
+	
+	SpawnMode(choices) : "Spawn Mode" : 0 : "How the game decides when a player can spawn here.  Triggered mode will only allow players sent via a trigger_player_respawn_override (in which case this spawn must be named, and match the trigger)." =
+	[
+		0 : "Normal"
+		1 : "Triggered"
+	] 
+	
+	round_bluespawn(target_destination) : "Blue spawn for round" : : "Blue spawn point when the associated round is being played."
+	round_redspawn(target_destination) : "Red spawn for round" : : "Red spawn point when the associated round is being played."
+]
+
+@PointClass base(Targetname, Parentname, GameType, TeamNum, EnableDisable, Angles) studio("models/flag/briefcase.mdl") = item_teamflag : "Team Fortress flag entity."
+[
+	ReturnTime(integer) : "Return time (in seconds)" : 60 : "Length of time (in seconds) before dropped flag/intelligence returns to base."
+	
+	NeutralType(choices) : "Neutral flag (Invade)" : 1 : "Only used for the Invade game type. When should a dropped Invade flag become neutral?" =
+	[
+		0 : "Never"
+		1 : "Default (30 seconds)"
+		2 : "Half of the Return Time."
+	] 
+	
+	ScoringType(choices) : "Scoring style (Invade)" : 0 : "Only used for the Invade game type. When the Invade flag is captured, how should the team be rewarded? 'Score' is the team score in the scoreboard. 'Capture count' is the team capture count used in the HUD." =
+	[
+		0 : "Increment score"
+		1 : "Increment capture count"
+	] 
+	
+	flag_model(studio) : "Model" : "models/flag/briefcase.mdl" : "The model to be used for this entity."
+	flag_icon(sprite) : "Icon" : "../hud/objectives_flagpanel_carried" : "The icons used for the HUD in some game modes. Format: materials/vgui/[materialname]_red and materials/vgui/[materialname]_blue"
+	flag_paper(string) : "Paper Particle" : "player_intel_papertrail" : "Particle effect used for the falling paper trail."
+	flag_trail(sprite) : "Trail Effect" : "flagtrail" : "Materials used for the trail effect. Format: materials/effects/[materialname]_red and materials/effects/[materialname]_blu"
+
+	trail_effect(choices) : "Use Trail Effect" : 1 : "Use trail effect when the player is carrying the flag." =
+	[
+		0 : "None"
+		1 : "All Effects"
+		2 : "Paper Trail Only"
+		3 : "Color Trail Only"
+	]
+
+	VisibleWhenDisabled(choices) : "Visible When Disabled" : 0 : "Flag appears semitransparent when disabled." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	ShotClockMode(choices) : "Shot Clock Mode" : 0 : "Flag uses shot-clock mode, which means that the timer doesn't reset to the full time when an attacking player touches it." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	tags(string) : "tags" : "" : "Tags used for the AI bomb carrier to avoid nav areas that have matching tags. Tags need to be separated by empty space."
+
+	// Inputs
+		
+	// Outputs
+	output OnReturn(void)  : "Sent when the flag is returned via timer."
+	output OnPickup(void)  : "Sent when the flag is picked up."
+	output OnDrop(void)    : "Sent when the flag is dropped."
+	output OnCapture(void) : "Sent when the flag is captured."
+]
+
+
+@SolidClass base(Targetname, EnableDisable, Parentname) = trigger_capture_area : "Capture Area"
+[
+	area_cap_point(target_source) : "Control point" : "" : "Name of the control point this area is linked to."
+
+	team_cancap_2(choices) : "Can RED Cap?" : 1 =
+	[
+		1 : "Yes"
+		0 : "No"
+	]
+	team_cancap_3(choices) : "Can BLUE Cap?" : 1 =
+	[
+		1 : "Yes"
+		0 : "No"
+	]
+	team_startcap_2(integer) : "Number of RED players to start capping" : 1 
+	team_startcap_3(integer) : "Number of BLUE players to start capping" : 1 
+
+	team_numcap_2(integer) : "Number of RED players to cap" : 1
+	team_numcap_3(integer) : "Number of BLUE players to cap" : 1
+
+	team_spawn_2(integer) : "Red Spawn Adjust" : 0 : "Adjust the minimum respawn time for the red team by this amount (in seconds) when red captures this point. If the red team owns this point when blue captures it, this adjustment is reversed."
+	team_spawn_3(integer) : "Blue Spawn Adjust" : 0 : "Adjust the minimum respawn time for the blue team by this amount (in seconds) when blue captures this point. If the blue team owns this point when red captures it, this adjustment is reversed."
+
+	area_time_to_cap(integer) : "Time to cap (sec)" : 5
+
+	// Outputs
+	output OnStartTeam1(void) : "Sent when RED start capture."
+	output OnBreakTeam1(void) : "Sent when a RED capture is broken."
+	output OnCapTeam1(void)   : "Sent when RED end capture."
+
+	output OnStartTeam2(void) : "Sent when BLUE start capture."
+	output OnBreakTeam2(void) : "Sent when a BLUE capture is broken."
+	output OnCapTeam2(void)   : "Sent when BLUE end capture."
+
+	output OnStartCap(void) : "Sent when either team starts capture."
+	output OnBreakCap(void) : "Sent when either team break capture."
+	output OnEndCap(void)   : "Sent when either team end capture."
+
+	output OnNumCappersChanged(integer) : "Sent when the number of cappers changes, passes the value in int."
+	output OnNumCappersChanged2(integer) : "Sent when the number of cappers changes, passes the value in int (-1 for capture blocked)."
+	
+	// Inputs
+	input SetTeamCanCap(string) : "Set whether a specific team is allowed to capture this point. Format is: <team number> <(0/1)>. i.e. '2 0' would prevent RED from capturing this point, whereas '3 1' would allow BLUE to cap it."
+
+	input SetControlPoint(string) : "Assign area capture to the passed control point."
+	input CaptureCurrentCP(string) : "If we're being capped, forces the current point to capture."	
+]
+
+
+//====================================================================================================================
+// CAPTURE POINT HANDLING
+//====================================================================================================================
+@PointClass base(Targetname, EnableDisable, Angles, Parentname) studio("models/effects/cappoint_hologram.mdl") = team_control_point :
+	"Control Point"
+[
+	spawnflags(flags) =
+	[
+		1: "Hide Control Point on HUD" : 0
+		2: "Start with model hidden" : 0
+		4: "Disable shadow" : 0
+		8: "Disable sounds" : 0
+	]
+	
+	point_start_locked(choices) : "Start locked" : 0 : "Locked means the point will not be available for capture until it is unlocked via its input."  =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	point_printname(string) : "Print Name" : "TODO: Set Name" : "LOCALIZED name to print on the HUD." 
+	point_group(integer) : "Group Index" : 0 : "Used for grouping points together under a team_control_point_master (not using control point rounds)."
+	point_default_owner(choices) : "Default Owner" : 0 : "Default Owner of the control point."  =
+	[
+		0 : "Neither"
+		2 : "Red"
+		3 : "Blue"
+	]
+	point_index(integer) : "Index" : 0 : "Index of this point (must be unique)."
+	
+	point_warn_on_cap(choices) : "Warning Type" : 0 : "Type of warning to issue to the team that owns the control point when the opposing team starts to capture it."  =
+	[
+		0 : "Normal Announcements"
+		1 : "Final Capture Point Warning"
+		2 : "No Announcements"
+	]
+	
+	point_warn_sound(string) : "Warning sound" : "ControlPoint.CaptureWarn" : "Sound to be played when this point is being captured (if warn on capture is set)." 
+	
+	random_owner_on_restart(choices) : "Randomly set the owner on restart" : 0 : "Randomly set the owner of this point during a full restart of the map. The ratio of default owners among the points with this flag will be kept when selecting random owners."  =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	// Per team data
+	team_timedpoints_2(integer) : "Time-based point value for RED." : 0
+	team_timedpoints_3(integer) : "Time-based point value for BLUE." : 0
+	
+	team_capsound_0(sound) : "Reset Sound" : "" : "Sound made when point resets."
+	team_capsound_2(sound) : "Red Capture Sound" : "" : "Sound made when RED captures."
+	team_capsound_3(sound) : "Blue Capture Sound" : "" : "Sound made when BLUE captures."
+	
+	team_model_0(studio) 	: "Reset Model" : "models/effects/cappoint_hologram.mdl" : "Model when point reset."
+	team_model_2(studio) 	: "RED Model" : "models/effects/cappoint_hologram.mdl" : "Model when RED owns the point."
+	team_model_3(studio) 	: "BLUE Model" : "models/effects/cappoint_hologram.mdl" : "Model when BLUE owns the point."
+	
+	team_bodygroup_0(integer) : "Reset model bodygroup" : 3
+	team_bodygroup_2(integer) : "RED model bodygroup" : 1
+	team_bodygroup_3(integer) : "BLUE model bodygroup" : 1
+
+	team_icon_0(material)	: "HUD icon neutral" : "sprites/obj_icons/icon_obj_neutral" : "HUD icon material when no one owns the point."
+	team_icon_2(material)	: "HUD icon RED" : "sprites/obj_icons/icon_obj_red" : "HUD icon material when RED owns the point."
+	team_icon_3(material)	: "HUD icon BLUE" : "sprites/obj_icons/icon_obj_blu" : "HUD icon material when BLUE owns the point."
+
+	team_overlay_0(material) : "HUD overlay neutral" : "" : "HUD material that will overlay the icon when no one owns the point."
+	team_overlay_2(material) : "HUD overlay RED" : "" : "HUD material that will overlay the icon when RED owns the point."
+	team_overlay_3(material) : "HUD overlay BLUE" : "" : "HUD material that will overlay the icon when BLUE owns the point."
+
+	team_previouspoint_2_0(target_source) : "RED Previous Required Point 1" : "" : "The name of a previous capture point that RED must own to be able to capture this point. If empty, the team must own all points preceding this one. Pointing to itself means no previous point required."
+	team_previouspoint_2_1(target_source) : "RED Previous Required Point 2" : "" : "The name of a second previous capture point that RED must own to be able to capture this point."
+	team_previouspoint_2_2(target_source) : "RED Previous Required Point 3" : "" : "The name of a third previous capture point that RED must own to be able to capture this point."
+	team_previouspoint_3_0(target_source) : "BLUE Previous Required Point 1" : "" : "The name of a previous capture point that BLUE must own to be able to capture this point. If empty, the team must own all points preceding this one. Pointing to itself means no previous point required."
+	team_previouspoint_3_1(target_source) : "BLUE Previous Required Point 2" : "" : "The name of a second previous capture point that BLUE must own to be able to capture this point."
+	team_previouspoint_3_2(target_source) : "BLUE Previous Required Point 3" : "" : "The name of a third previous capture point that BLUE must own to be able to capture this point."
+
+	// Outputs
+	output OnOwnerChangedToTeam1(void) : "Sent when owner is changed to RED."
+	output OnOwnerChangedToTeam2(void) : "Sent when owner is changed to BLUE."
+	output OnCapReset(void) : "Sent when owner is changed to neutral."
+
+	output OnRoundStartOwnedByTeam1(void) : "Sent when a round is starting and the point is owned by RED."
+	output OnRoundStartOwnedByTeam2(void) : "Sent when a round is starting and the point is owned by BLUE."
+	
+	output OnCapTeam1(void) : "Sent when RED capture this point."
+	output OnCapTeam2(void) : "Sent when BLUE capture this point."
+	
+	output OnUnlocked(void) : "Sent when point is unlocked via the SetLocked(0) or SetUnlockTime inputs."
+
+	input SetOwner(integer) : "Set the owner of the point."
+	input HideModel(void) : "Hide the control point model."
+	input ShowModel(void) : "Show the control point model again."
+	
+	input SetLocked(integer) : "Lock the control point. 0 = unlocked, 1 = locked"
+	input SetUnlockTime(integer) : "This will automatically unlock the control point in the specified amound of time (seconds)."
+]
+
+@PointClass base(Targetname, EnableDisable) = team_control_point_round :
+	"Control Point Round (you may have as many of these in the map as you would like)."
+[
+	cpr_printname(string) : "Print Name" : "" : "LOCALIZED name to print on the RoundInfo panel" 
+	
+	cpr_priority(integer) : "Priority" : 0 : "The priority value for this round (must be >= 0). Higher priority rounds will be picked first. If multiple rounds have the same priority value, a random selection will be used."
+	
+	cpr_cp_names(string) : "Control points in this round" : "" : "Names of the control points included in this round (space delimited). Control points may belong to more than one control point round.  The names of the control points (and the rounds) should all be unique." 
+
+	cpr_restrict_team_cap_win(choices) : "Restrict team from winning" : 0 : "Prevent this team from winning by capping all the points" =
+	[
+		0 : "Neither"
+		1 : "Both"
+		2 : "Red"
+		3 : "Blue"
+	]
+	
+	output OnStart(void) : "Sent when this round is selected to be played."
+	output OnEnd(void) : "Sent when this round is finished."
+	output OnWonByTeam1(void) : "Sent when RED wins this round."
+	output OnWonByTeam2(void) : "Sent when BLUE wins this round."
+]
+
+@PointClass base(Targetname, EnableDisable) = team_control_point_master : "Control Point Master"
+[
+	team_base_icon_2(material) : "Material for the RED Base icon" : "sprites/obj_icons/icon_base_red"
+	team_base_icon_3(material) : "Material for the BLUE Base icon" : "sprites/obj_icons/icon_base_blu"
+	caplayout(string) : "Cap Layout" : "" : "A string that tells the HUD how to lay out the cap points. It should be a string with indexes of cap points seperated by commas to denote a new line. So <2,0 1> would create a pyramid, with cap point 2 on the top and cap points 0 & 1 on the bottom."
+	custom_position_x(float) : "Custom cap position X" : -1 : "Set the cap layout custom X position [0,1]"
+	custom_position_y(float) : "Custom cap position Y" : -1 : "Set the cap layout custom Y position [0,1]"
+	
+	cpm_restrict_team_cap_win(choices) : "Restrict team from winning" : 0 : "Prevent this team from winning by capping all the points. This field is ignored if you're using control_point_rounds in your map (set this field inside the rounds)." =
+	[
+		0 : "Neither"
+		1 : "Both"
+		2 : "Red"
+		3 : "Blue"
+	]
+	
+	switch_teams(choices) : "Switch teams on map win?" : 0 : "Switch the teams when one team has won the map and the game is going to be reset." = 
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	score_style(choices) : "Scoring style" : 0 : "Sets the style of scoring used for capture point maps." = 
+	[
+		0 : "Add team score for each round won"
+		1 : "Add team score for each captured point"
+	]
+	
+	play_all_rounds(choices) : "Play all rounds before changelevel" : 0 : "Determines whether the server may changelevel when mp_timelimit is up before all mini-rounds have been completed (for maps like Dustbowl)." = 
+	[
+		0 : "Changelevel normally"
+		1 : "Only changelevel after all mini-rounds have been played to completion"
+	]	
+	
+	partial_cap_points_rate(float) : "Partial cap rate" : 0 : "Rate at which to give partial cap points for area captures."
+
+	output OnWonByTeam1(void) : "Sent when RED wins the game."
+	output OnWonByTeam2(void) : "Sent when BLUE wins the game."
+	
+	input SetWinner(integer) : "Set the winner of the round to this team (0 for a stalemate)."
+	input SetCapLayout(string) : "Set the cap layout string."
+	input SetCapLayoutCustomPositionX(float) : "Set the cap layout custom X position [0,1]"
+	input SetCapLayoutCustomPositionY(float) : "Set the cap layout custom Y position [0,1]"
+]
+
+
+@PointClass base(Targetname,EnableDisable) = team_round_timer :
+	"Round Timer. Timer starts paused by default."
+[
+	timer_length(integer) : "Timer length (in seconds)" : 600 : "Initial timer length."
+	max_length(integer) : "Max timer length (in seconds)" : 0 : "Maximum timer length (0 = no max). This value is used to ensure the timer never goes above this value when SetTime and AddTime are used."
+	
+	start_paused(choices) : "Start paused" : 1 : "Should the timer start paused? (will need to send a Resume input to start the timer if this is set)." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	show_time_remaining(choices) : "Show Time Remaining" : 1 : "Should we show how much time is remaining.  If no, this will display how much time has passed." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	setup_length(integer) : "Setup timer length (in seconds)" : 0 : "Length of setup time before the round begins and the timer starts to countdown the normal time. (0 = no setup time)  Setup time is run at the beginning of every round before the normal time begins."
+	
+	reset_time(choices) : "Reset time on round restart" : 0 : "Reset the timer time after a round restart.  This is not the setup time, but the normal round time." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	auto_countdown(choices) : "Use countdown sounds" : 1 : "Let the timer automatically count down the end of a round." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	show_in_hud(choices) : "Show timer in the HUD" : 1 : "Note: You can only show one timer in the HUD at a time." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	// Inputs	
+	input Pause(void) : "Pause the timer."
+	input Resume(void) : "Resume the timer."
+	input SetTime(integer) : "Set the timer to this value (in seconds)."
+	input AddTime(integer) : "Add time to the timer (in seconds). Added time cannot excede the max timer length."
+	input AddTeamTime(string) : "Input takes a string (space delimited) with the team number and the time to be added (in seconds) because of the team (2 for red, 3 for blue, and 0 for no team...but you could just use AddTime for that). Added time cannot excede the max timer length. Example: 2 600 (adds 10 minutes because of team red)" 
+	input Restart(void) : "Restart the timer."
+	input ShowInHUD(integer) : "Show this timer in the HUD (0 no, 1 Yes)."
+	input SetMaxTime(integer) : "Set the max timer length to this value (in seconds). The timer's time will never excede this value."
+	input AutoCountdown(integer) : "Turn off/on the auto countdown feature (0 no, 1 Yes)."
+	input SetSetupTime(integer) : "Set the setup time length to this value (in seconds)."
+		
+	// Outputs
+	output On5MinRemain(void) : "Sent when 5 minutes remain."
+	output On4MinRemain(void) : "Sent when 4 minutes remain."
+	output On3MinRemain(void) : "Sent when 3 minutes remain."
+	output On2MinRemain(void) : "Sent when 2 minutes remain."
+	output On1MinRemain(void) : "Sent when 1 minutes remain."
+	output On30SecRemain(void) : "Sent when 30 seconds remain."
+	output On10SecRemain(void) : "Sent when 10 seconds remain."
+	output On5SecRemain(void) : "Sent when 5 seconds remain."
+	output On4SecRemain(void) : "Sent when 4 seconds remain."
+	output On3SecRemain(void) : "Sent when 3 seconds remain."
+	output On2SecRemain(void) : "Sent when 2 seconds remain."
+	output On1SecRemain(void) : "Sent when 1 second remains."
+	
+	output OnRoundStart(void) : "Sent when the round starts."
+	output OnFinished(void) : "Sent when the timer is finished."
+	
+	output OnSetupStart(void) : "Sent when the setup time begins."
+	output OnSetupFinished(void) : "Sent when the setup time is finished."
+]
+
+@PointClass base(Targetname) = game_round_win :
+	 "Tells the game rules that the round has either been won (if a team is assigned) " +
+	 "or enter Sudden Death mode (if no team is assigned)."
+[	
+	TeamNum(choices) : "Team" : 0 : "Team" =
+	[
+		0 : "None (Sudden Death)"
+		2 : "Red"
+		3 : "Blue"
+	]
+	
+	force_map_reset(choices) : "Force map reset" : 1 : "Force the map to reset during the force respawn after the round is over." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	switch_teams(choices) : "Switch teams on map win?" : 0 : "Switch the teams when the game is going to be reset." = 
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	// Inputs
+	input SetTeam(integer) : "Changes the entity's team (this is used to determine which team has won the round (0 = none)."
+	input RoundWin(void) : "Tell the game rules the round is over."
+	
+	// Outputs
+	output OnRoundWin(void) : "Sent when the entity tells the game rules the round is over."	
+]
+
+@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle) = func_nobuild : "Engineer no-build area."
+[
+	AllowSentry(choices) : "Allow Sentries" : 0 : "Sentries are allowed to be built in this volume" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	AllowDispenser(choices) : "Allow Dispensers" : 0 : "Dispensers are allowed to be built in this volume" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	AllowTeleporters(choices) : "Allow Teleporters" : 0 : "Teleporters are allowed to be built in this volume" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+]
+
+@SolidClass base(Targetname, Parentname, TeamNum, EnableDisable, Toggle) = func_regenerate :
+	"Regeneration zone for players."
+[
+	associatedmodel(target_destination) : "Associated Model" : "" : "The prop_dynamic that represents this zone in the world. The associated model should have appropriate open and close animations for when players interact with the zone."
+]
+
+@SolidClass base(Targetname, EnableDisable, TeamNum) = func_capturezone :
+	"TF flag capture zone (set Team to 'any' for Territory Control maps)."
+[
+	capturepoint(integer) : "Capture Point" : 1 : "Used for Attack/Defend and Territory Control maps ONLY. This is ignored for CTF maps. Set this value to the Capture Point number for this entity."
+
+	output OnCapture(void) : "Sent when a flag is captured in this zone."
+]
+
+@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle) = func_respawnroom :
+	"Designates a respawn room for a team." []
+
+@SolidClass base(Targetname) = func_ladder :
+	"Ladder" []
+	
+@SolidClass base(Targetname, Parentname, Origin, RenderFields, Global, Inputfilter, EnableDisable, Shadow) = func_respawnroomvisualizer : 
+	"Brushes that become visible to enemy players when they get close. Use them to mark areas that they're unable to enter (i.e. respawn rooms)." 
+[
+	spawnflags(flags) =
+	[
+		2: "Ignore player +USE" : 1
+	]
+
+	respawnroomname(target_destination) : "Associated Respawn Room" : "" : "The func_respawnroom that this entity is visualizing. This entity will have its team matched to that for the func_respawnroom, and will have it updated if the func_respawnroom ever changes team."
+
+	Solidity(choices) : "Solidity" : 1 : "Used to control the solidity/collision of these brushes." =
+	[
+		0 : "Toggle"
+		1 : "Never Solid"
+		2 : "Always Solid"
+	]
+
+	vrad_brush_cast_shadows(choices) : "Shadows" : 0 : "Set this if this brush casts lightmap shadows." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	solid_to_enemies(choices) : "Solid to Enemies" : 1 : "Determines if this area is solid to enemy players." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]	
+	
+	input SetSolid(bool) : "Set whether this area is solid to enemy players or not. 0 = No, 1 = Yes"
+]
+
+@SolidClass base(BaseTank) = func_tank : "Brush Gun Turret" 
+[
+	bullet(choices) : "Bullets" : 0 = 
+	[
+		0: "None"
+		1: "Pistol"
+		2: "SMG1"
+		3: "AR2"
+		4: "Laser"
+	]
+	ammotype(choices) : "Ammo type" : "" = 
+	[
+		"" : "None"
+		"Pistol" : "Pistol"
+		"SMG1" : "SMG1"
+		"AR2" : "AR2"
+		"CombineHeavyCannon" : "Combine Heavy Cannon"
+	]
+	spawnflags(flags) =
+	[
+		8192: "Ignore range when making viewcone checks" : 0
+		256 : "Aiming Assistance (Player Only)" : 0
+	]
+]
+
+@PointClass base(Targetname, Parentname, Angles) size(-2 -2 -2, 2 2 2) frustum(lightfov,nearz,farz,lightcolor,-1) = env_projectedtexture : 
+	"Projected texture entity."
+[
+	spawnflags(flags) =
+	[
+		1  : "Enabled"				: 1
+		2  : "Always Update (moving light)"	: 0
+	]
+
+	texturename(material)		: "Texture" : "effects/flashlight001" : "path/texture to be projected. Relative to main/materials/"
+	target(target_destination)	: "target" : : "target"	
+	lightfov(float)				: "FOV" : "90.0" : "FOV"
+	nearz(float)				: "NearZ" : "4.0" : "Near Z for projected texture"
+	farz(float)					: "FarZ" : "750.0" : "Far Z for projected texture"	
+	quadraticatten(float)		: "Quadratic attenuation" : "0.0" : "Quadratic attenuation"
+	linearatten(float)			: "Linear attenuation" : "100" : "Linear attenuation"
+	constantatten(float)		: "Constant attenuation" : "0.0" : "Constant attenuation"
+	shadowtatten(float)		: "Shadow attenuation" : "0.0" : "Shadow attenuation"
+	
+	enableshadows(Choices) : "Enable Shadows" : 0 : "Enables/disables shadows from this projected texture." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	shadowquality(Choices) : "Shadow Quality" : 1 : "Quality of shadows." =
+	[
+		0 : "Low"
+		1 : "High"
+	]
+	lightonlytarget(Choices) : "Light Only Target" : 0 : "Limit flashlight effect to only effect target entity." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	lightworld(Choices) : "Light World" : 1 : "Control whether flashlight effects static world geometry." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	lightcolor(color255)		: "Light Color" : "255 255 255 200" : "Light Color RGB-Intensity"
+	colortransitiontime(float)	: "Color Transition Time" : "0.5" : "Amount of time it takes for a color change to occur."
+	cameraspace(integer)		: "Camera Space" : 0 : "Angles are interpreted as being relative to camera."
+
+	// Inputs
+	input TurnOn(void)		: "Turn on the texture"
+	input TurnOff(void)		: "Turn off the texture"
+	input AlwaysUpdateOn(void)	: "Turn on per frame updating (for moving lights)"
+	input AlwaysUpdateOff(void)	: "Turn off per frame updating (for moving lights)"
+	input SetFOV(float)		: "Set FOV"
+	input SpotlightTexture(string)		: "Set the spotlight texture"
+	input EnableShadows(bool)		: "Set the if shadows are enabled"
+	input SetNearZ(float) 	: "Sets the near Z distance."
+	input SetFarZ(float) 	: "Sets the far Z distance."
+]
+
+@PointClass base(Targetname) = tf_gamerules : "Proxy entity for TF Gamerules"
+[	
+	hud_type(choices) : "Hud Type" : 0 : "Override the HUD type clients should display." =
+	[
+		0 : "Default"
+		1 : "CTF HUD"
+		2 : "CP HUD"
+	]
+	
+	ctf_overtime(choices) : "CTF Overtime" : 1 : "Allow Overtime for CTF maps." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	input SetRedTeamRespawnWaveTime(float) : "Set the RED team's respawn wave time"
+	input SetBlueTeamRespawnWaveTime(float) : "Set the BLU team's respawn wave time"
+	input AddRedTeamRespawnWaveTime(float) : "Add to the RED team's respawn wave time"
+	input AddBlueTeamRespawnWaveTime(float) : "Add to the BLU team's respawn wave time"
+	input SetRedTeamGoalString(string) : "Set the RED team's goal string to show in the hud"
+	input SetBlueTeamGoalString(string) : "Set the BLU team's goal string to show in the hud"
+	input SetRedTeamRole(integer) : "Set RED team role, 0=none, 1=defenders, 2=attackers"
+	input SetBlueTeamRole(integer) : "Set BLU team role, 0=none, 1=defenders, 2=attackers"
+	input SetRequiredObserverTarget(string) : "Sets the given entity (by name) to be the required observer target for all spectators. Must be cleared to allow spectators to cycle through targets normally again."
+	input AddRedTeamScore(integer) : "Add to the RED team score (can be a negative number)"
+	input AddBlueTeamScore(integer) : "Add to the BLU team score (can be a negative number)"
+	input SetStalemateOnTimelimit(bool) : "Determines whether mp_timelimit can end the match in the middle of a round."
+]
+
+//
+// Health
+//
+
+@BaseClass = PlayerTouch
+[
+	// Outputs
+	output OnPlayerTouch(void) : "Sent when the entity is picked up by a player."
+]
+
+@BaseClass = FadeDistance
+[
+	fademindist(float) : "Start Fade Dist" : -1 : "Distance at which the prop starts to fade (<0 = use fademaxdist)."
+	fademaxdist(float) : "End Fade Dist" : 0 : "Maximum distance at which the prop is visible (0 = don't fade out)."
+]
+
+
+@BaseClass color(0 0 200) base(Targetname, TeamNum, EnableDisable, Toggle, Angles, PlayerTouch, FadeDistance) = Item
+[
+	powerup_model(string) : "Model" : "" : "Change the model to something other than the default model." 
+	AutoMaterialize(choices) : "Auto-Materialize" : 1 : "The pickup should automatically materialize after being picked up." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+]
+
+@PointClass base(Item) studio("models/items/medkit_large.mdl") sphere(fademindist) sphere(fademaxdist) = item_healthkit_full : "Health Kit Full" []
+@PointClass base(Item) studio("models/items/medkit_small.mdl") sphere(fademindist) sphere(fademaxdist) = item_healthkit_small :	"Health Kit Small" []
+@PointClass base(Item) studio("models/items/medkit_medium.mdl") sphere(fademindist) sphere(fademaxdist) = item_healthkit_medium : "Health Kit Medium" []
+
+@PointClass base(Item) studio("models/items/ammopack_large.mdl") sphere(fademindist) sphere(fademaxdist) = item_ammopack_full :	"Ammo Pack Full" []
+@PointClass base(Item) studio("models/items/ammopack_small.mdl") sphere(fademindist) sphere(fademaxdist) = item_ammopack_small : "Ammo Pack Small" []
+@PointClass base(Item) studio("models/items/ammopack_medium.mdl") sphere(fademindist) sphere(fademaxdist) = item_ammopack_medium : "Ammo Pack Medium" []
+
+@PointClass base(Item) studio("models/items/ammopack_medium.mdl") sphere(fademindist) sphere(fademaxdist) = lf_item : "Generic Lambda Fortress Ammo Pack" []
+
+//
+// Camera
+//
+
+
+@PointClass base(Angles) studioprop("models/editor/camera.mdl") = game_intro_viewpoint :
+	"A viewpoint in the intro camera."
+[	
+	TeamNum(choices) : "Team" : 0 : "Team" =
+	[
+		0 : "None (Shared)"
+		2 : "Red"
+		3 : "Blue"
+	]
+
+	step_number(integer) : "Step Number. Intro starts at 1." : 1
+	time_delay(float) : "Time to spend here." : 12
+	hint_message(string) : "Hint Message here."
+	event_to_fire(string) : "Game Event To Fire"
+	event_delay(float) : "Game Event fire delay" : 3
+	event_data_int(integer) : "Game Event data" : 0
+	fov(float) : "FOV" : 0
+]
+
+@PointClass base(Targetname) = point_intermission : "Entity that ends the match and triggers an intermission."
+[
+	// Inputs
+	input Activate(void) : "Activate. Causes the game to end and the intermission to begin."
+]
+
+@PointClass base(Targetname, TeamNum, Angles, EnableDisable, Parentname) studioprop("models/editor/camera.mdl") = info_observer_point :
+	"Observer Point"
+[
+	associated_team_entity(target_destination) : "Associated Team Entity" : "" : "An entity associated with this point that can be owned by a team (such as a flag or control point). Players will only be able to use this observer point if their team owns the associated team entity."
+	
+	defaultwelcome(choices) : "Welcome Point" : 0 :  "This marks this point as a welcome point. Players use this when connectig to servers the first time." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	fov(float) : "FOV" : 0
+]
+
+//
+// Filters
+//
+@FilterClass base(TeamNum, BaseFilter) iconsprite("editor/filter_team.vmt") = filter_activator_tfteam :
+	"A filter that filters by the team of the activator.  The team number to filter by. " +
+	"If the filter mode is Allow, only entities whose team number matches the given team will " +
+	"pass the filter. If the filter mode is Disallow, all entities EXCEPT those whose team number " +
+	"matches the given team will pass the filter." 
+[
+	controlpoint(target_destination) : "Associated Control Point" : "" : "The team_control_point associated with this filter. The filter does NOT need an associated control point to function properly, but ownership of the control point will control the team number the filter uses (setup during each round start)."
+]
+
+@BaseClass color(0 0 200) base(Targetname, Angles) sphere(fademindist) sphere(fademaxdist) = Weapon
+[
+	spawnflags(Flags) =
+	[
+		1 : "Start constrained" : 0
+		2 : "Deny player pickup (reserve for NPC)" : 0
+		4 : "Not puntable by Gravity Gun" : 0
+	]
+
+	output OnPlayerUse(void) : "Fires when the player +uses this weapon"
+	output OnPlayerPickup(void) : "Fires when the player picks up this weapon"
+	output OnNPCPickup(void) : "Fires when an NPC picks up this weapon"
+	output OnCacheInteraction(void) : "Fires when the player 'proves' they've found this weapon. Fires on: Player Touch, +USE pickup, Physcannon pickup, Physcannon punt."
+
+	fademindist(float) : "Start Fade Dist/Pixels" : -1 : "Distance at which the prop starts to fade (<0 = use fademaxdist). If 'Screen Space Fade' is selected, this represents the number of pixels wide covered by the prop when it starts to fade."
+	fademaxdist(float) : "End Fade Dist/Pixels" : 0 : "Maximum distance at which the prop is visible (0 = don't fade out). If 'Screen Space Fade' is selected, this represents the *minimum* number of pixels wide covered by the prop when it fades."
+	fadescale(float) : "Fade Scale" : 1 : "If you specify a fade in the worldspawn, or if the engine is running under dx7, then the engine will forcibly fade out props even if fademindist/fademaxdist isn't specified." +
+												 " This scale factor gives you some control over the fade. Using 0 here turns off the forcible fades." +
+]
+// Weapons
+
+@PointClass base(Weapon) studio("models/weapons/w_physics.mdl") = tf_weapon_physcannon : "TF Gravity Gun" []
+@PointClass base(Weapon) studio("models/weapons/w_physics.mdl") = tf_weapon_physgun : "TF Physics Gun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_bat.mdl") = tf_weapon_bat : "Scout Bat" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_bonesaw.mdl") = tf_weapon_bonesaw : "Medic Bonesaw" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_bottle.mdl") = tf_weapon_bottle : "Demoman Bottle" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_toolbox.mdl") = tf_weapon_builder : "Engineer PDA" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_machete.mdl") = tf_weapon_club : "Sniper Club" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_fireaxe.mdl") = tf_weapon_fireaxe : "Pyro Fireaxe" []
+@PointClass base(Weapon) studio("models/weapons/v_models/v_fist_heavy.mdl") = tf_weapon_fists : "Heavy Fists" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_flamethrower.mdl") = tf_weapon_flamethrower : "Pyro Flamethrower" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_grenadelauncher.mdl") = tf_weapon_grenadelauncher : "Demoman GrenadeLauncher" []
+@PointClass base(Weapon) studio("models/weapons/v_models/v_watch_spy.mdl") = tf_weapon_invis : "Spy Clock" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_knife.mdl") = tf_weapon_knife : "Spy Knife" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_medigun.mdl") = tf_weapon_medigun : "Medic Medigun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_minigun.mdl") = tf_weapon_minigun : "Heavy MiniGun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_builder.mdl") = tf_weapon_objectselection : "Engineer PDA"[]
+@PointClass base(Weapon) studio("models/weapons/w_models/w_pda_engineer.mdl") = tf_weapon_pda_engineer_destroy : "Engineer Destory PDA" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_cigarette_case.mdl") = tf_weapon_pda_spy : "Spy Disguie PDA" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_stickybomb_launcher.mdl") = tf_weapon_pipebomblauncher : "Demoman PipeBomb Launcher" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_pistol.mdl") = tf_weapon_pistol_scout : "Scout Pistol" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_pistol.mdl") = tf_weapon_pistol : "Engineer Pistol" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_revolver.mdl") = tf_weapon_revolver : "Spy Revolver" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_rocketlauncher.mdl") = tf_weapon_rocketlauncher : "Soldier RocketLauncher" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_scattergun.mdl") = tf_weapon_scattergun : "Scout Scattergun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_shotgun.mdl") = tf_weapon_shotgun_hwg : "Heavy Shotgun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_shotgun.mdl") = tf_weapon_shotgun_primary : "Engineer Shotgun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_shotgun.mdl") = tf_weapon_shotgun_pyro : "Pyro Shotgun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_shotgun.mdl") = tf_weapon_shotgun_soldier : "Soldier Shotgun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_shovel.mdl") = tf_weapon_shovel : "Soldier Shovel" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_smg.mdl") = tf_weapon_smg : "Sniper SMG" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_sniperrifle.mdl") = tf_weapon_sniperrifle : "Sniper SniperRife" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_syringegun.mdl") = tf_weapon_syringegun_medic : "Medic SyringGun" []
+@PointClass base(Weapon) studio("models/weapons/w_models/w_wrench.mdl") = tf_weapon_wrench : "Engineer Wrench" []
+
+//-------------------------------------------------------------------------
+//
+// Half-Life
+//
+//-------------------------------------------------------------------------
+
+@BaseClass base(Targetname, Angles, RenderFields, DamageFilter, ResponseContext, Shadow, TeamNum) color(0 200 200) = BaseNPC
+[
+	target(target_destination) : "Target Path Corner" : : "If set, the name of a path corner entity that this NPC will walk to, after spawning."
+	squadname(String) : "Squad Name" : : "NPCs that are in the same squad (i.e. have matching squad names) will share information about enemies, and will take turns attacking and covering each other."
+	hintgroup(String) : "Hint Group" : "" : "Hint groups are used by NPCs to restrict their hint-node searching to a subset of the map's hint nodes. Only hint nodes with matching hint group names will be considered by this NPC."
+	hintlimiting(choices) : "Hint Limit Nav" : 0 : "Limits NPC to using specified hint group for navigation requests, but does not limit local navigation." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	spawnflags(Flags) = 
+	[
+		1 : "Wait Till Seen" : 0
+		2 : "Gag (No IDLE sounds until angry)" : 0
+		4 : "Fall to ground (unchecked means *teleport* to ground)" : 1
+		8 : "Drop Healthkit" : 0
+		16 : "Efficient - Don't acquire enemies or avoid obstacles" : 0
+		128: "Wait For Script" : 0
+		256: "Long Visibility/Shoot" : 0
+		512: "Fade Corpse" : 1
+		1024: "Think outside PVS" : 0
+		2048: "Template NPC (used by npc_maker, will not spawn)" : 0
+		4096: "Do Alternate collision for this NPC (player avoidance)" : 0
+		8192: "Don't drop weapons" : 0
+		16384 : "Ignore player push (dont give way to player)" : 0
+	]
+
+	//initialidle(string) : "Initial Idle Activity" :: "Activity the NPC should use to idle until becomes alert"
+	sleepstate(choices) : "Sleep State" : 0 : "Holds the NPC in stasis until specified condition. See also 'Wake Radius' and 'Wake Squad'." =
+	[
+		0 : "None"
+		1 : "Waiting for threat"
+		2 : "Waiting for PVS"
+		3 : "Waiting for input, ignore PVS"
+		4 : "Auto PVS"
+		5 : "Auto PVS after PVS"
+	]
+
+	wakeradius(float) : "Wake Radius" : 0 : "Auto-wake if player within this distance"
+	wakesquad(choices) : "Wake Squad" : 0 : "Wake all of the NPCs squadmates if the NPC is woken" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	enemyfilter(target_destination) : "Enemy Filter" : "" : "Filter by which to filter potential enemies"
+	
+	ignoreunseenenemies(choices) : "Ignore unseen enemies" : 0 : "Prefer visible enemies, regardless of distance or relationship priority" = 
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	physdamagescale(float) : "Physics Impact Damage Scale" : "1.0" : "Scales damage energy when this character is hit by a physics object. With a value of 0 the NPC will take no damage from physics."
+
+	// Outputs
+	output OnDamaged(void) : "Fired when this NPC takes damage."
+	output OnDeath(void) : "Fired when this NPC is killed." 
+	output OnHalfHealth(void) : "Fired when this NPC reaches half of its maximum health."
+	output OnHearWorld(void) : "Fired when this NPC hears a sound (other than combat or the player)."
+	output OnHearPlayer(void) : "Fired when this NPC hears the player."
+	output OnHearCombat(void) : "Fired when this NPC hears combat sounds."
+	output OnFoundEnemy(string) : "Fired when this NPC establishes line of sight to its enemy (outputs entity)."
+	output OnLostEnemyLOS(void) : "Fired when this NPC loses line of sight to its enemy."
+	output OnLostEnemy(void) : "Fired when this NPC loses its enemy. Usually due to the enemy being killed/removed, or because this NPC has selected a newer, more dangerous enemy."
+	output OnFoundPlayer(string) : "Fired when this NPC establishes line of sight to its enemy, and that enemy is a player (outputs player entity)."
+	output OnLostPlayerLOS(void) : "Fired when this NPC loses line of sight to its enemy, and that enemy is a player."
+	output OnLostPlayer(void) : "Fired when this NPC loses its enemy, and that enemy was a player. Usually due to the enemy being killed/removed, or because this NPC has selected a newer, more dangerous enemy."
+	output OnDamagedByPlayer(void) : "Fired when this NPC is hurt by a player."
+	output OnDamagedByPlayerSquad(void) : "Fired when this NPC is hurt by a player OR by one of the player's squadmates."
+	output OnDenyCommanderUse(void) : "Fired when this NPC has refused to join the player's squad."
+	output OnSleep(void) : "Fired when this NPC enters a sleep state."
+	output OnWake(void) : "Fired when this NPC comes out of a sleep state."
+	output OnForcedInteractionStarted(void) : "Fired when the NPC starts a forced interaction."
+	output OnForcedInteractionAborted(void) : "Fired when the NPC aborts a forced interaction for some reason (target NPC died, couldn't be pathed to, etc)"
+	output OnForcedInteractionFinished(void) : "NPCs in actbusies can no longer perform dynamic interactions."
+
+	// Inputs
+	input SetRelationship(string) : "Changes this entity's relationship with another entity or class. Format: <entityname/classname> <D_HT/D_FR/D_LI/D_NU> <priority>"
+	input SetEnemyFilter(string) : "Changes this NPC's enemy filter to the named filter."
+	input SetHealth(integer) : "Set this NPC's health."
+	input SetBodyGroup(integer) : "HACK: Sets this NPC's body group (from 0 - n). You'd better know what you are doing!"
+	input physdamagescale(float) : "Sets the value that scales damage energy when this character is hit by a physics object. NOTE: 0 means this feature is disabled for backwards compatibility."
+	input Ignite(void) : "Ignite, burst into flames"
+	input IgniteLifetime(float) : "Ignite, with a parameter lifetime."
+	input IgniteNumHitboxFires(integer) : "Ignite, with a parameter number of hitbox fires."
+	input IgniteHitboxFireScale(float) : "Ignite, with a parameter hitbox fire scale."
+	input Break(void) : "Break, smash into pieces"
+	input StartScripting(void) : "Enter scripting state. In this state, NPCs ignore a variety of stimulus that would make them break out of their scripts: They ignore danger sounds, ignore +USE, don't idle speak or respond to other NPC's idle speech, and so on."
+	input StopScripting(void) : "Exit scripting state."
+	input SetSquad(string) : "Set the name of this NPC's squad. It will be removed from any existing squad automatically. Leaving the parameter blank will remove the NPC from any existing squad."
+	input Wake(void) : "Wakes up the NPC if it is sleeping."
+	input ForgetEntity(string) : "Clears out the NPC's knowledge of a named entity."
+	input GagEnable(void) : "Turn on the NPC Gag flag. NPC won't speak outside of choreographed scenes."
+	input GagDisable(void) : "Turn off the NPC Gag flag."
+	input IgnoreDangerSounds(float) : "Ignore danger sounds for the specified number of seconds."
+	input HolsterWeapon(void) : "Force the NPC to holster their weapon. Ignored if the NPC is scripting, if the NPC's weapon is already holstered, or if the NPC doesn't use weapons."
+	input HolsterAndDestroyWeapon(void) : "Identical to HolsterWeapon, except the weapon is destroyed once it has been holstered and concealed."
+	input UnholsterWeapon(void) : "Force the NPC to draw their weapon. Ignored if the NPC is scripting, if the NPC's weapon is already drawn, or if the NPC doesn't use weapons."
+	input ForceInteractionWithNPC(string) : "Force the NPC to use a dynamic interaction with another NPC. Parameter format: <target NPC name> <dynamic interaction name>"
+	input UpdateEnemyMemory(string) : "Update (or Create) this NPC's memory of an enemy and its location"
+	input BecomeRagdoll(void) : "This NPC will instantly become a ragdoll with ZERO force (just go limp). OnDeath, OnHalfHealth, etc. Outputs will **NOT** BE FIRED."
+]
+
+
+@BaseClass base(Targetname, Angles, EnableDisable, TeamNum) iconsprite("editor/npc_maker.vmt") color(0 0 255) = BaseNPCMaker
+[
+	StartDisabled(choices) : "Start Disabled" : 1 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	spawnflags(Flags) = 
+	[
+		// Only in npc__maker, npc_template_maker uses flag from template NPC
+		16 : "Fade Corpse" : 0
+		32 : "Infinite Children" : 0
+		64 : "Do Not Drop" : 0
+		128 : "Don't Spawn While Visible" : 0
+	]
+
+	MaxNPCCount(integer) : "Num. of NPCs" : 1 : "Number of NPCs that will spawn before this spawner is exhausted."
+	SpawnFrequency(string) : "Frequency" : "5" : "How often (in seconds) a new NPC will be spawned. If set to -1, a new NPC will be made when the last NPC dies."
+	MaxLiveChildren(integer) : "Max Live NPCs" : 5 : "Maximum number of live children allowed at any one time (new ones will not be made until one dies). If set to -1, no limit is applied."
+	
+	// Outputs
+	output OnSpawnNPC(string) : "Fired when an NPC is spawned. The activator is the NPC, and the string is the name of the NPC." 
+	output OnAllSpawned(void) : "Fired when the spawned is exhausted (all children have been spawned)."
+	output OnAllSpawnedDead(void) : "Fired when the spawner is exhausted (all children have been spawned) and all spawned children have died."
+	output OnAllLiveChildrenDead(void) : "Fired when all spawned children have died. This does not mean the spawned is exhausted, so a new child may be spawned any time after this (unless the maker is disabled)."
+
+	// Inputs
+	input Spawn(void) : "Spawns an NPC."
+	input Toggle(void) : "Toggles the spawner enabled/disabled state."
+	input Enable(void) : "Enables the spawner."
+	input Disable(void) : "Disables the spawner."
+	input AddMaxChildren(integer) : "Adds to the number of NPCs that can spawn before the spawner is exhausted. If an exhausted spawner is given some children to spawn, it still wont begin spawning until it is re-enabled with the Enable input."
+	input SetMaxChildren(integer) : "Sets the number of NPCs that can spawn before the spawner is exhausted. If an exhausted spawner is given some children to spawn, it still won't begin spawning until it is re-enabled with the Enable input."
+	input SetMaxLiveChildren(integer) : "Sets the maximum number of NPCs that can be alive at any one time from this spawner."
+	input SetSpawnFrequency(float) : "Sets how often (in seconds) a new NPC will be spawned."
+]
+
+
+
+
+@NPCClass base(BaseCombine) studio("models/combine_soldier_synth.mdl") = npc_combine_synth_base : "Combine Synth"
+[
+]
+
+@NPCClass base(BaseCombine) studio("models/combine_guard.mdl") = npc_combineguard : "Combine Guard"
+[
+]
+
+@NPCClass base(BaseCombine) studio("models/conscript.mdl") = npc_conscript : "Combine Conscript"
+[
+]
+
+@NPCClass base(BaseCombine) studio("models/conscript_red.mdl") = npc_conscriptred : "Rebel Conscript"
+[
+]
+
+@NPCClass base(BaseCombine) studio("models/cremator_npc.mdl") = npc_cremator : "Combine Cremator"
+[
+]
+
+@NPCClass base(BaseCombine) studio("models/cremator_npc.mdl") = npc_crematorred : "Rebel Cremator"
+[
+]
+
+@PointClass base(Targetname) = lfe_logic_coop : "Forced Co-Op Logic" []
+
+@PointClass base(Targetname) = lfe_logic_vs : "Versus Logic" []

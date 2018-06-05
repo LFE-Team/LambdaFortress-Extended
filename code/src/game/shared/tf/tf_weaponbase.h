@@ -232,6 +232,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual void	WeaponIdle( void );
 
 	virtual void	WeaponReset( void );
+	virtual void	WeaponRegenerate() {}
 
 	// Muzzleflashes
 	virtual const char *GetMuzzleFlashEffectName_3rd( void ) { return NULL; }

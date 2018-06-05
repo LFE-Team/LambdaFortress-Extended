@@ -13,7 +13,8 @@ using namespace vgui;
 #include "tier0/memdbgon.h"
 
 #define BLOG_URL "https://www.reddit.com/r/tf2/?nolinks=1&noheader=1&nofooter=1&fillwrapper=1"
-
+//#define BLOG_URL "https://discordapp.com/channels/427017307835858944/449233158546784266/?nolinks=1&noheader=1&nofooter=1&fillwrapper=1"
+// don't use discord link because it can fuck up the entire game
 static void OnBlogToggle(IConVar *var, const char *pOldValue, float flOldValue)
 {
 	GET_MAINMENUPANEL(CTFMainMenuPanel)->ShowBlogPanel(((ConVar*)var)->GetBool());

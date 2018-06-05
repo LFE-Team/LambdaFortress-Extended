@@ -15,6 +15,7 @@
 #ifdef TF_CLASSIC
 #include "entity_ammopack.h"
 #include "tf_player.h"
+#include "tf_weaponbase.h"
 
 #define TF_AMMOPACK_PICKUP_SOUND	"AmmoPack.Touch"
 #endif
@@ -37,6 +38,16 @@ bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound =
 
 		if ( pTFPlayer->GiveAmmo( ceil( iMaxAmmo * flCount ), i, true ) )
 		{
+			bSuccess = true;
+		}
+	}
+
+	for ( int i = 0; i < pTFPlayer->WeaponCount(); i++ )
+	{
+		auto pTFWeapon = dynamic_cast<CTFWeaponBase *>(pTFPlayer->GetWeapon(i));
+		if (pTFWeapon)
+		{
+			pTFWeapon->WeaponRegenerate();
 			bSuccess = true;
 		}
 	}

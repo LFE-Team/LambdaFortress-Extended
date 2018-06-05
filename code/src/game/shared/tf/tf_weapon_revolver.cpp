@@ -19,13 +19,13 @@
 // Weapon Revolver tables.
 //
 CREATE_SIMPLE_WEAPON_TABLE( TFRevolver, tf_weapon_revolver )
-CREATE_SIMPLE_WEAPON_TABLE( TFRevolver_Secondary, tf_weapon_revolver_secondary )
+//CREATE_SIMPLE_WEAPON_TABLE( TFRevolver_Secondary, tf_weapon_revolver_secondary ) // we don't need need since it's for mercenary in tf2c dm.
 
 //=============================================================================
 //
 // Weapon Revolver functions.
 //
-
+/*
 acttable_t CTFRevolver::m_acttable[] =
 {
 	{ ACT_MP_STAND_IDLE, ACT_MP_STAND_SECONDARY2, false },
@@ -42,3 +42,4 @@ acttable_t CTFRevolver::m_acttable[] =
 };
 
 IMPLEMENT_ACTTABLE( CTFRevolver );
+*/

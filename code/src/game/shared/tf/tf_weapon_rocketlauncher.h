@@ -15,6 +15,9 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFRocketLauncher C_TFRocketLauncher
+#define CTFRocketLauncher_DirectHit C_TFRocketLauncher_DirectHit
+#define CTFRocketLauncher_AirStrike C_TFRocketLauncher_AirStrike
+#define CTFRocketLauncher_FireBall C_TFRocketLauncher_FireBall
 #endif
 
 //=============================================================================
@@ -71,5 +74,36 @@ public:
 };
 
 #endif
+
+// Live tf2 weapons
+class CTFRocketLauncher_DirectHit : public CTFRocketLauncher
+{
+public:
+	DECLARE_CLASS( CTFRocketLauncher_DirectHit, CTFRocketLauncher );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
+};
+
+class CTFRocketLauncher_AirStrike : public CTFRocketLauncher
+{
+public:
+	DECLARE_CLASS( CTFRocketLauncher_AirStrike, CTFRocketLauncher );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
+};
+
+class CTFRocketLauncher_FireBall : public CTFRocketLauncher
+{
+public:
+	DECLARE_CLASS( CTFRocketLauncher_FireBall, CTFRocketLauncher );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
+};
 
 #endif // TF_WEAPON_ROCKETLAUNCHER_H

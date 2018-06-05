@@ -1781,7 +1781,11 @@ int CNPC_Combine::SelectSchedule( void )
 				Assert( pSound != NULL );
 				if ( pSound)
 				{
+					#ifdef TF_CLASSIC // uber and crit is freakin dangerous so run.
+					if (pSound->m_iType & SOUND_DANGER && !IsInvulnerable() || !IsCritBoosted() )
+					#else
 					if (pSound->m_iType & SOUND_DANGER)
+					#endif
 					{
 						// I hear something dangerous, probably need to take cover.
 						// dangerous sound nearby!, call it out

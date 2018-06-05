@@ -129,6 +129,7 @@ protected:
 	virtual int UseExistingNotice( IGameEvent *event ) { return -1; }
 
 	void GetLocalizedControlPointName( IGameEvent *event, char *namebuf, int namelen );
+	void GetLocalizedNPCName( const char *pName, char *namebuf, int namelen );
 	virtual Color GetInfoTextColor( int iDeathNoticeMsg ){ return Color( 255, 255, 255, 255 ); }
 	virtual Color GetBackgroundColor ( int iDeathNoticeMsg ) { return m_DeathNotices[iDeathNoticeMsg].bLocalPlayerInvolved ? m_clrLocalBGColor : m_clrBaseBGColor; }
 

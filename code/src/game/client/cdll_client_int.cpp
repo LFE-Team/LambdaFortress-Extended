@@ -849,6 +849,7 @@ CHLClient::CHLClient()
 
 extern IGameSystem *ViewportClientSystem();
 
+#include "mountsteamcontent.h"
 
 //-----------------------------------------------------------------------------
 ISourceVirtualReality *g_pSourceVR = NULL;
@@ -1088,6 +1089,8 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 #ifndef _X360
 	HookHapticMessages(); // Always hook the messages
 #endif
+
+	MountExtraContent();
 
 	return true;
 }

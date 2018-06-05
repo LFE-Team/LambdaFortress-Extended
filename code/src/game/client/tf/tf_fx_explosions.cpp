@@ -15,7 +15,11 @@
 #include "econ_item_system.h"
 #include "tf_gamerules.h"
 #include "c_tf_playerresource.h"
-
+/*
+#include "dlight.h"
+#include "iefx.h"
+extern ConVar lf_muzzlelight; 
+*/
 //--------------------------------------------------------------------------------------------------------------
 extern CTFWeaponInfo *GetTFWeaponInfo( int iWeapon );
 //-----------------------------------------------------------------------------
@@ -162,7 +166,19 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 	}
 
 	//C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
-
+/*
+	if ( lf_muzzlelight.GetBool() )
+	{
+		dlight_t *dl = effects->CL_AllocDlight(LIGHT_INDEX_MUZZLEFLASH);
+		dl->origin = vecOrigin;
+		dl->color.r = 255;
+		dl->color.g = 220;
+		dl->color.b = 128;
+		dl->decay	= 200;
+		dl->radius	= 340.f;
+		dl->die		= gpGlobals->curtime + 0.1f;
+	}
+*/
 	DispatchParticleEffect( pszEffect, vecOrigin, angExplosion );
 }
 

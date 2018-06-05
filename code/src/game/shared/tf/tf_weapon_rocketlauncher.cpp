@@ -22,6 +22,10 @@
 //
 CREATE_SIMPLE_WEAPON_TABLE( TFRocketLauncher, tf_weapon_rocketlauncher )
 
+CREATE_SIMPLE_WEAPON_TABLE( TFRocketLauncher_DirectHit, tf_weapon_rocketlauncher_directhit )
+CREATE_SIMPLE_WEAPON_TABLE( TFRocketLauncher_AirStrike, tf_weapon_rocketlauncher_airstrike )
+CREATE_SIMPLE_WEAPON_TABLE( TFRocketLauncher_FireBall, tf_weapon_rocketlauncher_fireball ) // JUNGLE INFERNO 3.0 WHEN?
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  :  - 

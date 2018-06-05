@@ -25,11 +25,14 @@ CREATE_SIMPLE_WEAPON_TABLE( TFPistol, tf_weapon_pistol )
 
 CREATE_SIMPLE_WEAPON_TABLE( TFPistol_Scout, tf_weapon_pistol_scout )
 
+CREATE_SIMPLE_WEAPON_TABLE( TFPistol_ScoutSecondary, tf_weapon_handgun_scout_secondary )
+CREATE_SIMPLE_WEAPON_TABLE( TFPistol_ScoutPrimary, tf_weapon_handgun_scout_primary )
+
 //=============================================================================
 //
 // Weapon Pistol functions.
 //
-
+/*
 acttable_t CTFPistol::m_acttable[] =
 {
 	{ ACT_MP_STAND_IDLE, ACT_MP_STAND_SECONDARY2, false },
@@ -46,7 +49,7 @@ acttable_t CTFPistol::m_acttable[] =
 };
 
 IMPLEMENT_ACTTABLE( CTFPistol );
-
+*/
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

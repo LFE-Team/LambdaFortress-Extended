@@ -77,8 +77,10 @@ extern ConVar hl2_walkspeed;
 
 	//Precahce the effects
 	CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectPhysCannon )
-	CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE )
-	CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE_NOZ )
+	//CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE )
+	//CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE_NOZ )
+	CLIENTEFFECT_MATERIAL( "sprites/orangelight1" )
+	CLIENTEFFECT_MATERIAL( "sprites/orangelight1_noz" )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_GLOW_SPRITE )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_ENDCAP_SPRITE )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_CENTER_GLOW )
@@ -3923,37 +3925,7 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 		// Draw a beam
 		
 		BeamInfo_t beamInfo;
-		/*
-		if ( IsMegaPhysCannon() )
-		{
-			beamInfo.m_pStartEnt = pEnt;
-			beamInfo.m_nStartAttachment = 1;
-			beamInfo.m_pEndEnt = NULL;
-			beamInfo.m_nEndAttachment = -1;
-			beamInfo.m_vecStart = vec3_origin;
-			beamInfo.m_vecEnd = data.m_vOrigin;
-			beamInfo.m_pszModelName = MEGACANNON_BEAM_SPRITE;
-			beamInfo.m_flHaloScale = 0.0f;
-			beamInfo.m_flLife = 0.1f;
-			beamInfo.m_flWidth = 12.0f;
-			beamInfo.m_flEndWidth = 4.0f;
-			beamInfo.m_flFadeLength = 0.0f;
-			beamInfo.m_flAmplitude = 0;
-			beamInfo.m_flBrightness = 255.0;
-			beamInfo.m_flSpeed = 0.0f;
-			beamInfo.m_nStartFrame = 0.0;
-			beamInfo.m_flFrameRate = 30.0;
-			beamInfo.m_flRed = 255.0;
-			beamInfo.m_flGreen = 255.0;
-			beamInfo.m_flBlue = 255.0;
-			beamInfo.m_nSegments = 16;
-			beamInfo.m_bRenderable = true;
-			beamInfo.m_nFlags = FBEAM_ONLYNOISEONCE;
 
-			beams->CreateBeamEntPoint( beamInfo );
-		}
-		else
-		{*/
 			beamInfo.m_pStartEnt = pEnt;
 			beamInfo.m_nStartAttachment = 1;
 			beamInfo.m_pEndEnt = NULL;
@@ -3979,7 +3951,6 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 			beamInfo.m_nFlags = FBEAM_ONLYNOISEONCE;
 
 			beams->CreateBeamEntPoint( beamInfo );
-		//}
 	}
 	else
 	{

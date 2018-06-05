@@ -622,6 +622,9 @@ bool CObjectSentrygun::FindTarget()
 	// Loop through players within 1100 units (sentry range).
 	Vector vecSentryOrigin = EyePosition();
 
+	// oh boi it's the sentry stay away from it.
+	CSoundEnt::InsertSound( ( SOUND_DANGER | SOUND_CONTEXT_REACT_TO_SOURCE | SOUND_CONTEXT_DANGER_APPROACH ), vecSentryOrigin, 1100, 3.0 );
+
 	// Find the opposing team list.
 	CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );
 	CUtlVector<CTFTeam *> pTeamList;

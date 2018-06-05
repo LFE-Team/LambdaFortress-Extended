@@ -458,8 +458,11 @@ void CPropJeepEpisodic::Spawn(void)
 	BaseClass::Spawn();
 
 	SetBlocksLOS(false);
-
+#ifdef TF_CLASSIC
+	CBasePlayer	*pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
+#else
 	CBasePlayer	*pPlayer = UTIL_GetLocalPlayer();
+#endif
 	if (pPlayer != NULL)
 	{
 		pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
@@ -720,10 +723,18 @@ void CPropJeepEpisodic::CreateCargoTrigger(void)
 //-----------------------------------------------------------------------------
 // Purpose: If the player uses the jeep while at the back, he gets ammo from the crate instead
 //-----------------------------------------------------------------------------
-void CPropJeepEpisodic::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+void CPropJeepEpisodic::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	// Fall back and get in the vehicle instead, skip giving ammo
-	BaseClass::BaseClass::Use(pActivator, pCaller, useType, value);
+	// Andrew; don't skip giving ammo with the jeep if we're the buggy
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	{
+		BaseClass::Use( pActivator, pCaller, useType, value );
+	}
+	else
+	{
+		// Fall back and get in the vehicle instead, skip giving ammo
+		BaseClass::BaseClass::Use( pActivator, pCaller, useType, value );
+	}
 }
 
 #define	MIN_WHEEL_DUST_SPEED	5
@@ -959,7 +970,7 @@ void CPropJeepEpisodic::UpdateRadar(bool forceUpdate)
 	//Msg("Server detected %d objects\n", m_iNumRadarContacts );
 
 	//SecobMod__Information: Fix pPlayer from sp to mp.
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifdef TF_CLASSIC
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
@@ -1139,7 +1150,7 @@ CBaseEntity *CPropJeepEpisodic::OnFailedPhysGunPickup(Vector vPhysgunPos)
 		// Player's forward direction
 		Vector vecPlayerForward;
 		//SecobMod__Information: Fix pPlayer from sp to mp.
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifdef TF_CLASSIC
 		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #else
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
@@ -1376,6 +1387,12 @@ void CPropJeepEpisodic::DriveVehicle(float flFrameTime, CUserCmd *ucmd, int iBut
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::CreateHazardLights(void)
 {
+#ifdef TF_CLASSIC
+	// only create lights on jalopy model
+	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+		return;
+#endif
+
 	static const char *s_szAttach[NUM_HAZARD_LIGHTS] =
 	{
 		"rearlight_r",

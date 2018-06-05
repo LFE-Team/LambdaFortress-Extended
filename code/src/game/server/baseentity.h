@@ -86,7 +86,7 @@ class INextBot;
 class IHasAttributes;
 
 typedef CUtlVector< CBaseEntity* > EntityList_t;
-
+/*
 #if defined( HL2_DLL )
 
 // For CLASSIFY
@@ -187,9 +187,9 @@ enum Class_T
 	CLASS_PLAYER_ALLY,
 	NUM_AI_CLASSES
 };
-
-#elif defined( TF_CLASSIC )
-
+*/
+//#elif defined( TF_CLASSIC )
+#if defined( TF_CLASSIC )
 enum Class_T
 {
 	CLASS_NONE=0,				
@@ -233,7 +233,8 @@ enum Class_T
 
 	NUM_AI_CLASSES
 };
-
+#endif
+/*
 #else
 
 enum Class_T
@@ -245,7 +246,7 @@ enum Class_T
 };
 
 #endif
-
+*/
 //
 // Structure passed to input handlers.
 //

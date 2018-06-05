@@ -1,0 +1,6 @@
+"Sprite"
+{
+	"$spriteorientation" "vp_parallel"
+	"$basetexture" "sprites/blueshaft1"
+	"$additive" "1"
+}

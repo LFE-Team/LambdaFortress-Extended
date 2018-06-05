@@ -999,6 +999,7 @@ void CTFPlayer::PrecachePlayerModels( void )
 	PrecacheModel( TF_POWERUP_SHIELD_MODEL );
 	PrecacheModel( "models/props_trainyard/bomb_cart_red.mdl" );
 	PrecacheModel( "models/props_trainyard/bomb_cart.mdl" );
+	PrecacheModel( "models/items/ammopack_medium.mdl" );
 
 	// Precache player class sounds
 	for ( i = TF_FIRST_NORMAL_CLASS; i < TF_CLASS_COUNT_ALL; ++i )
@@ -1397,7 +1398,7 @@ void CTFPlayer::Regenerate( void )
 		m_Shared.RemoveCond( TF_COND_BURNING );
 	}
 
-	// Remove tranq condition
+	// Remove slow life condition
 	if ( m_Shared.InCond( TF_COND_SLOWED ) )
 	{
 		m_Shared.RemoveCond( TF_COND_SLOWED );
@@ -1405,6 +1406,15 @@ void CTFPlayer::Regenerate( void )
 
 	// Fill Spy cloak
 	m_Shared.SetSpyCloakMeter( 100.0f );
+
+	for ( int i = 0; i < WeaponCount(); i++ )
+	{
+		auto pTFWeapon = dynamic_cast<CTFWeaponBase *>(GetWeapon(i));
+		if ( pTFWeapon )
+		{
+			pTFWeapon->WeaponRegenerate();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -3636,7 +3646,7 @@ void CTFPlayer::StartBuildingObjectOfType( int iType, int iMode )
 			{
 				SetActiveWeapon( NULL );
 			}
-\
+
 			// try to switch to this weapon
 			if ( Weapon_Switch( pBuilder ) )
 			{
@@ -5466,8 +5476,9 @@ void CTFPlayer::DropAmmoPack( void )
 
 	// We need to find bones on the world model, so switch the weapon to it.
 	const char *pszWorldModel = pWeapon->GetWorldModel();
-	pWeapon->SetModel( pszWorldModel );
 
+
+	pWeapon->SetModel( pszWorldModel );
 
 	// Find the position and angle of the weapons so the "ammo box" matches.
 	Vector vecPackOrigin;
@@ -5481,7 +5492,8 @@ void CTFPlayer::DropAmmoPack( void )
 	int iMetal = max( 5, GetAmmoCount( TF_AMMO_METAL ) );
 
 	// Create the ammo pack.
-	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, pszWorldModel );
+	//CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, pszWorldModel );
+	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, "models/items/ammopack_medium.mdl" );
 	Assert( pAmmoPack );
 	if ( pAmmoPack )
 	{
@@ -5520,7 +5532,7 @@ void CTFPlayer::DropAmmoPack( void )
 		}
 
 		pAmmoPack->SetInitialVelocity( vecImpulse );
-
+		/*
 		switch ( GetTeamNumber() )
 		{
 			case TF_TEAM_RED:
@@ -5536,7 +5548,7 @@ void CTFPlayer::DropAmmoPack( void )
 				pAmmoPack->m_nSkin = 3;
 				break;
 		}
-
+		*/
 		// Give the ammo pack some health, so that trains can destroy it.
 		pAmmoPack->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 		pAmmoPack->m_takedamage = DAMAGE_YES;		
@@ -6625,6 +6637,12 @@ void CTFPlayer::CheatImpulseCommands( int iImpulse )
 						continue;
 
 					pWeapon->GiveDefaultAmmo();
+
+					auto pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
+					if ( pTFWeapon ) 
+					{
+						pTFWeapon->WeaponRegenerate();
+					}
 				}
 
 				gEvilImpulse101 = false;
@@ -8626,6 +8644,9 @@ bool CTFPlayer::SpeakConceptIfAllowed( int iConcept, const char *modifiers, char
 			}
 		}
 	}
+
+	// now the enemies npc should hear us spamming MEDIC.
+	CSoundEnt::InsertSound ( SOUND_PLAYER, GetAbsOrigin(), 512, 0.5, this );
 
 	return bReturn;
 }

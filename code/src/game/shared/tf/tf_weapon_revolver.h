@@ -13,7 +13,7 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFRevolver C_TFRevolver
-#define CTFRevolver_Secondary C_TFRevolver_Secondary
+//#define CTFRevolver_Secondary C_TFRevolver_Secondary
 #endif
 
 //=============================================================================
@@ -27,7 +27,7 @@ public:
 	DECLARE_CLASS( CTFRevolver, CTFWeaponBaseGun );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
-	DECLARE_ACTTABLE();
+	//DECLARE_ACTTABLE();
 
 	CTFRevolver() {}
 	~CTFRevolver() {}
@@ -38,7 +38,7 @@ private:
 
 	CTFRevolver( const CTFRevolver & ) {}
 };
-
+/*
 class CTFRevolver_Secondary : public CTFRevolver
 {
 public:
@@ -46,5 +46,5 @@ public:
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 };
-
+*/
 #endif // TF_WEAPON_REVOLVER_H

@@ -14,6 +14,8 @@
 #ifdef CLIENT_DLL
 #define CTFPistol C_TFPistol
 #define CTFPistol_Scout C_TFPistol_Scout
+#define CTFPistol_ScoutSecondary C_TFPistol_ScoutSecondary
+#define CTFPistol_ScoutPrimary C_TFPistol_ScoutPrimary
 #endif
 
 // The faster the player fires, the more inaccurate he becomes
@@ -31,7 +33,7 @@ public:
 	DECLARE_CLASS( CTFPistol, CTFWeaponBaseGun );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
-	DECLARE_ACTTABLE();
+	//DECLARE_ACTTABLE();
 
 	CTFPistol() {}
 	~CTFPistol() {}
@@ -53,6 +55,27 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_PISTOL_SCOUT; }
+};
+
+// Live tf2 weapons
+class CTFPistol_ScoutSecondary : public CTFPistol_Scout
+{
+public:
+	DECLARE_CLASS( CTFPistol_ScoutSecondary, CTFPistol_Scout );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_HANDGUN_SCOUT_SECONDARY; }
+};
+
+class CTFPistol_ScoutPrimary : public CTFPistol
+{
+public:
+	DECLARE_CLASS( CTFPistol_ScoutPrimary, CTFPistol_Scout );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_HANDGUN_SCOUT_PRIMARY; }
 };
 
 #endif // TF_WEAPON_PISTOL_H
