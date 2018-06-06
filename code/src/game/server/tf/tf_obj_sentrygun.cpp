@@ -941,7 +941,8 @@ void CObjectSentrygun::Attack()
 
 	// Track enemy
 	Vector vecMid = EyePosition();
-	Vector vecMidEnemy = m_hEnemy->WorldSpaceCenter();
+	//Vector vecMidEnemy = m_hEnemy->WorldSpaceCenter();
+	Vector vecMidEnemy = GetEnemyAimPosition(m_hEnemy);
 	Vector vecDirToEnemy = vecMidEnemy - vecMid;
 
 	QAngle angToTarget;
@@ -1012,7 +1013,8 @@ bool CObjectSentrygun::Fire()
 			GetAttachment( m_iAttachments[SENTRYGUN_ATTACHMENT_ROCKET_R], vecSrc, vecAng );
 		}
 
-		vecAimDir = m_hEnemy->WorldSpaceCenter() - vecSrc;
+		//vecAimDir = m_hEnemy->WorldSpaceCenter() - vecSrc;
+		vecAimDir = GetEnemyAimPosition(m_hEnemy) - vecSrc;
 		vecAimDir.NormalizeInPlace();
 
 		// NOTE: vecAng is not actually set by GetAttachment!!!
@@ -1071,7 +1073,8 @@ bool CObjectSentrygun::Fire()
 
 		GetAttachment( iAttachment, vecSrc, vecAng );
 
-		Vector vecMidEnemy = m_hEnemy->WorldSpaceCenter();
+		//Vector vecMidEnemy = m_hEnemy->WorldSpaceCenter();
+		Vector vecMidEnemy = GetEnemyAimPosition(m_hEnemy);
 
 		// If we cannot see their WorldSpaceCenter ( possible, as we do our target finding based
 		// on the eye position of the target ) then fire at the eye position
@@ -1521,6 +1524,49 @@ void CObjectSentrygun::SetModel( const char *pModel )
 	ReattachChildren();
 
 	ResetSequenceInfo();
+}
+
+// sigsegv-mvm's stuff
+Vector CObjectSentrygun::GetEnemyAimPosition( CBaseEntity *pEnemy ) const
+{
+	EHANDLE m_hEnemy = pEnemy;
+	
+	CTFPlayer *pTFPlayer = ToTFPlayer( pEnemy );
+	CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pEnemy );
+	if ( pTFPlayer )
+	{
+		bool bOnGround = ((pTFPlayer->GetFlags() & FL_ONGROUND) != 0);
+		bool bDucking  = ((pTFPlayer->GetFlags() & FL_DUCKING)  != 0);
+		
+		if ( ( !bOnGround && bDucking ) || pTFPlayer->m_Shared.InCond( TF_COND_TAUNTING ) )
+		{
+			int iBoneBipSpine2 = pTFPlayer->LookupBone( "bip_spine_2" );
+			if (iBoneBipSpine2 != -1)
+			{
+				Vector vecBone; QAngle angBone;
+				pTFPlayer->GetBonePosition(iBoneBipSpine2, vecBone, angBone);
+				
+				// special case: for players who are airborne-and-ducking, or taunting,
+				// shoot at their bip_spine_2 bone position instead of their hull center
+				return vecBone;
+			}
+		}
+	}
+	else if ( pNPC )
+	{
+		int iBoneBipSpine2 = pNPC->LookupBone( "root" );
+		if ( iBoneBipSpine2 != -1 )
+		{
+			Vector vecBone; QAngle angBone;
+			pNPC->GetBonePosition(iBoneBipSpine2, vecBone, angBone);
+			
+			// imagine headcrabs outsmart bullets.
+			return vecBone;
+		}
+	}
+	
+	// by default, shoot at enemy's hull center
+	return pEnemy->WorldSpaceCenter();
 }
 
 LINK_ENTITY_TO_CLASS( tf_projectile_sentryrocket, CTFProjectile_SentryRocket );

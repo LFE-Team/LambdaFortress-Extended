@@ -14,6 +14,7 @@
 
 #ifdef TF_CLASSIC
 #include "tf_player.h"
+#include "tf_weapon_medigun.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -92,6 +93,12 @@ bool CHLHealthKit::MyTouch( CBasePlayer *pPlayer )
 			pTFPlayer->m_Shared.RemoveCond( TF_COND_BURNING );		
 		}
 
+		CWeaponMedigun *pMedigun = pTFPlayer->GetMedigun();
+		if ( pMedigun )
+		{
+			pMedigun->AddCharge( 0.15 );
+		}
+
 		return true;
 	}
 
@@ -162,6 +169,12 @@ public:
 			if ( pTFPlayer->m_Shared.InCond( TF_COND_BURNING ) )
 			{
 				pTFPlayer->m_Shared.RemoveCond( TF_COND_BURNING );		
+			}
+
+			CWeaponMedigun *pMedigun = pTFPlayer->GetMedigun();
+			if ( pMedigun )
+			{
+				pMedigun->AddCharge( 0.01 );
 			}
 
 			return true;

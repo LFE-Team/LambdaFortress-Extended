@@ -71,6 +71,7 @@ public:
 
 	virtual void	MakeCarriedObject( CTFPlayer *pPlayer );
 
+	Vector GetEnemyAimPosition( CBaseEntity *pEnemy ) const;
 private:
 
 	// Main think
@@ -98,7 +99,6 @@ private:
 	void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 
 	int GetBaseTurnRate( void );
-	
 private:
 	CNetworkVar( int, m_iState );
 

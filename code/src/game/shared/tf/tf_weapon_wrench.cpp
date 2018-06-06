@@ -23,6 +23,7 @@
 // Weapon Wrench tables.
 //
 CREATE_SIMPLE_WEAPON_TABLE( TFWrench, tf_weapon_wrench )
+CREATE_SIMPLE_WEAPON_TABLE( TFRobotArm, tf_weapon_robot_arm )
 
 //=============================================================================
 //

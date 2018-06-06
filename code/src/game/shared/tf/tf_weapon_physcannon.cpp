@@ -871,7 +871,10 @@ bool CPlayerPickupController::IsHoldingEntity( CBaseEntity *pEnt )
 
 void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject )
 {
-	
+	//if ( pPlayer )
+	//{
+	//	pPlayer->GetActiveWeapon()->Lower();
+	//}
 #ifndef CLIENT_DLL
 	
 	//Don't pick up if we don't have a phys object.
@@ -884,7 +887,6 @@ void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject )
 		return;
 
 	pController->Init( pPlayer, pObject );
-
 #endif
 
 }

@@ -253,6 +253,9 @@ public:
 
 	virtual int		GetBaseHealth( void ) { return 0; }
 
+	void	FallThink( void );
+	float  m_flNextResetCheckTime;
+
 public:		
 
 	virtual bool TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );

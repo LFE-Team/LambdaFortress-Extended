@@ -1561,6 +1561,32 @@ bool CTFWeaponBase::Lower( void )
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::SetWeaponVisible( bool visible )
 {
+#ifdef CLIENT_DLL
+	CTFViewModel *vm = NULL;
+	C_ViewmodelAttachmentModel *pVMAddon = dynamic_cast<C_ViewmodelAttachmentModel *>( vm );
+	C_TFPlayer *pOwner = GetTFPlayerOwner();
+	if ( pOwner )
+	{
+		pOwner->GetViewModel();
+	}
+
+	if ( visible )
+	{
+		RemoveEffects( EF_NODRAW );
+		if ( pVMAddon )
+		{
+			pVMAddon->RemoveEffects( EF_NODRAW );
+		}
+	}
+	else
+	{
+		AddEffects( EF_NODRAW );
+		if ( pVMAddon )
+		{
+			pVMAddon->AddEffects( EF_NODRAW );
+		}
+	}
+#endif
 	BaseClass::SetWeaponVisible( visible );
 
 #ifdef CLIENT_DLL
@@ -2020,17 +2046,70 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 			return;
 	}
 
+	CWeaponMedigun *pMedigun = pOwner->GetMedigun();
+
 	float flAddCharge = 0.0f;
 	CALL_ATTRIB_HOOK_FLOAT( flAddCharge, add_onhit_ubercharge );
 	if ( flAddCharge )
 	{
-		CWeaponMedigun *pMedigun = pOwner->GetMedigun();
-
 		if ( pMedigun )
 		{
 			pMedigun->AddCharge( flAddCharge );
 		}
 	}
+
+	float flAddChargeRed = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddChargeRed, add_onhit_ubercharge_red );
+	if ( flAddChargeRed )
+	{
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_RED )
+		{
+			if ( pMedigun )
+			{
+				pMedigun->AddCharge( flAddChargeRed );
+			}
+		}
+	}
+
+	float flAddChargeBlu = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddChargeBlu, add_onhit_ubercharge_blu );
+	if ( flAddChargeBlu )
+	{
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_BLUE )
+		{
+			if ( pMedigun )
+			{
+				pMedigun->AddCharge( flAddChargeBlu );
+			}
+		}
+	}
+
+	float flAddChargeGrn = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddChargeGrn, add_onhit_ubercharge_grn );
+	if ( flAddChargeGrn )
+	{
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_GREEN )
+		{
+			if ( pMedigun )
+			{
+				pMedigun->AddCharge( flAddChargeGrn );
+			}
+		}
+	}
+
+	float flAddChargeYlw = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flAddChargeYlw, add_onhit_ubercharge_ylw );
+	if ( flAddChargeYlw )
+	{
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_YELLOW )
+		{
+			if ( pMedigun )
+			{
+				pMedigun->AddCharge( flAddChargeYlw );
+			}
+		}
+	}
+
 
 	float flAddHealth = 0.0f;
 	CALL_ATTRIB_HOOK_FLOAT( flAddHealth, add_onhit_addhealth );

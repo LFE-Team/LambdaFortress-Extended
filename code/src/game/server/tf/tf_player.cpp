@@ -4991,7 +4991,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	RemoveTeleportEffect();
 
 		// Drop our weapon and ammo box
-		DropWeapon( GetActiveTFWeapon(), true );
+		//DropWeapon( GetActiveTFWeapon(), true );
 		DropAmmoPack();
 
 	m_Shared.SetDesiredWeaponIndex( -1 );
@@ -9388,7 +9388,7 @@ void CTFPlayer::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 		return;
 
 	// Must be able to holster current weapon
-	if ( GetActiveWeapon() && GetActiveWeapon()->CanHolster() == false )
+	if ( GetActiveTFWeapon() && GetActiveTFWeapon()->CanHolster() == false )
 		return;
 	
 	if ( bLimitMassAndSize == true )

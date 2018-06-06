@@ -1421,7 +1421,7 @@
 		}
 		"weapon_backburner"
 		{
-			"enabled"	"1"	
+			"enabled"	"0"	
 			"prefab"	"weapon_baseflamethrower"
 			"capabilities"
 			{
@@ -1675,6 +1675,98 @@
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"	"ui/item_heavy_gun_drop.wav"
 		}
+		"weapon_tomislav"
+		{
+			"enabled"	"1"
+			"item_class"	"tf_weapon_minigun"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+				"can_craft_count"	"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_deal_critical_damage"	"1"
+				"can_deal_mvm_penetration_damage"	"1"
+				"can_deal_long_distance_damage"	"1"
+			}
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_Minigun"
+			"item_name"	"#TF_Tomislav"
+			"item_slot"	"primary"
+			"item_logname"	"tomislav"
+			"item_iconname"	"tomislav"
+			"image_inventory"	"backpack/workshop/weapons/c_models/c_tomislav/c_tomislav"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"model_player"	"models/workshop/weapons/c_models/c_tomislav/c_tomislav.mdl"
+			"attach_to_hands"	"1"
+			"inspect_panel_dist" "88"
+			"item_quality"	"unique"
+			"min_ilevel"	"5"
+			"max_ilevel"	"5"
+			"used_by_classes"
+			{
+				"heavy"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"10 0 -9"
+			}
+			"visuals"
+			{
+				"sound_reload"	"Weapon_Gatling.Reload"
+				"sound_empty"	"Weapon_Tomislav.WindDown"
+				"sound_double_shot"	"Weapon_Tomislav.Fire"
+				"sound_burst"	"Weapon_Tomislav.FireCrit"
+				"sound_special1"	"Weapon_Tomislav.WindUp"
+				"sound_special2"	"Weapon_Tomislav.WindDown"
+				"styles"
+				{
+					"0"
+					{
+						"skin_red" "0"
+						"skin_blu" "1"
+						"selectable"	"0"
+					}
+					"1"
+					{
+						"skin_red"	"2"
+						"skin_blu"	"3"
+						"selectable"	"0"
+						"image_inventory"	"backpack/workshop/weapons/c_models/c_tomislav/c_tomislav_gold"
+					}
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
+			"drop_sound"		"ui/item_heavy_gun_drop.wav"
+			"attributes"
+			{
+				"minigun spinup time decreased"
+				{
+					"attribute_class"	"mult_minigun_spinup_time"
+					"value" "0.8"
+				}
+				"minigun no spin sounds"
+				{
+					"attribute_class"	"minigun_no_spin_sounds"
+					"value" "1"
+				}
+				"fire rate penalty"
+				{
+					"attribute_class"	"mult_postfiredelay"
+					"value"	"1.2"
+				}
+				"weapon spread bonus"
+				{
+					"attribute_class"	"mult_spread_scale"
+					"value"	"0.8"
+				}
+			}
+		}
 		"weapon_ubersaw"
 		{
 			"enabled"	"1"
@@ -1683,13 +1775,13 @@
 			"craft_material_type"	"weapon"
 			"capabilities"
 			{
-				"nameable"	"1"
+				"nameable"		"1"
 			}
 			"tags"
 			{
-				"can_deal_damage"	"1"
+				"can_deal_damage"			"1"
 				"can_deal_critical_damage"	"1"
-				"can_deal_taunt_damage"	"1"
+				"can_deal_taunt_damage"		"1"
 			}
 			"base_item_name"	"The Ubersaw"
 			"item_logname"	"ubersaw"
@@ -1699,11 +1791,11 @@
 			"item_name"	"#TF_Unique_Achievement_Bonesaw1"
 			"item_slot"	"melee"
 			"image_inventory"	"backpack/weapons/c_models/c_ubersaw/c_ubersaw"
-			"image_inventory_size_w"	"128"
-			"image_inventory_size_h"	"82"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
 			"model_player"	"models/weapons/c_models/c_ubersaw/c_ubersaw.mdl"
-			"attach_to_hands"	"2"
-
+			"attach_to_hands"	"1"
+			"inspect_panel_dist" "42"
 			"item_quality"	"unique"
 			"propername"	"1"
 			"min_ilevel"	"10"
@@ -1712,12 +1804,32 @@
 			{
 				"medic"	"1"
 			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"10 0 -12"
+				"weapon_stattrak_module_scale"		"0.608"
+			}
 			"attributes"
 			{
-				"add uber charge on hit"
+				"add uber charge on hit red"
 				{
-					"attribute_class"	"add_onhit_ubercharge"
+					"attribute_class"	"add_onhit_ubercharge_red"
 					"value"	"0.25"
+				}
+				"add uber charge on hit blu"
+				{
+					"attribute_class"	"add_onhit_ubercharge_blu"
+					"value"	"0.15"
+				}
+				"add uber charge on hit grn"
+				{
+					"attribute_class"	"add_onhit_ubercharge_grn"
+					"value"	"0.10"
+				}
+				"add uber charge on hit ylw"
+				{
+					"attribute_class"	"add_onhit_ubercharge_ylw"
+					"value"	"0.15"
 				}
 				"fire rate penalty"
 				{
@@ -1732,14 +1844,83 @@
 				"special taunt"
 				{
 					"attribute_class"	"special_taunt"
-					"value"	"1"
+					"value" "1"
 				}
 			}
 			"visuals"
 			{
+				"sound_melee_hit"	"Weapon_UberSaw.HitFlesh"
 			}
 			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
-			"drop_sound"	"ui/item_metal_weapon_drop.wav"
+			"drop_sound"		"ui/item_metal_weapon_drop.wav"
+		}
+		"weapon_winger_pistol"
+		{
+			"enabled"	"1"
+			"item_class"	"tf_weapon_handgun_scout_secondary"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+				"can_craft_count"	"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_deal_critical_damage"	"1"
+				"can_deal_mvm_penetration_damage"	"1"
+				"can_deal_long_distance_damage"	"1"
+			}
+			"item_type_name"	"#TF_Weapon_Pistol"
+			"item_logname" "the_winger"
+			"item_iconname" "the_winger"
+			"item_name"	"#TF_Winger"
+			"item_slot"	"secondary"
+			"item_quality"	"unique"
+			"min_ilevel"	"15"
+			"max_ilevel"	"15"
+			"attach_to_hands"	"1"
+			"inspect_panel_dist" "31"
+			"propername" "1"
+			"image_inventory"	"backpack/workshop/weapons/c_models/c_winger_pistol/c_winger_pistol"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"model_player"	"models/workshop/weapons/c_models/c_winger_pistol/c_winger_pistol.mdl"
+			"used_by_classes"
+			{
+				"scout"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"10 0 -10"
+				"weapon_stattrak_module_scale"				"0.723"
+			}
+			"attributes"
+			{
+				"damage bonus"
+				{
+					"attribute_class"	"mult_dmg"
+					"value" "1.15"
+				}
+				"clip size penalty"
+				{
+					"attribute_class"	"mult_clipsize"
+					"value" "0.4"
+				}
+				"increased jump height from weapon"
+				{
+					"attribute_class"	"mod_jump_height_from_weapon"
+					"value" "1.25"
+				}
+			}
+			"visuals"
+			{
+				"sound_single_shot"	"Weapon_Winger.Single"
+				"sound_burst"	"Weapon_Winger.SingleCrit"
+			}
+			"mouse_pressed_sound"	"ui/item_light_gun_pickup.wav"
+			"drop_sound"		"ui/item_light_gun_drop.wav"
 		}
 		"weapon_flaregun"
 		{
@@ -2890,6 +3071,11 @@
 			"name"	"The Ubersaw"
 			"first_sale_date"	"2010/09/29"
 			"prefab"	"valve weapon_ubersaw"
+			"particle_suffix"	"ubersaw"
+			"tags"
+			{
+				"can_be_festivized"		"1"
+			}
 			"xifier_class_remap"	"ubersaw"
 		}
 		"39"
@@ -2921,7 +3107,7 @@
 			}
 			"item_logname"	"backburner"
 			"item_iconname"	"backburner"
-			"show_in_armory"	"1"
+			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Flamethrower"
 			"item_name"	"#TF_Unique_Achievement_Flamethrower"
 			"item_slot"	"primary"
@@ -3157,6 +3343,7 @@
 			"prefab"	"valve weapon_huntsman"
 			"xifier_class_remap"	"huntsman"
 			"baseitem"	"0"
+			"show_in_armory"	"0"
 		}
 		"133"
 		{
@@ -3207,6 +3394,110 @@
 			}
 			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
 			"drop_sound"	"ui/item_metal_weapon_drop.wav"
+		}
+		"142"
+		{
+			"name"	"The Gunslinger"
+			"prefab"	"valve"
+			"first_sale_date"	"2010/09/29"
+			"item_class"	"tf_weapon_robot_arm"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_deal_critical_damage"	"1"
+				"can_destroy_sappers"		"1"
+				"can_deal_taunt_damage"		"1"
+			}
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_Robot_Arm"
+			"item_name"	"#TF_Unique_Robot_Arm"
+			"item_slot"	"melee"
+			"equip_region"	"arms"
+			"item_quality"	"unique"
+			"anim_slot"	"item2"
+			"min_ilevel"	"15"
+			"max_ilevel"	"15"
+			"propername"	"1"
+			"item_logname"	"robot_arm"
+			"item_iconname"	"robot_arm_kill"
+			"image_inventory"	"backpack/weapons/gunslinger"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 				"40"
+			"attach_to_hands" "1"
+			"disable_backpack_inspect"	"1"
+			"used_by_classes"
+			{
+				"engineer"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"10 -2 -7"				
+			}
+			"attributes"
+			{
+				"gunslinger punch combo"
+				{
+					"attribute_class"	"gunslinger_punch_combo"
+					"value"				"1"
+				}
+				"mod wrench builds minisentry"
+				{
+					"attribute_class"	"wrench_builds_minisentry"
+					"value"	"1"
+				}
+				"max health additive bonus"
+				{
+					"attribute_class"	"add_maxhealth"
+					"value" "25"
+				}		
+				"engineer sentry build rate multiplier"
+				{
+					"attribute_class"	"sentry_build_rate_multiplier"
+					"value"		"2.5"
+				}
+				"crit mod disabled"
+				{
+					"attribute_class"	"mult_crit_chance"
+					"value"	"0"
+				}
+				"kill eater score type"
+				{
+					"attribute_class"	"kill_eater_score_type"
+					"value" 	"3"									
+				}
+				"kill eater score type 2"
+				{
+					"attribute_class"	"kill_eater_score_type_2"
+					"value" 	"0"									
+				}
+				"special taunt"
+				{
+					"attribute_class"	"special_taunt"
+					"value" "1"
+				}
+			}
+			"visuals"
+			{
+				"player_bodygroups"
+				{
+					"rightarm"			"1"
+				}
+				"animation_replacement"
+				{
+					"ACT_MELEE_VM_INSPECT_START"	"ACT_ITEM2_VM_INSPECT_START"
+					"ACT_MELEE_VM_INSPECT_IDLE"		"ACT_ITEM2_VM_INSPECT_IDLE"
+					"ACT_MELEE_VM_INSPECT_END"		"ACT_ITEM2_VM_INSPECT_END"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_robot_arm_pickup.wav"
+			"drop_sound"		"ui/item_robot_arm_drop.wav"
 		}
 		"228"
 		{
@@ -3397,10 +3688,74 @@
 			{
 			}
 		}
+		"416"
+		{
+			"name"	"The Market Gardener"
+			"first_sale_date"	"2011/03/23"
+			"item_class"	"tf_weapon_shovel"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"show_in_armory"	"0"
+			"capabilities"
+			{
+				"nameable"		"1"
+				"can_craft_count"	"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_be_equipped_by_soldier_or_demo"	"1"
+				"can_deal_critical_damage"	"1"
+			}
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_Shovel"
+			"item_name"	"#TF_MarketGardener"
+			"item_logname"	"market_gardener"
+			"item_iconname"	"market_gardener"
+			"item_slot"	"melee"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"10"
+			"max_ilevel"	"10"
+			"image_inventory" "backpack/workshop/weapons/c_models/c_market_gardener/c_market_gardener"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 				"45"
+			"model_player"	"models/workshop/weapons/c_models/c_market_gardener/c_market_gardener.mdl"
+			"attach_to_hands" "1"
+			"used_by_classes"
+			{
+				"soldier"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"10 -3 -11"
+			}
+			"attributes"
+			{
+				"fire rate penalty"
+				{
+					"attribute_class"	"mult_postfiredelay"
+					"value"	"1.2"
+				}
+				"mod crit while airborne"
+				{
+					"attribute_class"	"crit_while_airborne"
+					"value"	"1"
+				}
+				"crit mod disabled"
+				{
+					"attribute_class"	"mult_crit_chance"
+					"value"	"0"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_shovel_pickup.wav"
+			"drop_sound"		"ui/item_shovel_drop.wav"
+		}
 		"424"
 		{
 			"name"	"Tomislav"
-			"prefab" "weapon_tomislav paintkit_base"
+			"prefab" "weapon_tomislav"
 			"first_sale_date"	"2011/04/14"
 			"particle_suffix"	"tomislav"
 			"tags"
@@ -3421,7 +3776,7 @@
 		"425"
 		{
 			"name"	"The Family Business"
-			"prefab"	"weapon_russian_riot paintkit_base"
+			"prefab"	"weapon_russian_riot"
 			"first_sale_date"	"2011/04/14"
 			"particle_suffix"	"family_business"
 			"tags"
@@ -10575,6 +10930,50 @@
 			"description_format"	"value_is_percentage"
 			"hidden"	"0"
 			"effect_type"	"negative"
+			"stored_as_integer"	"0"
+		}
+		"10003"
+		{
+			"name"	"add uber charge on hit red"
+			"attribute_class"	"add_onhit_ubercharge_red"
+			"description_string"	"#Attrib_AddUber_OnHit_Red_Positive"
+			"description_format"	"value_is_additive_percentage"
+			"hidden"	"0"
+			"effect_type"	"positive"
+			"armory_desc"	"on_hit"
+			"stored_as_integer"	"0"
+		}
+		"10004"
+		{
+			"name"	"add uber charge on hit blu"
+			"attribute_class"	"add_onhit_ubercharge_blu"
+			"description_string"	"#Attrib_AddUber_OnHit_Blu_Positive"
+			"description_format"	"value_is_additive_percentage"
+			"hidden"	"0"
+			"effect_type"	"positive"
+			"armory_desc"	"on_hit"
+			"stored_as_integer"	"0"
+		}
+		"10005"
+		{
+			"name"	"add uber charge on hit grn"
+			"attribute_class"	"add_onhit_ubercharge_grn"
+			"description_string"	"#Attrib_AddUber_OnHit_Grn_Positive"
+			"description_format"	"value_is_additive_percentage"
+			"hidden"	"0"
+			"effect_type"	"positive"
+			"armory_desc"	"on_hit"
+			"stored_as_integer"	"0"
+		}
+		"10006"
+		{
+			"name"	"add uber charge on hit ylw"
+			"attribute_class"	"add_onhit_ubercharge_ylw"
+			"description_string"	"#Attrib_AddUber_OnHit_Ylw_Positive"
+			"description_format"	"value_is_additive_percentage"
+			"hidden"	"0"
+			"effect_type"	"positive"
+			"armory_desc"	"on_hit"
 			"stored_as_integer"	"0"
 		}
 	}

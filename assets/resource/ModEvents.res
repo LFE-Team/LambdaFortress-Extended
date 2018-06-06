@@ -513,6 +513,22 @@
 		"was_building"	"bool"		// object was being built when it died
 	}
 
+	"npc_death"
+	{ 
+		"victim_index"	"short"	// entindex who died
+		"victim_name"	"string"// classname of victim
+		"victim_team"	"byte"	// team of victim
+		"attacker_index"	"short"		// entindex that killed
+		"attacker_name"		"string"	// classname of attacker
+		"attacker_team"		"byte"		// team of attacker
+		"weapon"	"string" 	// weapon name killer used 
+		"damagebits"	"long"	// bits of type of damage
+		"customkill"	"short"	// type of custom kill
+		"assister_index"	"short"		// entindex of assister
+		"assister_name"		"string"	// classname of assister
+		"assister_team"		"byte"		// team of assister
+	}
+
 	"object_detonated"
 	{
 		"userid"		"short"		// user ID of the object owner
@@ -673,6 +689,17 @@
 		"allseecrit" "bool"
 		"weaponid" "short"
 		"bonuseffect" "byte"
+	}
+
+	"npc_hurt"
+	{
+		"victim_index" "short"
+		"health" "short"
+		"attacker_index" "short"
+		"damageamount" "short"
+		"custom"	"short"
+		"crit" "bool"
+		"weaponid" "short"
 	}
 
 	"arena_player_notification"
