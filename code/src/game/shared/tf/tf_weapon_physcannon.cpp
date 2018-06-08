@@ -40,8 +40,10 @@
 #include "movevars_shared.h"
 #include "vphysics/friction.h"
 #include "debugoverlay_shared.h"
-#include "tf_viewmodel.h"
+
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 #include "tf_gamerules.h"
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN	
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -77,8 +79,6 @@ extern ConVar hl2_walkspeed;
 
 	//Precahce the effects
 	CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectPhysCannon )
-	//CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE )
-	//CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE_NOZ )
 	CLIENTEFFECT_MATERIAL( "sprites/orangelight1" )
 	CLIENTEFFECT_MATERIAL( "sprites/orangelight1_noz" )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_GLOW_SPRITE )
@@ -871,10 +871,7 @@ bool CPlayerPickupController::IsHoldingEntity( CBaseEntity *pEnt )
 
 void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject )
 {
-	//if ( pPlayer )
-	//{
-	//	pPlayer->GetActiveWeapon()->Lower();
-	//}
+	
 #ifndef CLIENT_DLL
 	
 	//Don't pick up if we don't have a phys object.
@@ -887,6 +884,7 @@ void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject )
 		return;
 
 	pController->Init( pPlayer, pObject );
+
 #endif
 
 }
@@ -937,8 +935,22 @@ LINK_ENTITY_TO_CLASS( weapon_physcannon, CWeaponPhysCannon );
 #endif
 PRECACHE_WEAPON_REGISTER( tf_weapon_physcannon );
 
-BEGIN_DATADESC( CWeaponPhysCannon )
-END_DATADESC()
+#ifndef CLIENT_DLL
+#ifdef HL2MP
+acttable_t	CWeaponPhysCannon::m_acttable[] = 
+{
+	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_PHYSGUN,					false },
+	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_PHYSGUN,					false },
+	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_PHYSGUN,			false },
+	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_PHYSGUN,			false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_PHYSGUN,	false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_PHYSGUN,		false },
+	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_PHYSGUN,					false },
+};
+
+IMPLEMENT_ACTTABLE(CWeaponPhysCannon);
+#endif
+#endif
 
 
 enum
@@ -1043,27 +1055,27 @@ void CWeaponPhysCannon::Precache( void )
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
 
 #ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
-	PrecacheModel( MEGACANNON_BEAM_SPRITE );
-	PrecacheModel( MEGACANNON_GLOW_SPRITE );
-	PrecacheModel( MEGACANNON_ENDCAP_SPRITE );
-	PrecacheModel( MEGACANNON_CENTER_GLOW );
-	PrecacheModel( MEGACANNON_BLAST_SPRITE );
+	PrecacheModel(MEGACANNON_BEAM_SPRITE);
+	PrecacheModel(MEGACANNON_GLOW_SPRITE);
+	PrecacheModel(MEGACANNON_ENDCAP_SPRITE);
+	PrecacheModel(MEGACANNON_CENTER_GLOW);
+	PrecacheModel(MEGACANNON_BLAST_SPRITE);
 
-	PrecacheModel( MEGACANNON_RAGDOLL_BOOGIE_SPRITE );
+	PrecacheModel(MEGACANNON_RAGDOLL_BOOGIE_SPRITE);
 
 	// Precache our alternate model
-	PrecacheModel( MEGACANNON_MODEL );
+	PrecacheModel(MEGACANNON_MODEL);
 #endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	PrecacheScriptSound( "Weapon_PhysCannon.HoldSound" );
 
 #ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.DryFire" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Launch" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Pickup" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Drop" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.HoldSound" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.ChargeZap" );
+	PrecacheScriptSound("Weapon_MegaPhysCannon.DryFire");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.Launch");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.Pickup");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.Drop");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.HoldSound");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.ChargeZap");
 #endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	BaseClass::Precache();
@@ -1201,7 +1213,7 @@ bool CWeaponPhysCannon::Deploy( void )
 	}
 #endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN	
 
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	if ( pOwner )
 	{
@@ -1223,7 +1235,7 @@ void CWeaponPhysCannon::SetViewModel( void )
 		return;
 	}
 
-	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (pOwner == NULL)
 		return;
 
@@ -1231,7 +1243,8 @@ void CWeaponPhysCannon::SetViewModel( void )
 	if (vm == NULL)
 		return;
 
-	vm->SetWeaponModel( MEGACANNON_MODEL, this );
+	vm->SetWeaponModel(MEGACANNON_MODEL, this);
+	//BaseClass::SetViewModel();
 #else
 	BaseClass::SetViewModel();
 #endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
@@ -1323,7 +1336,7 @@ void CWeaponPhysCannon::DryFire( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PrimaryFireEffect( void )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
@@ -1400,7 +1413,7 @@ void CWeaponPhysCannon::Physgun_OnPhysGunPickup( CBaseEntity *pEntity, CBasePlay
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecForward, trace_t &tr )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 
 	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
@@ -1595,7 +1608,7 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForward, trace_t &tr)
 {
-	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	Pickup_OnPhysGunDrop(pEntity, pOwner, LAUNCHED_BY_CANNON);
 
 	CTakeDamageInfo	info;
@@ -1890,7 +1903,7 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 	if ( !CanAttack() )
 		return;
 
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
@@ -2174,7 +2187,7 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	}
 
 	// Check to see if the object is constrained + needs to be ripped off...
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( !Pickup_OnAttemptPhysGunPickup( pEntity, pOwner, PICKED_UP_BY_CANNON ) )
 		return OBJECT_BEING_DETACHED;
 
@@ -2475,7 +2488,7 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 
 void CWeaponPhysCannon::UpdateObject(void)
 {
-	CTFPlayer *pPlayer = ToTFPlayer(GetOwner());
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
 	Assert(pPlayer);
 
 #ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
@@ -2605,7 +2618,7 @@ void CWeaponPhysCannon::ManagePredictedObject( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::UpdateElementPosition( void )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	float flElementPosition = m_ElementParameter.Interp( gpGlobals->curtime );
 
@@ -2674,7 +2687,7 @@ void CWeaponPhysCannon::CheckForTarget( void )
 	if ( IsEffectActive( EF_NODRAW ) )
 		return;
 
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	if ( pOwner == NULL )
 		return;
@@ -2825,7 +2838,7 @@ void CWeaponPhysCannon::DoEffectIdle(void)
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::ItemPostFrame()
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( pOwner == NULL )
 	{
 		// We found an object. Debounce the button
@@ -2974,7 +2987,7 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 	if ( pTarget->IsEFlagSet( EFL_NO_PHYSCANNON_INTERACTION ) )
 		return false;
 
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	
 	if ( pOwner && pOwner->GetGroundEntity() == pTarget )
 		return false;
@@ -3029,7 +3042,7 @@ void CWeaponPhysCannon::OpenElements( void )
 
 	WeaponSound( SPECIAL2 );
 
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	if ( pOwner == NULL )
 		return;
@@ -3069,7 +3082,7 @@ void CWeaponPhysCannon::CloseElements( void )
 
 	WeaponSound( MELEE_HIT );
 
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	if ( pOwner == NULL )
 		return;
@@ -3206,12 +3219,12 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[PHYSCANNON_CORE].GetScale().Init( 0.0f, 1.0f, 0.1f );
 		m_Parameters[PHYSCANNON_CORE].GetAlpha().Init( 255.0f, 255.0f, 0.1f );
 		m_Parameters[PHYSCANNON_CORE].SetAttachment( 1 );
-
-			if ( m_Parameters[PHYSCANNON_CORE].SetMaterial( PHYSCANNON_CENTER_GLOW ) == false )
-			{
-				// This means the texture was not found
-				Assert( 0 );
-			}
+		
+		if ( m_Parameters[PHYSCANNON_CORE].SetMaterial( PHYSCANNON_CENTER_GLOW ) == false )
+		{
+			// This means the texture was not found
+			Assert( 0 );
+		}
 	}
 
 	// ------------------------------------------
@@ -3225,11 +3238,11 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[PHYSCANNON_BLAST].SetAttachment( 1 );
 		m_Parameters[PHYSCANNON_BLAST].SetVisible( false );
 		
-			if ( m_Parameters[PHYSCANNON_BLAST].SetMaterial( PHYSCANNON_BLAST_SPRITE ) == false )
-			{
-				// This means the texture was not found
-				Assert( 0 );
-			}
+		if ( m_Parameters[PHYSCANNON_BLAST].SetMaterial( PHYSCANNON_BLAST_SPRITE ) == false )
+		{
+			// This means the texture was not found
+			Assert( 0 );
+		}
 	}
 
 	// ------------------------------------------
@@ -3275,12 +3288,12 @@ void CWeaponPhysCannon::StartEffects( void )
 			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlowThirdPerson[i-PHYSCANNON_GLOW1] ) );
 		}
 		m_Parameters[i].SetColor( Vector( 255, 128, 0 ) );
-
-			if ( m_Parameters[i].SetMaterial( MEGACANNON_GLOW_SPRITE ) == false )
-			{
-				// This means the texture was not found
-				Assert( 0 );
-			}
+		
+		if ( m_Parameters[i].SetMaterial( PHYSCANNON_GLOW_SPRITE ) == false )
+		{
+			// This means the texture was not found
+			Assert( 0 );
+		}
 	}
 
 	// ------------------------------------------
@@ -3304,12 +3317,12 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[i].GetAlpha().SetAbsolute( 255.0f );
 		m_Parameters[i].SetAttachment( LookupAttachment( attachNamesEndCap[i-PHYSCANNON_ENDCAP1] ) );
 		m_Parameters[i].SetVisible( false );
-
-			if ( m_Parameters[i].SetMaterial( PHYSCANNON_ENDCAP_SPRITE ) == false )
-			{
-				// This means the texture was not found
-				Assert( 0 );
-			}
+		
+		if ( m_Parameters[i].SetMaterial( PHYSCANNON_ENDCAP_SPRITE ) == false )
+		{
+			// This means the texture was not found
+			Assert( 0 );
+		}
 	}
 
 #endif
@@ -3411,7 +3424,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 		}
 
 		// Create our beams
-		CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 		CBaseEntity *pBeamEnt = pOwner->GetViewModel();
 
 		// Setup the beams
@@ -3467,7 +3480,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::DoEffectLaunch( Vector *pos )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	if ( pOwner == NULL )
 		return;
 
@@ -3681,7 +3694,7 @@ void CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &col
 	// Format for first-person
 	if ( ShouldDrawUsingViewModel() )
 	{
-		CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 		
 		if ( pOwner != NULL )
 		{
@@ -3925,34 +3938,33 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 		FX_GaussExplosion( data.m_vOrigin, -dir, 0 );
 
 		// Draw a beam
-		
 		BeamInfo_t beamInfo;
 
-			beamInfo.m_pStartEnt = pEnt;
-			beamInfo.m_nStartAttachment = 1;
-			beamInfo.m_pEndEnt = NULL;
-			beamInfo.m_nEndAttachment = -1;
-			beamInfo.m_vecStart = vec3_origin;
-			beamInfo.m_vecEnd = data.m_vOrigin;
-			beamInfo.m_pszModelName = PHYSCANNON_BEAM_SPRITE;
-			beamInfo.m_flHaloScale = 0.0f;
-			beamInfo.m_flLife = 0.1f;
-			beamInfo.m_flWidth = 12.0f;
-			beamInfo.m_flEndWidth = 4.0f;
-			beamInfo.m_flFadeLength = 0.0f;
-			beamInfo.m_flAmplitude = 0;
-			beamInfo.m_flBrightness = 255.0;
-			beamInfo.m_flSpeed = 0.0f;
-			beamInfo.m_nStartFrame = 0.0;
-			beamInfo.m_flFrameRate = 30.0;
-			beamInfo.m_flRed = 255.0;
-			beamInfo.m_flGreen = 255.0;
-			beamInfo.m_flBlue = 255.0;
-			beamInfo.m_nSegments = 16;
-			beamInfo.m_bRenderable = true;
-			beamInfo.m_nFlags = FBEAM_ONLYNOISEONCE;
+		beamInfo.m_pStartEnt = pEnt;
+		beamInfo.m_nStartAttachment = 1;
+		beamInfo.m_pEndEnt = NULL;
+		beamInfo.m_nEndAttachment = -1;
+		beamInfo.m_vecStart = vec3_origin;
+		beamInfo.m_vecEnd = data.m_vOrigin;
+		beamInfo.m_pszModelName = PHYSCANNON_BEAM_SPRITE;
+		beamInfo.m_flHaloScale = 0.0f;
+		beamInfo.m_flLife = 0.1f;
+		beamInfo.m_flWidth = 12.0f;
+		beamInfo.m_flEndWidth = 4.0f;
+		beamInfo.m_flFadeLength = 0.0f;
+		beamInfo.m_flAmplitude = 0;
+		beamInfo.m_flBrightness = 255.0;
+		beamInfo.m_flSpeed = 0.0f;
+		beamInfo.m_nStartFrame = 0.0;
+		beamInfo.m_flFrameRate = 30.0;
+		beamInfo.m_flRed = 255.0;
+		beamInfo.m_flGreen = 255.0;
+		beamInfo.m_flBlue = 255.0;
+		beamInfo.m_nSegments = 16;
+		beamInfo.m_bRenderable = true;
+		beamInfo.m_nFlags = FBEAM_ONLYNOISEONCE;
 
-			beams->CreateBeamEntPoint( beamInfo );
+		beams->CreateBeamEntPoint( beamInfo );
 	}
 	else
 	{

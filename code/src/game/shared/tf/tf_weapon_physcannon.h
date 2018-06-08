@@ -259,17 +259,10 @@ class CWeaponPhysCannon : public CTFWeaponBase
 public:
 	DECLARE_CLASS( CWeaponPhysCannon, CTFWeaponBase );
 
-	DECLARE_DATADESC();
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
 	CWeaponPhysCannon( void );
-
-	// Do we have the super-phys gun?
-	inline bool	IsMegaPhysCannon()
-	{
-		return PlayerHasMegaPhysCannon();
-	}
 
 	virtual int		GetWeaponID( void ) const { return TF_WEAPON_PHYSCANNON; }
 	virtual void	WeaponReset( void );
@@ -323,6 +316,7 @@ public:
 	CNetworkHandle( CBaseEntity, m_hAttachedObject );
 
 	EHANDLE m_hOldAttachedObject;
+
 protected:
 	enum FindObjectResult_t
 	{
@@ -343,7 +337,7 @@ protected:
 	// Pickup and throw objects.
 	bool	CanPickupObject( CBaseEntity *pTarget );
 	void	CheckForTarget( void );
-
+	
 #ifndef CLIENT_DLL
 	bool	AttachObject( CBaseEntity *pObject, const Vector &vPosition );
 	FindObjectResult_t		FindObject( void );
@@ -406,6 +400,14 @@ protected:
 
 	// Sprite scale factor 
 	float	SpriteScaleFactor();
+
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	// Do we have the super-phys gun?
+	inline bool	IsMegaPhysCannon()
+	{
+		return PlayerHasMegaPhysCannon(); //SecobMod__Information: Force this to return true if always enabled.
+	}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	float			GetLoadPercentage();
 	CSoundPatch		*GetMotorSound( void );
