@@ -161,6 +161,7 @@ const char *g_aGameTypeNames[] =
 	"#Gametype_MVM",
 	"#Gametype_COOP",
 	"#Gametype_VS",
+	"#Gametype_ZS",
 };
 
 //-----------------------------------------------------------------------------
@@ -439,6 +440,7 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_SWORD",
 
 	"TF_WEAPON_STICKBOMB",
+	"TF_WEAPON_MINIGUN_TOMISLAV",
 
 	"TF_WEAPON_COUNT",	// end marker, do not add below here
 };
@@ -559,6 +561,7 @@ int g_aWeaponDamageTypes[] =
 	DMG_CLUB,	// TF_WEAPON_SWORD,
 
 	DMG_CLUB | DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_STICKBOMB,
+	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_MINIGUN_TOMISLAV,
 
 	// This is a special entry that must match with TF_WEAPON_COUNT
 	// to protect against updating the weapon list without updating this list

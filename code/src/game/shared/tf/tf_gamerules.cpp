@@ -117,6 +117,7 @@ ConVar tf_gamemode_payload( "tf_gamemode_payload", "0" , FCVAR_NOTIFY | FCVAR_RE
 ConVar tf_gamemode_mvm( "tf_gamemode_mvm", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_passtime( "tf_gamemode_passtime", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lf_versus( "lf_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar lf_gamemode_zs( "lf_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -760,6 +761,20 @@ public:
 LINK_ENTITY_TO_CLASS(lfe_logic_versus, CTFLogicVersus);
 
 void CTFLogicVersus::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
+class CTFLogicZombieSurvival : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicZombieSurvival, CBaseEntity);
+	void	Spawn(void);
+};
+
+LINK_ENTITY_TO_CLASS(lfe_logic_zs, CTFLogicZombieSurvival);
+
+void CTFLogicZombieSurvival::Spawn(void)
 {
 	BaseClass::Spawn();
 }
@@ -1591,6 +1606,16 @@ void CTFGameRules::Activate()
 		lf_versus.SetValue( 1 );
 		Msg( "Executing server versus config file\n", 1 );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+
+	if ( lf_gamemode_zs.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_zs" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "zs_", 3 ) )
+	{
+		m_nGameType.Set( TF_GAMETYPE_ZS );
+		lf_gamemode_zs.SetValue( 1 );
+		Msg( "Executing server zombie survival config file\n", 1 );
+		engine->ServerCommand( "exec config_zs.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
@@ -6945,7 +6970,7 @@ float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayer
 bool CTFGameRules::ShouldBalanceTeams( void )
 {
 	// No team balancing in coop since everybody should be on RED.
-	if ( IsCoOp() && !IsVersus() )
+	if ( IsCoOp() || IsZombieSurvival() || !IsVersus() )
 	{
 		return false;
 	}

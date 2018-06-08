@@ -342,6 +342,8 @@ public:
 	bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
 	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
+	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
+
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes data tables able to access our private vars.

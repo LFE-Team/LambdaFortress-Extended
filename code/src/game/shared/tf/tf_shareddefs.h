@@ -176,6 +176,7 @@ enum
 	TF_GAMETYPE_PD,
 	TF_GAMETYPE_COOP,
 	TF_GAMETYPE_VS,
+	TF_GAMETYPE_ZS,
 };
 extern const char *g_aGameTypeNames[];	// localized gametype names
 
@@ -418,6 +419,7 @@ enum
 	TF_WEAPON_SWORD,
 
 	TF_WEAPON_STICKBOMB,
+	TF_WEAPON_MINIGUN_TOMISLAV,
 
 	TF_WEAPON_COUNT
 };

@@ -26,7 +26,7 @@
 	}
 	"sniper"
 	{
-		"primary"		"1"
+		"primary"		"0"
 		"secondary"		"0"
 		"melee"		"0"
 		"pda"		"0"
@@ -38,8 +38,8 @@
 	}
 	"soldier"
 	{
-		"primary"		"1"
-		"secondary"		"1"
+		"primary"		"0"
+		"secondary"		"0"
 		"melee"		"0"
 		"pda"		"0"
 		"pda2"		"0"
@@ -52,7 +52,7 @@
 	{
 		"primary"		"0"
 		"secondary"		"0"
-		"melee"		"2"
+		"melee"		"0"
 		"pda"		"0"
 		"pda2"		"0"
 		"building"		"0"
@@ -61,66 +61,6 @@
 		"action"		"0"
 	}
 	"medic"
-	{
-		"primary"		"1"
-		"secondary"		"1"
-		"melee"		"1"
-		"pda"		"0"
-		"pda2"		"0"
-		"building"		"0"
-		"head"		"0"
-		"misc"		"0"
-		"action"		"0"
-	}
-	"heavy"
-	{
-		"primary"		"1"
-		"secondary"		"2"
-		"melee"		"1"
-		"pda"		"0"
-		"pda2"		"0"
-		"building"		"0"
-		"head"		"0"
-		"misc"		"0"
-		"action"		"0"
-	}
-	"pyro"
-	{
-		"primary"		"0"
-		"secondary"		"1"
-		"melee"		"1"
-		"pda"		"0"
-		"pda2"		"0"
-		"building"		"0"
-		"head"		"0"
-		"misc"		"0"
-		"action"		"0"
-	}
-	"spy"
-	{
-		"primary"		"1"
-		"secondary"		"1"
-		"melee"		"1"
-		"pda"		"0"
-		"pda2"		"0"
-		"building"		"0"
-		"head"		"0"
-		"misc"		"0"
-		"action"		"0"
-	}
-	"engineer"
-	{
-		"primary"		"0"
-		"secondary"		"0"
-		"melee"		"2"
-		"pda"		"0"
-		"pda2"		"0"
-		"building"		"0"
-		"head"		"0"
-		"misc"		"0"
-		"action"		"0"
-	}
-	"civilian"
 	{
 		"primary"		"0"
 		"secondary"		"0"
@@ -132,7 +72,43 @@
 		"misc"		"0"
 		"action"		"0"
 	}
-	"mercenary"
+	"heavy"
+	{
+		"primary"		"0"
+		"secondary"		"0"
+		"melee"		"0"
+		"pda"		"0"
+		"pda2"		"0"
+		"building"		"0"
+		"head"		"0"
+		"misc"		"0"
+		"action"		"0"
+	}
+	"pyro"
+	{
+		"primary"		"0"
+		"secondary"		"0"
+		"melee"		"0"
+		"pda"		"0"
+		"pda2"		"0"
+		"building"		"0"
+		"head"		"0"
+		"misc"		"0"
+		"action"		"0"
+	}
+	"spy"
+	{
+		"primary"		"0"
+		"secondary"		"0"
+		"melee"		"0"
+		"pda"		"0"
+		"pda2"		"0"
+		"building"		"0"
+		"head"		"0"
+		"misc"		"0"
+		"action"		"0"
+	}
+	"engineer"
 	{
 		"primary"		"0"
 		"secondary"		"0"

@@ -17,6 +17,7 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFMinigun C_TFMinigun
+#define CTFMinigunTomislav C_TFMinigunTomislav
 #endif
 
 enum MinigunState_t
@@ -139,6 +140,17 @@ private:
 	CNewParticleEffect *m_pMuzzleEffect;
 	int					m_iMuzzleAttachment;
 #endif
+};
+
+// LFE need this because of the Slient killer
+class CTFMinigunTomislav : public CTFMinigun
+{
+public:
+	DECLARE_CLASS( CTFMinigunTomislav, CTFMinigun );
+	DECLARE_NETWORKCLASS(); 
+	DECLARE_PREDICTABLE();
+
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_MINIGUN_TOMISLAV; }
 };
 
 #endif // TF_WEAPON_MINIGUN_H

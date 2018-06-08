@@ -18,6 +18,7 @@
 // Server specific.
 #else
 #include "tf_player.h"
+#include "soundent.h"
 #endif
 
 #define MAX_BARREL_SPIN_VELOCITY	20
@@ -201,6 +202,12 @@ void CTFMinigun::SharedAttack()
 					m_iWeaponState = AC_STATE_SPINNING;
 #ifdef GAME_DLL
 					pPlayer->SpeakWeaponFire( MP_CONCEPT_WINDMINIGUN );
+
+					CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
+					if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_MINIGUN_TOMISLAV ) )
+					{
+						CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
+					}
 #endif
 				}
 				else
@@ -868,3 +875,19 @@ void CTFMinigun::WeaponSoundUpdate()
 
 
 #endif
+/*
+IMPLEMENT_NETWORKCLASS_ALIASED( TFMinigunTomislav, DT_WeaponMinigunTomislav )
+	
+BEGIN_NETWORK_TABLE( CTFMinigunTomislav, DT_WeaponMinigunTomislav )
+END_NETWORK_TABLE()
+
+#ifdef CLIENT_DLL
+BEGIN_PREDICTION_DATA( CTFMinigunTomislav )
+END_PREDICTION_DATA()
+#endif
+
+LINK_ENTITY_TO_CLASS( tf_weapon_minigun_tomislav, CTFMinigunTomislav );
+PRECACHE_WEAPON_REGISTER( tf_weapon_minigun_tomislav );
+*/
+
+CREATE_SIMPLE_WEAPON_TABLE( TFMinigunTomislav, tf_weapon_minigun_tomislav )
