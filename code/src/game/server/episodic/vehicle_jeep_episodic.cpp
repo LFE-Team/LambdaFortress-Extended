@@ -664,6 +664,10 @@ Vector CPropJeepEpisodic::PhysGunLaunchVelocity(const Vector &forward, float flM
 	if (PassengerInTransition())
 		return vec3_origin;
 
+	// if we're jeep then stop.
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+		return vec3_origin;
+
 	Vector vecPuntDir = BaseClass::PhysGunLaunchVelocity(forward, flMass);
 	vecPuntDir.z = 150.0f;
 	vecPuntDir *= 600.0f;
@@ -677,6 +681,10 @@ AngularImpulse CPropJeepEpisodic::PhysGunLaunchAngularImpulse(void)
 {
 	if (IsOverturned())
 		return AngularImpulse(0, 300, 0);
+
+	// if we're jeep then stop oh wait
+	//if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	//	return AngularImpulse(0, 300, 0);
 
 	// Don't spin randomly, always spin reliably
 	return AngularImpulse(0, 0, 0);
@@ -990,6 +998,10 @@ void CPropJeepEpisodic::UpdateCargoEntry(void)
 {
 	// Don't bother if we have no prop to move
 	if (m_hCargoProp == NULL)
+		return;
+
+	// we don't have cargo for jeep
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
 		return;
 
 	// If we're past our animation point, then we're already done
@@ -1499,15 +1511,15 @@ void CPropJeepEpisodic::SpawnRadarPanel()
 	int nLLAttachmentIndex = pEntityToSpawnOn->LookupAttachment(pOrgLL);
 
 	if (nLLAttachmentIndex <= 0)
-	{
 		return;
-	}
 
 	int nURAttachmentIndex = pEntityToSpawnOn->LookupAttachment(pOrgUR);
 	if (nURAttachmentIndex <= 0)
-	{
 		return;
-	}
+
+	// we don't have radar for jeep
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+		return;
 
 	const char *pScreenName = "jalopy_radar_panel";
 	const char *pScreenClassname = "vgui_screen";

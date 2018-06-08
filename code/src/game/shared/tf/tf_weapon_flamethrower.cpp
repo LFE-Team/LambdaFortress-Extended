@@ -1457,7 +1457,8 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 		// if bounding box check passes, check player hitboxes
 		trace_t trHitbox;
 		trace_t trWorld;
-		bool bTested = pOther->GetCollideable()->TestHitboxes( ray, MASK_SOLID | CONTENTS_HITBOX, trHitbox );
+		//bool bTested = pOther->GetCollideable()->TestHitboxes( ray, MASK_SOLID | CONTENTS_HITBOX, trHitbox );
+		bool bTested = pOther->GetCollideable()->TestHitboxes( ray, MASK_SHOT, trHitbox );
 		if ( !bTested || !trHitbox.DidHit() )
 			return;
 
