@@ -94,6 +94,7 @@ public:
 	int				DrawDebugTextOverlays();
 	void			Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 	virtual void	Think( void );
+	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	CFourWheelVehiclePhysics *GetPhysics( void ) { return &m_VehiclePhysics; }
 	CBasePlayer		*HasPhysicsAttacker( float dt );
 	void			OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
@@ -128,7 +129,7 @@ protected:
 	virtual float GetUprightStrength( void ) { return 8.0f; }
 	virtual float GetUprightTime( void ) { return 5.0f; }
 
-	virtual bool					IsDeflectable() { return true; }
+	virtual bool					IsDeflectable() { return false; }
 protected:
 	CFourWheelVehiclePhysics		m_VehiclePhysics;
 	unsigned int					m_nVehicleType;

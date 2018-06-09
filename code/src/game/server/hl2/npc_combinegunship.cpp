@@ -248,6 +248,7 @@ public:
 
 	virtual void	MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 	virtual void	DoImpactEffect( trace_t &tr, int nDamageType );
+	virtual bool		IsDeflectable() { return false; }
 
 	void	MoveHead( void );
 	void	UpdateDesiredPosition( void );

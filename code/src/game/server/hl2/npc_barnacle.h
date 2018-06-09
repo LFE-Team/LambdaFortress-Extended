@@ -49,6 +49,7 @@ public:
 	virtual void Precache( void );
 	virtual void UpdateOnRemove( );
 	virtual void VPhysicsUpdate( IPhysicsObject *pPhysics );
+	virtual bool		IsDeflectable() { return false; }
 
 	virtual int	UpdateTransmitState( void );
 	bool						CreateSpring( CBaseAnimating *pTongueRoot );

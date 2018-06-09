@@ -89,6 +89,7 @@ public:
 
 	bool AllArmorDestroyed( void );
 	bool IsArmorPiece( int iArmorPiece );
+	virtual bool		IsDeflectable() { return false; }
 
 	float MaxYawSpeed( void );
 

@@ -142,6 +142,7 @@ public:
 	
 	bool IsValidEnemy( CBaseEntity *pEnemy );
 	bool FVisible(CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL);
+	virtual bool		IsDeflectable() { return false; }
 
 	Vector EyeOffset(Activity nActivity) 
 	{

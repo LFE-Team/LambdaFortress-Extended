@@ -239,6 +239,7 @@ public:
 
 	virtual int SelectSchedule( void );
 	virtual int TranslateSchedule( int scheduleType );
+	virtual bool		IsDeflectable() { return false; }
 
 	bool KeyValue( const char *szKeyName, const char *szValue );
 
