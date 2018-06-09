@@ -94,7 +94,6 @@ public:
 	int				DrawDebugTextOverlays();
 	void			Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity );
 	virtual void	Think( void );
-	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	CFourWheelVehiclePhysics *GetPhysics( void ) { return &m_VehiclePhysics; }
 	CBasePlayer		*HasPhysicsAttacker( float dt );
 	void			OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );

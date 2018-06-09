@@ -157,14 +157,6 @@ void CPropVehicle::DrawDebugGeometryOverlays()
 	}
 	BaseClass::DrawDebugGeometryOverlays();
 }
-bool CPropVehicle::ShouldCollide(int collisionGroup, int contentsMask) const
-{
-	if ((collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT))
-	{
-		return false;
-	}
-	return BaseClass::ShouldCollide(collisionGroup, contentsMask);
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
