@@ -672,11 +672,30 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	CAI_BaseNPC *pVictim = this;
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pKiller = info.GetAttacker();
-	CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
+	//CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
+	CTFPlayer *pScorer = ToTFPlayer( TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim ) );
 	CBaseEntity *pAssister = TFGameRules()->GetAssister( pVictim, pKiller, pInflictor );
 	int iWeaponID = TF_WEAPON_NONE;
 	// Work out what killed the player, and send a message to all clients about it
 	const char *killer_weapon_name = TFGameRules()->GetKillingWeaponName( info, NULL, iWeaponID );
+	const char *killer_weapon_log_name = NULL;
+
+	if ( iWeaponID && pScorer )
+	{
+		CTFWeaponBase *pWeapon = pScorer->Weapon_OwnsThisID( iWeaponID );
+		if ( pWeapon )
+		{
+			CEconItemDefinition *pItemDef = pWeapon->GetItem()->GetStaticData();
+			if ( pItemDef )
+			{
+				if ( pItemDef->item_iconname[0] )
+					killer_weapon_name = pItemDef->item_iconname;
+
+				if ( pItemDef->item_logname[0] )
+					killer_weapon_log_name = pItemDef->item_logname;
+			}
+		}
+	}
 
 	if ( pScorer )	// Is the killer a client?
 	{
@@ -701,6 +720,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		event->SetString( "assister_name", pAssister ? pAssister->GetClassname() : NULL );
 		event->SetInt( "assister_team", pAssister ? pAssister->GetTeamNumber() : 0 );
 		event->SetString( "weapon", killer_weapon_name );
+		event->SetString( "weapon_logclassname", killer_weapon_log_name );
 		event->SetInt( "damagebits", info.GetDamageType() );
 		event->SetInt( "customkill", info.GetDamageCustom() );
 		event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
