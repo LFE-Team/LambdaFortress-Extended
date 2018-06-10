@@ -769,10 +769,27 @@ class CTFLogicZombieSurvival : public CBaseEntity
 {
 public:
 	DECLARE_CLASS(CTFLogicZombieSurvival, CBaseEntity);
+	CTFLogicZombieSurvival();
+	~CTFLogicZombieSurvival();
+
 	void	Spawn(void);
+private:
+	bool m_bFinale;
+	bool m_bFiredEscapeRoom;
 };
 
 LINK_ENTITY_TO_CLASS(lfe_logic_zs, CTFLogicZombieSurvival);
+
+CTFLogicZombieSurvival::CTFLogicZombieSurvival()
+{
+	m_bFiredEscapeRoom = false;
+	m_bFinale = false;
+}
+
+CTFLogicZombieSurvival::~CTFLogicZombieSurvival()
+{
+
+}
 
 void CTFLogicZombieSurvival::Spawn(void)
 {

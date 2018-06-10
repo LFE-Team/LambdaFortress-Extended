@@ -72,6 +72,8 @@ public:
 	virtual void	MakeCarriedObject( CTFPlayer *pPlayer );
 
 	Vector GetEnemyAimPosition( CBaseEntity *pEnemy ) const;
+
+	virtual float			GetConstructionMultiplier( void );
 private:
 
 	// Main think

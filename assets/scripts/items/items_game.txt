@@ -1678,7 +1678,7 @@
 		"weapon_tomislav"
 		{
 			"enabled"	"1"
-			"item_class"	"tf_weapon_minigun"
+			"item_class"	"tf_weapon_minigun_tomislav"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
 			"capabilities"
@@ -3414,7 +3414,7 @@
 				"can_destroy_sappers"		"1"
 				"can_deal_taunt_damage"		"1"
 			}
-			"show_in_armory"	"1"
+			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Robot_Arm"
 			"item_name"	"#TF_Unique_Robot_Arm"
 			"item_slot"	"melee"
@@ -3695,7 +3695,7 @@
 			"item_class"	"tf_weapon_shovel"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
-			"show_in_armory"	"0"
+			"show_in_armory"	"1"
 			"capabilities"
 			{
 				"nameable"		"1"

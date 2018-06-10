@@ -16,7 +16,7 @@
 #include <KeyValues.h>
 #include "c_baseplayer.h"
 #include "c_team.h"
-
+#include "c_ai_basenpc.h"
 #include "hud_basedeathnotice.h"
 
 #include "tf_shareddefs.h"

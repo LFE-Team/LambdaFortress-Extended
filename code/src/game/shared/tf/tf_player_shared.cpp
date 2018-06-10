@@ -1586,8 +1586,32 @@ void CTFPlayerShared::OnRemoveSpeedBoost( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::RecalculatePlayerBodygroups( void )
 {
+	/*
+	int iSlot = TF_LOADOUT_SLOT_COUNT;
 	//CTFWeaponBase::UpdateWeaponBodyGroups((CTFWeaponBase *)v4, 0);
-	//CEconWearable::UpdateWearableBodyGroups(*((CEconWearable **)this + 521));
+
+	
+	CEconWearable *pWearable = GetWearableForLoadoutSlot( iSlot );
+	if ( pWearable )
+	{
+		pWearable->UpdateWearableBodyGroups( m_pOuter->IsLocalPlayer() );
+	}
+	*/
+
+	CTFWeaponBase *pWeapon = m_pOuter->GetActiveTFWeapon();
+	if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_ROBOT_ARM ) )
+	{
+		CTFPlayer *pOwner = ToTFPlayer( pWeapon->GetOwner() );
+		if ( pOwner )
+		{
+			pOwner->SetBodygroup( 0, 1 );
+
+			if ( pOwner->GetViewModel() )
+			{
+				pOwner->GetViewModel()->SetBodygroup( 1, true );
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

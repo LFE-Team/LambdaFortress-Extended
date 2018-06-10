@@ -83,7 +83,7 @@ static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
 	},
 	{
 		-1, -1, -1,
-	},
+	}
 };
 
 struct _WeaponData

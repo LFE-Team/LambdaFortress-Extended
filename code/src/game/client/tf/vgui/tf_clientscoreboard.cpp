@@ -144,7 +144,8 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	Reset();
 
-	if ( TFGameRules() && ( TFGameRules()->IsCoOp() ) )
+	/*
+	if ( TFGameRules() && ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() ) )
 	{
 		LoadControlSettings( "Resource/UI/scoreboard_coop.res" );
 		m_pPlayerListBlue->SetVisible( false );
@@ -153,6 +154,7 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
 		LoadControlSettings( "Resource/UI/scoreboard_vs.res" );
 	}
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -181,13 +183,24 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 	int iRenderGroup = gHUD.LookupRenderGroupIndexByName( "global" );
 
 	if ( bShow )
-	{		
+	{
 		if ( TFGameRules() && TFGameRules()->IsFourTeamGame())
 		{
 			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSCOREBOARD, true );
 		}
+		else if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+		{
+			LoadControlSettings("Resource/UI/scoreboard_coop.res");
+			m_pPlayerListBlue->SetVisible( false );
+		}
+		else if ( TFGameRules() && TFGameRules()->IsVersus() )
+		{
+			LoadControlSettings("Resource/UI/scoreboard_vs.res");
+			m_pPlayerListBlue->SetVisible( false );
+		}
 		else
 		{
+			LoadControlSettings("Resource/UI/scoreboard.res");
 			SetVisible(true);
 			MoveToFront();
 

@@ -1103,3 +1103,16 @@ CObjectTeleporter* CObjectTeleporter::FindMatch( void )
 
 	return pMatch;
 }
+
+float CObjectTeleporter::GetConstructionMultiplier( void )
+{
+	float flMultiplier = 1.0f;
+
+	// Re-deploy twice as fast.
+	if ( IsRedeploying() )
+		flMultiplier *= 2.0f;
+
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, teleporter_build_rate_multiplier );
+
+	return BaseClass::GetConstructionMultiplier();
+}

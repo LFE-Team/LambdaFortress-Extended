@@ -26,7 +26,9 @@ class C_AI_BaseNPC : public C_BaseCombatCharacter
 
 public:
 	DECLARE_CLIENTCLASS();
-
+	#ifdef TF_CLASSIC_CLIENT
+	DECLARE_PREDICTABLE();
+	#endif
 	C_AI_BaseNPC();
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 	virtual bool			IsNPC( void ) { return true; }
@@ -81,7 +83,8 @@ public:
 	//void	ConditionThink( void );
 	float	GetConditionDuration( int nCond );
 
-	void	UpdateConditions( void );
+	// check the newly networked conditions for changes
+	void	SyncConditions( int nCond, int nOldCond, int nUnused, int iOffset );
 
 	bool	IsCritBoosted( void );
 	bool	IsInvulnerable( void );
@@ -142,9 +145,16 @@ private:
 
 	// Conditions
 	int m_nPlayerCond;
-	int m_nOldConditions;
+	int m_nPlayerCondEx;
+	int m_nPlayerCondEx2;
+	int m_nPlayerCondEx3;
 	float m_flCondExpireTimeLeft[TF_COND_LAST];
 	int m_nNumHealers;
+
+	int	m_nOldConditions;
+	int m_nOldConditionsEx;
+	int m_nOldConditionsEx2;
+	int m_nOldConditionsEx3;
 
 	bool m_bWasCritBoosted;
 

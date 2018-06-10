@@ -511,6 +511,9 @@
 		"objecttype"	"short"		// type of object destroyed
 		"index"		"short"			// index of the object destroyed
 		"was_building"	"bool"		// object was being built when it died
+		"victim_index"		"short"		// entindex who died
+		"attacker_index"	"short"		// entindex that killed
+		"assister_index"	"short"		// entindex of assister
 	}
 
 	"npc_death"
@@ -701,6 +704,17 @@
 		"crit" "bool"
 		"weaponid" "short"
 	}
+
+	// dafuq is this?
+	//"npc_hurt"
+	//{
+	//	"entindex" "short"
+	//	"health" "short"
+	//	"attacker_player" "short"
+	//	"weaponid" "short"
+	//	"damageamount" "short"
+	//	"crit" "bool"
+	//}
 
 	"arena_player_notification"
 	{
@@ -1046,8 +1060,15 @@
 	{
 		"achievement"	"short"
 	}
-	
+
 	"player_healed"
+	{
+		"patient"	"short"
+		"healer"	"short"
+		"amount"	"short"
+	}
+
+	"npc_healed"
 	{
 		"patient"	"short"
 		"healer"	"short"
@@ -1195,16 +1216,6 @@
 	"eyeball_boss_escaped"
 	{
 		"level" "short"
-	}	
-	
-	"npc_hurt"
-	{
-		"entindex" "short"
-		"health" "short"
-		"attacker_player" "short"
-		"weaponid" "short"
-		"damageamount" "short"
-		"crit" "bool"
 	}
 	
 	"controlpoint_timer_updated"

@@ -722,6 +722,47 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		CTF_GameStats.Event_PlayerKilledNPC( pPlayerScorer, this );
 		pPlayerScorer->Event_KilledOther(this, info);
 	}
+
+	CTakeDamageInfo info_modified = info;
+
+	if ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE )
+	{
+		// if this was suicide, recalculate attacker to see if we want to award the kill to a recent damager
+		info_modified.SetAttacker( TFGameRules()->GetDeathScorer( info.GetAttacker(), pInflictor, this ) );
+	}
+	else if ( !pKiller || pKiller == this || pKiller->IsBSPModel() )
+	{
+		// Recalculate attacker if player killed himself or this was environmental death.
+		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
+		if ( pDamager )
+		{
+			info_modified.SetAttacker( pDamager );
+			info_modified.SetInflictor( NULL );
+			info_modified.SetWeapon( NULL );
+			info_modified.SetDamageType( DMG_GENERIC );
+			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
+		}
+	}
+
+	if ( pKiller && pKiller == pInflictor && pKiller->IsBSPModel() )
+	{
+		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
+		CTFPlayer *pTFDamager = ToTFPlayer( pDamager );
+
+		if ( pTFDamager )
+		{
+			IGameEvent *event = gameeventmanager->CreateEvent( "npc_environmental_death" );
+
+			if ( event )
+			{
+				event->SetInt( "killer", pTFDamager->GetUserID() );
+				event->SetInt( "victim", entindex() );
+				event->SetInt( "priority", 9 ); // HLTV event priority, not transmitted
+				
+				gameeventmanager->FireEvent( event );
+			}
+		}
+	}
 #endif
 	
 	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
@@ -925,6 +966,35 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
+		int nCritOnCond = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritOnCond, or_crit_vs_playercond );
+
+		if ( nCritOnCond )
+		{
+			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
+			{
+				int nCond = condition_to_attribute_translation[i];
+				int nFlag = ( 1 << i );
+				if ( ( nCritOnCond & nFlag ) && InCond( nCond ) )
+				{
+					bitsDamage |= DMG_CRITICAL;
+					info.AddDamageType( DMG_CRITICAL );
+					break;
+				}
+			}
+		}
+
+		int nCritWhileAirborne = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
+
+		CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
+
+		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		{
+			bitsDamage |= DMG_CRITICAL;
+			info.AddDamageType( DMG_CRITICAL );
+		}
+
 		// Notify the damaging weapon.
 		pWeapon->ApplyOnHitAttributes( this, info );
 	}
@@ -1443,6 +1513,16 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		// Start burning if we took ignition damage
 		bIgniting = ( ( info.GetDamageType() & DMG_IGNITE ) && ( GetWaterLevel() < WL_Waist ) );
+
+		if ( !bIgniting )
+		{
+			int iIgniting = 0;
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iIgniting, set_dmgtype_ignite );
+			bIgniting = ( iIgniting != 0 );
+		}
+
+		// Take damage - round to the nearest integer.
+		m_iHealth -= ( flDamage + 0.5f );
 	}
 
 	m_flLastDamageTime = gpGlobals->curtime;
@@ -1798,6 +1878,8 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 			if ( subInfo.GetDamageType() & DMG_USE_HITLOCATIONS )
 			{
 				CTFWeaponBase *pWpn = pTFAttacker->GetActiveTFWeapon();
+
+				float flDamage = subInfo.GetDamage();
 				bool bCritical = true;
 
 				if ( pWpn && !pWpn->CanFireCriticalShot( true ) )
@@ -1813,9 +1895,13 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 					// play the critical shot sound to the shooter	
 					if ( pWpn )
 					{
-						pWpn->WeaponSound( BURST );
+						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) )
+							pWpn->WeaponSound( BURST );
+
+						CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flDamage, headshot_damage_modify );
 					}
 				}
+				subInfo.SetDamage( flDamage );
 			}
 		}
 		else
@@ -1856,7 +1942,7 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	}
 
 #ifdef TF_CLASSIC
-	if ( InCond( TF_COND_INVULNERABLE ) )
+	if ( IsInvulnerable() )
 	{ 
 		// Make bullet impacts
 		g_pEffects->Ricochet( ptr->endpos - (vecDir * 8), -vecDir );
@@ -1906,6 +1992,12 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	{
 		Burn( pTFAttacker, pTFAttacker->GetActiveTFWeapon() );
 	}
+
+	if ( IsCritBoosted() )
+	{
+		subInfo.AddDamageType( DMG_CRITICAL );
+	}
+
 #endif
 
 	AddMultiDamage( subInfo, this );
@@ -11647,10 +11739,14 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropString( SENDINFO( m_szClassname ) ),
 
 #ifdef TF_CLASSIC
-	SendPropInt( SENDINFO( m_nPlayerCond ), TF_COND_LAST, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO( m_nPlayerCond ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO( m_nPlayerCondEx ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO( m_nPlayerCondEx2 ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO( m_nPlayerCondEx3 ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropInt( SENDINFO( m_nNumHealers ), 5, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropBool( SENDINFO( m_bBurningDeath ) ),
-	SendPropInt( SENDINFO( m_nTFFlags ) )
+	SendPropInt( SENDINFO( m_nTFFlags ) ),
+	SendPropArray3( SENDINFO_ARRAY3( m_flCondExpireTimeLeft ), SendPropFloat( SENDINFO_ARRAY( m_flCondExpireTimeLeft ) ) )
 #endif
 END_SEND_TABLE()
 
@@ -15129,13 +15225,15 @@ void CAI_BaseNPC::DeathNotice( const CTakeDamageInfo &info )
 
 int CAI_BaseNPC::TakeHealth( float flHealth, int bitsDamageType )
 {
-	int bResult = false;
+	int iResult = false;
 
 	// If the bit's set, add over the max health
 	if ( bitsDamageType & DMG_IGNORE_MAXHEALTH )
 	{
+		//int iTimeBasedDamage = g_pGameRules->Damage_GetTimeBased();
+		//m_bitsDamageType &= ~(bitsDamageType & ~iTimeBasedDamage);
 		m_iHealth += flHealth;
-		bResult = true;
+		iResult = (int)flHealth;
 	}
 	else
 	{
@@ -15150,15 +15248,15 @@ int CAI_BaseNPC::TakeHealth( float flHealth, int bitsDamageType )
 
 		if ( flHealthToAdd <= 0 )
 		{
-			bResult = false;
+			iResult = 0;
 		}
 		else
 		{
-			bResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
+			iResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
 		}
 	}
 
-	return bResult;
+	return iResult;
 }
 
 //-----------------------------------------------------------------------------
@@ -15358,40 +15456,6 @@ EHANDLE CAI_BaseNPC::GetFirstHealer()
 
 void CAI_BaseNPC::ConditionGameRulesThink( void )
 {
-	/*
-	if ( m_flNextCritUpdate < gpGlobals->curtime )
-	{
-		UpdateCritMult();
-		m_flNextCritUpdate = gpGlobals->curtime + 0.5;
-	}
-	*/
-
-	/*
-	for ( int i=0;i<TF_COND_LAST;i++ )
-	{
-		if ( m_nPlayerCond & (1<<i) )
-		{
-			// Ignore permanent conditions
-			if ( m_flCondExpireTimeLeft[i] != PERMANENT_CONDITION )
-			{
-				float flReduction = gpGlobals->frametime;
-
-				// If we're being healed, we reduce bad conditions faster
-				if ( i > TF_COND_HEALTH_BUFF && m_aHealers.Count() > 0 )
-				{
-					flReduction += (m_aHealers.Count() * flReduction * 4);
-				}
-
-				m_flCondExpireTimeLeft[i] = max( m_flCondExpireTimeLeft[i] - flReduction, 0 );
-
-				if ( m_flCondExpireTimeLeft[i] == 0 )
-				{
-					RemoveCond( i );
-				}
-			}
-		}
-	}*/
-
 	int i;
 	for ( i = 0; i < TF_COND_LAST; i++ )
 	{
@@ -15414,8 +15478,7 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 					}
 				}
 
-				//m_flCondExpireTimeLeft.Set( i, max( m_flCondExpireTimeLeft[i] - flReduction, 0 ) );
-				m_flCondExpireTimeLeft[i] = max( m_flCondExpireTimeLeft[i] - flReduction, 0 );
+				m_flCondExpireTimeLeft.Set( i, max( m_flCondExpireTimeLeft[i] - flReduction, 0 ) );
 
 				if ( m_flCondExpireTimeLeft[i] == 0 )
 				{
@@ -15473,10 +15536,50 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 
 			int iBoostMax = GetMaxBuffedHealth();
 
-			// Cap it to the max we'll boost a player's health
+			// Cap it to the max we'll boost a npc's health
 			nHealthToAdd = clamp( nHealthToAdd, 0, iBoostMax - GetHealth() );
 
 			TakeHealth( nHealthToAdd, DMG_IGNORE_MAXHEALTH );
+
+			// split up total healing based on the amount each healer contributes
+			for ( int i = 0; i < m_aHealers.Count(); i++ )
+			{
+				if ( m_aHealers[i].pPlayer.IsValid() )
+				{
+					CTFPlayer *pPlayer = static_cast<CTFPlayer *>( static_cast<CBaseEntity *>( m_aHealers[i].pPlayer ) );
+					float flAmount = 0.0f;
+
+					if ( InSameTeam( pPlayer ) )
+					{
+						flAmount = (float)nHealthToAdd * ( m_aHealers[i].flAmount / fTotalHealAmount );
+						CTF_GameStats.Event_PlayerHealedOther( pPlayer, flAmount );
+					}
+
+					// Store off how much this guy healed.
+					m_aHealers[i].iRecentAmount += nHealthToAdd;
+
+					// Show how much this player healed every second.
+					if ( gpGlobals->curtime >= m_aHealers[i].flNextNofityTime )
+					{
+						if ( m_aHealers[i].iRecentAmount > 0 )
+						{
+							IGameEvent *event = gameeventmanager->CreateEvent( "npc_healed" );
+							if ( event )
+							{
+								event->SetInt( "priority", 1 );
+								event->SetInt( "patient", entindex() );
+								event->SetInt( "healer", pPlayer->GetUserID() );
+								event->SetInt( "amount", m_aHealers[i].iRecentAmount );
+
+								gameeventmanager->FireEvent( event );
+							}
+						}
+
+						m_aHealers[i].iRecentAmount = 0;
+						m_aHealers[i].flNextNofityTime = gpGlobals->curtime + 1.0f;
+					}
+				}
+			}
 		}
 
 		if ( InCond( TF_COND_BURNING ) )
@@ -15486,32 +15589,7 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 			m_flFlameRemoveTime -= flReduction * gpGlobals->frametime;
 		}
 	}
-/*
-	if ( InCond( TF_COND_INVULNERABLE )  )
-	{
-		bool bRemoveInvul = false;
 
-		if ( ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && ( TFGameRules()->GetWinningTeam() != GetTeamNumber() ) )
-		{
-			bRemoveInvul = true;
-		}
-		
-		if ( m_flInvulnerableOffTime )
-		{
-			if ( gpGlobals->curtime > m_flInvulnerableOffTime )
-			{
-				bRemoveInvul = true;
-			}
-		}
-
-		if ( bRemoveInvul == true )
-		{
-			m_flInvulnerableOffTime = 0;
-			RemoveCond( TF_COND_INVULNERABLE_WEARINGOFF );
-			RemoveCond( TF_COND_INVULNERABLE );
-		}
-	}
-*/
 	if ( bDecayHealth )
 	{
 		// If we're not being buffed, our health drains back to our max
@@ -15551,14 +15629,14 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 		// If we're underwater, put the fire out
 		if ( gpGlobals->curtime > m_flFlameRemoveTime || GetWaterLevel() >= WL_Waist )
 		{
-			// Calling Extinguish since some NPCs use that.
-			Extinguish();
+			RemoveCond( TF_COND_BURNING );
 		}
 		else if ( ( gpGlobals->curtime >= m_flFlameBurnTime ) )
 		{
 			float flBurnDamage = TF_BURNING_DMG;
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hBurnWeapon, flBurnDamage, mult_wpn_burndmg );
 
+			// Burn the player (if not pyro, who does not take persistent burning damage)
 			CTakeDamageInfo info( m_hBurnAttacker, m_hBurnAttacker, m_hBurnWeapon, flBurnDamage, DMG_BURN | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BURNING );
 			TakeDamage( info );
 			m_flFlameBurnTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
@@ -15576,7 +15654,7 @@ void CAI_BaseNPC::AddDamagerToHistory( EHANDLE hDamager )
 {
 	// sanity check: ignore damager if it is on our team.  (Catch-all for 
 	// damaging self in rocket jumps, etc.)
-	if ( !hDamager || ( !hDamager->IsPlayer() && !hDamager->IsNPC() ) || hDamager->GetTeamNumber() == GetTeamNumber() )
+	if ( !hDamager || ( !hDamager->IsPlayer() && !hDamager->IsNPC() ) || hDamager->GetTeam() == GetTeam() )
 		return;
 
 	// If this damager is different from the most recent damager, shift the

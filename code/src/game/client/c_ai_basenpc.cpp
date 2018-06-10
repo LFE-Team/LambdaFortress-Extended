@@ -49,12 +49,23 @@ IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
 	RecvPropString( RECVINFO( m_szClassname ) ),
 #ifdef TF_CLASSIC_CLIENT
 	RecvPropInt( RECVINFO( m_nPlayerCond ) ),
+	RecvPropInt( RECVINFO( m_nPlayerCondEx ) ),
+	RecvPropInt( RECVINFO( m_nPlayerCondEx2 ) ),
+	RecvPropInt( RECVINFO( m_nPlayerCondEx3 ) ),
+	RecvPropArray3( RECVINFO_ARRAY( m_flCondExpireTimeLeft ), RecvPropFloat( RECVINFO( m_flCondExpireTimeLeft[0] ) ) ),
 	RecvPropInt( RECVINFO( m_nNumHealers ) ),
 	RecvPropBool( RECVINFO( m_bBurningDeath ) ),
 	RecvPropInt( RECVINFO( m_nTFFlags ) )
 #endif
 END_RECV_TABLE()
-
+#ifdef TF_CLASSIC_CLIENT
+BEGIN_PREDICTION_DATA_NO_BASE( C_AI_BaseNPC )
+	DEFINE_PRED_FIELD( m_nPlayerCond, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nPlayerCondEx, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nPlayerCondEx2, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nPlayerCondEx3, FIELD_INTEGER, FTYPEDESC_INSENDTABLE )
+END_PREDICTION_DATA()
+#endif
 extern ConVar cl_npc_speedmod_intime;
 
 bool NPC_IsImportantNPC( C_BaseAnimating *pAnimating )
@@ -181,6 +192,9 @@ void C_AI_BaseNPC::OnPreDataChanged( DataUpdateType_t updateType )
 #ifdef TF_CLASSIC_CLIENT
 	m_iOldTeam = GetTeamNumber();
 	m_nOldConditions = m_nPlayerCond;
+	m_nOldConditionsEx = m_nPlayerCondEx;
+	m_nOldConditionsEx2 = m_nPlayerCondEx2;
+	m_nOldConditionsEx3 = m_nPlayerCondEx3;
 	m_bWasCritBoosted = IsCritBoosted();
 #endif
 }
@@ -195,20 +209,23 @@ void C_AI_BaseNPC::OnDataChanged( DataUpdateType_t type )
 	}
 
 #ifdef TF_CLASSIC_CLIENT
-
 	if ( type == DATA_UPDATE_CREATED )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 
 		InitInvulnerableMaterial();
 	}
-	else
-	{
-		if ( m_iOldTeam != GetTeamNumber() )
-		{
-			InitInvulnerableMaterial();
-		}
-	}
+
+	// Update conditions from last network change
+	SyncConditions( m_nPlayerCond, m_nOldConditions, 0, 0 );
+	SyncConditions( m_nPlayerCondEx, m_nOldConditionsEx, 0, 32 );
+	SyncConditions( m_nPlayerCondEx2, m_nOldConditionsEx2, 0, 64 );
+	SyncConditions( m_nPlayerCondEx3, m_nOldConditionsEx3, 0, 96 );
+
+	m_nOldConditions = m_nPlayerCond;
+	m_nOldConditionsEx = m_nPlayerCondEx;
+	m_nOldConditionsEx2 = m_nPlayerCondEx2;
+	m_nOldConditionsEx3 = m_nPlayerCondEx3;
 
 	C_BaseCombatWeapon *pActiveWpn = this->GetActiveWeapon();
 	if ( pActiveWpn )
@@ -220,16 +237,62 @@ void C_AI_BaseNPC::OnDataChanged( DataUpdateType_t type )
 	{
 		StartBurningSound();
 	}
+/*
+	int nNewWaterLevel = GetWaterLevel();
 
-	// Update conditions from last network change
-	if ( m_nOldConditions != m_nPlayerCond )
+	if ( nNewWaterLevel != m_nOldWaterLevel )
 	{
-		UpdateConditions();
+		if ( ( m_nOldWaterLevel == WL_NotInWater ) && ( nNewWaterLevel > WL_NotInWater ) )
+		{
+			// Set when we do a transition to/from partially in water to completely out
+			m_flWaterEntryTime = gpGlobals->curtime;
+		}
 
-		m_nOldConditions = m_nPlayerCond;
+		// If player is now up to his eyes in water and has entered the water very recently (not just bobbing eyes in and out), play a bubble effect.
+		if ( ( nNewWaterLevel == WL_Eyes ) && ( gpGlobals->curtime - m_flWaterEntryTime ) < 0.5f ) 
+		{
+			CNewParticleEffect *pEffect = ParticleProp()->Create( "water_playerdive", PATTACH_ABSORIGIN_FOLLOW );
+			ParticleProp()->AddControlPoint( pEffect, 1, NULL, PATTACH_WORLDORIGIN, NULL, WorldSpaceCenter() );
+		}
+		// If player was up to his eyes in water and is now out to waist level or less, play a water drip effect
+		else if ( m_nOldWaterLevel == WL_Eyes && ( nNewWaterLevel < WL_Eyes ) && !bJustSpawned )
+		{
+			CNewParticleEffect *pWaterExitEffect = ParticleProp()->Create( "water_playeremerge", PATTACH_ABSORIGIN_FOLLOW );
+			ParticleProp()->AddControlPoint( pWaterExitEffect, 1, this, PATTACH_ABSORIGIN_FOLLOW );
+			m_bWaterExitEffectActive = true;
+		}
 	}
+*/
 #endif
 }
+
+#ifdef TF_CLASSIC_CLIENT
+//-----------------------------------------------------------------------------
+// Purpose: check the newly networked conditions for changes
+//-----------------------------------------------------------------------------
+void C_AI_BaseNPC::SyncConditions( int nCond, int nOldCond, int nUnused, int iOffset )
+{
+	if ( nCond == nOldCond )
+		return;
+
+	int nCondChanged = nCond ^ nOldCond;
+	int nCondAdded = nCondChanged & nCond;
+	int nCondRemoved = nCondChanged & nOldCond;
+
+	int i;
+	for ( i = 0; i < 32; i++ )
+	{
+		if ( nCondAdded & (1<<i) )
+		{
+			OnConditionAdded( i + iOffset );
+		}
+		else if ( nCondRemoved & (1<<i) )
+		{
+			OnConditionRemoved( i + iOffset );
+		}
+	}
+}
+#endif
 
 void C_AI_BaseNPC::UpdateOnRemove( void )
 {
@@ -368,29 +431,6 @@ Vector C_AI_BaseNPC::GetObserverCamOrigin( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: check the newly networked conditions for changes
-//-----------------------------------------------------------------------------
-void C_AI_BaseNPC::UpdateConditions( void )
-{
-	int nCondChanged = m_nPlayerCond ^ m_nOldConditions;
-	int nCondAdded = nCondChanged & m_nPlayerCond;
-	int nCondRemoved = nCondChanged & m_nOldConditions;
-
-	int i;
-	for ( i=0;i<TF_COND_LAST;i++ )
-	{
-		if ( nCondAdded & (1<<i) )
-		{
-			OnConditionAdded( i );
-		}
-		else if ( nCondRemoved & (1<<i) )
-		{
-			OnConditionRemoved( i );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 void C_AI_BaseNPC::GetTargetIDString( wchar_t *sIDString, int iMaxLenInBytes )
@@ -484,14 +524,20 @@ void C_AI_BaseNPC::InitInvulnerableMaterial( void )
 
 	switch ( iTeam )
 	{
-	case TF_TEAM_BLUE:	
-		pszMaterial = "models/effects/invulnfx_blue.vmt";
-		break;
-	case TF_TEAM_RED:	
-		pszMaterial = "models/effects/invulnfx_red.vmt";
-		break;
-	default:
-		break;
+		case TF_TEAM_RED:
+			pszMaterial = "models/effects/invulnfx_red.vmt";
+			break;
+		case TF_TEAM_BLUE:
+			pszMaterial = "models/effects/invulnfx_blue.vmt";
+			break;
+		case TF_TEAM_GREEN:
+			pszMaterial = "models/effects/invulnfx_green.vmt";
+			break;
+		case TF_TEAM_YELLOW:
+			pszMaterial = "models/effects/invulnfx_yellow.vmt";
+			break;
+		default:
+			break;
 	}
 
 	if ( pszMaterial )

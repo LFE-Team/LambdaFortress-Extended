@@ -36,7 +36,8 @@ extern bool IsInCommentaryMode();
 #define SENTRYGUN_MINS			Vector(-20, -20, 0)
 #define SENTRYGUN_MAXS			Vector( 20,  20, 66)
 
-#define SENTRYGUN_MAX_HEALTH	150
+#define SENTRYGUN_MAX_HEALTH		150
+#define MINI_SENTRYGUN_MAX_HEALTH	100
 
 #define SENTRYGUN_ADD_SHELLS	40
 #define SENTRYGUN_ADD_ROCKETS	8
@@ -128,6 +129,7 @@ CObjectSentrygun::CObjectSentrygun()
 	SetMaxHealth( SENTRYGUN_MAX_HEALTH );
 	m_iHealth = SENTRYGUN_MAX_HEALTH;
 	SetType( OBJ_SENTRYGUN );
+	m_bMiniBuilding = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -176,6 +178,16 @@ void CObjectSentrygun::Spawn()
 	UTIL_SetSize( this, SENTRYGUN_MINS, SENTRYGUN_MAXS );
 
 	m_iState.Set( SENTRY_STATE_INACTIVE );
+
+	int nMiniSentry = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+	if ( nMiniSentry )
+	{
+		m_bMiniBuilding = true;
+		SetMaxHealth( MINI_SENTRYGUN_MAX_HEALTH );
+		SetHealth( MINI_SENTRYGUN_MAX_HEALTH );
+		MakeMiniBuilding();
+	}
 
 	SetContextThink( &CObjectSentrygun::SentryThink, gpGlobals->curtime + SENTRY_THINK_DELAY, SENTRYGUN_CONTEXT );
 }
@@ -975,6 +987,11 @@ void CObjectSentrygun::Attack()
 			// Level 1 sentries fire slower
 			m_flNextAttack = gpGlobals->curtime + 0.2;
 		}
+		if ( m_iUpgradeLevel == 1 && m_bMiniBuilding )
+		{
+			// Mini-Sentries fire 50% faster
+			m_flNextAttack = gpGlobals->curtime + 0.15;
+		}
 		else
 		{
 			m_flNextAttack = gpGlobals->curtime + 0.1;
@@ -1107,6 +1124,10 @@ bool CObjectSentrygun::Fire()
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
 		info.m_flDamage = tf_sentrygun_damage.GetFloat();
+		if ( m_bMiniBuilding )
+		{
+			info.m_flDamage = 8;
+		}
 
 		FireBullets( info );
 
@@ -1567,6 +1588,19 @@ Vector CObjectSentrygun::GetEnemyAimPosition( CBaseEntity *pEnemy ) const
 	
 	// by default, shoot at enemy's hull center
 	return pEnemy->WorldSpaceCenter();
+}
+
+float CObjectSentrygun::GetConstructionMultiplier( void )
+{
+	float flMultiplier = 1.0f;
+
+	// Re-deploy twice as fast.
+	if ( IsRedeploying() )
+		flMultiplier *= 2.0f;
+
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, sentry_build_rate_multiplier );
+
+	return BaseClass::GetConstructionMultiplier();
 }
 
 LINK_ENTITY_TO_CLASS( tf_projectile_sentryrocket, CTFProjectile_SentryRocket );

@@ -83,6 +83,7 @@ public:
 
 	virtual void	MakeCarriedObject( CTFPlayer *pPlayer );
 
+	virtual float			GetConstructionMultiplier( void );
 protected:
 	CNetworkVar( int, m_iState );
 	CNetworkVar( float, m_flRechargeTime );

@@ -142,7 +142,7 @@ public:
 	virtual bool	Repair( float flHealth );
 
 	void			OnConstructionHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vector vecHitPos );
-	float			GetConstructionMultiplier( void );
+	virtual float			GetConstructionMultiplier( void );
 
 	// Destruction
 	virtual void	DetonateObject( void );
@@ -256,6 +256,8 @@ public:
 	void	FallThink( void );
 	float  m_flNextResetCheckTime;
 
+	/*virtual*/ void	MakeMiniBuilding( void );
+	bool			IsMiniBuilding( void ) { return m_bMiniBuilding; }
 public:		
 
 	virtual bool TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );

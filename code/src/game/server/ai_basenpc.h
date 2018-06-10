@@ -2217,7 +2217,10 @@ protected:
 
 private:
 	CNetworkVar( int, m_nPlayerCond );
-	float m_flCondExpireTimeLeft[TF_COND_LAST];		// Time until each condition expires
+	CNetworkVar( int, m_nPlayerCondEx );
+	CNetworkVar( int, m_nPlayerCondEx2 );
+	CNetworkVar( int, m_nPlayerCondEx3 );
+	CNetworkArray( float, m_flCondExpireTimeLeft, TF_COND_LAST ); // Time until each condition expires
 
 	struct healers_t
 	{

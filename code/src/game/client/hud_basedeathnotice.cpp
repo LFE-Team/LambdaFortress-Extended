@@ -387,7 +387,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 	bool bNPCDeath = FStrEq( pszEventName, "npc_death" );
 
 	bool bIsFeignDeath = event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH;
-	if ( bPlayerDeath )
+	if ( bPlayerDeath || bNPCDeath )
 	{
 		if ( !ShouldShowDeathNotice( event ) )
 			return;
@@ -422,7 +422,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 	// additional messages may get added during this function that cause the underlying array to get realloced, so don't
 	// ever keep a pointer to memory here.
 	int iMsg = -1;
-	if ( bPlayerDeath )
+	if ( bPlayerDeath || bNPCDeath )
 	{
 		iMsg = UseExistingNotice( event );
 	}
@@ -431,10 +431,13 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 		iMsg = AddDeathNoticeItem();
 	}
 
-	if ( bPlayerDeath || bObjectDeath )
+	if ( bPlayerDeath || bObjectDeath || bNPCDeath )
 	{
-		int victim = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
-		int killer = engine->GetPlayerForUserID( event->GetInt( "attacker" ) );
+		//int victim = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
+		//int killer = engine->GetPlayerForUserID( event->GetInt( "attacker" ) );
+		int victim = event->GetInt( "victim_index" );
+		int killer = event->GetInt( "attacker_index" );
+
 		const char *killedwith = event->GetString( "weapon" );
 		const char *killedwithweaponlog = event->GetString( "weapon_logclassname" );
 
@@ -591,7 +594,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 			}
 		}
 
-		if ( FStrEq( pszEventName, "player_death" ) || FStrEq( pszEventName, "npc_death" ) )
+		if ( bPlayerDeath || bNPCDeath )
 		{
 			if ( m_DeathNotices[iMsg].bCrit )
 			{

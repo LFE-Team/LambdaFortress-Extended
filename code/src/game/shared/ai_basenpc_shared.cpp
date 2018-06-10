@@ -461,9 +461,40 @@ extern ConVar tf_max_health_boost;
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::AddCond( int nCond, float flDuration /* = PERMANENT_CONDITION */ )
 {
+#ifdef GAME_DLL
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
-	m_nPlayerCond |= (1<<nCond);
-	m_flCondExpireTimeLeft[nCond] = flDuration;
+
+	int nCondFlag = nCond;
+	int *pVar = NULL;
+	if ( nCond < 96 )
+	{
+		if ( nCond < 64 )
+		{
+			if ( nCond < 32 )
+			{
+				pVar = &m_nPlayerCond.GetForModify();
+			}
+			else
+			{
+				pVar = &m_nPlayerCondEx.GetForModify();
+				nCondFlag -= 32;
+			}
+		}
+		else
+		{
+			pVar = &m_nPlayerCondEx2.GetForModify();
+			nCondFlag -= 64;
+		}
+	}
+	else
+	{
+		pVar = &m_nPlayerCondEx3.GetForModify();
+		nCondFlag -= 96;
+	}
+
+	*pVar |= ( 1 << nCondFlag );
+	m_flCondExpireTimeLeft.Set( nCond, flDuration );
+#endif
 	OnConditionAdded( nCond );
 }
 
@@ -472,11 +503,39 @@ void CAI_BaseNPC::AddCond( int nCond, float flDuration /* = PERMANENT_CONDITION 
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::RemoveCond( int nCond )
 {
+#ifdef GAME_DLL
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
+	int nCondFlag = nCond;
+	int *pVar = NULL;
+	if ( nCond < 96 )
+	{
+		if ( nCond < 64 )
+		{
+			if ( nCond < 32 )
+			{
+				pVar = &m_nPlayerCond.GetForModify();
+			}
+			else
+			{
+				pVar = &m_nPlayerCondEx.GetForModify();
+				nCondFlag -= 32;
+			}
+		}
+		else
+		{
+			pVar = &m_nPlayerCondEx2.GetForModify();
+			nCondFlag -= 64;
+		}
+	}
+	else
+	{
+		pVar = &m_nPlayerCondEx3.GetForModify();
+		nCondFlag -= 96;
+	}
 
-	m_nPlayerCond &= ~(1<<nCond);
-	m_flCondExpireTimeLeft[nCond] = 0;
-
+	*pVar &= ~( 1 << nCondFlag );
+	m_flCondExpireTimeLeft.Set( nCond, 0 );
+#endif
 	OnConditionRemoved( nCond );
 }
 
@@ -486,8 +545,39 @@ void CAI_BaseNPC::RemoveCond( int nCond )
 bool CAI_BaseNPC::InCond( int nCond )
 {
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
+/*
+	int nCondFlag = nCond;
+	const int *pVar = NULL;
 
-	return ( ( m_nPlayerCond & (1<<nCond) ) != 0 );
+	if ( nCond < 96 )
+	{
+		if ( nCond < 64 )
+		{
+			if ( nCond < 32 )
+			{
+				pVar = &m_nPlayerCond.Get();
+			}
+			else
+			{
+				pVar = &m_nPlayerCondEx.Get();
+				nCondFlag -= 32;
+			}
+		}
+		else
+		{
+			pVar = &m_nPlayerCondEx2.Get();
+			nCondFlag -= 64;
+		}
+	}
+	else
+	{
+		pVar = &m_nPlayerCondEx3.Get();
+		nCondFlag -= 96;
+	}
+
+	return ( ( *pVar & ( 1 << nCondFlag ) ) != 0 );
+*/
+	return ( ( m_nPlayerCond /*|| m_nPlayerCondEx || m_nPlayerCondEx2 || m_nPlayerCondEx3*/ & (1<<nCond) ) != 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -495,13 +585,14 @@ bool CAI_BaseNPC::InCond( int nCond )
 //-----------------------------------------------------------------------------
 float CAI_BaseNPC::GetConditionDuration( int nCond )
 {
+#ifdef GAME_DLL
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
 
 	if ( InCond( nCond ) )
 	{
 		return m_flCondExpireTimeLeft[nCond];
 	}
-	
+#endif
 	return 0.0f;
 }
 
@@ -511,9 +602,9 @@ float CAI_BaseNPC::GetConditionDuration( int nCond )
 void CAI_BaseNPC::RemoveAllCond( void )
 {
 	int i;
-	for ( i=0;i<TF_COND_LAST;i++ )
+	for ( i = 0; i < TF_COND_LAST; i++ )
 	{
-		if ( m_nPlayerCond & (1<<i) )
+		if ( InCond( i ) )
 		{
 			RemoveCond( i );
 		}
@@ -521,6 +612,9 @@ void CAI_BaseNPC::RemoveAllCond( void )
 
 	// Now remove all the rest
 	m_nPlayerCond = 0;
+	m_nPlayerCondEx = 0;
+	m_nPlayerCondEx2 = 0;
+	m_nPlayerCondEx3 = 0;
 }
 
 
@@ -583,7 +677,6 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-	case TF_COND_POWERUP_CRITDAMAGE:
 		OnAddCritboosted();
 		break;
 
@@ -637,7 +730,6 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-	case TF_COND_POWERUP_CRITDAMAGE:
 		OnRemoveCritboosted();
 		break;
 
@@ -661,8 +753,7 @@ bool CAI_BaseNPC::IsCritBoosted( void )
 		InCond( TF_COND_CRITBOOSTED_CTF_CAPTURE ) ||
 		InCond( TF_COND_CRITBOOSTED_ON_KILL ) ||
 		InCond( TF_COND_CRITBOOSTED_CARD_EFFECT ) ||
-		InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) ||
-		InCond( TF_COND_POWERUP_CRITDAMAGE ) )
+		InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) )
 		return true;
 
 	return false;

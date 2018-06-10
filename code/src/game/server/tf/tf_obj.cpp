@@ -203,6 +203,7 @@ CBaseObject::CBaseObject()
 	m_aGibs.Purge();
 	m_iObjectMode = 0;
 	m_iDefaultUpgrade = 0;
+	m_bMiniBuilding = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -295,6 +296,11 @@ bool CBaseObject::CanBeUpgraded( CTFPlayer *pPlayer )
 	}
 
 	if ( IsRedeploying() )
+	{
+		return false;
+	}
+
+	if ( IsMiniBuilding() )
 	{
 		return false;
 	}
@@ -408,6 +414,30 @@ void CBaseObject::Spawn( void )
 
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 	UTIL_DropToFloor( this, MASK_SOLID );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Gunslinger's Buildings
+//-----------------------------------------------------------------------------
+void CBaseObject::MakeMiniBuilding( void )
+{
+	m_flModelScale = 0.6f;
+	// Set the skin
+	switch ( GetTeamNumber() )
+	{
+	case TF_TEAM_RED:
+		m_nSkin = 2;
+		break;
+
+	case TF_TEAM_BLUE:
+		m_nSkin = 3;
+		break;
+
+	default:
+		m_nSkin = 2;
+		break;
+	}
+	SetBodygroup( 1, true );
 }
 
 void CBaseObject::MakeCarriedObject( CTFPlayer *pPlayer )
@@ -695,6 +725,12 @@ void CBaseObject::BaseObjectThink( void )
 			// Finished.
 			m_bCarryDeploy = false;
 		}
+	}
+	
+	if ( IsMiniBuilding() )
+	{
+		MakeMiniBuilding();
+		return;
 	}
 }
 
@@ -1029,6 +1065,11 @@ void CBaseObject::StartPlacement( CTFPlayer *pPlayer )
 	default:
 		m_nSkin = 1;
 		break;
+	}
+
+	if ( IsMiniBuilding() )
+	{
+		MakeMiniBuilding();
 	}
 }
 
@@ -1507,6 +1548,11 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 	// instantly play the build anim
 	DetermineAnimation();
 
+	if ( IsMiniBuilding() )
+	{
+		MakeMiniBuilding();
+	}
+
 	return true;
 }
 
@@ -1517,6 +1563,11 @@ void CBaseObject::BuildingThink( void )
 {
 	// Continue construction
 	Repair( (GetMaxHealth() - OBJECT_CONSTRUCTION_STARTINGHEALTH) / m_flTotalConstructionTime * OBJECT_CONSTRUCTION_INTERVAL );
+
+	if ( IsMiniBuilding() )
+	{
+		MakeMiniBuilding();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1885,7 +1936,7 @@ int CBaseObject::OnTakeDamage( const CTakeDamageInfo &info )
 		}
 	}
 
-	int iOldHealth = m_iHealth;
+	//int iOldHealth = m_iHealth;
 
 	if ( flDamage )
 	{
@@ -1897,7 +1948,7 @@ int CBaseObject::OnTakeDamage( const CTakeDamageInfo &info )
 			SetHealth( m_flHealth - flDamage );
 		}
 	}
-
+/*
 	IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
 
 	if ( event )
@@ -1915,7 +1966,7 @@ int CBaseObject::OnTakeDamage( const CTakeDamageInfo &info )
 
 		gameeventmanager->FireEvent( event );
 	}
-
+*/
 	m_OnDamaged.FireOutput(info.GetAttacker(), this);
 
 	if ( GetHealth() <= 0 )
@@ -2024,9 +2075,16 @@ float CBaseObject::GetConstructionMultiplier( void )
 {
 	float flMultiplier = 1.0f;
 
+	// Minis deploy faster.
+	if ( IsMiniBuilding() )
+		flMultiplier *= 1.5f;
+
 	// Re-deploy twice as fast.
 	if ( IsRedeploying() )
 		flMultiplier *= 2.0f;
+
+	//CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, sentry_build_rate_multiplier );
+	//CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, teleporter_build_rate_multiplier );
 
 	// expire all the old 
 	int i = m_RepairerList.LastInorder();
@@ -2219,13 +2277,16 @@ void CBaseObject::Killed( const CTakeDamageInfo &info )
 			if ( pTFPlayer )
 			{
 				event->SetInt( "userid", pTFPlayer->GetUserID() );
+				event->SetInt( "victim_index", pTFPlayer->entindex() );
 			}
 			if ( pAssister && ( pAssister != pScorer ) )
 			{
 				event->SetInt( "assister", pAssister->GetUserID() );
+				event->SetInt( "assister_index", pAssister->entindex() );
 			}
 			
 			event->SetInt( "attacker", pScorer->GetUserID() );	// attacker
+			event->SetInt( "attacker_index", pScorer->entindex() );
 			event->SetString( "weapon", killer_weapon_name );
 			event->SetString( "weapon_logclassname", killer_weapon_log_name );
 			event->SetInt( "priority", 6 );		// HLTV event priority, not transmitted
@@ -2517,10 +2578,14 @@ bool CBaseObject::OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vector ve
 
 	if ( !bRepair )
 	{
-		// Don't put in upgrade metal until the object is fully healed
-		if ( CanBeUpgraded( pPlayer ) )
+		// no building upgrade for minis.
+		if ( !IsMiniBuilding() )
 		{
-			bUpgrade = CheckUpgradeOnHit( pPlayer );
+			// Don't put in upgrade metal until the object is fully healed
+			if ( CanBeUpgraded( pPlayer ) )
+			{
+				bUpgrade = CheckUpgradeOnHit( pPlayer );
+			}
 		}
 	}
 

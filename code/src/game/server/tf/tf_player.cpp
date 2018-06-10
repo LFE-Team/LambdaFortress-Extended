@@ -579,6 +579,25 @@ void CTFPlayer::MedicRegenThink( void )
 
 		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
 	}
+	else if ( !IsPlayerClass( TF_CLASS_MEDIC ) )
+	{
+		float flHealRegen = 0;
+		CALL_ATTRIB_HOOK_FLOAT( flHealRegen, add_health_regen );
+		if ( flHealRegen )
+		{
+			if ( IsAlive() )
+			{
+				// Heal faster if we haven't been in combat for a while
+				float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
+				float flScale = RemapValClamped( flTimeSinceDamage, 5, 10, 1.0, 2.0 );
+
+				int iHealAmount = ceil( flHealRegen * flScale );
+				TakeHealth( iHealAmount, DMG_GENERIC );
+			}
+		}
+
+		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
+	}
 }
 
 CTFPlayer::~CTFPlayer()
@@ -1079,12 +1098,9 @@ void CTFPlayer::InitialSpawn( void )
 
 	m_iMaxSentryKills = 0;
 	CTF_GameStats.Event_MaxSentryKills( this, 0 );
-	/*
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		UpdatePlayerColor();
-	}
-	*/
+
+	UpdatePlayerColor();
+
 	// Set initial lives count.
 	m_Shared.SetLivesCount( lf_coop_lives.GetInt() );
 
@@ -1424,7 +1440,17 @@ void CTFPlayer::InitClass( void )
 {
 	// Set initial health and armor based on class.
 	SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
-	SetHealth( GetMaxHealth() );
+
+	float flMaxHealth = (float)GetPlayerClass()->GetMaxHealth();
+	//if ( flMaxHealth == WEAPON_NOCLIP )
+	//	return (int)flMaxHealth;
+
+	CALL_ATTRIB_HOOK_FLOAT( flMaxHealth, add_maxhealth );
+
+	int iMaxHealth = (int)( flMaxHealth + 0.5f );
+
+	//SetHealth( GetMaxHealth() );
+	SetHealth( iMaxHealth );
 
 	SetArmorValue( GetPlayerClass()->GetMaxArmor() );
 
@@ -1434,13 +1460,9 @@ void CTFPlayer::InitClass( void )
 
 	// Give default items for class.
 	GiveDefaultItems();
-	/*
+
 	// Update player's color.
-	if ( TFGameRules()->IsDeathmatch() )
-	{
-		UpdatePlayerColor();
-	}
-	*/
+	UpdatePlayerColor();
 }
 
 //-----------------------------------------------------------------------------
@@ -1618,10 +1640,15 @@ void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
 	{
 		//Not supposed to be holding a builder, nuke it from orbit
 		CTFWeaponBase *pWpn = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
+		CTFWeaponBase *pRobotArm = Weapon_OwnsThisID( TF_WEAPON_ROBOT_ARM );
 
 		if ( pWpn )
 		{
 			pWpn->UnEquip( this );
+		}
+		if ( pRobotArm )
+		{
+			pRobotArm->UnEquip( this );
 		}
 	}
 }
@@ -5173,57 +5200,24 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	m_Shared.SetKillstreak( 0 );
-	/*
-	bool bUsedSuicideButton = ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE );
-	
-	//if ( pAttacker && pAttacker == pInflictor && pAttacker->IsBSPModel() )
-	if ( bUsedSuicideButton || pAttacker == this || pAttacker->IsBSPModel() )
-	{
-		
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
 
-		if ( pDamager )
+	if ( pAttacker && pAttacker == pInflictor && pAttacker->IsBSPModel() )
+	{
+		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
+		CTFPlayer *pTFDamager = ToTFPlayer( pDamager );
+
+		if ( pTFDamager )
 		{
 			IGameEvent *event = gameeventmanager->CreateEvent( "environmental_death" );
 
 			if ( event )
 			{
-				event->SetInt( "killer", pDamager->GetUserID() );
+				event->SetInt( "killer", pTFDamager->GetUserID() );
 				event->SetInt( "victim", GetUserID() );
 				event->SetInt( "priority", 9 ); // HLTV event priority, not transmitted
 				
 				gameeventmanager->FireEvent( event );
 			}
-		}
-		float flCreditTime = bUsedSuicideButton ? TF_TIME_SUICIDE_KILL_CREDIT : TF_TIME_ENV_DEATH_KILL_CREDIT;
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, flCreditTime );
-
-		if ( pDamager )
-		{
-			info_modified.SetAttacker( pDamager );
-			info_modified.SetInflictor( NULL );
-			info_modified.SetWeapon( NULL );
-			info_modified.SetDamageType( DMG_GENERIC );
-			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
-		}
-	}
-	*/
-
-	bool bUsedSuicideButton = ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE );
-
-	if ( bUsedSuicideButton || pAttacker == this || pAttacker->IsBSPModel() )
-	{
-		// Recalculate attacker if player killed himself or this was environmental death.
-		float flCreditTime = bUsedSuicideButton ? TF_TIME_SUICIDE_KILL_CREDIT : TF_TIME_ENV_DEATH_KILL_CREDIT;
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, flCreditTime );
-
-		if ( pDamager )
-		{
-			info_modified.SetAttacker( pDamager );
-			info_modified.SetInflictor( NULL );
-			info_modified.SetWeapon( NULL );
-			info_modified.SetDamageType( DMG_GENERIC );
-			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
 		}
 	}
 
