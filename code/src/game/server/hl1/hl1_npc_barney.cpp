@@ -926,6 +926,11 @@ void CNPC_DeadBarney::Spawn( void )
 {
 	PrecacheModel("models/hl1bar.mdl");
 	SetModel( "models/hl1bar.mdl");
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel( "models/barney_hd.mdl" );
+		SetModel( "models/barney_hd.mdl" );
+	}
 
 	ClearEffects();
 	SetSequence( 0 );

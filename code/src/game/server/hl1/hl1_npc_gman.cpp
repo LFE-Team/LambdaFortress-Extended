@@ -118,6 +118,11 @@ void CNPC_HL1GMan::Spawn()
 	BaseClass::Spawn();
 
 	SetModel( "models/hl1gman.mdl" );
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel( "models/gman_hd.mdl" );
+		SetModel( "models/gman_hd.mdl" );
+	}
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();

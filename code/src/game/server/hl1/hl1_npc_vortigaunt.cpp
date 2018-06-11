@@ -67,6 +67,11 @@ void CNPC_HL1Vortigaunt::Spawn()
 	Precache( );
 
 	SetModel( "models/islave.mdl" );
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel( "models/islave_hd.mdl" );
+		SetModel( "models/islave_hd.mdl" );
+	}
 	
 	SetRenderColor( 255, 255, 255, 255 );
 

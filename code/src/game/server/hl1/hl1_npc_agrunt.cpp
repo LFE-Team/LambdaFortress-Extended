@@ -181,6 +181,11 @@ void CNPC_AlienGrunt::Spawn()
 	Precache();
 
 	SetModel( "models/agrunt.mdl");
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel( "models/agrunt_hd.mdl" );
+		SetModel( "models/agrunt_hd.mdl" );
+	}
 	UTIL_SetSize( this, Vector( -32, -32, 0 ), Vector( 32, 32, 64 ) );
 
 	SetSolid( SOLID_BBOX );
