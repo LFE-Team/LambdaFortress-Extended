@@ -93,12 +93,14 @@ ConVar hud_combattext_batching( "hud_combattext_batching", "0", FCVAR_ARCHIVE, "
 ConVar hud_combattext_batching_window( "hud_combattext_batching_window", "0.2", FCVAR_ARCHIVE, "Maximum delay between damage events in order to batch numbers." );
 
 ConVar tf_dingalingaling( "tf_dingalingaling", "0", FCVAR_ARCHIVE, "If set to 1, play a sound everytime you injure an enemy. The sound can be customized by replacing the 'tf/sound/ui/hitsound.wav' file." );
+ConVar tf_dingalingaling_effect( "tf_dingalingaling_effect", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Which Dingalingaling sound is used" );
 ConVar tf_dingaling_volume( "tf_dingaling_volume", "0.75", FCVAR_ARCHIVE, "Desired volume of the hit sound.", true, 0.0, true, 1.0 );
 ConVar tf_dingaling_pitchmindmg( "tf_dingaling_pitchmindmg", "100", FCVAR_ARCHIVE, "Desired pitch of the hit sound when a minimal damage hit (<= 10 health) is done.", true, 1, true, 255 );
 ConVar tf_dingaling_pitchmaxdmg( "tf_dingaling_pitchmaxdmg", "100", FCVAR_ARCHIVE, "Desired pitch of the hit sound when a maximum damage hit (>= 150 health) is done.", true, 1, true, 255 );
 ConVar tf_dingalingaling_repeat_delay( "tf_dingalingaling_repeat_delay", "0", FCVAR_ARCHIVE, "Desired repeat delay of the hit sound. Set to 0 to play a sound for every instance of damage dealt." );
 
 ConVar tf_dingalingaling_lasthit( "tf_dingalingaling_lasthit", "0", FCVAR_ARCHIVE, "If set to 1, play a sound whenever one of your attacks kills an enemy. The sound can be customized by replacing the 'tf/sound/ui/killsound.wav' file." );
+ConVar tf_dingalingaling_last_effect( "tf_dingalingaling_last_effect", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Which final hit sound to play when the target expires." );
 ConVar tf_dingaling_lasthit_volume( "tf_dingaling_lasthit_volume", "0.75", FCVAR_ARCHIVE, "Desired volume of the last hit sound.", true, 0.0, true, 1.0 );
 ConVar tf_dingaling_lasthit_pitchmindmg( "tf_dingaling_lasthit_pitchmindmg", "100", FCVAR_ARCHIVE, "Desired pitch of the last hit sound when a minimal damage hit (<= 10 health) is done.", true, 1, true, 255 );
 ConVar tf_dingaling_lasthit_pitchmaxdmg( "tf_dingaling_lasthit_pitchmaxdmg", "100", FCVAR_ARCHIVE, "Desired pitch of the last hit sound when a maximum damage hit (>= 150 health) is done.", true, 1, true, 255 );
@@ -125,6 +127,7 @@ CDamageAccountPanel::CDamageAccountPanel( const char *pElementName ) : CHudEleme
 	ListenForGameEvent( "player_hurt" );
 	ListenForGameEvent( "player_healed" );
 	ListenForGameEvent( "npc_hurt" );
+	ListenForGameEvent( "npc_healed" );
 }
 
 //-----------------------------------------------------------------------------
@@ -138,7 +141,7 @@ void CDamageAccountPanel::FireGameEvent( IGameEvent *event )
 	{
 		OnDamaged( event );
 	}
-	else if ( V_strcmp( type, "player_healed" ) == 0 )
+	else if ( V_strcmp( type, "player_healed" ) == 0 || V_strcmp( type, "npc_healed" ) == 0 )
 	{
 		OnHealed( event );
 	}
@@ -323,11 +326,15 @@ void CDamageAccountPanel::OnHealed( IGameEvent *event )
 	if ( !hud_combattext.GetBool() )
 		return;
 
-	int iPatient = event->GetInt( "patient" );
-	int iHealer = event->GetInt( "healer" );
+	bool bIsPlayer = V_strcmp( event->GetName(), "npc_healed" ) != 0;
+
+	//int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "entindex" );;
+	int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "patient" );;
+	int iHealer = bIsPlayer ? event->GetInt( "healer" ) : event->GetInt( "healer" );
 	int iAmount = event->GetInt( "amount" );
 
 	// Did we heal this guy?
+	//if ( iHealer != pPlayer->GetUserID() )
 	if ( pPlayer->GetUserID() != iHealer )
 		return;
 
@@ -335,9 +342,18 @@ void CDamageAccountPanel::OnHealed( IGameEvent *event )
 	if ( iAmount == 0 )
 		return;
 
-	C_BasePlayer *pPatient = UTIL_PlayerByUserId( iPatient );
+	//C_BasePlayer *pPatient = UTIL_PlayerByUserId( iPatient );
+	C_BaseEntity *pPatient = bIsPlayer ? UTIL_PlayerByUserId( iPatient ) : ClientEntityList().GetBaseEntity( iPatient );
 	if ( !pPatient )
 		return;
+
+	if ( bIsPlayer )
+	{
+		C_TFPlayer *pTFPatient = ToTFPlayer( pPatient );
+
+		if ( !pTFPatient )
+			return;
+	}
 
 	// Don't show the numbers if we can't see the patient.
 	trace_t tr;

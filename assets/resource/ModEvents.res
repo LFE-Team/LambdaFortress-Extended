@@ -524,7 +524,8 @@
 		"attacker_index"	"short"		// entindex that killed
 		"attacker_name"		"string"	// classname of attacker
 		"attacker_team"		"byte"		// team of attacker
-		"weapon"	"string" 	// weapon name killer used 
+		"weapon"	"string" 	// weapon name killer used
+		"weapon_logclassname"	"string" 	// weapon name that should be printed on the log
 		"damagebits"	"long"	// bits of type of damage
 		"customkill"	"short"	// type of custom kill
 		"assister_index"	"short"		// entindex of assister

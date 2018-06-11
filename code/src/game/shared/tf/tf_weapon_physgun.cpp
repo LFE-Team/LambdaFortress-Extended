@@ -65,7 +65,7 @@ extern ConVar lf_muzzlelight;
 // new commands
 ConVar physgun_allow_npc( "physgun_allow_npc", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Enable NPCs grab for Physics Gun <WARNING MAY CRASH THE GAME>" );
 //ConVar physgun_allow_building( "physgun_allow_building", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Enable Buildings grab for Physics Gun" );
-ConVar physgun_allow_ragdoll( "physgun_allow_ragdoll", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Enable Ragdolls grab for Physics Gun" );
+//ConVar physgun_allow_ragdoll( "physgun_allow_ragdoll", "1", FCVAR_REPLICATED | FCVAR_CHEAT, "Enable Ragdolls grab for Physics Gun" );
 
  //original commands
  /*
@@ -112,8 +112,8 @@ IPhysicsObject *GetPhysObjFromPhysicsBone( CBaseEntity *pEntity, short physicsbo
 	}
 	*/
 
-	if ( physgun_allow_ragdoll.GetBool() )
-	{
+	//if ( physgun_allow_ragdoll.GetBool() )
+	//{
 		CBaseAnimating *pModel = static_cast<CBaseAnimating *>(pEntity);
 		if (pModel != NULL)
 		{
@@ -147,7 +147,7 @@ IPhysicsObject *GetPhysObjFromPhysicsBone( CBaseEntity *pEntity, short physicsbo
 #endif
 			}
 		}
-	}
+	//}
 
 	return pEntity->VPhysicsGetObject();
 }

@@ -702,7 +702,7 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 		{
 			// Push enemy players.
 			pVictim->SetGroundEntity( NULL );
-			pVictim->ApplyAbsVelocityImpulse( vecDir * 500 );
+			pVictim->SetAbsVelocity( vecDir * 500 );
 			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
 
 			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
@@ -718,10 +718,10 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 
 	if ( pVictim->InSameTeam( pAttacker ) )
 	{
-		if ( pVictim->InCond( TF_COND_BURNING ) )
+		if ( pVictim->IsOnFire() )
 		{
-			// Extinguish teammates.
-			pVictim->RemoveCond( TF_COND_BURNING );
+			// we should calling Extinguish instead of RemoveCond for npcs.
+			pVictim->Extinguish();
 			pVictim->EmitSound( "TFPlayer.FlameOut" );
 
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
@@ -743,7 +743,7 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 		{
 			// Push enemy NPC.
 			pVictim->SetGroundEntity( NULL );
-			pVictim->ApplyAbsVelocityImpulse( vecDir * 500 );
+			pVictim->SetAbsVelocity( vecDir * 500 );
 			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
 
 			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
@@ -794,7 +794,7 @@ void CTFFlameThrower::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker
 
 									pEntity->VPhysicsTakeDamage( info );
 									//pEntity->Deflected( pAttacker, vecDir );
-									pEntity->EmitSound( "Weapon_FlameThrower.AirBurstAttackDeflect" );
+									pEntity->EmitSound( "TFPlayer.AirBlastImpact" ); // Weapon_FlameThrower.AirBurstAttackDeflect = earrape.
 								}
 							}
 						}
@@ -1533,15 +1533,15 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 
 	int iBehindTarget = 0;
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), iBehindTarget, set_flamethrower_back_crit );
-	if ( iBehindTarget == 1 )
+	if ( iBehindTarget )
 	{
 		trace_t trace;
 		//CBaseCombatCharacter *pTarget = trace.m_pEnt->MyCombatCharacterPointer();
 		if ( m_hLauncher.Get() && m_hLauncher->IsBehindAndFacingTarget( trace.m_pEnt ) )
 		{
-			CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, m_iDmgType, DMG_CRITICAL );
-			info.SetReportedPosition( pAttacker->GetAbsOrigin() );
-			pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+			int bitsDamage = info.GetDamageType();
+			bitsDamage |= DMG_CRITICAL;
+			info.AddDamageType( DMG_CRITICAL );
 		}
 	}
 

@@ -563,7 +563,7 @@ void CTFPlayer::TFPlayerThink()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::MedicRegenThink( void )
+void CTFPlayer::RegenThink( void )
 {
 	if ( IsPlayerClass( TF_CLASS_MEDIC ) )
 	{
@@ -571,17 +571,25 @@ void CTFPlayer::MedicRegenThink( void )
 		{
 			// Heal faster if we haven't been in combat for a while
 			float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
-			float flScale = RemapValClamped( flTimeSinceDamage, 5, 10, 1.0, 2.0 );
+			float flScale = RemapValClamped( flTimeSinceDamage, 5.0f, 10.0f, 1.0f, 2.0f );
+
+			float flHealingMastery = 0;
+			CALL_ATTRIB_HOOK_FLOAT( flHealingMastery, healing_mastery );
+			if ( flHealingMastery )
+			{
+				float flScaleMaster = RemapValClamped( flTimeSinceDamage, 0.0f, 4.0f, 1.00f, 2.00f );
+				flScale *= flScaleMaster;
+			}
 
 			int iHealAmount = ceil( TF_MEDIC_REGEN_AMOUNT * flScale );
 			TakeHealth( iHealAmount, DMG_GENERIC );
 		}
 
-		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
+		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
 	}
-	else if ( !IsPlayerClass( TF_CLASS_MEDIC ) )
+	else
 	{
-		float flHealRegen = 0;
+		float flHealRegen = 0.0f;
 		CALL_ATTRIB_HOOK_FLOAT( flHealRegen, add_health_regen );
 		if ( flHealRegen )
 		{
@@ -589,14 +597,14 @@ void CTFPlayer::MedicRegenThink( void )
 			{
 				// Heal faster if we haven't been in combat for a while
 				float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
-				float flScale = RemapValClamped( flTimeSinceDamage, 5, 10, 1.0, 2.0 );
+				float flScale = RemapValClamped( flTimeSinceDamage, 5.0f, 10.0f, 1.0f, 2.0f );
 
 				int iHealAmount = ceil( flHealRegen * flScale );
 				TakeHealth( iHealAmount, DMG_GENERIC );
 			}
 		}
 
-		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
+		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
 	}
 }
 
@@ -1447,10 +1455,10 @@ void CTFPlayer::InitClass( void )
 
 	CALL_ATTRIB_HOOK_FLOAT( flMaxHealth, add_maxhealth );
 
-	int iMaxHealth = (int)( flMaxHealth + 0.5f );
+	//int iMaxHealth = (int)( flMaxHealth + 0.5f );
 
 	//SetHealth( GetMaxHealth() );
-	SetHealth( iMaxHealth );
+	SetHealth( flMaxHealth );
 
 	SetArmorValue( GetPlayerClass()->GetMaxArmor() );
 
@@ -6181,11 +6189,7 @@ void CTFPlayer::StateEnterACTIVE()
 	m_flLastAction = gpGlobals->curtime;
 	m_bIsIdle = false;
 
-	// If we're a Medic, start thinking to regen myself
-	if ( IsPlayerClass( TF_CLASS_MEDIC ) )
-	{
-		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
-	}
+	SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
 }
 
 //-----------------------------------------------------------------------------

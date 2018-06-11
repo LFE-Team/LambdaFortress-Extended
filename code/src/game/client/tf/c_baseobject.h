@@ -274,4 +274,13 @@ private:
 	C_BaseObject( const C_BaseObject & ); // not defined, not accessible
 };
 
+inline C_BaseObject* ToBaseObject( C_BaseEntity *pEntity )
+{
+	if ( !pEntity || !pEntity->IsBaseObject() )
+		return NULL;
+
+	Assert( dynamic_cast<C_BaseObject*>( pEntity ) != 0 );
+	return static_cast< C_BaseObject* >( pEntity );
+}
+
 #endif // C_BASEOBJECT_H

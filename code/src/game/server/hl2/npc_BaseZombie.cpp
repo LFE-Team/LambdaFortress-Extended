@@ -718,6 +718,14 @@ bool CNPC_BaseZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDa
 	if ( info.GetDamageType() & DMG_REMOVENORAGDOLL )
 		return false;
 
+#ifdef TF_CLASSIC
+	if ( info.GetDamageType() & DMG_BULLET )
+		return false;
+
+	if ( info.GetDamageType() & DMG_CLUB )
+		return false;
+#endif
+
 	if ( m_fIsTorso )
 	{
 		// Already split.

@@ -436,4 +436,17 @@ private:
 
 extern short g_sModelIndexFireball;		// holds the index for the fireball
 
+//-----------------------------------------------------------------------------
+// Purpose: Utility function to convert an entity into a base object.
+//   Input: pEntity - the entity to convert into a player
+//-----------------------------------------------------------------------------
+inline CBaseObject *ToBaseObject( CBaseEntity *pEntity )
+{
+	if ( !pEntity || !pEntity->IsBaseObject() )
+		return NULL;
+
+	Assert( dynamic_cast<CBaseObject*>( pEntity ) != 0 );
+	return static_cast< CBaseObject* >( pEntity );
+}
+
 #endif // TF_OBJ_H

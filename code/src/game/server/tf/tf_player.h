@@ -530,7 +530,7 @@ private:
 
 	// Think.
 	void				TFPlayerThink();
-	void				MedicRegenThink();
+	void				RegenThink();
 	void				UpdateTimers( void );
 
 	// Taunt.
