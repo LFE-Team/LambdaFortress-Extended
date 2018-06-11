@@ -848,7 +848,11 @@ void CProtoSniper::PaintTarget( const Vector &vecTarget, float flPaintTime )
 //-----------------------------------------------------------------------------
 bool CProtoSniper::IsPlayerAllySniper()
 {
-	CBaseEntity *pPlayer = AI_GetSinglePlayer();
+#ifdef TF_CLASSIC
+	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
+#else
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 
 	return IRelationType( pPlayer ) == D_LI;
 }
@@ -1379,7 +1383,9 @@ void CProtoSniper::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInf
 {
 	if( pVictim && pVictim->IsPlayer() )
 	{
+#ifndef TF_CLASSIC
 		m_bKilledPlayer = true;
+#endif
 	}
 }
 
@@ -1406,7 +1412,7 @@ int CProtoSniper::SelectSchedule ( void )
 		return SCHED_RELOAD;
 	}
 	//SecobMod__Information: The condition area below when used in mp caused the sniper to fail terribly. Removing it from working with the AI enabled really improves snipers.
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifndef TF_CLASSIC
 	if( !AI_GetSinglePlayer()->IsAlive() && m_bKilledPlayer )
 	{
 		if( HasCondition(COND_IN_PVS) )
@@ -1414,7 +1420,7 @@ int CProtoSniper::SelectSchedule ( void )
 			return SCHED_PSNIPER_PLAYER_DEAD;
 		}
 	}
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+#endif //TF_CLASSIC
 
 	if( HasCondition( COND_HEAR_DANGER ) )
 	{
@@ -1973,7 +1979,11 @@ void CProtoSniper::StartTask( const Task_t *pTask )
 	{
 	case TASK_SNIPER_PLAYER_DEAD:
 		{
+#ifdef TF_CLASSIC
+			m_hSweepTarget = AI_GetNearestPlayer( GetAbsOrigin() );
+#else
 			m_hSweepTarget = AI_GetSinglePlayer();
+#endif
 			SetWait( 4.0f );
 			LaserOn( m_hSweepTarget->GetAbsOrigin(), vec3_origin );
 		}
@@ -2618,7 +2628,7 @@ Vector CProtoSniper::LeadTarget( CBaseEntity *pTarget )
 CBaseEntity *CProtoSniper::PickDeadPlayerTarget()
 {
 	const int iSearchSize = 32;
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifdef TF_CLASSIC
 	CBaseEntity *pTarget = UTIL_GetNearestVisiblePlayer(this); 
 	CBaseEntity *pEntities[ iSearchSize ];
 
@@ -2629,7 +2639,7 @@ CBaseEntity *CProtoSniper::PickDeadPlayerTarget()
 
 	int iNumEntities = UTIL_EntitiesInSphere( pEntities, iSearchSize, AI_GetSinglePlayer()->GetAbsOrigin(), 180.0f, 0 );
 
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+#endif //TF_CLASSIC
 
 	// Not very robust, but doesn't need to be. Randomly select a nearby object in the list that isn't an NPC.
 	if( iNumEntities > 0 )

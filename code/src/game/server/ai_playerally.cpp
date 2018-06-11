@@ -417,7 +417,11 @@ void CAI_PlayerAlly::GatherConditions( void )
 		SetCondition( COND_TALKER_CLIENTUNSEEN );
 	}
 
+#ifdef TF_CLASSIC
+	CBasePlayer *pLocalPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
+#else
 	CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
+#endif
 
 	if ( !pLocalPlayer )
 	{
@@ -465,12 +469,16 @@ void CAI_PlayerAlly::GatherEnemyConditions( CBaseEntity *pEnemy )
 	BaseClass::GatherEnemyConditions( pEnemy );
 	if ( GetLastEnemyTime() == 0 || gpGlobals->curtime - GetLastEnemyTime() > 30 )
 	{
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) && defined( TF_CLASSIC )
 		if ( HasCondition( COND_SEE_ENEMY ) && ( pEnemy->Classify() != CLASS_BULLSEYE ) )
 		{
 			if( Classify() == CLASS_PLAYER_ALLY_VITAL && hl2_episodic.GetBool() )
 			{
+#ifdef TF_CLASSIC
+				CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
+#else
 				CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 
 				if( pPlayer )
 				{
@@ -528,7 +536,7 @@ void CAI_PlayerAlly::PrescheduleThink( void )
 {
 	BaseClass::PrescheduleThink();
 
-#if defined (HL2_DLL) || defined (TF_CLASSIC)
+#if defined ( HL2_DLL ) || defined ( TF_CLASSIC )
 	// Vital allies regenerate
 	if( GetHealth() >= GetMaxHealth() )
 	{
@@ -1016,7 +1024,11 @@ void CAI_PlayerAlly::StartTask( const Task_t *pTask )
 			if ( HasCondition( COND_PLAYER_PUSHING ) && AI_IsSinglePlayer() )
 			{
 				// @TODO (toml 10-22-04): cope with multiplayer push
+#ifdef TF_CLASSIC
+				GetMotor()->SetIdealYawToTarget( UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter() );
+#else
 				GetMotor()->SetIdealYawToTarget( UTIL_GetLocalPlayer()->WorldSpaceCenter() );
+#endif
 			}
 			BaseClass::StartTask( pTask );
 			break;
@@ -1183,7 +1195,11 @@ void CAI_PlayerAlly::Event_Killed( const CTakeDamageInfo &info )
 	// notify the player
 	if ( IsInPlayerSquad() )
 	{
+#ifdef TF_CLASSIC
+		CBasePlayer *player = UTIL_GetNearestPlayer( GetAbsOrigin() );
+#else
 		CBasePlayer *player = AI_GetSinglePlayer();
+#endif
 		if ( player )
 		{
 			variant_t emptyVariant;
@@ -1470,7 +1486,11 @@ bool CAI_PlayerAlly::IsOkToSpeak( ConceptCategory_t category, bool fRespondingTo
 		}
 
 		// Don't talk if we're too far from the player
-		CBaseEntity *pPlayer = AI_GetSinglePlayer();
+#ifdef TF_CLASSIC
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
+#else
+		CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 		if ( pPlayer )
 		{
 			float flDist = sv_npc_talker_maxdist.GetFloat();

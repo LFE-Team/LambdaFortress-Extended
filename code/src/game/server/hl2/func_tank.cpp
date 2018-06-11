@@ -2518,17 +2518,17 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 	info.m_pAttacker = pAttacker;
 	info.m_pAdditionalIgnoreEnt = GetParent();
 
-	//SecobMod__MiscFixes: Here we disable the episode 2 method of mounted guns which doesn't work in hl2mp.
-	/*#ifdef HL2_EPISODIC
-		if ( m_iAmmoType != -1 )
+	//SecobMod__MiscFixes: Here we disable the episode 2 method of mounted guns which doesn't work in mp.
+#if !defined( TF_CLASSIC ) && defined( HL2_EPISODIC )
+	if ( m_iAmmoType != -1 )
+	{
+		for ( i = 0; i < bulletCount; i++ )
 		{
-			for ( i = 0; i < bulletCount; i++ )
-			{
-				info.m_iAmmoType = m_iAmmoType;
-				FireBullets( info );
-			}
+			info.m_iAmmoType = m_iAmmoType;
+			FireBullets( info );
 		}
-	#else*/
+	}
+#else
 		for ( i = 0; i < bulletCount; i++ )
 		{
 			switch( m_bulletType )
@@ -2550,9 +2550,10 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 	
 			default:
 			case TANK_BULLET_NONE:
-			//SecobMod__MiscFixes: Since only guns without a tank_bullet setting will be episodic (and non-player controllable anyway), here we tell the code to use the episode 2 ammo code.
+#ifdef TF_CLASSIC
 			info.m_iAmmoType = m_iAmmoType;
 			FireBullets( info );
+#endif
 				break;
 			}
 		}
@@ -4286,10 +4287,10 @@ void CFuncTankCombineCannon::FuncTankPostThink()
 			AddSpawnFlags( SF_TANK_AIM_AT_POS );
 
 			Vector vecTargetPosition = GetTargetPosition();
-			#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this); 
 #else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
+			CBasePlayer *pPlayer = AI_GetSinglePlayer();
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
             ////SecobMod__Information: Fixing null pointers on ep2_outland_09.
@@ -4459,7 +4460,6 @@ void CFuncTankCombineCannon::MakeTracer( const Vector &vecTracerSrc, const trace
 	// If the shot passed near the player, shake the screen.
 	//SecobMod__Information: Updated for multiplayer.
 #ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	
 		CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
 		if ( pPlayer == NULL)
 		{

@@ -600,7 +600,7 @@ void CTFLoadoutPanel::UpdateModelPanels()
 	int iClassIndex = m_iCurrentClass;
 
 	m_pClassModelPanel->SetVisible( true );
-	m_pWeaponSetPanel->SetVisible( iClassIndex <= TF_LAST_NORMAL_CLASS );
+	m_pWeaponSetPanel->SetVisible( true );
 	m_pRGBPanel->SetVisible( false );
 
 	SetModelClass( iClassIndex );
@@ -617,7 +617,7 @@ void CTFLoadoutPanel::DefaultLayout()
 	SetDialogVariable( "classname", g_pVGuiLocalize->Find( g_aPlayerClassNames[iClassIndex] ) );
 
 	// No point in updating all those buttons if they're not visible.
-	if ( iClassIndex <= TF_LAST_NORMAL_CLASS )
+	if ( iClassIndex != TF_CLASS_CIVILIAN )
 	{
 		for ( int iRow = 0; iRow < INVENTORY_ROWNUM; iRow++ )
 		{

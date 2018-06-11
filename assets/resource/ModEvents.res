@@ -695,27 +695,32 @@
 		"bonuseffect" "byte"
 	}
 
-	"npc_hurt"
-	{
-		"victim_index" "short"
-		"health" "short"
-		"attacker_index" "short"
-		"damageamount" "short"
-		"custom"	"short"
-		"crit" "bool"
-		"weaponid" "short"
-	}
-
 	// dafuq is this?
 	//"npc_hurt"
 	//{
-	//	"entindex" "short"
+	//	"victim_index" "short"
 	//	"health" "short"
-	//	"attacker_player" "short"
-	//	"weaponid" "short"
+	//	"attacker_index" "short"
 	//	"damageamount" "short"
+	//	"custom"	"short"
 	//	"crit" "bool"
+	//	"weaponid" "short"
 	//}
+
+	
+	"npc_hurt"
+	{
+		"entindex" "short"
+		"health" "short"
+		"attacker_player" "short"
+		"weaponid" "short"
+		"damageamount" "short"
+		"custom"	"short"
+		"crit" "bool"
+		"minicrit" "bool"
+		"allseecrit" "bool"
+		"bonuseffect" "byte"
+	}
 
 	"arena_player_notification"
 	{
