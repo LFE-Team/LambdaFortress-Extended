@@ -121,3 +121,10 @@ DESCRIPTION SERVER_OPTIONS
 		{ BOOL }
 		{ "0" }
 }
+	
+	"sv_hl1_hd"
+	{
+		"HL1: Enable HD Models"
+		{ BOOL }
+		{ "0" }
+}
