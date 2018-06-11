@@ -37,6 +37,7 @@
 #include "ai_interactions.h"
 #include "weapon_flaregun.h"
 #include "env_debughistory.h"
+#include "util.h"
 
 //SecobMod__MiscFixes: Here we include the hl2mp gamerules so that calls to darkness mode work. Also many instances of HL2GameRules are now set to TFGameRules in this file.
 #include "tf_gamerules.h"
@@ -1629,7 +1630,7 @@ bool CNPC_Alyx::FInViewCone(CBaseEntity *pEntity)
 	if ( HL2GameRules()->IsAlyxInDarknessMode() )
 	#endif
 	{
-		if ( anSeeEntityInDarkness(pEntity) )
+		if ( CanSeeEntityInDarkness(pEntity) )
 			return true;
 	}
 

@@ -2550,6 +2550,7 @@ void CFuncTankGun::Fire( int bulletCount, const Vector &barrelEnd, const Vector 
 	
 			default:
 			case TANK_BULLET_NONE:
+#endif
 #ifdef TF_CLASSIC
 			info.m_iAmmoType = m_iAmmoType;
 			FireBullets( info );

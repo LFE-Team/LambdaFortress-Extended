@@ -38,6 +38,7 @@
 #include "te_effect_dispatch.h"
 
 #include "collisionutils.h"
+#include "util.h"
 
 #ifdef TF_CLASSIC
 #include "tf_obj.h"
