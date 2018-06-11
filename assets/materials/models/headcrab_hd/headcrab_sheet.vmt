@@ -1,0 +1,5 @@
+"Vertexlitgeneric"
+{
+	"$baseTexture" "models\headcrab_hd/headcrab_sheet"
+	"$bumpmap" "models\headcrab_hd/headcrab_sheet_normal"
+}
