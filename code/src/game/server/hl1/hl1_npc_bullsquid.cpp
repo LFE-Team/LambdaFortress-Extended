@@ -251,6 +251,11 @@ void CNPC_Bullsquid::Spawn()
 	Precache( );
 
 	SetModel( "models/bullsquid.mdl");
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel( "models/bullsquid_hd.mdl" );
+		SetModel( "models/bullsquid_hd.mdl" );
+	}
 	SetHullType(HULL_WIDE_SHORT);
 	SetHullSizeNormal();
 

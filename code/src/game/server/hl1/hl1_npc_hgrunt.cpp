@@ -121,6 +121,8 @@ enum
 } HGRUNT_SENTENCE_TYPES;
 
 LINK_ENTITY_TO_CLASS(monster_human_grunt, CNPC_HGrunt);
+LINK_ENTITY_TO_CLASS(monster_human_grunt_red, CNPC_HGrunt);
+LINK_ENTITY_TO_CLASS(monster_human_grunt_blue, CNPC_HGrunt);
 
 //=========================================================
 // monster-specific schedule types
@@ -228,6 +230,17 @@ void CNPC_HGrunt::Spawn()
 	Precache();
 
 	SetModel("models/hgrunt.mdl");
+
+	if (FClassnameIs(this, "monster_human_grunt_red"))
+	{		
+        PrecacheModel("models/hgrunt_red.mdl");
+		SetModel("models/hgrunt_red.mdl");
+	}
+	else if (FClassnameIs(this, "monster_human_grunt_blue"))
+	{		
+        PrecacheModel("models/hgrunt_blue.mdl");
+		SetModel("models/hgrunt_blue.mdl");
+	}
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();

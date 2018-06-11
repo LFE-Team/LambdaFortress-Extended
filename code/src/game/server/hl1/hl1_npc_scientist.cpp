@@ -992,6 +992,11 @@ void CNPC_SittingScientist::Spawn( )
 {
 	PrecacheModel("models/scientist.mdl");
 	SetModel("models/scientist.mdl");
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel("models/scientist_hd.mdl");
+		SetModel("models/scientist_hd.mdl");
+	}
 	Precache();
 
 	InitBoneControllers();
