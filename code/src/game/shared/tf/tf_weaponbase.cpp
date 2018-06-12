@@ -483,7 +483,7 @@ void CTFWeaponBase::UpdateViewModel( void )
 
 	if ( pszModel && pszModel[0] != '\0' )
 	{
-		vm->UpdateViewmodelAddon( pszModel );
+		vm->RemoveViewmodelAddon();
 	}
 	else
 	{
