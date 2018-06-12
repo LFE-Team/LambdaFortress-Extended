@@ -185,19 +185,13 @@ int CTFInventory::NumWeapons( int iClass, int iSlot )
 //-----------------------------------------------------------------------------
 void CTFInventory::LoadInventory()
 {
-	bool bExist = filesystem->FileExists( TF_INVENTORY_FILE, "MOD" );
-	if ( bExist )
-	{
 		if ( !m_pInventory )
 		{
 			m_pInventory = new KeyValues( "Inventory" );
 		}
 		m_pInventory->LoadFromFile( filesystem, TF_INVENTORY_FILE );
-	}
-	else
-	{
-		ResetInventory();
-	}
+//		ResetInventory();
+// you take the blue pill, and you wake up and reset the inventory
 };
 
 //-----------------------------------------------------------------------------
@@ -241,13 +235,13 @@ int CTFInventory::GetWeaponPreset( int iClass, int iSlot )
 	KeyValues *pClass = m_pInventory->FindKey( g_aPlayerClassNames_NonLocalized[iClass] );
 	if ( !pClass )	//cannot find class node
 	{
-		ResetInventory();
+		//ResetInventory();
 		return 0;
 	}
 	int iPreset = pClass->GetInt( g_LoadoutSlots[iSlot], -1 );
 	if ( iPreset == -1 )	//cannot find slot node
 	{
-		ResetInventory();
+		//ResetInventory();
 		return 0;
 	}
 
@@ -265,7 +259,7 @@ void CTFInventory::SetWeaponPreset( int iClass, int iSlot, int iPreset )
 	KeyValues* pClass = m_pInventory->FindKey( g_aPlayerClassNames_NonLocalized[iClass] );
 	if ( !pClass )	//cannot find class node
 	{
-		ResetInventory();
+		//ResetInventory();
 		pClass = m_pInventory->FindKey( g_aPlayerClassNames_NonLocalized[iClass] );
 	}
 	pClass->SetInt( GetSlotName( iSlot ), iPreset );
