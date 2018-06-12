@@ -152,7 +152,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_nihilanth",
 		TF_TEAM_GREEN,
-		0,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING,
 	},
 	{
 		"monster_hornet",
@@ -162,7 +162,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_snark",
 		TF_TEAM_GREEN,
-		0,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING,
 	},
 	{
 		"monster_alien_controller",
@@ -182,12 +182,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_barnacle",
 		TF_TEAM_YELLOW,
-		0,
-	},
-	{
-		"npc_barnacle",
-		TF_TEAM_YELLOW,
-		0,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING,
 	},
 	{
 		"monster_osprey",
@@ -260,64 +255,64 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_cscanner",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_clawscanner",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_manhack",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	// Indestructible combine mechs.
 	{
 		"npc_combine_camera",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_rollermine",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_rollerminered",
 		TF_TEAM_RED,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_rollermine_hackable",
 		TF_TEAM_RED,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_rollermine_ep1",
 		TF_TEAM_RED,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_turret_ceiling",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_turret_floor",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_turret_ground",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	// Combine synths.
 	{
 		"npc_combinegunship",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_hunter",
@@ -327,17 +322,17 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_strider",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_helicopter",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_combinedropship",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
 	},
 	{
 		"npc_combineguard",
