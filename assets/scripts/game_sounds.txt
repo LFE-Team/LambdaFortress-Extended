@@ -190,6 +190,57 @@
 	"wave"		 "weapons/rocket_blackbox_shoot.wav" 
 }
 
+"Weapon_BoxingGloves.Miss"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"weapons/boxing_gloves_swing1.wav"
+		"wave"	"weapons/boxing_gloves_swing2.wav"
+		"wave"	"weapons/boxing_gloves_swing4.wav"
+		"wave"	"weapons/boxing_gloves_swing5.wav"
+	}
+}
+
+"Weapon_BoxingGloves.HitFlesh"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"weapons/boxing_gloves_hit1.wav"
+		"wave"	"weapons/boxing_gloves_hit2.wav"
+		"wave"	"weapons/boxing_gloves_hit3.wav"
+		"wave"	"weapons/boxing_gloves_hit4.wav"
+	}
+}
+
+"Weapon_BoxingGloves.HitWorld"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"weapons/boxing_gloves_hit1.wav"
+		"wave"	"weapons/boxing_gloves_hit2.wav"
+		"wave"	"weapons/boxing_gloves_hit3.wav"
+		"wave"	"weapons/boxing_gloves_hit4.wav"
+	}
+}
+
 "Weapon_RPG_BlackBox.SingleCrit"
 {
 	"channel"		"CHAN_WEAPON"
