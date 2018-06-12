@@ -115,16 +115,6 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
-		"monster_human_grunt_red",
-		TF_TEAM_RED,
-		0,
-	},
-	{
-		"monster_human_grunt_blue",
-		TF_TEAM_BLUE,
-		0,
-	},
-	{
 		"monster_alien_grunt",
 		TF_TEAM_GREEN,
 		0,
@@ -191,6 +181,11 @@ TF_NPCData g_aNPCData[] =
 	},
 	{
 		"monster_barnacle",
+		TF_TEAM_YELLOW,
+		0,
+	},
+	{
+		"npc_barnacle",
 		TF_TEAM_YELLOW,
 		0,
 	},
