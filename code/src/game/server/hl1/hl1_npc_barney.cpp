@@ -103,6 +103,11 @@ void CNPC_HL1Barney::Spawn()
 	Precache( );
 
 	SetModel( "models/hl1bar.mdl");
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel( "models/barney_hd.mdl" );
+		SetModel( "models/barney_hd.mdl" );
+	}
 
 	SetRenderColor( 255, 255, 255, 255 );
 	

@@ -149,7 +149,11 @@ void CNPC_Scientist::Spawn( void )
 	Precache();
 
 	SetModel( "models/scientist.mdl" );
-
+	if (sv_hl1_hd.GetFloat() == 1)
+	{
+		PrecacheModel("models/scientist_hd.mdl");
+		SetModel("models/scientist_hd.mdl");
+	}
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
 
@@ -918,6 +922,11 @@ void CNPC_DeadScientist::Spawn( void )
 {
 	PrecacheModel("models/scientist.mdl");
 	SetModel( "models/scientist.mdl" );
+	if ( sv_hl1_hd.GetFloat() == 1 )
+	{
+		PrecacheModel("models/scientist_hd.mdl");
+		SetModel("models/scientist_hd.mdl");
+	}
 	
 	ClearEffects();
 	SetSequence( 0 );
