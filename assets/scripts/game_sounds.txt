@@ -179,6 +179,28 @@
 	"wave"		 "common/null.wav" 
 }
 
+"Weapon_RPG_BlackBox.Single"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"wave"		 "weapons/rocket_blackbox_shoot.wav" 
+}
+
+"Weapon_RPG_BlackBox.SingleCrit"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"wave"		 "weapons/rocket_blackbox_shoot_crit.wav" 
+}
+
 "BaseCombatWeapon.WeaponDrop"
 {
 	"channel"		"CHAN_ITEM"
