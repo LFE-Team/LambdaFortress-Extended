@@ -136,6 +136,7 @@ ConVar tf2c_dm_spawnprotecttime( "tf2c_dm_spawnprotecttime", "5", FCVAR_REPLICAT
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
 ConVar hl2_normspeed( "hl2_normspeed", "190" );
 ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
+ConVar lfe_debug_transition( "lfe_debug_transition", "0", FCVAR_CHEAT );
 
 ConVar player_squad_transient_commands( "player_squad_transient_commands", "1", FCVAR_REPLICATED );
 ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
@@ -9832,13 +9833,13 @@ void CTFPlayer::CommanderMode()
 //-----------------------------------------------------------------------------
 void CTFPlayer::SaveForTransition( void )
 {
-	if ( !IsAlive() || !IsOnStoryTeam() )
+	if ( !IsAlive() || !IsOnStoryTeam() || lfe_debug_transition.GetFloat() == 0 )
 		return;
 
 	TFPlayerTransitionStruct transition;
 
 	transition.playerClass = GetDesiredPlayerClassIndex();
-	transition.weapon = m_Shared.GetDesiredWeaponIndex();
+	//transition.weapon = m_Shared.GetDesiredWeaponIndex();
 	transition.health = GetHealth();
 	//transition.weapon = GetActiveTFWeapon() ? GetActiveTFWeapon()->GetSlot() : -1;
 	/*
@@ -9853,6 +9854,7 @@ void CTFPlayer::SaveForTransition( void )
 	}
 	*/
 
+	/*
 	for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
 	{
 		int iWeaponID = GetTFInventory()->GetWeapon( m_PlayerClass.GetClassIndex(), iWeapon );
@@ -9868,6 +9870,7 @@ void CTFPlayer::SaveForTransition( void )
 			}
 		}
 	}
+	*/
 
 /*
 	for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
@@ -9904,7 +9907,7 @@ void CTFPlayer::SaveForTransition( void )
 	CWeaponMedigun *pMedigun = pOwner->GetMedigun();
 	transition.ubercharge = pMedigun->GetChargeLevel();
 	*/
-	transition.ammo = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_PRIMARY];
+	//transition.ammo = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_PRIMARY];
 
 	g_TFPlayerTransitions.InsertOrReplace( GetSteamIDAsUInt64(), transition );
 }
