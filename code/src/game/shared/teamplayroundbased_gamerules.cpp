@@ -1768,7 +1768,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 #ifdef TF_CLASSIC
 	// In co-op RED loses if all players die at the same time.
-	if ( TFGameRules()->IsCoOpGameRunning() || TFGameRules()->IsVersus() || TFGameRules()->IsZombieSurvival() || TFGameRules->IsCoOp() )
+	if ( TFGameRules()->IsCoOpGameRunning() || TFGameRules()->IsVersus() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsCoOp() )
 	{
 		CTeam *pTeam = GetGlobalTeam( TF_STORY_TEAM );
 		Assert( pTeam );
