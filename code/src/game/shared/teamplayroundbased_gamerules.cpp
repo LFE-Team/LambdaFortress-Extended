@@ -777,11 +777,14 @@ void CTeamplayRoundBasedRules::SetInWaitingForPlayers( bool bWaitingForPlayers  
 		m_bInWaitingForPlayers = false;
 		return;
 	}
-	
+
+#if defined ( TF_DLL ) || defined ( TF_CLASSIC )
 	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() )
 	{
 		m_bInWaitingForPlayers = false;
+		return;
 	}
+#endif
 
 	if( m_bInWaitingForPlayers == bWaitingForPlayers  )
 		return;
@@ -1765,7 +1768,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 #ifdef TF_CLASSIC
 	// In co-op RED loses if all players die at the same time.
-	if ( TFGameRules()->IsCoOpGameRunning() )
+	if ( TFGameRules()->IsCoOpGameRunning() || TFGameRules()->IsVersus() || TFGameRules()->IsZombieSurvival() )
 	{
 		CTeam *pTeam = GetGlobalTeam( TF_STORY_TEAM );
 		Assert( pTeam );
@@ -3658,11 +3661,11 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 	// In Co-Op we only allow players to join red team.
-	if ( TFGameRules()->IsCoOp() )
+	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() && iNewTeam == TF_COMBINE_TEAM )
 	{
-		// Always allow joining Rebels.
-		if ( iNewTeam == TF_COMBINE_TEAM )
-			return false;
+		// Don't allow joining BLU.
+		//return ( iNewTeam == TF_COMBINE_TEAM );
+		return false;
 	}
 
 	// In Versus don't allow joining BLU unless there's min amount of players on RED.
@@ -3741,24 +3744,27 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 #endif
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
-	// In Versus there must be min amount of players on RED.
-	if ( TFGameRules()->IsCoOp() )
+	// Don't balance teams in Co-op.
+	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
 	{
-		if ( TFGameRules()->IsVersus() )
+		if ( ShouldBalanceTeams() == false )
 		{
-			CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
-			CTeam *pCombine = GetGlobalTeam( TF_COMBINE_TEAM );
-
-			if ( pRebels->GetNumPlayers() < lf_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
-			{
-				iHeaviestTeam = TF_COMBINE_TEAM;
-				iLightestTeam = TF_STORY_TEAM;
-				return true;
-			}
+			return false;
 		}
-		
-		// Don't balance teams in Co-op.
-		return false;
+	}
+
+	// In Versus there must be min amount of players on RED.
+	if ( TFGameRules()->IsVersus() )
+	{
+		CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
+		CTeam *pCombine = GetGlobalTeam( TF_COMBINE_TEAM );
+
+		if ( pRebels->GetNumPlayers() < lf_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
+		{
+			iHeaviestTeam = TF_COMBINE_TEAM;
+			iLightestTeam = TF_STORY_TEAM;
+			return true;
+		}
 	}
 #endif
 

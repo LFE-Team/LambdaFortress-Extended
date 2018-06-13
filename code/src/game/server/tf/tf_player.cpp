@@ -116,7 +116,7 @@ ConVar lf_coop_lives( "lf_coop_lives", "-1", 0, "Amount of lives RED players sta
 
 ConVar tf_allow_player_use( "tf_allow_player_use", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Allow players to execute + use while playing." );
 
-ConVar lfe_debug_transition( "lfe_debug_transition", "1", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow new level transition system." );
+ConVar lfe_debug_transition( "lfe_debug_transition", "0", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow new level transition system." );
 
 ConVar tf_allow_sliding_taunt( "tf_allow_sliding_taunt", "0", 0, "Allow player to slide for a bit after taunting." );
 
@@ -6116,6 +6116,24 @@ void CTFPlayer::StateEnterWELCOME( void )
 		if ( index != g_TFPlayerTransitions.InvalidIndex() )
 		{
 			// A player has finished connecting & loading the level let's not wait for players any more.
+			mp_waitingforplayers_cancel.SetValue( 1 );
+			m_bSeenRoundInfo = true;
+			m_bIsIdle = false;
+
+			// Spawn this player instantly and restore his class.
+			ChangeTeam( TF_STORY_TEAM, false, true );
+			SetDesiredPlayerClassIndex( g_TFPlayerTransitions[index].playerClass );
+			ForceRespawn();
+
+			return;
+		}
+	}
+
+	if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 0 )
+	{
+		unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
+		if ( index != g_TFPlayerTransitions.InvalidIndex() )
+		{
 			mp_waitingforplayers_cancel.SetValue( 1 );
 			m_bSeenRoundInfo = true;
 			m_bIsIdle = false;
