@@ -16,6 +16,7 @@
 
 CREATE_SIMPLE_WEAPON_TABLE( TFFlareGun, tf_weapon_flaregun )
 
+/*
 acttable_t CTFFlareGun::m_acttable[] =
 {
 	{ ACT_MP_STAND_IDLE, ACT_MP_STAND_SECONDARY2, false },
@@ -30,8 +31,9 @@ acttable_t CTFFlareGun::m_acttable[] =
 	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE, ACT_MP_ATTACK_STAND_SECONDARY2, false },
 	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_MP_ATTACK_CROUCH_SECONDARY2, false },
 };
+*/
 
-IMPLEMENT_ACTTABLE( CTFFlareGun );
+//IMPLEMENT_ACTTABLE( CTFFlareGun );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor

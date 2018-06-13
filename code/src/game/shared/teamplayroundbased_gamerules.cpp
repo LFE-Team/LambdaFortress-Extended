@@ -777,6 +777,11 @@ void CTeamplayRoundBasedRules::SetInWaitingForPlayers( bool bWaitingForPlayers  
 		m_bInWaitingForPlayers = false;
 		return;
 	}
+	
+	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() )
+	{
+		m_bInWaitingForPlayers = false;
+	}
 
 	if( m_bInWaitingForPlayers == bWaitingForPlayers  )
 		return;
@@ -855,7 +860,7 @@ void CTeamplayRoundBasedRules::SetSetup( bool bSetup )
 void CTeamplayRoundBasedRules::CheckWaitingForPlayers( void )
 {
 	// never waiting for players when loading a bug report, or training
-	if ( IsLoadingBugBaitReport() || gpGlobals->eLoadType == MapLoad_Background || !AllowWaitingForPlayers() )
+	if ( IsLoadingBugBaitReport() || gpGlobals->eLoadType == MapLoad_Background || !AllowWaitingForPlayers() || TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() )
 		return;
 
 	if( mp_waitingforplayers_restart.GetBool() )
