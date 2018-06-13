@@ -5573,7 +5573,11 @@ void CGrenadeHelicopter::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t
 bool CGrenadeHelicopter::IsThrownByPlayer()
 {
 	// if player is the owner and we're set to explode on contact, then the player threw this grenade.
+#ifdef TF_CLASSIC
+	return ( ( GetOwnerEntity() == UTIL_GetNearestPlayer( GetAbsOrigin() ) ) && m_bExplodeOnContact );
+#else
 	return ( ( GetOwnerEntity() == UTIL_GetLocalPlayer() ) && m_bExplodeOnContact );
+#endif
 }
 
 //-----------------------------------------------------------------------------

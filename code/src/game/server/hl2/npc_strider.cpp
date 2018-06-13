@@ -3152,7 +3152,11 @@ int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 			{
 				// See if the person that injured me is an NPC.
 				CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
+#ifdef TF_CLASSIC
+				CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
+#else
 				CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 
 				if( pAttacker && pAttacker->IsAlive() && pPlayer )
 				{

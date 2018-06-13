@@ -812,7 +812,11 @@ void CHunterFlechette::SeekThink()
 //-----------------------------------------------------------------------------
 void CHunterFlechette::DopplerThink()
 {
+#ifdef TF_CLASSIC
+	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
+#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 	if ( !pPlayer )
 		return;
 
@@ -2302,8 +2306,13 @@ void CNPC_Hunter::GatherConditions()
 						if ( timeDrawnArrow != gpGlobals->curtime )
 						{
 							timeDrawnArrow = gpGlobals->curtime;
+#ifdef TF_CLASSIC
+							Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter().z - 24 );
+							NDebugOverlay::HorzArrow( UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 255, 0, 0, 64, true, .1 );
+#else
 							Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetLocalPlayer()->WorldSpaceCenter().z - 24 );
 							NDebugOverlay::HorzArrow( UTIL_GetLocalPlayer()->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 255, 0, 0, 64, true, .1 );
+#endif
 						}
 					}
 				}
@@ -2328,8 +2337,13 @@ void CNPC_Hunter::GatherConditions()
 				if ( timeDrawnArrow != gpGlobals->curtime )
 				{
 					timeDrawnArrow = gpGlobals->curtime;
+#ifdef TF_CLASSIC
+					Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter().z - 24 );
+					NDebugOverlay::HorzArrow( UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 127, 127, 127, 64, true, .1 );
+#else
 					Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetLocalPlayer()->WorldSpaceCenter().z - 24 );
 					NDebugOverlay::HorzArrow( UTIL_GetLocalPlayer()->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 127, 127, 127, 64, true, .1 );
+#endif
 				}
 			}
 
@@ -2406,7 +2420,11 @@ void CNPC_Hunter::ManageSiegeTargets()
 	}
 
 	m_flTimeNextSiegeTargetAttack = gpGlobals->curtime + (hunter_siege_frequency.GetFloat() * RandomFloat( 0.8f, 1.2f) );
+#ifdef TF_CLASSIC
+	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
+#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif
 
 	// Start by assuming we are not going to create a siege target
 	bool bCreateSiegeTarget = false;
@@ -3031,7 +3049,11 @@ int CNPC_Hunter::SelectSchedule()
 				}
 				else
 				{
+#ifdef TF_CLASSIC
+					SetTarget( UTIL_GetNearestPlayer( GetAbsOrigin() ) );
+#else
 					SetTarget( UTIL_GetLocalPlayer() );
+#endif
 					return SCHED_TARGET_FACE;
 				}
 			}
@@ -3063,7 +3085,11 @@ int CNPC_Hunter::SelectSchedule()
 		}
 		else
 		{
+#ifdef TF_CLASSIC
+			SetTarget( UTIL_GetNearestPlayer( GetAbsOrigin() ) );
+#else
 			SetTarget( UTIL_GetLocalPlayer() );
+#endif
 			return SCHED_TARGET_FACE;
 		}
 
@@ -5795,7 +5821,11 @@ void CNPC_Hunter::Event_Killed( const CTakeDamageInfo &info )
 			m_EscortBehavior.GetEscortTarget()->AlertSound();
 			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
 			{
+#ifdef TF_CLASSIC
+				m_EscortBehavior.GetEscortTarget()->UpdateEnemyMemory( UTIL_GetNearestPlayer( GetAbsOrigin() ), UTIL_GetNearestPlayer( GetAbsOrigin() )->GetAbsOrigin(), this );
+#else
 				m_EscortBehavior.GetEscortTarget()->UpdateEnemyMemory( UTIL_GetLocalPlayer(), UTIL_GetLocalPlayer()->GetAbsOrigin(), this );
+#endif
 			}
 		}
 	}
