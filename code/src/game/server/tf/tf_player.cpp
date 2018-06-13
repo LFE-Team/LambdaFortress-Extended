@@ -116,6 +116,8 @@ ConVar lf_coop_lives( "lf_coop_lives", "-1", 0, "Amount of lives RED players sta
 
 ConVar tf_allow_player_use( "tf_allow_player_use", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Allow players to execute + use while playing." );
 
+ConVar lfe_debug_transition( "lfe_debug_transition", "1", FCVAR_CHEAT | FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow new level transition system." );
+
 ConVar tf_allow_sliding_taunt( "tf_allow_sliding_taunt", "0", 0, "Allow player to slide for a bit after taunting." );
 
 extern ConVar spec_freeze_time;
@@ -1217,86 +1219,81 @@ void CTFPlayer::Spawn()
 		// Gotta make sure this is the first proper spawn.
 		if ( TFGameRules()->IsCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME )
 		{
-			unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
-			if ( index != g_TFPlayerTransitions.InvalidIndex() )
+			if ( lfe_debug_transition.GetBool() )
 			{
-				// Restore health, ammo and last weapon.
-				SetHealth( g_TFPlayerTransitions[index].health );
-
-				
-				for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
+				unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
+				if ( index != g_TFPlayerTransitions.InvalidIndex() )
 				{
-					int iWeaponID = GetTFInventory()->GetWeapon( m_PlayerClass.GetClassIndex(), iWeapon );
-					
-					if ( iWeaponID != TF_WEAPON_NONE )
-					{
-						CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( iWeapon );
+					// Restore health, ammo and last weapon.
+					SetHealth( g_TFPlayerTransitions[index].health );
 
-						if ( pWeapon )
+					int iClass = m_PlayerClass.GetClassIndex();
+
+					/*for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
+					{
+					//int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( GetDesiredPlayerClassIndex() );
+					CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetEntityForLoadoutSlot( iSlot );
+	
+					if ( pWeapon )
+					{
+						if ( ItemsMatch( pWeapon->GetItem(), &m_Item, pWeapon ) )
 						{
-							pWeapon->m_iClip1 = g_TFPlayerTransitions[index].clip1[iWeapon];
-							pWeapon->m_iClip2 = g_TFPlayerTransitions[index].clip2[iWeapon];
+							pWeapon->m_iClip1 = g_TFPlayerTransitions[index].clip1[iSlot];
+							pWeapon->m_iClip2 = g_TFPlayerTransitions[index].clip2[iSlot];
 						}
 					}
-				}
+					}*/
 
-				//TFPlayerClassData_t *pData = m_PlayerClass.GetData();
-
-				//ManageRegularWeapons( pData );
-
-/*
-				for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
-				{
-					if ( GetEntityForLoadoutSlot( iSlot ) != NULL )
+					for ( int i = 0; i < WeaponCount(); i++ )
 					{
-						// Nothing to do here.
-						continue;
-					}
+						CTFWeaponBase *pWeapon = static_cast<CTFWeaponBase *>( GetWeapon( i ) );
+						if ( !pWeapon )
+							continue;
 
-					// Give us an item from the inventory.
-					CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), iSlot );
+						CEconItemDefinition *pItemDef = pWeapon->GetItem()->GetStaticData();
 
-					if ( pItem )
-					{
-						const char *pszClassname = pItem->GetEntityName();
-						Assert( pszClassname );
-
-						CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
-
-						if ( pEntity )
+						if ( pItemDef )
 						{
-							pEntity->m_iClip1 = g_TFPlayerTransitions[index].clip1[iSlot];
-							pEntity->m_iClip2 = g_TFPlayerTransitions[index].clip2[iSlot];
+							int iSlot = pItemDef->GetLoadoutSlot( iClass );
+							CEconItemView *pLoadoutItem = GetLoadoutItem( iClass, iSlot );
+
+							if ( ItemsMatch( pWeapon->GetItem(), pLoadoutItem, pWeapon ) )
+							{
+								//transition.weapon = m_Shared.GetDesiredWeaponIndex( m_Item.GetItemDefIndex() );
+								pWeapon->m_iClip1 = g_TFPlayerTransitions[index].clip1[iSlot];
+								pWeapon->m_iClip2 = g_TFPlayerTransitions[index].clip2[iSlot];
+							}
 						}
 					}
+
+					GiveAmmo( g_TFPlayerTransitions[index].ammo, TF_AMMO_PRIMARY, true, TF_AMMO_SOURCE_AMMOPACK );
+
+					//CBaseCombatWeapon *pWeapon = Weapon_GetSlot( g_TFPlayerTransitions[index].weapon );
+					CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( g_TFPlayerTransitions[index].weapon );
+
+					if ( pWeapon )
+						Weapon_Switch( pWeapon );
+
+					/*
+					// Restore ubercharge.
+					CTFPlayer *pOwner = GetTFPlayerOwner();
+					if ( !pOwner )
+						return;
+
+					CWeaponMedigun *pMedigun = pOwner->GetMedigun();
+					pMedigun->SetCharge( g_TFPlayerTransitions[index].ubercharge );
+					*/
+
+					// Give default items for class.
+					//GiveDefaultItems();
+					//m_Shared.SetDesiredWeaponIndex( g_TFPlayerTransitions[index].weapon );
+					//m_AttributeManager.InitializeAttributes( this );
+
+					m_Shared.SetDesiredWeaponIndex( m_Item.GetItemDefIndex() );
+
+					// Remove player info from the list.
+					DeleteForTransition();
 				}
-*/
-
-				GiveAmmo( g_TFPlayerTransitions[index].ammo, TF_AMMO_PRIMARY );
-
-				/*
-				//CBaseCombatWeapon *pWeapon = Weapon_GetSlot( g_TFPlayerTransitions[index].weapon );
-				CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( g_TFPlayerTransitions[index].weapon );
-
-				if ( pWeapon )
-					Weapon_Switch( pWeapon );
-				*/
-				/*
-				// Restore ubercharge.
-				CTFPlayer *pOwner = GetTFPlayerOwner();
-				if ( !pOwner )
-					return;
-
-				CWeaponMedigun *pMedigun = pOwner->GetMedigun();
-				pMedigun->SetCharge( g_TFPlayerTransitions[index].ubercharge );
-				*/
-				
-				// Give default items for class.
-				GiveDefaultItems();
-				m_Shared.SetDesiredWeaponIndex( g_TFPlayerTransitions[index].weapon );
-				//m_AttributeManager.InitializeAttributes( this );
-				// Remove player info from the list.
-				DeleteForTransition();
 			}
 		}
 	}
@@ -1648,15 +1645,10 @@ void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
 	{
 		//Not supposed to be holding a builder, nuke it from orbit
 		CTFWeaponBase *pWpn = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
-		CTFWeaponBase *pRobotArm = Weapon_OwnsThisID( TF_WEAPON_ROBOT_ARM );
 
 		if ( pWpn )
 		{
 			pWpn->UnEquip( this );
-		}
-		if ( pRobotArm )
-		{
-			pRobotArm->UnEquip( this );
 		}
 	}
 }
@@ -5148,6 +5140,8 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_hObserverTarget.Set( NULL );
 	}
 
+	bool bUsedSuicideButton = ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE );
+/*
 	if ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE )
 	{
 		// if this was suicide, recalculate attacker to see if we want to award the kill to a recent damager
@@ -5157,6 +5151,22 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		// Recalculate attacker if player killed himself or this was environmental death.
 		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
+		if ( pDamager )
+		{
+			info_modified.SetAttacker( pDamager );
+			info_modified.SetInflictor( NULL );
+			info_modified.SetWeapon( NULL );
+			info_modified.SetDamageType( DMG_GENERIC );
+			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
+		}
+	}
+*/
+	if ( bUsedSuicideButton || pAttacker == this || pAttacker->IsBSPModel() )
+	{
+		// Recalculate attacker if player killed himself or this was environmental death.
+		float flCreditTime = bUsedSuicideButton ? TF_TIME_SUICIDE_KILL_CREDIT : TF_TIME_ENV_DEATH_KILL_CREDIT;
+		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, flCreditTime );
+
 		if ( pDamager )
 		{
 			info_modified.SetAttacker( pDamager );
@@ -6100,7 +6110,7 @@ void CTFPlayer::StateEnterWELCOME( void )
 
 	PhysObjectSleep();
 
-	if ( TFGameRules() && TFGameRules()->IsCoOp() )
+	if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 1 )
 	{
 		unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
 		if ( index != g_TFPlayerTransitions.InvalidIndex() )
@@ -9832,15 +9842,14 @@ void CTFPlayer::CommanderMode()
 //-----------------------------------------------------------------------------
 void CTFPlayer::SaveForTransition( void )
 {
-	if ( !IsAlive() || !IsOnStoryTeam() )
+	if ( !IsAlive() || !IsOnStoryTeam() || lfe_debug_transition.GetFloat() == 0 )
 		return;
 
 	TFPlayerTransitionStruct transition;
 
 	transition.playerClass = GetDesiredPlayerClassIndex();
-	transition.weapon = m_Shared.GetDesiredWeaponIndex();
 	transition.health = GetHealth();
-	//transition.weapon = GetActiveTFWeapon() ? GetActiveTFWeapon()->GetSlot() : -1;
+
 	/*
 	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
 	{
@@ -9852,50 +9861,51 @@ void CTFPlayer::SaveForTransition( void )
 		}
 	}
 	*/
-
-	for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
-	{
-		int iWeaponID = GetTFInventory()->GetWeapon( m_PlayerClass.GetClassIndex(), iWeapon );
-
-		if ( iWeaponID != TF_WEAPON_NONE )
-		{
-			CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( iWeapon );
-
-			if ( pWeapon )
-			{
-				transition.clip1[iWeapon] = pWeapon->m_iClip1;
-				transition.clip2[iWeapon] = pWeapon->m_iClip2;
-			}
-		}
-	}
-
-/*
+	/*
 	for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
 	{
-		if ( GetEntityForLoadoutSlot( iSlot ) != NULL )
+		//int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
+		//int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( GetDesiredPlayerClassIndex() );
+		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetEntityForLoadoutSlot( iSlot );
+
+		if ( ItemsMatch( pWeapon->GetItem(), &m_Item, pWeapon ) )
 		{
-			// Nothing to do here.
-			continue;
-		}
+			transition.weapon = m_Shared.GetDesiredWeaponIndex( m_Item.GetItemDefIndex() );
 
-		// Give us an item from the inventory.
-		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), iSlot );
-
-		if ( pItem )
-		{
-			const char *pszClassname = pItem->GetEntityName();
-			Assert( pszClassname );
-
-			CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
-
-			if ( pEntity )
+			if ( pWeapon )
 			{
 				transition.clip1[iSlot] = pWeapon->m_iClip1;
 				transition.clip2[iSlot] = pWeapon->m_iClip2;
 			}
 		}
 	}
-*/
+	*/
+
+	int iClass = m_PlayerClass.GetClassIndex();
+
+	for ( int i = 0; i < WeaponCount(); i++ )
+	{
+		CTFWeaponBase *pWeapon = static_cast<CTFWeaponBase *>( GetWeapon( i ) );
+		if ( !pWeapon )
+			continue;
+
+		CEconItemDefinition *pItemDef = pWeapon->GetItem()->GetStaticData();
+
+		if ( pItemDef )
+		{
+			int iSlot = pItemDef->GetLoadoutSlot( iClass );
+			CEconItemView *pLoadoutItem = GetLoadoutItem( iClass, iSlot );
+
+			if ( ItemsMatch( pWeapon->GetItem(), pLoadoutItem, pWeapon ) )
+			{
+				//transition.weapon = m_Shared.GetDesiredWeaponIndex( m_Item.GetItemDefIndex() );
+				transition.weapon = GetActiveTFWeapon() ? GetActiveTFWeapon()->GetSlot() : -1;
+				transition.clip1[iSlot] = pWeapon->m_iClip1;
+				transition.clip2[iSlot] = pWeapon->m_iClip2;
+			}
+		}
+	}
+
 	/*
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 	if ( !pOwner )
@@ -9904,6 +9914,7 @@ void CTFPlayer::SaveForTransition( void )
 	CWeaponMedigun *pMedigun = pOwner->GetMedigun();
 	transition.ubercharge = pMedigun->GetChargeLevel();
 	*/
+
 	transition.ammo = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_PRIMARY];
 
 	g_TFPlayerTransitions.InsertOrReplace( GetSteamIDAsUInt64(), transition );

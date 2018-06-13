@@ -77,9 +77,13 @@ ConVar tf_always_loser( "tf_always_loser", "0", FCVAR_REPLICATED | FCVAR_CHEAT, 
 ConVar sv_showimpacts( "sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point (1=both, 2=client-only, 3=server-only)" );
 ConVar sv_showplayerhitboxes( "sv_showplayerhitboxes", "0", FCVAR_REPLICATED, "Show lag compensated hitboxes for the specified player index whenever a player fires." );
 
-ConVar tf2c_building_hauling( "tf2c_building_hauling", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Toggle Engineer's building hauling ability." );
+ConVar tf2c_building_hauling( "tf2c_building_hauling", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Toggle Engineer's building hauling ability." );
 ConVar tf2c_disable_player_shadows( "tf2c_disable_player_shadows", "0", FCVAR_REPLICATED, "Disables rendering of player shadows regardless of client's graphical settings." );
 
+//
+#ifdef GAME_DLL 
+	ConVar sv_infinite_ammo( "sv_infinite_ammo", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Player's active weapon will never run out of ammo" );
+#endif
 #define TF_SPY_STEALTH_BLINKTIME   0.3f
 #define TF_SPY_STEALTH_BLINKSCALE  0.85f
 
@@ -3490,7 +3494,31 @@ void CTFPlayer::ItemPostFrame()
 			}
 		}
 	}
+#ifdef GAME_DLL
+	if( sv_infinite_ammo.GetBool() && ( GetActiveTFWeapon() ) )
+	{
+		// Refill clip in all weapons.
+		for ( int i = 0; i < WeaponCount(); i++ )
+		{
+			CBaseCombatWeapon *pWeapon = GetWeapon( i );
+			if ( !pWeapon )
+				continue;
 
+			for ( int i = TF_AMMO_PRIMARY; i < TF_AMMO_COUNT; i++ )
+			{
+				GiveAmmo( GetMaxAmmo( i ), i, false, TF_AMMO_SOURCE_RESUPPLY );
+			}
+
+			pWeapon->GiveDefaultAmmo();
+
+			auto pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
+			if ( pTFWeapon ) 
+			{
+				pTFWeapon->WeaponRegenerate();
+			}
+		}
+	}
+#endif
 	BaseClass::ItemPostFrame();
 }
 

@@ -34,7 +34,7 @@ bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound =
 
 	for ( int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++ )
 	{
-		int iMaxAmmo = pTFPlayer->GetPlayerClass()->GetData()->m_aAmmoMax[i];
+		int iMaxAmmo = pTFPlayer->GetMaxAmmo( i );
 
 		if ( pTFPlayer->GiveAmmo( ceil( iMaxAmmo * flCount ), i, true ) )
 		{

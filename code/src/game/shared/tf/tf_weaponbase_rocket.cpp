@@ -13,6 +13,7 @@
 #include "te_effect_dispatch.h"
 #include "tf_fx.h"
 #include "iscorer.h"
+#include "ai_basenpc.h"
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 extern void SendProxy_Angles( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 #endif
@@ -608,8 +609,14 @@ void CTFBaseRocket::FlyThink( void )
 		m_bCollideWithTeammates = true;
 	}
 
-	if ( tf2c_homing_rockets.GetBool() || ( tf2c_homing_deflected_rockets.GetBool() && m_iDeflected ) )
+	int flHomingRocket = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_hLauncher.Get(), flHomingRocket, mod_rocket_homing );
+
+	if ( tf2c_homing_rockets.GetBool() || ( tf2c_homing_deflected_rockets.GetBool() || flHomingRocket && m_iDeflected ) )
 	{
+		//CUtlVector<CTFTeam *> pTeamList;
+		//CTFTeam *pTeam = NULL;
+
 		// Find the closest visible enemy player.
 		CUtlVector<CTFPlayer *> vecPlayers;
 		int count = CollectPlayers( &vecPlayers, TEAM_ANY, true );
@@ -635,6 +642,41 @@ void CTFBaseRocket::FlyThink( void )
 			else
 			{
 				vecTarget = pPlayer->EyePosition();
+			}
+
+			if ( FVisible( vecTarget ) )
+			{
+				float flDistSqr = ( vecTarget - GetAbsOrigin() ).LengthSqr();
+				if ( flDistSqr < flClosest )
+				{
+					flClosest = flDistSqr;
+					vecClosestTarget = vecTarget;
+				}
+			}
+		}
+
+		// Find the closest visible enemy npc.
+		CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
+		int nNPCCount = g_AI_Manager.NumAIs();
+		for ( int iNPC = 0; iNPC < nNPCCount; ++iNPC )
+		{
+			CAI_BaseNPC *pNPC = ppAIs[iNPC];
+			if ( !pNPC )
+				continue;
+
+			if ( pNPC->GetTeamNumber() == GetTeamNumber() )
+				continue;
+
+			Vector vecTarget;
+			QAngle angTarget;
+			if ( GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
+			{
+				int iBone = pNPC->LookupBone( "bip_head" );
+				pNPC->GetBonePosition( iBone, vecTarget, angTarget );;
+			}
+			else
+			{
+				vecTarget = pNPC->EyePosition();
 			}
 
 			if ( FVisible( vecTarget ) )

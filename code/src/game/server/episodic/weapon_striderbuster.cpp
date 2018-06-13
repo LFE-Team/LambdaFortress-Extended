@@ -105,7 +105,10 @@ public:
 	float GetPickupTime() { return m_PickupTime; }
 
 	int GetStriderBusterFlags() { return m_iBusterFlags; } // I added a flags field so we don't have to keep added bools for all of these contingencies (sjb)
-
+	
+#ifdef TF_CLASSIC
+	unsigned int	PhysicsSolidMaskForEntity( void ) const;
+#endif
 private:
 
 	void	Launch( CBasePlayer *pPhysGunUser );
@@ -148,7 +151,11 @@ private:
 	COutputEvent m_OnShotDown;
 
 friend bool StriderBuster_IsAttachedStriderBuster( CBaseEntity *pEntity, CBaseEntity * );
-
+#ifdef TF_CLASSIC
+protected:
+	float					m_flCollideWithTeammatesTime;
+	bool					m_bCollideWithTeammates;
+#endif
 };
 
 LINK_ENTITY_TO_CLASS( prop_stickybomb, CWeaponStriderBuster );
@@ -263,6 +270,11 @@ void CWeaponStriderBuster::Spawn( void )
 	SetHealth( striderbuster_health.GetFloat() );
 	
 	SetNextThink(gpGlobals->curtime + 0.01f);
+#ifdef TF_CLASSIC
+	// Don't collide with players on the owner's team for the first bit of our life
+	m_flCollideWithTeammatesTime = gpGlobals->curtime + 0.25;
+	m_bCollideWithTeammates = false;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -907,6 +919,12 @@ void CWeaponStriderBuster::Shatter( CBaseEntity *pAttacker )
 //-----------------------------------------------------------------------------
 void CWeaponStriderBuster::BusterFlyThink()
 {
+#ifdef TF_CLASSIC
+	if ( gpGlobals->curtime > m_flCollideWithTeammatesTime && m_bCollideWithTeammates == false )
+	{
+		m_bCollideWithTeammates = true;
+	}
+#endif
 	if (IsAttachedToStrider())
 		return; // early out. Think no more.
 
@@ -1095,6 +1113,45 @@ void CWeaponStriderBuster::OnFlechetteAttach( Vector &vecFlechetteVelocity )
 		m_bNoseDiving = true;
 	}
 	m_nAttachedFlechettes++;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+unsigned int CWeaponStriderBuster::PhysicsSolidMaskForEntity( void ) const
+{
+	int teamContents = 0;
+
+	if ( m_bCollideWithTeammates == false )
+	{
+		// Only collide with the other team
+
+		switch ( GetTeamNumber() )
+		{
+		case TF_TEAM_RED:
+			teamContents = CONTENTS_BLUETEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+			break;
+
+		case TF_TEAM_BLUE:
+			teamContents = CONTENTS_REDTEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+			break;
+
+		case TF_TEAM_GREEN:
+			teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_YELLOWTEAM;
+			break;
+
+		case TF_TEAM_YELLOW:
+			teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_GREENTEAM;
+			break;
+		}
+	}
+	else
+	{
+		// Collide with all teams
+		teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+	}
+
+	return BaseClass::PhysicsSolidMaskForEntity() | teamContents;
 }
 
 //-----------------------------------------------------------------------------
