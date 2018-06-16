@@ -1910,15 +1910,17 @@ void MsgFunc_AchievementEvent( bf_read &msg )
 	pAchievementMgr->OnAchievementEvent( iAchievementID, iCount );
 }
 
-#if defined(_DEBUG) || defined(STAGING_ONLY) || DEBUG_ACHIEVEMENTS_IN_RELEASE
-CON_COMMAND_F( achievement_reset_all, "Clears all achievements", FCVAR_CHEAT )
+#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+CON_COMMAND_F( achievement_reset_all, "Clears all achievements", FCVAR_USERINFO | FCVAR_ARCHIVE )
 {
 	CAchievementMgr *pAchievementMgr = dynamic_cast<CAchievementMgr *>( engine->GetAchievementMgr() );
 	if ( !pAchievementMgr )
 		return;
 	pAchievementMgr->ResetAchievements();
 }
+#endif
 
+#if defined(_DEBUG) || defined(STAGING_ONLY) || DEBUG_ACHIEVEMENTS_IN_RELEASE
 CON_COMMAND_F( achievement_reset, "<internal name> Clears specified achievement", FCVAR_CHEAT )
 {
 	CAchievementMgr *pAchievementMgr = dynamic_cast<CAchievementMgr *>( engine->GetAchievementMgr() );

@@ -555,6 +555,39 @@ void CTFLoadoutPanel::Hide()
 {
 	BaseClass::Hide();
 	MAINMENU_ROOT->HidePanel( SHADEBACKGROUND_MENU );
+
+	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+
+	// Back to class menu if they haven't picked a class yet.
+	if ( ( pLocalPlayer && pLocalPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_UNDEFINED ) )
+	{
+		switch( pLocalPlayer->GetTeamNumber() )
+		{
+			case TF_TEAM_RED:
+				gViewPortInterface->ShowPanel( PANEL_CLASS_RED, true );
+				break;
+
+			case TF_TEAM_BLUE:
+				gViewPortInterface->ShowPanel( PANEL_CLASS_BLUE, true );
+				break;
+
+			// should i keep this?
+			case TF_TEAM_GREEN:
+				gViewPortInterface->ShowPanel( PANEL_CLASS_GREEN, true );
+				break;
+
+			case TF_TEAM_YELLOW:
+				gViewPortInterface->ShowPanel( PANEL_CLASS_YELLOW, true );
+				break;
+
+			default:
+				gViewPortInterface->ShowPanel( PANEL_CLASS_RED, false );
+				gViewPortInterface->ShowPanel( PANEL_CLASS_BLUE, false );
+				gViewPortInterface->ShowPanel( PANEL_CLASS_GREEN, false );
+				gViewPortInterface->ShowPanel( PANEL_CLASS_YELLOW, false );
+				break;
+		}
+	}
 };
 
 

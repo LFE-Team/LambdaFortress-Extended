@@ -106,7 +106,6 @@ ConVar tf2c_setmerccolor_g( "tf2c_setmerccolor_g", "0", FCVAR_ARCHIVE | FCVAR_US
 ConVar tf2c_setmerccolor_b( "tf2c_setmerccolor_b", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets merc color's blue channel value", true, 0, true, 255 );
 ConVar tf2c_setmercparticle( "tf2c_setmercparticle", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets merc's respawn particle index", OnMercParticleChange );
 
-
 #define BDAY_HAT_MODEL		"models/effects/bday_hat.mdl"
 
 IMaterial	*g_pHeadLabelMaterial[4] = { NULL, NULL }; 

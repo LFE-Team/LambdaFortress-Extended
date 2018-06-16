@@ -584,10 +584,12 @@ CEconItemSchema::~CEconItemSchema()
 {
 }
 
+#ifdef GAME_DLL
 CON_COMMAND( econ_item_system_reload, "Reloads items_game.txt" )
 {
 	g_EconItemSchema.Init();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Initializer

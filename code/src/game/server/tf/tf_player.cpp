@@ -2470,7 +2470,7 @@ int CTFPlayer::GetAutoTeam( void )
 					// Check RED for min amount of players.
 					if ( pRed->GetNumPlayers() < lf_coop_min_red_players.GetInt() )
 					{
-						return TF_TEAM_RED;
+						iTeam = TF_TEAM_RED;
 					}
 				}
 			}
@@ -2508,13 +2508,13 @@ int CTFPlayer::GetAutoTeam( void )
 					// Check RED for min amount of players.
 					if ( pRed->GetNumPlayers() < lf_coop_min_red_players.GetInt() )
 					{
-						return TF_TEAM_RED;
+						iTeam = TF_TEAM_RED;
 					}
 				}
 				else
 				{
 					// Always join RED in co-op.
-					return TF_TEAM_RED;
+					iTeam = TF_TEAM_RED;
 				}
 			}
 
@@ -6650,7 +6650,7 @@ void CTFPlayer::CheatImpulseCommands( int iImpulse )
 				}
 
 				TakeHealth( 999, DMG_GENERIC );
-
+				Regenerate();
 				// Refill clip in all weapons.
 				for ( int i = 0; i < WeaponCount(); i++ )
 				{

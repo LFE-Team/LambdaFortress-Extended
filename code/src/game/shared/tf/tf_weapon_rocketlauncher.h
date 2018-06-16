@@ -17,7 +17,7 @@
 #define CTFRocketLauncher C_TFRocketLauncher
 #define CTFRocketLauncher_DirectHit C_TFRocketLauncher_DirectHit
 #define CTFRocketLauncher_AirStrike C_TFRocketLauncher_AirStrike
-#define CTFRocketLauncher_FireBall C_TFRocketLauncher_FireBall
+#define CTFWeaponFlameBall C_TFWeaponFlameBall
 #endif
 
 //=============================================================================
@@ -96,10 +96,10 @@ public:
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
 };
 
-class CTFRocketLauncher_FireBall : public CTFRocketLauncher
+class CTFWeaponFlameBall : public CTFRocketLauncher
 {
 public:
-	DECLARE_CLASS( CTFRocketLauncher_FireBall, CTFRocketLauncher );
+	DECLARE_CLASS( CTFWeaponFlameBall, CTFRocketLauncher );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 

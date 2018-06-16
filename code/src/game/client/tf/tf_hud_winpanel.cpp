@@ -23,6 +23,8 @@
 #include "fmtstr.h"
 #include "teamplayroundbased_gamerules.h"
 #include "tf_gamerules.h"
+#include <KeyValues.h>
+void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -106,6 +108,14 @@ void CTFWinPanel::SetVisible( bool state )
 //-----------------------------------------------------------------------------
 void CTFWinPanel::FireGameEvent( IGameEvent * event )
 {
+	KeyValues *pConditions = NULL;
+
+	if ( TFGameRules() && TFGameRules()->IsCoOp() )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_coop" );
+	}
+
 	const char *pEventName = event->GetName();
 
 	if ( Q_strcmp( "teamplay_round_start", pEventName ) == 0 )
@@ -126,12 +136,17 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			return;
 
 		int iWinningTeam = event->GetInt( "winning_team" );
+
 		int iWinReason = event->GetInt( "winreason" );
 		int iFlagCapLimit = event->GetInt( "flagcaplimit" );
 		bool bRoundComplete = (bool) event->GetInt( "round_complete" );
 		int iRoundsRemaining = event->GetInt( "rounds_remaining" );
 
-		LoadControlSettings( "resource/UI/WinPanel.res" );		
+		LoadControlSettings( "resource/UI/WinPanel.res", NULL, NULL, pConditions );
+		if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+		{
+			LoadControlSettings( "resource/UI/WinPanel_coop.res", NULL, NULL, pConditions );
+		}
 		InvalidateLayout( false, true );
 
 		SetDialogVariable( "WinningTeamLabel", "" );
@@ -139,56 +154,55 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		SetDialogVariable( "WinReasonLabel", "" );
 		SetDialogVariable( "DetailsLabel", "" );
 
-		vgui::ImagePanel *pImagePanelBG = dynamic_cast<vgui::ImagePanel *>( FindChildByName("WinPanelBG") );
+		vgui::ScalableImagePanel *pImagePanelBG = dynamic_cast<vgui::ScalableImagePanel *>( FindChildByName("WinPanelBG") );
 		Assert( pImagePanelBG );
 		if ( !pImagePanelBG )
 			return;
 
-		// set the appropriate background image and label text
-		const char *pTeamLabel = NULL;
-		const char *pTopPlayersLabel = NULL;
-		const wchar_t *pLocalizedTeamName = NULL;
-		// this is an area defense, but not a round win, if this was a successful defend until time limit but not a complete round
-		bool bIsAreaDefense = ( ( WINREASON_DEFEND_UNTIL_TIME_LIMIT == iWinReason ) && !bRoundComplete );
-		switch ( iWinningTeam )
-		{
-		case TF_TEAM_BLUE:
-			pImagePanelBG->SetImage( "../hud/winpanel_blue_bg_main.vmt" );
-			pTeamLabel = ( bRoundComplete ? "#Winpanel_BlueWins" : ( bIsAreaDefense ? "#Winpanel_BlueDefends" : "#Winpanel_BlueAdvances" ) );
-			pTopPlayersLabel = "#Winpanel_BlueMVPs";
-			pLocalizedTeamName =  g_pVGuiLocalize->Find( "TF_BlueTeam_Name" );
-			break;
-		case TF_TEAM_RED:
-			pImagePanelBG->SetImage( "../hud/winpanel_red_bg_main.vmt" );
-			pTeamLabel = ( bRoundComplete ? "#Winpanel_RedWins" : ( bIsAreaDefense ? "#Winpanel_RedDefends" : "#Winpanel_RedAdvances" ) );
-			pTopPlayersLabel = "#Winpanel_RedMVPs";
-			pLocalizedTeamName =  g_pVGuiLocalize->Find( "TF_RedTeam_Name" );
-			break;
-		case TF_TEAM_GREEN:
-			pImagePanelBG->SetImage("../hud/winpanel_green_bg_main.vmt");
-			pTeamLabel = (bRoundComplete ? "#Winpanel_GreenWins" : (bIsAreaDefense ? "#Winpanel_GreenDefends" : "#Winpanel_GreenAdvances"));
-			pTopPlayersLabel = "#Winpanel_GreenMVPs";
-			pLocalizedTeamName = g_pVGuiLocalize->Find("TF_GreenTeam_Name");
-			break;
-		case TF_TEAM_YELLOW:
-			pImagePanelBG->SetImage("../hud/winpanel_yellow_bg_main.vmt");
-			pTeamLabel = (bRoundComplete ? "#Winpanel_YellowWins" : (bIsAreaDefense ? "#Winpanel_YellowDefends" : "#Winpanel_YellowAdvances"));
-			pTopPlayersLabel = "#Winpanel_YellowMVPs";
-			pLocalizedTeamName = g_pVGuiLocalize->Find("TF_YellowTeam_Name");
-			break;
-		case TEAM_UNASSIGNED:	// stalemate
-			pImagePanelBG->SetImage( "../hud/winpanel_black_bg_main.vmt" );
-			pTeamLabel = "#Winpanel_Stalemate";
-			pTopPlayersLabel = "#Winpanel_TopPlayers";
-			break;
-		default:
-			Assert( false );
-			break;
-		}
+			// set the appropriate background image and label text
+			const char *pTeamLabel = NULL;
+			const char *pTopPlayersLabel = NULL;
+			const wchar_t *pLocalizedTeamName = NULL;
+			if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsZombieSurvival() )
+			{
+			// this is an area defense, but not a round win, if this was a successful defend until time limit but not a complete round
+			bool bIsAreaDefense = ( ( WINREASON_DEFEND_UNTIL_TIME_LIMIT == iWinReason ) && !bRoundComplete );
+			
 
-		SetDialogVariable( bRoundComplete ? "WinningTeamLabel" : "AdvancingTeamLabel", g_pVGuiLocalize->Find( pTeamLabel ) );
-		SetDialogVariable( "TopPlayersLabel", g_pVGuiLocalize->Find( pTopPlayersLabel ) );
+			switch ( iWinningTeam )
+			{
+			case TF_TEAM_BLUE:
+				if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsZombieSurvival() )
+				{
+					pImagePanelBG->SetImage( "../hud/winpanel_blue_bg_main.vmt" );
+				}
+				pTeamLabel = ( bRoundComplete ? "#Winpanel_BlueWins" : ( bIsAreaDefense ? "#Winpanel_BlueDefends" : "#Winpanel_BlueAdvances" ) );
+				pTopPlayersLabel = "#Winpanel_BlueMVPs";
+				pLocalizedTeamName =  g_pVGuiLocalize->Find( "TF_BlueTeam_Name" );
+				break;
+			case TF_TEAM_RED:
+				if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsZombieSurvival() )
+				{
+					pImagePanelBG->SetImage( "../hud/winpanel_red_bg_main.vmt" );
+				}
+				pTeamLabel = ( bRoundComplete ? "#Winpanel_RedWins" : ( bIsAreaDefense ? "#Winpanel_RedDefends" : "#Winpanel_RedAdvances" ) );
+				pTopPlayersLabel = "#Winpanel_RedMVPs";
+				pLocalizedTeamName =  g_pVGuiLocalize->Find( "TF_RedTeam_Name" );
+				break;
+			case TEAM_UNASSIGNED:	// stalemate
+				pImagePanelBG->SetImage( "../hud/winpanel_black_bg_main.vmt" );
+				pTeamLabel = "#Winpanel_Stalemate";
+				pTopPlayersLabel = "#Winpanel_TopPlayers";
+				break;
+			default:
+				Assert( false );
+				break;
+			}
 
+
+			SetDialogVariable( bRoundComplete ? "WinningTeamLabel" : "AdvancingTeamLabel", g_pVGuiLocalize->Find( pTeamLabel ) );
+			SetDialogVariable( "TopPlayersLabel", g_pVGuiLocalize->Find( pTopPlayersLabel ) );
+			}
 		wchar_t wzWinReason[256]=L"";
 		switch ( iWinReason )
 		{
@@ -212,12 +226,34 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		case WINREASON_STALEMATE:
 			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_Stalemate" ), 0 );
 			break;	
+		case WINREASON_HL2_OBJECT:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Object" ), 0 );
+			break;	
+		case WINREASON_HL2EP_OBJECT:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2EP_Object" ), 0 );
+			break;
+		case WINREASON_HL2_ALLY_DEATH:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Ally_Death" ), 0 );
+			break;	
+		case WINREASON_HL2EP_ALLY_DEATH:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2EP_Ally_Death" ), 0 );
+			break;
+		case WINREASON_HL2_TIMER:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Timer" ), 0 );
+			break;	
+		case WINREASON_HL2EP_TIMER:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2EP_Timer" ), 0 );
+			break;
+		case WINREASON_HL2_STUCK:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Stuck" ), 0 );
+			break;
 		default:
 			Assert( false );
 			break;
 		}
+		
 		SetDialogVariable( "WinReasonLabel", wzWinReason );
-
+		//}
 		if ( !bRoundComplete && ( WINREASON_STALEMATE != iWinReason ) )
 		{			
 			// if this was a mini-round, show # of capture points remaining
@@ -301,6 +337,15 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 						m_flTimeUpdateTeamScore = gpGlobals->curtime + 2.0f;
 					}
 				}
+				else if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+				{
+					if ( ( m_iRedTeamScore != iRedTeamPrevScore ) )
+					{
+						// if the new scores are different, set ourselves to update the scoreboard to the new values after a short delay, so players
+						// see the scores tick up
+						m_flTimeUpdateTeamScore = gpGlobals->curtime + 2.0f;
+					}
+				}
 				else if ( ( m_iBlueTeamScore != iBlueTeamPrevScore ) || ( m_iRedTeamScore != iRedTeamPrevScore ) )
 				{
 					// if the new scores are different, set ourselves to update the scoreboard to the new values after a short delay, so players
@@ -316,67 +361,75 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		if ( !tf_PR )
 			return;
 
-		// look for the top 3 players sent in the event
-		for ( int i = 1; i <= 3; i++ )
+		
+		// only look for the top 3 players to sent in the event IF this isn't coop.
+		if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsZombieSurvival() )
 		{
-			bool bShow = false;
-			char szPlayerIndexVal[64]="", szPlayerScoreVal[64]="";
-			// get player index and round points from the event
-			Q_snprintf( szPlayerIndexVal, ARRAYSIZE( szPlayerIndexVal ), "player_%d", i );
-			Q_snprintf( szPlayerScoreVal, ARRAYSIZE( szPlayerScoreVal ), "player_%d_points", i );
-			int iPlayerIndex = event->GetInt( szPlayerIndexVal, 0 );
-			int iRoundScore = event->GetInt( szPlayerScoreVal, 0 );
-			// round score of 0 means no player to show for that position (not enough players, or didn't score any points that round)
-			if ( iRoundScore > 0 )
-				bShow = true;
-
-#if !defined( _X360 )
-			CAvatarImagePanel *pPlayerAvatar = dynamic_cast<CAvatarImagePanel *>( FindChildByName( CFmtStr( "Player%dAvatar", i ) ) );
-
-			if ( pPlayerAvatar )
+			for ( int i = 1; i <= 3; i++ )
 			{
-				pPlayerAvatar->ClearAvatar();
-				pPlayerAvatar->SetShouldScaleImage( true );
-				pPlayerAvatar->SetShouldDrawFriendIcon( false );
+				bool bShow = false;
+				char szPlayerIndexVal[64]="", szPlayerScoreVal[64]="";
+				// get player index and round points from the event
+				Q_snprintf( szPlayerIndexVal, ARRAYSIZE( szPlayerIndexVal ), "player_%d", i );
+				Q_snprintf( szPlayerScoreVal, ARRAYSIZE( szPlayerScoreVal ), "player_%d_points", i );
+				int iPlayerIndex = event->GetInt( szPlayerIndexVal, 0 );
+				int iRoundScore = event->GetInt( szPlayerScoreVal, 0 );
+				// round score of 0 means no player to show for that position (not enough players, or didn't score any points that round)
+				if ( iRoundScore > 0 )
+					bShow = true;
+
+				CAvatarImagePanel *pPlayerAvatar = dynamic_cast<CAvatarImagePanel *>( FindChildByName( CFmtStr( "Player%dAvatar", i ) ) );
+
+				if ( pPlayerAvatar )
+				{
+					pPlayerAvatar->ClearAvatar();
+					pPlayerAvatar->SetShouldScaleImage( true );
+					pPlayerAvatar->SetShouldDrawFriendIcon( false );
+
+					if ( bShow )
+					{
+						pPlayerAvatar->SetDefaultAvatar( GetDefaultAvatarImage( UTIL_PlayerByIndex( iPlayerIndex ) ) );
+						pPlayerAvatar->SetPlayer( iPlayerIndex );
+					}
+					pPlayerAvatar->SetVisible( bShow );
+				}
+
+				vgui::Label *pPlayerName = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dName", i ) ) );
+				vgui::Label *pPlayerClass = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dClass", i ) ) );
+				vgui::Label *pPlayerScore = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dScore", i ) ) );
+			
+				if ( !pPlayerName || !pPlayerClass || !pPlayerScore )
+					return;
 
 				if ( bShow )
 				{
-					pPlayerAvatar->SetDefaultAvatar( GetDefaultAvatarImage( UTIL_PlayerByIndex( iPlayerIndex ) ) );
-					pPlayerAvatar->SetPlayer( iPlayerIndex );
+					// set the player labels to team color
+					Color clr = g_PR->GetTeamColor( g_PR->GetTeam( iPlayerIndex ) );				
+					pPlayerName->SetFgColor( clr );
+					pPlayerClass->SetFgColor( clr );
+					pPlayerScore->SetFgColor( clr );
+
+					// set label contents
+					pPlayerName->SetText( g_PR->GetPlayerName( iPlayerIndex ) );
+					pPlayerClass->SetText( g_aPlayerClassNames[tf_PR->GetPlayerClass( iPlayerIndex )] );
+					pPlayerScore->SetText( CFmtStr( "%d", iRoundScore ) );
 				}
-				pPlayerAvatar->SetVisible( bShow );
-			}
-#endif
-			vgui::Label *pPlayerName = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dName", i ) ) );
-			vgui::Label *pPlayerClass = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dClass", i ) ) );
-			vgui::Label *pPlayerScore = dynamic_cast<Label *>( FindChildByName( CFmtStr( "Player%dScore", i ) ) );
-			
-			if ( !pPlayerName || !pPlayerClass || !pPlayerScore )
-				return;
 
-			if ( bShow )
-			{
-				// set the player labels to team color
-				Color clr = g_PR->GetTeamColor( g_PR->GetTeam( iPlayerIndex ) );				
-				pPlayerName->SetFgColor( clr );
-				pPlayerClass->SetFgColor( clr );
-				pPlayerScore->SetFgColor( clr );
-
-				// set label contents
-				pPlayerName->SetText( g_PR->GetPlayerName( iPlayerIndex ) );
-				pPlayerClass->SetText( g_aPlayerClassNames[tf_PR->GetPlayerClass( iPlayerIndex )] );
-				pPlayerScore->SetText( CFmtStr( "%d", iRoundScore ) );
+				// show or hide labels for this player position
+				pPlayerName->SetVisible( bShow );
+				pPlayerClass->SetVisible( bShow );
+				pPlayerScore->SetVisible( bShow );
 			}
 
-			// show or hide labels for this player position
-			pPlayerName->SetVisible( bShow );
-			pPlayerClass->SetVisible( bShow );
-			pPlayerScore->SetVisible( bShow );
+			m_bShouldBeVisible = true;
+
+			MoveToFront();
 		}
+	}
 
-		m_bShouldBeVisible = true;
-
-		MoveToFront();
+	if ( pConditions )
+	{
+		pConditions->deleteThis();
 	}
 }
 

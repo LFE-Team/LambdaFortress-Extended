@@ -7750,7 +7750,14 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 #ifdef TF_CLASSIC
 	if ( TFGameRules()->IsCoOpGameRunning() )
 	{
-		TFGameRules()->SetWinningTeam( TF_COMBINE_TEAM, WINREASON_NONE );
+		if (hl2_episodic.GetInt() == 1)
+		{
+			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT);
+		}
+		else if (hl2_episodic.GetInt() == 0)
+		{
+			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2_OBJECT);
+		}
 	}
 #else
 	UTIL_ScreenFadeAll( m_clrRender, Duration(), HoldTime(), FFADE_OUT );
