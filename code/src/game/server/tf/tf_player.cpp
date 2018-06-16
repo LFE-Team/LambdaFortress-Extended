@@ -489,7 +489,7 @@ CTFPlayer::CTFPlayer()
 	m_bTransition = false;
 
 	m_flTauntAttackTime = 0.0f;
-	m_iTauntAttack = TF_TAUNT_NONE;
+	m_iTauntAttack = TAUNTATK_NONE;
 
 	m_nBlastJumpFlags = 0;
 	m_bBlastLaunched = false;
@@ -2402,7 +2402,7 @@ bool CTFPlayer::SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity*
 				CBaseEntity *pEntity = pList[i];
 				if ( pEntity != this && ( !InSameTeam( pEntity ) ) )
 				{
-					CTakeDamageInfo info( this, this, 1000, DMG_CRUSH, TF_DMG_TELEFRAG );
+					CTakeDamageInfo info( this, this, 1000, DMG_CRUSH, TF_DMG_CUSTOM_TELEFRAG );
 					pEntity->TakeDamage( info );
 				}
 			}
@@ -4073,7 +4073,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 
 		// Ubercharge does not save from telefrags.
-		if ( info.GetDamageCustom() == TF_DMG_TELEFRAG )
+		if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
 		{
 			bAllowDamage = true;
 		}
@@ -4825,7 +4825,7 @@ bool CTFPlayer::ShouldGib( const CTakeDamageInfo &info )
 	if ( info.GetDamageType() & DMG_ALWAYSGIB )
 		return true;
 
-	if ( info.GetDamageCustom() == TF_DMG_TELEFRAG )
+	if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
 		return true;
 
 	if ( ( info.GetDamageType() & DMG_BLAST ) || ( info.GetDamageType() & DMG_HALF_FALLOFF ) )
@@ -5048,7 +5048,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pObject->Teleport( &WorldSpaceCenter(), &GetAbsAngles(), &vec3_origin );
 		pObject->DropCarriedObject( this );
 
-		CTakeDamageInfo newInfo( pInflictor, pAttacker, (float)pObject->GetHealth(), DMG_GENERIC, TF_DMG_BUILDING_CARRIED );
+		CTakeDamageInfo newInfo( pInflictor, pAttacker, (float)pObject->GetHealth(), DMG_GENERIC, TF_DMG_CUSTOM_CARRIED_BUILDING );
 		pObject->Killed( newInfo );
 	}
 
@@ -6128,23 +6128,19 @@ void CTFPlayer::StateEnterWELCOME( void )
 			return;
 		}
 	}
-
-	if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 0 )
+	else if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 0 )
 	{
-		unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
-		if ( index != g_TFPlayerTransitions.InvalidIndex() )
-		{
-			mp_waitingforplayers_cancel.SetValue( 1 );
-			m_bSeenRoundInfo = true;
-			m_bIsIdle = false;
+		mp_waitingforplayers_cancel.SetValue( 1 );
+		m_bSeenRoundInfo = true;
+		m_bIsIdle = false;
 
-			// Spawn this player instantly and restore his class.
-			ChangeTeam( TF_STORY_TEAM, false, true );
-			SetDesiredPlayerClassIndex( g_TFPlayerTransitions[index].playerClass );
-			ForceRespawn();
+		ShowViewPortPanel( PANEL_MAPINFO, false );
+		ShowViewPortPanel( PANEL_CLASS_RED, true );
 
-			return;
-		}
+		// Spawn this player instantly and change his team to red.
+		ChangeTeam( TF_STORY_TEAM, false, true );
+		ForceRespawn();
+		return;
 	}
 
 	if ( gpGlobals->eLoadType == MapLoad_Background )
@@ -7985,32 +7981,32 @@ void CTFPlayer::Taunt( void )
 		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX ) )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
-			m_iTauntAttack = TF_TAUNT_LUNCHBOX;
+			m_iTauntAttack = TAUNTATK_HEAVY_EAT;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
-			m_iTauntAttack = TF_TAUNT_PYRO;
+			m_iTauntAttack = TAUNTATK_PYRO_HADOUKEN;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
-			m_iTauntAttack = TF_TAUNT_HEAVY;
+			m_iTauntAttack = TAUNTATK_HEAVY_HIGH_NOON;
 		}
 		else if ( V_strnicmp( szResponse, "scenes/player/spy/low/taunt03", 29 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
-			m_iTauntAttack = TF_TAUNT_SPY1;
+			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/sniper/low/taunt04.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 0.85f;
-			m_iTauntAttack = TF_TAUNT_SNIPER_STUN;
+			m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_IMPALE;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/medic/low/taunt08.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 2.2;
-			m_iTauntAttack = TF_TAUNT_MEDIC_STUN;
+			m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_IMPALE;
 		}
 	}
 
@@ -8027,14 +8023,14 @@ void CTFPlayer::DoTauntAttack( void )
 	if ( !iTauntType )
 		return;
 
-	m_iTauntAttack = TF_TAUNT_NONE;
+	m_iTauntAttack = TAUNTATK_NONE;
 
 	switch ( iTauntType )
 	{
-	case TF_TAUNT_PYRO:
-	case TF_TAUNT_SPY1:
-	case TF_TAUNT_SPY2:
-	case TF_TAUNT_SPY3:
+	case TAUNTATK_PYRO_HADOUKEN:
+	case TAUNTATK_SPY_FENCING_SLASH_A:
+	case TAUNTATK_SPY_FENCING_SLASH_B:
+	case TAUNTATK_SPY_FENCING_STAB:
 	{
 		Vector vecAttackDir = BodyDirection2D();
 		Vector vecOrigin = WorldSpaceCenter() + vecAttackDir * 64;
@@ -8050,36 +8046,36 @@ void CTFPlayer::DoTauntAttack( void )
 
 		switch ( iTauntType )
 		{
-		case TF_TAUNT_PYRO:
+		case TAUNTATK_PYRO_HADOUKEN:
 			vecForce *= 25000;
 			flDamage = 500;
 			nDamageType = DMG_IGNITE;
-			iDamageCustom = TF_DMG_TAUNT_PYRO;
+			iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_HADOUKEN;
 			break;
-		case TF_TAUNT_SPY3:
+		case TAUNTATK_SPY_FENCING_STAB:
 			vecForce *= 20000;
 			flDamage = 500;
 			nDamageType = DMG_SLASH;
-			iDamageCustom = TF_DMG_TAUNT_SPY;
+			iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_FENCING;
 			break;
 		default:
 			vecForce *= 100;
 			flDamage = 25;
 			nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
-			iDamageCustom = TF_DMG_TAUNT_SPY;
+			iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_FENCING;
 			break;
 		}
 
 		// Spy taunt has 3 hits, set up the next one.
-		if ( iTauntType == TF_TAUNT_SPY1 )
+		if ( iTauntType == TAUNTATK_SPY_FENCING_SLASH_A )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 0.47;
-			m_iTauntAttack = TF_TAUNT_SPY2;
+			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_B;
 		}
-		else if ( iTauntType == TF_TAUNT_SPY2 )
+		else if ( iTauntType == TAUNTATK_SPY_FENCING_SLASH_B )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.73;
-			m_iTauntAttack = TF_TAUNT_SPY3;
+			m_iTauntAttack = TAUNTATK_SPY_FENCING_STAB;
 		}
 
 		CBaseEntity *pList[256];
@@ -8107,7 +8103,7 @@ void CTFPlayer::DoTauntAttack( void )
 
 		break;
 	}
-	case TF_TAUNT_HEAVY:
+	case TAUNTATK_HEAVY_HIGH_NOON:
 	{
 		// Fire a bullet in the direction player was looking at.
 		Vector vecSrc, vecShotDir, vecEnd;
@@ -8136,14 +8132,14 @@ void CTFPlayer::DoTauntAttack( void )
 
 				vecDamagePos = tr.endpos;
 
-				CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, 500, DMG_BULLET, TF_DMG_TAUNT_HEAVY );
+				CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, 500, DMG_BULLET, TF_DMG_CUSTOM_TAUNTATK_HIGH_NOON );
 				pEntity->TakeDamage( info );
 			}
 		}
 
 		break;
 	}
-	case TF_TAUNT_LUNCHBOX:
+	case TAUNTATK_HEAVY_EAT:
 	{
 		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
 		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX ) )
@@ -8151,16 +8147,16 @@ void CTFPlayer::DoTauntAttack( void )
 			CTFLunchBox *pLunch = static_cast<CTFLunchBox *>( pWeapon );
 			pLunch->ApplyBiteEffects();
 
-			m_iTauntAttack = TF_TAUNT_LUNCHBOX;
+			m_iTauntAttack = TAUNTATK_HEAVY_EAT;
 			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
 		}
 
 		break;
 	}
-	case TF_TAUNT_SNIPER_STUN:
-	case TF_TAUNT_SNIPER_KILL:
-	case TF_TAUNT_MEDIC_STUN:
-	case TF_TAUNT_MEDIC_KILL:
+	case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
+	case TAUNTATK_SNIPER_ARROW_STAB_KILL:
+	case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
+	case TAUNTATK_MEDIC_UBERSLICE_KILL:
 	{
 		// Trace a bit ahead.
 		Vector vecSrc, vecShotDir, vecEnd;
@@ -8178,7 +8174,7 @@ void CTFPlayer::DoTauntAttack( void )
 			if ( pPlayer && !InSameTeam( pPlayer ) )
 			{
 				// First hit stuns, next hit kills.
-				bool bStun = ( iTauntType == TF_TAUNT_SNIPER_STUN || iTauntType == TF_TAUNT_MEDIC_STUN );
+				bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE );
 				Vector vecForce, vecDamagePos;
 
 				if ( bStun )
@@ -8196,13 +8192,13 @@ void CTFPlayer::DoTauntAttack( void )
 				float flDamage = bStun ? 1.0f : 500.0f;
 				int nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
 				int iCustomDamage = 0;
-				if ( iTauntType == TF_TAUNT_SNIPER_STUN || TF_TAUNT_SNIPER_KILL )
+				if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || TAUNTATK_SNIPER_ARROW_STAB_KILL )
 				{
-					iCustomDamage = TF_DMG_TAUNT_SNIPER;
+					iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
 				}
-				else if ( iTauntType == TF_TAUNT_MEDIC_STUN || TF_TAUNT_MEDIC_KILL )
+				else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || TAUNTATK_MEDIC_UBERSLICE_KILL )
 				{
-					iCustomDamage = TF_DMG_TAUNT_MEDIC;
+					iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
 				}
 
 				vecDamagePos = tr.endpos;
@@ -8216,15 +8212,15 @@ void CTFPlayer::DoTauntAttack( void )
 				pPlayer->TakeDamage( info );
 			}
 
-			if ( iTauntType == TF_TAUNT_SNIPER_STUN )
+			if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE )
 			{
 				m_flTauntAttackTime = gpGlobals->curtime + 1.3f;
-				m_iTauntAttack = TF_TAUNT_SNIPER_KILL;
+				m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_KILL;
 			}
-			else if ( iTauntType == TF_TAUNT_MEDIC_STUN )
+			else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE )
 			{
 				m_flTauntAttackTime = gpGlobals->curtime + 0.75f;
-				m_iTauntAttack = TF_TAUNT_MEDIC_KILL;
+				m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_KILL;
 			}
 		}
 
@@ -8238,7 +8234,7 @@ void CTFPlayer::DoTauntAttack( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::ClearTauntAttack( void )
 {
-	if ( m_iTauntAttack == TF_TAUNT_LUNCHBOX )
+	if ( m_iTauntAttack == TAUNTATK_HEAVY_EAT )
 	{
 		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
 		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX ) )
@@ -8248,7 +8244,7 @@ void CTFPlayer::ClearTauntAttack( void )
 	}
 
 	m_flTauntAttackTime = 0.0f;
-	m_iTauntAttack = TF_TAUNT_NONE;
+	m_iTauntAttack = TAUNTATK_NONE;
 }
 
 //-----------------------------------------------------------------------------

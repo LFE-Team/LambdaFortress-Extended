@@ -83,7 +83,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT; }
 };
 
 class CTFRocketLauncher_AirStrike : public CTFRocketLauncher
@@ -103,7 +103,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
+	virtual int		GetWeaponID( void ) const			{ return TF_WEPON_FLAME_BALL; }
 };
 
 #endif // TF_WEAPON_ROCKETLAUNCHER_H

@@ -64,9 +64,9 @@ ConVar	sk_plr_health_drop_time("sk_plr_health_drop_time", "30", FCVAR_REPLICATED
 
 enum
 {
-	BIRTHDAY_RECALCULATE,
-	BIRTHDAY_OFF,
-	BIRTHDAY_ON,
+	HOLIDAY_RECALCULATE,
+	HOLIDAY_OFF,
+	HOLIDAY_ON,
 };
 
 static int g_TauntCamAchievements[] = 
@@ -96,9 +96,11 @@ ConVar tf_caplinear( "tf_caplinear", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTON
 ConVar tf_stalematechangeclasstime( "tf_stalematechangeclasstime", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Amount of time that players are allowed to change class in stalemates." );
 ConVar tf_birthday( "tf_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
 
-#ifdef HL2_EPISODIC  
+ConVar lfe_force_aprilfool( "lfe_force_aprilfool", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
+ConVar lfe_force_halloween( "lfe_force_halloween", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
+ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
+
 ConVar  alyx_darkness_force("alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED);
-#endif // HL2_EPISODIC
 
 // TF2C specific cvars.
 ConVar tf2c_falldamage_disablespread( "tf2c_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
@@ -769,14 +771,30 @@ class CTFLogicZombieSurvival : public CBaseEntity
 {
 public:
 	DECLARE_CLASS(CTFLogicZombieSurvival, CBaseEntity);
+	DECLARE_DATADESC();
 	CTFLogicZombieSurvival();
 	~CTFLogicZombieSurvival();
 
 	void	Spawn(void);
+
+	void InputForceTeleportToTeamSpawn( inputdata_t &inputdata );
+	void InputReleaseTeamSpawn( inputdata_t &inputdata );
+	void InputForceFinaleStart( inputdata_t &inputdata );
+	void InputStartIntro( inputdata_t &inputdata );
+	void InputFinishIntro( inputdata_t &inputdata );
 private:
 	bool m_bFinale;
 	bool m_bFiredEscapeRoom;
 };
+
+BEGIN_DATADESC( CTFLogicZombieSurvival )
+	DEFINE_INPUTFUNC( FIELD_VOID, "ForceTeleportToTeamSpawn", InputForceTeleportToTeamSpawn ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "ReleaseTeamSpawn", InputReleaseTeamSpawn ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "ForceFinaleStart", InputForceFinaleStart ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StartIntro", InputStartIntro ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "FinishIntro", InputFinishIntro )
+END_DATADESC()
+
 
 LINK_ENTITY_TO_CLASS(lfe_logic_zs, CTFLogicZombieSurvival);
 
@@ -794,6 +812,54 @@ CTFLogicZombieSurvival::~CTFLogicZombieSurvival()
 void CTFLogicZombieSurvival::Spawn(void)
 {
 	BaseClass::Spawn();
+}
+
+void CTFLogicZombieSurvival::InputForceTeleportToTeamSpawn( inputdata_t &inputdata )
+{
+	for (int i = 0; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+		
+		if ( !pPlayer || !pPlayer->IsAlive() )
+			continue;
+
+		CBaseEntity *pSpot = gEntList.FindEntityByClassname( NULL, "info_player_teamspawn" );
+		while ( pSpot )
+		{
+			Vector velocity = vec3_origin;
+			pPlayer->Teleport(&pSpot->GetAbsOrigin(), &pSpot->GetAbsAngles(), &velocity);
+			pPlayer->AddFlag( FL_FROZEN );
+			break;
+		}
+	}
+}
+
+void CTFLogicZombieSurvival::InputReleaseTeamSpawn( inputdata_t &inputdata )
+{
+	for (int i = 0; i<=gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer (UTIL_PlayerByIndex( i ) );
+		
+		if ( !pPlayer || !pPlayer->IsAlive() )
+			continue;
+
+		pPlayer->RemoveFlag( FL_FROZEN );
+	}
+}
+
+void CTFLogicZombieSurvival::InputForceFinaleStart( inputdata_t &inputdata )
+{
+	m_bFinale = true;
+}
+
+void CTFLogicZombieSurvival::InputStartIntro( inputdata_t &inputdata )
+{
+
+}
+
+void CTFLogicZombieSurvival::InputFinishIntro( inputdata_t &inputdata )
+{
+
 }
 
 class CTFClassLimits : public CBaseEntity
@@ -1220,10 +1286,8 @@ ConVar	sk_plr_dmg_grenade		( "sk_plr_dmg_grenade","100", FCVAR_REPLICATED);
 ConVar	sk_npc_dmg_grenade		( "sk_npc_dmg_grenade","50", FCVAR_REPLICATED);
 ConVar	sk_max_grenade			( "sk_max_grenade","5", FCVAR_REPLICATED);
 
-#ifdef HL2_EPISODIC
 ConVar	sk_max_hopwire			( "sk_max_hopwire", "3", FCVAR_REPLICATED);
 ConVar	sk_max_striderbuster	( "sk_max_striderbuster", "3", FCVAR_REPLICATED);
-#endif
 
 //ConVar sk_plr_dmg_brickbat	( "sk_plr_dmg_brickbat","0", FCVAR_REPLICATED);
 //ConVar sk_npc_dmg_brickbat	( "sk_npc_dmg_brickbat","0", FCVAR_REPLICATED);
@@ -1488,7 +1552,7 @@ CTFGameRules::CTFGameRules()
 	Assert( FStrEq( g_aWeaponNames[TF_WEAPON_COUNT], "TF_WEAPON_COUNT" ) );	
 
 	m_iPreviousRoundWinners = TEAM_UNASSIGNED;
-	m_iBirthdayMode = BIRTHDAY_RECALCULATE;
+	m_iBirthdayMode = HOLIDAY_RECALCULATE;
 
 	m_pszTeamGoalStringRed.GetForModify()[0] = '\0';
 	m_pszTeamGoalStringBlue.GetForModify()[0] = '\0';
@@ -1591,7 +1655,7 @@ static const char *s_PreserveEnts[] =
 //-----------------------------------------------------------------------------
 void CTFGameRules::Activate()
 {
-	m_iBirthdayMode = BIRTHDAY_RECALCULATE;
+	m_iBirthdayMode = HOLIDAY_RECALCULATE;
 
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
@@ -1604,6 +1668,8 @@ void CTFGameRules::Activate()
 	tf_gamemode_rd.SetValue( 0 );
 	tf_gamemode_passtime.SetValue( 0 );
 	lf_versus.SetValue( 0 );
+	lf_gamemode_zs.SetValue( 0 );
+	hl2_episodic.SetValue( 0 );
 
 	SetMultipleTrains( false );
 
@@ -1631,6 +1697,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_ZS );
 		lf_gamemode_zs.SetValue( 1 );
+		alyx_darkness_force.SetValue( 1 );
+		hl2_episodic.SetValue( 1 );
 		Msg( "Executing server zombie survival config file\n", 1 );
 		engine->ServerCommand( "exec config_zs.cfg \n" );
 		engine->ServerExecute();
@@ -4474,17 +4542,14 @@ static const char *g_aTaggedConVars[] =
 	"tf2c_random_weapons",
 	"randomizer",
 
-	"tf2c_autojump",
+	"lf_autojump",
 	"autojump",
 
-	"tf2c_duckjump",
+	"lf_duckjump",
 	"duckjump",
 
 	"tf2c_airblast",
 	"noairblast",
-
-	"tf2c_building_hauling",
-	"nohauling",
 
 	"tf2c_building_upgrades",
 	"nobuildingupgrades",
@@ -4525,14 +4590,20 @@ static const char *g_aTaggedConVars[] =
 	"tf_gamemode_passtime",
 	"passtime",
 
-	"skill0",
-	"original",
+	"lf_coop",
+	"coop",
 
-	"skill1",
-	"medium",
+	"lf_versus",
+	"versus",
 
-	"skill2",
-	"hard",
+	"lf_gamemode_zs",
+	"survival",
+
+	"sv_cheats",
+	"cheats",
+
+	"sv_infinite_ammo",
+	"infiniteammo",
 };
 
 //-----------------------------------------------------------------------------
@@ -4800,20 +4871,89 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	case TF_DMG_CUSTOM_SUICIDE:
 		pszCustomKill = "world";
 		break;
-	case TF_DMG_TAUNT_PYRO:
+	case TF_DMG_CUSTOM_TAUNTATK_HADOUKEN:
 		pszCustomKill = "taunt_pyro";
 		break;
-	case TF_DMG_TAUNT_HEAVY:
+	case TF_DMG_CUSTOM_TAUNTATK_HIGH_NOON:
 		pszCustomKill = "taunt_heavy";
 		break;
-	case TF_DMG_TAUNT_SPY:
+	case TF_DMG_CUSTOM_TAUNTATK_FENCING:
 		pszCustomKill = "taunt_spy";
 		break;
-	case TF_DMG_TELEFRAG:
+	case TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB:
+		pszCustomKill = "taunt_sniper";
+		break;
+	case TF_DMG_CUSTOM_TELEFRAG:
 		pszCustomKill = "telefrag";
 		break;
-	case TF_DMG_BUILDING_CARRIED:
+	case TF_DMG_CUSTOM_BURNING_ARROW:
+		pszCustomKill = "huntsman_burning";
+		break;
+	case TF_DMG_CUSTOM_FLYINGBURN:
+		pszCustomKill = "huntsman_flyingburn";
+		break;
+	case TF_DMG_CUSTOM_PUMPKIN_BOMB:
+		pszCustomKill = "pumpkindeath";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_GRENADE:
+		pszCustomKill = "taunt_soldier";
+		break;
+	case TF_DMG_CUSTOM_BASEBALL:
+		pszCustomKill = "ball";
+		break;
+	case TF_DMG_CUSTOM_CHARGE_IMPACT:
+		pszCustomKill = "demoshield";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_BARBARIAN_SWING:
+		pszCustomKill = "taunt_demoman";
+		break;
+	case TF_DMG_CUSTOM_DEFENSIVE_STICKY:
+		pszCustomKill = "sticky_resistance";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_UBERSLICE:
+		pszCustomKill = "taunt_medic";
+		break;
+	case TF_DMG_CUSTOM_PLAYER_SENTRY:
+		pszCustomKill = "player_sentry";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_ENGINEER_GUITAR_SMASH:
+		pszCustomKill = "taunt_guitar_kill";
+		break;
+	case TF_DMG_CUSTOM_BLEEDING:
+		pszCustomKill = "bleed_kill";
+		break;
+	case TF_DMG_CUSTOM_CARRIED_BUILDING:
 		pszCustomKill = "building_carried_destroyed";
+		break;
+	case TF_DMG_CUSTOM_COMBO_PUNCH:
+		pszCustomKill = "robot_arm_combo_kill";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL:
+		pszCustomKill = "robot_arm_blender_kill";
+		break;
+	case TF_DMG_CUSTOM_STICKBOMB_EXPLOSION:
+		pszCustomKill = "ullapool_caber_explosion";
+		break;
+	case TF_DMG_CUSTOM_DECAPITATION_BOSS:
+		pszCustomKill = "battleaxe";
+		break;
+	case TF_DMG_CUSTOM_EYEBALL_ROCKET:
+		pszCustomKill = "eyeball_rocket";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_ARMAGEDDON:
+		pszCustomKill = "armageddon";
+		break;
+	case TF_DMG_CUSTOM_CANNONBALL_PUSH:
+		pszCustomKill = "loose_cannon_impact";
+		break;
+	case TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING:
+		pszCustomKill = "dragons_fury_bonus";
+		break;
+	case TF_DMG_CUSTOM_CROC:
+		pszCustomKill = "crocodile";
+		break;
+	case TF_DMG_CUSTOM_TAUNTATK_GASBLAST:
+		pszCustomKill = "gas_blast";
 		break;
 	}
 
@@ -5009,6 +5149,34 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 			killer_weapon_name = "helicopter";
 		}
 	}
+	else if ( V_strcmp( killer_weapon_name, "tf_weapon_physcannon" ) == 0 )
+	{
+		if ( info.GetDamageType() & DMG_GENERIC && GlobalEntity_IsInTable( "super_phys_gun" ) )
+		{
+			killer_weapon_name = "physcannon_mega";
+		}
+	}
+	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_jeep" ) == 0/* && V_strcmp( STRING( GetModelName() ), "models/buggy.mdl" )*/ )
+	{
+		if ( info.GetDamageType() & DMG_VEHICLE )
+		{
+			killer_weapon_name = "jeep";
+		}
+	}
+	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_airboat" ) == 0 )
+	{
+		if ( info.GetDamageType() & DMG_VEHICLE )
+		{
+			killer_weapon_name = "airboat";
+		}
+	}/*
+	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_jeep" ) == 0 && V_strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	{
+		if ( info.GetDamageType() & DMG_VEHICLE )
+		{
+			killer_weapon_name = "jeep_episodic";
+		}
+	}*/
 	else if ( iWeaponID )
 	{
 		iOutputID = iWeaponID;
@@ -6265,15 +6433,12 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsBirthday( void )
 {
-	if ( IsX360() )
-		return false;
-
-	if ( m_iBirthdayMode == BIRTHDAY_RECALCULATE )
+	if ( m_iBirthdayMode == HOLIDAY_RECALCULATE )
 	{
-		m_iBirthdayMode = BIRTHDAY_OFF;
+		m_iBirthdayMode = HOLIDAY_OFF;
 		if ( tf_birthday.GetBool() )
 		{
-			m_iBirthdayMode = BIRTHDAY_ON;
+			m_iBirthdayMode = HOLIDAY_ON;
 		}
 		else
 		{
@@ -6284,13 +6449,103 @@ bool CTFGameRules::IsBirthday( void )
 			{
 				if ( today->tm_mon == 7 && today->tm_mday == 24 )
 				{
-					m_iBirthdayMode = BIRTHDAY_ON;
+					m_iBirthdayMode = HOLIDAY_ON;
 				}
 			}
 		}
 	}
 
-	return ( m_iBirthdayMode == BIRTHDAY_ON );
+	return ( m_iBirthdayMode == HOLIDAY_ON );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFGameRules::IsAprilFool( void )
+{
+	if ( m_iAprilFoolMode == HOLIDAY_RECALCULATE )
+	{
+		m_iAprilFoolMode = HOLIDAY_OFF;
+		if ( lfe_force_aprilfool.GetBool() )
+		{
+			m_iAprilFoolMode = HOLIDAY_ON;
+		}
+		else
+		{
+			time_t ltime = time(0);
+			const time_t *ptime = &ltime;
+			struct tm *today = localtime( ptime );
+			if ( today )
+			{
+				if ( today->tm_mon == 4 && today->tm_mday == 1 )
+				{
+					m_iAprilFoolMode = HOLIDAY_ON;
+				}
+			}
+		}
+	}
+
+	return ( m_iAprilFoolMode == HOLIDAY_ON );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFGameRules::IsHalloween( void )
+{
+	if ( m_iHalloweenMode == HOLIDAY_RECALCULATE )
+	{
+		m_iHalloweenMode = HOLIDAY_OFF;
+		if ( lfe_force_halloween.GetBool() )
+		{
+			m_iHalloweenMode = HOLIDAY_ON;
+		}
+		else
+		{
+			time_t ltime = time(0);
+			const time_t *ptime = &ltime;
+			struct tm *today = localtime( ptime );
+			if ( today )
+			{
+				if ( today->tm_mon == 10 && today->tm_mday == 29 || today->tm_mday == 30 || today->tm_mday == 31 )
+				{
+					m_iHalloweenMode = HOLIDAY_ON;
+				}
+			}
+		}
+	}
+
+	return ( m_iHalloweenMode == HOLIDAY_ON );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFGameRules::IsSmissmas( void )
+{
+	if ( m_iSmissmasMode == HOLIDAY_RECALCULATE )
+	{
+		m_iSmissmasMode = HOLIDAY_OFF;
+		if ( lfe_force_smissmas.GetBool() )
+		{
+			m_iSmissmasMode = HOLIDAY_ON;
+		}
+		else
+		{
+			time_t ltime = time(0);
+			const time_t *ptime = &ltime;
+			struct tm *today = localtime( ptime );
+			if ( today )
+			{
+				if ( today->tm_mon == 12 && today->tm_mday == 23 || today->tm_mday == 24 || today->tm_mday == 25 )
+				{
+					m_iSmissmasMode = HOLIDAY_ON;
+				}
+			}
+		}
+	}
+
+	return ( m_iSmissmasMode == HOLIDAY_ON );
 }
 
 //-----------------------------------------------------------------------------
@@ -6526,7 +6781,7 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 #ifdef CLIENT_DLL
 	else if ( !Q_strcmp( eventName, "game_newmap" ) )
 	{
-		m_iBirthdayMode = BIRTHDAY_RECALCULATE;
+		m_iBirthdayMode = HOLIDAY_RECALCULATE;
 	}
 #endif
 }
@@ -6651,11 +6906,9 @@ CAmmoDef* GetAmmoDef()
 		def.AddAmmoType("HelicopterGun",	DMG_BULLET,					TRACER_LINE_AND_WHIZ,	"sk_npc_dmg_helicopter_to_plr", "sk_npc_dmg_helicopter",	"sk_max_smg1",	BULLET_IMPULSE(400, 1225), AMMO_FORCE_DROP_IF_CARRIED | AMMO_INTERPRET_PLRDAMAGE_AS_DAMAGE_TO_PLAYER );
 		def.AddAmmoType("AR2AltFire",		DMG_DISSOLVE,				TRACER_NONE,			0, 0, "sk_max_ar2_altfire", 0, 0 );
 		def.AddAmmoType("Grenade",			DMG_BURN,					TRACER_NONE,			"sk_plr_dmg_grenade",		"sk_npc_dmg_grenade",		"sk_max_grenade",		0, 0);
-#ifdef HL2_EPISODIC
 		def.AddAmmoType("Hopwire",			DMG_BLAST,					TRACER_NONE,			"sk_plr_dmg_grenade",		"sk_npc_dmg_grenade",		"sk_max_hopwire",		0, 0);
 		def.AddAmmoType("CombineHeavyCannon",	DMG_BULLET,				TRACER_LINE,			40,	40, NULL, 10 * 750 * 12, AMMO_FORCE_DROP_IF_CARRIED ); // hit like a 10 kg weight at 750 ft/s
 		def.AddAmmoType("ammo_proto1",			DMG_BULLET,				TRACER_LINE,			0, 0, 10, 0, 0 );
-#endif // HL2_EPISODIC
 	}
 
 	return &def;
@@ -6796,7 +7049,7 @@ void CTFGameRules::OnDataChanged( DataUpdateType_t updateType )
 
 	if ( State_Get() == GR_STATE_STARTGAME )
 	{
-		m_iBirthdayMode = BIRTHDAY_RECALCULATE;
+		m_iBirthdayMode = HOLIDAY_RECALCULATE;
 	}
 }
 
@@ -6968,11 +7221,14 @@ const char *CTFGameRules::GetGameDescription(void)
 		case TF_GAMETYPE_VS:
 			return "LF (Versus)";
 			break;
+		case TF_GAMETYPE_ZS:
+			return "LFE (Zombie Survival)";
+			break;
 		case TF_GAMETYPE_MVM:
 			return "Implying we will ever have this";
 			break;
 		default:
-			return "TF2C";
+			return "LFE";
 			break;
 	}
 }
@@ -7057,15 +7313,10 @@ void AddSubKeyNamed( KeyValues *pKeys, const char *pszName )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsAlyxInDarknessMode()
 {
-#ifdef HL2_EPISODIC
-
 	if (alyx_darkness_force.GetBool())
 		return true;
 
 	return (GlobalEntity_GetState("ep_alyx_darknessmode") == GLOBAL_ON);
-#else
-	return false;
-#endif // HL2_EPISODIC
 }
 
 
@@ -7075,12 +7326,7 @@ bool CTFGameRules::IsAlyxInDarknessMode()
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldBurningPropsEmitLight()
 {
-#ifdef HL2_EPISODIC
-
 	return IsAlyxInDarknessMode();
-#else
-	return false;
-#endif // HL2_EPISODIC
 }
 
 #endif

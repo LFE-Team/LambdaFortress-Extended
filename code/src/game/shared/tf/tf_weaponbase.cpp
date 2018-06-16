@@ -3148,6 +3148,14 @@ acttable_t *CTFWeaponBase::ActivityList( int &iActivityCount )
 		pTable = s_acttablePrimary2;
 		iActivityCount = ARRAYSIZE( s_acttablePrimary2 );
 		break;
+	case TF_WPN_TYPE_ITEM3:
+		pTable = s_acttableItem1;
+		iActivityCount = ARRAYSIZE( s_acttableItem1 );
+		break;
+	case TF_WPN_TYPE_ITEM4:
+		pTable = s_acttableItem2;
+		iActivityCount = ARRAYSIZE( s_acttableItem2 );
+		break;
 	}
 
 	return pTable;

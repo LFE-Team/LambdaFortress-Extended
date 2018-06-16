@@ -967,7 +967,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 
 		// Ubercharge does not save from telefrags.
-		if ( info.GetDamageCustom() == TF_DMG_TELEFRAG )
+		if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
 		{
 			bAllowDamage = true;
 		}

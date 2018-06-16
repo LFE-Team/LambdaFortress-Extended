@@ -1768,7 +1768,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 #ifdef TF_CLASSIC
 	// In co-op RED loses if all players die at the same time.
-	if ( TFGameRules()->IsCoOpGameRunning() || TFGameRules()->IsVersus() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsCoOp() )
+	if ( TFGameRules()->IsCoOpGameRunning() || TFGameRules()->IsVersus() || TFGameRules()->IsZombieSurvival() )
 	{
 		CTeam *pTeam = GetGlobalTeam( TF_STORY_TEAM );
 		Assert( pTeam );
@@ -3661,11 +3661,10 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 	// In Co-Op we only allow players to join red team.
-	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() && iNewTeam == TF_COMBINE_TEAM )
+	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
 	{
 		// Don't allow joining BLU.
-		//return ( iNewTeam == TF_COMBINE_TEAM );
-		return false;
+		return ( iNewTeam == TF_COMBINE_TEAM );
 	}
 
 	// In Versus don't allow joining BLU unless there's min amount of players on RED.
@@ -3696,15 +3695,16 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 	int i = FIRST_GAME_TEAM;
 
 	CTeam *pTeam;
-
+/*
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 	int iTeamCount = GetNumberOfTeams();
 	if (TFGameRules())
 		iTeamCount = TFGameRules()->IsFourTeamGame() ? 5 : 3;
 	for ( pTeam = GetGlobalTeam(i); i <= iTeamCount; pTeam = GetGlobalTeam(++i) )
 #else
+	*/
 	for ( pTeam = GetGlobalTeam(i); pTeam != NULL; pTeam = GetGlobalTeam(++i) )
-#endif
+//#endif
 	{
 		if ( pTeam == pNewTeam )
 			continue;
@@ -3772,15 +3772,16 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 	int iLeastPlayers = MAX_PLAYERS + 1;
 
 	int i = FIRST_GAME_TEAM;
-
+/*
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 	int iTeamCount = GetNumberOfTeams();
 	if (TFGameRules())
 		iTeamCount = TFGameRules()->IsFourTeamGame() ? 5 : 3;
 	for ( CTeam *pTeam = GetGlobalTeam(i); i <= iTeamCount; pTeam = GetGlobalTeam(++i) )
 #else
+*/
 	for ( CTeam *pTeam = GetGlobalTeam(i); pTeam != NULL; pTeam = GetGlobalTeam(++i) )
-#endif
+//#endif
 	{
 		int iNumPlayers = pTeam->GetNumPlayers();
 

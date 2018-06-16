@@ -163,6 +163,9 @@ public:
 	static int		CalcPlayerScore( RoundStats_t *pRoundStats );
 
 	bool			IsBirthday( void );
+	bool			IsAprilFool( void );
+	bool			IsHalloween( void );
+	bool			IsSmissmas( void );
 
 	virtual const unsigned char *GetEncryptionKey( void ) { return ( unsigned char * )"E2NcUkG2"; }
 
@@ -486,6 +489,9 @@ public:
 	int	 m_iPreviousRoundWinners;
 
 	int		m_iBirthdayMode;
+	int		m_iAprilFoolMode;
+	int		m_iHalloweenMode;
+	int		m_iSmissmasMode;
 
 	CNetworkVar( bool, m_bFourTeamMode );
 
