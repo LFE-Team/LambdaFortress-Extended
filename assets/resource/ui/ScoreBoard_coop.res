@@ -30,28 +30,23 @@
 	{
 		"ControlName"		"ImagePanel"
 		"fieldName"		"RedScoreBG"
-		"xpos"			"354"
-		"ypos"			"9"
-		"wide"			"290"
-		"tall"			"71"
+		"xpos"			"80"
+		"ypos"			"30"
+		"wide"			"470"
+		"tall"			"70"
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
 		"image"			"../hud/score_panel_red_bg_solid"
 		"scaleImage"		"1"
-
-		if_mvm
-		{
-			"visible"		"0"
-		}
 	}
 	"RedTeamImage"
 	{
 		"ControlName"		"ImagePanel"
 		"fieldName"		"RedTeamImage"
-		"xpos"			"571"
-		"ypos"			"-5"
+		"xpos"			"100"
+		"ypos"			"15"
 		"zpos"			"20"
 		"wide"			"80"
 		"tall"			"80"
@@ -69,10 +64,10 @@
 	{
 		"ControlName"		"EditablePanel"
 		"fieldName"		"MainBG"
-		"xpos"			"0"
+		"xpos"			"90"
 		"ypos"			"38"
 		"zpos"			"-1"
-		"wide"			"640"
+		"wide"			"450"
 		"tall"			"410"
 		"autoResize"	"0"
 		"pinCorner"		"0"
@@ -85,74 +80,7 @@
 			"ypos"			"0"
 			"tall"			"448"
 		}
-	}										
-	"RedTeamLabel"
-	{
-		"ControlName"		"CExLabel"
-		"fieldName"		"RedTeamLabel"
-		"font"			"ScoreboardTeamNameNew"
-		"labelText"		"%redteamname%"
-		"textAlignment"		"west"
-		"xpos"			"358" [!$OSX]
-		"xpos"			"143" [$OSX]
-		"ypos"			"21"
-		"wide"			"140"
-		"tall"			"18"
-		"autoResize"		"0"
-		"pinCorner"		"0"
-		"visible"		"0"
-		"enabled"		"1"
-		
-		if_mvm
-		{
-			"visible"		"0"
-		}
-	}							
-	"RedTeamScore"
-	{
-		"ControlName"		"CExLabel"
-		"fieldName"		"RedTeamScore"
-		"font"			"ScoreboardTeamScoreNew"
-		"labelText"		"%redteamscore%"
-		"textAlignment"		"west"
-		"xpos"			"368"
-		"ypos"			"12" 
-		"zpos"			"4"
-		"wide"			"100"
-		"tall"			"55"
-		"autoResize"	"0"
-		"pinCorner"		"0"
-		"visible"		"1"
-		"enabled"		"1"
-		
-		if_mvm
-		{
-			"visible"		"0"
-		}
-	}
-	"RedTeamScoreDropshadow"
-	{
-		"ControlName"		"CExLabel"
-		"fieldName"		"RedTeamScoreDropshadow"
-		"font"			"ScoreboardTeamScoreNew"
-		"fgcolor"		"Black"
-		"labelText"		"%redteamscore%"
-		"textAlignment"		"west"
-		"xpos"			"369"
-		"ypos"			"13"
-		"zpos"			"4"
-		"wide"			"100"
-		"tall"			"55"
-		"autoResize"	"0"
-		"pinCorner"		"0"
-		"visible"		"1"
-		"enabled"		"1"
-		
-		if_mvm
-		{
-			"visible"		"0"
-		}
-	}							
+	}						
 	"RedTeamPlayerCount"
 	{
 		"ControlName"		"CExLabel"
@@ -160,19 +88,14 @@
 		"font"			"ScoreboardMedium"
 		"labelText"		"%redteamplayercount%"
 		"textAlignment"		"center"
-		"xpos"			"441"
-		"ypos"			"38"
+		"xpos"			"400"
+		"ypos"			"50"
 		"wide"			"130"
 		"tall"			"20"
 		"autoResize"		"0"
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
-		
-		if_mvm
-		{
-			"visible"		"0"
-		}
 	}
 	"ServerLabel"
 	{
@@ -310,10 +233,10 @@
 	{
 		"ControlName"	"SectionedListPanel"
 		"fieldName"		"RedPlayerList"
-		"xpos"			"325"
-		"ypos"			"67"
+		"xpos"			"100"
+		"ypos"			"80"
 		"zpos"			"20"
-		"wide"			"310"
+		"wide"			"430"
 		"tall"			"280"
 		"pinCorner"		"0"
 		"visible"		"1"
@@ -323,7 +246,7 @@
 		"linespacing"	"18"
 		"linegap"		"5"
 		"textcolor"		"red"
-		//"show_columns"	"1"
+		//"show_columns"	"0"
 
  		if_mvm
  		{
@@ -378,10 +301,10 @@
 	{
 		"ControlName"		"ImagePanel"
 		"fieldName"		"ShadedBar"
-		"xpos"			"4"
+		"xpos"			"95"
 		"ypos"			"372"
-		"zpos"			"-2"
-		"wide"			"633"
+		"zpos"			"0"
+		"wide"			"440"
 		"tall"			"72"
 		"autoResize"	"0"
 		"pinCorner"		"0"
@@ -407,14 +330,9 @@
 		"wide"			"92"
 		"tall"			"92"
 		"visible"		"0"
-		"enabled"		"1"
+		"enabled"		"0"
 		"image"			"../hud/class_scoutred"
 		"scaleImage"		"1"	
-		
-		if_mvm
-		{
-			"visible"		"1"
-		}
 	}
 	"classmodelpanel"
 	{
@@ -429,7 +347,7 @@
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"0"
-		"enabled"		"1"
+		"enabled"		"0"
 		
 		"render_texture"	"0"
 		"fov"			"12"
@@ -613,21 +531,16 @@
 	{
 		"ControlName"		"EditablePanel"
 		"fieldName"		"PlayerNameBG"
-		"xpos"			"105"
+		"xpos"			"95"
 		"ypos"			"372"
 		"zpos"			"-1"
-		"wide"			"485"
+		"wide"			"440"
 		"tall"			"29"
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
 		"border"		"TFThinLineBorder"
-		
-		if_mvm
-		{
-			"visible"		"0"
-		}
 	}
 	"PlayerNameLabel"
 	{
@@ -636,7 +549,7 @@
 		"font"			"ScoreboardMedium"
 		"labelText"		"%playername%"
 		"textAlignment"		"west"
-		"xpos"			"115"
+		"xpos"			"100"
 		"ypos"			"377"
 		"zpos"			"3"
 		"wide"			"300"
@@ -659,7 +572,7 @@
 		"font"			"ScoreboardVerySmall"
 		"labelText"		"%server%"
 		"textAlignment"		"east"
-		"xpos"			"315"
+		"xpos"			"250"
 		"ypos"			"375"
 		"zpos"			"3"
 		"wide"			"265"
@@ -746,7 +659,7 @@
 	{
 		"ControlName"		"EditablePanel"
 		"fieldName"		"LocalPlayerStatsPanel"
-		"xpos"			"0"
+		"xpos"			"-30"
 		"ypos"			"395"
 		"zpos"			"3"
 		"wide"			"600"
@@ -1221,41 +1134,41 @@
 			"visible"		"1"
 			"enabled"		"1"
 		}		
-		//"BonusLabel"
-		//{
-		//	"ControlName"		"CExLabel"
-		//	"fieldName"		"BonusLabel"
-		//	"font"			"ScoreboardVerySmall"
-		//	"labelText"		"#TF_ScoreBoard_BonusLabel"
-		//	"textAlignment"		"east"
-		//	"xpos"			"445"
-		//	"ypos"			"10"
-		//	"zpos"			"3"
-		//	"zpos"			"3"
-		//	"wide"			"95"
-		//	"tall"			"20"
-		//	"autoResize"		"0"
-		//	"pinCorner"		"0"
-		//	"visible"		"1"
-		//	"enabled"		"1"
-		//}
-		//"Bonus"
-		//{
-		//	"ControlName"		"CExLabel"
-		//	"fieldName"		"Bonus"
-		//	"font"			"ScoreboardVerySmall"
-		//	"labelText"		"%bonus%"
-		//	"textAlignment"		"west"
-		//	"xpos"			"545"
-		//	"ypos"			"10"
-		//	"zpos"			"3"
-		//	"wide"			"35"
-		//	"tall"			"20"
-		//	"autoResize"		"0"
-		//	"pinCorner"		"0"
-		//	"visible"		"1"
-		//	"enabled"		"1"
-		//}
+		"BonusLabel"
+		{
+			"ControlName"		"CExLabel"
+			"fieldName"		"BonusLabel"
+			"font"			"ScoreboardVerySmall"
+			"labelText"		"#TF_ScoreBoard_BonusLabel"
+			"textAlignment"		"east"
+			"xpos"			"445"
+			"ypos"			"10"
+			"zpos"			"3"
+			"zpos"			"3"
+			"wide"			"95"
+			"tall"			"20"
+			"autoResize"		"0"
+			"pinCorner"		"0"
+			"visible"		"1"
+			"enabled"		"1"
+		}
+		"Bonus"
+		{
+			"ControlName"		"CExLabel"
+			"fieldName"		"Bonus"
+			"font"			"ScoreboardVerySmall"
+			"labelText"		"%bonus%"
+			"textAlignment"		"west"
+			"xpos"			"545"
+			"ypos"			"10"
+			"zpos"			"3"
+			"wide"			"35"
+			"tall"			"20"
+			"autoResize"		"0"
+			"pinCorner"		"0"
+			"visible"		"1"
+			"enabled"		"1"
+		}
 		"SupportLabel"
 		{
 			"ControlName"	"CExLabel"
