@@ -190,57 +190,6 @@
 	"wave"		 "weapons/rocket_blackbox_shoot.wav" 
 }
 
-"Weapon_BoxingGloves.Miss"
-{
-	"channel"		"CHAN_WEAPON"
-	"volume"		"VOL_NORM"
-	"pitch"		"PITCH_NORM"
-
-	"soundlevel"	"SNDLVL_NORM"
-
-	"rndwave"
-	{
-		"wave"	"weapons/boxing_gloves_swing1.wav"
-		"wave"	"weapons/boxing_gloves_swing2.wav"
-		"wave"	"weapons/boxing_gloves_swing4.wav"
-		"wave"	"weapons/boxing_gloves_swing5.wav"
-	}
-}
-
-"Weapon_BoxingGloves.HitFlesh"
-{
-	"channel"		"CHAN_WEAPON"
-	"volume"		"VOL_NORM"
-	"pitch"		"PITCH_NORM"
-
-	"soundlevel"	"SNDLVL_NORM"
-
-	"rndwave"
-	{
-		"wave"	"weapons/boxing_gloves_hit1.wav"
-		"wave"	"weapons/boxing_gloves_hit2.wav"
-		"wave"	"weapons/boxing_gloves_hit3.wav"
-		"wave"	"weapons/boxing_gloves_hit4.wav"
-	}
-}
-
-"Weapon_BoxingGloves.HitWorld"
-{
-	"channel"		"CHAN_WEAPON"
-	"volume"		"VOL_NORM"
-	"pitch"		"PITCH_NORM"
-
-	"soundlevel"	"SNDLVL_NORM"
-
-	"rndwave"
-	{
-		"wave"	"weapons/boxing_gloves_hit1.wav"
-		"wave"	"weapons/boxing_gloves_hit2.wav"
-		"wave"	"weapons/boxing_gloves_hit3.wav"
-		"wave"	"weapons/boxing_gloves_hit4.wav"
-	}
-}
-
 "Weapon_RPG_BlackBox.SingleCrit"
 {
 	"channel"		"CHAN_WEAPON"
@@ -887,3 +836,217 @@
 		"wave"		"npc/cremator_orig/amb3.wav"
 	}
 }
+
+"Weapon_Minifun.Reload"
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"wave"		"weapons/default_reload.wav"
+}
+
+"Weapon_Minifun.ClipEmpty"	
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"wave"		")weapons/minifun_empty.wav"
+}
+
+"Weapon_Minifun.Spin"	
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"wave"		")weapons/minifun_spin.wav"
+}
+
+"Weapon_Minifun.WindUp"	
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/minifun_wind_up.wav"
+}
+
+
+"Weapon_Minifun.Fire"	
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/minifun_shoot.wav"
+}
+
+"Weapon_Minifun.FireCrit"	
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/minifun_shoot_crit.wav"
+}
+
+"Weapon_Minifun.WindDown"	
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/minifun_wind_down.wav"
+}
+
+"Weapon_Minifun.Draw"
+{
+	"channel"	"CHAN_AUTO"
+	"soundlevel"	"SNDLVL_74dB"
+	"volume"	".5"
+	"wave"		"weapons/draw_minigun_heavy.wav"
+}
+
+// ------------------------------------------------------------------------------------ //
+// EVICTION NOTICE
+// ------------------------------------------------------------------------------------ //
+
+"EvictionNotice.Impact"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		")weapons\eviction_notice_01.wav"
+		"wave"		")weapons\eviction_notice_02.wav"
+		"wave"		")weapons\eviction_notice_03.wav"
+		"wave"		")weapons\eviction_notice_04.wav"
+	}
+}
+
+"EvictionNotice.ImpactCrit"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		")weapons\eviction_notice_01_crit.wav"
+		"wave"		")weapons\eviction_notice_02_crit.wav"
+		"wave"		")weapons\eviction_notice_03_crit.wav"
+		"wave"		")weapons\eviction_notice_04_crit.wav"
+	}
+}
+
+"EvictionNotice.HitWorld"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		")weapons\demo_sword_hit_world1.wav"
+		"wave"		")weapons\demo_sword_hit_world2.wav"
+	}
+}
+
+"EvictionNotice.Swing"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		"weapons\boxing_gloves_swing1.wav"
+		"wave"		"weapons\boxing_gloves_swing2.wav"
+		"wave"		"weapons\boxing_gloves_swing4.wav"
+	}
+}
+
+// ------------------------------------------------------------------------------------ //
+// Boxing Gloves
+// ------------------------------------------------------------------------------------ //
+
+"Weapon_BoxingGloves.Miss"
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"pitch"		"95, 105"
+	"rndwave"
+	{
+		"wave"		"weapons/boxing_gloves_swing1.wav"
+		"wave"		"weapons/boxing_gloves_swing2.wav"
+		"wave"		"weapons/boxing_gloves_swing4.wav"
+	}
+}
+
+"Weapon_BoxingGloves.MissCrit"
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"wave"		"weapons/fist_swing_crit.wav"
+}
+
+"Weapon_BoxingGloves.CritHit"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		"weapons/boxing_gloves_hit_crit1.wav"
+		"wave"		"weapons/boxing_gloves_hit_crit2.wav"
+		"wave"		"weapons/boxing_gloves_hit_crit3.wav"
+	}
+}
+
+"Weapon_BoxingGloves.CritEnabled"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"wave"		"weapons/boxing_gloves_crit_enabled.wav"
+}
+
+"Weapon_BoxingGloves.HitFlesh"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		"weapons/boxing_gloves_hit1.wav"
+		"wave"		"weapons/boxing_gloves_hit2.wav"
+		"wave"		"weapons/boxing_gloves_hit3.wav"
+		"wave"		"weapons/boxing_gloves_hit4.wav"
+	}
+}
+
+"Weapon_BoxingGloves.HitWorld"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1.0"
+	"rndwave"
+	{
+		"wave"		"weapons/fist_hit_world1.wav"
+		"wave"		"weapons/fist_hit_world2.wav"
+	}
+}
+
+
+"Weapon_BoxingGloves.HitGlove"
+{
+	"channel"	"CHAN_AUTO"
+	"soundlevel"	"SNDLVL_NORM"
+	"volume"	"1"
+	"wave"		"weapons/boxing_gloves_hit.wav"
+
+}
+
+"Weapon_BoxingGloves.Draw"
+{
+	"channel"	"CHAN_AUTO"
+	"soundlevel"	"SNDLVL_74dB"
+	"volume"	".5"
+	"wave"		"weapons/draw_melee.wav"
+}
+

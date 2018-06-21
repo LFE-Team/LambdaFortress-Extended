@@ -28,7 +28,14 @@ void CTFLunchBox::PrimaryAttack( void )
 		return;
 
 #ifdef GAME_DLL
-	pOwner->Taunt();
+	//pOwner->Taunt();
+	if (pOwner->GetHealth() < 300)
+	{
+		CTFLunchBox::ApplyBiteEffects();
+		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+		pOwner->SwitchToNextBestWeapon(this);
+		StartEffectBarRegen();
+	}
 #endif
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
@@ -110,7 +117,8 @@ void CTFLunchBox::ApplyBiteEffects( void )
 
 	if ( pOwner )
 	{
-		pOwner->TakeHealth( 30, DMG_GENERIC );
+		//pOwner->TakeHealth( 30, DMG_GENERIC );
+		pOwner->TakeHealth( 120, DMG_GENERIC );
 	}
 }
 

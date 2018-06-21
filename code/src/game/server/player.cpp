@@ -6109,6 +6109,41 @@ static void CreateAirboat( CBasePlayer *pPlayer )
 	}
 }
 
+static void CreateAirboat2(CBasePlayer *pPlayer)
+{
+	CBaseEntity *pJeep2 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
+	if (gEntList.FindEntityByClassname(pJeep2, "prop_vehicle_airboat") && !gEntList.FindEntityByClassname(NULL, "lfe_logic_vehicle_block"))
+	{
+		CBaseEntity *pJeep3 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
+		if (pJeep3)
+		{
+			if (pJeep3->GetOwnerEntity()->IsPlayer())
+			{
+				pJeep3->Remove();
+			}
+		}
+		// Cheat to create a jeep in front of the player
+		Vector vecForward;
+		AngleVectors(pPlayer->EyeAngles(), &vecForward);
+		CBaseEntity *pJeep = (CBaseEntity*)CreateEntityByName("prop_vehicle_airboat");
+		if (pJeep)
+		{
+			Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0, 0, 64);
+			QAngle vecAngles(0, pPlayer->GetAbsAngles().y - 90, 0);
+			pJeep->SetAbsOrigin(vecOrigin);
+			pJeep->SetAbsAngles(vecAngles);
+			pJeep->KeyValue("model", "models/airboat.mdl");
+			pJeep->KeyValue("solid", "6");
+			pJeep->KeyValue("targetname", "airboat");
+			pJeep->KeyValue("vehiclescript", "scripts/vehicles/airboat.txt");
+			pJeep->SetOwnerEntity(pPlayer);
+			DispatchSpawn(pJeep);
+			pJeep->Activate();
+		}
+	}
+}
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -6123,7 +6158,17 @@ void CC_CH_CreateAirboat( void )
 
 }
 
-static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
+void CC_CH_LFEAirboat(void)
+{
+	CBasePlayer *pPlayer = UTIL_GetCommandClient();
+	if (!pPlayer)
+		return;
+
+	CreateAirboat2(pPlayer);
+}
+
+	static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
+	static ConCommand lfe_createairboat("lfe_createairboat", CC_CH_LFEAirboat, "Spawn an airboat.");
 
 
 //=========================================================

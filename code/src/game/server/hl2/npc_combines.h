@@ -41,7 +41,7 @@ public:
 
 	bool		IsLightDamage( const CTakeDamageInfo &info );
 	bool		IsHeavyDamage( const CTakeDamageInfo &info );
-	int 		OnTakeDamage_Alive( const CTakeDamageInfo &info );	
+	int			OnTakeDamage_Alive(const CTakeDamageInfo &info);
 
 	virtual	bool		AllowedToIgnite( void ) { return true; }
 
