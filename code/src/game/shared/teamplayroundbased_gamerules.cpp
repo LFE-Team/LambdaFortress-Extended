@@ -1810,11 +1810,13 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 			{
 				if ( hl2_episodic.GetInt() == 1 ) // til that episodic changed some gameover
 				{
-					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT, m_bForceMapReset );
+					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT, m_bForceMapReset );
+					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_RED_DEAD, m_bForceMapReset );
 				}
 				else if ( hl2_episodic.GetInt() == 0 )
 				{
-					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_OBJECT, m_bForceMapReset );
+					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_OBJECT, m_bForceMapReset );
+					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_RED_DEAD, m_bForceMapReset );
 				}
 			}
 

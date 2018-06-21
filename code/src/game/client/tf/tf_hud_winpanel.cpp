@@ -233,10 +233,10 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2EP_Object" ), 0 );
 			break;
 		case WINREASON_HL2_ALLY_DEATH:
-			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Ally_Death" ), 0 );
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Ally" ), 0 );
 			break;	
 		case WINREASON_HL2EP_ALLY_DEATH:
-			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2EP_Ally_Death" ), 0 );
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2EP_Ally" ), 0 );
 			break;
 		case WINREASON_HL2_TIMER:
 			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Timer" ), 0 );
@@ -246,6 +246,9 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			break;
 		case WINREASON_HL2_STUCK:
 			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_Stuck" ), 0 );
+			break;
+		case WINREASON_RED_DEAD:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_Red_Dead" ), 0 );
 			break;
 		default:
 			Assert( false );
