@@ -263,10 +263,9 @@ void Button::DoClick()
 	FireActionSignal();
 	PlayButtonReleasedSound();
 
-	static ConVarRef vgui_nav_lock( "vgui_nav_lock" );
-	if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateActivate() )
+	if ( ( s_NavLock == 0 ) && NavigateActivate() )
 	{
-		vgui_nav_lock.SetValue( 1 );
+		s_NavLock = 1;
 	}
 
 	if ( !m_bStaySelectedOnClick )

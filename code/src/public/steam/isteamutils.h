@@ -165,7 +165,7 @@ public:
 	virtual void SetOverlayNotificationInset( int nHorizontalInset, int nVerticalInset ) = 0;
 };
 
-#define STEAMUTILS_INTERFACE_VERSION "SteamUtils007"
+#define STEAMUTILS_INTERFACE_VERSION "SteamUtils009"
 
 
 // callbacks

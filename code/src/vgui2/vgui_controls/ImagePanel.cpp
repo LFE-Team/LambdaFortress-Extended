@@ -43,6 +43,7 @@ ImagePanel::ImagePanel(Panel *parent, const char *name) : Panel(parent, name)
 	m_FillColor = Color(0, 0, 0, 0);
 	m_DrawColor = Color(255,255,255,255);
 	m_iRotation = ROTATED_UNROTATED;
+	m_nFrame = 0;
 
 	SetImage( m_pImage );
 
@@ -448,6 +449,7 @@ bool ImagePanel::EvictImage()
 	m_pImage = NULL;
 	delete [] m_pszImageName;
 	m_pszImageName = NULL;
+	m_nFrame = 0;
 
 	return true;
 }
@@ -468,6 +470,8 @@ void ImagePanel::SetFrame( int nFrame )
 	{
 		return;
 	}
+
+	m_nFrame = nFrame;
 
 	return m_pImage->SetFrame( nFrame );
 }

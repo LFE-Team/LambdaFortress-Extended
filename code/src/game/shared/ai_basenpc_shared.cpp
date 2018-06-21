@@ -791,7 +791,7 @@ bool CAI_BaseNPC::IsStealthed( void )
 int CAI_BaseNPC::GetMaxBuffedHealth( void )
 {
 	float flBoostMax = GetMaxHealth() * tf_max_health_boost.GetFloat();
-
+	CALL_ATTRIB_HOOK_FLOAT( flBoostMax, mult_medigun_overheal_amount );
 	int iRoundDown = floor( flBoostMax / 5 );
 	iRoundDown = iRoundDown * 5;
 

@@ -217,7 +217,7 @@ public:
 
 };
 
-#define STEAMUSER_INTERFACE_VERSION "SteamUser018"
+#define STEAMUSER_INTERFACE_VERSION "SteamUser019"
 
 
 // callbacks

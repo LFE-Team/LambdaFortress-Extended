@@ -6,7 +6,7 @@
 #include "cbase.h"
 #include "tf_weaponbase_grenadeproj.h"
 #include "tf_gamerules.h"
-
+#include "particle_parse.h"
 // Client specific.
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
@@ -134,6 +134,8 @@ void CTFWeaponBaseGrenadeProj::Precache( void )
 	PrecacheModel( NOGRENADE_SPRITE );
 	PrecacheParticleSystem( "critical_grenade_blue" );
 	PrecacheParticleSystem( "critical_grenade_red" );
+	PrecacheParticleSystem( "explosionTrail_seeds_mvm" );
+	PrecacheParticleSystem( "fluidSmokeExpl_ring_mvm" );
 #endif
 }
 
@@ -361,6 +363,14 @@ void CTFWeaponBaseGrenadeProj::Explode( trace_t *pTrace, int bitsDamageType )
 	if ( pTrace->m_pEnt && !pTrace->m_pEnt->IsPlayer() )
 	{
 		UTIL_DecalTrace( pTrace, "Scorch" );
+	}
+
+	int iUseLargeExplosion = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_hLauncher.Get(), iUseLargeExplosion, use_large_smoke_explosion );
+	if ( iUseLargeExplosion )
+	{
+		DispatchParticleEffect( "explosionTrail_seeds_mvm", vecOrigin ,vec3_angle );
+		DispatchParticleEffect( "fluidSmokeExpl_ring_mvm", vecOrigin, vec3_angle );
 	}
 
 	SetThink( &CBaseGrenade::SUB_Remove );

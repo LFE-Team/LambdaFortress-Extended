@@ -837,6 +837,10 @@ int CTFPlayerShared::GetMaxBuffedHealth( void )
 {
 	float flBoostMax = m_pOuter->GetMaxHealth() * tf_max_health_boost.GetFloat();
 
+	CWeaponMedigun *pMedigun = m_pOuter->GetMedigun();
+
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pMedigun, flBoostMax, mult_medigun_overheal_amount );
+
 	int iRoundDown = floor( flBoostMax / 5 );
 	iRoundDown = iRoundDown * 5;
 
@@ -846,6 +850,10 @@ int CTFPlayerShared::GetMaxBuffedHealth( void )
 int CTFPlayerShared::GetDisguiseMaxBuffedHealth( void )
 {
 	float flBoostMax = GetDisguiseMaxHealth() * tf_max_health_boost.GetFloat();
+
+	CWeaponMedigun *pMedigun = m_pOuter->GetMedigun();
+
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pMedigun, flBoostMax, mult_medigun_overheal_amount );
 
 	int iRoundDown = floor( flBoostMax / 5 );
 	iRoundDown = iRoundDown * 5;

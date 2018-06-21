@@ -145,6 +145,7 @@ BEGIN_NETWORK_TABLE( CTFWeaponBase, DT_TFWeaponBase )
 	RecvPropTime( RECVINFO( m_flEffectBarRegenTime ) ),
 
 	RecvPropInt( RECVINFO( m_nSequence ), 0, RecvProxy_WeaponSequence ),
+	RecvPropString( RECVINFO( m_ParticleName ) ),
 	// Server specific.
 	#else
 	SendPropBool( SENDINFO( m_bLowered ) ),
@@ -156,6 +157,7 @@ BEGIN_NETWORK_TABLE( CTFWeaponBase, DT_TFWeaponBase )
 
 	SendPropExclude( "DT_BaseAnimating", "m_nSequence" ),
 	SendPropInt( SENDINFO( m_nSequence ), ANIMATION_SEQUENCE_BITS, SPROP_UNSIGNED ),
+	SendPropString( SENDINFO( m_ParticleName ) ),
 	#endif
 END_NETWORK_TABLE()
 
@@ -775,6 +777,36 @@ void CTFWeaponBase::PrimaryAttack( void )
 		return;
 
 	BaseClass::PrimaryAttack();
+	/*
+	int iSGKnockback = 0;
+	CALL_ATTRIB_HOOK_INT( iSGKnockback, set_scattergun_has_knockback );
+	if ( iSGKnockback )
+	{
+		Vector vecDir;
+		QAngle angDir = pOwner->EyeAngles();
+		AngleVectors( angDir, &vecDir );
+		QAngle angPushDir = angDir;
+
+		// Push them at least 45 degrees up.
+		angPushDir[PITCH] = min( -45, angPushDir[PITCH] );
+
+		AngleVectors( angPushDir, &vecDir );
+
+		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pOwner->WorldSpaceCenter();
+
+		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
+		VectorNormalize( vecVictimDir2D );
+
+		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
+		VectorNormalize( vecDir2D );
+
+		//If not on ground, then don't make them fly!
+		if ( pOwner && !( pOwner->GetFlags() & FL_ONGROUND ) )
+		{
+			pOwner->ApplyAbsVelocityImpulse( vecDir * 500 );
+		}
+	}
+	*/
 
 	// Due to cl_autoreload we can now interrupt ANY reload.
 	AbortReload();
@@ -1540,6 +1572,26 @@ bool CTFWeaponBase::Ready( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+bool CTFWeaponBase::ReadyIgnoreSequence( void )
+{
+	// If we don't have the anim, just hide for now
+	if ( SelectWeightedSequence( ACT_VM_IDLE_LOWERED ) == ACTIVITY_NOT_AVAILABLE )
+	{
+		RemoveEffects( EF_NODRAW );
+	}
+
+	m_bLowered = false;
+	SendWeaponAnim( ACT_VM_IDLE );
+
+	// Prevent firing until our weapon is back up
+	CTFPlayer *pPlayer = GetTFPlayerOwner();
+	pPlayer->m_flNextAttack = gpGlobals->curtime + 0.3;
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CTFWeaponBase::Lower( void )
 {
 	AbortReload();
@@ -1576,6 +1628,8 @@ void CTFWeaponBase::SetWeaponVisible( bool visible )
 		if ( pVMAddon )
 		{
 			pVMAddon->RemoveEffects( EF_NODRAW );
+			UpdateViewModel();
+			Deploy();
 		}
 	}
 	else
@@ -1591,6 +1645,7 @@ void CTFWeaponBase::SetWeaponVisible( bool visible )
 
 #ifdef CLIENT_DLL
 	UpdateVisibility();
+	UpdateViewModel();
 #endif
 
 }
@@ -2110,7 +2165,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 		}
 	}
 
-
 	float flAddHealth = 0.0f;
 	CALL_ATTRIB_HOOK_FLOAT( flAddHealth, add_onhit_addhealth );
 	if ( flAddHealth )
@@ -2154,13 +2208,44 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 		}
 	}
 
-	float flAddJarate = 0.0f;
-	CALL_ATTRIB_HOOK_FLOAT( flAddJarate, add_cloak_on_hit );
-	if ( flAddJarate )
+	int iSGKnockback = 0;
+	CALL_ATTRIB_HOOK_INT( iSGKnockback, set_scattergun_has_knockback );
+	if ( iSGKnockback )
 	{
-		if ( pOwner )
+		Vector vecDir;
+		QAngle angDir = pOwner->EyeAngles();
+		AngleVectors( angDir, &vecDir );
+		QAngle angPushDir = angDir;
+
+		// Push them at least airblast degrees up.
+		angPushDir[PITCH] = min( -45, angPushDir[PITCH] );
+
+		AngleVectors( angPushDir, &vecDir );
+
+		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pOwner->WorldSpaceCenter();
+
+		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
+		VectorNormalize( vecVictimDir2D );
+
+		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
+		VectorNormalize( vecDir2D );
+
+		float flKnockbackMult = 300;
+		CALL_ATTRIB_HOOK_FLOAT( flKnockbackMult, scattergun_knockback_mult );
+
+		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
+		if ( flDot >= 0.8 )
 		{
-			pOwner->m_Shared.AddCond( TF_COND_URINE, flAddJarate );
+			if ( pVictim->IsPlayer() )
+			{
+				pVictim->SetGroundEntity( NULL );
+				pVictim->ApplyAbsVelocityImpulse( vecDir * flKnockbackMult );
+			}
+			else if ( pVictim->IsNPC() )
+			{
+				pVictim->SetGroundEntity( NULL );
+				pVictim->ApplyAbsVelocityImpulse( vecDir * flKnockbackMult );
+			}
 		}
 	}
 }
@@ -2373,6 +2458,14 @@ void CTFWeaponBase::OnPreDataChanged( DataUpdateType_t type )
 void CTFWeaponBase::OnDataChanged( DataUpdateType_t type )
 {
 	BaseClass::OnDataChanged( type );
+
+	if ( type == DATA_UPDATE_DATATABLE_CHANGED )
+	{
+		if (Q_stricmp(m_ParticleName, "") && !m_pUnusualParticle)
+		{
+			m_pUnusualParticle = ParticleProp()->Create( m_ParticleName, PATTACH_ABSORIGIN_FOLLOW );
+		}
+	}
 
 	if ( GetPredictable() && !ShouldPredict() )
 	{
@@ -3485,6 +3578,18 @@ bool CTFWeaponBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& orig
 	}
 
 	return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFWeaponBase::SetParticle( const char* name )
+{
+#ifdef GAME_DLL
+	Q_snprintf( m_ParticleName.GetForModify(), WEAPON_PARTICLE_MODIFY_STRING_SIZE, name );
+#else
+	Q_snprintf(m_ParticleName, WEAPON_PARTICLE_MODIFY_STRING_SIZE, name);
+#endif
 }
 
 //-----------------------------------------------------------------------------

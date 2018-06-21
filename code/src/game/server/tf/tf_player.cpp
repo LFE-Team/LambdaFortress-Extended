@@ -68,10 +68,9 @@
 #include "antlion_maker.h"
 #include "npc_barnacle.h"
 #include "trains.h"
+#include "nav_mesh.h"
 
-#ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -567,6 +566,23 @@ void CTFPlayer::TFPlayerThink()
 //-----------------------------------------------------------------------------
 void CTFPlayer::RegenThink( void )
 {
+	float flHealRegen = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flHealRegen, add_health_regen );
+	if ( flHealRegen )
+	{
+		if ( IsAlive() )
+		{
+			// Heal faster if we haven't been in combat for a while
+			float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
+			float flScale = RemapValClamped( flTimeSinceDamage, 5.0f, 10.0f, 1.0f, 2.0f );
+
+			int iHealAmount = ceil( flHealRegen * flScale );
+			TakeHealth( iHealAmount, DMG_GENERIC );
+		}
+
+		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
+	}
+
 	if ( IsPlayerClass( TF_CLASS_MEDIC ) )
 	{
 		if ( IsAlive() )
@@ -585,25 +601,6 @@ void CTFPlayer::RegenThink( void )
 
 			int iHealAmount = ceil( TF_MEDIC_REGEN_AMOUNT * flScale );
 			TakeHealth( iHealAmount, DMG_GENERIC );
-		}
-
-		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
-	}
-	else
-	{
-		float flHealRegen = 0.0f;
-		CALL_ATTRIB_HOOK_FLOAT( flHealRegen, add_health_regen );
-		if ( flHealRegen )
-		{
-			if ( IsAlive() )
-			{
-				// Heal faster if we haven't been in combat for a while
-				float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
-				float flScale = RemapValClamped( flTimeSinceDamage, 5.0f, 10.0f, 1.0f, 2.0f );
-
-				int iHealAmount = ceil( flHealRegen * flScale );
-				TakeHealth( iHealAmount, DMG_GENERIC );
-			}
 		}
 
 		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
@@ -791,6 +788,25 @@ void CTFPlayer::PreThink()
 		else
 		{
 			SetAbsVelocity( vec3_origin );
+		}
+	}
+
+	if( !IsAlive() )
+	{
+		// CSS would like their players to continue to update their LastArea even when dead since it is displayed in the observer screen now.
+		// But we won't do the population tracking while dead.
+		CNavArea *area = TheNavMesh->GetNavArea( GetAbsOrigin(), 1000 );
+		if (area && area != m_lastNavArea)
+		{
+			m_lastNavArea = area;
+			if ( area->GetPlace() != UNDEFINED_PLACE )
+			{
+				const char *placeName = TheNavMesh->PlaceToName( area->GetPlace() );
+				if ( placeName && *placeName )
+				{
+					Q_strncpy( m_szLastPlaceName.GetForModify(), placeName, MAX_PLACE_NAME_LENGTH );
+				}
+			}
 		}
 	}
 }
@@ -1289,7 +1305,7 @@ void CTFPlayer::Spawn()
 					//m_Shared.SetDesiredWeaponIndex( g_TFPlayerTransitions[index].weapon );
 					//m_AttributeManager.InitializeAttributes( this );
 
-					m_Shared.SetDesiredWeaponIndex( m_Item.GetItemDefIndex() );
+					//m_Shared.SetDesiredWeaponIndex( m_Item.GetItemDefIndex() );
 
 					// Remove player info from the list.
 					DeleteForTransition();
@@ -1436,6 +1452,11 @@ void CTFPlayer::Regenerate( void )
 			pTFWeapon->WeaponRegenerate();
 		}
 	}
+
+	TFPlayerClassData_t *pData = m_PlayerClass.GetData();
+
+	// Give gravity gun if allowed.
+	ManageTeamWeapons( pData );
 }
 
 //-----------------------------------------------------------------------------
@@ -1444,7 +1465,7 @@ void CTFPlayer::Regenerate( void )
 void CTFPlayer::InitClass( void )
 {
 	// Set initial health and armor based on class.
-	SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
+
 
 	float flMaxHealth = (float)GetPlayerClass()->GetMaxHealth();
 	//if ( flMaxHealth == WEAPON_NOCLIP )
@@ -1454,6 +1475,7 @@ void CTFPlayer::InitClass( void )
 
 	//int iMaxHealth = (int)( flMaxHealth + 0.5f );
 
+	SetMaxHealth( flMaxHealth );
 	//SetHealth( GetMaxHealth() );
 	SetHealth( flMaxHealth );
 
@@ -1681,7 +1703,10 @@ void CTFPlayer::ValidateWeapons( bool bRegenerate )
 			{
 				// If this is not a weapon we're supposed to have in this loadout slot then nuke it.
 				// Either changed class or changed loadout.
+				pWeapon->Holster();
 				pWeapon->UnEquip( this );
+				UTIL_Remove( pWeapon );
+				Weapon_Detach( pWeapon );
 			}
 			else if ( bRegenerate )
 			{
@@ -9049,6 +9074,46 @@ CON_COMMAND_F( give_weapon, "Give specified weapon.", FCVAR_CHEAT )
 	}
 }
 
+CON_COMMAND( dev_give_weapon, "Give specified weapon. \n for devs" )
+{
+	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
+	if ( !pPlayer->m_bIsPlayerADev )
+		return;
+
+	if ( args.ArgC() < 2 )
+		return;
+
+	const char *pszWeaponName = args[1];
+
+	int iWeaponID = GetWeaponId( pszWeaponName );
+
+	CTFWeaponInfo *pWeaponInfo = GetTFWeaponInfo( iWeaponID );
+	if ( !pWeaponInfo )
+		return;
+
+	CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->Weapon_GetSlot( pWeaponInfo->iSlot );
+	//If we already have a weapon in this slot but is not the same type then nuke it
+	if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID )
+	{
+		if ( pWeapon == pPlayer->GetActiveWeapon() )
+			pWeapon->Holster();
+
+		pPlayer->Weapon_Detach( pWeapon );
+		UTIL_Remove( pWeapon );
+		pWeapon = NULL;
+	}
+
+	if ( !pWeapon )
+	{
+		pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
+
+		if ( pWeapon )
+		{
+			pWeapon->DefaultTouch( pPlayer );
+		}
+	}
+}
+
 CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>", FCVAR_CHEAT )
 {
 	if ( args.ArgC() < 2 )
@@ -9128,11 +9193,11 @@ CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nF
 
 CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
 {
-	if ( args.ArgC() < 2 )
-		return;
-
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer->m_bIsPlayerADev )
+		return;
+
+	if ( args.ArgC() < 2 )
 		return;
 
 	int iItemID = atoi( args[1] );
@@ -9219,6 +9284,17 @@ CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
 			pWearable->SetParticle( pszParticleName );
 		}
 	}
+/*
+	for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++ )
+	{
+		CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->Weapon_GetSlot( i );
+
+		if ( pWeapon )
+		{
+			pWeapon->SetParticle( pszParticleName );
+		}
+	}
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -10131,4 +10207,3 @@ void CTFPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 
 	BaseClass::PlayerRunCommand( ucmd, moveHelper );
 }
-

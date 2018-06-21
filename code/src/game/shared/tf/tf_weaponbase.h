@@ -39,6 +39,7 @@
 #endif
 
 #define MAX_TRACER_NAME		128
+#define WEAPON_PARTICLE_MODIFY_STRING_SIZE		128
 
 CTFWeaponInfo *GetTFWeaponInfo(int iWeapon);
 CTFWeaponInfo *GetTFWeaponInfoForItem( CEconItemView *pItem, int iClass );
@@ -227,6 +228,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	// Raising & Lowering for grenade throws
 	bool			WeaponShouldBeLowered( void );
 	virtual bool	Ready( void );
+	virtual bool	ReadyIgnoreSequence( void );
 	virtual bool	Lower( void );
 
 	virtual void	WeaponIdle( void );
@@ -259,6 +261,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 
 	void				OnControlStunned( void );
 
+	void		SetParticle( const char* name );
 // Server specific.
 #if !defined( CLIENT_DLL )
 
@@ -354,6 +357,13 @@ protected:
 
 private:
 	CTFWeaponBase( const CTFWeaponBase & );
+
+#ifdef GAME_DLL
+	CNetworkString( m_ParticleName, WEAPON_PARTICLE_MODIFY_STRING_SIZE );
+#else
+	char m_ParticleName[WEAPON_PARTICLE_MODIFY_STRING_SIZE];
+	CNewParticleEffect *m_pUnusualParticle;
+#endif
 };
 
 #define WEAPON_RANDOM_RANGE 10000

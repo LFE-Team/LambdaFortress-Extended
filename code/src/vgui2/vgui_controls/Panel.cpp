@@ -631,6 +631,8 @@ void Panel::ReloadKeyBindings( KeyBindingContextHandle_t handle )
 
 DECLARE_BUILD_FACTORY( Panel );
 
+int Panel::s_NavLock = 0;
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -3069,8 +3071,6 @@ void Panel::OnMouseWheeled(int delta)
 // base implementation forwards Key messages to the Panel's parent - override to 'swallow' the input
 void Panel::OnKeyCodePressed(KeyCode code)
 {
-	static ConVarRef vgui_nav_lock( "vgui_nav_lock" );
-
 	bool handled = false;
 	switch( GetBaseButtonCode( code ) )
 	{
@@ -3078,9 +3078,9 @@ void Panel::OnKeyCodePressed(KeyCode code)
 	case KEY_XSTICK1_UP:
 	case KEY_XSTICK2_UP:
 	case KEY_UP:
-		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateUp() )
+		if ( ( s_NavLock == 0 ) && NavigateUp() )
 		{
-			vgui_nav_lock.SetValue( 1 );
+			s_NavLock = 1;
 			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
 			handled = true;
 		}
@@ -3089,9 +3089,9 @@ void Panel::OnKeyCodePressed(KeyCode code)
 	case KEY_XSTICK1_DOWN:
 	case KEY_XSTICK2_DOWN:
 	case KEY_DOWN:
-		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateDown() )
+		if ( ( s_NavLock == 0 ) && NavigateDown() )
 		{
-			vgui_nav_lock.SetValue( 1 );
+			s_NavLock = 1;
 			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
 			handled = true;
 		}
@@ -3100,9 +3100,9 @@ void Panel::OnKeyCodePressed(KeyCode code)
 	case KEY_XSTICK1_LEFT:
 	case KEY_XSTICK2_LEFT:
 	case KEY_LEFT:
-		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateLeft() )
+		if ( ( s_NavLock == 0 ) && NavigateLeft() )
 		{
-			vgui_nav_lock.SetValue( 1 );
+			s_NavLock = 1;
 			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
 			handled = true;
 		}
@@ -3111,17 +3111,17 @@ void Panel::OnKeyCodePressed(KeyCode code)
 	case KEY_XSTICK1_RIGHT:
 	case KEY_XSTICK2_RIGHT:
 	case KEY_RIGHT:
-		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateRight() )
+		if ( ( s_NavLock == 0 ) && NavigateRight() )
 		{
-			vgui_nav_lock.SetValue( 1 );
+			s_NavLock = 1;
 			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
 			handled = true;
 		}
 		break;
 	case KEY_XBUTTON_B:
-		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateBack() )
+		if ( ( s_NavLock == 0 ) && NavigateBack() )
 		{
-			vgui_nav_lock.SetValue( 1 );
+			s_NavLock = 1;
 			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
 			handled = true;
 		}

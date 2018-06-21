@@ -6,7 +6,7 @@
 #include "cbase.h"
 #include "tf_weaponbase_rocket.h"
 #include "tf_gamerules.h"
-
+#include "particle_parse.h"
 // Server specific.
 #ifdef GAME_DLL
 #include "soundent.h"
@@ -117,6 +117,9 @@ CTFBaseRocket::~CTFBaseRocket()
 void CTFBaseRocket::Precache( void )
 {
 	BaseClass::Precache();
+
+	PrecacheParticleSystem( "explosionTrail_seeds_mvm" );
+	PrecacheParticleSystem( "fluidSmokeExpl_ring_mvm" );
 }
 
 //-----------------------------------------------------------------------------
@@ -463,6 +466,14 @@ void CTFBaseRocket::Explode( trace_t *pTrace, CBaseEntity *pOther )
 				gameeventmanager->FireEvent( event );
 			}
 		}
+	}
+
+	int iUseLargeExplosion = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_hLauncher.Get(), iUseLargeExplosion, use_large_smoke_explosion );
+	if ( iUseLargeExplosion )
+	{
+		DispatchParticleEffect( "explosionTrail_seeds_mvm", vecOrigin ,vec3_angle );
+		DispatchParticleEffect( "fluidSmokeExpl_ring_mvm", vecOrigin, vec3_angle );
 	}
 
 	// Remove the rocket.

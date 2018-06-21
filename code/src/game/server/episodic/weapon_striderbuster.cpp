@@ -658,16 +658,16 @@ void CWeaponStriderBuster::Detonate( void )
 	if ( !m_bDud && pVictim )
 	{
 		// Kill the strider (with magic effect)
-		CBasePlayer *pPlayer = AI_GetSinglePlayer();
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
 		CTakeDamageInfo info( pPlayer, this, RandomVector( -100.0f, 100.0f ), GetAbsOrigin(), pVictim->GetHealth(), DMG_GENERIC );
 		pVictim->TakeDamage( info );
 
-		gamestats->Event_WeaponHit( ToBasePlayer( pPlayer ), true, GetClassname(), info );
+		//gamestats->Event_WeaponHit( ToBasePlayer( pPlayer ), true, GetClassname(), info );
 
 		// Tracker 62293:  There's a bug where the inflictor/attacker are reversed when calling TakeDamage above so the player never gets
 		//  credit for the strider buster kills.  The code has a bunch of assumptions lower level, so it's safer to just fix it here by 
 		//  crediting a kill to the player directly.
-		gamestats->Event_PlayerKilledOther( pPlayer, pVictim, info );
+		//gamestats->Event_PlayerKilledOther( pPlayer, pVictim, info );
 	}
 
 	m_OnDetonate.FireOutput( this, this );

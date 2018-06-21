@@ -120,7 +120,11 @@ void CGrenadeSpit::SetSpitSize( int nSize )
 
 void CGrenadeSpit::Event_Killed( const CTakeDamageInfo &info )
 {
-	Detonate( );
+/*
+	trace_t trace;
+	memcpy( &trace, pTrace, sizeof( trace_t ) );
+	Detonate( &trace, pOther );
+*/
 }
 
 //-----------------------------------------------------------------------------
@@ -128,7 +132,7 @@ void CGrenadeSpit::Event_Killed( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 {
-	if ( pOther->IsSolidFlagSet(FSOLID_VOLUME_CONTENTS | FSOLID_TRIGGER) )
+	if ( pOther->IsSolidFlagSet( FSOLID_VOLUME_CONTENTS | FSOLID_TRIGGER ) )
 	{
 		// Some NPCs are triggers that can take damage (like antlion grubs). We should hit them.
 		if ( ( pOther->m_takedamage == DAMAGE_NO ) || ( pOther->m_takedamage == DAMAGE_EVENTS_ONLY ) )
@@ -146,7 +150,6 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 	// call below may cause another trace that overwrites the one global pTrace points
 	// at.
 	bool bHitWater = ( ( pTrace->contents & CONTENTS_WATER ) != 0 );
-	CBaseEntity *const pTraceEnt = pTrace->m_pEnt;
 	const Vector tracePlaneNormal = pTrace->plane.normal;
 
 	if ( bHitWater )
@@ -167,18 +170,11 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 		UTIL_DecalTrace( pNewTrace, "BeerSplash" );
 	}
 
-	// Part normal damage, part poison damage
-	float poisonratio = sk_antlion_worker_spit_grenade_poison_ratio.GetFloat();
-
-	// Take direct damage if hit
-	// NOTE: assume that pTrace is invalidated from this line forward!
-	if ( pTraceEnt )
+	if ( pTrace->surface.flags & SURF_SKY )
 	{
-		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * (1.0f-poisonratio), DMG_ACID ) );
-		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * poisonratio, DMG_POISON ) );
+		UTIL_Remove( this );
+		return;
 	}
-
-	CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), m_DmgRadius * 2.0f, 0.5f, GetThrower() );
 
 	QAngle vecAngles;
 	VectorAngles( tracePlaneNormal, vecAngles );
@@ -193,14 +189,39 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 		DispatchParticleEffect( "antlion_spit", GetAbsOrigin(), vecAngles );
 	}
 
-	Detonate();
+	trace_t trace;
+	memcpy( &trace, pTrace, sizeof( trace_t ) );
+	Detonate( &trace, pOther );
 }
 
-void CGrenadeSpit::Detonate(void)
+void CGrenadeSpit::Detonate( trace_t *pTrace, CBaseEntity *pOther )
 {
+	// took some of stuff from tf rocket
+	m_hEnemy = pOther;
+
 	m_takedamage = DAMAGE_NO;
 
 	EmitSound( "GrenadeSpit.Hit" );	
+	CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), m_DmgRadius * 2.0f, 0.5f, GetThrower() );
+
+	// Pull out a bit.
+	if ( pTrace->fraction != 1.0 )
+	{
+		SetAbsOrigin( pTrace->endpos + ( pTrace->plane.normal * 1.0f ) );
+	}
+
+	CBaseEntity *const pTraceEnt = pTrace->m_pEnt;
+
+	// Part normal damage, part poison damage
+	float poisonratio = sk_antlion_worker_spit_grenade_poison_ratio.GetFloat();
+
+	// Take direct damage if hit
+	// NOTE: assume that pTrace is invalidated from this line forward!
+	if ( pTraceEnt )
+	{
+		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * (1.0f-poisonratio), DMG_ACID ) );
+		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * poisonratio, DMG_POISON ) );
+	}
 
 	// Stop our hissing sound
 	if ( m_pHissSound != NULL )

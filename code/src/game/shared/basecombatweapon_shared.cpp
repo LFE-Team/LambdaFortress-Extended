@@ -2053,7 +2053,7 @@ bool CBaseCombatWeapon::ReloadsSingly( void ) const
 
 	int iWeaponMod = 0;
 	CALL_ATTRIB_HOOK_INT( iWeaponMod, set_scattergun_no_reload_single );
-	if ( iWeaponMod == 1 )
+	if ( iWeaponMod )
 	{
 		return false;
 	}

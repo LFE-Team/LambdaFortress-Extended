@@ -19,6 +19,7 @@ particles_manifest
 	"file"		"!particles/cig_smoke.pcf"
 	"file"		"!particles/crit.pcf"
 	"file"		"!particles/medicgun_beam.pcf"
+	"file"		"!particles/bigboom.pcf"
 	"file"		"!particles/water.pcf"
 	"file"		"!particles/stickybomb.pcf"
 	"file"		"!particles/buildingdamage.pcf"
@@ -34,6 +35,10 @@ particles_manifest
 	"file"		"!particles/firstperson_weapon_fx.pcf"
 	"file"		"!particles/medicgun_attrib.pcf"
 	"file"		"!particles/item_fx.pcf"
+	"file"		"!particles/drg_cowmangler.pcf"
+	"file"		"!particles/drg_bison.pcf"
+	"file"		"!particles/drg_engineer.pcf"
+	"file"		"!particles/drg_pyro.pcf"
 //hl2
 	"file"		"!particles/blood_impact_hl2.pcf"
 	"file"		"particles/vehicle.pcf"

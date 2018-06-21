@@ -41,9 +41,7 @@
 #include "vphysics/friction.h"
 #include "debugoverlay_shared.h"
 
-#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 #include "tf_gamerules.h"
-#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN	
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -691,20 +689,13 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	// Holster player's weapon
 	if ( pPlayer->GetActiveWeapon() )
 	{
-		if ( !pPlayer->GetActiveWeapon()->Holster() )
+		if ( !pPlayer->GetActiveWeapon()->Lower() )
 		{
 			Shutdown();
 			return;
 		}
 	}
 
-#ifdef HL2MP
-	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( pPlayer );
-	if ( pOwner )
-	{
-		pOwner->EnableSprint( false );
-	}
-#endif
 	// If the target is debris, convert it to non-debris
 	if ( pObject->GetCollisionGroup() == COLLISION_GROUP_DEBRIS )
 	{
@@ -722,7 +713,7 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	
 	m_grabController.AttachEntity( pPlayer, pObject, pPhysics, false, vec3_origin, false );
 	
-	m_pPlayer->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
+	//m_pPlayer->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 	m_pPlayer->SetUseEntity( this );
 #endif
 }
@@ -745,33 +736,28 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 
 	m_grabController.DetachEntity( bClearVelocity );
 
+	CTFPlayer *pTFPlayer = ToTFPlayer( m_pPlayer );
+
 	if ( pObject != NULL )
 	{
-		Pickup_OnPhysGunDrop( pObject, m_pPlayer, bThrown ? THROWN_BY_PLAYER : DROPPED_BY_PLAYER );
+		Pickup_OnPhysGunDrop( pObject, pTFPlayer, bThrown ? THROWN_BY_PLAYER : DROPPED_BY_PLAYER );
 	}
 
-	if ( m_pPlayer )
+	if ( pTFPlayer )
 	{
-#ifdef HL2MP
-		CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( m_pPlayer );
-		if ( pOwner )
+		pTFPlayer->SetUseEntity( NULL );
+		if ( pTFPlayer->GetActiveTFWeapon() )
 		{
-			pOwner->EnableSprint( true );
-		}
-#endif
-		m_pPlayer->SetUseEntity( NULL );
-		if ( m_pPlayer->GetActiveWeapon() )
-		{
-			if ( !m_pPlayer->GetActiveWeapon()->Deploy() )
+			if ( !pTFPlayer->GetActiveTFWeapon()->ReadyIgnoreSequence() )
 			{
 				// We tried to restore the player's weapon, but we couldn't.
 				// This usually happens when they're holding an empty weapon that doesn't
 				// autoswitch away when out of ammo. Switch to next best weapon.
-				m_pPlayer->SwitchToNextBestWeapon( NULL );
+				pTFPlayer->SwitchToNextBestWeapon( NULL );
 			}
 		}
 
-		m_pPlayer->m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
+		//pTFPlayer->m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
 	}
 	Remove();
 

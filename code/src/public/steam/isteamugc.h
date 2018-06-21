@@ -269,7 +269,7 @@ public:
 	virtual bool BInitWorkshopForGameServer( DepotId_t unWorkshopDepotID, const char *pszFolder ) = 0;
 };
 
-#define STEAMUGC_INTERFACE_VERSION "STEAMUGC_INTERFACE_VERSION007"
+#define STEAMUGC_INTERFACE_VERSION "STEAMUGC_INTERFACE_VERSION010"
 
 //-----------------------------------------------------------------------------
 // Purpose: Callback for querying UGC

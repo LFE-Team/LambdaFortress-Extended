@@ -144,6 +144,10 @@ $Project "Client (TF)"
 			$File	"hl2\c_vehicle_prisoner_pod.cpp"
 			$File	"hl2\c_citadel_effects.cpp"
 			$File	"$SRCDIR\game\shared\hl2\citadel_effects_shared.h"
+			$File	"hl2\c_env_starfield.cpp"
+			$File	"hl2\c_func_tankmortar.cpp"
+			$File	"hl2\c_info_teleporter_countdown.cpp"
+			$File	"hl2\shieldproxy.cpp"
 		}
 		
 		$Folder "Episodic DLL"
@@ -395,6 +399,10 @@ $Project "Client (TF)"
 					$File	"tf\vgui\panels\tf_statsummarydialog.h"
 					$File	"tf\vgui\panels\lf_createmultiplayergame.cpp"
 					$File	"tf\vgui\panels\lf_createmultiplayergame.h"
+					//$File	"tf\vgui\panels\lf_addons.cpp"
+					//$File	"tf\vgui\panels\lf_addons.h"
+					//$File	"tf\vgui\panels\lf_addonassociation.cpp"
+					//$File	"tf\vgui\panels\lf_addonassociation.h"
 				}	
 				
 				$Folder	"Unused"

@@ -5447,12 +5447,19 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 	// Try to stow weapons
 	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
 	{
+#ifndef TF_CLASSIC
 		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 		if ( pWeapon != NULL )
 		{
-			pWeapon->Holster( NULL );
+			pWeapon->SetWeaponVisible( false );
 		}
-
+#else
+		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
+		if ( pWeapon != NULL )
+		{
+			pWeapon->Lower();
+		}
+#endif
 #ifndef HL2_DLL
 		m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 #endif
@@ -5581,9 +5588,10 @@ void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExi
 	// Re-deploy our weapon
 	if ( IsAlive() )
 	{
-		if ( GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false )
+		if ( GetActiveWeapon() )
 		{
 			GetActiveWeapon()->Deploy();
+			GetActiveWeapon()->Ready();
 			ShowCrosshair( true );
 		}
 	}
