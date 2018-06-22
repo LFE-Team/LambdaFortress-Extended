@@ -230,6 +230,11 @@ void CNPC_HGrunt::Spawn()
 	Precache();
 
 	SetModel("models/hgrunt.mdl");
+	if (sv_hl1_hd.GetFloat() == 1)
+	{
+		PrecacheModel("models/hl1port/hgruntbs.mdl");
+		SetModel("models/hl1port/hgruntbs.mdl");
+	}
 
 	if (FClassnameIs(this, "monster_human_grunt_red"))
 	{		
@@ -351,6 +356,8 @@ void CNPC_HGrunt::Precache()
 	PrecacheScriptSound("HGrunt.Shotgun");
 	PrecacheScriptSound("HGrunt.Pain");
 	PrecacheScriptSound("HGrunt.Die");
+	PrecacheScriptSound("HGrunt.9MM_HD");
+	PrecacheScriptSound("HGrunt.Shotgun_HD");
 
 	BaseClass::Precache();
 
@@ -1167,7 +1174,14 @@ void CNPC_HGrunt::HandleAnimEvent(animevent_t *pEvent)
 
 			CPASAttenuationFilter filter3(this);
 			// the first round of the three round burst plays the sound and puts a sound in the world sound list.
-			EmitSound(filter3, entindex(), "HGrunt.9MM");
+			if (sv_hl1_hd.GetFloat() == 1)
+			{
+				EmitSound(filter3, entindex(), "HGrunt.9MM_HD");
+			}
+			else
+			{
+				EmitSound(filter3, entindex(), "HGrunt.9MM");
+			}
 		}
 		else
 		{
@@ -2618,6 +2632,10 @@ void CNPC_DeadHGrunt::Spawn(void)
 {
 	PrecacheModel("models/hgrunt.mdl");
 	SetModel("models/hgrunt.mdl");
+	if (sv_hl1_hd.GetFloat() == 1)
+	{
+		PrecacheModel("models/hl1port/hgruntbs.mdl");
+	}
 
 	ClearEffects();
 	SetSequence(0);
