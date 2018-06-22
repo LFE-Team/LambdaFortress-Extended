@@ -53,7 +53,12 @@ void CHandGrenade::Spawn( void )
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
-	SetModel( HANDGRENADE_MODEL ); 
+	SetModel( HANDGRENADE_MODEL );
+	if (sv_hl1_hd.GetFloat() == 1)
+	{
+		PrecacheModel("models/grenade_hd.mdl");
+		SetModel("models/w_grenade_hd.mdl");
+	}
 
 	UTIL_SetSize( this, Vector( 0, 0, 0 ), Vector( 0, 0, 0 ) );
 
