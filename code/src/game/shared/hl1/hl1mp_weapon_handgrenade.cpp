@@ -56,7 +56,7 @@ void CHandGrenade::Spawn( void )
 	SetModel( HANDGRENADE_MODEL );
 	if (sv_hl1_hd.GetFloat() == 1)
 	{
-		PrecacheModel("models/grenade_hd.mdl");
+		PrecacheModel("models/w_grenade_hd.mdl");
 		SetModel("models/w_grenade_hd.mdl");
 	}
 
