@@ -233,6 +233,7 @@ void CNPC_HGrunt::Spawn()
 	if (sv_hl1_hd.GetFloat() == 1)
 	{
 		PrecacheModel("models/hl1port/hgruntbs.mdl");
+		SetModel("models/hl1port/hgruntbs.mdl");
 	}
 
 	if (FClassnameIs(this, "monster_human_grunt_red"))
