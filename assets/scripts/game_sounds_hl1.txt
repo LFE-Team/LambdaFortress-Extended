@@ -2003,6 +2003,19 @@
 	}
 }
 
+"HGrunt.9MM_HD"
+{
+	"channel"	"CHAN_WEAPON"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_140db"
+	"pitch"		"PITCH_NORM"
+	"rndwave"
+	{
+		"wave"		"hgrunt/gr_mgun1_hd.wav"
+		"wave"		"hgrunt/gr_mgun2_hd.wav"
+	}
+}
+
 "HGrunt.Shotgun"
 {
 	"channel"	"CHAN_WEAPON"
@@ -2012,6 +2025,18 @@
 	"rndwave"
 	{
 		"wave"		"weapons/sbarrel1.wav"
+	}
+}
+
+"HGrunt.Shotgun_HD"
+{
+	"channel"	"CHAN_WEAPON"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_140db"
+	"pitch"		"PITCH_NORM"
+	"rndwave"
+	{
+		"wave"		"weapons/sbarrel1hd.wav"
 	}
 }
 
