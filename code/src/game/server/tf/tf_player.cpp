@@ -6675,7 +6675,7 @@ void CTFPlayer::CheatImpulseCommands( int iImpulse )
 				}
 
 				TakeHealth( 999, DMG_GENERIC );
-				Regenerate();
+				//Regenerate();
 				// Refill clip in all weapons.
 				for ( int i = 0; i < WeaponCount(); i++ )
 				{

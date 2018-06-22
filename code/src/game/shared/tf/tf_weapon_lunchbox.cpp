@@ -119,6 +119,7 @@ void CTFLunchBox::ApplyBiteEffects( void )
 	{
 		//pOwner->TakeHealth( 30, DMG_GENERIC );
 		pOwner->TakeHealth( 120, DMG_GENERIC );
+		pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
 	}
 }
 

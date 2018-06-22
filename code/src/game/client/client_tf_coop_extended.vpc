@@ -62,6 +62,11 @@ $Project "Client (TF)"
 		$File	"$SRCDIR\game\shared\mountsteamcontent.cpp"
 		$File	"$SRCDIR\game\shared\mountsteamcontent.h"
 
+		//Demez Discord RP (Rich Presence)
+		$File	"discordutils.cpp"
+		$File	"presenceupdater.cpp"
+		$File	"presenceupdater.h"
+
 		$Folder	"game_controls"
 		{
 				$File	"game_controls\classmenu.cpp"

@@ -36,6 +36,7 @@
 #include "tf_mainmenu.h"
 #include "tf_mainmenu_interface.h"
 #include "tier0/icommandline.h"
+#include "discord/discordutils.h"
 #endif
 
 using namespace vgui;

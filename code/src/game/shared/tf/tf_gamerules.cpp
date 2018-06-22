@@ -952,6 +952,26 @@ void CTFClassLimits::Spawn(void)
 	BaseClass::Spawn();
 }
 
+LINK_ENTITY_TO_CLASS( lfe_vehicle_block, CTFVehicleBlock );
+
+BEGIN_DATADESC( CTFVehicleBlock )
+	DEFINE_KEYFIELD( m_bAllowAirboat, FIELD_BOOLEAN, "allow_airboat" ),
+	DEFINE_KEYFIELD( m_bAllowJeep, FIELD_BOOLEAN, "allow_jeep"),
+	DEFINE_KEYFIELD( m_bAllowJalopy, FIELD_BOOLEAN, "allow_jeepepisodic" ),
+END_DATADESC()
+
+CTFVehicleBlock::CTFVehicleBlock(void)
+{
+	m_bAllowAirboat = true;
+	m_bAllowJeep = true;
+	m_bAllowJalopy = true;
+}
+
+void CTFVehicleBlock::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
 class CArenaLogic : public CBaseEntity
 {
 public:
@@ -7234,6 +7254,19 @@ const char *CTFGameRules::GetGameDescription(void)
 }
 
 #endif
+
+float CTFGameRules::GetMapRemainingTime()
+{
+	// if timelimit is disabled, return 0
+	if ( mp_timelimit.GetInt() <= 0 )
+		return 0;
+
+	// timelimit is in minutes
+
+	float timeleft = mp_timelimit.GetInt() - gpGlobals->curtime;
+
+	return timeleft;
+}
 
 float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayers /* = true */ )
 {

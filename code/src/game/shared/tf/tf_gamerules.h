@@ -347,6 +347,7 @@ public:
 
 	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
 
+	float GetMapRemainingTime();
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes data tables able to access our private vars.
@@ -499,6 +500,24 @@ public:
 	float	m_flCTFBonusTime;
 #endif
 
+};
+
+//-----------------------------------------------------------------------------
+// Vehicle blocks
+//-----------------------------------------------------------------------------
+class CTFVehicleBlock : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFVehicleBlock, CBaseEntity);
+	DECLARE_DATADESC();
+
+	CTFVehicleBlock();
+
+	void	Spawn(void);
+
+	bool	m_bAllowAirboat;
+	bool	m_bAllowJeep;
+	bool	m_bAllowJalopy;
 };
 
 //-----------------------------------------------------------------------------

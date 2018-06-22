@@ -58,6 +58,7 @@ void CGrenadeSpit::Spawn( void )
 
 	SetUse( &CBaseGrenade::DetonateUse );
 	SetTouch( &CGrenadeSpit::GrenadeSpitTouch );
+	SetThink( &CGrenadeSpit::Think );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	m_flDamage		= sk_antlion_worker_spit_grenade_dmg.GetFloat();
@@ -116,15 +117,6 @@ void CGrenadeSpit::SetSpitSize( int nSize )
 			break;
 		}
 	}
-}
-
-void CGrenadeSpit::Event_Killed( const CTakeDamageInfo &info )
-{
-/*
-	trace_t trace;
-	memcpy( &trace, pTrace, sizeof( trace_t ) );
-	Detonate( &trace, pOther );
-*/
 }
 
 //-----------------------------------------------------------------------------
@@ -199,6 +191,9 @@ void CGrenadeSpit::Detonate( trace_t *pTrace, CBaseEntity *pOther )
 	// took some of stuff from tf rocket
 	m_hEnemy = pOther;
 
+	// Invisible.
+
+	AddSolidFlags( FSOLID_NOT_SOLID );
 	m_takedamage = DAMAGE_NO;
 
 	EmitSound( "GrenadeSpit.Hit" );	
@@ -210,17 +205,15 @@ void CGrenadeSpit::Detonate( trace_t *pTrace, CBaseEntity *pOther )
 		SetAbsOrigin( pTrace->endpos + ( pTrace->plane.normal * 1.0f ) );
 	}
 
-	CBaseEntity *const pTraceEnt = pTrace->m_pEnt;
-
 	// Part normal damage, part poison damage
 	float poisonratio = sk_antlion_worker_spit_grenade_poison_ratio.GetFloat();
 
 	// Take direct damage if hit
 	// NOTE: assume that pTrace is invalidated from this line forward!
-	if ( pTraceEnt )
+	if ( pOther->IsPlayer() || pOther->IsNPC() || pOther->IsBaseObject() )
 	{
-		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * (1.0f-poisonratio), DMG_ACID ) );
-		pTraceEnt->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * poisonratio, DMG_POISON ) );
+		pOther->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * (1.0f-poisonratio), DMG_ACID ) );
+		pOther->TakeDamage( CTakeDamageInfo( this, GetThrower(), m_flDamage * poisonratio, DMG_POISON ) );
 	}
 
 	// Stop our hissing sound

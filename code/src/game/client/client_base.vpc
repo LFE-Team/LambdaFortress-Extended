@@ -1239,6 +1239,7 @@ $Project
 	
 	$Folder	"Link Libraries"
 	{
+		$Lib 		discord-rpc
 		$Lib		bitmap
 		$Lib		choreoobjects
 		$Lib		dmxloader

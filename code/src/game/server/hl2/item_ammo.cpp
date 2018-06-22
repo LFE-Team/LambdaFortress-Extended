@@ -15,6 +15,7 @@
 #ifdef TF_CLASSIC
 #include "entity_ammopack.h"
 #include "tf_player.h"
+#include "tf_powerup.h"
 #include "tf_weaponbase.h"
 
 #define TF_AMMOPACK_PICKUP_SOUND	"AmmoPack.Touch"
@@ -32,14 +33,29 @@ bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound =
 	if ( !pTFPlayer )
 		return false;
 
-	for ( int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++ )
+	int iMaxPrimary = pTFPlayer->GetMaxAmmo( TF_AMMO_PRIMARY );
+	if ( pPlayer->GiveAmmo( ceil( iMaxPrimary * flCount ), TF_AMMO_PRIMARY, true ) )
 	{
-		int iMaxAmmo = pTFPlayer->GetMaxAmmo( i );
+		bSuccess = true;
+	}
 
-		if ( pTFPlayer->GiveAmmo( ceil( iMaxAmmo * flCount ), i, true ) )
-		{
-			bSuccess = true;
-		}
+	int iMaxSecondary = pTFPlayer->GetMaxAmmo( TF_AMMO_SECONDARY );
+	if ( pPlayer->GiveAmmo( ceil( iMaxSecondary * flCount ), TF_AMMO_SECONDARY, true ) )
+	{
+		bSuccess = true;
+	}
+
+	int iMaxMetal = pTFPlayer->GetMaxAmmo( TF_AMMO_METAL );
+	if ( pPlayer->GiveAmmo( ceil( iMaxMetal * flCount ), TF_AMMO_METAL, true ) )
+	{
+		bSuccess = true;
+	}
+
+	float flCloak = pTFPlayer->m_Shared.GetSpyCloakMeter();
+	if ( flCloak < 100.0f )
+	{
+		pTFPlayer->m_Shared.SetSpyCloakMeter( min( 100.0f, flCloak + 100.0f * flCount ) );
+		bSuccess = true;
 	}
 
 	for ( int i = 0; i < pTFPlayer->WeaponCount(); i++ )
@@ -55,10 +71,10 @@ bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound =
 	return bSuccess;
 }
 
-class CLFItem : public CItem
+class CLFItem : public CTFPowerup
 {
 public:
-	DECLARE_CLASS( CLFItem, CItem );
+	DECLARE_CLASS( CLFItem, CTFPowerup );
 
 	virtual powerupsize_t GetPowerupSize( void ) { return POWERUP_FULL; }
 	virtual const char *GetPowerupModel( void ) { return "models/items/boxsrounds.mdl"; }
@@ -68,7 +84,8 @@ public:
 		Precache();
 		SetModel( GetPowerupModel() );
 
-		BaseClass::Spawn();
+		BaseClass::BaseClass::Spawn();
+		CreateItemVPhysicsObject();
 	}
 
 	void Precache( void )
@@ -81,11 +98,18 @@ public:
 
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()] ) )
+		if ( ValidTouch( pPlayer ) )
 		{
-			CSingleUserRecipientFilter filter( pPlayer );
-			EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
-			return true;
+			CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+			if ( !pTFPlayer )
+				return false;
+
+			if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()] ) )
+			{
+				CSingleUserRecipientFilter filter( pPlayer );
+				EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
+				return true;
+			}
 		}
 
 		return false;

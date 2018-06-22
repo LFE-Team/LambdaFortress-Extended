@@ -36,7 +36,6 @@ public:
 
 	virtual void		Spawn( void );
 	virtual void		Precache( void );
-	virtual void		Event_Killed( const CTakeDamageInfo &info );
 
 	virtual	unsigned int	PhysicsSolidMaskForEntity( void ) const { return ( BaseClass::PhysicsSolidMaskForEntity() | CONTENTS_WATER ); }
 

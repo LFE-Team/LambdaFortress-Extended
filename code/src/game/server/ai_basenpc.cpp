@@ -12545,14 +12545,27 @@ void CAI_BaseNPC::InputSetEnemyFilter( inputdata_t &inputdata )
 void CAI_BaseNPC::InputSetHealth( inputdata_t &inputdata )
 {
 	int iNewHealth = inputdata.value.Int();
-	int iDelta = abs(GetHealth() - iNewHealth);
-	if ( iNewHealth > GetHealth() )
+
+	if ( iNewHealth != m_iHealth )
 	{
-		TakeHealth( iDelta, DMG_GENERIC );
-	}
-	else if ( iNewHealth < GetHealth() )
-	{
-		TakeDamage( CTakeDamageInfo( this, this, iDelta, DMG_GENERIC ) );
+		m_iHealth = iNewHealth;
+
+		if ( m_iMaxHealth == 0 )
+		{
+			Assert( false );
+			m_iMaxHealth = 1;
+		}
+
+		// Output the new health as a percentage of max health [0..1]
+		//float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0.f, 1.f );
+		//m_OnHealthChanged.Set( flRatio, pActivator, this );
+
+		if ( m_iHealth <= 0 )
+		{
+			//CTakeDamageInfo info;
+			//info.SetAttacker( this );
+			TakeDamage( CTakeDamageInfo( this, this, iNewHealth, DMG_GENERIC ) );
+		}
 	}
 }
 

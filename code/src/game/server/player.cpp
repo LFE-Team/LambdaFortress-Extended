@@ -6017,8 +6017,6 @@ void CBasePlayer::ImpulseCommands( )
 	m_nImpulse = 0;
 }
 
-#ifdef HL2_EPISODIC
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -6053,8 +6051,6 @@ void CC_CH_CreateJalopy( void )
 }
 
 static ConCommand ch_createjalopy("ch_createjalopy", CC_CH_CreateJalopy, "Spawn jalopy in front of the player.", FCVAR_CHEAT);
-
-#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -6117,41 +6113,50 @@ static void CreateAirboat( CBasePlayer *pPlayer )
 	}
 }
 
-static void CreateAirboat2(CBasePlayer *pPlayer)
+#ifdef TF_CLASSIC
+static void CreateAirboat2( CBasePlayer *pPlayer )
 {
-	CBaseEntity *pJeep2 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
-	if (gEntList.FindEntityByClassname(pJeep2, "prop_vehicle_airboat") && !gEntList.FindEntityByClassname(NULL, "lfe_logic_vehicle_block"))
+	CTFVehicleBlock *pVehicleBlock = dynamic_cast<CTFVehicleBlock*>( gEntList.FindEntityByClassname( NULL, "lfe_vehicle_block" ) );
+
+	if (pVehicleBlock->m_bAllowAirboat)
 	{
-		CBaseEntity *pJeep3 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
-		if (pJeep3)
+		CBaseEntity *pJeep2 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
+		if (gEntList.FindEntityByClassname(pJeep2, "prop_vehicle_airboat"))
 		{
-			if (pJeep3->GetOwnerEntity()->IsPlayer())
+			CBaseEntity *pJeep3 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
+			if (pJeep3)
 			{
-				pJeep3->Remove();
+				if (pJeep3->GetOwnerEntity()->IsPlayer())
+				{
+					pJeep3->Remove();
+				}
+			}
+			// Cheat to create a jeep in front of the player
+			Vector vecForward;
+			AngleVectors(pPlayer->EyeAngles(), &vecForward);
+			CBaseEntity *pJeep = (CBaseEntity*)CreateEntityByName("prop_vehicle_airboat");
+			if (pJeep)
+			{
+				Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0, 0, 64);
+				QAngle vecAngles(0, pPlayer->GetAbsAngles().y - 90, 0);
+				pJeep->SetAbsOrigin(vecOrigin);
+				pJeep->SetAbsAngles(vecAngles);
+				pJeep->KeyValue("model", "models/airboat.mdl");
+				pJeep->KeyValue("solid", "6");
+				pJeep->KeyValue("targetname", "airboat");
+				pJeep->KeyValue("vehiclescript", "scripts/vehicles/airboat.txt");
+				pJeep->SetOwnerEntity(pPlayer);
+				DispatchSpawn(pJeep);
+				pJeep->Activate();
 			}
 		}
-		// Cheat to create a jeep in front of the player
-		Vector vecForward;
-		AngleVectors(pPlayer->EyeAngles(), &vecForward);
-		CBaseEntity *pJeep = (CBaseEntity*)CreateEntityByName("prop_vehicle_airboat");
-		if (pJeep)
-		{
-			Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0, 0, 64);
-			QAngle vecAngles(0, pPlayer->GetAbsAngles().y - 90, 0);
-			pJeep->SetAbsOrigin(vecOrigin);
-			pJeep->SetAbsAngles(vecAngles);
-			pJeep->KeyValue("model", "models/airboat.mdl");
-			pJeep->KeyValue("solid", "6");
-			pJeep->KeyValue("targetname", "airboat");
-			pJeep->KeyValue("vehiclescript", "scripts/vehicles/airboat.txt");
-			pJeep->SetOwnerEntity(pPlayer);
-			DispatchSpawn(pJeep);
-			pJeep->Activate();
-		}
+	}
+	else
+	{
+		return;
 	}
 }
-
-
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -6166,6 +6171,9 @@ void CC_CH_CreateAirboat( void )
 
 }
 
+static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
+
+#ifdef TF_CLASSIC
 void CC_CH_LFEAirboat(void)
 {
 	CBasePlayer *pPlayer = UTIL_GetCommandClient();
@@ -6175,9 +6183,8 @@ void CC_CH_LFEAirboat(void)
 	CreateAirboat2(pPlayer);
 }
 
-	static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
-	static ConCommand lfe_createairboat("lfe_createairboat", CC_CH_LFEAirboat, "Spawn an airboat.");
-
+static ConCommand lfe_createairboat("lfe_createairboat", CC_CH_LFEAirboat, "Spawn an airboat.");
+#endif
 
 //=========================================================
 //=========================================================
