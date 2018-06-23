@@ -233,7 +233,7 @@ void CNPC_HGrunt::Spawn()
 	if (sv_hl1_hd.GetFloat() == 1)
 	{
 		PrecacheModel("models/hl1port/hgruntbs.mdl");
-		SetModel("models/hl1port/hgruntbs.mdl");
+        SetModel("models/hl1port/hgruntbs.mdl");			
 	}
 
 	if (FClassnameIs(this, "monster_human_grunt_red"))
@@ -458,7 +458,14 @@ void CNPC_HGrunt::PrescheduleThink(void)
 
 Class_T	CNPC_HGrunt::Classify(void)
 {
-	return CLASS_HUMAN_MILITARY;
+	if (FClassnameIs(this, "monster_human_grunt_red"))
+	{
+		return CLASS_PLAYER_ALLY;
+	}
+	else
+	{
+		return CLASS_HUMAN_MILITARY;
+	}
 }
 
 //=========================================================
@@ -2635,6 +2642,7 @@ void CNPC_DeadHGrunt::Spawn(void)
 	if (sv_hl1_hd.GetFloat() == 1)
 	{
 		PrecacheModel("models/hl1port/hgruntbs.mdl");
+	    SetModel("models/hl1port/hgruntbs.mdl");		
 	}
 
 	ClearEffects();
