@@ -81,6 +81,7 @@ game_sounds_manifest
 	
 	//Music Tracks
 	"precache_file"		"scripts/level_sounds_music.txt"
+        "precache_file"		"scripts/tf_music_zombiesurvival.txt"
 	
 	// NPC Sounds
 	"precache_file"		"scripts/npc_sounds_eli.txt"
@@ -120,8 +121,9 @@ game_sounds_manifest
 	"precache_file"		"scripts/npc_sounds_combine_cannon.txt"
 	"precache_file"		"scripts/npc_sounds_alyx_episodic2.txt"
 	"precache_file"		"scripts/npc_sounds_turret_episodic2.txt"
-	"precache_file"     "scripts/cremator_orig_sounds.txt"
-	"precache_file"     "scripts/npc_sounds_combineguard.txt"
+	"precache_file"         "scripts/cremator_orig_sounds.txt"
+	"precache_file"         "scripts/npc_sounds_combineguard.txt"
+        "precache_file"         "scripts/npc_sounds_gonome.txt"
 	
 	//HL1
 	"precache_file"		"scripts/game_sounds_hl1.txt"
