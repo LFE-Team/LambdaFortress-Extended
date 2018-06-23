@@ -419,6 +419,7 @@ public:
 	virtual void UpdatePlayerSound( void );
 
 	bool IsOnStoryTeam( void ) { return ( GetTeamNumber() == TF_STORY_TEAM ); }
+	bool IsOnCombineTeam(void) { return (GetTeamNumber() == TF_COMBINE_TEAM); }
 
 	char GetPrevTextureType( void ) { return m_chPreviousTextureType; }
 

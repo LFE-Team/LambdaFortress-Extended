@@ -119,6 +119,7 @@ ConVar tf_gamemode_payload( "tf_gamemode_payload", "0" , FCVAR_NOTIFY | FCVAR_RE
 ConVar tf_gamemode_mvm( "tf_gamemode_mvm", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_passtime( "tf_gamemode_passtime", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lf_versus( "lf_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar lf_blucoop( "lf_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lf_gamemode_zs( "lf_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
@@ -753,6 +754,47 @@ void CTFLogicCoOp::Spawn(void)
 	BaseClass::Spawn();
 }
 
+class CTFVehicleBlock : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFVehicleBlock, CBaseEntity);
+	void	Spawn(void);
+};
+
+BEGIN_DATADESC( CTFVehicleBlock )
+	DEFINE_KEYFIELD( m_bAllowAirboat, FIELD_BOOLEAN, "allow_airboat" ),
+	DEFINE_KEYFIELD( m_bAllowJeep, FIELD_BOOLEAN, "allow_jeep"),
+	DEFINE_KEYFIELD( m_bAllowJalopy, FIELD_BOOLEAN, "allow_jeepepisodic" ),
+END_DATADESC()
+
+CTFVehicleBlock::CTFVehicleBlock(void)
+{
+	m_bAllowAirboat = true;
+	m_bAllowJeep = true;
+	m_bAllowJalopy = true;
+}
+
+void CTFVehicleBlock::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
+LINK_ENTITY_TO_CLASS(lfe_vehicle_block, CTFVehicleBlock);
+
+class CTFLogicBluCoOp : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicCoOp, CBaseEntity);
+	void	Spawn(void);
+};
+
+LINK_ENTITY_TO_CLASS(lfe_logic_blucoop, CTFLogicBluCoOp);
+
+void CTFLogicBluCoOp::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
 class CTFLogicVersus : public CBaseEntity
 {
 public:
@@ -948,26 +990,6 @@ DEFINE_KEYFIELD(m_nSpyLimit,		FIELD_INTEGER, "SpyLimit"),
 END_DATADESC()
 
 void CTFClassLimits::Spawn(void)
-{
-	BaseClass::Spawn();
-}
-
-LINK_ENTITY_TO_CLASS( lfe_vehicle_block, CTFVehicleBlock );
-
-BEGIN_DATADESC( CTFVehicleBlock )
-	DEFINE_KEYFIELD( m_bAllowAirboat, FIELD_BOOLEAN, "allow_airboat" ),
-	DEFINE_KEYFIELD( m_bAllowJeep, FIELD_BOOLEAN, "allow_jeep"),
-	DEFINE_KEYFIELD( m_bAllowJalopy, FIELD_BOOLEAN, "allow_jeepepisodic" ),
-END_DATADESC()
-
-CTFVehicleBlock::CTFVehicleBlock(void)
-{
-	m_bAllowAirboat = true;
-	m_bAllowJeep = true;
-	m_bAllowJalopy = true;
-}
-
-void CTFVehicleBlock::Spawn(void)
 {
 	BaseClass::Spawn();
 }
@@ -1688,12 +1710,13 @@ void CTFGameRules::Activate()
 	tf_gamemode_rd.SetValue( 0 );
 	tf_gamemode_passtime.SetValue( 0 );
 	lf_versus.SetValue( 0 );
+	lf_blucoop.SetValue( 0 );
 	lf_gamemode_zs.SetValue( 0 );
 	hl2_episodic.SetValue( 0 );
 
 	SetMultipleTrains( false );
 
-	if ( lf_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d2_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d3_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep2_", 3 ) )
+	if ( (lf_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d2_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d3_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep2_", 3 )) && !gEntList.FindEntityByClassname(NULL, "lfe_logic_blucoop") )
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
 		lf_coop.SetValue( 1 );
@@ -1709,6 +1732,16 @@ void CTFGameRules::Activate()
 		lf_versus.SetValue( 1 );
 		Msg( "Executing server versus config file\n", 1 );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+
+	if ( lf_blucoop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop"))
+	{
+		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
+		lf_blucoop.SetValue( 1 );
+		Msg( "Executing blue coop file\n", 1 );
+		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
 		return;
 	}
@@ -4616,6 +4649,9 @@ static const char *g_aTaggedConVars[] =
 	"lf_versus",
 	"versus",
 
+	"lf_blucoop",
+	"blucoop",
+
 	"lf_gamemode_zs",
 	"survival",
 
@@ -7268,6 +7304,7 @@ float CTFGameRules::GetMapRemainingTime()
 	return timeleft;
 }
 
+
 float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayers /* = true */ )
 {
 	return BaseClass::GetRespawnWaveMaxLength( iTeam, bScaleWithNumPlayers );
@@ -7276,7 +7313,7 @@ float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayer
 bool CTFGameRules::ShouldBalanceTeams( void )
 {
 	// No team balancing in coop since everybody should be on RED.
-	if ( IsCoOp() || IsZombieSurvival() || !IsVersus() )
+	if ( IsCoOp() || IsZombieSurvival() || !IsVersus() || IsBluCoOp() )
 	{
 		return false;
 	}

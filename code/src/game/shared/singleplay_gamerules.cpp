@@ -170,6 +170,11 @@ bool CSingleplayRules::Damage_ShouldNotBleed( int iDmgType )
 		return false;
 	}
 
+	bool CSingleplayRules::IsBluCoOp(void)
+	{
+		return false;
+	}
+
 	//-----------------------------------------------------------------------------
 	// Purpose: Determine whether the player should switch to the weapon passed in
 	// Output : Returns true on success, false on failure.
