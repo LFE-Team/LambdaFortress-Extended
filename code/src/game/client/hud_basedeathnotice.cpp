@@ -433,8 +433,6 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 
 	if ( bPlayerDeath || bObjectDeath || bNPCDeath )
 	{
-		//int victim = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
-		//int killer = engine->GetPlayerForUserID( event->GetInt( "attacker" ) );
 		int victim = event->GetInt( "victim_index" );
 		int killer = event->GetInt( "attacker_index" );
 
@@ -537,7 +535,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 		Q_strncpy( m_DeathNotices[iMsg].Victim.szName, victim_name, ARRAYSIZE( m_DeathNotices[iMsg].Victim.szName ) );
 		if ( killedwith && *killedwith )
 		{
-			Q_snprintf( m_DeathNotices[iMsg].szIcon, sizeof( m_DeathNotices[iMsg].szIcon), "d_%s", killedwith );
+			Q_snprintf( m_DeathNotices[iMsg].szIcon, sizeof( m_DeathNotices[iMsg].szIcon ), "d_%s", killedwith );
 		}
 
 		if ( !killer || killer == victim )
@@ -559,7 +557,17 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 			{
 				// special case icon for hit-by-vehicle death
 				Q_strncpy( m_DeathNotices[iMsg].szIcon, "d_vehicle", ARRAYSIZE( m_DeathNotices[iMsg].szIcon ) );
-			}			
+			}
+			else if ( ( event->GetInt( "damagebits" ) & DMG_BLAST ) && !killer )
+			{
+				// environmental explosive death
+				V_wcsncpy( m_DeathNotices[iMsg].wzInfoText, g_pVGuiLocalize->Find( "#DeathMsg_Blast" ), sizeof( m_DeathNotices[iMsg].wzInfoText ) );
+			}
+			else if ( event->GetInt( "damagebits" ) & DMG_DROWN )
+			{
+				// drowned
+				V_wcsncpy( m_DeathNotices[iMsg].wzInfoText, g_pVGuiLocalize->Find( "#DeathMsg_Drown" ), sizeof( m_DeathNotices[iMsg].wzInfoText ) );
+			}
 		}
 
 		m_DeathNotices[iMsg].iWeaponID = event->GetInt( "weaponid" );

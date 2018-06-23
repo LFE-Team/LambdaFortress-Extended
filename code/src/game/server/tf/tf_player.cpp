@@ -55,7 +55,7 @@
 #include "econ_item_schema.h"
 #include "baseprojectile.h"
 #include "tf_weapon_flamethrower.h"
-#include "tf_basedmpowerup.h"
+#include "entity_rune.h"
 #include "tf_weapon_lunchbox.h"
 #include "player_pickup.h"
 #include "weapon_physcannon.h"
@@ -2601,6 +2601,7 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 	if ( HasTheFlag() )
 	{
 		DropFlag();
+		DropPowerups();
 	}
 
 	if ( iTeam == TEAM_SPECTATOR )
@@ -5797,7 +5798,7 @@ void CTFPlayer::DropPowerups( void )
 		int nCond = g_aPowerupConds[i];
 		if ( m_Shared.InCond( nCond ) )
 		{
-			CTFBaseDMPowerup::Create( WorldSpaceCenter(), vec3_angle, this, g_aPowerupNames[i], m_Shared.GetConditionDuration( nCond ) );
+			CTFRune::Create( WorldSpaceCenter(), vec3_angle, this, g_aPowerupNames[i], m_Shared.GetConditionDuration( nCond ) );
 		}
 	}
 }
@@ -6323,6 +6324,7 @@ void CTFPlayer::StateEnterOBSERVER( void )
 	if ( HasTheFlag() )
 	{
 		DropFlag();
+		DropPowerups();
 	}
 
 	// Always start a spectator session in chase mode
@@ -6613,6 +6615,7 @@ void CTFPlayer::ForceRespawn( void )
 	if ( HasTheFlag() )
 	{
 		DropFlag();
+		DropPowerups();
 	}
 
 	if ( GetPlayerClass()->GetClassIndex() != iDesiredClass )
@@ -7354,6 +7357,7 @@ void CC_DropItem( void )
 	if ( pPlayer )
 	{
 		pPlayer->DropFlag();
+		pPlayer->DropPowerups();
 	}
 }
 static ConCommand dropitem( "dropitem", CC_DropItem, "Drop the flag." );
