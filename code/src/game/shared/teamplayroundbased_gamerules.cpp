@@ -779,7 +779,7 @@ void CTeamplayRoundBasedRules::SetInWaitingForPlayers( bool bWaitingForPlayers  
 	}
 
 #if defined ( TF_DLL ) || defined ( TF_CLASSIC )
-	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() )
+	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() || TFGameRules()->IsBluCoOp() )
 	{
 		m_bInWaitingForPlayers = false;
 		return;
@@ -863,7 +863,7 @@ void CTeamplayRoundBasedRules::SetSetup( bool bSetup )
 void CTeamplayRoundBasedRules::CheckWaitingForPlayers( void )
 {
 	// never waiting for players when loading a bug report, or training
-	if ( IsLoadingBugBaitReport() || gpGlobals->eLoadType == MapLoad_Background || !AllowWaitingForPlayers() || TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() )
+	if ( IsLoadingBugBaitReport() || gpGlobals->eLoadType == MapLoad_Background || !AllowWaitingForPlayers() || TFGameRules()->IsCoOp() || TFGameRules()->IsVersus() || TFGameRules()->IsBluCoOp() )
 		return;
 
 	if( mp_waitingforplayers_restart.GetBool() )
@@ -1810,11 +1810,68 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 			{
 				if ( hl2_episodic.GetInt() == 1 ) // til that episodic changed some gameover
 				{
+					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT, m_bForceMapReset );
 					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_ALL_DEATH, m_bForceMapReset );
 				}
 				else if ( hl2_episodic.GetInt() == 0 )
 				{
+					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_OBJECT, m_bForceMapReset );
 					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_ALL_DEATH, m_bForceMapReset );
+				}
+			}
+
+			return;
+		}
+	}
+	else if(TFGameRules()->IsBluCoOpGameRunning())
+	{
+		CTeam *pTeam = GetGlobalTeam(TF_COMBINE_TEAM);
+		Assert(pTeam);
+
+		bool bFoundLiveOne = false;
+		int iPlayers = pTeam->GetNumPlayers();
+		if (iPlayers)
+		{
+			for (int player = 0; player < iPlayers; player++)
+			{
+				if (pTeam->GetPlayer(player) && pTeam->GetPlayer(player)->IsAlive())
+				{
+					bFoundLiveOne = true;
+					break;
+				}
+			}
+		}
+
+		if (!bFoundLiveOne)
+		{
+			// The live team has won. 
+			bool bMasterHandled = false;
+			if (!m_bForceMapReset)
+			{
+				// We're not resetting the map, so give the winners control
+				// of all the points that were in play this round.
+				// Find the control point master.
+				CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
+				if (pMaster)
+				{
+					variant_t sVariant;
+					sVariant.SetInt(TF_STORY_TEAM);
+					pMaster->AcceptInput("SetWinnerAndForceCaps", NULL, NULL, sVariant, 0);
+					bMasterHandled = true;
+				}
+			}
+
+			if (!bMasterHandled)
+			{
+				if (hl2_episodic.GetInt() == 1) // til that episodic changed some gameover
+				{
+					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT, m_bForceMapReset );
+					SetWinningTeam(TF_STORY_TEAM, WINREASON_RED_DEAD, m_bForceMapReset);
+				}
+				else if (hl2_episodic.GetInt() == 0)
+				{
+					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_OBJECT, m_bForceMapReset );
+					SetWinningTeam(TF_STORY_TEAM, WINREASON_RED_DEAD, m_bForceMapReset);
 				}
 			}
 
@@ -3693,6 +3750,10 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 		// Allow joining Combine in Versus mode.
 		return true;
 	}
+	if (TFGameRules()->IsBluCoOp())
+	{
+		return (iNewTeam == TF_STORY_TEAM);
+	}
 #endif
 
 	// add one because we're joining this team
@@ -3752,7 +3813,7 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 	// Don't balance teams in Co-op.
-	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsBluCoOp() )
 	{
 		if ( ShouldBalanceTeams() == false )
 		{

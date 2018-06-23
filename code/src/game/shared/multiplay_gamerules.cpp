@@ -459,6 +459,11 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		return false;
 	}
 
+	bool CMultiplayRules::IsBluCoOp( void )
+	{
+		return false;
+	}
+
 	//=========================================================
 	//=========================================================
 	bool CMultiplayRules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon )

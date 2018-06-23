@@ -342,12 +342,13 @@ public:
 	virtual bool	IsInSpecialDeliveryMode( void ) { return m_bPlayingSpecialDeliveryMode; };
 
 	bool IsCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP ); }
+	bool IsBluCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_BLUCOOP ); }
 	bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
+	bool IsBluCoOpGameRunning(void) { return (IsBluCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
 	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
 	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
 
-	float GetMapRemainingTime();
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes data tables able to access our private vars.
@@ -519,6 +520,7 @@ public:
 	bool	m_bAllowJeep;
 	bool	m_bAllowJalopy;
 };
+
 
 //-----------------------------------------------------------------------------
 // Gets us at the team fortress game rules

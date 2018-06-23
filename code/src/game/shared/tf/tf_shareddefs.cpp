@@ -161,6 +161,7 @@ const char *g_aGameTypeNames[] =
 	"#Gametype_MVM",
 	"#Gametype_COOP",
 	"#Gametype_VS",
+	"#Gametype_BLUCOOP",
 	"#Gametype_ZS",
 };
 

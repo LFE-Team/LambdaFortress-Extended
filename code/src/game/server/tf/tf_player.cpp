@@ -1233,7 +1233,7 @@ void CTFPlayer::Spawn()
 			}
 		}
 		// Gotta make sure this is the first proper spawn.
-		if ( TFGameRules()->IsCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME )
+		if ( TFGameRules()->IsCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME || TFGameRules()->IsBluCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME )
 		{
 			if ( lfe_debug_transition.GetBool() )
 			{
@@ -2330,7 +2330,7 @@ bool CTFPlayer::ShouldUseCoopSpawning( void )
 	if ( IsAlive() )
 		return false;
 
-	return ( IsOnStoryTeam() && TFGameRules()->IsCoOpGameRunning() );
+	return ( IsOnStoryTeam() && TFGameRules()->IsCoOpGameRunning() || IsOnCombineTeam() && TFGameRules()->IsBluCoOpGameRunning() );
 }
 
 //-----------------------------------------------------------------------------
