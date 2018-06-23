@@ -140,6 +140,11 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
+		"monster_gonome",
+		TF_TEAM_GREEN,
+		0,
+	},
+	{
 		"monster_bullchicken",
 		TF_TEAM_YELLOW,
 		0,
