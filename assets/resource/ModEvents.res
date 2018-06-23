@@ -717,9 +717,6 @@
 		"damageamount" "short"
 		"custom"	"short"
 		"crit" "bool"
-		"minicrit" "bool"
-		"allseecrit" "bool"
-		"bonuseffect" "byte"
 	}
 
 	"arena_player_notification"

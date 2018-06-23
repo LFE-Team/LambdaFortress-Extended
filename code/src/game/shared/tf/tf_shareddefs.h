@@ -180,8 +180,8 @@ enum
 	TF_GAMETYPE_PASSTIME,
 	TF_GAMETYPE_PD,
 	TF_GAMETYPE_COOP,
-	TF_GAMETYPE_BLUCOOP,
 	TF_GAMETYPE_VS,
+	TF_GAMETYPE_BLUCOOP,
 	TF_GAMETYPE_ZS,
 };
 extern const char *g_aGameTypeNames[];	// localized gametype names

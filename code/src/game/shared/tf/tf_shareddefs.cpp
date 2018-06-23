@@ -159,9 +159,9 @@ const char *g_aGameTypeNames[] =
 	"#GameType_Passtime",
 	"#GameType_PlayerDestruction",
 	"#Gametype_MVM",
-	"#Gametype_COOP",
+	"#Gametype_CoOp",
 	"#Gametype_VS",
-	"#Gametype_BLUCOOP",
+	"#Gametype_BLUCoOp",
 	"#Gametype_ZS",
 };
 

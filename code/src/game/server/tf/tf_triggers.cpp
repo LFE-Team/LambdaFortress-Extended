@@ -58,11 +58,11 @@ void CTriggerAddTFPlayerCondition::Touch( CBaseEntity *pOther )
 // Purpose: Called when an entity starts touching us.
 // Input  : pOther - The entity that is touching us.
 //-----------------------------------------------------------------------------
-void CTriggerAddTFPlayerCondition::StartTouch(CBaseEntity *pOther)
+void CTriggerAddTFPlayerCondition::StartTouch( CBaseEntity *pOther )
 {
 	BaseClass::StartTouch( pOther );
 
-	m_nCondition = 0.0f;
+	m_nCondition = 0;
 	m_flDuration = 0.0f;
 
 	// If we added him to our list, store the start time
@@ -73,9 +73,16 @@ void CTriggerAddTFPlayerCondition::StartTouch(CBaseEntity *pOther)
 	{
 		CTFPlayer *pPlayer = dynamic_cast<CTFPlayer*>( pOther );
 
-		if ( pPlayer )
+		if ( m_flDuration == -1 )
 		{
-			pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
+			if ( pPlayer )
+			{
+				  pPlayer->m_Shared.AddCond( m_nCondition );
+			}
+			else
+			{
+				  pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
+			}
 		}
 	}
 }
@@ -101,5 +108,80 @@ void CTriggerAddTFPlayerCondition::EndTouch( CBaseEntity *pOther )
 		}
 	}
 
+	BaseClass::EndTouch( pOther );
+}
+
+BEGIN_DATADESC( CTriggerRemoveTFPlayerCondition )
+	DEFINE_KEYFIELD( m_nCondition,	FIELD_INTEGER,	"condition" ),
+END_DATADESC()
+
+
+LINK_ENTITY_TO_CLASS( trigger_remove_tf_player_condition, CTriggerRemoveTFPlayerCondition );
+
+//-----------------------------------------------------------------------------
+// Purpose: Called when spawning, after keyvalues have been handled.
+//-----------------------------------------------------------------------------
+void CTriggerRemoveTFPlayerCondition::Spawn( void )
+{
+	BaseClass::Spawn();
+	Precache();
+
+	m_nCondition = 0;
+	InitTrigger();
+}
+
+void CTriggerRemoveTFPlayerCondition::Precache( void )
+{
+	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTriggerRemoveTFPlayerCondition::Touch( CBaseEntity *pOther )
+{	
+	if (!PassesTriggerFilters(pOther))
+		return;
+
+	// Find our index
+	EHANDLE hOther;
+	hOther = pOther;
+	int iIndex = m_hTouchingEntities.Find( hOther );
+	if ( iIndex == m_hTouchingEntities.InvalidIndex() )
+		return;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Called when an entity starts touching us.
+// Input  : pOther - The entity that is touching us.
+//-----------------------------------------------------------------------------
+void CTriggerRemoveTFPlayerCondition::StartTouch( CBaseEntity *pOther )
+{
+	BaseClass::StartTouch( pOther );
+
+	m_nCondition = 0;
+
+	// If we added him to our list, store the start time
+	EHANDLE hOther;
+	hOther = pOther;
+
+	if ( pOther->IsPlayer() )
+	{
+		CTFPlayer *pPlayer = dynamic_cast<CTFPlayer*>( pOther );
+
+		if ( pPlayer )
+		{
+			pPlayer->m_Shared.RemoveCond( m_nCondition );
+		}
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Called when an entity stops touching us.
+// Input  : pOther - The entity that was touching us.
+//-----------------------------------------------------------------------------
+void CTriggerRemoveTFPlayerCondition::EndTouch( CBaseEntity *pOther )
+{
 	BaseClass::EndTouch( pOther );
 }

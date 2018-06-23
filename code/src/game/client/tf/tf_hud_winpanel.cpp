@@ -253,6 +253,9 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		case WINREASON_HL2_ALL_DEATH:
 			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_HL2_All_Death" ), 0 );
 			break;
+		case WINREASON_BLUCOOP_ALL_DEATH:
+			g_pVGuiLocalize->ConstructString( wzWinReason, sizeof( wzWinReason ), g_pVGuiLocalize->Find( "#Winreason_BLUCOOP_All_Death" ), 0 );
+			break;
 		default:
 			Assert( false );
 			break;

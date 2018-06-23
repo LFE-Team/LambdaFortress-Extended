@@ -42,4 +42,31 @@ private:
 	int				m_nCondition;
 };
 
+class CTriggerRemoveTFPlayerCondition : public CBaseTrigger
+{
+	DECLARE_CLASS( CTriggerRemoveTFPlayerCondition, CBaseTrigger );
+public:
+	DECLARE_DATADESC();
+
+	void Spawn( void );
+	void Precache( void );
+	void Touch( CBaseEntity *pOther );
+	
+	// Ignore non-living entities
+	virtual bool PassesTriggerFilters(CBaseEntity *pOther)
+	{
+		if ( !BaseClass::PassesTriggerFilters(pOther) )
+			return false;
+
+		return (pOther->m_takedamage == DAMAGE_YES);
+	}
+
+	virtual void StartTouch(CBaseEntity *pOther);
+	virtual void EndTouch(CBaseEntity *pOther);
+
+private:
+
+	int				m_nCondition;
+};
+
 #endif

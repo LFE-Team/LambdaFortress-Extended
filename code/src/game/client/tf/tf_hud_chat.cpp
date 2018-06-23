@@ -73,10 +73,6 @@ CHudChat *GetTFChatHud( void )
 
 CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 {
-#if defined ( _X360 )
-	RegisterForRenderGroup( "mid" );
-#endif
-
 	g_pTFChatHud = this;
 }
 
@@ -88,11 +84,8 @@ void CHudChat::CreateChatInputLine( void )
 
 void CHudChat::CreateChatLines( void )
 {
-#ifndef _XBOX
 	m_ChatLine = new CHudChatLine( this, "ChatLine1" );
-	m_ChatLine->SetVisible( false );		
-
-#endif
+	m_ChatLine->SetVisible( false );
 }
 
 void CHudChat::Init( void )
