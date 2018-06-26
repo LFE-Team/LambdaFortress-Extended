@@ -161,7 +161,6 @@ void PrecacheParticleSystem( const char *pParticleSystemName );
 int GetParticleSystemIndex( const char *pParticleSystemName );
 const char *GetParticleSystemNameFromIndex( int nIndex );
 
-
 //-----------------------------------------------------------------------------
 // Called during bone setup to test perf
 //-----------------------------------------------------------------------------

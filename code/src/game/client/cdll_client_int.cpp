@@ -148,6 +148,13 @@
 #include "fbxsystem/fbxsystem.h"
 #endif
 
+#ifdef TF_CLASSIC_CLIENT
+//discord
+#include "discord/discord-rpc.h"
+#include "tf_gamerules.h"
+#include <vgui_controls/ImageList.h>
+#endif
+
 extern vgui::IInputInternal *g_InputInternal;
 
 //=============================================================================
@@ -331,6 +338,12 @@ void DispatchHudText( const char *pszName );
 static ConVar s_CV_ShowParticleCounts("showparticlecounts", "0", 0, "Display number of particles drawn per frame");
 static ConVar s_cl_team("cl_team", "default", FCVAR_USERINFO|FCVAR_ARCHIVE, "Default team when joining a game");
 static ConVar s_cl_class("cl_class", "default", FCVAR_USERINFO|FCVAR_ARCHIVE, "Default class when joining a game");
+
+#ifdef TF_CLASSIC_CLIENT
+// discord
+#define DISCORD_APP_ID	"460822696951939073"
+#define STEAM_APP_ID	"659635"
+#endif
 
 #ifdef HL1MP_CLIENT_DLL
 static ConVar s_cl_load_hl1_content("cl_load_hl1_content", "0", FCVAR_ARCHIVE, "Mount the content from Half-Life: Source if possible");
@@ -836,6 +849,35 @@ bool IsEngineThreaded()
 	return false;
 }
 
+#ifdef TF_CLASSIC_CLIENT
+static void handleDiscordReady()
+{
+	DevMsg("Discord: Ready\n");
+}
+
+static void handleDiscordDisconnected(int errcode, const char* message)
+{
+	DevMsg("Discord: Disconnected (%d: %s)\n", errcode, message);
+}
+
+static void handleDiscordError(int errcode, const char* message)
+{
+	DevMsg("Discord: Error (%d: %s)\n", errcode, message);
+}
+
+static void handleDiscordJoin(const char* secret)
+{
+}
+
+static void handleDiscordSpectate(const char* secret)
+{
+}
+
+static void handleDiscordJoinRequest(const DiscordJoinRequest* request)
+{
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Constructor
 //-----------------------------------------------------------------------------
@@ -1092,6 +1134,29 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	MountExtraContent();
 
+#ifdef TF_CLASSIC_CLIENT
+	// discord
+	DiscordEventHandlers handlers;
+	memset(&handlers, 0, sizeof(handlers));
+	handlers.ready = handleDiscordReady;
+	handlers.disconnected = handleDiscordDisconnected;
+	handlers.errored = handleDiscordError;
+	handlers.joinGame = handleDiscordJoin;
+	handlers.spectateGame = handleDiscordSpectate;
+	handlers.joinRequest = handleDiscordJoinRequest;
+	Discord_Initialize(DISCORD_APP_ID, &handlers, 1, STEAM_APP_ID);
+
+	if (!g_bTextMode)
+	{
+		DiscordRichPresence discordPresence;
+		memset(&discordPresence, 0, sizeof(discordPresence));
+		discordPresence.state = "In-Game";
+		discordPresence.details = "Main Menu";
+		discordPresence.largeImageKey = "lfe_large";
+		Discord_UpdatePresence(&discordPresence);
+	}
+#endif
+
 	return true;
 }
 
@@ -1215,6 +1280,11 @@ void CHLClient::Shutdown( void )
 	ShutdownDataModel();
 	DisconnectDataModel();
 	ShutdownFbx();
+#endif
+
+#ifdef TF_CLASSIC_CLIENT
+	// discord
+	Discord_Shutdown();
 #endif
 	
 	// This call disconnects the VGui libraries which we rely on later in the shutdown path, so don't do it
@@ -1629,6 +1699,22 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 	}
 #endif
 
+#ifdef TF_CLASSIC_CLIENT
+//Discord
+	if (!g_bTextMode)
+	{
+		char buffer[256];
+		DiscordRichPresence discordPresence;
+		memset(&discordPresence, 0, sizeof(discordPresence));
+		discordPresence.state = "In-Game";
+		//sprintf(buffer, "Campaign: %s, Map: %s, Difficulty: %s, Time: %i", szCampaignName, szMapName, szDifficulty, iTimeSinceMapLoad);
+		sprintf(buffer, "Map: %s", pMapName);
+		discordPresence.details = buffer;
+		discordPresence.largeImageKey = "lfe_large";
+		Discord_UpdatePresence(&discordPresence);
+	}
+#endif
+
 	// Check low violence settings for this map
 	g_RagdollLVManager.SetLowViolence( pMapName );
 
@@ -1636,10 +1722,11 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 #if defined( REPLAY_ENABLED )
 	// Initialize replay ragdoll recorder
-	if ( !engine->IsPlayingDemo() )
+	if (!engine->IsPlayingDemo())
 	{
 		CReplayRagdollRecorder::Instance().Init();
 	}
+	
 #endif
 }
 
@@ -1723,6 +1810,19 @@ void CHLClient::LevelShutdown( void )
 	internalCenterPrint->Clear();
 
 	messagechars->Clear();
+
+#ifdef TF_CLASSIC_CLIENT
+	// discord
+	if (!g_bTextMode)
+	{
+		DiscordRichPresence discordPresence;
+		memset(&discordPresence, 0, sizeof(discordPresence));
+		discordPresence.state = "In-Game";
+		discordPresence.details = "Main Menu";
+		discordPresence.largeImageKey = "lfe_large";
+		Discord_UpdatePresence(&discordPresence);
+	}
+#endif
 
 #if !( defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT ) )
 	// don't want to do this for TF2 because we have particle systems in our

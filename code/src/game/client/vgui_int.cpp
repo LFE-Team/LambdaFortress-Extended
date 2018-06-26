@@ -36,7 +36,6 @@
 #include "tf_mainmenu.h"
 #include "tf_mainmenu_interface.h"
 #include "tier0/icommandline.h"
-#include "discord/discordutils.h"
 #endif
 
 using namespace vgui;
@@ -274,6 +273,7 @@ void VGui_Shutdown()
 	// Make sure anything "marked for deletion"
 	//  actually gets deleted before this dll goes away
 	vgui::ivgui()->RunFrame();
+
 }
 
 static ConVar cl_showpausedimage( "cl_showpausedimage", "1", 0, "Show the 'Paused' image when game is paused." );
