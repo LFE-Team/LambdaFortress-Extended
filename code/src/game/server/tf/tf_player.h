@@ -447,6 +447,7 @@ public:
 	int		no_dispenser_message;
 	
 	CNetworkVar( bool, m_bSaveMeParity );
+	CNetworkVar(bool, m_bHasLongJump);
 
 	// teleporter variables
 	int		no_entry_teleporter_message;

@@ -183,6 +183,9 @@ public:
 	bool	MegaPhyscannonActive(void) { return m_bMegaPhysgun; }
 
 	CNetworkVar(bool, m_bMegaPhysgun);
+	bool	LongJumpActive(void) { return m_bLongJump; }
+
+	CNetworkVar(bool, m_bLongJump);
 
 #ifdef GAME_DLL
 public:

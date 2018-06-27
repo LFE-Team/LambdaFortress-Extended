@@ -50,6 +50,7 @@ ConVar sv_ladderautomountdot( "sv_ladderautomountdot", "0.4", FCVAR_REPLICATED, 
 ConVar sv_ladder_useonly( "sv_ladder_useonly", "0", FCVAR_REPLICATED, "If set, ladders can only be mounted by pressing +USE" );
 
 #define TF_MAX_SPEED   520
+#define PLAYER_LONGJUMP_SPEED 350 // how fast we longjump
 
 #define TF_WATERJUMP_FORWARD  30
 #define TF_WATERJUMP_UP       300
@@ -571,6 +572,21 @@ bool CTFGameMovement::CheckJumpButton()
 	else
 	{
 		mv->m_vecVelocity[2] += flMul;  // 2 * gravity * jump_height * ground_factor
+	}
+	//if (m_pTFPlayer->m_bHasLongJump &&
+	if (TFGameRules()->LongJumpActive() == true &&
+		(mv->m_nButtons & IN_DUCK) &&
+		(m_pTFPlayer->m_Local.m_flDucktime > 0) &&
+		mv->m_vecVelocity.Length() > 50)
+	{
+		m_pTFPlayer->m_Local.m_vecPunchAngle.Set(PITCH, -5);
+
+		mv->m_vecVelocity = m_vecForward * PLAYER_LONGJUMP_SPEED * 1.6;
+		mv->m_vecVelocity.z = sqrt(2 * 800 * 56.0);
+	}
+	else
+	{
+		mv->m_vecVelocity[2] = flGroundFactor * sqrt(2 * 800 * 45.0);  // 2 * gravity * height
 	}
 
 	// Apply gravity.

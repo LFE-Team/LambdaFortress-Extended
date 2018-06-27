@@ -782,6 +782,20 @@ void CTFLogicVersus::Spawn(void)
 	BaseClass::Spawn();
 }
 
+class CTFLogicLongJump : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicLongJump, CBaseEntity);
+	void	Spawn(void);
+};
+
+LINK_ENTITY_TO_CLASS(lfe_logic_longjump, CTFLogicLongJump);
+
+void CTFLogicLongJump::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
 class CTFLogicZombieSurvival : public CBaseEntity
 {
 public:
@@ -2740,6 +2754,14 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 						return;
 				}
 			}
+		}
+		if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_longjump"))
+		{
+			m_bLongJump = true;
+		}
+		else
+		{
+			m_bLongJump = false;
 		}
 
 		if (physcannon_mega_enabled.GetBool() == true)

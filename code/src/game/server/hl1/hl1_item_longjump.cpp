@@ -34,14 +34,11 @@ public:
 	{
 		CHL1_Player *pHL1Player = (CHL1_Player*)pPlayer;
 
-		if ( pHL1Player->m_bHasLongJump == true )
-		{
-			return false;
-		}
 
 		if ( pHL1Player->IsSuitEquipped() )
 		{
 			pHL1Player->m_bHasLongJump = true;// player now has longjump module
+			CreateEntityByName("lfe_logic_longjump", -1);
 
 			CSingleUserRecipientFilter user( pHL1Player );
 			user.MakeReliable();

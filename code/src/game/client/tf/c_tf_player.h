@@ -435,6 +435,7 @@ public:
 	CHandle<C_PlayerAttachedModel> m_hPowerupShield;
 
 	bool			m_bTyping;
+	bool			m_bHasLongJump;
 	CNewParticleEffect	*m_pTypingEffect;
 
 	CNewParticleEffect *m_pOverhealEffect;
