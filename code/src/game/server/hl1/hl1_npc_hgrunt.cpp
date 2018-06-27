@@ -879,7 +879,8 @@ void CNPC_HGrunt::TraceAttack(const CTakeDamageInfo &inputInfo, const Vector &ve
 //=========================================================
 int CNPC_HGrunt::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
 {
-	if ( inputInfo.GetAttacker()->GetTeamNumber() == 3 )
+	//if ( inputInfo.GetAttacker()->GetTeamNumber() == 3 )
+	if (inputInfo.GetAttacker()->GetTeamNumber() == this->GetTeamNumber())
 	{
 		return 0;
 	}
