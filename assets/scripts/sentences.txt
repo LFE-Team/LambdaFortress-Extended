@@ -3136,124 +3136,26 @@ CONSCRIPT_MAD4 npc/conscript/ba_endline {Len 1.54}
 CONSCRIPT_MAD5 npc/conscript/ba_dontmake {Len 1.77}
 CONSCRIPT_MAD6 npc/conscript/ba_tomb {Len 1.66}
 
-
 // ROBO GRUNTS
-RG_GREN0 hgrunt/clik(p120) grenade! clik {Len 1.17}
-RG_GREN1 hgrunt/(t30) clik take!(e75) cover!(s5) clik {Len 0.95}
-RG_GREN2 hgrunt/clik clik oh! shit! clik {Len 1.59}
-RG_GREN3 hgrunt/(p110 t40) clik(p120) get!(e78) down!(t30) clik {Len 0.78}
-RG_GREN4 hgrunt/clik(p110) (t40) of!(e75) god! clik(p110) {Len 0.82}
-RG_GREN5 hgrunt/clik no! clik {Len 0.91}
-RG_GREN6 hgrunt/clik move! clik(p120) {Len 1.04}
-
-// Player Alert
-RG_ALERT0 hgrunt/(t30) squad!, we!(e80) got!(e80) freeman!(t20 p105), clik(p110) {Len 2.14}
-RG_ALERT1 hgrunt/clik(p110) target! clik {Len 1.13}
-RG_ALERT2 hgrunt/clik movement! clik {Len 1.18}
-RG_ALERT3 hgrunt/(t40) shit!(t20), (t50) we! got! hostiles!(p120 t0) clik {Len 2.07}
-RG_ALERT4 hgrunt/(t20) clik(p110) squad!, get!(e80) freeman!, clik(p110) clik {Len 2.37}
-RG_ALERT5 hgrunt/(t20) clik squad!, neutralize!(e90) freeman! clik {Len 2.67}
-RG_ALERT6 hgrunt/(t30) clik clik move!(e75) in! clik(p120) {Len 1.06}
-
-// Monster Alert
-RG_MONST0 hgrunt/clik(p110) (t50) bogies!(t0), my! sector!(t0) clik {Len 2.28}
-RG_MONST1 hgrunt/clik(p110) (t40) clik(p120) we!(e75) got! bogies! clik {Len 1.30}
-RG_MONST2 hgrunt/clik clik (t30) alien!(e85) alert! clik {Len 1.46}
-RG_MONST3 hgrunt/clik clik (t30) alien!(e85) movement!(t0) clik(p120) {Len 1.72}
-
-// Take cover
-RG_COVER0 hgrunt/clik (t30) take! cover!(t0) clik {Len 1.38}
-RG_COVER1 hgrunt/clik (t45) (e75) I!(e80) need!(e80) suppressing!(t20) fire!(t10) clik {Len 1.79}
-RG_COVER2 hgrunt/clik (t45) we! need! backup!(t10) clik {Len 1.58}
-RG_COVER3 hgrunt/clik(p120) (t40) two!(e75) hot!(e80) here! clik {Len 1.14}
-RG_COVER4 hgrunt/clik(p110) (t30) fall!(e80) out! clik clik {Len 1.17}
-RG_COVER5 hgrunt/clik(p120) (t20) clear! this! area! clik {Len 1.69}
-RG_COVER6 hgrunt/clik (t40) god! damn! clik {Len 1.05}
-RG_COVER7 hgrunt/clik (t40) cover!(e75) fire! clik {Len 0.95}
-
-// Throw grenade
-RG_THROW0 hgrunt/clik(p120) (t40) fire!(e90) in!(e90) the!(e60) hole!(e100) clik {Len 1.37}
-RG_THROW1 hgrunt/clik (t30) take!(e75) this!(e100 t0) clik {Len 1.03}
-RG_THROW2 hgrunt/clik (t35) fire in the(e50) hole clik(p120) {Len 1.66}
-RG_THROW3 hgrunt/clik(p110) (t35 e80) squad, stay down clik {Len 1.51}
- 
-// Taunt
-RG_TAUNT0 hgrunt/clik (t30 e75) uhh, we got heavy fire here clik {Len 2.05}
-RG_TAUNT1 hgrunt/clik(p120) (t40) roger, hold position clik {Len 1.82}
-RG_TAUNT2 hgrunt/clik (t40) we!(e80) will!(e75) kick!(e80) your!(e75) ass! clik {Len 1.55}
-RG_TAUNT3 hgrunt/clik (t40) mister, you(e75) are going down clik {Len 2.28}
-RG_TAUNT4 hgrunt/clik(p120) (t40) you got nothing clik {Len 1.45}
-RG_TAUNT5 hgrunt/clik(p110) (t40) request! backup! clik(p120) clik {Len 1.32}
-
-// Charge
-RG_CHARGE0 hgrunt/clik (t40) go! recon! clik(p120) {Len 1.21}
-RG_CHARGE1 hgrunt/clik(p110) (t40) move!(e75) in! clik {Len 0.84}
-RG_CHARGE2 hgrunt/clik go! clik(p120) {Len 0.91}
-RG_CHARGE3 hgrunt/clik lets! go! clik(p120) {Len 1.37}
-
-// Idle
-RG_IDLE0 hgrunt/gr_idle1 {Len 2.97}
-RG_IDLE1 hgrunt/gr_idle2 {Len 2.50}
-RG_IDLE2 hgrunt/gr_idle3 {Len 2.50}
-
-RG_QUEST0 hgrunt/clik (t25) stay(e80) alert people clik(p120) {Len 1.83}
-RG_QUEST1 hgrunt/clik (t30) radio(e75) check, over clik(p120) {Len 1.65}
-RG_QUEST2 hgrunt/clik (t20) maintain lookout clik(p120) {Len 1.56}
-RG_QUEST3 hgrunt/clik(p110) (t30) squad, quiet(e75) down clik(p120) {Len 1.92}
-RG_QUEST4 hgrunt/clik(p120) (t30) hold position, clik {Len 1.58}
-RG_QUEST5 hgrunt/clik(p120) (t30) sweep(e80) that sector, clik(p120) clik(p120) {Len 1.85}
-RG_QUEST6 hgrunt/clik(p120) (t30) uhh, go tango sweep formation clik(p120) clik(p120) {Len 3.12}
-RG_QUEST7 hgrunt/clik(p120) (t30) echo(e75) mission is go clik(p120) clik(p120) {Len 2.05}
-RG_QUEST8 hgrunt/clik(p110) (t30) fire(e75) team, weapons(e75) check ok clik(p120) clik {Len 2.72}
-RG_QUEST9 hgrunt/clik(p110) (t30) fire(e75) team, objective foxtrot niner clik(p120) {Len 3.20}
-RG_QUEST10 hgrunt/clik (t30) ok(e75) mission, zero(e75) niner clik {Len 2.33}
-RG_QUEST11 hgrunt/clik (t30) squad, stay(e80) alert(e80) four freeman, over clik {Len 3.53}
-
-RG_ANSWER0 hgrunt/clik(p110) (t20) uhh roger(e75) that, clik(p120) clik {Len 1.87}
-RG_ANSWER1 hgrunt/clik(p120) (t10) yessir clik {Len 1.06}
-RG_ANSWER2 hgrunt/clik(p120) (t30) affirmative, sir clik {Len 1.57}
-RG_ANSWER3 hgrunt/clik (t30) negative clik(p120) clik {Len 0.94}
-RG_ANSWER4 hgrunt/clik(p105) (t30) roger clik {Len 0.84}
-RG_ANSWER5 hgrunt/clik(p105) (t30) ok control clik {Len 1.46}
-RG_ANSWER6 hgrunt/clik(p105) (t30) that(e75) is, uhh, affirmative clik {Len 2.31}
-
-RG_CLEAR0 hgrunt/clik(p130) (t30) all(e75) clear sir, clik {Len 1.65}
-RG_CLEAR1 hgrunt/clik (t30) bravo(e75) post, clear clik(p120) {Len 1.70}
-RG_CLEAR2 hgrunt/clik(p110) (t30) delta(e75) team, clear clik(p120) {Len 1.62}
-RG_CLEAR3 hgrunt/clik(p110) (t40) no sign hostiles sir, over clik(p120) {Len 2.62}
-RG_CLEAR4 hgrunt/clik (t30) no(e80) sign objective sir, over clik(p120) {Len 2.77}
-RG_CLEAR5 hgrunt/clik (t30) no(e75) movement this level clik(p120) {Len 1.91}
-RG_CLEAR6 hgrunt/clik(p120) (t28) sir, sector secure, over clik(p120) clik(p120) {Len 2.76}
-RG_CLEAR7 hgrunt/clik(p120) (t30) command(e75) post, team in position, over clik {Len 3.13}
-RG_CLEAR8 hgrunt/clik (t30) recon, in(e75) position, all quiet clik(p120) {Len 2.88}
-RG_CLEAR9 hgrunt/clik(p110) (t30) lookout(e90) post, all quiet, over clik(p110) {Len 2.70}
-RG_CLEAR10 hgrunt/clik (t40) sir, I(e80) here(e75) something clik {Len 1.72}
-RG_CLEAR11 hgrunt/clik(p120) (t30) sir, uhh, zero movement, over clik {Len 3.20}
-RG_CLEAR12 hgrunt/clik (t30) area secure sir, over clik(p120) {Len 2.30}
-
-RG_CHECK0 hgrunt/clik (t30) ok, check(e75) in clik {Len 1.63}
-RG_CHECK1 hgrunt/clik(p110) (t30) squad, are(e80) hostiles clear clik(p120) {Len 2.72}
-RG_CHECK2 hgrunt/clik (t30) check(e80) in people clik {Len 1.40}
-RG_CHECK3 hgrunt/clik (t30) lookout, check(e75) in clik(p110) {Len 1.53}
-RG_CHECK4 hgrunt/clik (t30) recon(e90) team, check(e80) in clik {Len 2.09}
-RG_CHECK5 hgrunt/clik(p130) (t30) movement check, over clik {Len 1.80}
-RG_CHECK6 hgrunt/clik (t30) check your zone, over, clik {Len 2.43}
-RG_CHECK7 hgrunt/clik (t30) everything(e85) ok(e75) there, clik(p130) {Len 1.66}
-
-//narrative
-
-RG_SNOOP1A hgrunt/c2a2_hg_chat1a {Len 2.65}
-RG_SNOOP2A hgrunt/c2a2_hg_chat2a {Len 1.95}
-RG_SNOOP3A hgrunt/c2a2_hg_chat3a {Len 5.04}
-RG_SNOOP4A hgrunt/c2a2_hg_chat4a {Len 4.69}
-RG_SNOOP5A hgrunt/c2a2_hg_chat5a {Len 4.59}
-
-RG_DRAG1A hgrunt/c2a3_hg_1drag {Len 2.17}
-RG_DRAG2A hgrunt/c2a3_hg_2drag {Len 1.84}
-RG_DRAG3A hgrunt/c2a3_hg_3drag {Len 3.48}
-RG_DRAG4A hgrunt/c2a3_hg_4drag {Len 2.64}
-RG_DRAG5A hgrunt/c2a3_hg_5drag {Len 2.19}
-RG_DRAG6A hgrunt/c2a3_hg_laugh {Len 2.94}
-
-RG_SUCKS hgrunt/hg_sucks {Len 6.35}
-RG_CIVVIES hgrunt/hg_civvies {Len 6.73}
+RG_GREN0 vox/danger bizwarn {Len 1.17}
+RG_GREN1 vox/dadeda emergency evacuate {Len 0.95}
+RG_ALERT0 vox/target acquired {Len 2.14}
+RG_ALERT1 vox/alert, unauthorized personnel {Len 1.13}
+RG_MONST0 vox/alert {Len 2.28}
+RG_MONST1 vox/target acquired {Len 1.30}
+RG_COVER0 vox/dadeda {Len 1.38}
+RG_COVER1 vox/bizwarn {Len 1.79}
+RG_THROW0 vox/buzzwarn grenade activated {Len 1.37}
+RG_TAUNT0 vox/die dirt bag {Len 2.05}
+RG_TAUNT1 vox/mister, i will kit your ass {Len 1.82}
+RG_CHARGE0 vox/accelerating {Len 1.21}
+RG_CHARGE1 vox/engage {Len 0.84}
+RG_QUEST0 vox/status {Len 1.83}
+RG_QUEST1 vox/question, status {Len 1.65}
+RG_ANSWER0 vox/green {Len 1.87}
+RG_ANSWER1 vox/status is green {Len 1.06}
+RG_CLEAR0 vox/search ing for hostile force {Len 1.65}
+RG_CLEAR1 vox/search ing sector {Len 1.70}
+RG_CHECK0 vox/status report {Len 1.63}
+RG_CHECK1 vox/check ing communication relay {Len 2.72}
+RG_IDLE0 vox/i am supercooled {Len 2.97}
