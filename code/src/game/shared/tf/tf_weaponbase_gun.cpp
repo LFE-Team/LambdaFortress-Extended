@@ -528,9 +528,6 @@ CBaseEntity *CTFWeaponBaseGun::FireRocket( CTFPlayer *pPlayer, int iType )
 	//case TF_PROJECTILE_GRAPPLINGHOOK:
 		pProjectile = CTFProjectile_Arrow::Create( this, vecSrc, angForward, GetProjectileSpeed(), GetProjectileGravity(), pPlayer, pPlayer, iType );
 		break;
-	case TF_PROJECTILE_PLASMA:
-		pProjectile = CTFProjectile_Plasma::Create( this, vecSrc, angForward, pPlayer, pPlayer );
-		break;
 	default:
 		Assert( false );
 		break;
@@ -621,23 +618,18 @@ CBaseEntity *CTFWeaponBaseGun::FireGrenade( CTFPlayer *pPlayer, int iType )
 
 	CTFWeaponBaseGrenadeProj *pProjectile = NULL;
 
-	switch( iType )
+	switch (iType)
 	{
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE_PRACTICE:
-		pProjectile = CTFGrenadeStickybombProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
-			pPlayer, this );
+		pProjectile = CTFGrenadeStickybombProjectile::Create(vecSrc, pPlayer->EyeAngles(), vecVelocity,
+			AngularImpulse(600, random->RandomInt(-1200, 1200), 0),
+			pPlayer, this);
 		break;
 	case TF_PROJECTILE_PIPEBOMB:
-		pProjectile = CTFGrenadePipebombProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
-			pPlayer, this );
-		break;
-	case TF_PROJECTILE_MIRV:
-		pProjectile = CTFGrenadeMirvProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
-			pPlayer, this );
+		pProjectile = CTFGrenadePipebombProjectile::Create(vecSrc, pPlayer->EyeAngles(), vecVelocity,
+			AngularImpulse(600, random->RandomInt(-1200, 1200), 0),
+			pPlayer, this);
 		break;
 	}
 

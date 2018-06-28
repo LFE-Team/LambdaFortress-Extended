@@ -65,7 +65,7 @@ DESCRIPTION INFO_OPTIONS
 		"#TF_autoreload"
 		"#Tooltip_autoreload"
 		{ BOOL }
-		{ "1" }
+		{ "0" }
 	}
 	
 	"hud_fastswitch"
@@ -564,14 +564,6 @@ DESCRIPTION INFO_OPTIONS
 		"#TF_OptionCategory_Extended"
 		{ CATEGORY }
 	}
-
-	"tf2c_model_muzzleflash"
-	{
-		"#TFOption_modelmuzzleflash"
-		{ BOOL }
-		{ "1" }
-	}
-
 	"tf2c_ammobucket"
 	{
 		"#TFOption_ammobucket"
