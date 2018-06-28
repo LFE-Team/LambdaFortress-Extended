@@ -39,6 +39,7 @@
 #include	"scripted.h"
 #include	"hl1_basegrenade.h"
 #include	"hl1_grenade_mp5.h"
+#include	"hl1_npc_hgrunt.h"
 
 ConVar	sk_rgrunt_health("sk_rgrunt_health", "50");
 ConVar  sk_rgrunt_kick("sk_rgrunt_kick", "10");
@@ -237,7 +238,7 @@ void CNPC_RGrunt::Spawn()
 	SetMoveType(MOVETYPE_STEP);
 	m_bloodColor = BLOOD_COLOR_RED;
 	ClearEffects();
-	m_iHealth = sk_rgrunt_health.GetFloat() * 1.5;
+	m_iHealth = sk_hgrunt_health.GetFloat() * 1.5;
 	m_flFieldOfView = 0.2;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_NPCState = NPC_STATE_NONE;
 	m_flNextGrenadeCheck = gpGlobals->curtime + 1;
@@ -338,6 +339,8 @@ void CNPC_RGrunt::Precache()
 	PrecacheScriptSound("HGrunt.Shotgun");
 	PrecacheScriptSound("HGrunt.Pain");
 	PrecacheScriptSound("HGrunt.Die");
+	PrecacheScriptSound("HGrunt.9MM_HD");
+	PrecacheScriptSound("HGrunt.Shotgun_HD");
 
 	BaseClass::Precache();
 
@@ -708,7 +711,7 @@ int CNPC_RGrunt::GetGrenadeConditions(float flDot, float flDist)
 		// estimate position
 		if (HasCondition(COND_SEE_ENEMY))
 		{
-			vecTarget = vecTarget + ((vecTarget - GetAbsOrigin()).Length() / sk_rgrunt_gspeed.GetFloat()) * GetEnemy()->GetAbsVelocity();
+			vecTarget = vecTarget + ((vecTarget - GetAbsOrigin()).Length() / sk_hgrunt_gspeed.GetFloat()) * GetEnemy()->GetAbsVelocity();
 		}
 	}
 
@@ -763,7 +766,7 @@ int CNPC_RGrunt::GetGrenadeConditions(float flDot, float flDist)
 		QAngle angGunAngles;
 		GetAttachment("0", vGunPos, angGunAngles);
 
-		Vector vecToss = VecCheckThrow(this, vGunPos, vecTarget, sk_rgrunt_gspeed.GetFloat(), 0.5);
+		Vector vecToss = VecCheckThrow(this, vGunPos, vecTarget, sk_hgrunt_gspeed.GetFloat(), 0.5);
 
 		if (vecToss != vec3_origin)
 		{
@@ -1155,14 +1158,14 @@ void CNPC_RGrunt::HandleAnimEvent(animevent_t *pEvent)
 
 			CPASAttenuationFilter filter3(this);
 			// the first round of the three round burst plays the sound and puts a sound in the world sound list.
-			EmitSound(filter3, entindex(), "HGrunt.9MM");
+			EmitSound(filter3, entindex(), "HGrunt.9MM_HD");
 		}
 		else
 		{
 			Shotgun();
 
 			CPASAttenuationFilter filter4(this);
-			EmitSound(filter4, entindex(), "HGrunt.Shotgun");
+			EmitSound(filter4, entindex(), "HGrunt.Shotgun_HD");
 		}
 
 		CSoundEnt::InsertSound(SOUND_COMBAT, GetAbsOrigin(), 384, 0.3);
@@ -1192,7 +1195,7 @@ void CNPC_RGrunt::HandleAnimEvent(animevent_t *pEvent)
 			{
 				pHurt->ApplyAbsVelocityImpulse(forward * 100 + up * 50);
 
-				CTakeDamageInfo info(this, this, sk_rgrunt_kick.GetFloat() * 1.5, DMG_CLUB);
+				CTakeDamageInfo info(this, this, sk_hgrunt_kick.GetFloat() * 1.5, DMG_CLUB);
 				CalculateMeleeDamageForce(&info, forward, pHurt->GetAbsOrigin());
 				pHurt->TakeDamage(info);
 			}
@@ -1268,7 +1271,7 @@ void CNPC_RGrunt::Shotgun(void)
 
 	Vector	vecShellVelocity = right * random->RandomFloat(40, 90) + up * random->RandomFloat(75, 200) + forward * random->RandomFloat(-40, 40);
 	EjectShell(vecShootOrigin - vecShootDir * 24, vecShellVelocity, GetAbsAngles().y, 1);
-	FireBullets(sk_rgrunt_pellets.GetFloat() * 1.5, vecShootOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, m_iAmmoType, 0); // shoot +-7.5 degrees
+	FireBullets(sk_hgrunt_pellets.GetFloat() * 1.5, vecShootOrigin, vecShootDir, VECTOR_CONE_15DEGREES, 2048, m_iAmmoType, 0); // shoot +-7.5 degrees
 
 	DoMuzzleFlash();
 

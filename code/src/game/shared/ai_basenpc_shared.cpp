@@ -125,6 +125,11 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
+		"monster_robo_grunt",
+		TF_TEAM_BLUE,
+		0,
+	},
+	{
 		"monster_alien_grunt",
 		TF_TEAM_GREEN,
 		0,
