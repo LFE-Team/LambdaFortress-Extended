@@ -7,6 +7,10 @@
 //=============================================================================//
 #ifndef NPC_HGRUNT_H
 #define NPC_HGRUNT_H
+extern ConVar	sk_hgrunt_health;
+extern ConVar	sk_hgrunt_kick;
+extern ConVar	sk_hgrunt_pellets;
+extern ConVar	sk_hgrunt_gspeed;
 
 #include "ai_squad.h"
 #include "hl1_ai_basenpc.h"

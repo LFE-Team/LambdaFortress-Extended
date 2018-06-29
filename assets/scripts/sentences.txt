@@ -1,4 +1,4 @@
-// HALF-LIFE 2 SPEECH SYSTEM SENTENCES.
+﻿// HALF-LIFE 2 SPEECH SYSTEM SENTENCES.
 // Do not use TABS.  Separate sentence-names from wave definitions with single spaces only.
 // Sounds prefixed by "Q_" will be queued up for a while and played as soon as the NPC is allowed to speak
 
@@ -3135,3 +3135,27 @@ CONSCRIPT_MAD3 npc/conscript/ba_somuch {Len 2.62}
 CONSCRIPT_MAD4 npc/conscript/ba_endline {Len 1.54}
 CONSCRIPT_MAD5 npc/conscript/ba_dontmake {Len 1.77}
 CONSCRIPT_MAD6 npc/conscript/ba_tomb {Len 1.66}
+
+// ROBO GRUNTS
+RG_GREN0 vox/danger bizwarn {Len 1.17}
+RG_GREN1 vox/dadeda emergency evacuate {Len 0.95}
+RG_ALERT0 vox/target acquired {Len 2.14}
+RG_ALERT1 vox/alert, unauthorized personnel {Len 1.13}
+RG_MONST0 vox/alert {Len 2.28}
+RG_MONST1 vox/target acquired {Len 1.30}
+RG_COVER0 vox/dadeda {Len 1.38}
+RG_COVER1 vox/bizwarn {Len 1.79}
+RG_THROW0 vox/buzzwarn grenade activated {Len 1.37}
+RG_TAUNT0 vox/die dirt bag {Len 2.05}
+RG_TAUNT1 vox/mister, i will kit your ass {Len 1.82}
+RG_CHARGE0 vox/accelerating {Len 1.21}
+RG_CHARGE1 vox/engage {Len 0.84}
+RG_QUEST0 vox/status {Len 1.83}
+RG_QUEST1 vox/question, status {Len 1.65}
+RG_ANSWER0 vox/green {Len 1.87}
+RG_ANSWER1 vox/status is green {Len 1.06}
+RG_CLEAR0 vox/search ing for hostile force {Len 1.65}
+RG_CLEAR1 vox/search ing sector {Len 1.70}
+RG_CHECK0 vox/status report {Len 1.63}
+RG_CHECK1 vox/check ing communication relay {Len 2.72}
+RG_IDLE0 vox/i am supercooled {Len 2.97}
