@@ -1504,13 +1504,14 @@ void CTFPlayerShared::OnRemoveHalloweenTiny( void )
 void CTFPlayerShared::OnAddRagemode( void )
 {
 #ifdef GAME_DLL
+	/*
 	CTFWeaponBase *pWeapon = (CTFWeaponBase *)m_pOuter->GiveNamedItem( "tf_weapon_hammerfists" );
 	if ( pWeapon )
 	{
 		pWeapon->DefaultTouch( m_pOuter );
 		m_pOuter->Weapon_Switch( pWeapon );
 	}
-
+	*/
 	m_pOuter->TeamFortress_SetSpeed();
 #else
 	if ( m_pOuter->IsLocalPlayer() )
@@ -1530,6 +1531,7 @@ void CTFPlayerShared::OnAddRagemode( void )
 void CTFPlayerShared::OnRemoveRagemode( void )
 {
 #ifdef GAME_DLL
+	/*
 	CTFWeaponBase *pWeapon = (CTFWeaponBase *)m_pOuter->Weapon_OwnsThisID( TF_WEAPON_HAMMERFISTS );
 
 	if ( pWeapon )
@@ -1538,7 +1540,7 @@ void CTFPlayerShared::OnRemoveRagemode( void )
 		UTIL_Remove( pWeapon );
 		m_pOuter->SwitchToNextBestWeapon( NULL );
 	}
-
+	*/
 	m_pOuter->TeamFortress_SetSpeed();
 #else
 	if ( m_pOuter->IsLocalPlayer() )

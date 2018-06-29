@@ -1365,9 +1365,20 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 
 		if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE ) )
 		{
+			#ifdef TF_CLASSIC
+			// only push player if they're on the ground
+			if ( !( GetFlags() & FL_ONGROUND ) )
+			{
+				pPlayer->ViewPunch( qaViewPunch );
+			}
+			else
+			{
+				pPlayer->VelocityPunch( vecVelocityPunch );
+			}
+			#else
 			pPlayer->ViewPunch( qaViewPunch );
-
 			pPlayer->VelocityPunch( vecVelocityPunch );
+			#endif
 		}
 		else if( !pPlayer && UTIL_ShouldShowBlood(pHurt->BloodColor()) )
 		{
@@ -1695,6 +1706,7 @@ void CNPC_BaseZombie::Spawn( void )
 {
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_STEP );
+	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
 #ifdef _XBOX
 	// Always fade the corpse

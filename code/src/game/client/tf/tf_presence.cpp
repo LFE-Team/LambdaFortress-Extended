@@ -1,8 +1,7 @@
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
-// Purpose: Rich Presence support.
-// HACK: This file has also become the client wing of matchmaking. Matchmaking should
-// be re-factored to make a more complete client/server/engine interface
+// OLD Purpose: XBOX Rich Presence support.
+// NEW Purpose: Discord Rich Presence support.
 //
 //=====================================================================================//
 
@@ -12,11 +11,242 @@
 #include "tf_gamerules.h"
 #include "c_tf_team.h"
 #include "c_tf_playerresource.h"
+#include <inetchannelinfo.h>
+#include "discord/discord-rpc.h"
+#include "tf_gamerules.h"
+
+#ifdef _X360
 #include "engine/imatchmaking.h"
 #include "ixboxsystem.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+//#define DISCORD_LIBRARY_DLL "discord-rpc.dll"
+#define DISCORD_APP_ID	"460822696951939073"
+#define STEAM_APP_ID	"659635"
+
+// update once every 10 seconds. discord has an internal rate limiter of 15 seconds as well
+#define DISCORD_UPDATE_RATE 10.0f
+
+CTFDiscordRPC g_discordrpc;
+
+CTFDiscordRPC::CTFDiscordRPC()
+{
+	Q_memset(m_szLatchedMapname, 0, MAX_MAP_NAME);
+	m_bInitializeRequested = false;
+}
+
+CTFDiscordRPC::~CTFDiscordRPC()
+{
+}
+
+void CTFDiscordRPC::Shutdown()
+{
+	Discord_Shutdown();
+}
+
+void CTFDiscordRPC::Init()
+{
+	InitializeDiscord();
+	m_bInitializeRequested = true;
+
+	// make sure to call this after game system initialized
+	ListenForGameEvent( "server_spawn" );
+}
+
+void CTFDiscordRPC::RunFrame()
+{
+	if (m_bErrored)
+		return;
+
+	// NOTE: we want to run this even if they have use_discord off, so we can clear
+	// any previous state that may have already been sent
+	UpdateRichPresence();
+
+	// always run this, otherwise we will chicken & egg waiting for ready
+	//if (Discord_RunCallbacks)
+	//	Discord_RunCallbacks();
+}
+
+void CTFDiscordRPC::OnReady()
+{
+	DevMsg("[Discord] Activated");
+	ConColorMsg( Color( 114, 137, 218, 255 ), "[Discord] Activated", NULL );
+	g_discordrpc.Reset();
+}
+
+void CTFDiscordRPC::OnDiscordError(int errorCode, const char *szMessage)
+{
+	g_discordrpc.m_bErrored = true;
+	char buff[1024];
+	Q_snprintf(buff, 1024, "Discord init failed. code %d - error: %s\n", errorCode, szMessage);
+	Warning(buff);
+}
+
+void CTFDiscordRPC::SetLogo()
+{
+	m_sDiscordRichPresence.largeImageKey = "lfe_large";
+	m_sDiscordRichPresence.largeImageText = "";
+	// dont set big and small, small shows up bottom right like a notification. 
+	// class icon would be good
+	//m_sDiscordRichPresence.smallImageKey = "logo-small";
+	//m_sDiscordRichPresence.smallImageText = "";
+}
+
+void CTFDiscordRPC::InitializeDiscord()
+{
+	DiscordEventHandlers handlers;
+	Q_memset(&handlers, 0, sizeof(handlers));
+	handlers.ready = &CTFDiscordRPC::OnReady;
+	handlers.errored = &CTFDiscordRPC::OnDiscordError;
+	Discord_Initialize( DISCORD_APP_ID, &handlers, 1, STEAM_APP_ID );
+	Reset();
+}
+
+bool CTFDiscordRPC::NeedToUpdate()
+{
+	if ( m_bErrored || m_szLatchedMapname[0] == '\0')
+		return false;
+
+	return gpGlobals->curtime >= m_flLastUpdatedTime + DISCORD_UPDATE_RATE;
+}
+
+void CTFDiscordRPC::Reset()
+{
+	Q_memset( &m_sDiscordRichPresence, 0, sizeof( m_sDiscordRichPresence ) );
+	m_sDiscordRichPresence.state = "In-Menu";
+	m_sDiscordRichPresence.details = "Main Menu";
+	SetLogo();
+	Discord_UpdatePresence( &m_sDiscordRichPresence );
+}
+
+void CTFDiscordRPC::UpdatePlayerInfo()
+{
+	C_TF_PlayerResource *pResource = GetTFPlayerResource();
+	if ( !pResource )
+		return;
+
+	int maxPlayers = gpGlobals->maxClients;
+	int curPlayers = 0;
+
+	const char *pzePlayerName = NULL;
+	const char *pszGameType = "";
+
+	m_sDiscordRichPresence.state = "In-Game";
+
+	for (int i = 1; i < maxPlayers; i++)
+	{
+		if ( pResource->IsConnected( i ) )
+		{
+			
+			curPlayers++;
+			if ( pResource->IsLocalPlayer( i ) )
+			{
+				pzePlayerName = pResource->GetPlayerName( i );
+			}
+		}
+	}
+
+	if ( TFGameRules() )
+	{
+		if ( TFGameRules()->GetGameType() == TF_GAMETYPE_CTF )
+		{
+			pszGameType = "Capture The Flag";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_CP )
+		{
+			if ( TFGameRules()->IsInKothMode() )
+				pszGameType = "King of the Hill";
+			else
+				pszGameType = "Control Point";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_ARENA )
+		{
+			pszGameType = "Arena";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_ESCORT )
+		{
+			pszGameType = "Payload";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_COOP )
+		{
+			pszGameType = "Co-Op";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_BLUCOOP )
+		{
+			pszGameType = "BLU Co-Op";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_VS )
+		{
+			pszGameType = "Versus";
+		}
+		else if ( TFGameRules()->GetGameType() == TF_GAMETYPE_ZS )
+		{
+			pszGameType = "Zombie Survival";
+		}
+	}
+
+	//int iTimeLeft = TFGameRules()->GetTimeLeft();
+
+	if ( m_szLatchedHostname[0] != '\0' )
+	{
+		Q_snprintf(m_szServerInfo, DISCORD_FIELD_SIZE, "Server: %s [%d/%d] \nMap: %s \nMode: %s", m_szLatchedHostname, curPlayers, maxPlayers, m_szLatchedMapname, pszGameType );
+		//DevMsg("[Discord] sending details of '%s'\n", m_szServerInfo);
+		ConColorMsg( Color( 114, 137, 218, 255 ), "[Discord] sending details of\n '%s'\n", m_szServerInfo );
+		m_sDiscordRichPresence.details = m_szServerInfo;
+	}
+}
+
+void CTFDiscordRPC::FireGameEvent( IGameEvent *event )
+{
+	const char * type = event->GetName();
+
+	if ( Q_strcmp( type, "server_spawn" ) == 0 )
+	{
+		Q_strncpy( m_szLatchedHostname, event->GetString( "hostname" ), 255 );
+	}
+}
+
+void CTFDiscordRPC::UpdateRichPresence()
+{
+	if (!NeedToUpdate())
+		return;
+
+	m_flLastUpdatedTime = gpGlobals->curtime;
+
+	// MAP THUMBNAILS
+	//m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
+	//m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
+
+	UpdatePlayerInfo();
+	UpdateNetworkInfo();
+
+	SetLogo();
+	Discord_UpdatePresence(&m_sDiscordRichPresence);
+}
+
+
+void CTFDiscordRPC::UpdateNetworkInfo()
+{
+	//INetChannelInfo *ni = engine->GetNetChannelInfo();
+
+	// it's broken
+	//m_sDiscordRichPresence.joinSecret = ni->GetAddress();
+}
+
+void CTFDiscordRPC::LevelInit( const char *szMapname )
+{
+	Reset();
+	// we cant update our presence here, because if its the first map a client loaded,
+	// discord api may not yet be loaded, so latch
+	Q_strcpy(m_szLatchedMapname, szMapname);
+	// important, clear last update time as well
+	m_flLastUpdatedTime = max(0, gpGlobals->curtime - DISCORD_UPDATE_RATE);
+}
+
+#ifdef _X360
 
 // Global singleton
 static CTF_Presence s_presence;
@@ -531,4 +761,4 @@ void CTF_Presence::UploadStats()
 	}
 #endif
 }
-
+#endif

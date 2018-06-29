@@ -2008,11 +2008,12 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	}
 
 #ifdef TF_CLASSIC
+	/*
 	if ( pTFAttacker && pTFAttacker->GetActiveTFWeapon() && pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_HAMMERFISTS )
 	{
 		Burn( pTFAttacker, pTFAttacker->GetActiveTFWeapon() );
 	}
-
+	*/
 	if ( IsCritBoosted() )
 	{
 		subInfo.AddDamageType( DMG_CRITICAL );

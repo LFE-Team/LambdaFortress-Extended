@@ -29,7 +29,7 @@ public:
 
 #ifdef GAME_DLL
 
-	virtual int		GetWeaponID( void ) const { return TF_WEAPON_DISPLACER; }
+	virtual int		GetWeaponID( void ) const { return TF_WEAPON_PARTICLE_CANNON; }
 
 	static CTFProjectile_Plasma *Create( CBaseEntity *pWeapon, const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner = NULL, CBaseEntity *pScorer = NULL );
 	virtual void	Spawn();
@@ -60,7 +60,7 @@ class CTFProjectile_PlasmaBomb : public CTFBaseRocket
 #ifdef GAME_DLL
 	static CTFProjectile_PlasmaBomb *Create( CBaseEntity *pWeapon, const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner = NULL, CBaseEntity *pScorer = NULL );
 
-	virtual int		GetWeaponID( void ) const { return TF_WEAPON_DISPLACER; }
+	virtual int		GetWeaponID( void ) const { return TF_WEAPON_PARTICLE_CANNON; }
 
 	virtual void	Spawn( void );
 	virtual void	Precache();

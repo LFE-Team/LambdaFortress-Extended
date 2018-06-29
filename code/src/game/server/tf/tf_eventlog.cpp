@@ -52,6 +52,8 @@ public:
 		ListenForGameEvent( "teamplay_round_stalemate" );
 		ListenForGameEvent( "teamplay_round_win" );
 		ListenForGameEvent( "teamplay_game_over" );
+		ListenForGameEvent( "npc_death" );
+		ListenForGameEvent( "npc_hurt" );
 
 		return true;
 	}

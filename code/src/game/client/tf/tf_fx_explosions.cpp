@@ -38,9 +38,6 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 	case TF_WEAPON_GRENADE_MIRVBOMB:
 		pWeaponInfo = GetTFWeaponInfo( TF_WEAPON_GRENADE_MIRV );
 		break;
-	case TF_WEAPON_DISPLACER_BOMB:
-		pWeaponInfo = GetTFWeaponInfo( TF_WEAPON_DISPLACER );
-		break;
 	default:
 		pWeaponInfo = GetTFWeaponInfo( iWeaponID );
 		break;
@@ -71,16 +68,6 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 	{
 		VectorAngles( vecNormal, angExplosion );
 		bInAir = false;
-	}
-
-	// Cheating here but I don't want to add another bunch of keyvalues just for Displacer.
-	if ( iWeaponID == TF_WEAPON_DISPLACER_BOMB )
-	{
-		bIsWater = true;
-	}
-	else if ( iWeaponID == TF_WEAPON_DISPLACER )
-	{
-		bIsWater = false;
 	}
 
 	// Base explosion effect and sound.

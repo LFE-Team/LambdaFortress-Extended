@@ -59,9 +59,6 @@ $Project "Client (TF)"
 		$File	"$SRCDIR\game\shared\ai_basenpc_shared.cpp"
 		$File	"$SRCDIR\game\shared\ai_basenpc_shared.h"
 
-		$File	"$SRCDIR\game\shared\mountsteamcontent.cpp"
-		$File	"$SRCDIR\game\shared\mountsteamcontent.h"
-		
 		$Folder	"game_controls"
 		{
 				$File	"game_controls\classmenu.cpp"
@@ -314,7 +311,9 @@ $Project "Client (TF)"
 			$File	"tf\c_tf_viewmodeladdon.cpp"
 			$File	"tf\c_tf_viewmodeladdon.h"
 			$File	"tf\c_tf_dropped_weapon.cpp"
-			
+			$File	"tf\tf_hud_annotationspanel.cpp"
+			$File	"tf\tf_hud_annotationspanel.h"
+
 			$Folder	"Unused"
 			{
 				$File	"tf\tf_hud_health.cpp"
@@ -476,6 +475,10 @@ $Project "Client (TF)"
 						$File	"$SRCDIR\game\shared\tf\tf_weapon_lunchbox.h"
 						$File	"$SRCDIR\game\shared\tf\tf_weapon_physcannon.cpp"
 						$File	"$SRCDIR\game\shared\tf\tf_weapon_physcannon.h"
+						$File	"$SRCDIR\game\shared\tf\tf_weapon_physgun.cpp"
+						$File	"$SRCDIR\game\shared\tf\tf_weapon_physgun.h"
+						$File	"$SRCDIR\game\shared\tf\tf_weapon_stickbomb.cpp"
+						$File	"$SRCDIR\game\shared\tf\tf_weapon_stickbomb.h"
 					}
 					$File	"$SRCDIR\game\shared\tf\tf_weapon_bat.cpp"
 					$File	"$SRCDIR\game\shared\tf\tf_weapon_bat.h"

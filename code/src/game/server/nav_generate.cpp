@@ -3423,7 +3423,15 @@ void CNavMesh::BeginGeneration( bool incremental )
 		}
 	}
 #else
-	engine->ServerCommand( "bot_kick\n" );
+	engine->ServerCommand( "bot_kick\nnb_delete_all\n" );
+	if ( !incremental && !engine->IsDedicatedServer() )
+	{
+		CBasePlayer *pHost = UTIL_GetListenServerHost();
+		if ( pHost )
+		{
+			pHost->ChangeTeam( TEAM_SPECTATOR );
+		}
+	}
 #endif
 
 	// Right now, incrementally-generated areas won't connect to existing areas automatically.

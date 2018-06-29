@@ -3793,12 +3793,12 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		// This does smaller splotches on the guy and splats blood on the world.
 		TraceBleed( info_modified.GetDamage(), vecDir, ptr, info_modified.GetDamageType() );
 	}
-
+	/*
 	if ( pTFAttacker && pTFAttacker->GetActiveTFWeapon() && pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_HAMMERFISTS )
 	{
 		m_Shared.Burn( pTFAttacker, pTFAttacker->GetActiveTFWeapon() );
 	}
-
+	*/
 	AddMultiDamage( info_modified, this );
 }
 

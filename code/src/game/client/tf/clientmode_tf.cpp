@@ -51,6 +51,7 @@
 #include "c_tf_playerresource.h"
 
 #include "vgui/lf_loadingprogress.h"
+#include "tf_presence.h"
 
 #if defined( _X360 )
 #include "tf_clientscoreboard.h"
@@ -123,6 +124,8 @@ void CTFModeManager::LevelInit( const char *newmap )
 	}
 
 	g_ThirdPersonManager.Init();
+
+	g_discordrpc.LevelInit( newmap );
 }
 
 void CTFModeManager::LevelShutdown( void )

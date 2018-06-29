@@ -164,6 +164,10 @@ void CHLTVDirector::SetHLTVServer( IHLTVServer *hltv )
 		ListenForGameEvent( "hltv_cameraman" );
 		ListenForGameEvent( "hltv_rank_entity" );
 		ListenForGameEvent( "hltv_rank_camera" );
+		#ifdef TF_CLASSIC
+		ListenForGameEvent( "npc_death" );
+		ListenForGameEvent( "npc_hurt" );
+		#endif
 	}
 	else
 	{

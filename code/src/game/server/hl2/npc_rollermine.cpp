@@ -38,6 +38,10 @@
 #include "mapentities.h"
 #include "RagdollBoogie.h"
 #include "physics_collisionevent.h"
+
+#ifdef TF_CLASSIC
+#include "tf_gamerules.h"
+#endif
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -299,6 +303,8 @@ public:
 
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 
+	virtual bool			CanBecomeServerRagdoll(void) { return false; } // we need this or the game will fucc up
+
 	void		SetRollerSkin( void );
 
 	COutputEvent m_OnPhysGunDrop;
@@ -554,7 +560,7 @@ void CNPC_RollerMine::Spawn( void )
 
 	BaseClass::Spawn();
 
-	AddEFlags( EFL_NO_DISSOLVE );
+	AddEFlags( EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL );
 
 	CapabilitiesClear();
 	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_SQUAD );
@@ -2402,8 +2408,21 @@ void CNPC_RollerMine::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_
 	// Are we just being punted?
 	if ( reason == PUNTED_BY_CANNON )
 	{
+		#ifndef TF_CLASSIC
 		// Be stunned
 		m_flActiveTime = gpGlobals->curtime + GetStunDelay();
+		#else
+		if ( TFGameRules()->MegaPhyscannonActive() == true )
+		{
+			SetThink( &CNPC_RollerMine::PreDetonate );
+			SetNextThink(gpGlobals->curtime + random->RandomFloat( 0.1f, 0.5f ));
+		}
+		else
+		{
+			// Be stunned
+			m_flActiveTime = gpGlobals->curtime + GetStunDelay();
+		}
+		#endif
 		return;
 	}
 

@@ -46,12 +46,29 @@ void CTriggerAddTFPlayerCondition::Touch( CBaseEntity *pOther )
 	if (!PassesTriggerFilters(pOther))
 		return;
 
-	// Find our index
+	m_nCondition = 0;
+	m_flDuration = 0.0f;
+
+	// If we added him to our list, store the start time
 	EHANDLE hOther;
 	hOther = pOther;
-	int iIndex = m_hTouchingEntities.Find( hOther );
-	if ( iIndex == m_hTouchingEntities.InvalidIndex() )
-		return;
+
+	if ( pOther->IsPlayer() )
+	{
+		CTFPlayer *pPlayer = dynamic_cast<CTFPlayer*>( pOther );
+
+		if ( m_flDuration == -1 )
+		{
+			if ( pPlayer )
+			{
+				  pPlayer->m_Shared.AddCond( m_nCondition );
+			}
+			else
+			{
+				  pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -143,12 +160,21 @@ void CTriggerRemoveTFPlayerCondition::Touch( CBaseEntity *pOther )
 	if (!PassesTriggerFilters(pOther))
 		return;
 
-	// Find our index
+	m_nCondition = 0;
+
+	// If we added him to our list, store the start time
 	EHANDLE hOther;
 	hOther = pOther;
-	int iIndex = m_hTouchingEntities.Find( hOther );
-	if ( iIndex == m_hTouchingEntities.InvalidIndex() )
-		return;
+
+	if ( pOther->IsPlayer() )
+	{
+		CTFPlayer *pPlayer = dynamic_cast<CTFPlayer*>( pOther );
+
+		if ( pPlayer )
+		{
+			pPlayer->m_Shared.RemoveCond( m_nCondition );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

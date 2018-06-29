@@ -25,7 +25,6 @@
 	#include "tf_projectile_flare.h"
 	#include "tf_projectile_arrow.h"
 	#include "tf_weapon_grenade_mirv.h"
-	#include "tf_projectile_plasma.h"
 	#include "te.h"
 	#include "soundent.h"
 
@@ -232,27 +231,19 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 	case TF_PROJECTILE_FESTITIVE_ARROW:
 	case TF_PROJECTILE_FESTITIVE_HEALING_BOLT:
 	case TF_PROJECTILE_GRAPPLINGHOOK:
-	case TF_PROJECTILE_PLASMA:
 		pProjectile = FireRocket( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
 
 	case TF_PROJECTILE_SYRINGE:
-	case TF_PROJECTILE_NAIL:
 		pProjectile = FireNail( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-		break;
-
-	case TF_PROJECTILE_DART:
-		pProjectile = FireNail(pPlayer, iProjectile);
-		pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 		break;
 
 	case TF_PROJECTILE_PIPEBOMB:
 	case TF_PROJECTILE_CANNONBALL:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE_PRACTICE:
-	case TF_PROJECTILE_MIRV:
 		pProjectile = FireGrenade( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
@@ -557,28 +548,16 @@ CBaseEntity *CTFWeaponBaseGun::FireNail( CTFPlayer *pPlayer, int iSpecificNail )
 	QAngle angForward;
 	GetProjectileFireSetup( pPlayer, Vector(16,6,-8), &vecSrc, &angForward );
 
-	// Add some spread (no spread on tranq. gun)
-	if ( iSpecificNail != TF_PROJECTILE_DART )
-	{
-		float flSpread = 1.5;
+	float flSpread = 1.5;
 
-		angForward.x += RandomFloat(-flSpread, flSpread);
-		angForward.y += RandomFloat(-flSpread, flSpread);
-	}
+	angForward.x += RandomFloat(-flSpread, flSpread);
+	angForward.y += RandomFloat(-flSpread, flSpread);
 
 	CTFBaseProjectile *pProjectile = NULL;
 	switch( iSpecificNail )
 	{
 	case TF_PROJECTILE_SYRINGE:
 		pProjectile = CTFProjectile_Syringe::Create( vecSrc, angForward, pPlayer, pPlayer, IsCurrentAttackACrit() );
-		break;
-
-	case TF_PROJECTILE_NAIL:
-		pProjectile = CTFProjectile_Nail::Create(vecSrc, angForward, pPlayer, pPlayer, IsCurrentAttackACrit());
-		break;
-
-	case TF_PROJECTILE_DART:
-		pProjectile = CTFProjectile_Dart::Create(vecSrc, angForward, pPlayer, pPlayer, IsCurrentAttackACrit());
 		break;
 
 	default:
@@ -618,18 +597,18 @@ CBaseEntity *CTFWeaponBaseGun::FireGrenade( CTFPlayer *pPlayer, int iType )
 
 	CTFWeaponBaseGrenadeProj *pProjectile = NULL;
 
-	switch (iType)
+	switch( iType )
 	{
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE_PRACTICE:
-		pProjectile = CTFGrenadeStickybombProjectile::Create(vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse(600, random->RandomInt(-1200, 1200), 0),
-			pPlayer, this);
+		pProjectile = CTFGrenadeStickybombProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
+			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
+			pPlayer, this );
 		break;
 	case TF_PROJECTILE_PIPEBOMB:
-		pProjectile = CTFGrenadePipebombProjectile::Create(vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse(600, random->RandomInt(-1200, 1200), 0),
-			pPlayer, this);
+		pProjectile = CTFGrenadePipebombProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
+			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
+			pPlayer, this );
 		break;
 	}
 
