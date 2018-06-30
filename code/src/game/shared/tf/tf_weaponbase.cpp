@@ -1838,7 +1838,7 @@ const char *CTFWeaponBase::GetTracerType( void )
 		return m_szTracerName;
 	}
 
-	if ( GetWeaponID() == TF_WEAPON_MINIGUN )
+	if ( GetWeaponID() == TF_WEAPON_MINIGUN || GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV )
 		return "BrightTracer";
 
 	return BaseClass::GetTracerType();
@@ -3527,12 +3527,6 @@ int CTFWeaponBase::GetSkin()
 				break;
 			case TF_TEAM_BLUE:
 				nSkin = 1;
-				break;
-			case TF_TEAM_GREEN:
-				nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				nSkin = 3;
 				break;
 			}
 		}

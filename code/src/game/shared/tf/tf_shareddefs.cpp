@@ -320,6 +320,30 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_revolver",			// Pyro
 	"tf_weapon_revolver",			// Spy
 	"tf_weapon_revolver_secondary",	// Engineer
+
+	"tf_weapon_physcannon",			// Base weapon to translate
+	NULL,
+	"tf_weapon_physcannon",			// Scout
+	"tf_weapon_physcannon",			// Sniper
+	"tf_weapon_physcannon",			// Soldier
+	"tf_weapon_physcannon",			// Demoman
+	"tf_weapon_physcannon",			// Medic
+	"tf_weapon_physcannon",			// Heavy
+	"tf_weapon_physcannon",			// Pyro
+	"tf_weapon_physcannon",			// Spy
+	"tf_weapon_physcannon_secondary",	// Engineer
+
+	"tf_weapon_physgun",			// Base weapon to translate
+	NULL,
+	"tf_weapon_physgun",			// Scout
+	"tf_weapon_physgun",			// Sniper
+	"tf_weapon_physgun",			// Soldier
+	"tf_weapon_physgun",			// Demoman
+	"tf_weapon_physgun",			// Medic
+	"tf_weapon_physgun",			// Heavy
+	"tf_weapon_physgun",			// Pyro
+	"tf_weapon_physgun",			// Spy
+	"tf_weapon_physgun_secondary",	// Engineer
 };
 
 //-----------------------------------------------------------------------------
@@ -619,6 +643,26 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_COMPOUND_BOW,
 	TF_WEAPON_FLAMETHROWER,
 	TF_WEAPON_JAR_MILK,
+	TF_WEAPON_CROSSBOW,
+	TF_WEAPON_DRG_POMSON,
+	TF_WEAPON_DRG_POMSON,
+	TF_WEAPON_GRENADELAUNCHER,
+	TF_WEAPON_CLEAVER,
+	TF_WEAPON_GRENADELAUNCHER,
+	TF_WEAPON_PIPEBOMBLAUNCHER,
+	TF_WEAPON_SHOTGUN_BUILDING_RESCUE,
+	TF_WEAPON_COMPOUND_BOW,
+	TF_WEAPON_JAR,
+	TF_WEAPON_SPELLBOOK,
+	TF_WEAPON_JAR,
+	TF_WEAPON_COMPOUND_BOW,
+	TF_WEAPON_JAR,
+	TF_WEAPON_JAR_MILK,
+	TF_WEAPON_GRAPPLINGHOOK,
+	TF_WEAPON_SENTRY_ROCKET,
+	TF_WEAPON_JAR,
+	TF_WEAPON_JAR_GAS,
+	TF_WEPON_FLAME_BALL,
 };
 
 const char *g_pszHintMessages[] =

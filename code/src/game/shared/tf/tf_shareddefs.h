@@ -91,8 +91,6 @@ enum
 #define PANEL_CLASS_YELLOW		"class_yellow"
 #define PANEL_MAPINFO			"mapinfo"
 #define PANEL_ROUNDINFO			"roundinfo"
-#define PANEL_FOURTEAMSCOREBOARD "fourteamscoreboard"
-#define PANEL_FOURTEAMSELECT	"fourteamselect"
 #define PANEL_DEATHMATCHSCOREBOARD "deathmatchscoreboard"
 #define PANEL_ARENATEAMSELECT "arenateamselect"
 

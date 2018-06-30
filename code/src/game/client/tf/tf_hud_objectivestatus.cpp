@@ -381,14 +381,6 @@ void CTFHudTimeStatus::SetTeamBackground( void )
 				szImg = "../hud/objectives_timepanel_blue_bg";
 				break;
 
-			case TF_TEAM_GREEN:
-				szImg = "../hud/objectives_timepanel_green_bg";
-				break;
-
-			case TF_TEAM_YELLOW:
-				szImg = "../hud/objectives_timepanel_yellow_bg";
-				break;
-
 			default:
 				szImg = "../hud/objectives_timepanel_black_bg";
 				break;
@@ -1015,10 +1007,6 @@ CTFHudKothTimeStatus::CTFHudKothTimeStatus( const char *pElementName ) : CHudEle
 	m_pBlueKothTimer->m_iTeamIndex = TF_TEAM_BLUE;
 	m_pRedKothTimer = new CTFHudTimeStatus( this, "RedTimer" );
 	m_pRedKothTimer->m_iTeamIndex = TF_TEAM_RED;
-	m_pGreenKothTimer = new CTFHudTimeStatus( this, "GreenTimer" );
-	m_pGreenKothTimer->m_iTeamIndex = TF_TEAM_GREEN;
-	m_pYellowKothTimer = new CTFHudTimeStatus( this, "YellowTimer" );
-	m_pYellowKothTimer->m_iTeamIndex = TF_TEAM_YELLOW;
 
 	m_pActiveTimerBG = new ImagePanel( this, "ActiveTimerBG" );
 
@@ -1049,12 +1037,6 @@ void CTFHudKothTimeStatus::Reset( void )
 
 	if ( m_pRedKothTimer )
 		m_pRedKothTimer->Reset();
-
-	if ( m_pGreenKothTimer )
-		m_pGreenKothTimer->Reset();
-	
-	if ( m_pYellowKothTimer )
-		m_pYellowKothTimer->Reset();
 
 	UpdateActiveTeam();
 }
@@ -1095,14 +1077,6 @@ void CTFHudKothTimeStatus::UpdateActiveTeam( void )
 			{
 				m_pActiveTimerBG->SetPos( m_nRedActiveXPos, m_nOriginalActiveTimerBGYPos );
 			}
-			else if ( m_pActiveKothTimerPanel->m_iTeamIndex == TF_TEAM_GREEN )
-			{
-				m_pActiveTimerBG->SetPos( m_nGreenActiveXPos, m_nGreenActiveYPos );
-			}
-			else if ( m_pActiveKothTimerPanel->m_iTeamIndex == TF_TEAM_YELLOW )
-			{
-				m_pActiveTimerBG->SetPos( m_nYellowActiveXPos, m_nYellowActiveYPos );
-			}
 			
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "ActiveTimerBGPulse" );
 		}
@@ -1132,8 +1106,6 @@ void CTFHudKothTimeStatus::Think( void )
 		{
 			bool bDisplayBlueTimer = false;
 			bool bDisplayRedTimer = false;
-			bool bDisplayGreenTimer = false;
-			bool bDisplayYellowTimer = false;
 
 			// is the time panel still pointing at an active timer?
 			CTeamRoundTimer *pTimer = dynamic_cast< CTeamRoundTimer* >( ClientEntityList().GetEnt( m_pBlueKothTimer->GetTimerIndex() ) );
@@ -1177,47 +1149,6 @@ void CTFHudKothTimeStatus::Think( void )
 					pActiveKothTimerPanel = m_pRedKothTimer;
 			}
 
-			if ( TFGameRules()->IsFourTeamGame() )
-			{
-				// Check GRN timer
-				pTimer = dynamic_cast< CTeamRoundTimer* >( ClientEntityList().GetEnt( m_pGreenKothTimer->GetTimerIndex() ) );
-
-				if ( !pTimer )
-				{
-					pTimer = TFGameRules()->GetGreenKothRoundTimer();
-					if ( pTimer )
-						m_pGreenKothTimer->SetTimerIndex( pTimer->index );
-				}
-
-				if ( pTimer && !pTimer->IsDormant() && !pTimer->IsDisabled() )
-				{
-					// the current timer is fine, make sure the panel is visible
-					bDisplayGreenTimer = true;
-
-					if ( !pTimer->IsTimerPaused() )
-						pActiveKothTimerPanel = m_pGreenKothTimer;
-				}
-
-				// Check YLW timer
-				pTimer = dynamic_cast< CTeamRoundTimer* >( ClientEntityList().GetEnt( m_pYellowKothTimer->GetTimerIndex() ) );
-
-				if ( !pTimer )
-				{
-					pTimer = TFGameRules()->GetYellowKothRoundTimer();
-					if ( pTimer )
-						m_pYellowKothTimer->SetTimerIndex( pTimer->index );
-				}
-
-				if ( pTimer && !pTimer->IsDormant() && !pTimer->IsDisabled() )
-				{
-					// the current timer is fine, make sure the panel is visible
-					bDisplayYellowTimer = true;
-
-					if ( !pTimer->IsTimerPaused() )
-						pActiveKothTimerPanel = m_pYellowKothTimer;
-				}
-			}
-
 			if ( !m_pBlueKothTimer->IsVisible() || !m_pRedKothTimer->IsVisible() )
 			{
 				m_pBlueKothTimer->SetVisible( true ); // bDisplayBlueTimer
@@ -1228,26 +1159,6 @@ void CTFHudKothTimeStatus::Think( void )
 				{
 					g_pSpectatorGUI->InvalidateLayout();
 				}
-			}
-
-			if ( TFGameRules()->IsFourTeamGame() )
-			{
-				if ( !m_pGreenKothTimer->IsVisible() || !m_pYellowKothTimer->IsVisible() )
-				{
-					m_pGreenKothTimer->SetVisible( true ); 
-					m_pYellowKothTimer->SetVisible( true );
-
-					// If our spectator GUI is visible, invalidate its layout so that it moves the reinforcement label
-					if ( g_pSpectatorGUI )
-					{
-						g_pSpectatorGUI->InvalidateLayout();
-					}
-				}
-			}
-			else
-			{
-				m_pGreenKothTimer->SetVisible( false ); 
-				m_pYellowKothTimer->SetVisible( false );
 			}
 
 			// Set overtime panels active on our active panel (if needed)
@@ -1265,8 +1176,6 @@ void CTFHudKothTimeStatus::Think( void )
 		{
 			m_pBlueKothTimer->SetVisible( false );
 			m_pRedKothTimer->SetVisible( false );
-			m_pGreenKothTimer->SetVisible( false );
-			m_pYellowKothTimer->SetVisible( false );
 
 			m_pActiveTimerBG->SetVisible( false );
 		}

@@ -1700,14 +1700,13 @@ void CTFPlayer::ValidateWeapons( bool bRegenerate )
 			int iSlot = pItemDef->GetLoadoutSlot( iClass );
 			CEconItemView *pLoadoutItem = GetLoadoutItem( iClass, iSlot );
 
-			if ( !ItemsMatch( pWeapon->GetItem(), pLoadoutItem, pWeapon ) )
+			if ( !ItemsMatch( pWeapon->GetItem(), pLoadoutItem, pWeapon ) /*&& pWeapon->GetPosition() >= 0*/ )
 			{
 				// If this is not a weapon we're supposed to have in this loadout slot then nuke it.
 				// Either changed class or changed loadout.
+				// also nuke if it's in hl2 weapon position of a slot
 				pWeapon->Holster();
 				pWeapon->UnEquip( this );
-				UTIL_Remove( pWeapon );
-				Weapon_Detach( pWeapon );
 			}
 			else if ( bRegenerate )
 			{
@@ -1884,7 +1883,7 @@ void CTFPlayer::ManageRegularWeaponsLegacy( TFPlayerClassData_t *pData )
 			CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( iWeapon );
 
 			//If we already have a weapon in this slot but is not the same type then nuke it (changed classes)
-			if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID )
+			if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID /*&& pWeapon->GetPosition() >= 0*/ )
 			{
 				pWeapon->UnEquip( this );
 			}
@@ -2123,8 +2122,6 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	{
 	case TF_TEAM_RED:
 	case TF_TEAM_BLUE:
-	case TF_TEAM_GREEN:
-	case TF_TEAM_YELLOW:
 		{
 			bool bSuccess = false;
 			pSpawnPointName = "info_player_teamspawn";
@@ -2482,49 +2479,6 @@ int CTFPlayer::GetAutoTeam( void )
 	CTFTeam *pBlue = TFTeamMgr()->GetTeam(TF_TEAM_BLUE);
 	CTFTeam *pRed = TFTeamMgr()->GetTeam(TF_TEAM_RED);
 
-	if (TFGameRules()->IsFourTeamGame())
-	{
-		CTFTeam *pGreen = TFTeamMgr()->GetTeam(TF_TEAM_GREEN);
-		CTFTeam *pYellow = TFTeamMgr()->GetTeam(TF_TEAM_YELLOW);
-
-		if (pBlue && pRed && pGreen && pYellow)
-		{
-			if ( TFGameRules()->IsCoOp() )
-			{
-				if ( TFGameRules()->IsVersus() )
-				{
-					// Check RED for min amount of players.
-					if ( pRed->GetNumPlayers() < lf_coop_min_red_players.GetInt() )
-					{
-						iTeam = TF_TEAM_RED;
-					}
-				}
-			}
-
-			if (pBlue->GetNumPlayers() < pRed->GetNumPlayers() && pBlue->GetNumPlayers() < pGreen->GetNumPlayers() && pBlue->GetNumPlayers() < pYellow->GetNumPlayers())
-			{
-				iTeam = TF_TEAM_BLUE;
-			}
-			else if (pRed->GetNumPlayers() < pBlue->GetNumPlayers() && pRed->GetNumPlayers() < pGreen->GetNumPlayers() && pRed->GetNumPlayers() < pYellow->GetNumPlayers())
-			{
-				iTeam = TF_TEAM_RED;
-			}
-			else if (pGreen->GetNumPlayers() < pRed->GetNumPlayers() && pGreen->GetNumPlayers() < pBlue->GetNumPlayers() && pGreen->GetNumPlayers() < pYellow->GetNumPlayers())
-			{
-				iTeam = TF_TEAM_GREEN;
-			}
-			else if (pYellow->GetNumPlayers() < pRed->GetNumPlayers() && pYellow->GetNumPlayers() < pBlue->GetNumPlayers() && pYellow->GetNumPlayers() < pGreen->GetNumPlayers())
-			{
-				iTeam = TF_TEAM_YELLOW;
-			}
-			else
-			{
-				iTeam = RandomInt(2, 5);
-			}
-		}
-	}
-	else
-	{
 		if (pBlue && pRed)
 		{
 			if ( TFGameRules()->IsCoOp() )
@@ -2557,7 +2511,6 @@ int CTFPlayer::GetAutoTeam( void )
 				iTeam = RandomInt(0, 1) ? TF_TEAM_RED : TF_TEAM_BLUE;
 			}
 		}
-	}
 
 	return iTeam;
 }
@@ -2586,12 +2539,6 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 				break;
 			}
 		}
-	}
-
-	if ( iTeam > TF_TEAM_BLUE && !TFGameRules()->IsFourTeamGame() )
-	{
-		ClientPrint( this, HUD_PRINTCONSOLE, "Four player teams have been disabled!\n" );
-		return;
 	}
 
 	if (iTeam == GetTeamNumber())
@@ -2648,14 +2595,6 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 
 		case TF_TEAM_BLUE:
 			ShowViewPortPanel( PANEL_CLASS_BLUE );
-			break;
-
-		case TF_TEAM_GREEN:
-			ShowViewPortPanel( PANEL_CLASS_GREEN );
-			break;
-
-		case TF_TEAM_YELLOW:
-			ShowViewPortPanel( PANEL_CLASS_YELLOW );
 			break;
 		}
 	}
@@ -2720,12 +2659,6 @@ void CTFPlayer::HandleCommand_JoinTeam_NoKill( const char *pTeamName )
 		}
 	}
 
-	if ( iTeam > TF_TEAM_BLUE && !TFGameRules()->IsFourTeamGame() )
-	{
-		ClientPrint( this, HUD_PRINTCONSOLE, "Four player teams have been disabled!\n" );
-		return;
-	}
-
 	if (iTeam == GetTeamNumber())
 	{
 		return;	// we wouldn't change the team
@@ -2744,12 +2677,6 @@ void CTFPlayer::ForceChangeTeam( int iTeamNum )
 	if ( iNewTeam == TF_TEAM_AUTOASSIGN )
 	{
 		iNewTeam = GetAutoTeam();
-	}
-
-	if (iNewTeam > TF_TEAM_BLUE && !TFGameRules()->IsFourTeamGame())
-	{
-		Warning("Four player teams have been disabled!\n");
-		return;
 	}
 
 	if ( !GetGlobalTeam( iNewTeam ) )
@@ -2805,12 +2732,6 @@ void CTFPlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent )
 	if ( !GetGlobalTeam( iTeamNum ) )
 	{
 		Warning( "CTFPlayer::ChangeTeam( %d ) - invalid team index.\n", iTeamNum );
-		return;
-	}
-
-	if ( iTeamNum > TF_TEAM_BLUE && !TFGameRules()->IsFourTeamGame() )
-	{
-		ClientPrint( this, HUD_PRINTCONSOLE, "Four player teams have been disabled!\n" );
 		return;
 	}
 
@@ -3162,14 +3083,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 				ShowViewPortPanel( PANEL_CLASS_BLUE, true );
 				break;
 
-			case TF_TEAM_GREEN:
-				ShowViewPortPanel( PANEL_CLASS_GREEN, true );
-				break;
-
-			case TF_TEAM_YELLOW:
-				ShowViewPortPanel( PANEL_CLASS_YELLOW, true );
-				break;
-
 			default:
 				break;
 			}
@@ -3251,9 +3164,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 				
 				// intercepting the team value and reassigning what gets passed into Disguise()
 				// because the team numbers in the client menu don't match the #define values for the teams
-
-				if (TFGameRules()->IsFourTeamGame())
-				{
+				/*
 					switch (nTeam)
 					{
 					case 0:
@@ -3268,12 +3179,9 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 					case 3:
 						m_Shared.Disguise(TF_TEAM_YELLOW, nClass);
 						break;
-					}
-				}
-				else
-				{
+					}*/
+
 					m_Shared.Disguise((nTeam == 1) ? TF_TEAM_BLUE : TF_TEAM_RED, nClass);
-				}
 			}
 		}
 		return true;
@@ -3305,10 +3213,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 				{
 					nClass = random->RandomInt( TF_FIRST_NORMAL_CLASS, TF_LAST_NORMAL_CLASS );
 					
-					// PistonMiner: Added check whether or not we actually have four teams.
-					if ( TFGameRules()->IsFourTeamGame() )
-						nTeam = random->RandomInt( TF_TEAM_RED, TF_TEAM_YELLOW );
-					else
+					//	nTeam = random->RandomInt( TF_TEAM_RED, TF_TEAM_YELLOW );
 						GetTeamNumber() == TF_TEAM_BLUE ? nTeam = TF_TEAM_RED : nTeam = TF_TEAM_BLUE;
 
 				} while( nClass == TF_CLASS_SCOUT || nClass == TF_CLASS_SPY || nTeam == GetTeamNumber() );
@@ -5667,12 +5572,6 @@ void CTFPlayer::DropFakeWeapon( CTFWeaponBase *pWeapon )
 		case TF_TEAM_BLUE:
 			pAmmoPack->m_nSkin = 1;
 			break;
-		case TF_TEAM_GREEN:
-			pAmmoPack->m_nSkin = 2;
-			break;
-		case TF_TEAM_YELLOW:
-			pAmmoPack->m_nSkin = 3;
-			break;
 		}
 
 		// Give the ammo pack some health, so that trains can destroy it.
@@ -5768,12 +5667,6 @@ void CTFPlayer::DropWeapon( CTFWeaponBase *pWeapon, bool bKilled /*= false*/ )
 			break;
 		case TF_TEAM_BLUE:
 			pDroppedWeapon->m_nSkin = 1;
-			break;
-		case TF_TEAM_GREEN:
-			pDroppedWeapon->m_nSkin = 2;
-			break;
-		case TF_TEAM_YELLOW:
-			pDroppedWeapon->m_nSkin = 3;
 			break;
 		}
 
@@ -5922,31 +5815,20 @@ void CTFPlayer::UpdateSkin( int iTeam )
 	//int iSkin = iTeam - 2;
 	int iSkin;
 
-	if ( TFGameRules()->IsFourTeamGame() )
+	switch (iTeam)
 	{
-		switch (iTeam)
-		{
-		case TF_TEAM_RED:
-			iSkin = 0;
-			break;
-		case TF_TEAM_BLUE:
-			iSkin = 1;
-			break;
-		case TF_TEAM_GREEN:
-			iSkin = 4;
-			break;
-		case TF_TEAM_YELLOW:
-			iSkin = 5;
-			break;
-		default:
-			iSkin = 0;
-			break;
-		}
+	case TF_TEAM_RED:
+		iSkin = 0;
+		break;
+	case TF_TEAM_BLUE:
+		iSkin = 1;
+		break;
+	default:
+		iSkin = 0;
+		break;
 	}
-	else
-	{
-		iSkin = iTeam - 2;
-	}
+
+	//iSkin = iTeam - 2;
 
 	// Check to see if the skin actually changed.
 	if ( iSkin != m_iLastSkin )
@@ -8385,7 +8267,7 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 				criteriaSet.AppendCriteria( "sniperzoomed", "1" );
 			}
 		}
-		else if ( pActiveWeapon->GetWeaponID() == TF_WEAPON_MINIGUN )
+		else if ( pActiveWeapon->GetWeaponID() == TF_WEAPON_MINIGUN || pActiveWeapon->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV )
 		{
 			CTFMinigun *pMinigun = dynamic_cast<CTFMinigun*>(pActiveWeapon);
 			if ( pMinigun )

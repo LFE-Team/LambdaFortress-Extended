@@ -515,12 +515,6 @@ void CTFLoadoutPanel::UpdateModelWeapons( void )
 							case TF_TEAM_BLUE:
 								nSkin = 1;
 								break;
-							case TF_TEAM_GREEN:
-								nSkin = 2;
-								break;
-							case TF_TEAM_YELLOW:
-								nSkin = 3;
-								break;
 							}
 						}
 					}
@@ -572,20 +566,9 @@ void CTFLoadoutPanel::Hide()
 				gViewPortInterface->ShowPanel( PANEL_CLASS_BLUE, true );
 				break;
 
-			// should i keep this?
-			case TF_TEAM_GREEN:
-				gViewPortInterface->ShowPanel( PANEL_CLASS_GREEN, true );
-				break;
-
-			case TF_TEAM_YELLOW:
-				gViewPortInterface->ShowPanel( PANEL_CLASS_YELLOW, true );
-				break;
-
 			default:
 				gViewPortInterface->ShowPanel( PANEL_CLASS_RED, false );
 				gViewPortInterface->ShowPanel( PANEL_CLASS_BLUE, false );
-				gViewPortInterface->ShowPanel( PANEL_CLASS_GREEN, false );
-				gViewPortInterface->ShowPanel( PANEL_CLASS_YELLOW, false );
 				break;
 		}
 	}
@@ -616,12 +599,6 @@ void CTFLoadoutPanel::SetModelClass( int iClass )
 			break;
 		case TF_TEAM_BLUE:
 			nSkin = 1;
-			break;
-		case TF_TEAM_GREEN:
-			nSkin = 4;
-			break;
-		case TF_TEAM_YELLOW:
-			nSkin = 5;
 			break;
 		}
 	}

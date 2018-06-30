@@ -19,7 +19,7 @@
 // Weapon Revolver tables.
 //
 CREATE_SIMPLE_WEAPON_TABLE( TFRevolver, tf_weapon_revolver )
-//CREATE_SIMPLE_WEAPON_TABLE( TFRevolver_Secondary, tf_weapon_revolver_secondary ) // we don't need need since it's for mercenary in tf2c dm.
+CREATE_SIMPLE_WEAPON_TABLE( TFRevolver_Secondary, tf_weapon_revolver_secondary ) // engineer, anyone?
 
 //=============================================================================
 //

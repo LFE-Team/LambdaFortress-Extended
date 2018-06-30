@@ -3576,7 +3576,7 @@
 			"height"	"32"
 		}
 
-		"prop_physics"
+		"physics"
 		{
 			"dfile"	"HUD/d_images_hl2"
 			"dnegfile"	"HUD/dneg_images_hl2"
@@ -3986,7 +3986,7 @@
 			"height"	"32"
 		}
 
-		"physcannon_ragdoll"
+		"ragdoll"
 		{
 			"dfile"	"HUD/d_images_hl2"
 			"dnegfile"	"HUD/dneg_images_hl2"

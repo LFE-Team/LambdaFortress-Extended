@@ -321,14 +321,6 @@ void CObjectDispenser::GetControlPanelInfo( int nPanelIndex, const char *&pPanel
 				pPanelName = "screen_obj_dispenser_blue";
 				break;
 
-			case TF_TEAM_GREEN:
-				pPanelName = "screen_obj_dispenser_green";
-				break;
-
-			case TF_TEAM_YELLOW:
-				pPanelName = "screen_obj_dispenser_yellow";
-				break;
-
 			default:
 				pPanelName = "screen_obj_dispenser_blue";
 				break;
@@ -372,8 +364,6 @@ void CObjectDispenser::Precache()
 
 	PrecacheVGuiScreen( "screen_obj_dispenser_blue" );
 	PrecacheVGuiScreen( "screen_obj_dispenser_red" );
-	PrecacheVGuiScreen( "screen_obj_dispenser_green" );
-	PrecacheVGuiScreen( "screen_obj_dispenser_yellow" );
 
 	PrecacheScriptSound( "Building_Dispenser.Idle" );
 	PrecacheScriptSound( "Building_Dispenser.GenerateMetal" );

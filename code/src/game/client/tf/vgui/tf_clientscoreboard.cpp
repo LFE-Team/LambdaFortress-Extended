@@ -184,11 +184,7 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 
 	if ( bShow )
 	{
-		if ( TFGameRules() && TFGameRules()->IsFourTeamGame())
-		{
-			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSCOREBOARD, true );
-		}
-		else if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+		if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsBluCoOp() || TFGameRules()->IsZombieSurvival() )
 		{
 			LoadControlSettings("Resource/UI/scoreboard_coop.res");
 			m_pPlayerListBlue->SetVisible( false );
@@ -216,16 +212,9 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 	}
 	else
 	{
-		if (TFGameRules() && TFGameRules()->IsFourTeamGame())
-		{
-			gViewPortInterface->ShowPanel( PANEL_FOURTEAMSCOREBOARD, false );
-		}
-		else
-		{
-			SetVisible(false);
+		SetVisible(false);
 
-			gHUD.UnlockRenderGroup(iRenderGroup);
-		}
+		gHUD.UnlockRenderGroup(iRenderGroup);
 	}
 }
 

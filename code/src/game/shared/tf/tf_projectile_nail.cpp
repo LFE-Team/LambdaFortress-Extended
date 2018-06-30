@@ -100,12 +100,6 @@ void ClientsideProjectileSyringeCallback( const CEffectData &data )
 			case TF_TEAM_BLUE:
 				pSyringe->m_nSkin = 1;
 				break;
-			case TF_TEAM_GREEN:
-				pSyringe->m_nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				pSyringe->m_nSkin = 3;
-				break;
 			}
 			bool bCritical = ( ( data.m_nDamageType & DMG_CRITICAL ) != 0 );
 			pPlayer->m_Shared.SetParticleToMercColor(
@@ -204,12 +198,6 @@ void ClientsideProjectileNailCallback( const CEffectData &data )
 			case TF_TEAM_BLUE:
 				pNail->m_nSkin = 1;
 				break;
-			case TF_TEAM_GREEN:
-				pNail->m_nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				pNail->m_nSkin = 3;
-				break;
 			}
 			bool bCritical = ( ( data.m_nDamageType & DMG_CRITICAL ) != 0 );
 			pPlayer->m_Shared.SetParticleToMercColor(
@@ -307,12 +295,6 @@ void ClientsideProjectileTranqDartCallback( const CEffectData &data )
 				break;
 			case TF_TEAM_BLUE:
 				pSyringe->m_nSkin = 1;
-				break;
-			case TF_TEAM_GREEN:
-				pSyringe->m_nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				pSyringe->m_nSkin = 3;
 				break;
 			}
 			bool bCritical = ( ( data.m_nDamageType & DMG_CRITICAL ) != 0 );

@@ -176,7 +176,7 @@ CHudWeaponSelection::CHudWeaponSelection( const char *pElementName ) : CBaseHudW
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	for (int i = 0; i < MAX_WEAPON_SLOTS; i++)
+	for (int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++)
 	{
 		char name[32];
 		Q_snprintf(name, sizeof(name), "modelpanel%i", i);
@@ -290,7 +290,7 @@ void CHudWeaponSelection::LevelInit()
 {
 	CHudElement::LevelInit();
 	
-	m_iMaxSlots = clamp( m_iMaxSlots, 0, MAX_WEAPON_SLOTS );
+	m_iMaxSlots = clamp( m_iMaxSlots, 0, TF_PLAYER_WEAPON_COUNT );
 }
 
 //-------------------------------------------------------------------------
@@ -394,7 +394,7 @@ void CHudWeaponSelection::PostChildPaint()
 			int ypos = (GetTall() - nTotalHeight) / 2;
 
 			// Draw the four buckets
-			for ( int i = 0; i < MAX_WEAPON_SLOTS; ++i )
+			for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; ++i )
 			{
 				pModelPanels[i]->SetVisible(false);
 
@@ -711,7 +711,7 @@ C_BaseCombatWeapon *CHudWeaponSelection::FindNextWeaponInWeaponSelection(int iCu
 	C_BaseCombatWeapon *pNextWeapon = NULL;
 
 	// search all the weapons looking for the closest next
-	int iLowestNextSlot = MAX_WEAPON_SLOTS;
+	int iLowestNextSlot = TF_PLAYER_WEAPON_COUNT;
 	int iLowestNextPosition = MAX_WEAPON_POSITIONS;
 	for ( int i = 0; i < MAX_WEAPONS; i++ )
 	{
@@ -881,7 +881,7 @@ void CHudWeaponSelection::CycleToPrevWeapon( void )
 	if ( !pNextWeapon )
 	{
 		// wrap around back to end of weapon list
-		pNextWeapon = FindPrevWeaponInWeaponSelection(MAX_WEAPON_SLOTS, MAX_WEAPON_POSITIONS);
+		pNextWeapon = FindPrevWeaponInWeaponSelection(TF_PLAYER_WEAPON_COUNT, MAX_WEAPON_POSITIONS);
 	}
 
 	if ( pNextWeapon )
@@ -1123,7 +1123,7 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 		return;
 
 	// Don't try and read past our possible number of slots
-	if ( iSlot > MAX_WEAPON_SLOTS )
+	if ( iSlot > TF_PLAYER_WEAPON_COUNT )
 		return;
 	
 	// Make sure the player's allowed to switch weapons

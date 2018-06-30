@@ -357,7 +357,7 @@ void CTFGameStats::Event_PlayerSpawned( CTFPlayer *pPlayer )
 	if ( !map )
 		return;
 
-	int iTeamCount = TFGameRules()->IsFourTeamGame() ? 5 : 3;
+	int iTeamCount = 3;
 
 	// calculate peak player count on each team
 	for ( iTeam = FIRST_GAME_TEAM; iTeam <= iTeamCount; iTeam++ )

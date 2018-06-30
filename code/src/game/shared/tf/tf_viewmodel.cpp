@@ -360,7 +360,7 @@ void CTFViewModel::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quatern
 	if ( !pWeapon ) 
 		return;
 
-	if ( pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN )
+	if ( pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN || pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV )
 	{
 		CTFMinigun *pMinigun = ( CTFMinigun * )pWeapon;
 
@@ -417,12 +417,6 @@ int CTFViewModel::GetSkin()
 				break;
 			case TF_TEAM_BLUE:
 				nSkin = 1;
-				break;
-			case TF_TEAM_GREEN:
-				nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				nSkin = 3;
 				break;
 			}
 		}	

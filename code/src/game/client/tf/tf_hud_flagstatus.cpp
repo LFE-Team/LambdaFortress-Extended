@@ -50,14 +50,10 @@ CTFArrowPanel::CTFArrowPanel( Panel *parent, const char *name ) : vgui::Panel( p
 {
 	m_RedMaterial.Init( "hud/objectives_flagpanel_compass_red", TEXTURE_GROUP_VGUI ); 
 	m_BlueMaterial.Init( "hud/objectives_flagpanel_compass_blue", TEXTURE_GROUP_VGUI ); 
-	m_GreenMaterial.Init("hud/objectives_flagpanel_compass_green", TEXTURE_GROUP_VGUI);
-	m_YellowMaterial.Init("hud/objectives_flagpanel_compass_yellow", TEXTURE_GROUP_VGUI);
 	m_NeutralMaterial.Init( "hud/objectives_flagpanel_compass_grey", TEXTURE_GROUP_VGUI ); 
 
 	m_RedMaterialNoArrow.Init( "hud/objectives_flagpanel_compass_red_noArrow", TEXTURE_GROUP_VGUI ); 
 	m_BlueMaterialNoArrow.Init( "hud/objectives_flagpanel_compass_blue_noArrow", TEXTURE_GROUP_VGUI ); 
-	m_GreenMaterialNoArrow.Init("hud/objectives_flagpanel_compass_green_noArrow", TEXTURE_GROUP_VGUI);
-	m_YellowMaterialNoArrow.Init("hud/objectives_flagpanel_compass_yellow_noArrow", TEXTURE_GROUP_VGUI);
 }
 
 //-----------------------------------------------------------------------------
@@ -153,44 +149,6 @@ void CTFArrowPanel::Paint()
 				if ( pTarget->HasTheFlag() && ( pTarget->GetItem() == pEnt ) )
 				{
 					pMaterial = m_BlueMaterialNoArrow;
-				}
-			}
-		}
-	}
-	else if (pEnt->GetTeamNumber() == TF_TEAM_GREEN)
-	{
-		pMaterial = m_GreenMaterial;
-
-		if (pLocalPlayer && (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE))
-		{
-			// is our target a player?
-			C_BaseEntity *pTargetEnt = pLocalPlayer->GetObserverTarget();
-			if (pTargetEnt && pTargetEnt->IsPlayer())
-			{
-				// does our target have the flag and are they carrying the flag we're currently drawing?
-				C_TFPlayer *pTarget = static_cast< C_TFPlayer* >(pTargetEnt);
-				if (pTarget->HasTheFlag() && (pTarget->GetItem() == pEnt))
-				{
-					pMaterial = m_GreenMaterialNoArrow;
-				}
-			}
-		}
-	}
-	else if (pEnt->GetTeamNumber() == TF_TEAM_YELLOW)
-	{
-		pMaterial = m_YellowMaterial;
-
-		if (pLocalPlayer && (pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE))
-		{
-			// is our target a player?
-			C_BaseEntity *pTargetEnt = pLocalPlayer->GetObserverTarget();
-			if (pTargetEnt && pTargetEnt->IsPlayer())
-			{
-				// does our target have the flag and are they carrying the flag we're currently drawing?
-				C_TFPlayer *pTarget = static_cast< C_TFPlayer* >(pTargetEnt);
-				if (pTarget->HasTheFlag() && (pTarget->GetItem() == pEnt))
-				{
-					pMaterial = m_YellowMaterialNoArrow;
 				}
 			}
 		}
@@ -383,10 +341,6 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 	m_pRedFlag = dynamic_cast<CTFFlagStatus *>( FindChildByName( "RedFlag" ) );
 	m_pBlueFlag = dynamic_cast<CTFFlagStatus *>( FindChildByName( "BlueFlag" ) );
 
-	//Not used yet
-	m_pGreenFlag = dynamic_cast<CTFFlagStatus *>( FindChildByName( "GreenFlag" ) );
-	m_pYellowFlag = dynamic_cast<CTFFlagStatus *>( FindChildByName( "YellowFlag" ) );
-
 	m_pCapturePoint = dynamic_cast<CTFArrowPanel *>( FindChildByName( "CaptureFlag" ) );
 
 	m_pSpecCarriedImage = dynamic_cast<ImagePanel *>( FindChildByName( "SpecCarriedImage" ) );
@@ -426,16 +380,6 @@ void CTFHudFlagObjectives::Reset()
 	if ( m_pRedFlag && !m_pRedFlag->IsVisible() )
 	{
 		m_pRedFlag->SetVisible( true );
-	}
-
-	if (m_pGreenFlag && !m_pGreenFlag->IsVisible())
-	{
-		m_pGreenFlag->SetVisible(true);
-	}
-
-	if (m_pYellowFlag && !m_pYellowFlag->IsVisible())
-	{
-		m_pYellowFlag->SetVisible(true);
 	}
 
 	if ( m_pSpecCarriedImage && m_pSpecCarriedImage->IsVisible() )
@@ -484,14 +428,6 @@ void CTFHudFlagObjectives::OnTick()
 				else if (m_pBlueFlag && pFlag->GetTeamNumber() == TF_TEAM_BLUE)
 				{
 					m_pBlueFlag->SetEntity(pFlag);
-				}
-				else if (m_pGreenFlag && pFlag->GetTeamNumber() == TF_TEAM_GREEN)
-				{
-					m_pGreenFlag->SetEntity(pFlag);
-				}
-				else if (m_pYellowFlag && pFlag->GetTeamNumber() == TF_TEAM_YELLOW)
-				{
-					m_pYellowFlag->SetEntity(pFlag);
 				}
 			}
 		}
@@ -563,12 +499,6 @@ void CTFHudFlagObjectives::OnTick()
 						case TF_TEAM_BLUE:
 							m_pSpecCarriedImage->SetImage(("%s_blue", STRING(pPlayerFlag->m_szHudIcon)));
 							break;
-						case TF_TEAM_GREEN:
-							m_pSpecCarriedImage->SetImage(("%s_green", STRING(pPlayerFlag->m_szHudIcon)));
-							break;
-						case TF_TEAM_YELLOW:
-							m_pSpecCarriedImage->SetImage(("%s_yellow", STRING(pPlayerFlag->m_szHudIcon)));
-							break;
 					}
 				}
 			}
@@ -624,12 +554,6 @@ void CTFHudFlagObjectives::UpdateStatus( void )
 				case TF_TEAM_BLUE:
 					m_pCarriedImage->SetImage("../hud/objectives_flagpanel_carried_blue");
 					break;
-				case TF_TEAM_GREEN:
-					m_pCarriedImage->SetImage("../hud/objectives_flagpanel_carried_green");
-					break;
-				case TF_TEAM_YELLOW:
-					m_pCarriedImage->SetImage("../hud/objectives_flagpanel_carried_yellow");
-					break;
 			}
 
 			if (m_pRedFlag && m_pRedFlag->IsVisible())
@@ -640,16 +564,6 @@ void CTFHudFlagObjectives::UpdateStatus( void )
 			if ( m_pBlueFlag && m_pBlueFlag->IsVisible() )
 			{
 				m_pBlueFlag->SetVisible( false );
-			}
-
-			if (m_pGreenFlag && m_pGreenFlag->IsVisible())
-			{
-				m_pGreenFlag->SetVisible(false);
-			}
-
-			if (m_pYellowFlag && m_pYellowFlag->IsVisible())
-			{
-				m_pYellowFlag->SetVisible(false);
 			}
 
 			if ( !m_pCarriedImage->IsVisible() )
@@ -724,26 +638,6 @@ void CTFHudFlagObjectives::UpdateStatus( void )
 			}
 
 			m_pRedFlag->UpdateStatus();
-		}
-
-		if (m_pGreenFlag)
-		{
-			if (!m_pGreenFlag->IsVisible())
-			{
-				m_pGreenFlag->SetVisible(true);
-			}
-
-			m_pGreenFlag->UpdateStatus();
-		}
-
-		if (m_pYellowFlag)
-		{
-			if (!m_pYellowFlag->IsVisible())
-			{
-				m_pYellowFlag->SetVisible(true);
-			}
-
-			m_pYellowFlag->UpdateStatus();
 		}
 	}
 }

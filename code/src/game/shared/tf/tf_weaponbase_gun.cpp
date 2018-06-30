@@ -146,7 +146,7 @@ void CTFWeaponBaseGun::PrimaryAttack( void )
 	pPlayer->RemoveSpawnProtection();
 
 	// Minigun has custom handling
-	if ( GetWeaponID() != TF_WEAPON_MINIGUN )
+	if ( GetWeaponID() != TF_WEAPON_MINIGUN || GetWeaponID() != TF_WEAPON_MINIGUN_TOMISLAV )
 	{
 		pPlayer->SpeakWeaponFire();
 	}

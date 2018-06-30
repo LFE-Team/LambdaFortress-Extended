@@ -393,12 +393,7 @@ void CHudMenuSpyDisguise::FlipFourTeams( void )
 //-----------------------------------------------------------------------------
 void CHudMenuSpyDisguise::ToggleDisguiseTeam( void )
 {
-	if (TFGameRules() && TFGameRules()->IsFourTeamGame())
-	{
-		FlipFourTeams();
-	}
-	else
-	{
+	//FlipFourTeams();
 		// flip the teams
 		m_iShowingTeam = (m_iShowingTeam == TF_TEAM_BLUE) ? TF_TEAM_RED : TF_TEAM_BLUE;
 
@@ -410,7 +405,6 @@ void CHudMenuSpyDisguise::ToggleDisguiseTeam( void )
 			m_pClassItems_Red[i]->SetVisible(!bShowBlue);
 			m_pClassItems_Blue[i]->SetVisible(bShowBlue);
 		}
-	}
 
 	// Do click animation.
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
@@ -454,12 +448,8 @@ void CHudMenuSpyDisguise::FireGameEvent( IGameEvent *event )
 		CTFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 		if ( pPlayer )
 		{
-			if (TFGameRules() && TFGameRules()->IsFourTeamGame())
-			{
-				FlipFourTeams();
-			}
-			else
-			{
+				//FlipFourTeams();
+
 				bool bShowBlue = (pPlayer->GetTeamNumber() == TF_TEAM_RED);
 
 				for (int i = 0; i<9; i++)
@@ -469,7 +459,6 @@ void CHudMenuSpyDisguise::FireGameEvent( IGameEvent *event )
 				}
 
 				m_iShowingTeam = (bShowBlue) ? TF_TEAM_BLUE : TF_TEAM_RED;
-			}
 		}
 	}
 	else

@@ -692,16 +692,6 @@ void CTeamControlPointMaster::CheckWinConditions( void )
 				{
 					pTimer = TFGameRules()->GetBlueKothRoundTimer();
 				}
-#ifdef TF_CLASSIC
-				else if ( iWinners == TF_TEAM_GREEN )
-				{
-					pTimer = TFGameRules()->GetGreenKothRoundTimer();
-				}
-				else if ( iWinners == TF_TEAM_YELLOW )
-				{
-					pTimer = TFGameRules()->GetYellowKothRoundTimer();
-				}
-#endif
 
 				if ( pTimer )
 				{

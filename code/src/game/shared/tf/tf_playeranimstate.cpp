@@ -265,7 +265,7 @@ void CTFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 				return;
 
 			CTFWeaponBase *pWpn = pPlayer->GetActiveTFWeapon();
-			bool bIsMinigun = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN );
+			bool bIsMinigun = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN || pWpn->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV );
 			bool bIsSniperRifle = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_SNIPERRIFLE );
 
 			// Heavy weapons primary fire.
@@ -355,7 +355,7 @@ void CTFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 				return;
 
 			CTFWeaponBase *pWpn = pPlayer->GetActiveTFWeapon();
-			bool bIsMinigun  = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN );
+			bool bIsMinigun  = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN || pWpn->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV );
 
 			bool bAutoKillPreFire = false;
 			if ( bIsMinigun )
@@ -390,7 +390,7 @@ void CTFPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 				return;
 
 			CTFWeaponBase *pWpn = pPlayer->GetActiveTFWeapon();
-			bool bIsMinigun  = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN );
+			bool bIsMinigun  = ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN || pWpn->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV );
 
 			if ( m_bInSwim && bIsMinigun )
 			{
@@ -538,7 +538,7 @@ bool CTFPlayerAnimState::HandleSwimming( Activity &idealActivity )
 		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_AIMING ) )
 		{
 			CTFWeaponBase *pWpn = m_pTFPlayer->GetActiveTFWeapon();
-			if ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN )
+			if ( pWpn && pWpn->GetWeaponID() == TF_WEAPON_MINIGUN || pWpn->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV )
 			{
 				idealActivity = ACT_MP_SWIM_DEPLOYED;
 			}
@@ -629,7 +629,7 @@ bool CTFPlayerAnimState::HandleDucking( Activity &idealActivity )
 				CTFPlayer *pPlayer = GetTFPlayer();
 				if ( pPlayer && pPlayer->GetActiveTFWeapon() )
 				{
-					bIsMinigun = ( pPlayer->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_MINIGUN );
+					bIsMinigun = ( pPlayer->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_MINIGUN || pPlayer->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV );
 				}
 
 				if ( !bIsMinigun )

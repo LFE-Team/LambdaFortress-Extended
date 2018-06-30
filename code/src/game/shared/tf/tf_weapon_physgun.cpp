@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. =================//
 //
-// Purpose: Physics Gun
+// Purpose: random useless weapon lead to dev abuse
 //
 //=============================================================================//
 
@@ -363,6 +363,7 @@ IMotionEvent::simresult_e CGravControllerPoint::Simulate( IPhysicsMotionControll
 
 #ifdef CLIENT_DLL
 #define CWeaponGravityGun C_WeaponGravityGun
+#define CWeaponGravityGun_Secondary C_WeaponGravityGun_Secondary
 #endif
 
 class CWeaponGravityGun : public CTFWeaponBase
@@ -1515,3 +1516,24 @@ void CWeaponGravityGun::FallInit( void )
 	CBaseCombatWeapon::FallInit();
 #endif
 }
+
+class CWeaponGravityGun_Secondary : public CWeaponGravityGun
+{
+public:
+	DECLARE_CLASS( CWeaponGravityGun_Secondary, CWeaponGravityGun );
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
+};
+
+IMPLEMENT_NETWORKCLASS_ALIASED( WeaponGravityGun_Secondary, DT_WeaponGravityGun_Secondary )
+
+BEGIN_NETWORK_TABLE( CWeaponGravityGun_Secondary, DT_WeaponGravityGun_Secondary )
+END_NETWORK_TABLE()
+
+#ifdef CLIENT_DLL
+BEGIN_PREDICTION_DATA( CWeaponGravityGun_Secondary )
+END_PREDICTION_DATA()
+#endif
+
+LINK_ENTITY_TO_CLASS( tf_weapon_physgun_secondary, CWeaponGravityGun_Secondary );
+PRECACHE_WEAPON_REGISTER( tf_weapon_physgun_secondary );

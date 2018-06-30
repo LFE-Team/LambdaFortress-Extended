@@ -1284,12 +1284,6 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 		case TF_TEAM_RED:
 			pEffectName =  "effects/invuln_overlay_red";
 			break;
-		case TF_TEAM_GREEN:
-			pEffectName =  "effects/invuln_overlay_green";
-			break;
-		case TF_TEAM_YELLOW:
-			pEffectName =  "effects/invuln_overlay_yellow";
-			break;
 		default:
 			pEffectName = "effects/invuln_overlay_blue";
 			break;
@@ -3153,7 +3147,7 @@ void CTFPlayer::ImpactWaterTrace( trace_t &trace, const Vector &vecStart )
 
 		const char *pszEffectName = "tf_gunshotsplash";
 		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon && ( TF_WEAPON_MINIGUN == pWeapon->GetWeaponID() ) )
+		if ( pWeapon && ( TF_WEAPON_MINIGUN == pWeapon->GetWeaponID() || TF_WEAPON_MINIGUN_TOMISLAV == pWeapon->GetWeaponID() ) )
 		{
 			// for the minigun, use a different, cheaper splash effect because it can create so many of them
 			pszEffectName = "tf_gunshotsplash_minigun";
@@ -3276,7 +3270,7 @@ void CTFPlayer::TeamFortress_SetSpeed()
 	if ( m_Shared.InCond( TF_COND_AIMING ) )
 	{
 		// Heavy moves slightly faster spun-up
-		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_MINIGUN ) )
+		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_MINIGUN ) || pWeapon->IsWeapon( TF_WEAPON_MINIGUN_TOMISLAV ) )
 		{
 			if ( maxfbspeed > 110 )
 				maxfbspeed = 110;

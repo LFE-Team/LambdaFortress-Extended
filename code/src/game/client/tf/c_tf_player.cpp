@@ -118,22 +118,16 @@ const char *pszHeadLabelNames[] =
 {
 	"effects/speech_voice_red",
 	"effects/speech_voice_blue",
-	"effects/speech_voice_green",
-	"effects/speech_voice_yellow"
 };
 
 #define TF_PLAYER_HEAD_LABEL_RED 0
 #define TF_PLAYER_HEAD_LABEL_BLUE 1
-#define TF_PLAYER_HEAD_LABEL_GREEN 2
-#define TF_PLAYER_HEAD_LABEL_YELLOW 3
 
 #define TF_FLASHLIGHT_DISTANCE		1000
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheInvuln )
 CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_blue.vmt" )
 CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_red.vmt" )
-CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_green.vmt" )
-CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_yellow.vmt" )
 CLIENTEFFECT_REGISTER_END()
 
 // -------------------------------------------------------------------------------- //
@@ -464,14 +458,6 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 
 			case TF_TEAM_BLUE:
 				m_nSkin = 1;
-				break;
-
-			case TF_TEAM_GREEN:
-				m_nSkin = 4;
-				break;
-
-			case TF_TEAM_YELLOW:
-				m_nSkin = 5;
 				break;
 			}
 	}
@@ -1205,7 +1191,7 @@ public:
 		Vector vecColor = Vector( 1, 1, 1 );
 
 		C_TFPlayer *pPlayer = ToTFPlayer( pEntity );;
-		C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEntity );
+		//C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEntity );
 
 		if ( !pPlayer )
 		{
@@ -1254,7 +1240,7 @@ public:
 					break;
 				}
 			}
-		}
+		}/*
 		else if ( pNPC && pNPC->IsCritBoosted() )
 		{
 			if ( !pNPC->InCond( TF_COND_DISGUISED ) )
@@ -1275,7 +1261,7 @@ public:
 					break;
 				}
 			}
-		}
+		}*/
 
 		m_pResult->SetVecValue( vecColor.Base(), 3 );
 		/*
@@ -2050,14 +2036,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 						pTeam = "blue";
 						break;
 
-					case TF_TEAM_GREEN:
-						pTeam = "green";
-						break;
-
-					case TF_TEAM_YELLOW:
-						pTeam = "yellow";
-						break;
-
 					case TEAM_SPECTATOR:
 						pTeam = "spectate";
 						break;
@@ -2163,12 +2141,6 @@ void C_TFPlayer::InitInvulnerableMaterial( void )
 			break;
 		case TF_TEAM_BLUE:
 			pszMaterial = "models/effects/invulnfx_blue.vmt";
-			break;
-		case TF_TEAM_GREEN:
-			pszMaterial = "models/effects/invulnfx_green.vmt";
-			break;
-		case TF_TEAM_YELLOW:
-			pszMaterial = "models/effects/invulnfx_yellow.vmt";
 			break;
 		default:
 			break;
@@ -2465,9 +2437,6 @@ void C_TFPlayer::ShowNemesisIcon( bool bShow )
 		// stop effects for both team colors (to make sure we remove effects in event of team change)
 		ParticleProp()->StopParticlesNamed( "particle_nemesis_red", true );
 		ParticleProp()->StopParticlesNamed( "particle_nemesis_blue", true );
-		ParticleProp()->StopParticlesNamed( "particle_nemesis_green", true );
-		ParticleProp()->StopParticlesNamed( "particle_nemesis_yellow", true );
-		ParticleProp()->StopParticlesNamed( "particle_nemesis_dm", true );
 	}
 	m_bIsDisplayingNemesisIcon = bShow;
 }
@@ -3774,12 +3743,6 @@ void C_TFPlayer::CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVel
 			case TF_TEAM_BLUE:
 				pGib->m_nSkin = 1;
 				break;
-			case TF_TEAM_GREEN:
-				pGib->m_nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				pGib->m_nSkin = 3;
-				break;
 			default:
 				pGib->m_nSkin = 0;
 				break;
@@ -3927,14 +3890,6 @@ int C_TFPlayer::GetSkin()
 
 		case TF_TEAM_BLUE:
 			nSkin = 1;
-			break;
-
-		case TF_TEAM_GREEN:
-			nSkin = 4;
-			break;
-
-		case TF_TEAM_YELLOW:
-			nSkin = 5;
 			break;
 
 		default:
@@ -4603,15 +4558,6 @@ IMaterial *C_TFPlayer::GetHeadLabelMaterial( void )
 		case TF_TEAM_BLUE:
 			return g_pHeadLabelMaterial[TF_PLAYER_HEAD_LABEL_BLUE];
 			break;
-
-		case TF_TEAM_GREEN:
-			return g_pHeadLabelMaterial[TF_PLAYER_HEAD_LABEL_GREEN];
-			break;
-
-		case TF_TEAM_YELLOW:
-			return g_pHeadLabelMaterial[TF_PLAYER_HEAD_LABEL_YELLOW];
-			break;
-
 	}
 
 	return BaseClass::GetHeadLabelMaterial();

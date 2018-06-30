@@ -183,18 +183,11 @@ CON_COMMAND_F( bot, "Add a bot.", FCVAR_CHEAT )
 				iTeam = TF_TEAM_RED;
 			else if ( stricmp( pVal, "blue" ) == 0 )
 				iTeam = TF_TEAM_BLUE;
-			else if ( stricmp( pVal, "green" ) == 0 )
-				iTeam = TF_TEAM_GREEN;
-			else if ( stricmp( pVal, "yellow" ) == 0 )
-				iTeam = TF_TEAM_YELLOW;
 			else if ( stricmp( pVal, "spectator" ) == 0 )
 				iTeam = TEAM_SPECTATOR;
 			else if ( stricmp( pVal, "random" ) == 0 )
 			{
-				if ( TFGameRules()->IsFourTeamGame() )
-					iTeam = RandomInt( TF_TEAM_RED, TF_TEAM_YELLOW );
-				else
-					iTeam = RandomInt( 0, 100 ) < 50 ? TF_TEAM_BLUE : TF_TEAM_RED;
+				iTeam = RandomInt( 0, 100 ) < 50 ? TF_TEAM_BLUE : TF_TEAM_RED;
 			}
 			else
 				iTeam = TEAM_UNASSIGNED;
@@ -344,12 +337,6 @@ void Bot_Think( CTFPlayer *pBot )
 			break;
 		case TF_TEAM_BLUE:
 			pszTeam = "blue";
-			break;
-		case TF_TEAM_GREEN:
-			TFGameRules()->IsFourTeamGame() ? pszTeam = "green" : pszTeam = "red";
-			break;
-		case TF_TEAM_YELLOW:
-			TFGameRules()->IsFourTeamGame() ? pszTeam = "yellow" : pszTeam = "red";
 			break;
 		case TEAM_SPECTATOR:
 			pszTeam = "spectator";
@@ -700,15 +687,6 @@ CON_COMMAND_F( bot_changeteams, "Make all bots change teams", FCVAR_CHEAT )
 		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) )
 		{
 			int iTeam = pPlayer->GetTeamNumber();
-			if ( TFGameRules()->IsFourTeamGame() )
-			{
-				int iNewTeam = RandomInt( TF_TEAM_RED, TF_TEAM_YELLOW );
-				while ( iNewTeam == iTeam )
-					iNewTeam = RandomInt( TF_TEAM_RED, TF_TEAM_YELLOW );
-				pPlayer->ChangeTeam( iNewTeam );
-			}
-			else
-			{
 				if ( TF_TEAM_BLUE == iTeam || TF_TEAM_RED == iTeam )
 				{
 					// toggle team between red & blue
@@ -718,7 +696,6 @@ CON_COMMAND_F( bot_changeteams, "Make all bots change teams", FCVAR_CHEAT )
 				{
 					pPlayer->ChangeTeam( RandomInt(TF_TEAM_BLUE, TF_TEAM_RED) );
 				}
-			}
 		}
 	}
 }

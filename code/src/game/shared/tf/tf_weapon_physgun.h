@@ -30,6 +30,7 @@
 
 #ifdef CLIENT_DLL
 #define CWeaponGravityGun C_WeaponGravityGun
+#define CWeaponGravityGun_Secondary C_WeaponGravityGun_Secondary
 #endif
 
 
@@ -289,6 +290,14 @@ private:
 	DECLARE_ACTTABLE();
 #endif
 #endif
+};
+
+class CWeaponGravityGun_Secondary : public CWeaponGravityGun
+{
+public:
+	DECLARE_CLASS( CWeaponGravityGun_Secondary, CWeaponGravityGun );
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
 };
 
 #endif // TF_WEAPON_PHYSGUN_H
