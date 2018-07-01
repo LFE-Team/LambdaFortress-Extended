@@ -1050,3 +1050,35 @@
 	"wave"		"weapons/draw_melee.wav"
 }
 
+"Weapon_Tomislav.Fire"	
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/tomislav_shoot.wav"
+}
+
+"Weapon_Tomislav.FireCrit"	
+{
+	"channel"	"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/tomislav_shoot_crit.wav"
+}
+
+"Weapon_Tomislav.WindDown"	
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		")weapons/tomislav_wind_down.wav"
+}
+
+"Weapon_Tomislav.WindUp"	
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_94dB"
+	"volume"	"1.0"
+	"wave"		"weapons/tomislav_wind_up.wav"
+}
+
