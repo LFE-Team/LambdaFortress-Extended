@@ -194,7 +194,11 @@ void CGrenadeFrag::Spawn( void )
 	m_punted			= false;
 
 	// Set the team.
-	ChangeTeam( GetThrower()->GetTeamNumber() );
+	CBaseEntity *pOwner = GetOwnerEntity();
+	if ( pOwner )
+	{
+		ChangeTeam( GetThrower()->GetTeamNumber() );
+	}
 
 	BaseClass::Spawn();
 }
