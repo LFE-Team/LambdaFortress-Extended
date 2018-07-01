@@ -4687,7 +4687,7 @@
 
 	"soundlevel"	"SNDLVL_95dB"
 
-	"wave"			"vo/engineer_LaughLong02.wav"
+	"wave"			"vo/engineer_LaughLong02.mp3"
 }
 
 
@@ -10251,7 +10251,7 @@
 
 	"soundlevel"	"SNDLVL_95dB"
 
-	"wave"			"vo/pyro_laugh_addl04.wav"
+	"wave"			"vo/pyro_laugh_addl04.mp3"
 }
 
 "Pyro.Medic01"
@@ -18527,7 +18527,7 @@
 
 	"soundlevel"	"SNDLVL_95dB"
 
-	"wave"			"vo/spy_LaughLong01.wav"
+	"wave"			"vo/spy_LaughLong01.mp3"
 }
 
 "Spy.LaughShort01"
@@ -20601,7 +20601,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_LaughterBig01.wav"
+ "wave"  "vo/heavy_LaughterBig01.mp3"
 }
  
 "Heavy.LaughterBig03"
@@ -21186,7 +21186,7 @@
  "volume"  "1"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/SandwichEat09.wav"
+ "wave"  "vo/SandwichEat09.mp3"
 }
 
 "Heavy.SandwichTaunt01"
