@@ -110,6 +110,11 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
+		"monster_bigmomma",
+		TF_TEAM_GREEN,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING,
+	},
+	{
 		"monster_human_grunt",
 		TF_TEAM_BLUE,
 		0,
@@ -217,7 +222,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_tentacle",
 		TF_TEAM_GREEN,
-		0,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING,
 	},
 	{
 		"monster_gman",
