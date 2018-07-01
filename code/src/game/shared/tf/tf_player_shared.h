@@ -280,6 +280,7 @@ private:
 	void OnAddHalloweenGiant( void );
 	void OnAddHalloweenTiny( void );
 	void OnAddRagemode( void );
+	void OnAddPhase( void );
 	void OnAddShield( void );
 	void OnAddSpeedBoost( void );
 
@@ -297,6 +298,7 @@ private:
 	void OnRemoveHalloweenGiant( void );
 	void OnRemoveHalloweenTiny( void );
 	void OnRemoveRagemode( void );
+	void OnRemovePhase( void );
 	void OnRemoveShield( void );
 	void OnRemoveSpeedBoost( void );
 

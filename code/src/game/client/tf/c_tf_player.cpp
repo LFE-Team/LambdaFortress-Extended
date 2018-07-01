@@ -3132,11 +3132,25 @@ bool C_TFPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 
 		VectorCopy( angMoveAngle, pCmd->viewangles );
 		bNoTaunt = false;
-	}
-	else
+	}	
+	else if ( m_Shared.InCond( TF_COND_PHASE ) )
 	{
-		VectorCopy( pCmd->viewangles, angMoveAngle );
+		pCmd->weaponselect = 0;
+		int nOldButtons = pCmd->buttons;
+		pCmd->buttons = 0;
+
+		// Scout can jump and duck while phased
+		if ( ( nOldButtons & IN_JUMP ) )
+		{
+			pCmd->buttons |= IN_JUMP;
+		}
+
+		if ( ( nOldButtons & IN_DUCK ) )
+		{
+			pCmd->buttons |= IN_DUCK;
+		}
 	}
+
 
 	// HACK: We're using an unused bit in buttons var to set the typing status based on whether player's chat panel is open.
 	if ( GetTFChatHud() && GetTFChatHud()->GetMessageMode() != MM_NONE )
