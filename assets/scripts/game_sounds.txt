@@ -201,6 +201,61 @@
 	"wave"		 "weapons/rocket_blackbox_shoot_crit.wav" 
 }
 
+"Scout.DodgeCanOpen"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1"
+	"soundlevel"	"SNDLVL_84dB"
+	"pitch"		"PITCH_NORM"
+	"wave"		"player/pl_scout_dodge_can_open.wav"
+}
+
+"Scout.DodgeCanDrinkFast"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		".25"
+	"soundlevel"	"SNDLVL_84dB"
+	"pitch"		"PITCH_NORM"
+	"wave"		"player/pl_scout_dodge_can_drink_fast.wav"
+}
+
+"Scout.DodgeCanDrink"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1"
+	"soundlevel"	"SNDLVL_84dB"
+	"pitch"		"PITCH_NORM"
+	"wave"		"player/pl_scout_dodge_can_drink.wav"
+}
+
+"Scout.DodgeCanCrush"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1"
+	"soundlevel"	"SNDLVL_84dB"
+	"pitch"		"PITCH_NORM"
+	"wave"		"player/pl_scout_dodge_can_crush.wav"
+}
+
+"Scout.DodgeCanPitch"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1"
+	"soundlevel"	"SNDLVL_84dB"
+	"pitch"		"PITCH_NORM"
+	"wave"		"player/pl_scout_dodge_can_pitch.wav"
+}
+
+
+"Scout.DodgeTired"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"1"
+	"soundlevel"	"SNDLVL_74dB"
+	"pitch"		"PITCH_NORM"
+	"wave"		"player/pl_scout_dodge_tired.wav"
+}
+
 "BaseCombatWeapon.WeaponDrop"
 {
 	"channel"		"CHAN_ITEM"
