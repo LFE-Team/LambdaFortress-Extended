@@ -104,7 +104,7 @@ void CTFStickBomb::Smack()
 			 * I dunno! */
 			CTakeDamageInfo dmginfo(pOwner, pOwner, this, where, where, 75.0f,
 				DMG_BLAST | DMG_CRITICAL | (this->IsCurrentAttackACrit() ? DMG_USEDISTANCEMOD : 0),
-				TF_DMG_CUSTOM_NONE, &where);
+				TF_DMG_CUSTOM_STICKBOMB_EXPLOSION, &where);
 			/* should be TF_DMG_CUSTOM_STICKBOMB_EXPLOSION or some such */
 			
 			CTFRadiusDamageInfo radius;

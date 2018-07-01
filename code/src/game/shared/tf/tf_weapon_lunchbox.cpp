@@ -28,9 +28,9 @@ void CTFLunchBox::PrimaryAttack( void )
 		return;
 
 #ifdef GAME_DLL
-	//pOwner->Taunt();
 	if (pOwner->GetHealth() < 300)
 	{
+		pOwner->Taunt();
 		CTFLunchBox::ApplyBiteEffects();
 		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
 		pOwner->SwitchToNextBestWeapon(this);
@@ -117,8 +117,8 @@ void CTFLunchBox::ApplyBiteEffects( void )
 
 	if ( pOwner )
 	{
-		//pOwner->TakeHealth( 30, DMG_GENERIC );
-		pOwner->TakeHealth( 120, DMG_GENERIC );
+		pOwner->TakeHealth( 30, DMG_GENERIC );
+		//pOwner->TakeHealth( 120, DMG_GENERIC );
 		pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
 	}
 }

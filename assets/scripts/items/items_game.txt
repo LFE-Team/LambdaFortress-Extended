@@ -714,11 +714,6 @@
 					"attribute_class"	"kill_eater_score_type"
 					"value" 	"50" 
 				}
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
-				}
 				"allowed in medieval mode"
 				{
 					"attribute_class"	"allowed_in_medieval_mode"
@@ -726,6 +721,52 @@
 				}
 			}
 		}
+
+		"weapon_sapper"
+		{
+			"enabled"	"1"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"base_item_name"	"TF_WEAPON_BUILDER_SPY"
+			"item_class"	"tf_weapon_builder"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"item_name"	"#TF_Weapon_Spy_Sapper"
+			"item_description"	"#TF_Weapon_Spy_Sapper_desc"
+			"item_type_name"	"#TF_Weapon_Spy_Sapper"
+			"item_slot"	"building"
+			"item_quality"	"unique"
+			"min_ilevel"	"1"
+			"max_ilevel"	"1"
+			"image_inventory"	"backpack/weapons/w_models/w_sapper"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 			"25"
+			"attach_to_hands"	"1"
+			"model_player"	"models/weapons/c_models/c_sapper/c_sapper.mdl"
+			"used_by_classes"
+			{
+				"spy"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"5 -2 -4"
+			}
+			"attributes"
+			{
+				"kill eater score type"
+				{
+					"attribute_class"	"kill_eater_score_type"
+					"value"				"24"								
+				}
+			}
+			"xifier_class_remap"	"sapper"
+			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
+			"drop_sound"		"ui/item_metal_weapon_drop.wav"
+		}
+
 		"weapon_stickybomb_launcher"
 		{
 			"capabilities"
@@ -1019,10 +1060,14 @@
 			"image_inventory_size_h"	"82"
 			"model_world"	"models/weapons/w_models/w_flamethrower.mdl"
 			"model_player"	"models/weapons/v_models/v_flamethrower_pyro.mdl"
-			"attach_to_hands"	"0"
+			"attach_to_hands"	"2"
 			"used_by_classes"
 			{
 				"pyro"	"1"
+			}
+			"attributes"
+			{
+				"extinguish restores health"			"20"
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"	"ui/item_heavy_gun_drop.wav"
@@ -1166,11 +1211,6 @@
 				{
 					"attribute_class"	"kill_eater_score_type_2"
 					"value" 			"1"								
-				}
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
 				}
 			}
 			"visuals_red"
@@ -1841,11 +1881,6 @@
 					"attribute_class"	"set_weapon_mode"
 					"value"	"1"
 				}
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
-				}
 			}
 			"visuals"
 			{
@@ -1951,7 +1986,7 @@
 			"image_inventory_size_h"	"82"
 			"model_world"	"models/weapons/w_models/w_flaregun.mdl"
 			"model_player"	"models/weapons/v_models/v_flaregun_pyro.mdl"
-			"attach_to_hands"	"1"
+			"attach_to_hands"	"2"
 			"item_quality"	"unique"
 			"propername"	"1"
 			"min_ilevel"	"10"
@@ -1962,11 +1997,6 @@
 			}
 			"attributes"
 			{
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value"	"1"
-				}
 				"crit_vs_burning_FLARES_DISPLAY_ONLY"
 				{
 					"attribute_class"	"crit_vs_burning_FLARES_DISPLAY_ONLY"
@@ -2015,11 +2045,6 @@
 				{
 					"attribute_class"	"kill_eater_score_type"
 					"value" 	"50" 
-				}
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
 				}
 				"allowed in medieval mode"
 				{
@@ -2085,11 +2110,6 @@
 				{
 					"attribute_class"	"disable_fancy_class_select_anim"
 					"value"	"1"
-				}
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
 				}
 				"allowed in medieval mode"
 				{
@@ -2355,7 +2375,7 @@
 			"image_inventory_size_h"	"82"
 			"model_world"	"models/weapons/w_models/w_machete.mdl"
 			"model_player"	"models/weapons/v_models/v_machete_sniper.mdl"
-			"attach_to_hands"	"0"
+			"attach_to_hands"	"2"
 			"used_by_classes"
 			{
 				"sniper"	"1"
@@ -2927,33 +2947,9 @@
 		"735"
 		{
 			"name"	"TF_WEAPON_BUILDER_SPY"
-			"capabilities"
-			{
-				"nameable"	"1"
-			}
-			"first_sale_date"	"2010/09/29"
-			"item_class"	"tf_weapon_builder"
-			"craft_class"	"weapon"
-			"craft_material_type"	"weapon"
-			"item_name"	"#TF_Weapon_Spy_Sapper"
-			"item_type_name"	"#TF_Weapon_Spy_Sapper"
-			"item_slot"	"building"
+			"prefab" "weapon_sapper"
 			"item_quality"	"normal"
-			"baseitem"	"1"
-			"min_ilevel"	"1"
-			"max_ilevel"	"1"
-			"image_inventory"	"backpack/weapons/w_models/w_sapper"
-			"image_inventory_size_w"	"128"
-			"image_inventory_size_h"	"82"
-			"attach_to_hands"	"0"
-			"model_world"	"models/weapons/w_models/w_sapper.mdl"
-			"model_player"	"models/weapons/v_models/v_sapper_spy.mdl"
-			"used_by_classes"
-			{
-				"spy"	"1"
-			}
-			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
-			"drop_sound"	"ui/item_metal_weapon_drop.wav"
+			"baseitem" "1"
 		}
 		"35"
 		{
@@ -3309,6 +3305,153 @@
 			"baseitem"	"0"
 			"show_in_armory"	"0"
 		}
+		"127"
+		{
+			"name"	"The Direct Hit"
+			"prefab"	"valve"
+			"first_sale_date"	"2010/09/29"
+			"item_class"	"tf_weapon_rocketlauncher_directhit"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"		"1"
+				"can_deal_gib_damage"	"1"
+				"can_be_equipped_by_soldier_or_demo"	"1"
+				"can_deal_posthumous_damage"	"1"
+				"can_deal_critical_damage"	"1"
+				"can_deal_long_distance_damage"	"1"
+			}
+			"show_in_armory"	"0"
+			"item_type_name"	"#TF_Weapon_RocketLauncher"
+			"item_name"	"#TF_Unique_Achievement_RocketLauncher"
+			"item_slot"	"primary"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"1"
+			"max_ilevel"	"1"
+			"image_inventory"	"backpack/weapons/c_models/c_directhit/c_directhit"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"model_player"	"models/weapons/c_models/c_directhit/c_directhit.mdl"
+			"attach_to_hands" "1"
+			"used_by_classes"
+			{
+				"soldier"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"10 -3 -10"				
+			}
+			"attributes"
+			{
+				"Blast radius decreased"
+				{
+					"attribute_class"	"mult_explosion_radius"
+					"value"	"0.3"
+				}
+				"Projectile speed increased"
+				{
+					"attribute_class"	"mult_projectile_speed"
+					"value"	"1.8"
+				}
+				"damage bonus"
+				{
+					"attribute_class"	"mult_dmg"
+					"value"	"1.25"
+				}
+				"mod mini-crit airborne"
+				{
+					"attribute_class"	"mini_crit_airborne"
+					"value" "1"
+				}
+				"disable fancy class select anim"
+				{
+					"attribute_class"	"disable_fancy_class_select_anim"
+					"value"	"1"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
+			"drop_sound"		"ui/item_heavy_gun_drop.wav"
+		}
+		"128"
+		{
+			"name"	"The Equalizer"
+			"prefab"	"valve"
+			"first_sale_date"	"2010/09/29"
+			"item_class"	"tf_weapon_shovel"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_be_equipped_by_soldier_or_demo"	"1"
+				"can_deal_critical_damage"	"1"
+				"can_deal_taunt_damage"		"1"
+			}
+			"show_in_armory"	"0"
+			"item_type_name"	"#TF_Weapon_Pickaxe"
+			"item_name"	"#TF_Unique_Achievement_Pickaxe"
+			"item_logname"	"unique_pickaxe"
+			"item_slot"	"melee"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"10"
+			"max_ilevel"	"10"
+			"image_inventory" "backpack/weapons/c_models/c_pickaxe/c_pickaxe_s2"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 				"50"			
+			"model_player"	"models/weapons/c_models/c_pickaxe/c_pickaxe_s2.mdl"
+			"attach_to_hands" "1"
+			"used_by_classes"
+			{
+				"soldier"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"10 -3 -11"
+			}
+			"attributes"
+			{
+				"provide on active"
+				{
+					"attribute_class"	"provide_on_active"
+					"value" "1"
+				}
+				"mod shovel damage boost"
+				{
+					"attribute_class"	"set_weapon_mode"
+					"value"	"1"
+				}
+				"reduced_healing_from_medics"
+				{
+					"attribute_class"	"mult_healing_from_medics"
+					"value" "0.1"
+				}
+				"special taunt"
+				{
+					"attribute_class"	"special_taunt"
+					"value" "1"
+				}
+			}
+			"visuals"
+			{
+				"sound_melee_miss"	"Weapon_PickAxe.Swing"
+				"sound_melee_hit"	"Weapon_PickAxe.HitFlesh"
+				"sound_burst"		"Weapon_PickAxe.SwingCrit"
+			}
+			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
+			"drop_sound"		"ui/item_metal_weapon_drop.wav"
+		}
 		"133"
 		{
 			"name"	"The Gunboats"
@@ -3440,11 +3583,6 @@
 				{
 					"attribute_class"	"kill_eater_score_type_2"
 					"value" 	"0"									
-				}
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
 				}
 			}
 			"visuals"
@@ -3839,6 +3977,134 @@
 			}
 			"mouse_pressed_sound"	"ui/item_light_gun_pickup.wav"
 			"drop_sound"		"ui/item_light_gun_drop.wav"
+		}
+		"1178"
+		{
+			"name"	"The Dragon's Fury"
+			"item_class"	"tf_weapon_rocketlauncher_fireball"
+			"craft_class"	"" 
+			"craft_material_type"	"weapon"
+			"show_in_armory"	"0"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"		"1"
+				"can_deal_posthumous_damage"	"1"
+				"can_be_festivized"		"1"
+			}
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_FireballLauncher"
+			"particle_suffix"	"dragons_fury"
+			"propername"	"1"
+			"item_name"	"#TF_Weapon_DragonsFury"
+			"item_description"	"#TF_Weapon_DragonsFury_Desc"
+			"item_slot"	"primary"
+			"anim_slot"		"primary"
+			"item_quality"	"unique"
+			"min_ilevel"	"1"
+			"max_ilevel"	"100"
+			"item_logname"	"dragons_fury"
+			"item_iconname"	"dragons_fury"
+			"image_inventory"	"backpack/weapons/c_models/c_flameball/c_flameball"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"model_player"	"models/weapons/c_models/c_flameball/c_flameball.mdl"
+			"attach_to_hands" "1"
+			"inspect_panel_dist" "91"
+			"used_by_classes"
+			{
+				"pyro"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"10 -3 -10"
+				"item_meter_charge_type"							"1"
+				"item_meter_charge_rate"				"0.8"
+				"meter_label"							"#TF_Pressure"
+				"hidden primary max ammo bonus"			"0.2"
+				"airblast cost scale hidden"			"0.25"
+				"dragons fury neutral properties"		"1"
+				"dragons fury positive properties"		"1"
+				"dragons fury negative properties"		"1"
+				"extinguish restores health"			"20"
+			}
+			"visuals"
+			{
+				"attached_models_festive"
+				{
+					"0"
+					{
+						"model"	"models/weapons/c_models/c_flameball/c_flameball_festivizer.mdl"
+					}
+				}
+				"sound_single_shot"		"Weapon_Airstrike.AltFire"
+				"sound_special1"		"Weapon_Airstrike.Explosion"
+				"animation_replacement"
+				{
+					"ACT_VM_PRIMARYATTACK"		"ACT_PRIMARY_VM_PRIMARYATTACK_3"
+
+					"ACT_PRIMARY_VM_INSPECT_START"		"ACT_ITEM4_VM_INSPECT_START"
+					"ACT_PRIMARY_VM_INSPECT_IDLE"		"ACT_ITEM4_VM_INSPECT_IDLE"
+					"ACT_PRIMARY_VM_INSPECT_END"		"ACT_ITEM4_VM_INSPECT_END"
+
+					"ACT_MP_ATTACK_CROUCH_PRIMARY"		"ACT_MP_ATTACK_CROUCH_PRIMARY_ALT"
+					"ACT_MP_ATTACK_STAND_PRIMARY"		"ACT_MP_ATTACK_STAND_PRIMARY_ALT"
+					"ACT_MP_ATTACK_SWIM_PRIMARY"		"ACT_MP_ATTACK_SWIM_PRIMARY_ALT"
+
+					"ACT_MP_ATTACK_CROUCH_SECONDARYFIRE"	"ACT_MP_ATTACK_CROUCH_PRIMARY_ALT"
+					"ACT_MP_ATTACK_STAND_SECONDARYFIRE"		"ACT_MP_ATTACK_STAND_PRIMARY_ALT"
+					"ACT_MP_ATTACK_SWIM_SECONDARYFIRE"		"ACT_MP_ATTACK_SWIM_PRIMARY_ALT"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
+			"drop_sound"		"ui/item_heavy_gun_drop.wav"
+		}
+		"9001"
+		{
+			"name"	"Fake Valve Rocket Launcher"
+			"prefab"	"weapon_rocketlauncher"
+			"baseitem"	"0"
+			"attributes"
+			{
+				"damage bonus"
+				{
+					"attribute_class"	"mult_dmg"
+					"value"	"10100.0"
+				}
+				"clip size bonus"
+				{
+					"attribute_class"	"mult_clipsize"
+					"value"	"1100.0"
+				}
+				"fire rate bonus"
+				{
+					"attribute_class"	"mult_postfiredelay"
+					"value"	"0.25"
+				}
+				"heal on hit for slowfire"
+				{
+					"attribute_class"	"add_onhit_addhealth"
+					"value"	"250.0"
+				}
+				"critboost on kill"
+				{
+					"attribute_class"	"add_onkill_critboost_time"
+					"value"	"10.0"
+				}
+				"Projectile speed increased"
+				{
+					"atribute_class"	"mult_projectile_speed"
+					"value"	"1.5"
+				}
+				"move speed bonus"
+				{
+					"attribute_class"	"mult_player_movespeed"
+					"value"	"2.0"
+				}
+			}
 		}
 	}
 	"attributes"

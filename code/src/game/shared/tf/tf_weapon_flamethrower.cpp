@@ -683,6 +683,13 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 			pVictim->m_Shared.RemoveCond( TF_COND_BURNING );
 			pVictim->EmitSound( "TFPlayer.FlameOut" );
 
+			float flExReHp = 0.0f;
+			CALL_ATTRIB_HOOK_FLOAT( flExReHp, extinguish_restores_health );
+			if ( flExReHp )
+			{
+				pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
+			}
+
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
 		}
 	}
@@ -723,6 +730,13 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 			// we should calling Extinguish instead of RemoveCond for npcs.
 			pVictim->Extinguish();
 			pVictim->EmitSound( "TFPlayer.FlameOut" );
+
+			float flExReHp = 0.0f;
+			CALL_ATTRIB_HOOK_FLOAT( flExReHp, extinguish_restores_health );
+			if ( flExReHp )
+			{
+				pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
+			}
 
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
 		}

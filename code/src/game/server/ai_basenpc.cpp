@@ -706,7 +706,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		killer_index = pKiller->entindex();
 	}
 
-	IGameEvent * event = gameeventmanager->CreateEvent( "npc_death" );
+	IGameEvent *event = gameeventmanager->CreateEvent( "npc_death" );
 
 	if ( event )
 	{
@@ -1559,7 +1559,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		Burn( ToTFPlayer( pAttacker ), pTFWeapon );
 	}
 
-	IGameEvent * event = gameeventmanager->CreateEvent( "npc_hurt" );
+	IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
 	if ( event )
 	{
 		event->SetInt( "victim_index", entindex() );
@@ -1568,6 +1568,9 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		event->SetInt( "health", max( 0, m_iHealth ) );
 		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
 		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+
+		CBasePlayer *pPlayer = ToBasePlayer( pAttacker );
+		event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );
 
 		// HLTV event priority, not transmitted
 		event->SetInt( "priority", 5 );
