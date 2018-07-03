@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+ï»¿//====== Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -14,29 +14,28 @@
 #include "c_tf_player.h"
 #endif
 
-CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox, tf_weapon_lunchbox )
+CREATE_SIMPLE_WEAPON_TABLE(TFLunchBox, tf_weapon_lunchbox)
 
 #define TF_SANDVICH_PLATE_MODEL "models/items/plate.mdl"
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFLunchBox::PrimaryAttack( void )
+void CTFLunchBox::PrimaryAttack(void)
 {
 	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
+	if (!pOwner)
 		return;
 
 #ifdef GAME_DLL
 	if (pOwner->GetHealth() < 300)
 	{
 		pOwner->Taunt();
-		/*
-		CTFLunchBox::ApplyBiteEffects();
+		
 		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
 		pOwner->SwitchToNextBestWeapon(this);
 		StartEffectBarRegen();
-		*/
+		
 	}
 #endif
 
@@ -46,20 +45,20 @@ void CTFLunchBox::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFLunchBox::SecondaryAttack( void )
+void CTFLunchBox::SecondaryAttack(void)
 {
 	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
+	if (!pOwner)
 		return;
 
-	if ( !CanAttack() )
+	if (!CanAttack())
 		return;
 
 #ifdef GAME_DLL
 	// Remove the previous dropped lunch box.
-	if ( m_hDroppedLunch.Get() )
+	if (m_hDroppedLunch.Get())
 	{
-		UTIL_Remove( m_hDroppedLunch.Get() );
+		UTIL_Remove(m_hDroppedLunch.Get());
 		m_hDroppedLunch = NULL;
 	}
 
@@ -71,27 +70,27 @@ void CTFLunchBox::SecondaryAttack( void )
 	// A bit below the eye position.
 	vecSrc.z -= 8.0f;
 
-	CHealthKitMedium *pPowerup = static_cast<CHealthKitMedium *>( CBaseEntity::Create( "item_healthkit_medium", vecSrc, vec3_angle, pOwner ) );
-	if ( !pPowerup )
+	CHealthKitMedium *pPowerup = static_cast<CHealthKitMedium *>(CBaseEntity::Create("item_healthkit_medium", vecSrc, vec3_angle, pOwner));
+	if (!pPowerup)
 		return;
 
-	pPowerup->SetModel( TF_SANDVICH_PLATE_MODEL );
-	UTIL_SetSize( pPowerup, -Vector( 17, 17, 10 ), Vector( 17, 17, 10 ) );
+	pPowerup->SetModel(TF_SANDVICH_PLATE_MODEL);
+	UTIL_SetSize(pPowerup, -Vector(17, 17, 10), Vector(17, 17, 10));
 
 	// Throw it down.
 	angThrow = pOwner->EyeAngles();
 	angThrow[PITCH] -= 10.0f;
-	AngleVectors( angThrow, &vecThrow );
+	AngleVectors(angThrow, &vecThrow);
 	vecThrow *= 500;
 
-	pPowerup->DropSingleInstance( vecThrow, pOwner, 0.3f, 0.1f );
+	pPowerup->DropSingleInstance(vecThrow, pOwner, 0.3f, 0.1f);
 
 	m_hDroppedLunch = pPowerup;
 #endif
 
 	// Switch away from it immediately, don't want it to stick around.
-	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
-	pOwner->SwitchToNextBestWeapon( this );
+	pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+	pOwner->SwitchToNextBestWeapon(this);
 
 	StartEffectBarRegen();
 }
@@ -101,10 +100,10 @@ void CTFLunchBox::SecondaryAttack( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFLunchBox::Precache( void )
+void CTFLunchBox::Precache(void)
 {
-	UTIL_PrecacheOther( "item_healthkit_medium" );
-	PrecacheModel( TF_SANDVICH_PLATE_MODEL );
+	UTIL_PrecacheOther("item_healthkit_medium");
+	PrecacheModel(TF_SANDVICH_PLATE_MODEL);
 
 	BaseClass::Precache();
 }
@@ -112,14 +111,14 @@ void CTFLunchBox::Precache( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFLunchBox::ApplyBiteEffects( void )
+void CTFLunchBox::ApplyBiteEffects(void)
 {
 	// Heal 30 HP per second for a total 120 HP.
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 
-	if ( pOwner )
+	if (pOwner)
 	{
-		pOwner->TakeHealth( 30, DMG_GENERIC );
+		pOwner->TakeHealth(30, DMG_GENERIC);
 		//pOwner->TakeHealth( 120, DMG_GENERIC );
 		//pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
 	}
