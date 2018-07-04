@@ -14,6 +14,7 @@
 
 #ifdef CLIENT_DLL
 #define CTFLunchBox C_TFLunchBox
+#define CTFLunchBox_Drink C_TFLunchBox_Drink
 #endif
 
 class CTFLunchBox : public CTFWeaponBase
@@ -42,6 +43,31 @@ public:
 private:
 #ifdef GAME_DLL
 	EHANDLE m_hDroppedLunch;
+#endif
+};
+
+class CTFLunchBox_Drink : public CTFWeaponBase
+{
+public:
+	DECLARE_CLASS( CTFLunchBox_Drink, CTFWeaponBase );
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
+
+	virtual int GetWeaponID() const { return TF_WEAPON_LUNCHBOX_DRINK; }
+
+	virtual bool	ShouldBlockPrimaryFire( void ) { return true; }
+
+	virtual void	PrimaryAttack( void );
+
+	virtual bool	Deploy( void );
+
+	virtual bool	HasChargeBar( void ) { return true; }
+	virtual float	InternalGetEffectBarRechargeTime( void ) { return 22.2f; }
+	virtual const char	*GetEffectLabelText( void ) { return "#TF_EnergyDrink"; }
+
+#ifdef GAME_DLL
+	virtual void	Precache( void );
+	//virtual void	ApplyBiteEffects( bool bHurt );
 #endif
 };
 

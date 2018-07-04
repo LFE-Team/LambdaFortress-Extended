@@ -14,6 +14,7 @@
 
 #ifdef CLIENT_DLL
 #define CTFBottle C_TFBottle
+#define CTFStickBomb C_TFStickBomb
 #endif
 
 //=============================================================================
@@ -44,6 +45,36 @@ protected:
 private:
 
 	CTFBottle( const CTFBottle & ) {}
+};
+
+//==================== sigsegv-mvm's reversed engineering =====================
+//
+// Caber class.
+//
+class CTFStickBomb : public CTFBottle
+{
+public:
+	DECLARE_CLASS(CTFStickBomb, CTFBottle);
+	DECLARE_NETWORKCLASS();
+	DECLARE_PREDICTABLE();
+	
+	CTFStickBomb();
+	CTFStickBomb( const CTFStickBomb& ) = delete;
+	
+	virtual int GetWeaponID() const override { return TF_WEAPON_STICKBOMB; }
+	virtual const char *GetWorldModel() const override;
+	virtual void Precache() override;
+	virtual void Smack() override;
+	virtual void SwitchBodyGroups() override;
+	virtual void WeaponRegenerate() override;
+	virtual void WeaponReset() override;
+	
+#ifdef CLIENT_DLL
+	virtual int GetWorldModelIndex() override;
+#endif
+	
+private:
+	CNetworkVar( int, m_iDetonated );
 };
 
 #endif // TF_WEAPON_BOTTLE_H

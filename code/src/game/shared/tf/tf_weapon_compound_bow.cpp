@@ -5,6 +5,7 @@
 //=============================================================================
 #include "cbase.h"
 #include "tf_weapon_compound_bow.h"
+#include "in_buttons.h"
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -49,6 +50,7 @@ END_DATADESC()
 
 CTFCompoundBow::CTFCompoundBow()
 {
+	bFlame = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -57,6 +59,11 @@ CTFCompoundBow::CTFCompoundBow()
 void CTFCompoundBow::Precache( void )
 {
 	PrecacheScriptSound( "ArrowLight" );
+
+	PrecacheParticleSystem( "v_flaming_arrow" );
+	PrecacheParticleSystem( "v_flaming_arrow_smoke" );
+	PrecacheParticleSystem( "flaming_arrow" );
+	PrecacheParticleSystem( "flaming_arrow_smoke" );
 
 	BaseClass::Precache();
 }
@@ -67,6 +74,7 @@ void CTFCompoundBow::Precache( void )
 bool CTFCompoundBow::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	LowerBow();
+	bFlame = false;
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -86,6 +94,7 @@ bool CTFCompoundBow::Deploy( void )
 //-----------------------------------------------------------------------------
 void CTFCompoundBow::WeaponReset( void )
 {
+	bFlame = false;
 	BaseClass::WeaponReset();
 
 	LowerBow();
@@ -210,12 +219,59 @@ void CTFCompoundBow::FireArrow( void )
 	if ( !pPlayer )
 		return;
 
-	BaseClass::PrimaryAttack();
+	// Make sure we're aiming already
+	if( !pPlayer->m_Shared.InCond( TF_COND_AIMING ) )
+		return;
+
+	CalcIsAttackCritical();
+
+	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+
+	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+	pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
 	pPlayer->m_Shared.RemoveCond( TF_COND_AIMING );
 	pPlayer->TeamFortress_SetSpeed();
 
+	FireProjectile( pPlayer );
+
+#if !defined( CLIENT_DLL ) 
+	pPlayer->SpeakWeaponFire();
+	CTF_GameStats.Event_PlayerFiredWeapon( pPlayer, IsCurrentAttackACrit() );
+#endif
+
+	// Set next attack times.
+	float flDelay = m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_flTimeFireDelay;
+	CALL_ATTRIB_HOOK_FLOAT( flDelay, mult_postfiredelay );
+	m_flNextPrimaryAttack = gpGlobals->curtime + flDelay;
+
+	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+
 	m_flChargeBeginTime = 0.0f;
+	bFlame = false;
+}
+
+// ---------------------------------------------------------------------------- -
+// Purpose: Set arrow on fire
+//-----------------------------------------------------------------------------
+void CTFCompoundBow::LightArrow( void )
+{
+	//don't light if we're already lit.
+	if( bFlame )
+		return;
+	bFlame = true;
+	EmitSound( "ArrowLight" );
+
+#ifdef CLIENT_DLL
+	//FIXME: this isn't working and I don't know why
+	C_BaseEntity *pModel = GetWeaponForEffect();
+
+		if ( pModel )
+		{
+			pModel->ParticleProp()->Create( "flaming_arrow", PATTACH_POINT_FOLLOW, "muzzle" );
+			pModel->ParticleProp()->Create( "flaming_arrow_smoke", PATTACH_POINT_FOLLOW, "muzzle" );
+		}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -285,3 +341,19 @@ float CTFCompoundBow::GetChargeMaxTime( void )
 {
 	return TF_BOW_MAX_CHARGE_TIME;
 }
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CTFCompoundBow::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
+{
+	// Prevent jumping while aiming
+	if (GetTFPlayerOwner()->m_Shared.InCond(TF_COND_AIMING))
+	{
+		pCmd->buttons &= ~IN_JUMP;
+	}
+
+	BaseClass::CreateMove(flInputSampleTime, pCmd, vecOldViewAngles);
+}
+#endif

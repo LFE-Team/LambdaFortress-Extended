@@ -28,15 +28,14 @@ void CTFLunchBox::PrimaryAttack( void )
 		return;
 
 #ifdef GAME_DLL
-	if (pOwner->GetHealth() < 300)
+	pOwner->Taunt();
+
+	//ApplyBiteEffects();
+	if ( pOwner->GetHealth() < 300 )
 	{
-		pOwner->Taunt();
-		/*
-		CTFLunchBox::ApplyBiteEffects();
-		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
-		pOwner->SwitchToNextBestWeapon(this);
+		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		pOwner->SwitchToNextBestWeapon( this );
 		StartEffectBarRegen();
-		*/
 	}
 #endif
 
@@ -114,15 +113,76 @@ void CTFLunchBox::Precache( void )
 //-----------------------------------------------------------------------------
 void CTFLunchBox::ApplyBiteEffects( void )
 {
-	// Heal 30 HP per second for a total 120 HP.
+	// Heal 80 HP per second for a total 300 HP because this is sandvich not banana.
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 
 	if ( pOwner )
 	{
-		pOwner->TakeHealth( 30, DMG_GENERIC );
+		//
+		pOwner->TakeHealth( 80, DMG_GENERIC );
 		//pOwner->TakeHealth( 120, DMG_GENERIC );
 		//pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
 	}
 }
 
+#endif
+
+//=============================================================================
+//
+// Weapon BONK! tables.
+//
+CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox_Drink, tf_weapon_lunchbox_drink )
+
+//-----------------------------------------------------------------------------
+// Purpose: Show the drink splash when we deploy
+//-----------------------------------------------------------------------------
+bool CTFLunchBox_Drink::Deploy( void )
+{
+#ifdef CLIENT_DLL
+	ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
+#endif
+
+	return BaseClass::Deploy();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFLunchBox_Drink::PrimaryAttack( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+	if ( !pOwner )
+	{
+		return;
+	}
+
+#ifdef GAME_DLL
+	pOwner->Taunt();
+#endif
+
+	// Switch away from it immediately, don't want it to stick around.
+	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	pOwner->SwitchToNextBestWeapon( this );
+
+	StartEffectBarRegen();
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+}
+
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFLunchBox_Drink::Precache( void )
+{
+	PrecacheParticleSystem( "energydrink_splash" );
+	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+/*void CTFLunchBox_Drink::ApplyBiteEffects( bool bHurt )
+{
+}*/
 #endif

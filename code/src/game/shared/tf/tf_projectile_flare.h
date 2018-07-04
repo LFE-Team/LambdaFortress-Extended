@@ -5,12 +5,14 @@
 //=============================================================================//
 #ifndef TF_PROJECTILE_FLARE_H
 #define TF_PROJECTILE_FLARE_H
-
 #ifdef _WIN32
 #pragma once
 #endif
 
 #include "tf_weaponbase_rocket.h"
+#ifdef GAME_DLL
+#include "iscorer.h"
+#endif
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -33,17 +35,35 @@ public:
 	virtual void	Spawn();
 	virtual void	Precache();
 
-	virtual int		GetWeaponID( void ) const { return TF_WEAPON_FLAREGUN; }
-	virtual float	GetRocketSpeed( void );
+	// IScorer interface
+	virtual CBasePlayer *GetScorer( void );
+	virtual CBasePlayer *GetAssistant( void ) { return NULL; }
+
+	virtual int		GetWeaponID(void) const			{ return TF_WEAPON_FLAREGUN; }
+
+	void	SetScorer( CBaseEntity *pScorer );
+
+	void	SetCritical( bool bCritical ) { m_bCritical = bCritical; }
+	virtual int		GetDamageType();
+
+	virtual bool IsDeflectable() { return true; }
+	virtual void Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
 
 	// Overrides.
 	virtual void	Explode( trace_t *pTrace, CBaseEntity *pOther );
-
 #else
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	CreateTrails( void );
 
+#endif
+
+private:
+#ifdef GAME_DLL
+	CBaseHandle m_Scorer;
+	CNetworkVar( bool,	m_bCritical );
+#else
+	bool		m_bCritical;
 #endif
 
 };

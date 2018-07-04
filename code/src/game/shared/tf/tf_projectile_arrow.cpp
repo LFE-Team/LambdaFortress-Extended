@@ -1,11 +1,12 @@
 //=============================================================================//
 //
-// Purpose:
+// Purpose: arrow from tf2vintage
 //
 //=============================================================================//
 
 #include "cbase.h"
 #include "tf_projectile_arrow.h"
+#include "effect_dispatch_data.h"
 
 #ifdef GAME_DLL
 #include "SpriteTrail.h"
@@ -28,11 +29,16 @@ const char *g_pszArrowModels[] =
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_Arrow, DT_TFProjectile_Arrow )
+
 BEGIN_NETWORK_TABLE( CTFProjectile_Arrow, DT_TFProjectile_Arrow )
 #ifdef CLIENT_DLL
+	RecvPropBool( RECVINFO( m_bCritical ) ),
+	RecvPropBool( RECVINFO( m_bFlame ) ),
 	RecvPropInt( RECVINFO( m_iType ) ),
 #else
-	SendPropInt( SENDINFO( m_iType ), 6, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bCritical ) ),
+	SendPropBool( SENDINFO( m_bFlame ) ),
+	SendPropInt( SENDINFO( m_iType ), 3, SPROP_UNSIGNED ),
 #endif
 END_NETWORK_TABLE()
 
@@ -60,15 +66,33 @@ CTFProjectile_Arrow::~CTFProjectile_Arrow()
 
 #ifdef GAME_DLL
 
-CTFProjectile_Arrow *CTFProjectile_Arrow::Create( CBaseEntity *pWeapon, const Vector &vecOrigin, const QAngle &vecAngles, float flSpeed, float flGravity, CBaseEntity *pOwner, CBaseEntity *pScorer, int iType )
+CTFProjectile_Arrow *CTFProjectile_Arrow::Create( CBaseEntity *pWeapon, const Vector &vecOrigin, const QAngle &vecAngles, float flSpeed, float flGravity, bool bFlame, CBaseEntity *pOwner, CBaseEntity *pScorer, int iType )
 {
-	CTFProjectile_Arrow *pArrow = static_cast<CTFProjectile_Arrow *>( CTFBaseRocket::Create( pWeapon, "tf_projectile_arrow", vecOrigin, vecAngles, pOwner ) );
+	CTFProjectile_Arrow *pArrow = static_cast<CTFProjectile_Arrow *>( CBaseEntity::CreateNoSpawn( "tf_projectile_arrow", vecOrigin, vecAngles, pOwner ) );
 
 	if ( pArrow )
 	{
-		// Overriding speed.
-		Vector vecForward;
-		AngleVectors( vecAngles, &vecForward );
+		// Set team.
+		pArrow->ChangeTeam( pOwner->GetTeamNumber() );
+
+		// Set scorer.
+		pArrow->SetScorer( pScorer );
+
+		// Set firing weapon.
+		pArrow->SetLauncher( pWeapon );
+
+		// Set arrow type.
+		pArrow->SetType( iType );
+
+		// Set flame arrow.
+		pArrow->SetFlameArrow( bFlame );
+
+		// Spawn.
+		DispatchSpawn( pArrow );
+
+		// Setup the initial velocity.
+		Vector vecForward, vecRight, vecUp;
+		AngleVectors( vecAngles, &vecForward, &vecRight, &vecUp );
 
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flSpeed, mult_projectile_speed );
 
@@ -76,11 +100,14 @@ CTFProjectile_Arrow *CTFProjectile_Arrow::Create( CBaseEntity *pWeapon, const Ve
 		pArrow->SetAbsVelocity( vecVelocity );
 		pArrow->SetupInitialTransmittedGrenadeVelocity( vecVelocity );
 
+		// Setup the initial angles.
+		QAngle angles;
+		VectorAngles( vecVelocity, angles );
+		pArrow->SetAbsAngles( angles );
+
 		pArrow->SetGravity( flGravity );
 
-		pArrow->SetScorer( pScorer );
-
-		pArrow->SetType( iType );
+		return pArrow;
 	}
 
 	return pArrow;
@@ -104,6 +131,10 @@ void CTFProjectile_Arrow::Precache( void )
 		PrecacheModel( ConstructTeamParticle( "effects/healingtrail_%s.vmt", i, false, g_aTeamNamesShort ) );
 		PrecacheModel( ConstructTeamParticle( "effects/repair_claw_trail_%s.vmt", i, false, g_aTeamParticleNames ) );
 	}
+
+	// Precache flame effects
+	PrecacheParticleSystem( "flying_flaming_arrow" );
+	PrecacheParticleSystem( "flying_flaming_arrow_smoke" );
 
 	PrecacheScriptSound( "Weapon_Arrow.ImpactFlesh" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactMetal" );
@@ -135,18 +166,45 @@ void CTFProjectile_Arrow::Spawn( void )
 
 	BaseClass::Spawn();
 
+#ifdef TF_ARROW_FIX
 	SetSolidFlags( FSOLID_NOT_SOLID | FSOLID_TRIGGER );
+#endif
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
-	SetGravity( 0.3f );
+	SetGravity( 0.3f ); // TODO: Check again later.
 
 	UTIL_SetSize( this, -Vector( 1, 1, 1 ), Vector( 1, 1, 1 ) );
+
+	//FIXME: this isn't working and I don't know why
+	if( m_bFlame )
+	{
+		DispatchParticleEffect( "flying_flaming_arrow", PATTACH_POINT_FOLLOW, this, "muzzle" );
+		DispatchParticleEffect( "flying_flaming_arrow_smoke", PATTACH_POINT_FOLLOW, this, "muzzle" );
+	}
 
 	CreateTrail();
 
 	SetTouch( &CTFProjectile_Arrow::ArrowTouch );
+	SetThink(&CTFProjectile_Arrow::FlyThink);
+	SetNextThink(gpGlobals->curtime);
 
 	// TODO: Set skin here...
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CTFProjectile_Arrow::SetScorer( CBaseEntity *pScorer )
+{
+	m_Scorer = pScorer;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBasePlayer *CTFProjectile_Arrow::GetScorer( void )
+{
+	return dynamic_cast<CBasePlayer *>( m_Scorer.Get() );
 }
 
 //-----------------------------------------------------------------------------
@@ -156,14 +214,12 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 {
 	// Verify a correct "other."
 	Assert( pOther );
-	if ( !pOther->IsSolid() || pOther->IsSolidFlagSet( FSOLID_VOLUME_CONTENTS ) )
+	if ( pOther->IsSolidFlagSet( FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS ) )
 		return;
 
 	// Handle hitting skybox (disappear).
-	const trace_t *pTrace = &CBaseEntity::GetTouchTrace();
-	//trace_t *pNewTrace = const_cast<trace_t*>( pTrace );
-
-	if( pTrace->surface.flags & SURF_SKY )
+	trace_t *pTrace = const_cast<trace_t *>( &CBaseEntity::GetTouchTrace() );
+	if ( pTrace->surface.flags & SURF_SKY )
 	{
 		UTIL_Remove( this );
 		return;
@@ -173,13 +229,6 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	SetModelName( NULL_STRING );
 	AddSolidFlags( FSOLID_NOT_SOLID );
 	m_takedamage = DAMAGE_NO;
-
-	if ( pOther->IsWorld() )
-	{
-		SetAbsVelocity( vec3_origin	);
-		AddSolidFlags( FSOLID_NOT_SOLID );
-		return;
-	}
 
 	// Damage.
 	CBaseEntity *pAttacker = GetOwnerEntity();
@@ -193,118 +242,113 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	Vector vecDir = GetAbsVelocity();
 	CTFPlayer *pPlayer = ToTFPlayer( pOther );
 	CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( m_hLauncher.Get() );
-	trace_t trHit;
+	trace_t trHit, tr;
 	trHit = *pTrace;
 
 	if ( pPlayer )
 	{
-//#if 0
-		CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
-		if ( !pStudioHdr )
-			return;
-
-		mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pPlayer->GetHitboxSet() );
-		if ( !set )
-			return;
-
-		Vector vecDir = GetAbsVelocity();
-		VectorNormalize( vecDir );
-
-		// Oh boy... we gotta figure out the closest hitbox on player model to land a hit on.
-		// Trace a bit ahead, to get closer to player's body.
-		trace_t trFly;
-		UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * 16.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &trFly );
-
-		//trFly->hitgroup = HITGROUP_HEAD;
-
-		QAngle angHit;
-		trace_t trHit;
-		float flClosest = FLT_MAX;
-		for ( int i = 0; i < set->numhitboxes; i++ )
+		//trace_t trPlayerHit;
+		//Trace ahead to see if we're going to hit player's hitbox.
+		UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * gpGlobals->frametime, MASK_SHOT, this, COLLISION_GROUP_NONE, &trHit );
+		if ( trHit.m_pEnt != pOther )
 		{
-			mstudiobbox_t *pBox = set->pHitbox( i );
+			// Determine where we should land
 
-			Vector boxPosition;
-			QAngle boxAngles;
-			pPlayer->GetBonePosition( pBox->bone, boxPosition, boxAngles );
-
-			trace_t tr;
-			//UTIL_TraceLine( trFly.endpos, boxPosition, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-			float flLengthSqr = ( tr.endpos - trFly.endpos ).LengthSqr();
-
-			if ( flLengthSqr < flClosest )
-			{
-				flClosest = flLengthSqr;
-				trHit = tr;
-			}
-		}
-
-
-		if ( tf_debug_arrows.GetBool() )
-		{
-			NDebugOverlay::Line( trHit.endpos, trFly.endpos, 0, 255, 0, true, 5.0f );
-		}
-
-		// Place arrow at hitbox.
-		SetAbsOrigin( trHit.endpos );
-
-		Vector vecHitDir = trHit.plane.normal * -1.0f;
-		AngleVectors( angHit, &vecHitDir );
-		SetAbsAngles( angHit );
-//#else
-	/*
-		trace_t trPlayerHit;
-		// Trace ahead to see if we're going to hit player's hitbox.
-		UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * gpGlobals->frametime, MASK_SHOT, this, COLLISION_GROUP_NONE, &trPlayerHit );
-		if ( trPlayerHit.m_pEnt != pOther ) // Didn't hit, keep going.
-			return;
-
-		trHit = trPlayerHit;
-	*/
-//#endif
-		pPlayer->EmitSound( "Weapon_Arrow.ImpactFlesh" );
-	}
-	else if ( pOther->IsBaseObject() )
-	{
-		EmitSound( "Weapon_Arrow.ImpactMetal" );
-	}
-	else
-	{
-		trace_t	tr;
-		tr = BaseClass::GetTouchTrace();
-
-		// See if we struck the world
-		if ( pOther->GetMoveType() == MOVETYPE_NONE && !( tr.surface.flags & SURF_SKY ) )
-		{
-			EmitSound( "Weapon_Arrow.ImpactConcrete" );
-
-			// if what we hit is static architecture, can stay around for a while.
 			Vector vecDir = GetAbsVelocity();
-			float speed = VectorNormalize( vecDir );
+			VectorNormalizeFast( vecDir );
+			CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
+			if ( !pStudioHdr )
+				return;
 
-			// See if we should reflect off this surface
-			float hitDot = DotProduct( tr.plane.normal, -vecDir );
-			
-			if ( ( hitDot < 0.5f ) && ( speed > 100 ) )
+			mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pPlayer->GetHitboxSet() );
+			if ( !set )
+				return;
+
+			// Oh boy... we gotta figure out the closest hitbox on player model to land a hit on.
+			// Trace a bit ahead, to get closer to player's body.
+			//UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * 16.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &trPlayerHit );
+
+			QAngle angHit;
+			float flClosest = FLT_MAX;
+			mstudiobbox_t *pBox;
+			//int group = 0;
+			//Msg( "\nNum of Hitboxes: %i", set->numhitboxes );
+
+			for ( int i = 0; i < set->numhitboxes; i++ )
 			{
-				Vector vReflection = 2.0f * tr.plane.normal * hitDot + vecDir;
-				
-				QAngle reflectAngles;
+				pBox = set->pHitbox( i );
+				//Msg( "\nGroup: %i", pBox->group );
 
-				VectorAngles( vReflection, reflectAngles );
+				Vector boxPosition;
+				QAngle boxAngles;
+				pPlayer->GetBonePosition( pBox->bone, boxPosition, boxAngles );
+				Vector vecCross = CrossProduct( vecOrigin + vecDir * 16, boxPosition );
 
-				SetLocalAngles( reflectAngles );
+				trace_t tr;
+				UTIL_TraceLine( vecOrigin, boxPosition, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 
-				SetAbsVelocity( vReflection * speed * 0.75f );
-
-				// Start to sink faster
-				SetGravity( 1.0f );
+				float flLengthSqr = ( boxPosition - vecCross ).LengthSqr();
+				if ( flLengthSqr < flClosest )
+				{
+					//Msg( "\nCLOSER: %i", pBox->group );
+					//group = pBox->group;
+					flClosest = flLengthSqr;
+					trHit = tr;
+				}
 			}
-			else
+			//Msg("\nClosest: %i\n", group);
+
+			if ( tf_debug_arrows.GetBool() )
 			{
-				SetThink( &CTFProjectile_Arrow::SUB_Remove );
-				SetNextThink( gpGlobals->curtime + 2.0f );
-				
+				//Msg("\nHitBox: %i\nHitgroup: %i\n", trHit.hitbox, trHit.hitgroup);
+				NDebugOverlay::Line( trHit.startpos, trHit.endpos, 0, 255, 0, true, 5.0f );
+				NDebugOverlay::Line( vecOrigin, vecOrigin + vecDir * 16, 255, 0, 0, true, 5.0f );
+			}
+
+			// Place arrow at hitbox.
+			/*SetAbsOrigin( trHit.endpos );
+
+			Vector vecHitDir = trHit.plane.normal * -1.0f;
+			AngleVectors( angHit, &vecHitDir );
+			SetAbsAngles( angHit );*/
+		}
+		EmitSound( "Weapon_Arrow.ImpactFlesh" );
+
+		Vector vForward;
+
+		AngleVectors( GetAbsAngles(), &vForward );
+		VectorNormalize ( vForward );
+
+		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + vForward * 128, MASK_BLOCKLOS, pOther, COLLISION_GROUP_NONE, &tr );
+
+		if ( tr.fraction != 1.0f )
+		{
+			//NDebugOverlay::Box( tr.endpos, Vector( -16, -16, -16 ), Vector( 16, 16, 16 ), 0, 255, 0, 0, 10 );
+			//NDebugOverlay::Box( GetAbsOrigin(), Vector( -16, -16, -16 ), Vector( 16, 16, 16 ), 0, 0, 255, 0, 10 );
+
+			if ( tr.m_pEnt == NULL || ( tr.m_pEnt && tr.m_pEnt->GetMoveType() == MOVETYPE_NONE ) )
+			{
+				CEffectData	data;
+
+				data.m_vOrigin = tr.endpos;
+				data.m_vNormal = vForward;
+				data.m_nEntIndex = tr.fraction != 1.0f;
+			
+				DispatchEffect( "BoltImpact", data );
+			}
+		}
+
+	}
+	else if ( pOther->GetMoveType() == MOVETYPE_NONE )
+		{
+			if ( pOther->IsBaseObject() )
+				{
+					EmitSound( "Weapon_Arrow.ImpactMetal" );
+				}
+				else
+				{
+					EmitSound( "Weapon_Arrow.ImpactConcrete" );
+				}			
 				//FIXME: We actually want to stick (with hierarchy) to what we've hit
 				SetMoveType( MOVETYPE_NONE );
 			
@@ -313,34 +357,21 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 				AngleVectors( GetAbsAngles(), &vForward );
 				VectorNormalize ( vForward );
 
-				/*
 				CEffectData	data;
 
 				data.m_vOrigin = tr.endpos;
 				data.m_vNormal = vForward;
 				data.m_nEntIndex = 0;
-				*/
-				//DispatchEffect( "BoltImpact", data );
-				
-				UTIL_ImpactTrace( &tr, DMG_BULLET );
+			
+				DispatchEffect( "BoltImpact", data );
 
-				AddEffects( EF_NODRAW );
-				SetTouch( NULL );
-				SetThink( &CTFProjectile_Arrow::SUB_Remove );
-				SetNextThink( gpGlobals->curtime + 2.0f );
-			}
-		}
-		else
-		{
-			// Put a mark unless we've hit the sky
-			if ( ( tr.surface.flags & SURF_SKY ) == false )
-			{
-				UTIL_ImpactTrace( &tr, DMG_BULLET );
-			}
-
-			UTIL_Remove( this );
-		}
+				UTIL_ImpactTrace( &trHit, DMG_BULLET );
 	}
+	else
+		{
+			UTIL_ImpactTrace( &trHit, DMG_BULLET );
+			//UTIL_Remove( this );
+		}
 
 	// Do damage.
 	CTakeDamageInfo info( this, pAttacker, pWeapon, GetDamage(), GetDamageType() );
@@ -357,13 +388,34 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CTFProjectile_Arrow::FlyThink(void)
+{
+	QAngle angles;
+
+	VectorAngles(GetAbsVelocity(), angles);
+
+	SetAbsAngles(angles);
+
+	SetNextThink(gpGlobals->curtime + 0.1f);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 int	CTFProjectile_Arrow::GetDamageType()
 {
 	int iDmgType = BaseClass::GetDamageType();
-
+	if ( m_bCritical )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
 	if ( CanHeadshot() )
 	{
 		iDmgType |= DMG_USE_HITLOCATIONS;
+	}
+	if ( m_bFlame == true )
+	{
+		iDmgType |= DMG_IGNITE;	
 	}
 
 	return iDmgType;
@@ -374,7 +426,21 @@ int	CTFProjectile_Arrow::GetDamageType()
 //-----------------------------------------------------------------------------
 void CTFProjectile_Arrow::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 {
-	BaseClass::Deflected( pDeflectedBy, vecDir );
+	// Get arrow's speed.
+	float flVel = GetAbsVelocity().Length();
+
+	QAngle angForward;
+	VectorAngles( vecDir, angForward );
+
+	// Now change arrow's direction.
+	SetAbsAngles( angForward );
+	SetAbsVelocity( vecDir * flVel );
+
+	// And change owner.
+	IncremenentDeflected();
+	SetOwnerEntity( pDeflectedBy );
+	ChangeTeam( pDeflectedBy->GetTeamNumber() );
+	SetScorer( pDeflectedBy );
 
 	// Change trail color.
 	if ( m_hSpriteTrail.Get() )

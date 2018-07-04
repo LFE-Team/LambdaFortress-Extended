@@ -44,7 +44,6 @@
 	#include "team_train_watcher.h"
 	#include "vote_controller.h"
 	#include "tf_voteissues.h"
-	#include "tf_weaponbase_grenadeproj.h"
 	#include "eventqueue.h"
 	#include "AI_ResponseSystem.h"
 	#include "hl2orange.spa.h"
@@ -52,7 +51,9 @@
 	#include "ai_dynamiclink.h"
 	#include "antlion_maker.h"
 	#include "globalstate.h"
+	#include "tf_weaponbase_grenadeproj.h"
 	#include "tf_weapon_physcannon.h"
+	#include "tf_projectile_arrow.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -4726,7 +4727,13 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 				case TF_WEAPON_ROCKETLAUNCHER:
 					killer_weapon_name = "deflect_rocket";
 					break;
-				}
+				case TF_WEAPON_COMPOUND_BOW:
+					if( info.GetDamageType() & DMG_IGNITE )
+						killer_weapon_name = "deflect_huntsman_flyingburn";
+					else
+						killer_weapon_name = "deflect_arrow";
+					break;
+ 				}
 			}
 		}
 		else if ( CTFWeaponBaseGrenadeProj *pGrenade = dynamic_cast<CTFWeaponBaseGrenadeProj *>( pInflictor ) )
@@ -4765,7 +4772,7 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	}
 
 	// strip certain prefixes from inflictor's classname
-	const char *prefix[] = { "tf_weapon_grenade_", "tf_weapon_", "weapon_", "npc_", "func_", "prop_" };
+	const char *prefix[] = { "tf_weapon_grenade_", "tf_weapon_", "weapon_", "npc_", "func_", "prop_", "monster_" };
 	for ( int i = 0; i < ARRAYSIZE( prefix ); i++ )
 	{
 		// if prefix matches, advance the string pointer past the prefix
@@ -4799,6 +4806,14 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	{
 		// look out for sentry rocket as weapon and map it to sentry gun, so we get the L3 sentry death icon
 		killer_weapon_name = "obj_sentrygun3";
+	}
+	// make sure arrow kills are mapping to the huntsman
+	else if ( 0 == V_strcmp( killer_weapon_name, "tf_projectile_arrow" ) )
+	{
+		if( info.GetDamageType() & DMG_IGNITE )
+			killer_weapon_name = "huntsman_flyingburn";
+		else
+			killer_weapon_name = "huntsman";
 	}
 	// Some special cases for NPCs.
 	else if ( V_strcmp( killer_weapon_name, "strider" ) == 0 )
@@ -5679,6 +5694,8 @@ void CTFGameRules::RoundRespawn( void )
 
 		pTeam->SetFlagCaptures( 0 );
 	}
+
+	CTF_GameStats.ResetRoundStats();
 
 	BaseClass::RoundRespawn();
 

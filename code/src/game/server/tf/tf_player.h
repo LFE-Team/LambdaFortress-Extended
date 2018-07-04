@@ -602,6 +602,7 @@ private:
 	float					m_flNextRegenerateTime;
 	float					m_flNextChangeClassTime;
 	float					m_flNextChangeTeamTime;
+	float					m_flNextHealthRegen;
 
 	// Ragdolls.
 	Vector					m_vecTotalBulletForce;

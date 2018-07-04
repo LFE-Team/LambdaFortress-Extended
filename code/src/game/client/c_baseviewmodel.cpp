@@ -211,7 +211,11 @@ bool C_BaseViewModel::ShouldFlipViewModel()
 	CBaseCombatWeapon *pWeapon = m_hWeapon.Get();
 	if ( pWeapon )
 	{
-		return pWeapon->m_bFlipViewModel != cl_flipviewmodels.GetBool();
+		// HACK: Fix for flipped huntsman model
+		if( !V_stricmp( pWeapon->GetName(), "tf_weapon_compound_bow" ) )
+			return pWeapon->m_bFlipViewModel == cl_flipviewmodels.GetBool();
+		else
+			return pWeapon->m_bFlipViewModel != cl_flipviewmodels.GetBool();
 	}
 #endif
 

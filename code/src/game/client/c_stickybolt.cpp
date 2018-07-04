@@ -103,6 +103,7 @@ public:
 	
 			physenv->CreateBallsocketConstraint( pReference, pPhysicsObject, NULL, ballsocket );
 
+			#ifdef HL2_CLIENT_DLL
 			//Play a sound
 			CPASAttenuationFilter filter( pEnt );
 
@@ -114,7 +115,7 @@ public:
 			ep.m_pOrigin = &pEnt->GetAbsOrigin();
 
 			C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, ep );
-	
+			#endif
 			return ITERATION_STOP;
 		}
 
@@ -128,7 +129,11 @@ private:
 
 void CreateCrossbowBolt( const Vector &vecOrigin, const Vector &vecDirection )
 {
-	model_t *pModel = (model_t *)engine->LoadModel( "models/crossbow_bolt.mdl" );
+	#ifdef TF_CLASSIC_CLIENT
+		model_t *pModel = (model_t *)engine->LoadModel( "models/weapons/w_models/w_arrow.mdl" );
+	#else
+		model_t *pModel = (model_t *)engine->LoadModel( "models/crossbow_bolt.mdl" );
+	#endif
 
 	QAngle vAngles;
 

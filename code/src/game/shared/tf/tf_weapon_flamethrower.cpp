@@ -11,7 +11,7 @@
 #include "tf_gamerules.h"
 #include "tf_player_shared.h"
 #include "props_shared.h"
-
+#include "tf_weapon_compound_bow.h"
 #if defined( CLIENT_DLL )
 
 	#include "c_tf_player.h"
@@ -1354,10 +1354,13 @@ void CTFFlameEntity::FlameThink( void )
 		if ( !pAttacker )
 			return;
 
-		CUtlVector<CTFTeam *> pTeamList;
-		CTFTeam *pTeam = pAttacker->GetTFTeam();
-		if ( pTeam )
+		CUtlVector<CTFTeam *> pTeamList, pTeamListOther;
+		CTFTeam *pTeam = pAttacker->GetTFTeam(), *pTeamOther = pAttacker->GetOpposingTFTeam();
+		if ( pTeam && pTeamOther )
+		{
 			pTeam->GetOpposingTFTeamList(&pTeamList);
+			pTeamOther->GetOpposingTFTeamList(&pTeamListOther);
+		}
 		else
 			return;
 
@@ -1395,7 +1398,7 @@ void CTFFlameEntity::FlameThink( void )
 							return;
 					}
 				}
-				
+
 				// check collision against all enemy NPCs
 				for (int iNPC = 0; iNPC < pTeamList[i]->GetNumNPCs(); iNPC++)
 				{
@@ -1404,6 +1407,19 @@ void CTFFlameEntity::FlameThink( void )
 					if ( pNPC && pNPC->IsAlive() )
 					{
 						CheckCollision( pNPC, &bHitWorld );
+						if ( bHitWorld )
+							return;
+					}
+				}
+
+				// check collision against all players on our team
+				for ( int iPlayer = 0; iPlayer < pTeamListOther[i]->GetNumPlayers(); iPlayer++ )
+				{
+					CBasePlayer *pPlayer = pTeamListOther[i]->GetPlayer( iPlayer );
+					// Is this player connected, alive, and an enemy?
+					if ( pPlayer && pPlayer->IsConnected() && pPlayer->IsAlive() && pPlayer!=pAttacker )
+					{
+						CheckCollision( pPlayer, &bHitWorld );
 						if ( bHitWorld )
 							return;
 					}
@@ -1509,65 +1525,64 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 {
 	// remember that we've burnt this player
-	m_hEntitiesBurnt.AddToTail( pOther );
-
-	float flDistance = GetAbsOrigin().DistTo( m_vecInitialPos );
-	float flMultiplier;
-	if ( flDistance <= 125 )
-	{
-		// at very short range, apply short range damage multiplier
-		flMultiplier = tf_flamethrower_shortrangedamagemultiplier.GetFloat();
-	}
-	else
-	{
-		// make damage ramp down from 100% to 60% from half the max dist to the max dist
-		flMultiplier = RemapValClamped( flDistance, tf_flamethrower_maxdamagedist.GetFloat()/2, tf_flamethrower_maxdamagedist.GetFloat(), 1.0, 0.6 );
-	}
-	float flDamage = m_flDmgAmount * flMultiplier;
-	flDamage = max( flDamage, 1.0 );
-	if ( tf_debug_flamethrower.GetInt() )
-	{
-		Msg( "Flame touch dmg: %.1f\n", flDamage );
-	}
-
-	CBaseEntity *pAttacker = m_hAttacker;
-	if ( !pAttacker )
-		return;
-
-	SetHitTarget();
-
-	CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, m_iDmgType, TF_DMG_CUSTOM_BURNING );
-	info.SetReportedPosition( pAttacker->GetAbsOrigin() );
-
-	// We collided with pOther, so try to find a place on their surface to show blood
-	trace_t pTrace;
-	UTIL_TraceLine( WorldSpaceCenter(), pOther->WorldSpaceCenter(), MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &pTrace );
-
-	pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
-
-	int iBehindTarget = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), iBehindTarget, set_flamethrower_back_crit );
-	if ( iBehindTarget )
-	{
-		trace_t trace;
-		//CBaseCombatCharacter *pTarget = trace.m_pEnt->MyCombatCharacterPointer();
-		if ( m_hLauncher.Get() && m_hLauncher->IsBehindAndFacingTarget( trace.m_pEnt ) )
+ 	m_hEntitiesBurnt.AddToTail( pOther );
+ 
+	//is this entity on our team?
+	if(pOther->GetTeam() == GetTeam())
+ 	{
+		CTFPlayer *pPlayer = ToTFPlayer(pOther);
+		CTFCompoundBow *bBow = dynamic_cast<CTFCompoundBow *>(pPlayer->GetActiveTFWeapon());
+		if(bBow)
 		{
-			int bitsDamage = info.GetDamageType();
-			bitsDamage |= DMG_CRITICAL;
-			info.AddDamageType( DMG_CRITICAL );
+			bBow->LightArrow();
 		}
-	}
+		return;
+ 	}
+ 	else
+ 	{
+		float flDistance = GetAbsOrigin().DistTo( m_vecInitialPos );
+		float flMultiplier;
+		if ( flDistance <= 125 )
+		{
+			// at very short range, apply short range damage multiplier
+			flMultiplier = tf_flamethrower_shortrangedamagemultiplier.GetFloat();
+		}
+		else
+		{
+			// make damage ramp down from 100% to 60% from half the max dist to the max dist
+			flMultiplier = RemapValClamped( flDistance, tf_flamethrower_maxdamagedist.GetFloat()/2, tf_flamethrower_maxdamagedist.GetFloat(), 1.0, 0.6 );
+		}
+		float flDamage = m_flDmgAmount * flMultiplier;
+		flDamage = max( flDamage, 1.0 );
+		if ( tf_debug_flamethrower.GetInt() )
+		{
+			Msg( "Flame touch dmg: %.1f\n", flDamage );
+		}
 
-	ApplyMultiDamage();
+		CBaseEntity *pAttacker = m_hAttacker;
+		if ( !pAttacker )
+			return;
 
-	// It's better to ignite NPC here rather than NPC code.
-	CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
-	if ( pNPC )
-	{
-		pNPC->Ignite( TF_BURNING_FLAME_LIFE );
-		// I don't like this but Ignite doesn't allow us to set attacker so we have to do it separately. -nicknine?
-		pNPC->SetBurnAttacker( pAttacker );
+		SetHitTarget();
+
+		CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, m_iDmgType, TF_DMG_CUSTOM_BURNING );
+		info.SetReportedPosition( pAttacker->GetAbsOrigin() );
+
+		// We collided with pOther, so try to find a place on their surface to show blood
+		trace_t pTrace;
+		UTIL_TraceLine( WorldSpaceCenter(), pOther->WorldSpaceCenter(), MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &pTrace );
+
+		pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+		ApplyMultiDamage();
+	
+		// It's better to ignite NPC here rather than NPC code.
+		CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
+		if ( pNPC )
+		{
+			pNPC->Ignite( TF_BURNING_FLAME_LIFE );
+			// I don't like this but Ignite doesn't allow us to set attacker so we have to do it separately. -nicknine?
+			pNPC->SetBurnAttacker( pAttacker );
+		}
 	}
 }
 

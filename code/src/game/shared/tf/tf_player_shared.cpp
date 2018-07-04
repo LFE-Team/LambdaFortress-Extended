@@ -157,6 +157,7 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropBool( RECVINFO( m_bCarryingObject ) ),
 	RecvPropInt( RECVINFO( m_nTeamTeleporterUsed ) ),
 	RecvPropInt( RECVINFO( m_iRespawnParticleID ) ),
+	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
 	RecvPropInt( RECVINFO( m_bInCutScene ) ),
 	// Spy.
 	RecvPropTime( RECVINFO( m_flInvisChangeCompleteTime ) ),
@@ -222,6 +223,7 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropBool( SENDINFO( m_bCarryingObject ) ),
 	SendPropInt( SENDINFO( m_nTeamTeleporterUsed ), 3, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iRespawnParticleID ), -1, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iMaxHealth ), 10 ),
 	SendPropInt( SENDINFO( m_bInCutScene ), 1, SPROP_UNSIGNED ),
 	// Spy
 	SendPropTime( SENDINFO( m_flInvisChangeCompleteTime ) ),
@@ -856,6 +858,11 @@ int CTFPlayerShared::GetMaxBuffedHealth( void )
 	return iRoundDown;
 }
 
+int CTFPlayerShared::GetMaxHealth( void )
+{
+	return m_iMaxHealth;
+}
+
 int CTFPlayerShared::GetDisguiseMaxBuffedHealth( void )
 {
 	float flBoostMax = GetDisguiseMaxHealth() * tf_max_health_boost.GetFloat();
@@ -1095,6 +1102,15 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			//m_pOuter->SetLocalAngles( m_pOuter->m_angTauntCamera );
 
 			RemoveCond( TF_COND_TAUNTING );
+		}
+	}
+
+	if ( InCond( TF_COND_STUNNED ) )
+	{
+		if ( gpGlobals->curtime > m_flTauntRemoveTime )
+		{
+			m_pOuter->ResetTauntHandle();
+			RemoveCond( TF_COND_STUNNED );
 		}
 	}
 
@@ -1490,7 +1506,7 @@ void CTFPlayerShared::OnAddPhase(void)
 	m_pOuter->DropFlag();
 #else
 	//CNewParticleEffect *pParticle = m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
-	//m_pOuter->ParticleProp()->Create( ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber() ), PATTACH_ABSORIGIN_FOLLOW );
+	m_pOuter->ParticleProp()->Create( ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber() ), PATTACH_ABSORIGIN_FOLLOW );
 	m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW ); 
 #endif
 }
@@ -3719,6 +3735,9 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pObject )
 		return false;
 
 	if ( pObject->IsBuilding() || pObject->IsUpgrading() || pObject->IsRedeploying() || pObject->IsDisabled() )
+		return false;
+
+	if ( pObject->HasSapper() )
 		return false;
 
 	return true;

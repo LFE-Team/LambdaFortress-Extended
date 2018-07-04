@@ -124,6 +124,10 @@ public:
 
 	int		GetMaxBuffedHealth( void );
 
+	// Max Health
+	int		GetMaxHealth( void );	
+	void	SetMaxHealth( int iMaxHealth ) { m_iMaxHealth = iMaxHealth; }
+
 #ifdef CLIENT_DLL
 	// This class only receives calls for these from C_TFPlayer, not
 	// natively from the networking system
@@ -340,6 +344,8 @@ private:
 	CNetworkVar( int, m_nDesiredDisguiseClass );
 	CNetworkVar( int, m_nDesiredDisguiseTeam );
 	CEconItemView m_DisguiseItem;
+
+	CNetworkVar( int, m_iMaxHealth );
 
 	bool m_bEnableSeparation;		// Keeps separation forces on when player stops moving, but still penetrating
 	Vector m_vSeparationVelocity;	// Velocity used to keep player seperate from teammates

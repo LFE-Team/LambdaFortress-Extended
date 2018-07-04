@@ -260,7 +260,26 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 			Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_backstab", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
 			break;
 		case TF_DMG_CUSTOM_HEADSHOT:
-			Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_headshot", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
+			if ( FStrEq( event->GetString( "weapon" ), "huntsman" ) )
+			{
+				Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_huntsman_headshot", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
+			}
+			else if ( FStrEq( event->GetString( "weapon" ), "huntsman_flyingburn" ) )
+			{
+				Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_huntsman_flyingburn_headshot", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
+			}
+			else if ( FStrEq( event->GetString( "weapon" ), "deflect_arrow" ) )
+			{
+				Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_deflect_huntsman_headshot", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
+			}
+			else if ( FStrEq( event->GetString( "weapon" ), "deflect_huntsman_flyingburn" ) )
+			{
+				Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_deflect_huntsman_flyingburn_headshot", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
+			}
+			else 
+			{
+				Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_headshot", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
+			}
 			break;
 		case TF_DMG_CUSTOM_BURNING:
 		{

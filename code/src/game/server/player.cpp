@@ -5458,6 +5458,7 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 		if ( pWeapon != NULL )
 		{
 			pWeapon->Lower();
+			//pWeapon->SetWeaponVisible( false );
 		}
 #endif
 #ifndef HL2_DLL
@@ -5593,6 +5594,10 @@ void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExi
 			GetActiveWeapon()->Deploy();
 			GetActiveWeapon()->Ready();
 			ShowCrosshair( true );
+			#ifdef TF_CLASSIC
+			//GetActiveWeapon()->SetWeaponVisible( true );
+			//GetActiveWeapon()->SwitchToNextBestWeapon( NULL );
+			#endif
 		}
 	}
 

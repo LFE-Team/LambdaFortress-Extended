@@ -270,10 +270,14 @@ void CObjectSapper::Killed( const CTakeDamageInfo &info )
 	if ( pScorer )
 	{
 		CBaseObject *pObject = GetParentObject();
+		if (pScorer->GetTeamNumber() != pObject->GetBuilder()->GetTeamNumber())
+		{
+			return;
+		}
 		if ( pObject && pScorer != pObject->GetBuilder() )
 		{
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pScorer, this, 1 );
-		}
+ 		}
 	}
 
 	BaseClass::Killed( info );

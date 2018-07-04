@@ -961,10 +961,19 @@ bool CViewRender::ShouldDrawViewModel( bool bDrawViewmodel )
 
 	if ( !r_drawviewmodel.GetBool() )
 		return false;
+#ifndef TF_CLASSIC_CLIENT
+	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
+		return false;
+#else
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( pPlayer->IsInAVehicle() )
+	{
+		return false;
+	}
 
 	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
 		return false;
-
+#endif
 	if ( !ShouldDrawEntities() )
 		return false;
 

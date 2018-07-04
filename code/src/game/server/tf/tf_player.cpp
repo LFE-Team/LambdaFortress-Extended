@@ -455,6 +455,7 @@ CTFPlayer::CTFPlayer()
 	m_iMaxSentryKills = 0;
 	m_flNextNameChangeTime = 0;
 
+	m_flNextHealthRegen = 0;
 	m_flNextTimeCheck = gpGlobals->curtime;
 	m_flSpawnTime = 0;
 
@@ -559,6 +560,17 @@ void CTFPlayer::TFPlayerThink()
 		m_bJumpEffect = true;
 	}
 
+	if( !IsPlayerClass( TF_CLASS_MEDIC ) && gpGlobals->curtime > m_flNextHealthRegen )
+	{
+		int iHealthDrain = 0;
+		CALL_ATTRIB_HOOK_INT( iHealthDrain, add_health_regen );
+		if( iHealthDrain )
+		{
+			RegenThink();
+			m_flNextHealthRegen = gpGlobals->curtime + TF_MEDIC_REGEN_TIME;
+		}			
+	}
+
 	SetContextThink( &CTFPlayer::TFPlayerThink, gpGlobals->curtime, "TFPlayerThink" );
 }
 
@@ -567,22 +579,9 @@ void CTFPlayer::TFPlayerThink()
 //-----------------------------------------------------------------------------
 void CTFPlayer::RegenThink( void )
 {
-	float flHealRegen = 0.0f;
-	CALL_ATTRIB_HOOK_FLOAT( flHealRegen, add_health_regen );
-	if ( flHealRegen )
-	{
-		if ( IsAlive() )
-		{
-			// Heal faster if we haven't been in combat for a while
-			float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
-			float flScale = RemapValClamped( flTimeSinceDamage, 5.0f, 10.0f, 1.0f, 2.0f );
-
-			int iHealAmount = ceil( flHealRegen * flScale );
-			TakeHealth( iHealAmount, DMG_GENERIC );
-		}
-
-		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
-	}
+	// Health drain attribute
+	int iHealthDrain = 0;
+	CALL_ATTRIB_HOOK_INT( iHealthDrain, add_health_regen );
 
 	if ( IsPlayerClass( TF_CLASS_MEDIC ) )
 	{
@@ -590,7 +589,7 @@ void CTFPlayer::RegenThink( void )
 		{
 			// Heal faster if we haven't been in combat for a while
 			float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
-			float flScale = RemapValClamped( flTimeSinceDamage, 5.0f, 10.0f, 1.0f, 2.0f );
+			float flScale = RemapValClamped( flTimeSinceDamage, 5, 10, 3.0, 6.0 );
 
 			float flHealingMastery = 0;
 			CALL_ATTRIB_HOOK_FLOAT( flHealingMastery, healing_mastery );
@@ -601,10 +600,28 @@ void CTFPlayer::RegenThink( void )
 			}
 
 			int iHealAmount = ceil( TF_MEDIC_REGEN_AMOUNT * flScale );
-			TakeHealth( iHealAmount, DMG_GENERIC );
+			TakeHealth( iHealAmount + iHealthDrain, DMG_GENERIC );
 		}
-
 		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
+	}
+	else
+	{
+		if( IsAlive() )
+		{
+			int iHealthRestored = TakeHealth( iHealthDrain, DMG_GENERIC );
+			if (iHealthRestored)
+			{
+				IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
+				
+				if ( event )
+				{
+					event->SetInt( "amount", iHealthRestored );
+					event->SetInt( "entindex", entindex() );
+					
+					gameeventmanager->FireEvent( event );
+				}
+			}	
+		}
 	}
 }
 
@@ -1466,19 +1483,21 @@ void CTFPlayer::Regenerate( void )
 void CTFPlayer::InitClass( void )
 {
 	// Set initial health and armor based on class.
+	int iHealthToAdd = 0;
+	CALL_ATTRIB_HOOK_INT( iHealthToAdd, add_maxhealth );
+	if( iHealthToAdd != 0 )
+	{
+		SetMaxHealth( GetPlayerClass()->GetMaxHealth() + iHealthToAdd );
+	}
+	else
+	{
+		SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
+	}
 
+	SetHealth( GetMaxHealth() );
 
-	float flMaxHealth = (float)GetPlayerClass()->GetMaxHealth();
-	//if ( flMaxHealth == WEAPON_NOCLIP )
-	//	return (int)flMaxHealth;
-
-	CALL_ATTRIB_HOOK_FLOAT( flMaxHealth, add_maxhealth );
-
-	//int iMaxHealth = (int)( flMaxHealth + 0.5f );
-
-	SetMaxHealth( flMaxHealth );
-	//SetHealth( GetMaxHealth() );
-	SetHealth( flMaxHealth );
+	// Update network variables
+	m_Shared.SetMaxHealth( GetMaxHealth() );
 
 	SetArmorValue( GetPlayerClass()->GetMaxArmor() );
 
@@ -3989,8 +4008,8 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
  
 	int bitsDamage = inputInfo.GetDamageType();
 
-	// If we're invulnerable, force ourselves to only take damage events only, so we still get pushed
-	if ( m_Shared.InCond( TF_COND_INVULNERABLE ) || m_Shared.InCond( TF_COND_PHASE) )
+	// If we're invulnerable or bonk, force ourselves to only take damage events only, so we still get pushed
+	if ( m_Shared.IsInvulnerable() || m_Shared.InCond( TF_COND_PHASE) )
 	{
 		bool bAllowDamage = false;
 
@@ -7970,12 +7989,12 @@ void CTFPlayer::Taunt( void )
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/engineer/low/taunt09.vcd" ) == 0 )
 		{
-			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
+			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
 			m_iTauntAttack = TAUNTATK_ENGINEER_ARM_IMPALE;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/demoman/low/taunt09.vcd" ) == 0 )
 		{
-			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
+			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
 			m_iTauntAttack = TAUNTATK_DEMOMAN_BARBARIAN_SWING;
 		}
 	}
@@ -8252,6 +8271,11 @@ void CTFPlayer::DoTauntAttack( void )
 				{
 					m_flTauntAttackTime = gpGlobals->curtime + 0.75f;
 					m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_KILL;
+				}
+				else if ( iTauntType == TAUNTATK_ENGINEER_ARM_IMPALE )
+				{
+					m_flTauntAttackTime = gpGlobals->curtime + 1.75f;
+					m_iTauntAttack = TAUNTATK_ENGINEER_ARM_KILL;
 				}
 			}
 
