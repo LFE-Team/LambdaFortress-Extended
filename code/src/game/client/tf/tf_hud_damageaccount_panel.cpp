@@ -205,14 +205,14 @@ void CDamageAccountPanel::OnDamaged( IGameEvent *event )
 
 	bool bIsPlayer = V_strcmp( event->GetName(), "npc_hurt" ) != 0;
 
-	int iAttacker = bIsPlayer ? event->GetInt( "attacker" ) : event->GetInt( "attacker_player" );;
-	int iVictim = bIsPlayer ? event->GetInt( "userid" ) : event->GetInt( "entindex" );
+	int iAttacker = event->GetInt("attacker_index");
+	int iVictim = event->GetInt("victim_index");
 	int iDmgAmount = event->GetInt( "damageamount" );
 	int iHealth = event->GetInt( "health" );
 
 	// Did we shoot the guy?
-	if ( iAttacker != pPlayer->GetUserID() )
-		return;
+	if ( iAttacker != pPlayer->entindex() )
+        return;
 
 	// No self-damage notifications.
 	if ( bIsPlayer && iAttacker == iVictim )
