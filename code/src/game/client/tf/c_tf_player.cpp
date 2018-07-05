@@ -2355,6 +2355,15 @@ CStudioHdr *C_TFPlayer::OnNewModel( void )
 		InitPhonemeMappings();
 	}
 
+	if ( IsPlayerClass( TF_CLASS_SPY ) )
+	{
+		m_iSpyMaskBodygroup = FindBodygroupByName( "spyMask" );
+	}
+	else
+	{
+		m_iSpyMaskBodygroup = -1;
+	}
+
 	m_bUpdatePartyHat = true;
 
 	return hdr;
@@ -2631,7 +2640,7 @@ void C_TFPlayer::ThirdPersonSwitch( bool bThirdPerson )
 	// Update any effects affected by camera mode.
 	m_Shared.UpdateCritBoostEffect();
 	UpdateOverhealEffect();
-	UpdateSpyMask();
+	//UpdateSpyMask();
 	UpdateShieldEffect();
 
 	if ( GetViewModel() )
@@ -4217,6 +4226,11 @@ void C_TFPlayer::ValidateModelIndex( void )
 		}
 	}
 
+	if ( m_iSpyMaskBodygroup > -1 && GetModelPtr() != NULL )
+	{
+		SetBodygroup( m_iSpyMaskBodygroup, ( m_Shared.InCond( TF_COND_DISGUISED ) && !IsEnemyPlayer() ) );
+	}
+
 	BaseClass::ValidateModelIndex();
 }
 
@@ -4680,7 +4694,7 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 			m_Shared.UpdateCritBoostEffect();
 			UpdateOverhealEffect();
 			UpdateRecentlyTeleportedEffect();
-			UpdateSpyMask();
+			//UpdateSpyMask();
 		}
 	}
 	else

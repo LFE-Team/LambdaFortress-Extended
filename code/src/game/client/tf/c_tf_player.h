@@ -423,6 +423,8 @@ public:
 
 	int GetNumActivePipebombs( void );
 
+	int				m_iSpyMaskBodygroup;
+
 	bool			m_bUpdatePartyHat;
 	CHandle<C_PlayerAttachedModel>	m_hPartyHat;
 

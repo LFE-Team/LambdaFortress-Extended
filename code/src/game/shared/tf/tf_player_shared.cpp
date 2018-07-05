@@ -1276,7 +1276,7 @@ void CTFPlayerShared::OnDisguiseChanged( void )
 	UpdateCritBoostEffect();
 	m_pOuter->UpdateOverhealEffect();
 	m_pOuter->UpdateRecentlyTeleportedEffect();
-	m_pOuter->UpdateSpyMask();
+	//m_pOuter->UpdateSpyMask();
 }
 #endif
 
