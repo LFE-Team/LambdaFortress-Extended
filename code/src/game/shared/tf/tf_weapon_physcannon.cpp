@@ -1777,52 +1777,69 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			return;
 		}
 #ifndef CLIENT_DLL 
-		if (GetOwner()->IsPlayer() && !IsMegaPhysCannon())
+		if( GetOwner()->IsPlayer() && !IsMegaPhysCannon() )
 		{
 			// Don't let the player zap any NPC's except regular antlions and headcrabs.
-			if (pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion"))
+			if( pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion") )
 			{
 				DryFire();
 				return;
 			}
 		}
 
-		if (IsMegaPhysCannon())
+		if ( IsMegaPhysCannon() )
 		{
 			//SecobMod__Information: This line was modified with the classify check. This prevents the primary fire being used on the following friendly NPCs: Dog, Monk, Vortigaunt.
-			if (pEntity->IsNPC() && !pEntity->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly())
+			if ( pEntity->IsNPC() && !pEntity->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() )
 			{
-				CTakeDamageInfo info(pOwner, pOwner, 1.0f, DMG_GENERIC);
-				CBaseEntity *pRagdoll = CreateServerRagdoll(pEntity->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true);
-				PhysSetEntityGameFlags(pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS);
-				pRagdoll->SetCollisionBounds(pEntity->CollisionProp()->OBBMins(), pEntity->CollisionProp()->OBBMaxs());
+				CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC );
+				CBaseEntity *pRagdoll = CreateServerRagdoll( pEntity->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
+				PhysSetEntityGameFlags( pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS );
+				pRagdoll->SetCollisionBounds( pEntity->CollisionProp()->OBBMins(), pEntity->CollisionProp()->OBBMaxs() );
 
 				// Necessary to cause it to do the appropriate death cleanup
-				CTakeDamageInfo ragdollInfo(pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
-				pEntity->TakeDamage(ragdollInfo);
+				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+				pEntity->TakeDamage( ragdollInfo );
 
-				PuntRagdoll(pRagdoll, forward, tr);
-				return;
-			}
-			if (pEntity->IsPlayer() && pEntity->GetTeam())
-			{
-				CTakeDamageInfo ragdollInfo(pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
-				pEntity->TakeDamage(ragdollInfo);
+				PuntRagdoll( pRagdoll, forward, tr );
 				return;
 			}
 		}
 #endif
+
+		PuntNonVPhysics( pEntity, forward, tr );
 	}
 	else
 	{
-		if ( pEntity->VPhysicsIsFlesh( ) )
+#ifndef CLIENT_DLL 
+		if ( EntityAllowsPunts( pEntity) == false )
 		{
 			DryFire();
 			return;
 		}
-		PuntVPhysics( pEntity, forward, tr );
-	}
 
+		if ( !IsMegaPhysCannon() )
+		{
+			if ( pEntity->VPhysicsIsFlesh( ) )
+			{
+				DryFire();
+				return;
+			}
+			PuntVPhysics( pEntity, forward, tr );
+		}
+		else
+		{
+			if ( dynamic_cast<CRagdollProp*>(pEntity) )
+			{
+				PuntRagdoll( pEntity, forward, tr );
+			}
+			else
+			{
+				PuntVPhysics( pEntity, forward, tr );
+			}
+		}
+#endif
+	}
 #ifndef CLIENT_DLL
 	pOwner->RemoveInvisibility();
 	pOwner->RemoveDisguise();

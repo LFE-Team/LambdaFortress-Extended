@@ -6121,9 +6121,12 @@ static void CreateAirboat( CBasePlayer *pPlayer )
 #ifdef TF_CLASSIC
 static void CreateAirboat2( CBasePlayer *pPlayer )
 {
-	CTFVehicleBlock *pVehicleBlock = dynamic_cast<CTFVehicleBlock*>( gEntList.FindEntityByClassname( NULL, "lfe_vehicle_block" ) );
+	CBaseEntity *pEnt = NULL;
+	while ( ( pEnt = gEntList.FindEntityByClassname( pEnt, "lfe_vehicle_block" ) ) != NULL )
+	{
+		CTFVehicleBlock *pVehicleBlock = dynamic_cast<CTFVehicleBlock *>( pEnt );
 
-	if (pVehicleBlock->m_bAllowAirboat)
+	if ( pVehicleBlock && pVehicleBlock->m_bAllowAirboat )
 	{
 		CBaseEntity *pJeep2 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
 		if (gEntList.FindEntityByClassname(pJeep2, "prop_vehicle_airboat"))
@@ -6139,26 +6142,27 @@ static void CreateAirboat2( CBasePlayer *pPlayer )
 			// Cheat to create a jeep in front of the player
 			Vector vecForward;
 			AngleVectors(pPlayer->EyeAngles(), &vecForward);
-			CBaseEntity *pJeep = (CBaseEntity*)CreateEntityByName("prop_vehicle_airboat");
-			if (pJeep)
+			CBaseEntity *pBoat = (CBaseEntity*)CreateEntityByName( "prop_vehicle_airboat" );
+			if (pBoat)
 			{
 				Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0, 0, 64);
 				QAngle vecAngles(0, pPlayer->GetAbsAngles().y - 90, 0);
-				pJeep->SetAbsOrigin(vecOrigin);
-				pJeep->SetAbsAngles(vecAngles);
-				pJeep->KeyValue("model", "models/airboat.mdl");
-				pJeep->KeyValue("solid", "6");
-				pJeep->KeyValue("targetname", "airboat");
-				pJeep->KeyValue("vehiclescript", "scripts/vehicles/airboat.txt");
-				pJeep->SetOwnerEntity(pPlayer);
-				DispatchSpawn(pJeep);
-				pJeep->Activate();
+				pBoat->SetAbsOrigin(vecOrigin);
+				pBoat->SetAbsAngles(vecAngles);
+				pBoat->KeyValue( "model", "models/airboat.mdl" );
+				pBoat->KeyValue( "solid", "6" );
+				pBoat->KeyValue( "targetname", "airboat" );
+				pBoat->KeyValue( "vehiclescript", "scripts/vehicles/airboat.txt" );
+				pBoat->SetOwnerEntity( pPlayer );
+				DispatchSpawn( pBoat );
+				pBoat->Activate();
 			}
 		}
 	}
 	else
 	{
 		return;
+	}
 	}
 }
 #endif

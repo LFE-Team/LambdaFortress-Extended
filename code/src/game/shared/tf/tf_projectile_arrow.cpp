@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "tf_projectile_arrow.h"
 #include "effect_dispatch_data.h"
+#include "tf_weaponbase.h"
 
 #ifdef GAME_DLL
 #include "SpriteTrail.h"
@@ -240,10 +241,14 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 
 	Vector vecOrigin = GetAbsOrigin();
 	Vector vecDir = GetAbsVelocity();
-	CTFPlayer *pPlayer = ToTFPlayer( pOther );
+	//CTFPlayer *pPlayer = ToTFPlayer( pOther );
+	CBaseCombatCharacter *pPlayer = dynamic_cast<CBaseCombatCharacter*>( pOther );
 	CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( m_hLauncher.Get() );
 	trace_t trHit, tr;
 	trHit = *pTrace;
+
+	//CTakeDamageInfo info_modified( this, pAttacker, m_flDamage, DMG_BULLET );
+	CTakeDamageInfo info_modified;
 
 	if ( pPlayer )
 	{
@@ -256,6 +261,7 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 
 			Vector vecDir = GetAbsVelocity();
 			VectorNormalizeFast( vecDir );
+			/*
 			CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
 			if ( !pStudioHdr )
 				return;
@@ -263,7 +269,48 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 			mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pPlayer->GetHitboxSet() );
 			if ( !set )
 				return;
+			*/
+			
+			CStudioHdr *pHdr = pPlayer->GetModelPtr();
+			if ( pHdr )
+			{
+				int set = pPlayer->GetHitboxSet();
+				for( int i = 0; i < pHdr->iHitboxCount(set); i++ )
+				{
+					mstudiobbox_t *pBox = pHdr->pHitbox( i, set );
+					if ( !pBox )
+						continue;
 
+					if ( pBox->group == HITGROUP_HEAD )
+					{
+						float flDamage = info_modified.GetDamage();
+						bool bCritical = true;
+
+						if ( pWeapon && !pWeapon->CanFireCriticalShot( true ) )
+						{
+							bCritical = false;
+						}
+
+						if ( bCritical )
+						{
+							info_modified.AddDamageType( DMG_CRITICAL );
+							info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
+
+							// play the critical shot sound to the shooter	
+							if ( pWeapon )
+							{
+								pWeapon->WeaponSound( BURST );
+								CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, headshot_damage_modify );
+							}
+						}
+
+						info_modified.SetDamage( flDamage );
+
+						break;
+					}
+				}
+			}
+/*
 			// Oh boy... we gotta figure out the closest hitbox on player model to land a hit on.
 			// Trace a bit ahead, to get closer to player's body.
 			//UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * 16.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &trPlayerHit );
@@ -304,7 +351,7 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 				NDebugOverlay::Line( trHit.startpos, trHit.endpos, 0, 255, 0, true, 5.0f );
 				NDebugOverlay::Line( vecOrigin, vecOrigin + vecDir * 16, 255, 0, 0, true, 5.0f );
 			}
-
+*/
 			// Place arrow at hitbox.
 			/*SetAbsOrigin( trHit.endpos );
 
@@ -340,38 +387,38 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 
 	}
 	else if ( pOther->GetMoveType() == MOVETYPE_NONE )
+	{
+		if ( pOther->IsBaseObject() )
 		{
-			if ( pOther->IsBaseObject() )
-				{
-					EmitSound( "Weapon_Arrow.ImpactMetal" );
-				}
-				else
-				{
-					EmitSound( "Weapon_Arrow.ImpactConcrete" );
-				}			
-				//FIXME: We actually want to stick (with hierarchy) to what we've hit
-				SetMoveType( MOVETYPE_NONE );
-			
-				Vector vForward;
+			EmitSound( "Weapon_Arrow.ImpactMetal" );
+		}
+		else
+		{
+			EmitSound( "Weapon_Arrow.ImpactConcrete" );
+		}			
+		//FIXME: We actually want to stick (with hierarchy) to what we've hit
+		SetMoveType( MOVETYPE_NONE );
 
-				AngleVectors( GetAbsAngles(), &vForward );
-				VectorNormalize ( vForward );
+		Vector vForward;
 
-				CEffectData	data;
+		AngleVectors( GetAbsAngles(), &vForward );
+		VectorNormalize ( vForward );
 
-				data.m_vOrigin = tr.endpos;
-				data.m_vNormal = vForward;
-				data.m_nEntIndex = 0;
-			
-				DispatchEffect( "BoltImpact", data );
+		CEffectData	data;
 
-				UTIL_ImpactTrace( &trHit, DMG_BULLET );
+		data.m_vOrigin = tr.endpos;
+		data.m_vNormal = vForward;
+		data.m_nEntIndex = 0;
+
+		DispatchEffect( "BoltImpact", data );
+
+		UTIL_ImpactTrace( &trHit, DMG_BULLET );
 	}
 	else
-		{
-			UTIL_ImpactTrace( &trHit, DMG_BULLET );
-			//UTIL_Remove( this );
-		}
+	{
+		UTIL_ImpactTrace( &trHit, DMG_BULLET );
+		//UTIL_Remove( this );
+	}
 
 	// Do damage.
 	CTakeDamageInfo info( this, pAttacker, pWeapon, GetDamage(), GetDamageType() );

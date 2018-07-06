@@ -326,11 +326,14 @@ public:
 
 	bool IsCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP ); }
 	bool IsBluCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_BLUCOOP ); }
+	bool IsAnyCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP || GetGameType() == TF_GAMETYPE_BLUCOOP ); }
 	bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
-	bool IsBluCoOpGameRunning(void) { return (IsBluCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
+	bool IsBluCoOpGameRunning( void ) { return ( IsBluCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
+	bool IsAnyCoOpGameRunning( void ) { return ( IsBluCoOp() || IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
 	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
 	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
+	bool IsFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1); }
 
 	float GetMapRemainingTime();
 #ifdef CLIENT_DLL
@@ -491,14 +494,14 @@ public:
 	DECLARE_DATADESC();
 
 	CTFVehicleBlock();
+	~CTFVehicleBlock();
 
-	void	Spawn(void);
+	void	Spawn( void );
 
 	bool	m_bAllowAirboat;
 	bool	m_bAllowJeep;
 	bool	m_bAllowJalopy;
 };
-
 
 //-----------------------------------------------------------------------------
 // Gets us at the team fortress game rules

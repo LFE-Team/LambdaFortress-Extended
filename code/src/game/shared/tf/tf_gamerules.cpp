@@ -524,6 +524,9 @@ void CTFGameRulesProxy::Activate()
 	BaseClass::Activate();
 }
 
+//-----------------------------------------------------------------------------
+// Co-Op Logic ( RED TEAM )
+//-----------------------------------------------------------------------------
 class CTFLogicCoOp : public CBaseEntity
 {
 public:
@@ -538,6 +541,9 @@ void CTFLogicCoOp::Spawn(void)
 	BaseClass::Spawn();
 }
 
+//-----------------------------------------------------------------------------
+// Co-Op Logic ( BLU TEAM )
+//-----------------------------------------------------------------------------
 class CTFLogicBluCoOp : public CBaseEntity
 {
 public:
@@ -552,6 +558,9 @@ void CTFLogicBluCoOp::Spawn(void)
 	BaseClass::Spawn();
 }
 
+//-----------------------------------------------------------------------------
+// Versus Logic
+//-----------------------------------------------------------------------------
 class CTFLogicVersus : public CBaseEntity
 {
 public:
@@ -566,6 +575,9 @@ void CTFLogicVersus::Spawn(void)
 	BaseClass::Spawn();
 }
 
+//-----------------------------------------------------------------------------
+// HL1 Jetpack Long Jump
+//-----------------------------------------------------------------------------
 class CTFLogicLongJump : public CBaseEntity
 {
 public:
@@ -580,6 +592,9 @@ void CTFLogicLongJump::Spawn(void)
 	BaseClass::Spawn();
 }
 
+//-----------------------------------------------------------------------------
+// Zombie Survival
+//-----------------------------------------------------------------------------
 class CTFLogicZombieSurvival : public CBaseEntity
 {
 public:
@@ -673,6 +688,30 @@ void CTFLogicZombieSurvival::InputStartIntro( inputdata_t &inputdata )
 void CTFLogicZombieSurvival::InputFinishIntro( inputdata_t &inputdata )
 {
 
+}
+
+LINK_ENTITY_TO_CLASS( lfe_vehicle_block, CTFVehicleBlock);
+
+BEGIN_DATADESC( CTFVehicleBlock )
+	DEFINE_KEYFIELD( m_bAllowAirboat, FIELD_INTEGER, "allow_airboat" ),
+	DEFINE_KEYFIELD( m_bAllowJeep, FIELD_INTEGER, "allow_jeep" ),
+	DEFINE_KEYFIELD( m_bAllowJalopy, FIELD_INTEGER, "allow_jalopy" ),
+END_DATADESC()
+
+void CTFVehicleBlock::Spawn( void )
+{
+	BaseClass::Spawn();
+}
+
+CTFVehicleBlock::CTFVehicleBlock()
+{
+	m_bAllowAirboat = true;
+	m_bAllowJeep = true;
+	m_bAllowJalopy = true;
+}
+
+CTFVehicleBlock::~CTFVehicleBlock()
+{
 }
 
 class CTFClassLimits : public CBaseEntity

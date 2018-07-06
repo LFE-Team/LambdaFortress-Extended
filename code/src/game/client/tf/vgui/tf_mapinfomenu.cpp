@@ -218,10 +218,15 @@ void CTFMapInfoMenu::OnCommand( const char *command )
 		}
 		else
 		{
-			if ( TFGameRules() && TFGameRules()->IsCoOp() && !TFGameRules()->IsVersus() )
+			if ( TFGameRules() && TFGameRules()->IsCoOp() )
 			{
 				// Send the player straight to RED in co-op.
 				engine->ClientCmd( VarArgs( "jointeam %s", g_aTeamNames[TF_STORY_TEAM] ) );
+			}
+			if ( TFGameRules() && TFGameRules()->IsBluCoOp() )
+			{
+				// Send the player straight to RED in co-op.
+				engine->ClientCmd( VarArgs( "jointeam %s", g_aTeamNames[TF_COMBINE_TEAM] ) );
 			}
 			else if ( GetLocalPlayerTeam() == TEAM_UNASSIGNED )
 			{

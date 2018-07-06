@@ -108,7 +108,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 {
 	KeyValues *pConditions = NULL;
 
-	if ( TFGameRules() && TFGameRules()->IsCoOp() )
+	if ( TFGameRules() && TFGameRules()->IsAnyCoOp() )
 	{
 		pConditions = new KeyValues( "conditions" );
 		AddSubKeyNamed( pConditions, "if_coop" );
@@ -141,7 +141,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 		int iRoundsRemaining = event->GetInt( "rounds_remaining" );
 
 		LoadControlSettings( "resource/UI/WinPanel.res", NULL, NULL, pConditions );
-		if ( TFGameRules()->IsCoOp() || TFGameRules()->IsBluCoOp() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
+		if ( TFGameRules()->IsAnyCoOp() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
 		{
 			LoadControlSettings( "resource/UI/WinPanel_coop.res", NULL, NULL, pConditions );
 		}
@@ -161,7 +161,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			const char *pTeamLabel = NULL;
 			const char *pTopPlayersLabel = NULL;
 			const wchar_t *pLocalizedTeamName = NULL;
-			if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsBluCoOp() || !TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
+			if ( TFGameRules() && !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
 			{
 			// this is an area defense, but not a round win, if this was a successful defend until time limit but not a complete round
 			bool bIsAreaDefense = ( ( WINREASON_DEFEND_UNTIL_TIME_LIMIT == iWinReason ) && !bRoundComplete );
@@ -170,7 +170,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			switch ( iWinningTeam )
 			{
 			case TF_TEAM_BLUE:
-				if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsBluCoOp() || !TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
+				if ( TFGameRules() && !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
 				{
 					pImagePanelBG->SetImage( "../hud/winpanel_blue_bg_main.vmt" );
 				}
@@ -179,7 +179,7 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 				pLocalizedTeamName =  g_pVGuiLocalize->Find( "TF_BlueTeam_Name" );
 				break;
 			case TF_TEAM_RED:
-				if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsBluCoOp() || !TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
+				if ( TFGameRules() && !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
 				{
 					pImagePanelBG->SetImage( "../hud/winpanel_red_bg_main.vmt" );
 				}
@@ -313,9 +313,9 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 				m_pTeamScorePanel->SetDialogVariable( "blueteamname", GetGlobalTeam(TF_TEAM_BLUE)->Get_Name() );
 				m_pTeamScorePanel->SetDialogVariable( "redteamname", GetGlobalTeam(TF_TEAM_RED)->Get_Name() );
 
-				if ( TFGameRules()->IsCoOp() || TFGameRules()->IsBluCoOp() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
+				if ( TFGameRules()->IsAnyCoOp() || TFGameRules()->IsZombieSurvival() || TFGameRules()->IsVersus() )
 				{
-					if ( ( m_iRedTeamScore != iRedTeamPrevScore ) )
+					if ( ( ( m_iBlueTeamScore != iBlueTeamPrevScore ) || ( m_iRedTeamScore != iRedTeamPrevScore ) ) )
 					{
 						// if the new scores are different, set ourselves to update the scoreboard to the new values after a short delay, so players
 						// see the scores tick up
@@ -338,8 +338,8 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 			return;
 
 		
-		// only look for the top 3 players to sent in the event IF this isn't coop.
-		if ( TFGameRules() && !TFGameRules()->IsCoOp() || !TFGameRules()->IsBluCoOp() || !TFGameRules()->IsZombieSurvival() || !TFGameRules()->IsVersus() )
+		// only look for the top 3 players to sent in the event IF this isn't coop, zs and vs.
+		if ( TFGameRules() && !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() || !TFGameRules()->IsVersus() )
 		{
 			for ( int i = 1; i <= 3; i++ )
 			{

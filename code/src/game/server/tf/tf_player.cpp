@@ -6084,6 +6084,20 @@ void CTFPlayer::StateEnterWELCOME( void )
 		ForceRespawn();
 		return;
 	}
+	else if ( TFGameRules() && TFGameRules()->IsBluCoOp() && lfe_debug_transition.GetFloat() == 0 )
+	{
+		mp_waitingforplayers_cancel.SetValue( 1 );
+		m_bSeenRoundInfo = true;
+		m_bIsIdle = false;
+
+		ShowViewPortPanel( PANEL_MAPINFO, false );
+		ShowViewPortPanel( PANEL_CLASS_BLUE, true );
+
+		// Spawn this player instantly and change his team to red.
+		ChangeTeam( TF_COMBINE_TEAM, false, true );
+		ForceRespawn();
+		return;
+	}
 
 	if ( gpGlobals->eLoadType == MapLoad_Background )
 	{
