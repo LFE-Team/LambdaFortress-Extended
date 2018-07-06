@@ -51,6 +51,8 @@
 #include "tf_overview.h"
 #include "tf_deathmatchscoreboard.h"
 
+#include "tf_gamerules.h"
+
 /*
 CON_COMMAND( spec_help, "Show spectator help screen")
 {
@@ -113,7 +115,10 @@ CON_COMMAND( changeteam, "Choose a new team" )
 	// don't let the player open the team menu themselves until they're on a team
 	if ( pPlayer && ( pPlayer->GetTeamNumber() != TEAM_UNASSIGNED ) )
 	{
-		gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+		if ( !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
+		{
+			gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+		}
 	}
 }
 

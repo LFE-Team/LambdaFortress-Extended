@@ -27,7 +27,7 @@ class CTFWeaponBuilder;
 class CBaseObject;
 class CTFWeaponBase;
 class CIntroViewpoint;
-
+class CLogicPlayerProxy;
 //=============================================================================
 //
 // Player State Information
@@ -424,6 +424,20 @@ public:
 	char GetPrevTextureType( void ) { return m_chPreviousTextureType; }
 
 	Class_T				Classify ( void );
+
+	void FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller );
+
+	CLogicPlayerProxy	*GetPlayerProxy( void );
+
+	void MissedAR2AltFire();
+
+	inline void EnableCappedPhysicsDamage();
+	inline void DisableCappedPhysicsDamage();
+
+	CSoundPatch *m_sndLeeches;
+	CSoundPatch *m_sndWaterSplashes;
+
+	const impactdamagetable_t &GetPhysicsImpactDamageTable();
 public:
 
 	CNetworkVector( m_vecPlayerColor );
@@ -691,6 +705,17 @@ private:
 	CNetworkVar( int,	m_iSquadMedicCount );
 	CNetworkVar( bool,	m_fSquadInFollowMode );
 
+	// Suit power fields
+	float				m_flSuitPowerLoad;	// net suit power drain (total of all device's drainrates)
+	float				m_flAdmireGlovesAnimTime;
+
+	float				m_flNextFlashlightCheckTime;
+	float				m_flFlashlightPowerDrainScale;
+
+	EHANDLE				m_hPlayerProxy;
+
+	bool				m_bFlashlightDisabled;
+	bool				m_bUseCappedPhysicsDamageTable;
 public:
 	bool				SetPowerplayEnabled( bool bOn );
 	bool				PlayerHasPowerplay( void );
@@ -703,6 +728,21 @@ public:
 	LadderMove_t			m_LadderMove;
 	bool				m_bTransition;
 };
+
+//-----------------------------------------------------------------------------
+// FIXME: find a better way to do this
+// Switches us to a physics damage table that caps the max damage.
+//-----------------------------------------------------------------------------
+void CTFPlayer::EnableCappedPhysicsDamage()
+{
+	m_bUseCappedPhysicsDamageTable = true;
+}
+
+
+void CTFPlayer::DisableCappedPhysicsDamage()
+{
+	m_bUseCappedPhysicsDamageTable = false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Utility function to convert an entity into a tf player.

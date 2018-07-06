@@ -143,6 +143,53 @@ ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
 
 extern ConVar lf_use_hl2_player_hull;
 
+#define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
+#define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
+
+//==============================================================================================
+// CAPPED PLAYER PHYSICS DAMAGE TABLE
+//==============================================================================================
+static impactentry_t cappedPlayerLinearTable[] =
+{
+	{ 150*150, 5 },
+	{ 250*250, 10 },
+	{ 450*450, 20 },
+	{ 550*550, 30 },
+	//{ 700*700, 100 },
+	//{ 1000*1000, 500 },
+};
+
+static impactentry_t cappedPlayerAngularTable[] =
+{
+	{ 100*100, 10 },
+	{ 150*150, 20 },
+	{ 200*200, 30 },
+	//{ 300*300, 500 },
+};
+
+static impactdamagetable_t gCappedPlayerImpactDamageTable =
+{
+	cappedPlayerLinearTable,
+	cappedPlayerAngularTable,
+
+	ARRAYSIZE(cappedPlayerLinearTable),
+	ARRAYSIZE(cappedPlayerAngularTable),
+
+	24*24.0f,	// minimum linear speed
+	360*360.0f,	// minimum angular speed
+	2.0f,		// can't take damage from anything under 2kg
+
+	5.0f,		// anything less than 5kg is "small"
+	5.0f,		// never take more than 5 pts of damage from anything under 5kg
+	36*36.0f,	// <5kg objects must go faster than 36 in/s to do damage
+
+	0.0f,		// large mass in kg (no large mass effects)
+	1.0f,		// large mass scale
+	2.0f,		// large mass falling scale
+	320.0f,		// min velocity for player speed to cause damage
+
+};
+
 // -------------------------------------------------------------------------------- //
 //Transitions
 // -------------------------------------------------------------------------------- //
@@ -323,6 +370,16 @@ BEGIN_DATADESC( CTFPlayer )
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetForcedTauntCam", InputSetForcedTauntCam ),
 	DEFINE_FIELD(m_bHasLongJump, FIELD_BOOLEAN),
 	DEFINE_OUTPUT( m_OnDeath, "OnDeath" ),
+
+	DEFINE_FIELD( m_flAdmireGlovesAnimTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flNextFlashlightCheckTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flFlashlightPowerDrainScale, FIELD_FLOAT ),
+	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
+
+	DEFINE_FIELD( m_bUseCappedPhysicsDamageTable, FIELD_BOOLEAN ),
+
+	DEFINE_SOUNDPATCH( m_sndLeeches ),
+	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
 END_DATADESC()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
@@ -2540,7 +2597,7 @@ int CTFPlayer::GetAutoTeam( void )
 void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 {
 	int iTeam = TF_TEAM_RED;
-	if ( stricmp( pTeamName, "auto" ) == 0 )
+	if ( stricmp( pTeamName, "auto" ) == 0 && !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
 	{
 		iTeam = GetAutoTeam();
 	}
@@ -2548,7 +2605,15 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 	{
 		iTeam = TEAM_SPECTATOR;
 	}
-	else
+	else if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+	{
+		iTeam = TF_TEAM_RED;
+	}
+	else if ( TFGameRules()->IsBluCoOp() )
+	{
+		iTeam = TF_TEAM_BLUE;
+	}
+	else if ( !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
 	{
 		for ( int i = 0; i < TF_TEAM_COUNT; ++i )
 		{
@@ -10261,3 +10326,270 @@ void CTFPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 
 	BaseClass::PlayerRunCommand( ucmd, moveHelper );
 }
+
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void CTFPlayer::MissedAR2AltFire()
+{
+	/* somebody fixPassesDamageFilter this plz
+	if( GetPlayerProxy() != NULL )
+	{
+		GetPlayerProxy()->m_PlayerMissedAR2AltFire.FireOutput( this, this );
+	}
+	*/
+}
+
+//-----------------------------------------------------------------------------
+const impactdamagetable_t &CTFPlayer::GetPhysicsImpactDamageTable()
+{
+	if ( m_bUseCappedPhysicsDamageTable )
+		return gCappedPlayerImpactDamageTable;
+	
+	return BaseClass::GetPhysicsImpactDamageTable();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Used to relay outputs/inputs from the player to the world and viceversa
+//-----------------------------------------------------------------------------
+class CLogicPlayerProxy : public CLogicalEntity
+{
+	DECLARE_CLASS( CLogicPlayerProxy, CLogicalEntity );
+
+private:
+
+	DECLARE_DATADESC();
+
+public:
+
+	COutputEvent m_OnFlashlightOn;
+	COutputEvent m_OnFlashlightOff;
+	COutputEvent m_PlayerHasAmmo;
+	COutputEvent m_PlayerHasNoAmmo;
+	COutputEvent m_PlayerDied;
+	COutputEvent m_PlayerMissedAR2AltFire; // Player fired a combine ball which did not dissolve any enemies. 
+
+	COutputInt m_RequestedPlayerHealth;
+
+	void InputRequestPlayerHealth( inputdata_t &inputdata );
+	void InputSetFlashlightSlowDrain( inputdata_t &inputdata );
+	void InputSetFlashlightNormalDrain( inputdata_t &inputdata );
+	void InputSetPlayerHealth( inputdata_t &inputdata );
+	void InputRequestAmmoState( inputdata_t &inputdata );
+	void InputLowerWeapon( inputdata_t &inputdata );
+	void InputEnableCappedPhysicsDamage( inputdata_t &inputdata );
+	void InputDisableCappedPhysicsDamage( inputdata_t &inputdata );
+	void InputSetLocatorTargetEntity( inputdata_t &inputdata );
+#ifdef PORTAL
+	void InputSuppressCrosshair( inputdata_t &inputdata );
+#endif // PORTAL2
+
+	void Activate ( void );
+
+	//bool PassesDamageFilter( const CTakeDamageInfo &info );
+
+	EHANDLE m_hPlayer;
+};
+
+CLogicPlayerProxy *CTFPlayer::GetPlayerProxy( void )
+{
+	CLogicPlayerProxy *pProxy = dynamic_cast< CLogicPlayerProxy* > ( m_hPlayerProxy.Get() );
+
+	if ( pProxy == NULL )
+	{
+		pProxy = (CLogicPlayerProxy*)gEntList.FindEntityByClassname(NULL, "logic_playerproxy" );
+
+		if ( pProxy == NULL )
+			return NULL;
+
+		pProxy->m_hPlayer = this;
+		m_hPlayerProxy = pProxy;
+	}
+
+	return pProxy;
+}
+
+void CTFPlayer::FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller )
+{
+	if ( GetPlayerProxy() == NULL )
+		return;
+
+	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
+}
+
+LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
+
+BEGIN_DATADESC( CLogicPlayerProxy )
+	DEFINE_OUTPUT( m_OnFlashlightOn, "OnFlashlightOn" ),
+	DEFINE_OUTPUT( m_OnFlashlightOff, "OnFlashlightOff" ),
+	DEFINE_OUTPUT( m_RequestedPlayerHealth, "PlayerHealth" ),
+	DEFINE_OUTPUT( m_PlayerHasAmmo, "PlayerHasAmmo" ),
+	DEFINE_OUTPUT( m_PlayerHasNoAmmo, "PlayerHasNoAmmo" ),
+	DEFINE_OUTPUT( m_PlayerDied,	"PlayerDied" ),
+	DEFINE_OUTPUT( m_PlayerMissedAR2AltFire, "PlayerMissedAR2AltFire" ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestPlayerHealth",	InputRequestPlayerHealth ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightSlowDrain",	InputSetFlashlightSlowDrain ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightNormalDrain",	InputSetFlashlightNormalDrain ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPlayerHealth",	InputSetPlayerHealth ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestAmmoState", InputRequestAmmoState ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"LowerWeapon", InputLowerWeapon ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"EnableCappedPhysicsDamage", InputEnableCappedPhysicsDamage ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"DisableCappedPhysicsDamage", InputDisableCappedPhysicsDamage ),
+	DEFINE_INPUTFUNC( FIELD_STRING,	"SetLocatorTargetEntity", InputSetLocatorTargetEntity ),
+#ifdef PORTAL
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SuppressCrosshair", InputSuppressCrosshair ),
+#endif // PORTAL
+	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
+END_DATADESC()
+
+void CLogicPlayerProxy::Activate( void )
+{
+	BaseClass::Activate();
+
+	CTFPlayer *pPlayer;
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		if ( m_hPlayer == NULL )
+		{
+			m_hPlayer = pPlayer;
+		}
+	}
+/*
+	m_hPlayer = AI_GetSinglePlayer();
+*/
+}
+/*
+bool CLogicPlayerProxy::PassesDamageFilter( const CTakeDamageInfo &info )
+{
+	BaseClass::PassesDamageFilter( info );
+}
+*/
+void CLogicPlayerProxy::InputSetPlayerHealth( inputdata_t &inputdata )
+{
+	if ( m_hPlayer == NULL )
+		return;
+
+	m_hPlayer->SetHealth( inputdata.value.Int() );
+}
+
+void CLogicPlayerProxy::InputRequestPlayerHealth( inputdata_t &inputdata )
+{
+	if ( m_hPlayer == NULL )
+		return;
+
+	m_RequestedPlayerHealth.Set( m_hPlayer->GetHealth(), inputdata.pActivator, inputdata.pCaller );
+}
+
+void CLogicPlayerProxy::InputSetFlashlightSlowDrain( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+	/*
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+
+
+	if( pPlayer )
+		pPlayer->SetFlashlightPowerDrainScale( hl2_darkness_flashlight_factor.GetFloat() );
+	*/
+}
+
+void CLogicPlayerProxy::InputSetFlashlightNormalDrain( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+/*
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+
+	if( pPlayer )
+		pPlayer->SetFlashlightPowerDrainScale( 1.0f );
+*/
+}
+
+void CLogicPlayerProxy::InputRequestAmmoState( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+
+	for ( int i = 0 ; i < pPlayer->WeaponCount(); ++i )
+	{
+		CBaseCombatWeapon* pCheck = pPlayer->GetWeapon( i );
+
+		if ( pCheck )
+		{
+			if ( pCheck->HasAnyAmmo() && (pCheck->UsesPrimaryAmmo() || pCheck->UsesSecondaryAmmo()))
+			{
+				m_PlayerHasAmmo.FireOutput( this, this, 0 );
+				return;
+			}
+		}
+	}
+
+	m_PlayerHasNoAmmo.FireOutput( this, this, 0 );
+}
+
+void CLogicPlayerProxy::InputLowerWeapon( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+
+	CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
+	if ( pWeapon != NULL )
+	{
+		pWeapon->Lower();
+	}
+}
+
+void CLogicPlayerProxy::InputEnableCappedPhysicsDamage( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	pPlayer->EnableCappedPhysicsDamage();
+}
+
+void CLogicPlayerProxy::InputDisableCappedPhysicsDamage( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	pPlayer->DisableCappedPhysicsDamage();
+}
+
+void CLogicPlayerProxy::InputSetLocatorTargetEntity( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CBaseEntity *pTarget = NULL; // assume no target
+	string_t iszTarget = MAKE_STRING( inputdata.value.String() );
+
+	if( iszTarget != NULL_STRING )
+	{
+		pTarget = gEntList.FindEntityByName( NULL, iszTarget );
+	}
+
+	//CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	//pPlayer->SetLocatorTargetEntity(pTarget);
+}
+
+#ifdef PORTAL
+void CLogicPlayerProxy::InputSuppressCrosshair( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CPortal_Player *pPlayer = ToPortalPlayer(m_hPlayer.Get());
+	pPlayer->SuppressCrosshair( true );
+}
+#endif // PORTAL
