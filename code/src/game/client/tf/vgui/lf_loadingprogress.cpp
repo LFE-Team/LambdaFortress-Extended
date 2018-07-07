@@ -32,6 +32,11 @@ using namespace vgui;
 
 CTFLoadingProgress *g_pTFLoadingProgress = NULL;
 
+CON_COMMAND( lfe_hud_reload_loadingprogress, "Reload Loading Progress")
+{
+	g_pTFLoadingProgress->InvalidateLayout( true, true );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Returns the global loading progress panel
 //-----------------------------------------------------------------------------

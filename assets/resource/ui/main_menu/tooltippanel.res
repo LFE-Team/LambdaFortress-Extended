@@ -6,8 +6,8 @@
 		"fieldName"			"CTFToolTipPanel"
 		"xpos"				"0"
 		"ypos"				"0"
-		"wide"				"90"
-		"tall"				"35"
+		"wide"				"120"
+		"tall"				"50"
 		"autoResize"		"0"
 		"pinCorner"			"0"
 		"visible"			"1"
@@ -31,7 +31,7 @@
 		"labelText"			"text"
 		"textAlignment"		"center"
 		"wrap"				"1"
-		"font"				"ControllerHintText"
+		"font"				"HudFontSmallBold"
 		"fgcolor"			"MainMenuTextDepressed"
 	}		
 }		

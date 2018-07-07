@@ -98,17 +98,27 @@ public:
 
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
+		
 		if ( ValidTouch( pPlayer ) )
 		{
 			CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 			if ( !pTFPlayer )
 				return false;
 
-			if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()] ) )
+			for ( int i = 0; i < pTFPlayer->WeaponCount(); i++ )
 			{
-				CSingleUserRecipientFilter filter( pPlayer );
-				EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
-				return true;
+				CTFWeaponBase *pWeapon = static_cast<CTFWeaponBase *>( pTFPlayer->GetWeapon( i ) );
+				if ( !pWeapon->HasPrimaryAmmo() || !pWeapon->HasSecondaryAmmo() )
+				{
+					//return false;
+
+					if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()] ) )
+					{
+						CSingleUserRecipientFilter filter( pPlayer );
+						EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
+						return true;
+					}
+				}
 			}
 		}
 

@@ -1060,7 +1060,7 @@
 			"image_inventory_size_h"	"82"
 			"model_world"	"models/weapons/w_models/w_flamethrower.mdl"
 			"model_player"	"models/weapons/v_models/v_flamethrower_pyro.mdl"
-			"attach_to_hands"	"2"
+			"attach_to_hands"	"0"
 			"used_by_classes"
 			{
 				"pyro"	"1"
@@ -1789,7 +1789,7 @@
 		"weapon_tomislav"
 		{
 			"enabled"	"1"
-			"item_class"	"tf_weapon_minigun_tomislav"
+			"item_class"	"tf_weapon_minigun"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
 			"capabilities"
@@ -2445,7 +2445,7 @@
 			"image_inventory_size_h"	"82"
 			"model_world"	"models/weapons/w_models/w_machete.mdl"
 			"model_player"	"models/weapons/v_models/v_machete_sniper.mdl"
-			"attach_to_hands"	"2"
+			"attach_to_hands"	"1"
 			"used_by_classes"
 			{
 				"sniper"	"1"
@@ -3794,7 +3794,7 @@
 				"can_deal_gib_damage"	"1"
 				"can_be_equipped_by_soldier_or_demo"	"1"
 			}
-			"show_in_armory"	"0"
+			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_StickBomb"
 			"item_name"	"#TF_UllapoolCaber"
 			"item_description"	"#TF_UllapoolCaber_Desc"

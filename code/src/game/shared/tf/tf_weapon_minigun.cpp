@@ -203,8 +203,9 @@ void CTFMinigun::SharedAttack()
 #ifdef GAME_DLL
 					pPlayer->SpeakWeaponFire( MP_CONCEPT_WINDMINIGUN );
 
-					CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
-					if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_MINIGUN_TOMISLAV ) )
+					int nMinigunNoSound = 0;
+					CALL_ATTRIB_HOOK_INT( nMinigunNoSound, minigun_no_spin_sounds );
+					if ( nMinigunNoSound != 1 )
 					{
 						CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
 					}
@@ -231,6 +232,8 @@ void CTFMinigun::SharedAttack()
 				pPlayer->SpeakWeaponFire( MP_CONCEPT_WINDMINIGUN );
 #endif
 				m_iWeaponState = AC_STATE_SPINNING;
+
+				//CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
 
 				m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flTimeWeaponIdle = gpGlobals->curtime + 0.1;
 			}

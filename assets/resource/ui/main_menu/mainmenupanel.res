@@ -153,7 +153,7 @@
 		"enabled"			"1"
 		"border"			"MainMenuBGBorderAlpha"
 		"font"				"MenuMainTitle"
-		"bgcolor_override"	"117 107 94 255"
+		"bgcolor_override"	"17 67 44 255"
 	}
 	
 	"AvatarImage"
@@ -198,7 +198,7 @@
 		"tall"				"f0"
 		"visible"			"1"
 		"enabled"			"1"
-		"border"			"TFThinLineBorder"
+		"border"			"AdvRoundedButtonDefault"
 		"font"				"MenuMainTitle"
 	}
 	
@@ -269,7 +269,7 @@
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_server_browser"
+			"image" 			"glyph_server_browser"
 			"imagewidth"		"16"	
 		}
 	}
@@ -308,7 +308,7 @@
 
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_practice"
+			"image" 			"glyph_practice"
 			"imagewidth"		"16"
 		}		
 	}
@@ -337,13 +337,14 @@
 			"defaultFgColor_override"		"MainMenuTextArmed"
 			"armedFgColor_override"			"MainMenuTextArmed"
 			"depressedFgColor_override"		"MainMenuTextDefault"	
-			"border_default"				"MainMenuAdvButtonDepressed"
-			"border_depressed"				"MainMenuAdvButton"	
+			"border_default"	"AdvRoundedButtonArmed"
+			"border_armed"		"AdvRoundedButtonDepressed"
+			"border_depressed"	"AdvRoundedButtonDefault"
 		}
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_create"
+			"image" 			"glyph_create"
 			"imagewidth"		"16"	
 		}
 	}
@@ -353,31 +354,31 @@
 		"ControlName"	"EditablePanel"
 		"fieldName"		"StoreBGPanel"
 		"xpos"			"30"
-		"ypos"			"220"
+		"ypos"			"230"
 		"zpos"			"-1"
 		"wide"			"265"
 		"tall"			"60"
 		"visible"		"1"
 		"PaintBackgroundType"	"2"
 		"border"		"MainMenuBGBorder"
-	}
-
-	"CustomizeLabel"
-	{
-		"ControlName"	"CExLabel"
-		"fieldName"		"CustomizeLabel"
-		"font"			"HudFontSmallBold"
-		"labelText"		"#MMenu_Customize"
-		"textAlignment"	"west"
-		"xpos"			"40"
-		"ypos"			"221"
-		"wide"			"140"
-		"tall"			"30"
-		"autoResize"	"0"
-		"pinCorner"		"0"
-		"visible"		"1"
-		"enabled"		"1"
-		"fgcolor_override"	"235 227 203 255"
+		
+		"CustomizeLabel"
+		{
+			"ControlName"	"CExLabel"
+			"fieldName"		"CustomizeLabel"
+			"font"			"HudFontSmallBold"
+			"labelText"		"#MMenu_Customize"
+			"textAlignment"	"west"
+			"xpos"			"10"
+			"ypos"			"0"
+			"wide"			"140"
+			"tall"			"30"
+			"autoResize"	"0"
+			"pinCorner"		"0"
+			"visible"		"1"
+			"enabled"		"1"
+			"fgcolor_override"	"235 227 203 255"
+		}
 	}
 
 	"LoadoutButton"
@@ -385,7 +386,7 @@
 		"ControlName"			"CTFAdvButton"
 		"fieldName"				"LoadoutButton"
 		"xpos"					"35"
-		"ypos"					"250"
+		"ypos"					"260"
 		"zpos"					"11"
 		"wide"					"124"
 		"tall"					"25"
@@ -408,7 +409,7 @@
 
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_items"
+			"image" 			"glyph_items"
 			"imagewidth"		"16"	
 		}
 	}
@@ -418,7 +419,7 @@
 		"ControlName"			"CTFAdvButton"
 		"fieldName"				"OptionsDialogButton"
 		"xpos"					"165"
-		"ypos"					"250"
+		"ypos"					"260"
 		"zpos"					"11"
 		"wide"					"124"
 		"tall"					"25"
@@ -441,44 +442,9 @@
 
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_options"
+			"image" 			"glyph_options"
 			"imagewidth"		"16"
 		}		
-	}
-	
-	"OptionsOldButton"
-	{
-		"ControlName"			"CTFAdvButton"
-		"fieldName"				"OptionsOldButton"		
-		"xpos"					"265"
-		"ypos"					"250"
-		"zpos"					"12"
-		"wide"					"24"
-		"tall"					"24"
-		"visible"				"1"
-		"enabled"				"1"
-		"bordervisible"			"1"	
-		"command"				"gamemenucommand openoptionsdialog"
-
-		"SubButton"
-		{
-			"labelText" 		""
-			"tooltip" 			"Options"
-			"bordervisible"		"0"
-			"textAlignment"		"west"
-			"font"				"HudFontSmallBold"
-			"defaultFgColor_override"		"MainMenuTextArmed"
-			"armedFgColor_override"			"MainMenuTextArmed"
-			"depressedFgColor_override"		"MainMenuTextDefault"
-			"border_default"				"MainMenuAdvButtonDepressed"
-			"border_depressed"				"MainMenuAdvButton"		
-		}
-
-		"SubImage"
-		{
-			"image" 			"../vgui/glyph_steamworkshop"
-			"imagewidth"		"16"
-		}
 	}
 
 	"AchievementStatsBGPanel"
@@ -486,30 +452,31 @@
 		"ControlName"	"EditablePanel"
 		"fieldName"		"AchievementStatsBGPanel"
 		"xpos"			"30"
-		"ypos"			"280"
+		"ypos"			"300"
 		"zpos"			"-1"
 		"wide"			"265"
-		"tall"			"60"
+		"tall"			"50"
 		"visible"		"1"
 		"PaintBackgroundType"	"2"
 		"border"		"MainMenuBGBorder"
-	}
-	"AchievementStatsLabel"
-	{
-		"ControlName"	"CExLabel"
-		"fieldName"		"AchievementStatsLabel"
-		"font"			"HudFontSmallBold"
-		"labelText"		"#MMenu_Achievements"
-		"textAlignment"	"west"
-		"xpos"			"40"
-		"ypos"			"281"
-		"wide"			"150"
-		"tall"			"30"
-		"autoResize"	"0"
-		"pinCorner"		"0"
-		"visible"		"1"
-		"enabled"		"1"
-		"fgcolor_override"	"235 227 203 255"
+		
+		"AchievementStatsLabel"
+		{
+			"ControlName"	"CExLabel"
+			"fieldName"		"AchievementStatsLabel"
+			"font"			"HudFontSmallBold"
+			"labelText"		"#MMenu_Achievements"
+			"textAlignment"	"west"
+			"xpos"			"10"
+			"ypos"			"0"
+			"wide"			"150"
+			"tall"			"30"
+			"autoResize"	"0"
+			"pinCorner"		"0"
+			"visible"		"0"
+			"enabled"		"0"
+			"fgcolor_override"	"235 227 203 255"
+		}
 	}
 
 	"AchievementsButton"
@@ -521,8 +488,8 @@
 		"zpos"					"11"
 		"wide"					"124"
 		"tall"					"25"
-		"visible"				"1"
-		"enabled"				"1"
+		"visible"				"0"
+		"enabled"				"0"
 		"bordervisible"			"1"	
 		"command"				"gamemenucommand OpenAchievementsDialog"
 		
@@ -540,11 +507,11 @@
 
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_achievements"
+			"image" 			"glyph_achievements"
 			"imagewidth"		"16"	
 		}
 	}
-	
+
 	"StatsButton"
 	{
 		"ControlName"			"CTFAdvButton"
@@ -554,8 +521,8 @@
 		"zpos"					"11"
 		"wide"					"124"
 		"tall"					"25"
-		"visible"				"1"
-		"enabled"				"1"
+		"visible"				"0"
+		"enabled"				"0"
 		"bordervisible"			"1"	
 		"command"				"newstats"
 
@@ -573,9 +540,177 @@
 
 		"SubImage"
 		{
-			"image" 			"../vgui/main_menu/glyph_stats"
+			"image" 			"main_menu/glyph_stats"
 			"imagewidth"		"16"
-		}		
+		}
+	}
+
+	"SmallButtonBG"
+	{
+		"ControlName"		"EditablePanel"
+		"fieldName"			"SmallButtonBG"
+		"xpos"				"30"
+		"ypos"				"305"
+		"zpos"				"4"
+		"wide"				"140"
+		"tall"				"40"
+		"visible"			"1"
+		"enabled"			"1"
+		//"border"			"AdvRoundedButtonDefault"
+		"font"				"MenuMainTitle"
+		
+		"SmallAchievementsButton"
+		{
+			"ControlName"		"CTFAdvButton"
+			"fieldName"			"SmallAchievementsButton"
+			"xpos"				"10"
+			"ypos"				"5"
+			"zpos"				"5"
+			"wide"				"30"
+			"tall"				"30"
+			"visible"			"1"
+			"enabled"			"1"
+			"bordervisible"		"1"
+			"labelText" 		""
+			"Command"		"gamemenucommand OpenAchievementsDialog"
+		
+			"SubButton"
+			{
+				"labelText" 		""
+				"bordervisible"		"0"
+				"tooltip" 			"#GameUI_GameMenu_Achievements"
+				"textAlignment"		"center"
+				"font"				"HudFontSmallBold"
+				"border_default"	"AdvLeftButtonDefault"
+				"border_armed"		"AdvLeftButtonArmed"
+				"border_depressed"	"AdvLeftButtonDepressed"
+			}
+
+			"SubImage"
+			{
+				"image" 			"glyph_achievements"
+				"imagewidth"		"22"
+			}	
+		}
+
+		"CommentaryButton"
+		{
+			"ControlName"	"CTFAdvButton"
+			"fieldName"		"CommentaryButton"
+			"xpos"			"40"
+			"ypos"			"5"
+			"zpos"			"5"
+			"wide"			"30"
+			"tall"			"30"
+			"visible"		"1"
+			"enabled"		"1"
+			"tabPosition"	"0"
+			"labelText"		""
+			"font"			"HudFontSmallBold"
+			"Command"		"gamemenucommand OpenLoadSingleplayerCommentaryDialog"
+			"bordervisible"		"1"
+
+			"sound_depressed"	"UI/buttonclick.wav"
+			"sound_released"	"UI/buttonclickrelease.wav"
+
+			"image_drawcolor"	"235 226 202 255"
+
+			"SubButton"
+			{
+				"labelText" 		""
+				"bordervisible"		"0"
+				"tooltip" 			"#GameUI_GameMenu_Commentary"
+				"textAlignment"		"center"
+				"font"				"HudFontSmallBold"
+				"border_default"	"AdvSquareButtonDefault"
+				"border_armed"		"AdvSquareButtonArmed"
+				"border_depressed"	"AdvSquareButtonDepressed"
+			}
+
+			"SubImage"
+			{
+				"scaleImage"	"1"
+				"image" 			"glyph_forums"
+				"imagewidth"		"22"
+			}				
+		}
+
+		"SmallStatsButton"
+		{
+			"ControlName"	"CTFAdvButton"
+			"fieldName"		"SmallStatsButton"
+			"xpos"			"70"
+			"ypos"			"5"
+			"zpos"			"5"	
+			"wide"			"30"
+			"tall"			"30"
+			"visible"		"1"
+			"enabled"		"1"
+			"tabPosition"	"0"
+			"labelText"		""
+			"font"			"HudFontSmallBold"
+			"Command"		"newstats"
+			"bordervisible"		"1"
+
+			"sound_depressed"	"UI/buttonclick.wav"
+			"sound_released"	"UI/buttonclickrelease.wav"
+
+			"image_drawcolor"	"235 226 202 255"
+
+			"SubButton"
+			{
+				"labelText" 		""
+				"bordervisible"		"0"
+				"tooltip" 			"#GameUI_GameMenu_PlayerStats"
+				"textAlignment"		"center"
+				"font"				"HudFontSmallBold"
+				"border_default"	"AdvSquareButtonDefault"
+				"border_armed"		"AdvSquareButtonArmed"
+				"border_depressed"	"AdvSquareButtonDepressed"
+			}
+
+			"SubImage"
+			{
+				"scaleImage"	"1"
+				"image" 			"main_menu/glyph_stats"
+				"imagewidth"		"24"
+			}				
+		}
+	
+		"OptionsOldButton"
+		{
+			"ControlName"			"CTFAdvButton"
+			"fieldName"				"OptionsOldButton"		
+			"xpos"					"100"
+			"ypos"					"5"
+			"zpos"					"5"
+			"wide"					"30"
+			"tall"					"30"
+			"visible"				"1"
+			"enabled"				"1"
+			"tabPosition"			"0"
+			"labelText"				""
+			"font"					"HudFontSmallBold"
+			"command"				"gamemenucommand openoptionsdialog"
+
+			"SubButton"
+			{
+				"labelText" 		""
+				"tooltip" 			"Options"
+				"bordervisible"		"0"
+				"textAlignment"		"center"
+				"font"				"HudFontSmallBold"
+				"border_default"	"AdvRightButtonDefault"
+				"border_armed"		"AdvRightButtonArmed"
+				"border_depressed"	"AdvRightButtonDepressed"
+			}
+
+			"SubImage"
+			{
+				"image" 			"glyph_steamworkshop"
+				"imagewidth"		"16"
+			}
+		}
 	}
 
 	"QuitButton"
@@ -600,22 +735,25 @@
 			"yshift" 			"0"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
-			"defaultFgColor_override"		"MainMenuTextDefault"
-			"armedFgColor_override"			"MainMenuTextArmed"
-			"depressedFgColor_override"		"MainMenuTextDepressed"	
+			//"defaultFgColor_override"		"MainMenuTextDefault"
+			//"armedFgColor_override"			"MainMenuTextArmed"
+			//"depressedFgColor_override"		"MainMenuTextDepressed"
+			"border_default"	"AdvRoundedButtonDefault"
+			"border_armed"		"AdvRoundedButtonDepressed"
+			"border_depressed"	"AdvRoundedButtonArmed"
 		}
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_quit"
+			"image" 			"glyph_quit"
 			"imagewidth"		"14"
 		}
 	}
 
-	"SmallButtonBG"
+	"ExtraButtonBG"
 	{
 		"ControlName"		"EditablePanel"
-		"fieldName"			"SmallButtonBG"
+		"fieldName"			"ExtraButtonBG"
 		"xpos"				"c190"
 		"ypos"				"25"
 		"zpos"				"-100"
@@ -623,7 +761,7 @@
 		"tall"				"40"
 		"visible"			"1"
 		"enabled"			"1"
-		"border"			"TFThinLineBorder"
+		"border"			"AdvRoundedButtonDefault"
 		"font"				"MenuMainTitle"
 	}
 
@@ -651,15 +789,15 @@
 			"tooltip" 			"Music Toggle"
 			"textAlignment"		"center"
 			"font"				"MenuSmallFont"
-			"border_default"	"MainMenuAdvButtonDepressed"
-			"border_armed"		"MainMenuAdvButtonArmed"
-			"border_depressed"	"MainMenuAdvButtonDepressed"	
+			"border_default"	"AdvLeftButtonDefault"
+			"border_armed"		"AdvLeftButtonArmed"
+			"border_depressed"	"AdvLeftButtonDepressed"
 		}
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/main_menu/glyph_speaker"
-			"imagecheck" 		"../vgui/main_menu/glyph_disabled"	
+			"image" 			"main_menu/glyph_speaker"
+			"imagecheck" 		"main_menu/glyph_disabled"	
 			"imagewidth"		"24"
 		}
 	}
@@ -668,7 +806,7 @@
 	{
 		"ControlName"		"CTFAdvButton"
 		"fieldName"			"RandomMusicButton"
-		"xpos"				"c270"
+		"xpos"				"c271"
 		"ypos"				"30"
 		"zpos"				"5"
 		"wide"				"32"
@@ -686,14 +824,14 @@
 			"tooltip" 			"Random music"
 			"textAlignment"		"center"
 			"font"				"MenuSmallFont"
-			"border_default"	"MainMenuAdvButtonDepressed"
-			"border_armed"		"MainMenuAdvButtonArmed"
-			"border_depressed"	"MainMenuAdvButtonDepressed"	
+			"border_default"	"AdvRightButtonDefault"
+			"border_armed"		"AdvRightButtonArmed"
+			"border_depressed"	"AdvRightButtonDepressed"
 		}
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/main_menu/glyph_random"
+			"image" 			"main_menu/glyph_random"
 			"imagewidth"		"24"
 		}
 	}
@@ -722,15 +860,15 @@
 			"tooltip" 			"Blog panel Toggle"
 			"textAlignment"		"center"
 			"font"				"MenuSmallFont"
-			"border_default"	"MainMenuAdvButtonDepressed"
-			"border_armed"		"MainMenuAdvButtonArmed"
-			"border_depressed"	"MainMenuAdvButtonDepressed"	
+			"border_default"	"AdvRoundedButtonDefault"
+			"border_armed"		"AdvRoundedButtonArmed"
+			"border_depressed"	"AdvRoundedButtonDepressed"
 		}
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_tv"
-			"imagecheck" 		"../vgui/main_menu/glyph_disabled"	
+			"image" 			"glyph_tv"
+			"imagecheck" 		"main_menu/glyph_disabled"	
 			"imagewidth"		"24"
 		}
 	}	
@@ -758,12 +896,12 @@
 			"font"				"MenuSmallFont"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
-			"border_depressed"	"AdvRoundedButtonDepressed"	
+			"border_depressed"	"AdvRoundedButtonDepressed"
 		}
 		
 		"SubImage"
 		{
-			"image" 			"../vgui/glyph_alert"
+			"image" 			"glyph_alert"
 			"imagewidth"		"16"
 		}
 	}		

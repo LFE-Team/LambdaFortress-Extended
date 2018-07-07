@@ -205,8 +205,8 @@ void CDamageAccountPanel::OnDamaged( IGameEvent *event )
 
 	bool bIsPlayer = V_strcmp( event->GetName(), "npc_hurt" ) != 0;
 
-	int iAttacker = event->GetInt("attacker_index");
-	int iVictim = event->GetInt("victim_index");
+	int iAttacker = bIsPlayer ? event->GetInt( "attacker" ) : event->GetInt( "attacker_index" );;
+	int iVictim = bIsPlayer ? event->GetInt( "userid" ) : event->GetInt( "victim_index" );
 	int iDmgAmount = event->GetInt( "damageamount" );
 	int iHealth = event->GetInt( "health" );
 

@@ -42,17 +42,17 @@ void OverrideMainMenu()
 	}
 }
 
-CON_COMMAND(lf_mainmenu_reload, "Reload Main Menu")
+CON_COMMAND( lfe_hud_reload_mainmenu, "Reload Main Menu" )
 {
 	MAINMENU_ROOT->InvalidatePanelsLayout(true, true);
 }
 
-CON_COMMAND(showloadout, "Show loadout screen (new)")
+CON_COMMAND( showloadout, "Show loadout screen (new)" )
 {
 	if (!guiroot)
 		return;
 
-	engine->ClientCmd("gameui_activate");
+	engine->ClientCmd( "gameui_activate" );
 	MAINMENU_ROOT->ShowPanel(LOADOUT_MENU, true);
 }
 

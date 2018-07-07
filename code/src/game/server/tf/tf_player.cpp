@@ -10160,7 +10160,10 @@ void CTFPlayer::UpdatePlayerSound ( void )
 
 	// if we're holding tomislav npc won't notice.
 	CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-	if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_MINIGUN_TOMISLAV ) )
+	int nMinigunNoSound = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMinigunNoSound, minigun_no_spin_sounds );
+
+	if ( nMinigunNoSound )
 	{
 		pSound->m_iVolume = 0;
 		return;
