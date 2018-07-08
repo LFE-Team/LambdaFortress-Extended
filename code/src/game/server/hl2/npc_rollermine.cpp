@@ -1724,12 +1724,12 @@ void CNPC_RollerMine::SetRollerSkin( void )
 	else if ( m_bHackedByAlyx == true )
 	{
 		m_nSkin = (int)ROLLER_SKIN_FRIENDLY;
-		ChangeTeam(2);
+		ChangeTeam( TF_STORY_TEAM );
 	}
 	else
 	{
 		m_nSkin = (int)ROLLER_SKIN_REGULAR;
-		ChangeTeam(3);
+		ChangeTeam( TF_COMBINE_TEAM );
 	}
 }
 
@@ -1887,7 +1887,11 @@ float CNPC_RollerMine::GetAttackDamageScale( CBaseEntity *pVictim )
 		if ( pVictim->MyNPCPointer() )
 		{
 			// If we don't hate the player, we're immune
-			CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
+#ifdef TF_CLASSIC
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+#else
+CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
+#endif //SecobMod
 			if ( pPlayer && pVictim->MyNPCPointer()->IRelationType( pPlayer ) != D_HT )
 				return 0.0;
 		}

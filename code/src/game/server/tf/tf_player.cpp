@@ -3776,6 +3776,19 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		// Make bullet impacts
 		g_pEffects->Ricochet( ptr->endpos - (vecDir * 8), -vecDir );
 	}
+	else if ( m_Shared.InCond( TF_COND_PHASE ) )
+	{
+		CEffectData	data;
+		data.m_nHitBox = GetParticleSystemIndex( "miss_text" );
+		data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+		data.m_vAngles = vec3_angle;
+		data.m_nEntIndex = 0;
+
+		CSingleUserRecipientFilter filter( (CTFPlayer*)pTFAttacker );
+		te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+		SpeakConceptIfAllowed( MP_CONCEPT_DODGE_SHOT );
+	}
 	else
 	{	
 		// Since this code only runs on the server, make sure it shows the tempents it creates.
@@ -4078,7 +4091,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
 
 	// If we're invulnerable or bonk, force ourselves to only take damage events only, so we still get pushed
-	if ( m_Shared.IsInvulnerable() || m_Shared.InCond( TF_COND_PHASE) )
+	if ( m_Shared.IsInvulnerable() || m_Shared.InCond( TF_COND_PHASE ) )
 	{
 		bool bAllowDamage = false;
 
@@ -4111,7 +4124,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			{
 				SpeakConceptIfAllowed( MP_CONCEPT_HURT );
 			}
-
+/* because we can't take damage so i moved this to TraceAttack
 			if( m_Shared.InCond( TF_COND_PHASE ) )
 			{
 				CEffectData	data;
@@ -4125,6 +4138,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 				SpeakConceptIfAllowed( MP_CONCEPT_DODGE_SHOT );
 			}
+*/
 			return 0;
 		}
 	}
@@ -4686,7 +4700,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	}
 
 	//No bleeding while invul or disguised.
-	bool bBleed = ( ( m_Shared.InCond( TF_COND_DISGUISED ) == false || m_Shared.GetDisguiseTeam() == GetTeamNumber() ) &&
+	bool bBleed = ( ( m_Shared.InCond( TF_COND_DISGUISED ) == false || m_Shared.InCond( TF_COND_PHASE ) == false || m_Shared.GetDisguiseTeam() == GetTeamNumber() ) &&
 		m_Shared.IsInvulnerable() == false );
 	if ( bBleed && pAttacker->IsPlayer() )
 	{
