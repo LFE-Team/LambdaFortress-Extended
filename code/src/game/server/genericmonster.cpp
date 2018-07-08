@@ -216,7 +216,8 @@ public:
 	void	UpdateOnRemove( void );
 	int		SelectSchedule( void );
 	void	OnRestore( void );
-	int		OnTakeDamage( const CTakeDamageInfo &info )
+	int		OnTakeDamage(const CTakeDamageInfo &info);
+	int		OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		if ( m_iHealth <= info.GetDamage() )
 			m_iHealth = info.GetDamage() + TOO_MUCH_HEALTH_TO_DIE;
@@ -297,6 +298,13 @@ void CNPC_Furniture::Spawn( )
 void CNPC_Furniture::Precache( void )
 {
 	PrecacheModel( STRING( GetModelName() ) );
+}
+int CNPC_Furniture::OnTakeDamage_Alive(const CTakeDamageInfo &info)
+{
+	if (info.GetAttacker()->IsPlayer())
+	{
+		return 0;
+	}
 }
 
 //-----------------------------------------------------------------------------
