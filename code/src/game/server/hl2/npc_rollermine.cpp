@@ -38,6 +38,7 @@
 #include "mapentities.h"
 #include "RagdollBoogie.h"
 #include "physics_collisionevent.h"
+#include "tf_team.h"
 
 #ifdef TF_CLASSIC
 #include "tf_gamerules.h"
@@ -1723,10 +1724,12 @@ void CNPC_RollerMine::SetRollerSkin( void )
 	else if ( m_bHackedByAlyx == true )
 	{
 		m_nSkin = (int)ROLLER_SKIN_FRIENDLY;
+		ChangeTeam(2);
 	}
 	else
 	{
 		m_nSkin = (int)ROLLER_SKIN_REGULAR;
+		ChangeTeam(3);
 	}
 }
 
