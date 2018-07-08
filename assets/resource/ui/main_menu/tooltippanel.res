@@ -6,12 +6,13 @@
 		"fieldName"			"CTFToolTipPanel"
 		"xpos"				"0"
 		"ypos"				"0"
-		"wide"				"120"
+		"wide"				"150"
 		"tall"				"50"
 		"autoResize"		"0"
 		"pinCorner"			"0"
 		"visible"			"1"
 		"enabled"			"1"
+		"PaintBackgroundType"	"2"
 		"border"			"MainMenuAdvButtonDepressed"
 	}	
 		
@@ -22,8 +23,8 @@
 		"xpos"				"0"
 		"ypos"				"0"
 		"zpos"				"1"
-		"wide"				"80"
-		"tall"				"25"
+		"wide"				"140"
+		"tall"				"30"
 		"autoResize"		"0"
 		"pinCorner"			"0"
 		"visible"			"1"
@@ -33,5 +34,6 @@
 		"wrap"				"1"
 		"font"				"HudFontSmallBold"
 		"fgcolor"			"MainMenuTextDepressed"
+		"auto_wide_tocontents" "1"
 	}		
 }		

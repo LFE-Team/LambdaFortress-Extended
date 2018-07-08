@@ -230,10 +230,10 @@ void CTFMinigun::SharedAttack()
 #ifdef GAME_DLL
 				pPlayer->ClearWeaponFireScene();
 				pPlayer->SpeakWeaponFire( MP_CONCEPT_WINDMINIGUN );
+
+				CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 4.0 );
 #endif
 				m_iWeaponState = AC_STATE_SPINNING;
-
-				//CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
 
 				m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flTimeWeaponIdle = gpGlobals->curtime + 0.1;
 			}
@@ -292,6 +292,13 @@ void CTFMinigun::SharedAttack()
 #ifdef GAME_DLL
 					pPlayer->ClearWeaponFireScene();
 					pPlayer->SpeakWeaponFire( MP_CONCEPT_FIREMINIGUN );
+
+					int nMinigunNoSound = 0;
+					CALL_ATTRIB_HOOK_INT( nMinigunNoSound, minigun_no_spin_sounds );
+					if ( nMinigunNoSound != 1 )
+					{
+						CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
+					}
 #endif
 					m_iWeaponState = AC_STATE_FIRING;
 				}
@@ -499,7 +506,12 @@ void CTFMinigun::HandleFireOnEmpty( void )
 
 		 if ( m_iWeaponMode == TF_WEAPON_SECONDARY_MODE )
 		 {
-			m_iWeaponState = AC_STATE_SPINNING;
+			int nMinigunNoSound = 0;
+			CALL_ATTRIB_HOOK_INT( nMinigunNoSound, minigun_no_spin_sounds );
+			if ( nMinigunNoSound != 1 )
+			{
+				m_iWeaponState = AC_STATE_SPINNING;
+			}
 		 }
 	}
 }

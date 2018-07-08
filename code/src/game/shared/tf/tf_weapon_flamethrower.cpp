@@ -12,6 +12,7 @@
 #include "tf_player_shared.h"
 #include "props_shared.h"
 #include "tf_weapon_compound_bow.h"
+#include "eventlist.h"
 #if defined( CLIENT_DLL )
 
 	#include "c_tf_player.h"
@@ -685,11 +686,25 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 
 			float flExReHp = 0.0f;
 			CALL_ATTRIB_HOOK_FLOAT( flExReHp, extinguish_restores_health );
+
 			if ( flExReHp )
 			{
-				pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
-			}
+				int iHealthRestored = pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
 
+				if ( iHealthRestored )
+				{
+					IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
+
+					if ( event )
+					{
+						event->SetInt( "amount", iHealthRestored );
+						event->SetInt( "entindex", pAttacker->entindex() );
+
+						gameeventmanager->FireEvent( event );
+					}
+				}
+			}
+	
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
 		}
 	}
@@ -733,9 +748,23 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 
 			float flExReHp = 0.0f;
 			CALL_ATTRIB_HOOK_FLOAT( flExReHp, extinguish_restores_health );
+
 			if ( flExReHp )
 			{
-				pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
+				int iHealthRestored = pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
+
+				if ( iHealthRestored )
+				{
+					IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
+
+					if ( event )
+					{
+						event->SetInt( "amount", iHealthRestored );
+						event->SetInt( "entindex", pAttacker->entindex() );
+
+						gameeventmanager->FireEvent( event );
+					}
+				}
 			}
 
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
@@ -1574,7 +1603,7 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 
 		pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
 		ApplyMultiDamage();
-	
+
 		// It's better to ignite NPC here rather than NPC code.
 		CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
 		if ( pNPC )

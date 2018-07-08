@@ -14,7 +14,7 @@
 		"enabled"			"1"
 		"border"			""
 	}	
-	
+
 	"BackgroundImage"
 	{
 		"ControlName"		"ImagePanel"
@@ -27,12 +27,30 @@
 		"autoResize"		"0"
 		"pinCorner"			"0"
 		"scaleimage"		"1"
-		"border"			"AdvRoundedButtonArmed"
+		"border"			"AdvRoundedButtonDefault"
 		"visible"			"1"
 		//"fillcolor"			"46 43 42 255"
 		"enabled"			"1"
 	}
-	
+
+	"ExtraBackgroundImage"
+	{
+		"ControlName"		"ImagePanel"
+		"fieldName"			"ExtraBackgroundImage"
+		"xpos"				"100"
+		"ypos"				"20"
+		"zpos"				"-2"
+		"wide"				"f+200"
+		"tall"				"f+40"
+		"autoResize"		"0"
+		"pinCorner"			"0"
+		"scaleimage"		"1"
+		"border"			"AdvRoundedButtonDefault"
+		"visible"			"1"
+		//"fillcolor"			"46 43 42 255"
+		"enabled"			"1"
+	}
+
 	"ClassLabel"
 	{
 		"ControlName"	"CExLabel"
@@ -95,7 +113,7 @@
 		"xpos"			"c-320"
 		"ypos"			"c-90"
 		"zpos"			"0"		
-		"wide"			"250"
+		"wide"			"260"
 		"tall"			"280"
 		"autoResize"	"0"
 		"pinCorner"		"0"
@@ -196,7 +214,7 @@
 		"xpos"			"c-320"
 		"ypos"			"c-90"
 		"zpos"			"2"		
-		"wide"			"250"
+		"wide"			"260"
 		"tall"			"280"
 		"autoResize"	"0"
 		"pinCorner"		"0"
