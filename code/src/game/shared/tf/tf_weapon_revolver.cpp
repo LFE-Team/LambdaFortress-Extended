@@ -43,3 +43,44 @@ acttable_t CTFRevolver::m_acttable[] =
 
 IMPLEMENT_ACTTABLE( CTFRevolver );
 */
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CTFRevolver::CanFireCriticalShot( bool bIsHeadshot )
+{
+	// can only fire a crit shot if this is a headshot
+	if ( !bIsHeadshot )
+		return false;
+
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( iType == 1 )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int	CTFRevolver::GetDamageType( void ) const
+{
+	int iDmgType = BaseClass::GetDamageType();
+
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
+	if ( iType == 1 )
+	{
+		iDmgType |= DMG_USE_HITLOCATIONS;
+	}
+	else
+	{
+		iDmgType |= DMG_BULLET;	
+	}
+
+	return iDmgType;
+}

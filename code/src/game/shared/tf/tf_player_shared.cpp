@@ -448,6 +448,18 @@ bool CTFPlayerShared::IsCritBoosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+bool CTFPlayerShared::IsMiniCritBoosted( void )
+{
+	if ( InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
+		InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CTFPlayerShared::IsInvulnerable( void )
 {
 	// Oh man again...
@@ -525,6 +537,7 @@ void CTFPlayerShared::OnPreDataChanged( void )
 	m_iOldDisguiseWeaponModelIndex = m_iDisguiseWeaponModelIndex;
 	m_iOldDisguiseWeaponID = m_DisguiseItem.GetItemDefIndex();
 	m_bWasCritBoosted = IsCritBoosted();
+	m_bWasMiniCritBoosted = IsMiniCritBoosted();
 }
 
 //-----------------------------------------------------------------------------
@@ -680,6 +693,11 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 		OnAddCritboosted();
 		break;
 
+	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
+	case TF_COND_MINICRITBOOSTED_ON_KILL:
+		OnAddMiniCritboosted();
+		break;
+
 	case TF_COND_BURNING:
 		OnAddBurning();
 		break;
@@ -795,6 +813,11 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
 	case TF_COND_POWERUP_CRITDAMAGE:
 		OnRemoveCritboosted();
+		break;
+
+	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
+	case TF_COND_MINICRITBOOSTED_ON_KILL:
+		OnRemoveMiniCritboosted();
 		break;
 
 	case TF_COND_BURNING:
@@ -1434,7 +1457,27 @@ void CTFPlayerShared::OnAddCritboosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddMiniCritboosted( void )
+{
+#ifdef CLIENT_DLL
+	UpdateCritBoostEffect();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CTFPlayerShared::OnRemoveCritboosted( void )
+{
+#ifdef CLIENT_DLL
+	UpdateCritBoostEffect();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveMiniCritboosted( void )
 {
 #ifdef CLIENT_DLL
 	UpdateCritBoostEffect();
@@ -2952,6 +2995,10 @@ void CTFPlayerShared::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill
 	if ( info.GetDamageType() & DMG_CRITICAL )
 	{
 		m_DamageEvents[iIndex].flDamage /= TF_DAMAGE_CRIT_MULTIPLIER;
+	}
+	else if ( info.GetDamageType() & DMG_CRITICAL && IsMiniCritBoosted() )
+	{
+		m_DamageEvents[iIndex].flDamage /= TF_DAMAGE_MINICRIT_MULTIPLIER;
 	}
 }
 

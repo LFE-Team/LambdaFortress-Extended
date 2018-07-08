@@ -80,6 +80,7 @@ enum
 #define TF_DAMAGE_CRITMOD_MAXMULT			6
 
 #define TF_DAMAGE_CRIT_MULTIPLIER			3.0f
+#define TF_DAMAGE_MINICRIT_MULTIPLIER		2.0f
 
 
 //-----------------------------------------------------------------------------

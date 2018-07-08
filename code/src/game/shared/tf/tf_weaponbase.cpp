@@ -881,6 +881,34 @@ void CTFWeaponBase::CalcIsAttackCritical( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Most calls use the prediction seed
+//-----------------------------------------------------------------------------
+void CTFWeaponBase::CalcIsAttackMiniCritical( void )
+{
+	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
+	if ( !pPlayer )
+		return;
+
+	if ( gpGlobals->framecount == m_iLastCritCheckFrame )
+		return;
+
+	m_iLastCritCheckFrame = gpGlobals->framecount;
+
+	// if base entity seed has changed since last calculation, reseed with new seed
+	int iSeed = CBaseEntity::GetPredictionRandomSeed();
+	if ( iSeed != m_iCurrentSeed )
+	{
+		m_iCurrentSeed = iSeed;
+		RandomSeed( m_iCurrentSeed );
+	}
+
+	if ( pPlayer->m_Shared.IsMiniCritBoosted() )
+	{
+		m_bCurrentAttackIsMiniCrit = true;
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Weapon-specific helper method to calculate if attack is crit
 //-----------------------------------------------------------------------------
 bool CTFWeaponBase::CalcIsAttackCriticalHelper()

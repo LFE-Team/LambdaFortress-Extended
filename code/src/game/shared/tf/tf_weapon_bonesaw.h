@@ -31,6 +31,8 @@ public:
 	CTFBonesaw() {}
 	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_BONESAW; }
 
+	virtual void		SecondaryAttack( void );
+
 #ifdef CLIENT_DLL
 	virtual void		OnDataChanged( DataUpdateType_t updateType );
 	virtual bool		Deploy( void );

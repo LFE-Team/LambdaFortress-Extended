@@ -705,6 +705,11 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		OnAddCritboosted();
 		break;
 
+	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
+	case TF_COND_MINICRITBOOSTED_ON_KILL:
+		OnAddMiniCritboosted();
+		break;
+
 	default:
 		break;
 	}
@@ -758,6 +763,11 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 		OnRemoveCritboosted();
 		break;
 
+	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
+	case TF_COND_MINICRITBOOSTED_ON_KILL:
+		OnRemoveMiniCritboosted();
+		break;
+
 	default:
 		break;
 	}
@@ -779,6 +789,18 @@ bool CAI_BaseNPC::IsCritBoosted( void )
 		InCond( TF_COND_CRITBOOSTED_ON_KILL ) ||
 		InCond( TF_COND_CRITBOOSTED_CARD_EFFECT ) ||
 		InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::IsMiniCritBoosted( void )
+{
+	if ( InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
+		InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
 		return true;
 
 	return false;
@@ -959,7 +981,27 @@ void CAI_BaseNPC::OnAddCritboosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddMiniCritboosted( void )
+{
+#ifdef CLIENT_DLL
+	UpdateCritBoostEffect();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnRemoveCritboosted( void )
+{
+#ifdef CLIENT_DLL
+	UpdateCritBoostEffect();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveMiniCritboosted( void )
 {
 #ifdef CLIENT_DLL
 	UpdateCritBoostEffect();

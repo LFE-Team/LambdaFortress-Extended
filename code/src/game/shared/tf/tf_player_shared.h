@@ -115,6 +115,7 @@ public:
 	float	GetConditionDuration( int nCond );
 
 	bool	IsCritBoosted( void );
+	bool	IsMiniCritBoosted( void );
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
 
@@ -280,6 +281,7 @@ private:
 	void OnAddTaunting( void );
 	void OnAddSlowed( void );
 	void OnAddCritboosted( void );
+	void OnAddMiniCritboosted( void );
 	void OnAddStunned( void );
 	void OnAddHalloweenGiant( void );
 	void OnAddHalloweenTiny( void );
@@ -298,6 +300,7 @@ private:
 	void OnRemoveTaunting( void );
 	void OnRemoveSlowed( void );
 	void OnRemoveCritboosted( void );
+	void OnRemoveMiniCritboosted( void );
 	void OnRemoveStunned( void );
 	void OnRemoveHalloweenGiant( void );
 	void OnRemoveHalloweenTiny( void );
@@ -447,6 +450,7 @@ private:
 	int m_nOldConditionsEx3;
 
 	bool m_bWasCritBoosted;
+	bool m_bWasMiniCritBoosted;
 #endif
 };			   
 

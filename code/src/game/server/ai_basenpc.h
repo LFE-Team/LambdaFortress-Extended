@@ -2158,6 +2158,7 @@ public:
 	float	GetConditionDuration( int nCond );
 
 	bool	IsCritBoosted( void );
+	bool	IsMiniCritBoosted( void );
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
 
@@ -2186,6 +2187,8 @@ public:
 	void	OnRemoveSlowed( void );
 	void OnAddCritboosted( void );
 	void OnRemoveCritboosted( void );
+	void OnAddMiniCritboosted( void );
+	void OnRemoveMiniCritboosted( void );
 
 	// Damager history, used for TF2 assists.
 	void				AddDamagerToHistory( EHANDLE hDamager );

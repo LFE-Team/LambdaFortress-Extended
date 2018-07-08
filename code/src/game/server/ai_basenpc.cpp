@@ -983,6 +983,8 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
+	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
+
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
@@ -1006,8 +1008,6 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		int nCritWhileAirborne = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
-
-		CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
 
 		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
 		{
@@ -1042,6 +1042,28 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				EmitSound_t params;
 				params.m_flSoundTime = 0;
 				params.m_pSoundName = "TFPlayer.CritHit";
+				EmitSound( filter, pAttacker->entindex(), params );
+			}
+		}
+		else if ( bitsDamage & DMG_CRITICAL && pTFAttacker->m_Shared.IsMiniCritBoosted() )
+		{
+			flDamage = info.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
+
+			// Show the attacker, unless the target is a disguised spy
+			if ( pAttacker && pAttacker->IsPlayer() && !InCond( TF_COND_DISGUISED ) )
+			{
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
+				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
+
+				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+				EmitSound_t params;
+				params.m_flSoundTime = 0;
+				params.m_pSoundName = "TFPlayer.CritHitMini";
 				EmitSound( filter, pAttacker->entindex(), params );
 			}
 		}
@@ -1918,7 +1940,7 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 					// play the critical shot sound to the shooter	
 					if ( pWpn )
 					{
-						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) )
+						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) || pWpn->IsWeapon( TF_WEAPON_REVOLVER ) )
 							pWpn->WeaponSound( BURST );
 
 						CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flDamage, headshot_damage_modify );

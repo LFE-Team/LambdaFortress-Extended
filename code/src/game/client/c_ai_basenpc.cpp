@@ -196,6 +196,7 @@ void C_AI_BaseNPC::OnPreDataChanged( DataUpdateType_t updateType )
 	m_nOldConditionsEx2 = m_nPlayerCondEx2;
 	m_nOldConditionsEx3 = m_nPlayerCondEx3;
 	m_bWasCritBoosted = IsCritBoosted();
+	m_bWasMiniCritBoosted = IsMiniCritBoosted();
 #endif
 }
 

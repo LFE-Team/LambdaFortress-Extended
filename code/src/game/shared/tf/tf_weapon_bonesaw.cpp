@@ -20,6 +20,23 @@
 
 CREATE_SIMPLE_WEAPON_TABLE( TFBonesaw, tf_weapon_bonesaw )
 
+void CTFBonesaw::SecondaryAttack( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+	if ( !pOwner )
+		return;
+/*
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( iType != 0 )
+	{
+#ifdef GAME_DLL
+		pOwner->Taunt();
+#endif
+	}
+*/
+}
+
 #ifdef CLIENT_DLL
 void CTFBonesaw::OnDataChanged( DataUpdateType_t updateType )
 {
@@ -44,14 +61,19 @@ void CTFBonesaw::UpdateChargePoseParam( void )
 	if ( !pOwner )
 		return;
 
-	CWeaponMedigun *pMedigun = pOwner->GetMedigun();
-	if ( pMedigun )
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( iType != 0 )
 	{
-		SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
+		CWeaponMedigun *pMedigun = pOwner->GetMedigun();
+		if ( pMedigun )
+		{
+			SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
 
-		CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
-		if ( vm )
-			vm->SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
+			CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+			if ( vm )
+				vm->SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
+		}
 	}
 }
 

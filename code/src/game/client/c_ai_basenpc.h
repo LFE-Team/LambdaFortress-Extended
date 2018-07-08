@@ -87,6 +87,7 @@ public:
 	void	SyncConditions( int nCond, int nOldCond, int nUnused, int iOffset );
 
 	bool	IsCritBoosted( void );
+	bool	IsMiniCritBoosted( void );
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
 
@@ -100,6 +101,8 @@ public:
 	void	OnRemoveSlowed( void );
 	void OnAddCritboosted( void );
 	void OnRemoveCritboosted( void );
+	void OnAddMiniCritboosted( void );
+	void OnRemoveMiniCritboosted( void );
 
 	void	StartBurningSound( void );
 	void	StopBurningSound( void );
@@ -157,6 +160,7 @@ private:
 	int m_nOldConditionsEx3;
 
 	bool m_bWasCritBoosted;
+	bool m_bWasMiniCritBoosted;
 
 	// Burning
 	CSoundPatch			*m_pBurningSound;

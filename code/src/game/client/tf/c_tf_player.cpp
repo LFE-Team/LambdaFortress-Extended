@@ -1232,11 +1232,30 @@ public:
 				case TF_TEAM_BLUE:
 					vecColor = Vector( 6, 21, 80 );
 					break;
+				/*
 				case TF_TEAM_GREEN:
 					vecColor = Vector( 1, 28, 9 );
 					break;
 				case TF_TEAM_YELLOW:
 					vecColor = Vector( 28, 28, 9 );
+					break;
+				*/
+				}
+			}
+		}
+		else if ( pPlayer && pPlayer->m_Shared.IsMiniCritBoosted() )
+		{
+			if ( !pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) ||
+				!pPlayer->IsEnemyPlayer() ||
+				pPlayer->GetTeamNumber() == pPlayer->m_Shared.GetDisguiseTeam() )
+			{
+				switch ( pPlayer->GetTeamNumber() )
+				{
+				case TF_TEAM_RED:
+					vecColor = Vector( 237, 140, 55 );
+					break;
+				case TF_TEAM_BLUE:
+					vecColor = Vector( 28, 168, 112 );
 					break;
 				}
 			}

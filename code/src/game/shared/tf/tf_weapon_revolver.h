@@ -33,7 +33,8 @@ public:
 	~CTFRevolver() {}
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_REVOLVER; }
-
+	virtual int	GetDamageType() const;
+	virtual bool CanFireCriticalShot( bool bIsHeadshot = false );
 private:
 
 	CTFRevolver( const CTFRevolver & ) {}
