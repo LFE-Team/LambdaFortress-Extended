@@ -7,6 +7,13 @@
 #include "cbase.h"
 #include "mp_shareddefs.h"
 #include "teamplayroundbased_gamerules.h"
+#ifdef GAME_DLL
+#include "globalstate.h"
+#include "npc_metropolice.h"
+//#include "logicentities.h"
+#endif
+//#include "tf_weapon_physcannon.h"
+#include "tf_gamerules.h"
 
 #ifdef CLIENT_DLL
 	#include "iclientmode.h"
@@ -380,6 +387,22 @@ CTeamplayRoundBasedRules::CTeamplayRoundBasedRules( void )
 	m_flStopWatchTotalTime = -1.0f;
 	m_bMultipleTrains = false;
 	m_bAllowBetweenRounds = true;
+#ifdef GAME_DLL
+	GlobalEntity_SetState(GlobalEntity_GetIndex("gordon_precriminal"), GLOBAL_OFF);
+	GlobalEntity_SetState(GlobalEntity_GetIndex("ep_alyx_darknessmode"), GLOBAL_OFF);
+	GlobalEntity_SetState(GlobalEntity_GetIndex("antlion_allied"), GLOBAL_OFF);
+	GlobalEntity_SetState(GlobalEntity_GetIndex("super_phys_gun"), GLOBAL_OFF);
+	//TFGameRules()->m_bMegaPhysgun = false;
+	/*
+	CBaseEntity *pGlobals = gEntList.FindEntityByClassname(NULL, "env_global");
+	if (pGlobals)
+	{
+		//pGlobals->Respawn();
+		variant_t sVariant;
+		pGlobals->AcceptInput("TurnOn", NULL, NULL, sVariant, NULL);
+	}
+	*/
+#endif
 
 #ifdef GAME_DLL
 	ListenForGameEvent( "server_changelevel_failed" );
@@ -393,6 +416,8 @@ CTeamplayRoundBasedRules::CTeamplayRoundBasedRules( void )
 	InitTeams();
 	ResetMapTime();
 	ResetScores();
+	//TFGameRules()->IsAlyxInDarknessMode = false;
+	
 	SetForceMapReset( true );
 	SetRoundToPlayNext( NULL_STRING );
 	m_bInWaitingForPlayers  = false;
@@ -2875,6 +2900,7 @@ void CTeamplayRoundBasedRules::HandleTimeLimitChange( void )
 //-----------------------------------------------------------------------------
 void CTeamplayRoundBasedRules::ResetPlayerAndTeamReadyState( void )
 {
+
 	for ( int i = 0; i < MAX_TEAMS; i++ )
 	{
 		m_bTeamReady.Set( i, false );
@@ -3144,6 +3170,16 @@ void CTeamplayRoundBasedRules::CleanUpMap()
 	// DO NOT CALL SPAWN ON info_node ENTITIES!
 
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
+#ifdef GAME_DLL
+	CBaseEntity *pGlobals = gEntList.FindEntityByClassname(NULL, "env_global");
+	if (pGlobals)
+	{
+		//pGlobals->Respawn();
+		variant_t sVariant;
+		pGlobals->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
+		pGlobals->AcceptInput("TurnOn", NULL, NULL, sVariant, NULL);
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
