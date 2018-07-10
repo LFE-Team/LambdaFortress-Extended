@@ -28,14 +28,17 @@ void CTFLunchBox::PrimaryAttack( void )
 		return;
 
 #ifdef GAME_DLL
-	pOwner->Taunt();
-
-	//ApplyBiteEffects();
-	if ( pOwner->GetHealth() < 300 )
+	if (pOwner->GetGroundEntity() != NULL)
 	{
-		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
-		pOwner->SwitchToNextBestWeapon( this );
-		StartEffectBarRegen();
+		pOwner->Taunt();
+
+		//ApplyBiteEffects();
+		if (pOwner->GetHealth() < 300)
+		{
+			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+			pOwner->SwitchToNextBestWeapon(this);
+			StartEffectBarRegen();
+		}
 	}
 #endif
 
@@ -155,18 +158,21 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 	{
 		return;
 	}
+	if (pOwner->GetGroundEntity() != NULL)
+	{
 
 #ifdef GAME_DLL
-	pOwner->Taunt();
+		pOwner->Taunt();
 #endif
 
-	// Switch away from it immediately, don't want it to stick around.
-	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
-	pOwner->SwitchToNextBestWeapon( this );
+		// Switch away from it immediately, don't want it to stick around.
+		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+		pOwner->SwitchToNextBestWeapon(this);
 
-	StartEffectBarRegen();
+		StartEffectBarRegen();
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+	}
 }
 
 #ifdef GAME_DLL
