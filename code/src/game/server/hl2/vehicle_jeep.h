@@ -48,6 +48,7 @@ public:
 	virtual bool	AllowBlockedExit( CBasePlayer *pPlayer, int nRole ) { return false; }
 	virtual bool	CanExitVehicle( CBaseEntity *pEntity );
 	virtual bool	IsVehicleBodyInWater() { return m_WaterData.m_bBodyInWater; }
+	bool	m_bFromSpawner;
 	
 	// Passengers do not directly receive damage from blasts or radiation damage
 	virtual bool PassengerShouldReceiveDamage( CTakeDamageInfo &info ) 
@@ -118,6 +119,7 @@ private:
 	void		InputShowHudHint( inputdata_t &inputdata );
 	void		InputStartRemoveTauCannon( inputdata_t &inputdata );
 	void		InputFinishRemoveTauCannon( inputdata_t &inputdata );
+	void	InputFromSpawner(inputdata_t &inputdata);
 
 protected:
 

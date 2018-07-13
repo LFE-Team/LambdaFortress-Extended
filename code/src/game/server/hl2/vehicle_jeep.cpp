@@ -144,6 +144,7 @@ BEGIN_DATADESC( CPropJeep )
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowHudHint", InputShowHudHint ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartRemoveTauCannon", InputStartRemoveTauCannon ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "FinishRemoveTauCannon", InputFinishRemoveTauCannon ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "FromSpawner", InputFromSpawner),
 
 	DEFINE_THINKFUNC( JeepSeagullThink ),
 END_DATADESC()
@@ -189,6 +190,10 @@ void CPropJeep::CreateServerVehicle( void )
 	m_pServerVehicle->SetVehicle( this );
 }
 
+void CPropJeep::InputFromSpawner(inputdata_t &inputdata)
+{
+	m_bFromSpawner = true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -248,6 +253,12 @@ void CPropJeep::Spawn( void )
 	}
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
+	/*
+	if (GetKeyValue("targetname", "airboatfromspawner", -1))
+	{
+		m_bFromSpawner = true;
+	}
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1497,6 +1508,10 @@ void CPropJeep::EnterVehicle( CBaseCombatCharacter *pPassenger )
 	// Start looking for seagulls to land
 	m_hLastPlayerInVehicle = m_hPlayer;
 	SetContextThink( NULL, 0, g_pJeepThinkContext );
+	if (m_bFromSpawner)
+	{
+		KeyValue("targetname", "jeepfromspawner_protected");
+	}
 }
 
 //-----------------------------------------------------------------------------

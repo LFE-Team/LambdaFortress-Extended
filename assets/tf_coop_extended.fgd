@@ -1934,3 +1934,24 @@
 [
 	duration(float)			: "Duration"		:  0	: "The duration of the condition. NOTE: -1 duration means last until the player exits the trigger."
 ]
+
+@PointClass base(Targetname, Origin) = lfe_vehiclespawner : "lfe_vehiclespawner"
+[
+
+	targetname(string) : "Name" : : ""
+	vehicle_to_spawn(integer) : "Vehicle Type" : : "1 - Airboat 2 - Jeep 3 - Jalopy"
+	max_vehicles(integer) : "Max Vehicles" : : "Maximum owned vehicles at a time."
+	delay(integer) : "Spawn Delay" : : ""
+
+	// Outputs
+	output OnSomethingHappened(void) : "Fires when something happens"
+	output OnSomethingElse(void) : "Fires when something else happens"
+
+	// Inputs
+	input Enable(void) : "Enable"
+	input Disable(void) : "Disable"
+	input EnableGun(void) : "EnableGun"
+	input DisableGun(void) : "DisableGun"
+	input RemoveAllVehicles(void) : "RemoveAllVehicles"
+	input ForceSpawn(void ) : "ForceSpawn"
+]
