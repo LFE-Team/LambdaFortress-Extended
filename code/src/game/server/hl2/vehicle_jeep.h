@@ -105,6 +105,7 @@ private:
 	void		CheckWaterLevel( void );
 	void		CreateSplash( const Vector &vecPosition );
 	void		CreateRipple( const Vector &vecPosition );
+	void		InputEnableGunSpawner(inputdata_t &inputdata);
 
 	void		CreateDangerSounds( void );
 

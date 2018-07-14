@@ -137,6 +137,7 @@ public:
 	void InputEnableGun( inputdata_t &inputdata );
 	void InputStartRotorWashForces( inputdata_t &inputdata );
 	void InputStopRotorWashForces( inputdata_t &inputdata );
+	void InputEnableGunSpawnerBoat(inputdata_t &inputdata);
 
 	// Allows the shooter to change the impact effect of his bullets
 	virtual void DoImpactEffect( trace_t &tr, int nDamageType );
@@ -335,6 +336,7 @@ BEGIN_DATADESC( CPropAirboat )
 	DEFINE_INPUTFUNC( FIELD_VOID, "ExitVehicle", InputExitVehicle ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Wake", InputWake ),
 	DEFINE_INPUTFUNC(FIELD_VOID, "FromSpawnerBoat", InputFromSpawnerBoat),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableGunSpawnerBoat", InputEnableGunSpawnerBoat)
 
 END_DATADESC()
 
@@ -604,6 +606,17 @@ void CPropAirboat::InputExitVehicle( inputdata_t &inputdata )
 void CPropAirboat::InputWake( inputdata_t &inputdata )
 {
 	VPhysicsGetObject()->Wake();
+}
+
+void CPropAirboat::InputEnableGunSpawnerBoat(inputdata_t &inputdata)
+{
+	m_bHasGun = true;
+	SetBodygroup(AIRBOAT_BODYGROUP_GUN, 1);
+
+	if (m_bHasGun)
+	{
+		m_nAmmoCount = sk_airboat_max_ammo.GetInt();
+	}
 }
 
 

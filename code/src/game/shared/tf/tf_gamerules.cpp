@@ -755,12 +755,11 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				pBoat->Spawn();
 				pBoat->Activate();
 				pBoat->Teleport(&vecOrigin, &vecAngles, NULL);
+				pBoat->AcceptInput("FromSpawnerBoat", NULL, NULL, sVariant, NULL);
 				if (m_bGunEnabled)
 				{
-					KeyValue("EnableGun", "true");
-					pBoat->AcceptInput("EnableGun", NULL, NULL, sVariant, NULL);
+					pBoat->AcceptInput("enablegunspawnerboat", NULL, NULL, sVariant, NULL);
 				}
-				pBoat->AcceptInput("FromSpawnerBoat", NULL, NULL, sVariant, NULL);
 			}
 		}
 		else if (iVehicleNum2 == 2)
@@ -789,12 +788,11 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				pBoat->Spawn();
 				pBoat->Activate();
 				pBoat->Teleport(&vecOrigin, &vecAngles, NULL);
+				pBoat->AcceptInput("FromSpawner", NULL, NULL, sVariant, NULL);
 				if (m_bGunEnabled)
 				{
-					KeyValue("EnableGun", "true");
-					pBoat->AcceptInput("EnableGun", NULL, NULL, sVariant, NULL);
+					pBoat->AcceptInput("enablegunspawner", NULL, NULL, sVariant, NULL);
 				}
-				pBoat->AcceptInput("FromSpawner", NULL, NULL, sVariant, NULL);
 			}
 		}
 		else if (iVehicleNum2 == 3)
@@ -829,6 +827,68 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 		iSpawnedVehicles = iSpawnedVehicles + 1;
 	}
 #endif
+}
+
+class CTFLogicPlayerTeleports : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicPlayerTeleports, CBaseEntity);
+	DECLARE_DATADESC();
+	CTFLogicPlayerTeleports();
+	~CTFLogicPlayerTeleports();
+
+	void	Spawn(void);
+
+	void	InputTeleportPlayers(inputdata_t &inputdata);
+private:
+	int		iTeamToTeleport;
+};
+
+BEGIN_DATADESC(CTFLogicPlayerTeleports)
+DEFINE_INPUTFUNC(FIELD_VOID, "TeleportPlayers", InputTeleportPlayers),
+DEFINE_KEYFIELD(iTeamToTeleport, FIELD_INTEGER, "team_to_teleport"),
+END_DATADESC()
+
+LINK_ENTITY_TO_CLASS(lfe_logic_playerteleport, CTFLogicPlayerTeleports);
+
+CTFLogicPlayerTeleports::CTFLogicPlayerTeleports()
+{
+	iTeamToTeleport = 0;
+}
+
+CTFLogicPlayerTeleports::~CTFLogicPlayerTeleports()
+{
+}
+
+void CTFLogicPlayerTeleports::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
+void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
+{
+	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
+	Vector vecForward;
+	Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+	//CBaseEntity *pTeamPlayer = gEntList.FindEntityByClassname(NULL, "player");
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CTFPlayer *pTeamPlayer = ToTFPlayer(UTIL_PlayerByIndex(i));
+		if (iTeamToTeleport == 1)
+		{
+			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED)
+			{
+				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+			}
+		}
+		else if (iTeamToTeleport == 2)
+		{
+			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_BLUE)
+			{
+				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+			}
+		}
+	}
 }
 //-----------------------------------------------------------------------------
 // Zombie Survival
