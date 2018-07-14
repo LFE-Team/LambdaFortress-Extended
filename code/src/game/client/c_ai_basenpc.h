@@ -103,6 +103,8 @@ public:
 	void OnRemoveCritboosted( void );
 	void OnAddMiniCritboosted( void );
 	void OnRemoveMiniCritboosted( void );
+	void OnAddUrine( void );
+	void OnRemoveUrine( void );
 
 	void	StartBurningSound( void );
 	void	StopBurningSound( void );

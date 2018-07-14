@@ -119,9 +119,9 @@ ConVar tf_gamemode_rd( "tf_gamemode_rd", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED |
 ConVar tf_gamemode_payload( "tf_gamemode_payload", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_mvm( "tf_gamemode_mvm", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_passtime( "tf_gamemode_passtime", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-ConVar lf_versus( "lf_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-ConVar lf_blucoop( "lf_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-ConVar lf_gamemode_zs( "lf_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar lfe_versus( "lfe_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar lfe_blucoop( "lfe_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar lfe_gamemode_zs( "lfe_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -530,15 +530,26 @@ void CTFGameRulesProxy::Activate()
 class CTFLogicCoOp : public CBaseEntity
 {
 public:
-	DECLARE_CLASS(CTFLogicCoOp, CBaseEntity);
-	void	Spawn(void);
+	DECLARE_CLASS( CTFLogicCoOp, CBaseEntity );
+	DECLARE_DATADESC();
+	void	Spawn( void );
+	bool	m_bIsEpisodic;
 };
 
-LINK_ENTITY_TO_CLASS(lfe_logic_coop, CTFLogicCoOp);
+BEGIN_DATADESC( CTFLogicCoOp )
+	DEFINE_KEYFIELD( m_bIsEpisodic, FIELD_INTEGER, "is_episodic" ),
+END_DATADESC()
 
-void CTFLogicCoOp::Spawn(void)
+LINK_ENTITY_TO_CLASS( lfe_logic_coop, CTFLogicCoOp );
+
+void CTFLogicCoOp::Spawn( void )
 {
 	BaseClass::Spawn();
+
+	if ( m_bIsEpisodic )
+	{
+		hl2_episodic.SetValue( 1 );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -547,15 +558,26 @@ void CTFLogicCoOp::Spawn(void)
 class CTFLogicBluCoOp : public CBaseEntity
 {
 public:
-	DECLARE_CLASS(CTFLogicCoOp, CBaseEntity);
-	void	Spawn(void);
+	DECLARE_CLASS( CTFLogicCoOp, CBaseEntity );
+	DECLARE_DATADESC();
+	void	Spawn( void );
+	bool	m_bIsEpisodic;
 };
 
-LINK_ENTITY_TO_CLASS(lfe_logic_blucoop, CTFLogicBluCoOp);
+BEGIN_DATADESC( CTFLogicBluCoOp )
+	DEFINE_KEYFIELD( m_bIsEpisodic, FIELD_INTEGER, "is_episodic" ),
+END_DATADESC()
 
-void CTFLogicBluCoOp::Spawn(void)
+LINK_ENTITY_TO_CLASS( lfe_logic_blucoop, CTFLogicBluCoOp );
+
+void CTFLogicBluCoOp::Spawn( void )
 {
 	BaseClass::Spawn();
+
+	if ( m_bIsEpisodic )
+	{
+		hl2_episodic.SetValue( 1 );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -565,14 +587,25 @@ class CTFLogicVersus : public CBaseEntity
 {
 public:
 	DECLARE_CLASS(CTFLogicVersus, CBaseEntity);
-	void	Spawn(void);
+	DECLARE_DATADESC();
+	void	Spawn( void );
+	bool	m_bIsEpisodic;
 };
+
+BEGIN_DATADESC( CTFLogicVersus )
+	DEFINE_KEYFIELD( m_bIsEpisodic, FIELD_INTEGER, "is_episodic" ),
+END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(lfe_logic_versus, CTFLogicVersus);
 
-void CTFLogicVersus::Spawn(void)
+void CTFLogicVersus::Spawn( void )
 {
 	BaseClass::Spawn();
+	
+	if ( m_bIsEpisodic )
+	{
+		hl2_episodic.SetValue( 1 );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1451,9 +1484,9 @@ void CTFGameRules::Activate()
 	tf_gamemode_mvm.SetValue( 0 );
 	tf_gamemode_rd.SetValue( 0 );
 	tf_gamemode_passtime.SetValue( 0 );
-	lf_versus.SetValue( 0 );
-	lf_blucoop.SetValue( 0 );
-	lf_gamemode_zs.SetValue( 0 );
+	lfe_versus.SetValue( 0 );
+	lfe_blucoop.SetValue( 0 );
+	lfe_gamemode_zs.SetValue( 0 );
 	hl2_episodic.SetValue( 0 );
 
 	SetMultipleTrains( false );
@@ -1468,30 +1501,30 @@ void CTFGameRules::Activate()
 		return;
 	}
 
-	if ( lf_versus.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_versus" ) )
+	if ( lfe_versus.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_versus" ) )
 	{
 		m_nGameType.Set( TF_GAMETYPE_VS );
-		lf_versus.SetValue( 1 );
+		lfe_versus.SetValue( 1 );
 		Msg( "Executing server versus config file\n", 1 );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
 
-	if ( lf_blucoop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop"))
+	if ( lfe_blucoop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop"))
 	{
 		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
-		lf_blucoop.SetValue( 1 );
+		lfe_blucoop.SetValue( 1 );
 		Msg( "Executing blue coop file\n", 1 );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
 		return;
 	}
 
-	if ( lf_gamemode_zs.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_zs" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "zs_", 3 ) )
+	if ( lfe_gamemode_zs.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_zs" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "zs_", 3 ) )
 	{
 		m_nGameType.Set( TF_GAMETYPE_ZS );
-		lf_gamemode_zs.SetValue( 1 );
+		lfe_gamemode_zs.SetValue( 1 );
 		alyx_darkness_force.SetValue( 1 );
 		hl2_episodic.SetValue( 1 );
 		Msg( "Executing server zombie survival config file\n", 1 );
@@ -2095,6 +2128,14 @@ bool CTFRadiusDamageInfo::ApplyToEntity( CBaseEntity *pEntity )
 
 		flDistanceToEntity = min( flToWorldSpaceCenter, flToOrigin );
 	}
+	else if ( pEntity->IsNPC() )
+	{
+		// Use whichever is closer, absorigin or worldspacecenter
+		float flToWorldSpaceCenter = ( m_vecSrc - pEntity->WorldSpaceCenter() ).Length();
+		float flToOrigin = ( m_vecSrc - pEntity->GetAbsOrigin() ).Length();
+
+		flDistanceToEntity = min( flToWorldSpaceCenter, flToOrigin );
+	}
 	else
 	{
 		flDistanceToEntity = ( m_vecSrc - tr.endpos ).Length();
@@ -2171,6 +2212,115 @@ bool CTFRadiusDamageInfo::ApplyToEntity( CBaseEntity *pEntity )
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Logic for jar-based throwable object collisions
+//-----------------------------------------------------------------------------
+bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
+{
+	bool bExtinguished = false;
+	CTakeDamageInfo &info = radiusInfo.info;
+	CBaseEntity *pAttacker = info.GetAttacker();
+
+	CBaseEntity *pEntity = NULL;
+	for ( CEntitySphereQuery sphere( radiusInfo.m_vecSrc, radiusInfo.m_flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if ( pEntity == radiusInfo.m_pEntityIgnore )
+			continue;
+
+		if ( pEntity->m_takedamage == DAMAGE_NO )
+			continue;
+
+		// UNDONE: this should check a damage mask, not an ignore
+		if ( radiusInfo.m_iClassIgnore != CLASS_NONE && pEntity->Classify() == radiusInfo.m_iClassIgnore )
+		{
+			continue;
+		}
+
+		// Skip the attacker as we'll handle him separately.
+		//if ( pEntity == pAttacker && radiusInfo.m_flSelfDamageRadius != 0.0f )
+			//continue;
+
+		// Checking distance from source because Valve were apparently too lazy to fix the engine function.
+		Vector vecHitPoint;
+		pEntity->CollisionProp()->CalcNearestPoint( radiusInfo.m_vecSrc, &vecHitPoint );
+		Vector vecDir = vecHitPoint - radiusInfo.m_vecSrc;
+
+		if ( vecDir.LengthSqr() > ( radiusInfo.m_flRadius * radiusInfo.m_flRadius ) )
+			continue;
+
+		CTFPlayer *pTFPlayer = ToTFPlayer( pEntity );
+		if ( pTFPlayer )
+		{
+			if ( !pTFPlayer->InSameTeam( pAttacker ) )
+			{
+				pTFPlayer->m_Shared.AddCond( TF_COND_URINE, 10.0f );
+				pTFPlayer->m_Shared.m_hUrineAttacker.Set( pAttacker );
+			}
+			else
+			{
+				if ( !pTFPlayer->InSameTeam( pAttacker ) && pTFPlayer->m_Shared.InCond( TF_COND_BURNING ) )
+				{
+					pTFPlayer->m_Shared.RemoveCond( TF_COND_BURNING );
+					pTFPlayer->EmitSound( "TFPlayer.FlameOut" );
+
+					if ( pEntity != pAttacker )
+					{
+						bExtinguished = true;
+					}
+				}
+			}
+		}
+
+		CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( pEntity );
+		if ( pNPC )
+		{
+			if ( !pNPC->InSameTeam( pAttacker ) )
+			{
+				pNPC->AddCond( TF_COND_URINE, 10.0f );
+				//pNPC->m_hUrineAttacker.Set( pAttacker );
+			}
+			else
+			{
+				if ( !pNPC->InSameTeam( pAttacker ) && pNPC->InCond( TF_COND_BURNING ) )
+				{
+					pNPC->RemoveCond( TF_COND_BURNING );
+					pNPC->EmitSound( "TFPlayer.FlameOut" );
+
+					if ( pEntity != pAttacker )
+					{
+						bExtinguished = true;
+					}
+				}
+			}
+		}
+	}
+	// For attacker, radius and damage need to be consistent so custom weapons don't screw up rocket jumping.
+	/*if ( radiusInfo.m_flSelfDamageRadius != 0.0f )
+	{
+		if ( pAttacker )
+		{
+			// Get stock damage.
+			CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
+			if ( pWeapon )
+			{
+				info.SetDamage( (float)pWeapon->GetTFWpnData().GetWeaponData( TF_WEAPON_PRIMARY_MODE ).m_nDamage );
+			}
+
+			// Use stock radius.
+			radiusInfo.m_flRadius = radiusInfo.m_flSelfDamageRadius;
+
+			Vector vecHitPoint;
+			pAttacker->CollisionProp()->CalcNearestPoint( radiusInfo.m_vecSrc, &vecHitPoint );
+			Vector vecDir = vecHitPoint - radiusInfo.m_vecSrc;
+
+			if ( vecDir.LengthSqr() <= ( radiusInfo.m_flRadius * radiusInfo.m_flRadius ) )
+			{
+				radiusInfo.ApplyToEntity( pAttacker );
+			}
+		}
+	}*/
+	return bExtinguished;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2211,6 +2361,10 @@ void CTFGameRules::RadiusDamage( CTFRadiusDamageInfo &radiusInfo )
 		if ( radiusInfo.ApplyToEntity( pEntity ) )
 		{
 			if ( pEntity->IsPlayer() && !pEntity->InSameTeam( pAttacker ) )
+			{
+				iPlayersDamaged++;
+			}
+			else if ( pEntity->IsNPC() && !pEntity->InSameTeam( pAttacker ) )
 			{
 				iPlayersDamaged++;
 			}
@@ -4238,7 +4392,7 @@ void CTFGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	iFov = clamp( iFov, 75, MAX_FOV );
 	pTFPlayer->SetDefaultFOV( iFov );
 
-	pTFPlayer->m_bIsPlayerADev = pTFPlayer->PlayerHasPowerplay() && ( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "lf_dev_mark" ) ) > 0 );
+	pTFPlayer->m_bIsPlayerADev = pTFPlayer->PlayerHasPowerplay() && ( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "lfe_dev_mark" ) ) > 0 );
 }
 
 static const char *g_aTaggedConVars[] =
@@ -4276,7 +4430,7 @@ static const char *g_aTaggedConVars[] =
 	"lf_duckjump",
 	"duckjump",
 
-	"tf2c_airblast",
+	"lfe_allow_airblast",
 	"noairblast",
 
 	"tf2c_building_upgrades",
@@ -4321,13 +4475,13 @@ static const char *g_aTaggedConVars[] =
 	"lf_coop",
 	"coop",
 
-	"lf_versus",
+	"lfe_versus",
 	"versus",
 
-	"lf_blucoop",
+	"lfe_blucoop",
 	"blucoop",
 
-	"lf_gamemode_zs",
+	"lfe_gamemode_zs",
 	"survival",
 
 	"sv_cheats",
@@ -4951,6 +5105,14 @@ CBasePlayer *CTFGameRules::GetAssister( CBasePlayer *pVictim, CBasePlayer *pScor
 		{
 			return pHealer;
 		}
+		/*
+		// Players who apply jarate should get next priority
+		CTFPlayer *pThrower = ToTFPlayer( static_cast<CBaseEntity *>( pTFVictim->m_Shared.m_hUrineAttacker.Get() ) );
+		if( pThrower && pThrower != pTFScorer )
+		{
+			return pThrower;
+		}
+		*/
 
 		// See who has damaged the victim 2nd most recently (most recent is the killer), and if that is within a certain time window.
 		// If so, give that player an assist.  (Only 1 assist granted, to single other most recent damager.)
@@ -4968,6 +5130,7 @@ CBaseEntity *CTFGameRules::GetAssister( CBaseEntity *pVictim, CBaseEntity *pKill
 {
 	// See if the killer is a player.
 	CTFPlayer *pTFScorer = ToTFPlayer( GetDeathScorer( pKiller, pInflictor, pVictim ) );
+	//CTFPlayer *pTFVictim = ToTFPlayer( pVictim );
 	if ( pTFScorer )
 	{
 		// if victim killed himself, don't award an assist to anyone else, even if there was a recent damager
@@ -4981,7 +5144,13 @@ CBaseEntity *CTFGameRules::GetAssister( CBaseEntity *pVictim, CBaseEntity *pKill
 		if ( pHealer && pHealer->IsPlayerClass( TF_CLASS_MEDIC ) && ( dynamic_cast<CObjectSentrygun *>( pInflictor ) ) == NULL )
 		{
 			return pHealer;
-		}
+		}/*
+		// Players who apply jarate should get next priority
+		CTFPlayer *pThrower = ToTFPlayer( static_cast<CBaseEntity *>( pTFVictim->m_Shared.m_hUrineAttacker.Get() ) );
+		if( pThrower && pThrower != pTFScorer )
+		{
+			return pThrower;
+		}*/
 
 		// See who has damaged the victim 2nd most recently (most recent is the killer), and if that is within a certain time window.
 		// If so, give that player an assist.  (Only 1 assist granted, to single other most recent damager.)
@@ -6086,7 +6255,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		return false;
 	}
 
-	if ( pTFPlayer->m_Shared.IsInvulnerable() )
+	if ( pTFPlayer->m_Shared.InCond( TF_COND_INVULNERABLE ) || pTFPlayer->m_Shared.InCond( TF_COND_PHASE ) )
 	{
 		if ( pszReason )
 		{

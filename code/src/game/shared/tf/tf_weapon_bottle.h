@@ -70,6 +70,7 @@ public:
 	virtual void WeaponReset() override;
 	
 #ifdef CLIENT_DLL
+	virtual void ClientThink( void );
 	virtual int GetWorldModelIndex() override;
 #endif
 	

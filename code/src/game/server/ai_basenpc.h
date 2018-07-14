@@ -2189,6 +2189,8 @@ public:
 	void OnRemoveCritboosted( void );
 	void OnAddMiniCritboosted( void );
 	void OnRemoveMiniCritboosted( void );
+	void OnAddUrine( void );
+	void OnRemoveUrine( void );
 
 	// Damager history, used for TF2 assists.
 	void				AddDamagerToHistory( EHANDLE hDamager );

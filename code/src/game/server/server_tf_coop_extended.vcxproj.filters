@@ -2294,10 +2294,10 @@
     <ClInclude Include="..\..\game\shared\tf\tf_weapon_flaregun.h">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\game\shared\tf\tf_weapon_lunchbox.h">
+    <ClInclude Include="..\..\game\shared\tf\tf_weapon_jar.h">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\game\shared\tf\tf_weapon_lunchbox_drink.h">
+    <ClInclude Include="..\..\game\shared\tf\tf_weapon_lunchbox.h">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClInclude>
     <ClInclude Include="..\..\game\shared\tf\tf_weapon_physcannon.h">
@@ -2306,7 +2306,7 @@
     <ClInclude Include="..\..\game\shared\tf\tf_weapon_physgun.h">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\game\shared\tf\tf_weapon_stickbomb.h">
+    <ClInclude Include="..\..\game\shared\tf\tf_weapon_sword.h">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClInclude>
     <ClInclude Include="tf\entity_grenadepack.h">
@@ -4594,10 +4594,10 @@
     <ClCompile Include="..\..\game\shared\tf\tf_weapon_flaregun.cpp">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\game\shared\tf\tf_weapon_lunchbox.cpp">
+    <ClCompile Include="..\..\game\shared\tf\tf_weapon_jar.cpp">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\game\shared\tf\tf_weapon_lunchbox_drink.cpp">
+    <ClCompile Include="..\..\game\shared\tf\tf_weapon_lunchbox.cpp">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\tf\tf_weapon_physcannon.cpp">
@@ -4606,7 +4606,7 @@
     <ClCompile Include="..\..\game\shared\tf\tf_weapon_physgun.cpp">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\game\shared\tf\tf_weapon_stickbomb.cpp">
+    <ClCompile Include="..\..\game\shared\tf\tf_weapon_sword.cpp">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
     <ClCompile Include="tf\entity_grenadepack.cpp">

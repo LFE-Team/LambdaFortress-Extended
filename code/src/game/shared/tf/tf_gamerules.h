@@ -411,6 +411,7 @@ public:
 
 	void	RadiusDamage( CTFRadiusDamageInfo &radiusInfo );
 	virtual void  RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrc, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
+	bool   RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond );
 
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
 

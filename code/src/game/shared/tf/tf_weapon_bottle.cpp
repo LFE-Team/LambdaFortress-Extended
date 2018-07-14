@@ -132,9 +132,6 @@ PRECACHE_WEAPON_REGISTER( tf_weapon_stickbomb );
 #define MODEL_NORMAL   "models/weapons/c_models/c_caber/c_caber.mdl"
 #define MODEL_EXPLODED "models/weapons/c_models/c_caber/c_caber_exploded.mdl"
 
-#define BODYGROUP_NORMAL 0
-#define BODYGROUP_BROKEN 1
-
 #define TF_STICKBOMB_NORMAL    0
 #define TF_STICKBOMB_DETONATED 1
 
@@ -170,7 +167,6 @@ void CTFStickBomb::Smack()
 	if (m_iDetonated == TF_STICKBOMB_NORMAL && ConnectedHit()) 
 	{
 		m_iDetonated = TF_STICKBOMB_DETONATED;
-		m_bBroken = true;
 		
 		SwitchBodyGroups();
 		
@@ -212,24 +208,14 @@ void CTFStickBomb::Smack()
 
 void CTFStickBomb::SwitchBodyGroups()
 {
-	int iState = 0;
-
-	if ( m_bBroken == true )
+#ifdef CLIENT_DLL
+	C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+	if ( pAttach )
 	{
-		iState = 1;
+		int bodygroup = pAttach->FindBodygroupByName( "broken" );
+		pAttach->SetBodygroup( bodygroup, m_iDetonated );
 	}
-
-	SetBodygroup( TF_STICKBOMB_DETONATED, iState );
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwner() );
-
-	if ( pTFPlayer && pTFPlayer->GetActiveTFWeapon() == this )
-	{
-		if ( pTFPlayer->GetViewModel() )
-		{
-			pTFPlayer->GetViewModel()->SetBodygroup( TF_STICKBOMB_DETONATED, iState );
-		}
-	}
+#endif
 }
 
 void CTFStickBomb::WeaponRegenerate()
@@ -238,7 +224,9 @@ void CTFStickBomb::WeaponRegenerate()
 	
 	m_iDetonated = TF_STICKBOMB_NORMAL;
 	
-	SetContextThink( &CTFStickBomb::SwitchBodyGroups, gpGlobals->curtime + 0.001f, "SwitchBodyGroups" );
+#ifdef CLIENT_DLL
+	SetNextClientThink( gpGlobals->curtime + 0.1f );
+#endif
 }
 
 void CTFStickBomb::WeaponReset()
@@ -247,12 +235,14 @@ void CTFStickBomb::WeaponReset()
 	
 	m_iDetonated = TF_STICKBOMB_NORMAL;
 	
-	SwitchBodyGroups();
+#ifdef CLIENT_DLL
+	SetNextClientThink( gpGlobals->curtime + 0.1f );
+#endif
 }
 
 
 #ifdef CLIENT_DLL
-int CTFStickBomb::GetWorldModelIndex()
+int C_TFStickBomb::GetWorldModelIndex()
 {
 	if ( modelinfo ) 
 	{
@@ -262,5 +252,18 @@ int CTFStickBomb::GetWorldModelIndex()
 	int index = modelinfo->GetModelIndex( m_iDetonated == TF_STICKBOMB_DETONATED ? MODEL_EXPLODED : MODEL_NORMAL );
 	m_iWorldModelIndex = index;
 	return index;
+}
+
+void C_TFStickBomb::ClientThink( void )
+{
+	if ( WeaponState() == WEAPON_IS_ACTIVE )
+	{
+		SwitchBodyGroups();
+		SetNextClientThink( CLIENT_THINK_NEVER );
+		return;
+	}
+
+	// Keep checking until the weapon is deployed
+	SetNextClientThink( gpGlobals->curtime + 0.1f );
 }
 #endif

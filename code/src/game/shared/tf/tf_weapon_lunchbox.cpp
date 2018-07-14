@@ -12,10 +12,14 @@
 #include "entity_healthkit.h"
 #else
 #include "c_tf_player.h"
+#include "c_tf_viewmodeladdon.h"
 #endif
 
 CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox, tf_weapon_lunchbox )
 
+#define SANDVICH_BODYGROUP_BITE 0
+#define SANDVICH_STATE_BITTEN 1
+#define SANDVICH_STATE_NORMAL 0
 #define TF_SANDVICH_PLATE_MODEL "models/items/plate.mdl"
 
 //-----------------------------------------------------------------------------
@@ -36,6 +40,13 @@ void CTFLunchBox::PrimaryAttack( void )
 		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
 		pOwner->SwitchToNextBestWeapon( this );
 		StartEffectBarRegen();
+	}
+	
+#else
+	C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+	if ( pAttach )
+	{
+		pAttach->SetBodygroup( SANDVICH_BODYGROUP_BITE, SANDVICH_STATE_BITTEN );
 	}
 #endif
 
@@ -93,6 +104,8 @@ void CTFLunchBox::SecondaryAttack( void )
 	pOwner->SwitchToNextBestWeapon( this );
 
 	StartEffectBarRegen();
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 }
 
 #ifdef GAME_DLL
@@ -104,6 +117,8 @@ void CTFLunchBox::Precache( void )
 {
 	UTIL_PrecacheOther( "item_healthkit_medium" );
 	PrecacheModel( TF_SANDVICH_PLATE_MODEL );
+
+	PrecacheParticleSystem( "sandwich_fx" );
 
 	BaseClass::Precache();
 }
@@ -123,6 +138,9 @@ void CTFLunchBox::ApplyBiteEffects( void )
 		//pOwner->TakeHealth( 120, DMG_GENERIC );
 		//pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
 	}
+#ifdef CLIENT_DLL
+	ParticleProp()->Create( "sandwich_fx", PATTACH_ABSORIGIN_FOLLOW );
+#endif
 }
 
 #endif
@@ -139,7 +157,20 @@ CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox_Drink, tf_weapon_lunchbox_drink )
 bool CTFLunchBox_Drink::Deploy( void )
 {
 #ifdef CLIENT_DLL
-	ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( iType == 0 ) // it's a bonk
+	{
+		ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
+	}
+	else if ( iType == 1 )
+	{ // it's a bonk again
+		ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
+	} // it's a cola
+	else if ( iType == 2 )
+	{
+		ParticleProp()->Create( "energydrink_cola_splash", PATTACH_ABSORIGIN_FOLLOW );
+	}
 #endif
 
 	return BaseClass::Deploy();
@@ -176,6 +207,7 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 void CTFLunchBox_Drink::Precache( void )
 {
 	PrecacheParticleSystem( "energydrink_splash" );
+	PrecacheParticleSystem( "energydrink_cola_splash" );
 	BaseClass::Precache();
 }
 

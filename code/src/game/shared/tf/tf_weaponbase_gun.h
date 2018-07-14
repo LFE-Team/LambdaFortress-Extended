@@ -60,6 +60,7 @@ public:
 	CBaseEntity *FirePipeBomb( CTFPlayer *pPlayer, int iType );
  	CBaseEntity *FireFlare( CTFPlayer *pPlayer );
 	CBaseEntity *FireArrow( CTFPlayer *pPlayer, int iType );
+	CBaseEntity *FireThrowable( CTFPlayer *pPlayer, int iType );
 	CBaseEntity *FireGrenade( CTFPlayer *pPlayer );
 
 	virtual float GetWeaponSpread( void );

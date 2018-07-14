@@ -43,8 +43,7 @@ extern ConVar r_drawviewmodel;
 extern ConVar tf_useparticletracers;
 
 #ifdef CLIENT_DLL
-extern ConVar tf2c_model_muzzleflash;
-extern ConVar lf_muzzlelight;
+extern ConVar lfe_muzzlelight;
 #endif
 
 ConVar tf_weapon_criticals( "tf_weapon_criticals", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled." );
@@ -454,7 +453,7 @@ void CTFWeaponBase::SetViewModel()
 }
 
 #ifdef CLIENT_DLL
-void CTFWeaponBase::UpdateViewModel( void )
+void C_TFWeaponBase::UpdateViewModel( void )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwner() );
 	if ( pTFPlayer == NULL )
@@ -491,6 +490,22 @@ void CTFWeaponBase::UpdateViewModel( void )
 	{
 		vm->RemoveViewmodelAddon();
 	}
+}
+
+C_ViewmodelAttachmentModel *C_TFWeaponBase::GetViewmodelAddon( void )
+{
+	C_TFPlayer *pOwner = GetTFPlayerOwner();
+
+	if ( pOwner )
+	{
+		C_TFViewModel *vm = dynamic_cast < C_TFViewModel *  >( pOwner->GetViewModel( m_nViewModelIndex ) );
+		if ( vm )
+		{
+			C_ViewmodelAttachmentModel *pAttachment = vm->GetViewmodelAddon();
+			return pAttachment;
+		}
+	}
+	return NULL;
 }
 #endif
 
@@ -600,6 +615,16 @@ bool CTFWeaponBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 #endif
 
+	CTFPlayer *pPlayer = GetTFPlayerOwner();
+	if ( pPlayer )
+ 	{
+		for ( int i = 0; i < m_iHiddenBodygroups.Count(); i++ )
+		{
+			// Reset all hidden bodygroups on holster
+			pPlayer->SetBodygroup( m_iHiddenBodygroups[i] , 0 );
+		}
+	}
+
 	AbortReload();
 
 	return BaseClass::Holster( pSwitchingTo );
@@ -652,9 +677,43 @@ bool CTFWeaponBase::Deploy( void )
 
 
 		pPlayer->SetNextAttack( m_flNextPrimaryAttack );
+
+		SwitchBodyGroups();
+
+		// Hellish check for bodygroup disabling from vintage
+		CEconItemDefinition *pStatic = m_Item.GetStaticData();
+		if ( pStatic && pStatic->hide_bodygroups_deployed_only )
+		{
+			EconItemVisuals *pVisuals =	pStatic->GetVisuals();
+			if ( pVisuals )
+			{
+				for ( int i = 0; i < pPlayer->GetNumBodyGroups(); i++ )
+				{
+					unsigned int index = pVisuals->player_bodygroups.Find( pPlayer->GetBodygroupName(i) );
+					if ( pVisuals->player_bodygroups.IsValidIndex( index ) )
+					{
+						// Assume the hidden bodygroups are set to 1 
+						pPlayer->SetBodygroup( i , 1 );
+						m_iHiddenBodygroups.AddToTail( i );
+					}
+				}
+			}
+		}
 	}
 
 	return bDeploy;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFWeaponBase::UpdatePlayerBodygroups( void )
+{
+	if ( m_Item.GetStaticData() && ( !m_Item.GetStaticData()->hide_bodygroups_deployed_only || m_iState == WEAPON_IS_ACTIVE ) )
+	{
+		// Don't call for inactive weapons that hide bodygroups when deployed
+		BaseClass::UpdatePlayerBodygroups();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1258,6 +1317,7 @@ void CTFWeaponBase::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 			}
 
 			m_bReloadedThroughAnimEvent = true;
+
 			return;
 		}
 	}
@@ -1866,7 +1926,7 @@ const char *CTFWeaponBase::GetTracerType( void )
 		return m_szTracerName;
 	}
 
-	if ( GetWeaponID() == TF_WEAPON_MINIGUN || GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV )
+	if ( GetWeaponID() == TF_WEAPON_MINIGUN )
 		return "BrightTracer";
 
 	return BaseClass::GetTracerType();
@@ -2295,7 +2355,7 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 	int iMuzzleFlashAttachment = pAttachEnt->LookupAttachment( "muzzle" );
 
 	const char *pszMuzzleFlashEffect = NULL;
-	const char *pszMuzzleFlashModel = GetMuzzleFlashModel();
+	//const char *pszMuzzleFlashModel = GetMuzzleFlashModel();
 	const char *pszMuzzleFlashParticleEffect = GetMuzzleFlashParticleEffect();
 
 	// Pick the right muzzleflash (3rd / 1st person)
@@ -2309,12 +2369,12 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 	}
 
 	// If we have an attachment, then stick a light on it.
-	if ( iMuzzleFlashAttachment > 0 && ( pszMuzzleFlashEffect || pszMuzzleFlashModel || pszMuzzleFlashParticleEffect ) )
+	if ( iMuzzleFlashAttachment > 0 && ( pszMuzzleFlashEffect /*|| pszMuzzleFlashModel*/ || pszMuzzleFlashParticleEffect ) )
 	{
 		pAttachEnt->GetAttachment( iMuzzleFlashAttachment, vecOrigin, angAngles );
 
 		// Muzzleflash light
-		if ( lf_muzzlelight.GetBool() )
+		if ( lfe_muzzlelight.GetBool() )
 		{
 			CLocalPlayerFilter filter;
 			TE_DynamicLight( filter, 0.0f, &vecOrigin, 255, 192, 64, 5, 70.0f, 0.05f, 70.0f / 0.05f, LIGHT_INDEX_MUZZLEFLASH );
@@ -2333,8 +2393,7 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 			muzzleFlashData.m_flMagnitude = 0.2;
 			DispatchEffect( pszMuzzleFlashEffect, muzzleFlashData );
 		}
-
-		if ( pszMuzzleFlashModel && tf2c_model_muzzleflash.GetBool() )
+		/*if ( pszMuzzleFlashModel && tf2c_model_muzzleflash.GetBool() )
 		{
 			float flEffectLifetime = GetMuzzleFlashModelLifetime();
 
@@ -2356,7 +2415,7 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 
 			// If we use a muzzle model, we don't need to do the particle effect
 			return;
-		}
+		}*/
 
 		if ( pszMuzzleFlashParticleEffect )
 		{
@@ -3584,7 +3643,7 @@ bool CTFWeaponBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& orig
 		DispatchEffect( "TF_EjectBrass", data );
 		return true;
 	}
-	if ( event == AE_WPN_INCREMENTAMMO )
+	if ( event == AE_WPN_INCREMENTAMMO && GetWeaponID() )
 	{
 		CTFPlayer *pPlayer = GetTFPlayerOwner();
 

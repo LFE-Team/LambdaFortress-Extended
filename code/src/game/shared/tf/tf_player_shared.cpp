@@ -450,6 +450,7 @@ bool CTFPlayerShared::IsCritBoosted( void )
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::IsMiniCritBoosted( void )
 {
+	if ( InCond( TF_COND_ENERGY_BUFF ) ||
 	if ( InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
 		InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
 		return true;
@@ -733,12 +734,8 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 		OnAddStunned();
 		break;
 
-	case TF_COND_POWERUP_RAGEMODE:
-		OnAddRagemode();
-		break;
-
-	case TF_COND_POWERUP_SHIELD:
-		OnAddShield();
+	case TF_COND_URINE:
+		OnAddUrine();
 		break;
 		
 	case TF_COND_POWERUP_SPEEDBOOST:
@@ -850,12 +847,8 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 		OnRemoveStunned();
 		break;
 
-	case TF_COND_POWERUP_RAGEMODE:
-		OnRemoveRagemode();
-		break;
-
-	case TF_COND_POWERUP_SHIELD:
-		OnRemoveShield();
+	case TF_COND_URINE:
+		OnRemoveUrine();
 		break;
 
 	case TF_COND_POWERUP_SPEEDBOOST:
@@ -1162,6 +1155,11 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		}
 	}
 
+	if (InCond( TF_COND_URINE ) && m_pOuter->GetWaterLevel() >= WL_Waist )
+ 	{
+		RemoveCond( TF_COND_URINE );
+	}
+
 	if ( InCond( TF_COND_DISGUISING ) )
 	{
 		if ( gpGlobals->curtime > m_flDisguiseCompleteTime )
@@ -1234,6 +1232,17 @@ void CTFPlayerShared::ConditionThink( void )
 			{
 				m_flCloakMeter = 100.0f;
 			}
+		}
+	}
+
+	if ( InCond( TF_COND_PHASE ) )
+	{
+		if ( gpGlobals->curtime > m_flPhaseTime )
+		{
+			UpdatePhaseEffects();
+
+			// limit how often we can update in case of spam
+			m_flPhaseTime = gpGlobals->curtime + 0.25f;
 		}
 	}
 }
@@ -1318,6 +1327,11 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 	if ( InCond( TF_COND_SLOWED ) )
 	{
 		RemoveCond( TF_COND_SLOWED );
+	}
+
+	if ( InCond( TF_COND_URINE ) )
+	{
+		RemoveCond( TF_COND_URINE );
 	}
 #else
 	if ( m_pOuter->IsLocalPlayer() )
@@ -1547,11 +1561,8 @@ void CTFPlayerShared::OnAddPhase(void)
 {
 #ifdef GAME_DLL
 	m_pOuter->DropFlag();
-#else
-	//CNewParticleEffect *pParticle = m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
-	m_pOuter->ParticleProp()->Create( ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber() ), PATTACH_ABSORIGIN_FOLLOW );
-	m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW ); 
 #endif
+	UpdatePhaseEffects();
 }
 
 //-----------------------------------------------------------------------------
@@ -1561,10 +1572,15 @@ void CTFPlayerShared::OnRemovePhase(void)
 {
 #ifdef GAME_DLL
 	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_TIRED );
+
+	for ( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+	{
+		m_pPhaseTrails[i]->SUB_Remove();
+	}
+	m_pPhaseTrails.RemoveAll();
 #else
-	m_pOuter->ParticleProp()->StopParticlesNamed( "scout_dodge_red" );
-	m_pOuter->ParticleProp()->StopParticlesNamed( "scout_dodge_blue" );
-	m_pOuter->ParticleProp()->StopParticlesNamed( "warp_version" );
+	m_pOuter->ParticleProp()->StopEmission( m_pWarp );
+	m_pWarp = NULL;
 #endif
 }
 
@@ -1688,6 +1704,48 @@ void CTFPlayerShared::OnRemoveSpeedBoost( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddUrine( void )
+{
+#ifdef GAME_DLL
+	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
+#else
+	m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
+
+	// set the burning screen overlay
+	if ( m_pOuter->IsLocalPlayer() && !InCond( TF_COND_POWERUP_RAGEMODE ) )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
+		if ( !IsErrorMaterial( pMaterial ) )
+		{
+			view->SetScreenOverlayMaterial( pMaterial );
+		}
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveUrine(void)
+{
+#ifdef GAME_DLL
+	if( m_nPlayerState != TF_STATE_DYING )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
+	m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips" );
+
+	if ( m_pOuter->IsLocalPlayer() )
+	{
+		view->SetScreenOverlayMaterial( NULL );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CTFPlayerShared::RecalculatePlayerBodygroups( void )
 {
 	/*
@@ -1764,6 +1822,108 @@ void CTFPlayerShared::StunPlayer( float flDuration, CTFPlayer *pStunner )
 	m_flStunExpireTime = max( m_flStunExpireTime, gpGlobals->curtime + flDuration );
 	m_hStunner = pStunner;
 	AddCond( TF_COND_STUNNED );
+}
+
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Bonk phase effects
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::AddPhaseEffects(void)
+{
+	CTFPlayer *pPlayer = m_pOuter;
+	if ( !pPlayer)
+		return;
+
+
+	// TODO: Clean this up a bit more
+	const char* pszEffect = m_pOuter->GetTeamNumber() == TF_TEAM_BLUE ? "effects/beam001_blu.vmt" : "effects/beam001_red.vmt";
+	Vector vecOrigin = pPlayer->GetAbsOrigin();
+	
+	CSpriteTrail *pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 12.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "back_upper" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 16.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "back_lower" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	// White trail for socks
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 8.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 0.5 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "foot_R" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 8.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 0.5 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "foot_L" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: Update phase effects
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::UpdatePhaseEffects(void)
+{
+	if ( !InCond( TF_COND_PHASE ) )
+	{
+		return;
+	}
+
+	// We're on the move
+	if(  m_pOuter->GetAbsVelocity() != vec3_origin )
+	{
+#ifdef CLIENT_DLL
+		if( m_pWarp )
+		{
+			m_pOuter->ParticleProp()->StopEmission( m_pWarp );
+			m_pWarp = NULL;
+		}
+#else
+		if ( m_pPhaseTrails.IsEmpty() )
+		{
+			AddPhaseEffects();
+		}
+		else
+		{
+			for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+			{
+				m_pPhaseTrails[i]->TurnOn();
+			}
+		}
+#endif
+	}
+	else
+	{
+#ifdef CLIENT_DLL
+		if ( !m_pWarp )
+		{
+			m_pWarp = m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
+		}
+#else
+		if ( !m_pPhaseTrails.IsEmpty() )
+		{
+			for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+			{
+				m_pPhaseTrails[i]->TurnOn();
+			}
+		}
+#endif
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2058,7 +2218,7 @@ void CTFPlayerShared::InvisibilityThink( void )
 {
 	float flTargetInvis = 0.0f;
 	float flTargetInvisScale = 1.0f;
-	if ( InCond( TF_COND_STEALTHED_BLINK ) )
+	if ( InCond( TF_COND_STEALTHED_BLINK ) || InCond( TF_COND_URINE ) )
 	{
 		// We were bumped into or hit for some damage.
 		flTargetInvisScale = TF_SPY_STEALTH_BLINKSCALE;/*tf_spy_stealth_blink_scale.GetFloat();*/
@@ -2379,6 +2539,10 @@ void CTFPlayerShared::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 			bShouldShow = false;
 		}
 		else if ( !IsCritBoosted() )
+		{
+			bShouldShow = false;
+		}
+		else if ( !IsMiniCritBoosted() )
 		{
 			bShouldShow = false;
 		}
@@ -2894,8 +3058,10 @@ int CTFPlayerShared::GetSequenceForDeath( CBaseAnimating *pAnim, int iDamageCust
 		pszSequence = "primary_death_headshot";
 		break;
 	case TF_DMG_CUSTOM_BURNING:
-		// Disabled until we get shorter burning death animations.
-		//pszSequence = "primary_death_burning";
+		pszSequence = "primary_death_burning"; // we need shorter animation
+		break;
+	case TF_DMG_CUSTOM_DECAPITATION:
+		pszSequence = "primary_death_headshot";
 		break;
 	}
 
@@ -2995,10 +3161,6 @@ void CTFPlayerShared::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill
 	if ( info.GetDamageType() & DMG_CRITICAL )
 	{
 		m_DamageEvents[iIndex].flDamage /= TF_DAMAGE_CRIT_MULTIPLIER;
-	}
-	else if ( info.GetDamageType() & DMG_CRITICAL && IsMiniCritBoosted() )
-	{
-		m_DamageEvents[iIndex].flDamage /= TF_DAMAGE_MINICRIT_MULTIPLIER;
 	}
 }
 
@@ -3247,7 +3409,7 @@ void CTFPlayer::ImpactWaterTrace( trace_t &trace, const Vector &vecStart )
 
 		const char *pszEffectName = "tf_gunshotsplash";
 		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon && ( TF_WEAPON_MINIGUN == pWeapon->GetWeaponID() || TF_WEAPON_MINIGUN_TOMISLAV == pWeapon->GetWeaponID() ) )
+		if ( pWeapon && ( TF_WEAPON_MINIGUN == pWeapon->GetWeaponID() ) )
 		{
 			// for the minigun, use a different, cheaper splash effect because it can create so many of them
 			pszEffectName = "tf_gunshotsplash_minigun";
@@ -3370,7 +3532,7 @@ void CTFPlayer::TeamFortress_SetSpeed()
 	if ( m_Shared.InCond( TF_COND_AIMING ) )
 	{
 		// Heavy moves slightly faster spun-up
-		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_MINIGUN ) || pWeapon->IsWeapon( TF_WEAPON_MINIGUN_TOMISLAV ) )
+		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_MINIGUN ) )
 		{
 			if ( maxfbspeed > 110 )
 				maxfbspeed = 110;

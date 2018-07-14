@@ -36,6 +36,7 @@
 #define CTFWeaponBaseGrenadeProj C_TFWeaponBaseGrenadeProj
 #define CTFViewModel C_TFViewModel
 #include "tf_fx_muzzleflash.h"
+#include "c_tf_viewmodeladdon.h"
 #endif
 
 #define MAX_TRACER_NAME		128
@@ -143,6 +144,8 @@ class CTFWeaponBase : public CBaseCombatWeapon
 
 #ifdef CLIENT_DLL
 	virtual void UpdateViewModel( void );
+
+	C_ViewmodelAttachmentModel *GetViewmodelAddon( void );
 #endif
 
 	virtual void Drop( const Vector &vecVelocity );
@@ -183,6 +186,10 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual bool ReloadOrSwitchWeapons( void );
 
 	virtual bool CanDrop( void ) { return false; }
+
+	// Accessor for reload bodygroup switching
+ 	virtual void SwitchBodyGroups( void ) {}
+	virtual void UpdatePlayerBodygroups( void );
 
 	// Sound.
 	bool PlayEmptySound();
@@ -260,6 +267,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	void				CheckEffectBarRegen( void );
 	virtual float		GetEffectBarProgress( void );
 	virtual const char	*GetEffectLabelText( void ) { return ""; }
+	void				ReduceEffectBarRegenTime( float flTime ) { m_flEffectBarRegenTime -= flTime; }
 
 	void				OnControlStunned( void );
 
@@ -360,6 +368,8 @@ protected:
 
 private:
 	CTFWeaponBase( const CTFWeaponBase & );
+
+	CUtlVector< int > m_iHiddenBodygroups;
 
 #ifdef GAME_DLL
 	CNetworkString( m_ParticleName, WEAPON_PARTICLE_MODIFY_STRING_SIZE );

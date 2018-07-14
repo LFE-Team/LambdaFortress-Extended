@@ -14,6 +14,10 @@
 #include "tf_weaponbase.h"
 #include "basegrenade_shared.h"
 
+#ifdef GAME_DLL
+#include "SpriteTrail.h"
+#endif
+
 // Client specific.
 #ifdef CLIENT_DLL
 class C_TFPlayer;
@@ -183,11 +187,23 @@ public:
 	int		FindHealerIndex( CTFPlayer *pPlayer );
 	EHANDLE	GetFirstHealer();
 	void	HealthKitPickupEffects( int iAmount );
+
+	// Jarate Player
+	EHANDLE	m_hUrineAttacker;
 #endif
 	int		GetNumHealers( void ) { return m_nNumHealers; }
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
 	void	StunPlayer( float flDuration, CTFPlayer *pStunner );
+
+#ifdef GAME_DLL
+	void	AddPhaseEffects( void );
+	CUtlVector< CSpriteTrail * > m_pPhaseTrails;
+#else
+	CNewParticleEffect *m_pWarp;
+#endif
+
+	void	UpdatePhaseEffects( void );
 
 	void	RecalculatePlayerBodygroups( void );
 
@@ -289,6 +305,7 @@ private:
 	void OnAddPhase( void );
 	void OnAddShield( void );
 	void OnAddSpeedBoost( void );
+	void OnAddUrine( void );
 
 	void OnRemoveZoomed( void );
 	void OnRemoveBurning( void );
@@ -308,6 +325,7 @@ private:
 	void OnRemovePhase( void );
 	void OnRemoveShield( void );
 	void OnRemoveSpeedBoost( void );
+	void OnRemoveUrine( void );
 
 	float GetCritMult( void );
 
@@ -387,7 +405,7 @@ private:
 	float					m_flFlameBurnTime;
 	float					m_flFlameRemoveTime;
 	float					m_flTauntRemoveTime;
-
+	float					m_flPhaseTime;
 
 	float m_flDisguiseCompleteTime;
 

@@ -432,6 +432,10 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 	else if ( pTarget->IsNPC() )	// See if this is NPC.
  	{
 		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pTarget );
+
+		if ( !pNPC->CanBeHealed() )
+			return false;
+
 		// We can heal teammates only
 		if ( pNPC->InSameTeam( pOwner ) )
 		{

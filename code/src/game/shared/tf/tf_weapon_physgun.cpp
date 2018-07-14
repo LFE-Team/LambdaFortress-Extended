@@ -57,7 +57,7 @@
 #include "tier0/memdbgon.h"
 
 #ifdef CLIENT_DLL
-extern ConVar lf_muzzlelight;
+extern ConVar lfe_muzzlelight;
 #endif
 
 #define	SPRITE_SCALE	128.0f
@@ -1137,7 +1137,7 @@ void CWeaponGravityGun::PrimaryAttack( void )
 /*
 #ifdef CLIENT_DLL
 	// Handle the muzzle light
-	if (lf_muzzlelight.GetBool())
+	if (lfe_muzzlelight.GetBool())
 	{
 		dlight_t *dl = effects->CL_AllocDlight(LIGHT_INDEX_MUZZLEFLASH + index);
 		dl->origin = vecMuzzlePos;

@@ -57,10 +57,6 @@ BEGIN_DATADESC( CTFMinigun )
 END_DATADESC()
 #endif
 
-#ifdef CLIENT_DLL
-extern ConVar tf2c_model_muzzleflash;
-#endif
-
 //=============================================================================
 //
 // Weapon Minigun functions.
@@ -597,12 +593,12 @@ void CTFMinigun::OnDataChanged( DataUpdateType_t updateType )
 {
 	// Brass ejection and muzzle flash.
 	HandleBrassEffect();
-	
+	/*
 //	if (!ShouldMuzzleFlash())
 	if (!tf2c_model_muzzleflash.GetBool())
-	{
+	{*/
 		HandleMuzzleEffect();
-	}
+	//}
 
 	BaseClass::OnDataChanged( updateType );
 
@@ -890,19 +886,3 @@ void CTFMinigun::WeaponSoundUpdate()
 
 
 #endif
-/*
-IMPLEMENT_NETWORKCLASS_ALIASED( TFMinigunTomislav, DT_WeaponMinigunTomislav )
-	
-BEGIN_NETWORK_TABLE( CTFMinigunTomislav, DT_WeaponMinigunTomislav )
-END_NETWORK_TABLE()
-
-#ifdef CLIENT_DLL
-BEGIN_PREDICTION_DATA( CTFMinigunTomislav )
-END_PREDICTION_DATA()
-#endif
-
-LINK_ENTITY_TO_CLASS( tf_weapon_minigun_tomislav, CTFMinigunTomislav );
-PRECACHE_WEAPON_REGISTER( tf_weapon_minigun_tomislav );
-*/
-
-CREATE_SIMPLE_WEAPON_TABLE( TFMinigunTomislav, tf_weapon_minigun_tomislav )

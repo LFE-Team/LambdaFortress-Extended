@@ -952,7 +952,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	int bitsDamage = inputInfo.GetDamageType();
 
 	// If we're invulnerable, force ourselves to only take damage events only, so we still get pushed
-	if ( IsInvulnerable() )
+	if ( IsInvulnerable() || InCond( TF_COND_PHASE ) )
 	{
 		bool bAllowDamage = false;
 
@@ -979,8 +979,27 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			// NOTE: Deliberately skip base player OnTakeDamage, because we don't want all the stuff it does re: suit voice
 			CBaseCombatCharacter::OnTakeDamage( info );
 			m_takedamage = iOldTakeDamage;
+
+			if( InCond( TF_COND_PHASE ) )
+			{
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "miss_text" );
+				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
+
+				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+			}
 			return 0;
 		}
+	}
+
+	if ( InCond( TF_COND_URINE ) )
+	{
+		// Jarated npcs take mini-crits
+		bitsDamage |= DMG_MINICRITICAL;
+		info.AddDamageType( DMG_MINICRITICAL );
 	}
 
 	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
@@ -1006,6 +1025,24 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 
+		int nMiniCritOnCond = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritOnCond, or_minicrit_vs_playercond_burning );
+
+		if ( nMiniCritOnCond )
+		{
+			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
+			{
+				int nCond = condition_to_attribute_translation[i];
+				int nFlag = ( 1 << i );
+				if ( ( nMiniCritOnCond & nFlag ) && InCond( nCond ) )
+				{
+					bitsDamage |= DMG_MINICRITICAL;
+					info.AddDamageType( DMG_MINICRITICAL );
+					break;
+				}
+			}
+		}
+
 		int nCritWhileAirborne = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
 
@@ -1015,56 +1052,71 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			info.AddDamageType( DMG_CRITICAL );
 		}
 
+		int nMiniCritWhileAirborne = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritWhileAirborne, crit_while_airborne );
+
+		if ( nMiniCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		{
+			bitsDamage |= DMG_MINICRITICAL;
+			info.AddDamageType( DMG_MINICRITICAL );
+		}
+
 		// Notify the damaging weapon.
 		pWeapon->ApplyOnHitAttributes( this, info );
 	}
 
 	// If we're not damaging ourselves, apply randomness
-	if ( pAttacker != this && !(bitsDamage & (DMG_DROWN | DMG_FALL)) ) 
+	if ( pAttacker != this && !( bitsDamage & ( DMG_DROWN | DMG_FALL ) ) ) 
 	{
 		float flDamage = info.GetDamage();
 		if ( bitsDamage & DMG_CRITICAL )
 		{
-			flDamage = info.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
-
-			// Show the attacker
-			if ( pAttacker && pAttacker->IsPlayer() )
+			if ( IsAlive() )
 			{
-				CEffectData	data;
-				data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
-				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-				data.m_vAngles = vec3_angle;
-				data.m_nEntIndex = 0;
+				flDamage = info.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
 
-				CSingleUserRecipientFilter filter( (CBasePlayer*) pAttacker );
-				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+				// Show the attacker
+				if ( pAttacker && pAttacker->IsPlayer() )
+				{
+					CEffectData	data;
+					data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
+					data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+					data.m_vAngles = vec3_angle;
+					data.m_nEntIndex = 0;
 
-				EmitSound_t params;
-				params.m_flSoundTime = 0;
-				params.m_pSoundName = "TFPlayer.CritHit";
-				EmitSound( filter, pAttacker->entindex(), params );
+					CSingleUserRecipientFilter filter( (CBasePlayer*) pAttacker );
+					te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+					EmitSound_t params;
+					params.m_flSoundTime = 0;
+					params.m_pSoundName = "TFPlayer.CritHit";
+					EmitSound( filter, pAttacker->entindex(), params );
+				}
 			}
 		}
-		else if ( bitsDamage & DMG_CRITICAL && pTFAttacker->m_Shared.IsMiniCritBoosted() )
+		else if ( bitsDamage & DMG_MINICRITICAL )
 		{
-			flDamage = info.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
-
-			// Show the attacker, unless the target is a disguised spy
-			if ( pAttacker && pAttacker->IsPlayer() && !InCond( TF_COND_DISGUISED ) )
+			if ( IsAlive() )
 			{
-				CEffectData	data;
-				data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
-				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-				data.m_vAngles = vec3_angle;
-				data.m_nEntIndex = 0;
+				flDamage = info.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
 
-				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
-				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+				// Show the attacker, unless the target is a disguised spy
+				if ( pAttacker && pAttacker->IsPlayer() && !InCond( TF_COND_DISGUISED ) )
+				{
+					CEffectData	data;
+					data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
+					data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+					data.m_vAngles = vec3_angle;
+					data.m_nEntIndex = 0;
 
-				EmitSound_t params;
-				params.m_flSoundTime = 0;
-				params.m_pSoundName = "TFPlayer.CritHitMini";
-				EmitSound( filter, pAttacker->entindex(), params );
+					CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
+					te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+					EmitSound_t params;
+					params.m_flSoundTime = 0;
+					params.m_pSoundName = "TFPlayer.CritHitMini";
+					EmitSound( filter, pAttacker->entindex(), params );
+				}
 			}
 		}
 		else
@@ -1359,10 +1411,20 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	CBaseEntity *pWeapon = info.GetWeapon();
 	float flDamage = info.GetDamage();
 
+	CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
+
 	Vector vecDir = vec3_origin;
 	if ( pInflictor )
 	{
-		vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
+		// Huntsman should not do too much knockback
+		if ( pTFWeapon && pTFWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
+		{
+			vecDir = -info.GetDamageForce();
+		}
+		else
+		{
+			vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
+		}
 		VectorNormalize( vecDir );
 	}
 	g_vecAttackDir = vecDir;
@@ -1577,7 +1639,6 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( bIgniting )
 	{
-		CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
 		Burn( ToTFPlayer( pAttacker ), pTFWeapon );
 	}
 
@@ -1590,6 +1651,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		event->SetInt( "health", max( 0, m_iHealth ) );
 		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
 		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+		event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
 
 		CBasePlayer *pPlayer = ToBasePlayer( pAttacker );
 		event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );

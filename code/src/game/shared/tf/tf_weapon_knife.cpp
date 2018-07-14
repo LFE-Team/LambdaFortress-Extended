@@ -177,6 +177,14 @@ bool CTFKnife::IsBehindAndFacingTarget( CBaseEntity *pTarget )
 {
 	Assert( pTarget );
 
+	// Only certain NPCs can be backstabbed
+	CAI_BaseNPC *pNPC = pTarget->MyNPCPointer();
+	if ( pNPC )
+	{
+		if ( !pNPC->AllowBackstab() )
+			return false;
+	}
+
 	// Get the forward view vector of the target, ignore Z
 	Vector vecVictimForward;
 	AngleVectors( pTarget->EyeAngles(), &vecVictimForward );

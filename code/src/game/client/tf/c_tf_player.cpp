@@ -85,10 +85,9 @@ ConVar cl_autorezoom( "cl_autorezoom", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "Whe
 
 ConVar cl_autoreload( "cl_autoreload", "0",  FCVAR_USERINFO | FCVAR_ARCHIVE, "When set to 1, clip-using weapons will automatically be reloaded whenever they're not being fired." );
 
-ConVar tf2c_model_muzzleflash("tf2c_model_muzzleflash", "0", FCVAR_ARCHIVE, "Use the tf2 beta model based muzzleflash");
-ConVar lf_muzzlelight("lf_muzzlelight", "0", FCVAR_ARCHIVE, "Enable dynamic lights for muzzleflashes and the flamethrower");
+ConVar lfe_muzzlelight("lfe_muzzlelight", "0", FCVAR_ARCHIVE, "Enable dynamic lights for muzzleflashes and the flamethrower");
 
-ConVar lf_dev_mark( "lf_dev_mark", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );
+ConVar lfe_dev_mark( "lfe_dev_mark", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );
 
 static void OnMercParticleChange( IConVar *var, const char *pOldValue, float flOldValue )
 {
@@ -1161,7 +1160,23 @@ public:
 				return;
 			}
 		}
+		/*
+		C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEntity );
+		if ( pNPC && pNPC->InCond( TF_COND_URINE ) )
+		{
+			int iTeam = pNPC->GetTeamNumber();
 
+			if ( iTeam >= FIRST_GAME_TEAM && iTeam < TF_TEAM_COUNT )
+			{
+				float r = g_aUrineLevels[iTeam].x;
+				float g = g_aUrineLevels[iTeam].y;
+				float b = g_aUrineLevels[iTeam].z;
+
+				m_pResult->SetVecValue( r, g, b );
+				return;
+			}
+		}
+		*/
 		m_pResult->SetVecValue( 1, 1, 1 );
 	}
 };
@@ -1202,7 +1217,17 @@ public:
 			}
 			else
 			{
-				C_BaseViewModel *pVM = dynamic_cast<C_BaseViewModel *>( pEntity );
+				C_TFViewModel *pVM;
+				C_ViewmodelAttachmentModel *pVMAddon = dynamic_cast< C_ViewmodelAttachmentModel * >( pEntity );
+				if ( pVMAddon )
+				{
+					pVM = dynamic_cast< C_TFViewModel * >( pVMAddon->m_viewmodel.Get() );
+				}
+				else
+				{
+					pVM = dynamic_cast< C_TFViewModel * >( pEntity );
+				}
+
 				if ( pVM )
 				{
 					pPlayer = ToTFPlayer( pVM->GetOwner() );
@@ -1532,10 +1557,18 @@ void CInvisProxy::HandleVMInvis( C_BaseViewModel *pVM )
 	// remap from 0.22 to 0.5
 	// but drop to 0.0 if we're not invis at all
 	float flWeaponInvis = ( flPercentInvisible < 0.01 ) ?
-		0.0 :
-		RemapVal( flPercentInvisible, 0.0, 1.0, tf_vm_min_invis.GetFloat(), tf_vm_max_invis.GetFloat() );
+	0.0 :
+	RemapVal( flPercentInvisible, 0.0, 1.0, tf_vm_min_invis.GetFloat(), tf_vm_max_invis.GetFloat() );
 
-	m_pPercentInvisible->SetFloatValue( flWeaponInvis );
+	if ( pPlayer->m_Shared.InCond( TF_COND_STEALTHED_BLINK ) )
+	{
+		// Hacky fix to make viewmodel blink more obvious
+		m_pPercentInvisible->SetFloatValue( flWeaponInvis - 0.1 );
+	}
+	else
+	{
+		m_pPercentInvisible->SetFloatValue( flWeaponInvis );
+	}
 }
 
 //-----------------------------------------------------------------------------

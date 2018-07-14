@@ -235,6 +235,7 @@ public:
 		memset( model_player_per_class, 0, sizeof( model_player_per_class ) );
 		attach_to_hands = 0;
 		act_as_wearable = false;
+		hide_bodygroups_deployed_only = 0;
 		CLEAR_STR(mouse_pressed_sound);
 		CLEAR_STR(drop_sound);
 	}
@@ -272,6 +273,7 @@ public:
 	char model_player_per_class[TF_CLASS_COUNT_ALL][128];
 	int attach_to_hands;
 	bool act_as_wearable;
+	int hide_bodygroups_deployed_only;
 	CUtlVector<CEconItemAttribute> attributes;
 	EconItemVisuals visual[TF_TEAM_COUNT];
 	char mouse_pressed_sound[128];

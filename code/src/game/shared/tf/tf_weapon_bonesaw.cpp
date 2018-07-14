@@ -11,6 +11,7 @@
 #include "tf_weapon_medigun.h"
 #include "c_tf_player.h"
 #include "tf_viewmodel.h"
+#include "c_tf_viewmodeladdon.h"
 #endif
 
 //=============================================================================
@@ -70,9 +71,11 @@ void CTFBonesaw::UpdateChargePoseParam( void )
 		{
 			SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
 
-			CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
-			if ( vm )
-				vm->SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
+			C_ViewmodelAttachmentModel *pAttachment = GetViewmodelAddon();
+			if ( pAttachment )
+ 			{
+				pAttachment->SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
+			}
 		}
 	}
 }

@@ -12,7 +12,7 @@
 #include "tf_projectile_nail.h"
 #include "tf_projectile_arrow.h"
 #include "in_buttons.h"
-
+#include "tf_weapon_jar.h"
 #if !defined( CLIENT_DLL )	// Server specific.
 
 	#include "tf_gamestats.h"
@@ -146,7 +146,7 @@ void CTFWeaponBaseGun::PrimaryAttack( void )
 	pPlayer->RemoveSpawnProtection();
 
 	// Minigun has custom handling
-	if ( GetWeaponID() != TF_WEAPON_MINIGUN || GetWeaponID() != TF_WEAPON_MINIGUN_TOMISLAV )
+	if ( GetWeaponID() != TF_WEAPON_MINIGUN )
 	{
 		pPlayer->SpeakWeaponFire();
 	}
@@ -257,7 +257,8 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 	case TF_PROJECTILE_FESTITIVE_URINE:
 	case TF_PROJECTILE_BREADMONSTER_JARATE:
 	case TF_PROJECTILE_BREADMONSTER_MADMILK:
-		pProjectile = FireGrenade( pPlayer /*, iProjectile*/ );
+		pProjectile = FireThrowable(pPlayer, iProjectile);
+		pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 		break;
 
 	case TF_PROJECTILE_ARROW:
@@ -599,7 +600,16 @@ CBaseEntity *CTFWeaponBaseGun::FirePipeBomb( CTFPlayer *pPlayer, int iType )
 	PlayWeaponShootSound();
 
 #ifdef GAME_DLL
+	/*
+	int iMode = TF_GL_MODE_REGULAR;
+	CALL_ATTRIB_HOOK_INT( iMode, set_detonate_mode );
 
+	if ( bRemoteDetonate )
+	{
+		iMode = TF_GL_MODE_REMOTE_DETONATE;
+	}
+	*/
+	int iNoSpin = 0;
 	Vector vecForward, vecRight, vecUp;
 	AngleVectors( pPlayer->EyeAngles(), &vecForward, &vecRight, &vecUp );
 
@@ -609,6 +619,15 @@ CBaseEntity *CTFWeaponBaseGun::FirePipeBomb( CTFPlayer *pPlayer, int iType )
 	
 	Vector vecVelocity = ( vecForward * GetProjectileSpeed() ) + ( vecUp * 200.0f ) + ( random->RandomFloat( -10.0f, 10.0f ) * vecRight ) +		
 		( random->RandomFloat( -10.0f, 10.0f ) * vecUp );
+
+	CALL_ATTRIB_HOOK_INT ( iNoSpin, grenade_no_spin );
+
+	AngularImpulse spin( 600, 0, 0 );
+
+	if ( iNoSpin == 0 )
+	{
+		spin = AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 );
+	}
 
 	CTFWeaponBaseGrenadeProj *pProjectile = NULL;
 
@@ -621,13 +640,13 @@ CBaseEntity *CTFWeaponBaseGun::FirePipeBomb( CTFPlayer *pPlayer, int iType )
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE_PRACTICE:
 		pProjectile = CTFGrenadeStickybombProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
+			spin,
 			pPlayer, this );
 		break;
 	case TF_PROJECTILE_PIPEBOMB:
 	case TF_PROJECTILE_CANNONBALL:
 		pProjectile = CTFGrenadePipebombProjectile::Create( vecSrc, pPlayer->EyeAngles(), vecVelocity,
-			AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 ),
+			spin,
 			pPlayer, this );
 		break;
 	}
@@ -697,6 +716,39 @@ CBaseEntity *CTFWeaponBaseGun::FireArrow(CTFPlayer *pPlayer, int iType)
 	{
 		pProjectile->SetCritical(IsCurrentAttackACrit());
 		pProjectile->SetDamage(GetProjectileDamage());
+	}
+	return pProjectile;
+#endif
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Fire some piss
+//-----------------------------------------------------------------------------
+CBaseEntity *CTFWeaponBaseGun::FireThrowable( CTFPlayer *pPlayer, int iType )
+{
+	PlayWeaponShootSound();
+
+#ifdef GAME_DLL
+	AngularImpulse spin = AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 );
+
+	Vector vecForward, vecRight, vecUp;
+	AngleVectors( pPlayer->EyeAngles(), &vecForward, &vecRight, &vecUp );
+
+	// Create grenades here!!
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	vecSrc +=  vecForward * 16.0f + vecRight * 8.0f + vecUp * -6.0f;
+	
+	Vector vecVelocity = ( vecForward * GetProjectileSpeed() ) + ( vecUp * 200.0f ) + ( random->RandomFloat( -10.0f, 10.0f ) * vecRight ) +		
+		( random->RandomFloat( -10.0f, 10.0f ) * vecUp );
+
+	//GetProjectileFireSetup( pPlayer, vecOffset, &vecSrc, &angForward, false, false );
+	CTFProjectile_Jar *pProjectile = CTFProjectile_Jar::Create( this, vecSrc, pPlayer->EyeAngles(), vecVelocity, pPlayer, pPlayer, spin, GetTFWpnData() );
+	if ( pProjectile )
+	{
+		pProjectile->SetCritical( IsCurrentAttackACrit() );
+		pProjectile->SetDamage( GetProjectileDamage() );
 	}
 	return pProjectile;
 #endif

@@ -710,6 +710,10 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		OnAddMiniCritboosted();
 		break;
 
+	case TF_COND_URINE:
+		OnAddUrine();
+		break;
+
 	default:
 		break;
 	}
@@ -766,6 +770,10 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
 	case TF_COND_MINICRITBOOSTED_ON_KILL:
 		OnRemoveMiniCritboosted();
+		break;
+
+	case TF_COND_URINE:
+		OnRemoveUrine();
 		break;
 
 	default:
@@ -1005,5 +1013,27 @@ void CAI_BaseNPC::OnRemoveMiniCritboosted( void )
 {
 #ifdef CLIENT_DLL
 	UpdateCritBoostEffect();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddUrine( void )
+{
+#ifdef CLIENT_DLL
+	SetRenderColor( 255, 255, 108 );
+	ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveUrine(void)
+{
+#ifdef CLIENT_DLL
+	SetRenderColor( 255, 255, 255 );
+	ParticleProp()->StopParticlesNamed( "peejar_drips" );
 #endif
 }

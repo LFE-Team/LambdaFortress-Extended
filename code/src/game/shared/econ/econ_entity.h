@@ -65,6 +65,8 @@ public:
 
 	void UpdatePlayerModelToClass( void );
 
+	virtual void UpdatePlayerBodygroups( void );
+
 	virtual void UpdateOnRemove( void );
 
 protected:
