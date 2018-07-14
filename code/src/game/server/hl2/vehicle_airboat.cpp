@@ -91,6 +91,7 @@ public:
 	void			Think(void);
 	void			Precache( void );
 	void			Spawn( void );
+	bool			m_bFromSpawnerBoat;
 	virtual void	OnRestore();
 	virtual void	Activate();
 	virtual void	UpdateOnRemove();
@@ -111,6 +112,7 @@ public:
 	void			ComputePDControllerCoefficients( float *pCoefficientsOut, float flFrequency, float flDampening, float flDeltaTime );
 	void			DampenForwardMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
 	void			DampenUpMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
+	void			InputFromSpawnerBoat(inputdata_t &inputdata);
 
 	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
@@ -135,6 +137,7 @@ public:
 	void InputEnableGun( inputdata_t &inputdata );
 	void InputStartRotorWashForces( inputdata_t &inputdata );
 	void InputStopRotorWashForces( inputdata_t &inputdata );
+	void InputEnableGunSpawnerBoat(inputdata_t &inputdata);
 
 	// Allows the shooter to change the impact effect of his bullets
 	virtual void DoImpactEffect( trace_t &tr, int nDamageType );
@@ -332,6 +335,8 @@ BEGIN_DATADESC( CPropAirboat )
 	DEFINE_INPUTFUNC( FIELD_VOID, "StopRotorWashForces", InputStopRotorWashForces ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ExitVehicle", InputExitVehicle ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Wake", InputWake ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "FromSpawnerBoat", InputFromSpawnerBoat),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableGunSpawnerBoat", InputEnableGunSpawnerBoat)
 
 END_DATADESC()
 
@@ -419,8 +424,18 @@ void CPropAirboat::Spawn( void )
 	}
 
 	//CreateAntiFlipConstraint();
+	/*
+	if (GetKeyValue("targetname", "airboatfromspawner", -1))
+	{
+		m_bFromSpawnerBoat = true;
+	}
+	*/
 }
 
+void CPropAirboat::InputFromSpawnerBoat(inputdata_t &inputdata)
+{
+	m_bFromSpawnerBoat = true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: Create a ragdoll constraint that prevents us from flipping.
 //-----------------------------------------------------------------------------
@@ -593,6 +608,17 @@ void CPropAirboat::InputWake( inputdata_t &inputdata )
 	VPhysicsGetObject()->Wake();
 }
 
+void CPropAirboat::InputEnableGunSpawnerBoat(inputdata_t &inputdata)
+{
+	m_bHasGun = true;
+	SetBodygroup(AIRBOAT_BODYGROUP_GUN, 1);
+
+	if (m_bHasGun)
+	{
+		m_nAmmoCount = sk_airboat_max_ammo.GetInt();
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler to enable or disable the airboat's mounted gun.
@@ -669,6 +695,16 @@ void CPropAirboat::EnterVehicle( CBaseCombatCharacter *pPlayer )
 
 	// Start playing the engine's idle sound as the startup sound finishes.
 	m_flEngineIdleTime = gpGlobals->curtime + flDuration - 0.1;
+	/*
+	if ((GetKeyValue("targetname", "airboatfromspawner", NULL)) || GetKeyValue("targetname", "airboatfromspawner_protected", NULL))
+	{
+		SetOwnerEntity(pPlayer);
+	}
+	*/
+	if (m_bFromSpawnerBoat)
+	{
+		KeyValue("targetname", "airboatfromspawner_protected");
+	}
 }
 
 
@@ -746,6 +782,14 @@ void CPropAirboat::ExitVehicle( int nRole )
 	controller.SoundChangeVolume( m_pWaterStoppedSound, 0.0, 0.0 );
 	controller.SoundChangeVolume( m_pWaterFastSound, 0.0, 0.0 );
 	controller.SoundChangeVolume( m_pGunFiringSound, 0.0, 0.0 );
+	/*
+	if ((GetKeyValue("targetname", "airboatfromspawner", NULL)) || GetKeyValue("targetname", "airboatfromspawner_protected", NULL))
+	{
+		SetOwnerEntity(this);
+		KeyValue("targetname", "airboatfromspawner_protected");
+	}
+	*/
+	KeyValue("targetname", "airboatfromspawner_protected");
 }
 
 

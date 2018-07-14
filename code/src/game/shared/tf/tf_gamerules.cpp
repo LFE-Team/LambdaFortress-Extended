@@ -625,6 +625,304 @@ void CTFLogicLongJump::Spawn(void)
 	BaseClass::Spawn();
 }
 
+class CTFLogicVehicleSpawner : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicVehicleSpawner, CBaseEntity);
+	DECLARE_DATADESC();
+	CTFLogicVehicleSpawner();
+	~CTFLogicVehicleSpawner();
+
+	void	Spawn(void);
+	void	SpawnVehicle(void);
+	void	Think(void);
+
+	void	InputEnable(inputdata_t &inputdata);
+	void	InputDisable(inputdata_t &inputdata);
+	void	InputForceSpawn(inputdata_t &inputdata);
+	void	InputRemoveVehicles(inputdata_t &inputdata);
+	void	InputEnableGun(inputdata_t &inputdata);
+	void	InputDisableGun(inputdata_t &inputdata);
+private:
+	bool m_bEnabled;
+	//string_t sVehicle;
+	int iVehicleNum2;
+	int iSpawnedVehicles;
+	int iMaxVehicles;
+	int iDelay;
+	bool m_bGunEnabled;
+};
+
+BEGIN_DATADESC(CTFLogicVehicleSpawner)
+DEFINE_INPUTFUNC(FIELD_VOID, "ForceSpawn", InputForceSpawn),
+DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+DEFINE_KEYFIELD(iVehicleNum2, FIELD_INTEGER, "vehicle_to_spawn"),
+DEFINE_KEYFIELD(iMaxVehicles, FIELD_INTEGER, "max_vehicles"),
+DEFINE_KEYFIELD(iDelay, FIELD_INTEGER, "delay"),
+DEFINE_INPUTFUNC(FIELD_VOID, "EnableGun", InputEnableGun),
+DEFINE_INPUTFUNC(FIELD_VOID, "RemoveVehicles", InputRemoveVehicles),
+DEFINE_INPUTFUNC(FIELD_VOID, "DisableGun", InputDisableGun),
+END_DATADESC()
+
+LINK_ENTITY_TO_CLASS(lfe_vehiclespawner, CTFLogicVehicleSpawner);
+
+CTFLogicVehicleSpawner::CTFLogicVehicleSpawner()
+{
+	m_bEnabled = true;
+	iMaxVehicles = 12;
+	iSpawnedVehicles = 0;
+	iDelay = 10.0;
+}
+CTFLogicVehicleSpawner::~CTFLogicVehicleSpawner()
+{
+}
+void CTFLogicVehicleSpawner::Spawn(void)
+{
+	BaseClass::Spawn();
+	Think();
+}
+void CTFLogicVehicleSpawner::InputDisable(inputdata_t &inputdata)
+{
+	m_bEnabled = false;
+}
+
+void CTFLogicVehicleSpawner::InputEnable(inputdata_t &inputdata)
+{
+	m_bEnabled = true;
+}
+
+void CTFLogicVehicleSpawner::InputEnableGun(inputdata_t &inputdata)
+{
+	m_bGunEnabled = true;
+}
+
+void CTFLogicVehicleSpawner::InputDisableGun(inputdata_t &inputdata)
+{
+	m_bGunEnabled = false;
+}
+
+void CTFLogicVehicleSpawner::InputForceSpawn(inputdata_t &inputdata)
+{
+	SpawnVehicle();
+}
+
+void CTFLogicVehicleSpawner::Think(void)
+{
+	SpawnVehicle();
+	SetContextThink(&CTFLogicVehicleSpawner::Think, gpGlobals->curtime + iDelay, "ThinkContextVehicle");
+}
+void CTFLogicVehicleSpawner::InputRemoveVehicles(inputdata_t &inputdata)
+{
+	CBaseEntity *pAirboats = gEntList.FindEntityByName(NULL, "airboatfromspawner");
+	CBaseEntity *pAirboatsProtected = gEntList.FindEntityByName(NULL, "airboatfromspawner_protected");
+	if (pAirboats)
+	{
+		pAirboats->Remove();
+	}
+	if (pAirboatsProtected)
+	{
+		pAirboatsProtected->Remove();
+	}
+	CBaseEntity *pJeeps = gEntList.FindEntityByName(NULL, "jeepfromspawner");
+	CBaseEntity *pJeepsProtected = gEntList.FindEntityByName(NULL, "jeepfromspawner_protected");
+	if (pJeeps)
+	{
+		pJeeps->Remove();
+	}
+	if (pJeepsProtected)
+	{
+		pJeepsProtected->Remove();
+	}
+	iSpawnedVehicles = 0;
+}
+void CTFLogicVehicleSpawner::SpawnVehicle(void)
+{
+	variant_t sVariant;
+#ifdef GAME_DLL
+	if (m_bEnabled && iSpawnedVehicles != iMaxVehicles)
+	{
+		//CBaseEntity *pAirboats = gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat");
+		CBaseEntity *pAirboats = gEntList.FindEntityByName(NULL, "airboatfromspawner");
+		CBaseEntity *pJeeps2 = gEntList.FindEntityByName(NULL, "jeepfromspawner");
+		if (pAirboats)
+		{
+			//if (pAirboats->GetOwnerEntity() == NULL && pAirboats->GetKeyValue("targetname", "airboatfromspawner", NULL))
+			pAirboats->Remove();
+			if (iSpawnedVehicles != 0)
+			{
+				iSpawnedVehicles = iSpawnedVehicles - 1;
+			}
+		}
+		if (pJeeps2)
+		{
+			pJeeps2->Remove();
+			if (iSpawnedVehicles != 0)
+			{
+				iSpawnedVehicles = iSpawnedVehicles - 1;
+			}
+		}
+		if (iVehicleNum2 == 1)
+		{
+			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_airboat", -1);
+			if (pBoat)
+			{
+				//CBaseEntity *pRandPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), 2);
+				/*
+				if (pRandPlayer)
+				{
+					pBoat->SetOwnerEntity(pRandPlayer);
+				}
+				*/
+				QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
+				Vector vecForward;
+				AngleVectors(EyeAngles(), &vecForward);
+				Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+				pBoat->KeyValue("model", "models/airboat.mdl");
+				pBoat->KeyValue("solid", "6");
+				pBoat->KeyValue("targetname", "airboatfromspawner");
+				pBoat->KeyValue("vehiclescript", "scripts/vehicles/airboat.txt");
+				pBoat->SetAbsOrigin(vecOrigin);
+				pBoat->SetAbsAngles(vecAngles);
+				DispatchSpawn(pBoat);
+				pBoat->Spawn();
+				pBoat->Activate();
+				pBoat->Teleport(&vecOrigin, &vecAngles, NULL);
+				pBoat->AcceptInput("FromSpawnerBoat", NULL, NULL, sVariant, NULL);
+				if (m_bGunEnabled)
+				{
+					pBoat->AcceptInput("enablegunspawnerboat", NULL, NULL, sVariant, NULL);
+				}
+			}
+		}
+		else if (iVehicleNum2 == 2)
+		{
+			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_jeep", -1);
+			if (pBoat)
+			{
+				//CBaseEntity *pRandPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), 2);
+				/*
+				if (pRandPlayer)
+				{
+					pBoat->SetOwnerEntity(pRandPlayer);
+				}
+				*/
+				QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
+				Vector vecForward;
+				AngleVectors(EyeAngles(), &vecForward);
+				Vector vecOrigin =GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+				pBoat->KeyValue("model", "models/buggy.mdl");
+				pBoat->KeyValue("solid", "6");
+				pBoat->KeyValue("targetname", "jeepfromspawner");
+				pBoat->KeyValue("vehiclescript", "scripts/vehicles/jeep_test.txt");
+				pBoat->SetAbsOrigin(vecOrigin);
+				pBoat->SetAbsAngles(vecAngles);
+				DispatchSpawn(pBoat);
+				pBoat->Spawn();
+				pBoat->Activate();
+				pBoat->Teleport(&vecOrigin, &vecAngles, NULL);
+				pBoat->AcceptInput("FromSpawner", NULL, NULL, sVariant, NULL);
+				if (m_bGunEnabled)
+				{
+					pBoat->AcceptInput("enablegunspawner", NULL, NULL, sVariant, NULL);
+				}
+			}
+		}
+		else if (iVehicleNum2 == 3)
+		{
+			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_jeep", -1);
+			if (pBoat)
+			{
+				//CBaseEntity *pRandPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), 2);
+				/*
+				if (pRandPlayer)
+				{
+				pBoat->SetOwnerEntity(pRandPlayer);
+				}
+				*/
+				QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
+				Vector vecForward;
+				AngleVectors(EyeAngles(), &vecForward);
+				Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+				pBoat->KeyValue("model", "models/vehicle.mdl");
+				pBoat->KeyValue("solid", "6");
+				pBoat->KeyValue("targetname", "jeepfromspawner");
+				pBoat->KeyValue("vehiclescript", "scripts/vehicles/jalopy.txt");
+				pBoat->SetAbsOrigin(vecOrigin);
+				pBoat->SetAbsAngles(vecAngles);
+				DispatchSpawn(pBoat);
+				pBoat->Spawn();
+				pBoat->Activate();
+				pBoat->Teleport(&vecOrigin, &vecAngles, NULL);
+				pBoat->AcceptInput("FromSpawner", NULL, NULL, sVariant, NULL);
+			}
+		}
+		iSpawnedVehicles = iSpawnedVehicles + 1;
+	}
+#endif
+}
+
+class CTFLogicPlayerTeleports : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(CTFLogicPlayerTeleports, CBaseEntity);
+	DECLARE_DATADESC();
+	CTFLogicPlayerTeleports();
+	~CTFLogicPlayerTeleports();
+
+	void	Spawn(void);
+
+	void	InputTeleportPlayers(inputdata_t &inputdata);
+private:
+	int		iTeamToTeleport;
+};
+
+BEGIN_DATADESC(CTFLogicPlayerTeleports)
+DEFINE_INPUTFUNC(FIELD_VOID, "TeleportPlayers", InputTeleportPlayers),
+DEFINE_KEYFIELD(iTeamToTeleport, FIELD_INTEGER, "team_to_teleport"),
+END_DATADESC()
+
+LINK_ENTITY_TO_CLASS(lfe_logic_playerteleport, CTFLogicPlayerTeleports);
+
+CTFLogicPlayerTeleports::CTFLogicPlayerTeleports()
+{
+	iTeamToTeleport = 0;
+}
+
+CTFLogicPlayerTeleports::~CTFLogicPlayerTeleports()
+{
+}
+
+void CTFLogicPlayerTeleports::Spawn(void)
+{
+	BaseClass::Spawn();
+}
+
+void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
+{
+	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
+	Vector vecForward;
+	Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+	//CBaseEntity *pTeamPlayer = gEntList.FindEntityByClassname(NULL, "player");
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CTFPlayer *pTeamPlayer = ToTFPlayer(UTIL_PlayerByIndex(i));
+		if (iTeamToTeleport == 1)
+		{
+			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED)
+			{
+				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+			}
+		}
+		else if (iTeamToTeleport == 2)
+		{
+			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_BLUE)
+			{
+				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+			}
+		}
+	}
+}
 //-----------------------------------------------------------------------------
 // Zombie Survival
 //-----------------------------------------------------------------------------
@@ -653,7 +951,7 @@ BEGIN_DATADESC( CTFLogicZombieSurvival )
 	DEFINE_INPUTFUNC( FIELD_VOID, "ReleaseTeamSpawn", InputReleaseTeamSpawn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceFinaleStart", InputForceFinaleStart ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartIntro", InputStartIntro ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "FinishIntro", InputFinishIntro )
+	DEFINE_INPUTFUNC( FIELD_VOID, "FinishIntro", InputFinishIntro ),
 END_DATADESC()
 
 

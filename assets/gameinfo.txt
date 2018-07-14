@@ -15,7 +15,8 @@
 	supportsvr	0
 	FileSystem
 	{
-		SteamAppId		243750	// Source SDK Base 2013 Multiplayer
+	
+	    SteamAppId		243750	// Source SDK Base 2013 Multiplayer
 		SearchPaths
 		{
 			// Firstly, mount all user customizations.  This will search for VPKs and subfolders
@@ -32,40 +33,36 @@
 			gamebin				|gameinfo_path|bin
 
 			// Search shared VPK files.
+			game_lv				hl2/hl2_lv.vpk
 			game				|all_source_engine_paths|hl2/hl2_textures.vpk
 			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
 			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
 			game				|all_source_engine_paths|hl2/hl2_misc.vpk
+			platform			|all_source_engine_paths|platform/platform_misc.vpk
+			
+			//Mount EP2,EP1,Lost Coast,HL2,HL1
 			game				"|all_source_engine_paths|../Half-Life 2/ep2/ep2_sound_vo_english.vpk"
 			game				"|all_source_engine_paths|../Half-Life 2/ep2/ep2_pak.vpk"
-			game				"|all_source_engine_paths|../Half-Life 2/ep2"			
+			game				"|all_source_engine_paths|../Half-Life 2/ep2"
 			game				"|all_source_engine_paths|../Half-Life 2/episodic/ep1_sound_vo_english.vpk"
 			game				"|all_source_engine_paths|../Half-Life 2/episodic/ep1_pak.vpk"
-			//game				"|all_source_engine_paths|../Half-Life 2/episodic"		
-			platform			|all_source_engine_paths|platform/platform_misc.vpk
-
-			// Mount in shared loose files.
-			game				|all_source_engine_paths|hl2
-			platform			|all_source_engine_paths|platform
-
-			//TF2-HL1/HL2 COOP -- Leave EP1/EP2 stuff out until it's ready.
-			//game				"|all_source_engine_paths|../Half-Life 2/ep2/ep2_sound_vo_english.vpk"
-			//game				"|all_source_engine_paths|../Half-Life 2/ep2/ep2_pak.vpk"
-			//game				"|all_source_engine_paths|../Half-Life 2/ep2"
-			//game				"|all_source_engine_paths|../Half-Life 2/episodic/ep1_sound_vo_english.vpk"
-			//game				"|all_source_engine_paths|../Half-Life 2/episodic/ep1_pak.vpk"
-			game				"|all_source_engine_paths|../Half-Life 2/episodic"‚
-			game				"|all_source_engine_paths|../Half-Life 2/hl2/hl2_pak.vpk"
-			game				"|all_source_engine_paths|../Half-Life 2/hl2"
+			game				"|all_source_engine_paths|../Half-Life 2/episodic"
 			game				"|all_source_engine_paths|../Half-Life 2/lostcoast/lostcoast_sound_vo_english.vpk"
 			game				"|all_source_engine_paths|../Half-Life 2/lostcoast/lostcoast_pak.vpk"
-			game				"|all_source_engine_paths|../Half-Life 2/lostcoast"			
-			//game				"|all_source_engine_paths|../Half-Life 2/hl1_hd/hl1_hd_pak.vpk"
-			//game				"|all_source_engine_paths|../Half-Life 2/hl1_hd/"
+			game				"|all_source_engine_paths|../Half-Life 2/lostcoast"
+			game				"|all_source_engine_paths|../Half-Life 2/hl2/hl2_pak.vpk"
+			game				"|all_source_engine_paths|../Half-Life 2/hl2"
 			game				"|all_source_engine_paths|../Half-Life 2/hl1/hl1_pak.vpk"
 			game				"|all_source_engine_paths|../Half-Life 2/hl1/"
 			
+			// Mount in shared loose files.
+			game				|all_source_engine_paths|hl2
+			platform			|all_source_engine_paths|platform
 			
+		  //Mount Counter Strike Source	for making custom maps	
+          game "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_english.vpk.vpk"		  
+          game "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_pak_dir.vpk"
+		  
 			// Random files downloaded from gameservers go into a seperate directory, so
 			// that it's easy to keep those files segregated from the official game files
 			// or customizations intentially installed by the user.

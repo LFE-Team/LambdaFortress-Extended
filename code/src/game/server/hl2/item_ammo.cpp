@@ -25,45 +25,20 @@
 #include "tier0/memdbgon.h"
 
 #ifdef TF_CLASSIC
-bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound = true)
+bool ITEM_GiveTFAmmo(CBasePlayer *pPlayer, float flCount, bool bSuppressSound = true)
 {
 	bool bSuccess = false;
 
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	if ( !pTFPlayer )
+	CTFPlayer *pTFPlayer = ToTFPlayer(pPlayer);
+	if (!pTFPlayer)
 		return false;
 
-	int iMaxPrimary = pTFPlayer->GetMaxAmmo( TF_AMMO_PRIMARY );
-	if ( pPlayer->GiveAmmo( ceil( iMaxPrimary * flCount ), TF_AMMO_PRIMARY, true ) )
+	for (int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++)
 	{
-		bSuccess = true;
-	}
+		int iMaxAmmo = pTFPlayer->GetPlayerClass()->GetData()->m_aAmmoMax[i];
 
-	int iMaxSecondary = pTFPlayer->GetMaxAmmo( TF_AMMO_SECONDARY );
-	if ( pPlayer->GiveAmmo( ceil( iMaxSecondary * flCount ), TF_AMMO_SECONDARY, true ) )
-	{
-		bSuccess = true;
-	}
-
-	int iMaxMetal = pTFPlayer->GetMaxAmmo( TF_AMMO_METAL );
-	if ( pPlayer->GiveAmmo( ceil( iMaxMetal * flCount ), TF_AMMO_METAL, true ) )
-	{
-		bSuccess = true;
-	}
-
-	float flCloak = pTFPlayer->m_Shared.GetSpyCloakMeter();
-	if ( flCloak < 100.0f )
-	{
-		pTFPlayer->m_Shared.SetSpyCloakMeter( min( 100.0f, flCloak + 100.0f * flCount ) );
-		bSuccess = true;
-	}
-
-	for ( int i = 0; i < pTFPlayer->WeaponCount(); i++ )
-	{
-		auto pTFWeapon = dynamic_cast<CTFWeaponBase *>(pTFPlayer->GetWeapon(i));
-		if (pTFWeapon)
+		if (pTFPlayer->GiveAmmo(ceil(iMaxAmmo * flCount), i, true))
 		{
-			pTFWeapon->WeaponRegenerate();
 			bSuccess = true;
 		}
 	}
@@ -71,10 +46,10 @@ bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound =
 	return bSuccess;
 }
 
-class CLFItem : public CTFPowerup
+class CLFItem : public CItem
 {
 public:
-	DECLARE_CLASS( CLFItem, CTFPowerup );
+	DECLARE_CLASS( CLFItem, CItem);
 
 	virtual powerupsize_t GetPowerupSize( void ) { return POWERUP_FULL; }
 	virtual const char *GetPowerupModel( void ) { return "models/items/boxsrounds.mdl"; }
@@ -84,8 +59,7 @@ public:
 		Precache();
 		SetModel( GetPowerupModel() );
 
-		BaseClass::BaseClass::Spawn();
-		CreateItemVPhysicsObject();
+		BaseClass::Spawn();
 	}
 
 	void Precache( void )
@@ -96,35 +70,19 @@ public:
 		BaseClass::Precache();
 	}
 
-	bool MyTouch( CBasePlayer *pPlayer )
+	bool MyTouch(CBasePlayer *pPlayer)
 	{
-		
-		if ( ValidTouch( pPlayer ) )
+		if (ITEM_GiveTFAmmo(pPlayer, PackRatios[GetPowerupSize()]))
 		{
-			CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-			if ( !pTFPlayer )
-				return false;
-
-			for ( int i = 0; i < pTFPlayer->WeaponCount(); i++ )
-			{
-				CTFWeaponBase *pWeapon = static_cast<CTFWeaponBase *>( pTFPlayer->GetWeapon( i ) );
-				if ( !pWeapon->HasPrimaryAmmo() || !pWeapon->HasSecondaryAmmo() )
-				{
-					//return false;
-
-					if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()] ) )
-					{
-						CSingleUserRecipientFilter filter( pPlayer );
-						EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
-						return true;
-					}
-				}
-			}
+			CSingleUserRecipientFilter filter(pPlayer);
+			EmitSound(filter, entindex(), TF_AMMOPACK_PICKUP_SOUND);
+			return true;
 		}
 
 		return false;
 	}
 };
+
 LINK_ENTITY_TO_CLASS( lf_item, CLFItem );
 
 #define LF_ITEM_CLASS( entityName, className, powerupSize, powerupModel )	\

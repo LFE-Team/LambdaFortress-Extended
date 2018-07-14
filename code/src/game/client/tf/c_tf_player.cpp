@@ -1284,6 +1284,23 @@ public:
 					break;
 				}
 			}
+		}
+		else if ( pPlayer && pPlayer->m_Shared.InCond( TF_COND_SODAPOPPER_HYPE ) )
+		{
+			if ( !pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) ||
+				!pPlayer->IsEnemyPlayer() ||
+				pPlayer->GetTeamNumber() == pPlayer->m_Shared.GetDisguiseTeam() )
+			{
+				switch ( pPlayer->GetTeamNumber() )
+				{
+				case TF_TEAM_RED:
+					vecColor = Vector( 50, 2, 50 );
+					break;
+				case TF_TEAM_BLUE:
+					vecColor = Vector( 50, 2, 50 );
+					break;
+				}
+			}
 		}/*
 		else if ( pNPC && pNPC->IsCritBoosted() )
 		{
