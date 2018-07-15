@@ -1500,6 +1500,7 @@ void CTFFlameEntity::FlameThink( void )
 void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 {
 	CTFCompoundBow *pBow = NULL;
+	CBreakableProp *pProp = NULL;
 	*pbHitWorld = false;
 
 	// if we've already burnt this entity, don't do more damage, so skip even checking for collision with the entity
@@ -1557,6 +1558,19 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 				pBow->LightArrow();
 				return;
 			}
+
+			if ( pProp )
+			{
+				// If we won't be able to break it, don't burn
+				if ( pProp->m_takedamage == DAMAGE_YES )
+				{
+					m_hEntitiesBurnt.AddToTail( pOther );
+					pProp->IgniteLifetime( TF_BURNING_FLAME_LIFE );
+					//pProp->ApplyMultiDamage();
+					return;
+				}
+			}
+
 			// if there is nothing solid in the way, damage the entity
 			OnCollide( pOther );
 		}					

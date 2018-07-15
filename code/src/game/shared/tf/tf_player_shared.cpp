@@ -451,7 +451,7 @@ bool CTFPlayerShared::IsCritBoosted( void )
 bool CTFPlayerShared::IsMiniCritBoosted( void )
 {
 	if ( InCond( TF_COND_ENERGY_BUFF ) ||
-	if ( InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
+		InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
 		InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
 		return true;
 
@@ -1572,14 +1572,10 @@ void CTFPlayerShared::OnRemovePhase(void)
 {
 #ifdef GAME_DLL
 	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_TIRED );
-
-	for ( int i = 0; i < m_pPhaseTrails.Count(); i++ )
-	{
-		m_pPhaseTrails[i]->SUB_Remove();
-	}
-	m_pPhaseTrails.RemoveAll();
 #else
+	m_pOuter->ParticleProp()->StopEmission( m_pPhaseTrails );
 	m_pOuter->ParticleProp()->StopEmission( m_pWarp );
+	m_pPhaseTrails = NULL;
 	m_pWarp = NULL;
 #endif
 }
@@ -1824,53 +1820,19 @@ void CTFPlayerShared::StunPlayer( float flDuration, CTFPlayer *pStunner )
 	AddCond( TF_COND_STUNNED );
 }
 
-#ifdef GAME_DLL
+#ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Bonk phase effects
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::AddPhaseEffects(void)
 {
+	/*
 	CTFPlayer *pPlayer = m_pOuter;
 	if ( !pPlayer)
 		return;
 
-
-	// TODO: Clean this up a bit more
-	const char* pszEffect = m_pOuter->GetTeamNumber() == TF_TEAM_BLUE ? "effects/beam001_blu.vmt" : "effects/beam001_red.vmt";
-	Vector vecOrigin = pPlayer->GetAbsOrigin();
-	
-	CSpriteTrail *pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
-	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
-	pPhaseTrail->SetStartWidth( 12.0f );
-	pPhaseTrail->SetTextureResolution( 0.01416667 );
-	pPhaseTrail->SetLifeTime( 1.0 );
-	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "back_upper" ) );
-	m_pPhaseTrails.AddToTail( pPhaseTrail );
-
-	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
-	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
-	pPhaseTrail->SetStartWidth( 16.0f );
-	pPhaseTrail->SetTextureResolution( 0.01416667 );
-	pPhaseTrail->SetLifeTime( 1.0 );
-	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "back_lower" ) );
-	m_pPhaseTrails.AddToTail( pPhaseTrail );
-
-	// White trail for socks
-	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
-	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
-	pPhaseTrail->SetStartWidth( 8.0f );
-	pPhaseTrail->SetTextureResolution( 0.01416667 );
-	pPhaseTrail->SetLifeTime( 0.5 );
-	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "foot_R" ) );
-	m_pPhaseTrails.AddToTail( pPhaseTrail );
-
-	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
-	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
-	pPhaseTrail->SetStartWidth( 8.0f );
-	pPhaseTrail->SetTextureResolution( 0.01416667 );
-	pPhaseTrail->SetLifeTime( 0.5 );
-	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "foot_L" ) );
-	m_pPhaseTrails.AddToTail( pPhaseTrail );
+	pPlayer->ParticleProp()->Create( "pyro_blast", PATTACH_POINT_FOLLOW, "muzzle" );
+	*/
 }
 #endif
 
@@ -1881,31 +1843,14 @@ void CTFPlayerShared::UpdatePhaseEffects(void)
 {
 	if ( !InCond( TF_COND_PHASE ) )
 	{
+		#ifdef CLIENT_DLL
+		m_pOuter->ParticleProp()->StopEmission( m_pWarp );
+		m_pWarp = NULL;
+		
+		m_pOuter->ParticleProp()->StopEmission( m_pPhaseTrails );
+		m_pPhaseTrails = NULL;
+		#endif
 		return;
-	}
-
-	// We're on the move
-	if(  m_pOuter->GetAbsVelocity() != vec3_origin )
-	{
-#ifdef CLIENT_DLL
-		if( m_pWarp )
-		{
-			m_pOuter->ParticleProp()->StopEmission( m_pWarp );
-			m_pWarp = NULL;
-		}
-#else
-		if ( m_pPhaseTrails.IsEmpty() )
-		{
-			AddPhaseEffects();
-		}
-		else
-		{
-			for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
-			{
-				m_pPhaseTrails[i]->TurnOn();
-			}
-		}
-#endif
 	}
 	else
 	{
@@ -1914,13 +1859,11 @@ void CTFPlayerShared::UpdatePhaseEffects(void)
 		{
 			m_pWarp = m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
 		}
-#else
-		if ( !m_pPhaseTrails.IsEmpty() )
+
+		if ( !m_pPhaseTrails )
 		{
-			for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
-			{
-				m_pPhaseTrails[i]->TurnOn();
-			}
+			const char *pszEffectName = ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber(), true );
+			m_pPhaseTrails = m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "head" );
 		}
 #endif
 	}
@@ -2538,11 +2481,7 @@ void CTFPlayerShared::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 		{
 			bShouldShow = false;
 		}
-		else if ( !IsCritBoosted() )
-		{
-			bShouldShow = false;
-		}
-		else if ( !IsMiniCritBoosted() )
+		else if ( !IsCritBoosted() || !InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
 		{
 			bShouldShow = false;
 		}

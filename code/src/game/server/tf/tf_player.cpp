@@ -5203,10 +5203,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	bool bOnGround = ( GetFlags() & FL_ONGROUND ) != 0;
 	float flInvis = m_Shared.m_flInvisibility;
 
-	//if( TFGameRules()->IsDeathmatch() )
-	//{
-		DropPowerups();
-	//}
+	DropPowerups();
 
 	// Remove all conditions...
 	m_Shared.RemoveAllCond( NULL );
@@ -5219,11 +5216,12 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	RemoveTeleportEffect();
 
-		// Drop our weapon and ammo box
-		//DropWeapon( GetActiveTFWeapon(), true );
-		DropAmmoPack();
+	// Drop our weapon and ammo box
+	//DropWeapon( GetActiveTFWeapon(), true );
+	DropAmmoPack();
 
 	m_Shared.SetDesiredWeaponIndex( -1 );
+	RemoveAllWeapons();
 
 	// If the player has a capture flag and was killed by another player, award that player a defense
 	if ( HasItem() && pTFAttacker && ( pTFAttacker != this ) )
@@ -5341,39 +5339,21 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		m_hObserverTarget.Set( NULL );
 	}
-
-	bool bUsedSuicideButton = ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE );
-/*
+	
 	if ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE )
 	{
 		// if this was suicide, recalculate attacker to see if we want to award the kill to a recent damager
 		info_modified.SetAttacker( TFGameRules()->GetDeathScorer( info.GetAttacker(), pInflictor, this ) );
 	}
-	else if ( !pAttacker || pAttacker == this || pAttacker->IsBSPModel() )
+	else if ( (!pAttacker || pAttacker == this || pAttacker->IsBSPModel()))
 	{
 		// Recalculate attacker if player killed himself or this was environmental death.
 		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
-		if ( pDamager )
+		if (pDamager)
 		{
-			info_modified.SetAttacker( pDamager );
-			info_modified.SetInflictor( NULL );
-			info_modified.SetWeapon( NULL );
-			info_modified.SetDamageType( DMG_GENERIC );
-			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
-		}
-	}
-*/
-	if ( bUsedSuicideButton || pAttacker == this || pAttacker->IsBSPModel() )
-	{
-		// Recalculate attacker if player killed himself or this was environmental death.
-		float flCreditTime = bUsedSuicideButton ? TF_TIME_SUICIDE_KILL_CREDIT : TF_TIME_ENV_DEATH_KILL_CREDIT;
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, flCreditTime );
-
-		if ( pDamager )
-		{
-			info_modified.SetAttacker( pDamager );
-			info_modified.SetInflictor( NULL );
-			info_modified.SetWeapon( NULL );
+			info_modified.SetAttacker(pDamager);
+			info_modified.SetInflictor(NULL);
+			info_modified.SetWeapon(NULL);
 			info_modified.SetDamageType( DMG_GENERIC );
 			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
 		}
@@ -5441,7 +5421,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if ( ( info.GetDamageType() & ( DMG_ALWAYSGIB|DMG_LASTGENERICFLAG|DMG_CRUSH )) == ( DMG_ALWAYSGIB|DMG_LASTGENERICFLAG|DMG_CRUSH ) )
+	if ( ( info.GetDamageType() & ( DMG_ALWAYSGIB | DMG_LASTGENERICFLAG | DMG_CRUSH )) == ( DMG_ALWAYSGIB | DMG_LASTGENERICFLAG | DMG_CRUSH ) )
 	{
 		if ( m_hRagdoll )
 		{

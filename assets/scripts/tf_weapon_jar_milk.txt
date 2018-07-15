@@ -1,9 +1,8 @@
-	WeaponData
+WeaponData
 {
 	// Attributes Base.
 	"printname"			"#TF_Weapon_MilkJar"
 	"BuiltRightHanded"		"0"
-	"MeleeWeapon"			"1"
 	"weight"			"5"
 	"WeaponType"			"item1"
 	"ITEM_FLAG_NOITEMPICKUP" 	"1"
@@ -30,6 +29,12 @@
 	"viewmodel"			"models/weapons/c_models/c_madmilk/c_madmilk.mdl"
 	"playermodel"			"models/weapons/c_models/c_madmilk/c_madmilk.mdl"
 	"anim_prefix"			"pj"
+
+	"ExplosionEffect"		"peejar_impact_milk"
+	"ExplosionPlayerEffect"		"peejar_impact_milk"
+	"ExplosionWaterEffect"		"peejar_impact_milk"
+
+	"ExplosionSound"	"Jar.Explode"
 
 	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
 	SoundData

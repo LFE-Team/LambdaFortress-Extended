@@ -703,6 +703,7 @@
 		"damageamount" "short"
 		"custom"	"short"
 		"crit" "bool"
+		"minicrit" "bool"
         "weaponid" "short"
 	}
 	

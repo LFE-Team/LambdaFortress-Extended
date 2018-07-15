@@ -1769,9 +1769,9 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 	}
 
 	// See if we hit something
-	if (pEntity->GetMoveType() != MOVETYPE_VPHYSICS)
+	if ( pEntity->GetMoveType() != MOVETYPE_VPHYSICS )
 	{
-		if (pEntity->m_takedamage == DAMAGE_NO)
+		if ( pEntity->m_takedamage == DAMAGE_NO )
 		{
 			DryFire();
 			return;

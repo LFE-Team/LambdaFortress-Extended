@@ -381,13 +381,13 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 
 	int iLocalPlayerIndex = GetLocalPlayerIndex();
 	const char *pszEventName = event->GetName();
-	
+
 	bool bPlayerDeath = EventIsPlayerDeath( pszEventName );
 	bool bObjectDeath = FStrEq( pszEventName, "object_destroyed" );
 	bool bNPCDeath = FStrEq( pszEventName, "npc_death" );
 
 	bool bIsFeignDeath = event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH;
-	if ( bPlayerDeath || bNPCDeath )
+	if ( bPlayerDeath )
 	{
 		if ( !ShouldShowDeathNotice( event ) )
 			return;
@@ -433,8 +433,8 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 
 	if ( bPlayerDeath || bObjectDeath || bNPCDeath )
 	{
-		int victim = event->GetInt( "victim_index" );
-		int killer = event->GetInt( "attacker_index" );
+		int victim = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) : event->GetInt( "victim_index" );
+		int killer = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );
 
 		const char *killedwith = event->GetString( "weapon" );
 		const char *killedwithweaponlog = event->GetString( "weapon_logclassname" );
@@ -561,7 +561,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 			else if ( ( event->GetInt( "damagebits" ) & DMG_BLAST ) && !killer )
 			{
 				// environmental explosive death
-				V_wcsncpy( m_DeathNotices[iMsg].wzInfoText, g_pVGuiLocalize->Find( "#DeathMsg_Blast" ), sizeof( m_DeathNotices[iMsg].wzInfoText ) );
+				Q_strncpy( m_DeathNotices[iMsg].szIcon, "d_explosive", ARRAYSIZE( m_DeathNotices[iMsg].szIcon ) );
 			}
 			else if ( event->GetInt( "damagebits" ) & DMG_DROWN )
 			{
@@ -570,9 +570,9 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 			}
 		}
 
+		m_DeathNotices[iMsg].iKillerID = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );
 		m_DeathNotices[iMsg].iWeaponID = event->GetInt( "weaponid" );
-		m_DeathNotices[iMsg].iKillerID = event->GetInt( "attacker" );
-		m_DeathNotices[iMsg].iVictimID = event->GetInt( "userid" );
+		m_DeathNotices[iMsg].iVictimID = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) : event->GetInt( "victim_index" );
 
 		char sDeathMsg[512];
 

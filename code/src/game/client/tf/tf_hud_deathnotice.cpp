@@ -130,14 +130,17 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 {
 	const char *pszEventName = event->GetName();
 
-	if ( FStrEq( pszEventName, "player_death" ) || FStrEq( pszEventName, "object_destroyed" ) || FStrEq( pszEventName, "npc_death" ) )
+	bool bPlayerDeath = EventIsPlayerDeath( pszEventName );
+	bool bIsObjectDestroyed = FStrEq( pszEventName, "object_destroyed" );
+	bool bNPCDeath = FStrEq( pszEventName, "npc_death" );
+
+	if ( bPlayerDeath || bIsObjectDestroyed || bNPCDeath )
 	{
-		bool bIsObjectDestroyed = FStrEq( pszEventName, "object_destroyed" );
 		int iCustomDamage = event->GetInt( "customkill" );
 		int iLocalPlayerIndex = GetLocalPlayerIndex();
 
 		// if there was an assister, put both the killer's and assister's names in the death message
-		int iAssisterID = event->GetInt( "assister_index" );
+		int iAssisterID = bPlayerDeath ? event->GetInt( "assister" ) : event->GetInt( "assister_index" );
 		const char *assister_classname = event->GetString( "assister_name" );
 		int assister_team = event->GetInt( "assister_team" );
 
@@ -173,24 +176,14 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 			{
 				m_DeathNotices[iDeathNoticeMsg].bLocalPlayerInvolved = true;
 			}
-
-			// This is the old code used for assister handling
-			/*
-			char szKillerBuf[MAX_PLAYER_NAME_LENGTH*2];
-			Q_snprintf(szKillerBuf, ARRAYSIZE(szKillerBuf), "%s + %s", m_DeathNotices[iDeathNoticeMsg].Killer.szName, assister_name);
-			Q_strncpy(m_DeathNotices[iDeathNoticeMsg].Killer.szName, szKillerBuf, ARRAYSIZE(m_DeathNotices[iDeathNoticeMsg].Killer.szName));
-			if ( iLocalPlayerIndex == iAssisterID )
-			{
-			m_DeathNotices[iDeathNoticeMsg].bLocalPlayerInvolved = true;
-			}*/
 		}
 
 		if ( !bIsObjectDestroyed )
 		{
 			// if this death involved a player dominating another player or getting revenge on another player, add an additional message
 			// mentioning that
-			int iKillerID = engine->GetPlayerForUserID( event->GetInt( "attacker" ) );
-			int iVictimID = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
+			int iKillerID = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );
+			int iVictimID = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) : event->GetInt( "victim_index" );
 			int nDeathFlags = event->GetInt( "death_flags" );
 
 			if ( nDeathFlags & TF_DEATH_DOMINATION )
@@ -284,8 +277,8 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 		case TF_DMG_CUSTOM_BURNING:
 		{
 			// Show a special fire death icon if this was a suicide or environmental death.
-			int victim = event->GetInt( "victim_index" );
-			int killer = event->GetInt( "attacker_index" );
+			int victim = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) : event->GetInt( "victim_index" );
+			int killer = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );
 			if ( !killer || killer == victim )
 			{
 				Q_strncpy( m_DeathNotices[iDeathNoticeMsg].szIcon, "d_firedeath", ARRAYSIZE( m_DeathNotices[iDeathNoticeMsg].szIcon ) );
@@ -296,7 +289,7 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 		case TF_DMG_CUSTOM_SUICIDE:
 		{
 			// display a different message if this was suicide, or assisted suicide (suicide w/recent damage, kill awarded to damager)
-			bool bAssistedSuicide = event->GetInt( "victim_index" ) != event->GetInt( "attacker_index" );
+			bool bAssistedSuicide = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) != engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "victim_index" ) != event->GetInt( "attacker_index" );
 			pMsg = g_pVGuiLocalize->Find( bAssistedSuicide ? "#DeathMsg_AssistedSuicide" : "#DeathMsg_Suicide" );
 			if ( pMsg )
 			{

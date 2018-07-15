@@ -1,9 +1,8 @@
-	WeaponData
+WeaponData
 {
 	// Attributes Base.
 	"printname"			"#TF_Weapon_Jar"
 	"BuiltRightHanded"		"0"
-	"MeleeWeapon"			"1"
 	"weight"			"5"
 	"WeaponType"			"item1"
 	"ITEM_FLAG_NOITEMPICKUP" 	"1"
@@ -25,6 +24,12 @@
 	// Buckets.	
 	"bucket"			"1"
 	"bucket_position"		"0"
+
+	"ExplosionEffect"		"peejar_impact"
+	"ExplosionPlayerEffect"		"peejar_impact"
+	"ExplosionWaterEffect"		"peejar_impact"
+
+	"ExplosionSound"	"Jar.Explode"
 
 	// Model & Animation
 	"viewmodel"			"models/weapons/c_models/urinejar.mdl"

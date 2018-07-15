@@ -196,10 +196,9 @@ public:
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
 	void	StunPlayer( float flDuration, CTFPlayer *pStunner );
 
-#ifdef GAME_DLL
+#ifdef CLIENT_DLL
 	void	AddPhaseEffects( void );
-	CUtlVector< CSpriteTrail * > m_pPhaseTrails;
-#else
+	CNewParticleEffect *m_pPhaseTrails;
 	CNewParticleEffect *m_pWarp;
 #endif
 

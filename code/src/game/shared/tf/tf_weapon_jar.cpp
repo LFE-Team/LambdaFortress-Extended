@@ -143,7 +143,13 @@ void CTFProjectile_Jar::Explode( trace_t *pTrace, int bitsDamageType )
 	//EmitSound( "Jar.Explode" );
 	CPVSFilter filter( vecOrigin );
 	TE_TFExplosion( filter, 0.0f, vecOrigin, pTrace->plane.normal, GetWeaponID(), -1 );
-
+/*
+#ifdef CLIENT_DLL
+	CEffectData data;
+	data.m_vOrigin = vecOrigin;
+	DispatchEffect( "peejar_impact", data );
+#endif
+*/
 	// Damage.
 	CBaseEntity *pAttacker = NULL;
 	pAttacker = pWeapon->GetOwnerEntity();

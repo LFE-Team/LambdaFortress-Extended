@@ -215,7 +215,9 @@ void CTFMinigun::SharedAttack()
 #endif
 				}
 
-				m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flTimeWeaponIdle = gpGlobals->curtime + 0.1;
+				float flSpinUpTime = 0.1f;
+				CALL_ATTRIB_HOOK_FLOAT( flSpinUpTime, mult_minigun_spinup_time );
+				m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flTimeWeaponIdle = gpGlobals->curtime + flSpinUpTime;
 			}
 			break;
 		}

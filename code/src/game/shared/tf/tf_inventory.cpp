@@ -14,7 +14,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define TF_INVENTORY_FILE "tf_inventory.txt"
+#define TF_INVENTORY_FILE "scripts/tf_inventory.txt"
 
 static CTFInventory g_TFInventory;
 
@@ -185,13 +185,19 @@ int CTFInventory::NumWeapons( int iClass, int iSlot )
 //-----------------------------------------------------------------------------
 void CTFInventory::LoadInventory()
 {
-		if ( !m_pInventory )
+	bool bExist = filesystem->FileExists( TF_INVENTORY_FILE, "MOD");
+	if (bExist)
+	{
+		if (!m_pInventory)
 		{
-			m_pInventory = new KeyValues( "Inventory" );
+			m_pInventory = new KeyValues("Inventory");
 		}
 		m_pInventory->LoadFromFile( filesystem, TF_INVENTORY_FILE );
-//		ResetInventory();
-// you take the blue pill, and you wake up and reset the inventory
+	}
+	else
+	{
+		ResetInventory();
+	}
 };
 
 //-----------------------------------------------------------------------------

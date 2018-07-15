@@ -71,7 +71,7 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 	}
 
 	// Base explosion effect and sound.
-	const char *pszFormat = "explosion";
+	const char *pszFormat = "";
 	const char *pszSound = "BaseExplosionEffect.Sound";
 	bool bColored = pWeaponInfo->m_bHasTeamColoredExplosions;
 

@@ -3995,5 +3995,14 @@
 			"width"	"96"
 			"height"	"32"
 		}
+		"explosion"
+		{
+			"dfile"	"HUD/d_images"
+			"dnegfile"	"HUD/dneg_images"
+			"x"		"258"
+			"y"		"359"
+			"width"		"96"
+			"height"	"32"
+		}
 	}
 }
