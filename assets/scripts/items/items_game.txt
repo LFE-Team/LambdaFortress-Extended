@@ -4642,7 +4642,7 @@
 			"image_inventory"	"backpack/weapons/c_models/c_spy_watch/parts/c_spy_watch"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/v_models/v_watch_spy.mdl"
+			"model_player"	"models/weapons/c_models/c_spy_watch.mdl"
 			"used_by_classes"
 			{
 				"spy"	"1"
@@ -4748,7 +4748,7 @@
 
 		"weapon_jarate"
 		{
-			"enabled"	"1"
+			"enabled"	"0"
 			"item_class"	"tf_weapon_jar"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
@@ -4761,7 +4761,7 @@
 				"can_extinguish"			"1"
 			}
 			"base_item_name"	"Jarate"
-			"show_in_armory"	"1"
+			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Jar"
 			"item_name"	"#TF_Unique_Achievement_Jar"
 			"item_slot"	"secondary"
@@ -5441,11 +5441,12 @@
 			"item_quality"	"unique"
 			"min_ilevel"	"1"
 			"max_ilevel"	"99"
-			"attach_to_hands" "1"
+			"attach_to_hands" "0"
 			"image_inventory"	"backpack/weapons/w_models/w_builder"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_builder/c_builder.mdl"
+			"model_world"	"models/weapons/w_models/w_builder.mdl"
+			"model_player"	"models/weapons/v_models/v_builder_engineer.mdl"
 			"used_by_classes"
 			{
 				"engineer"	"1"
@@ -7892,11 +7893,12 @@
 			"baseitem" "1"
 			"min_ilevel"	"1"
 			"max_ilevel"	"1"
-			"attach_to_hands" "1"
+			"attach_to_hands" "0"
 			"image_inventory"	"backpack/weapons/w_models/w_builder"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_builder/c_builder.mdl"
+			"model_world"	"models/weapons/w_models/w_builder.mdl"
+			"model_player"	"models/weapons/v_models/v_builder_engineer.mdl"
 			"used_by_classes"
 			{
 				"engineer"	"1"
@@ -7948,11 +7950,12 @@
 			"baseitem" "1"
 			"min_ilevel"	"1"
 			"max_ilevel"	"1"
-			"attach_to_hands" "1"
+			"attach_to_hands" "0"
 			"image_inventory"	"backpack/weapons/w_models/w_pda_engineer"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_pda_engineer/c_pda_engineer.mdl"
+			"model_world"	"models/weapons/w_models/w_pda_engineer.mdl"
+			"model_player"	"models/weapons/v_models/v_pda_engineer.mdl"
 			"used_by_classes"
 			{
 				"engineer"	"1"
@@ -7989,7 +7992,8 @@
 			"image_inventory"	"backpack/weapons/w_models/w_cigarette_case"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/w_models/w_cigarette_case.mdl"
+                        "model_world"	"models/weapons/w_models/w_cigarette_case.mdl"
+			"model_player"	"models/weapons/v_models/v_pda_spy.mdl"
 			"used_by_classes"
 			{
 				"spy"	"1"
@@ -8017,8 +8021,9 @@
 			"image_inventory"	"backpack/weapons/w_models/w_pda_engineer"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"attach_to_hands"	"1"
-			"model_player"	"models/weapons/c_models/c_toolbox/c_toolbox.mdl"
+			"attach_to_hands"	"0"
+			"model_world"	"models/weapons/w_models/w_toolbox.mdl"
+			"model_player"	"models/weapons/v_models/v_toolbox_engineer.mdl"
 			"used_by_classes"
 			{
 				"engineer"	"1"
@@ -8522,7 +8527,7 @@
 			"name"	"Jarate"
 			"prefab"	"valve weapon_jarate"
 			"first_sale_date"	"2010/09/29"
-			"show_in_armory"	"1"
+			"show_in_armory"	"0"
 		}
 		"59"
 		{
