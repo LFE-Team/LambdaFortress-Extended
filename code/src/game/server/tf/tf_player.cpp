@@ -1037,7 +1037,9 @@ void CTFPlayer::Precache()
 	PrecacheScriptSound( "TFPlayer.SaveMe" );
 	PrecacheScriptSound( "Camera.SnapShot" );
 	PrecacheScriptSound( "TFPlayer.ReCharged" );
-	PrecacheScriptSound( "PowerupSpeedBoost.WearOff" );
+	PrecacheScriptSound( "TFPlayer.Dissolve" );
+	PrecacheScriptSound( "TFPlayer.DoubleDonk" );
+	PrecacheScriptSound( "TFPlayer.CritHitMini" );
 
 	PrecacheScriptSound( "HL2Player.FlashlightOn" );
 	PrecacheScriptSound( "HL2Player.FlashlightOff" );
@@ -1050,6 +1052,7 @@ void CTFPlayer::Precache()
 
 	// Precache particle systems
 	PrecacheParticleSystem( "crit_text" );
+	PrecacheParticleSystem( "minicrit_text" );
 	PrecacheParticleSystem( "cig_smoke" );
 	PrecacheParticleSystem( "speech_mediccall" );
 	PrecacheTeamParticles( "player_recent_teleport_%s" );
@@ -1070,6 +1073,7 @@ void CTFPlayer::Precache()
 	PrecacheParticleSystem( "rocketjump_smoke" );
 	PrecacheTeamParticles( "overhealedplayer_%s_pluses", false );
 	PrecacheParticleSystem( "speech_typing" );
+	PrecacheParticleSystem( "peejar_drips" );
 					 
 	BaseClass::Precache();
 }
@@ -1516,15 +1520,21 @@ void CTFPlayer::Regenerate( void )
 		m_Shared.RemoveCond( TF_COND_SLOWED );
 	}
 
+	if ( m_Shared.InCond( TF_COND_URINE ) )
+	{
+		m_Shared.RemoveCond( TF_COND_URINE );
+	}
+
 	// Fill Spy cloak
 	m_Shared.SetSpyCloakMeter( 100.0f );
 
-	for ( int i = 0; i < WeaponCount(); i++ )
-	{
-		auto pTFWeapon = dynamic_cast<CTFWeaponBase *>(GetWeapon(i));
-		if ( pTFWeapon )
+	for ( int i = 0; i < MAX_ITEMS; i++ )
+	{		
+		CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase * >( Weapon_GetSlot( i ) );
+		if ( pWeapon ) 
 		{
-			pTFWeapon->WeaponRegenerate();
+			pWeapon->WeaponRegenerate();
+			pWeapon->UpdatePlayerBodygroups();
 		}
 	}
 
@@ -1567,6 +1577,16 @@ void CTFPlayer::InitClass( void )
 
 	// Update player's color.
 	UpdatePlayerColor();
+
+	for ( int i = 0; i < MAX_ITEMS; i++ )
+	{
+		// player_bodygroups
+		CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase * >( Weapon_GetSlot( i ) );
+		if ( pWeapon )
+		{
+			pWeapon->UpdatePlayerBodygroups();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1648,6 +1668,12 @@ void CTFPlayer::GiveDefaultItems()
 	TFPlayerClassData_t *pData = m_PlayerClass.GetData();
 
 	RemoveAllAmmo();
+
+	// Reset all bodygroups
+	for ( int i = 0; i < GetNumBodyGroups(); i++ )
+	{
+		SetBodygroup( i, 0 );
+	}
 
 	// Give ammo. Must be done before weapons, so weapons know the player has ammo for them.
 	for ( int iAmmo = 0; iAmmo < TF_AMMO_COUNT; ++iAmmo )
@@ -2596,10 +2622,10 @@ int CTFPlayer::GetAutoTeam( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 {
-	if (!TFGameRules()->IsCoOp() && !TFGameRules()->IsBluCoOp())
+	if (!TFGameRules()->IsAnyCoOp() && !TFGameRules()->IsZombieSurvival())
 	{
 		int iTeam = TF_TEAM_RED;
-		if ( stricmp( pTeamName, "auto" ) == 0 && !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
+		if ( stricmp( pTeamName, "auto" ) == 0 )
 		{
 			iTeam = GetAutoTeam();
 		}
@@ -2607,15 +2633,7 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 		{
 			iTeam = TEAM_SPECTATOR;
 		}
-		else if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
-		{
-			iTeam = TF_TEAM_RED;
-		}
-		else if ( TFGameRules()->IsBluCoOp() )
-		{
-			iTeam = TF_TEAM_BLUE;
-		}
-		else if ( !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
+		else
 		{
 			for ( int i = 0; i < TF_TEAM_COUNT; ++i )
 			{
@@ -2684,7 +2702,57 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 				break;
 			}
 		}
+	}
+	else
+	{
+		int iTeam = TF_TEAM_RED;
+		if ( stricmp( pTeamName, "spectate" ) == 0 )
+		{
+			iTeam = TEAM_SPECTATOR;
+		}
+		else if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+		{
+			iTeam = TF_TEAM_RED;
+		}
+		else if ( TFGameRules()->IsBluCoOp() )
+		{
+			iTeam = TF_TEAM_BLUE;
+		}
 
+		if (iTeam == GetTeamNumber())
+		{
+			return;	// we wouldn't change the team
+		}
+
+		if ( HasTheFlag() )
+		{
+			DropFlag();
+			DropPowerups();
+		}
+
+		if ( iTeam == TEAM_SPECTATOR )
+		{
+			// Prevent this is the cvar is set
+			if ( !mp_allowspectators.GetInt() && !IsHLTV() )
+			{
+				ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
+				return;
+			}
+		
+			if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
+			{
+				CommitSuicide( false, true );
+			}
+
+			ChangeTeam( TEAM_SPECTATOR );
+
+			// do we have fadetoblack on? (need to fade their screen back in)
+			if ( mp_fadetoblack.GetBool() )
+			{
+				color32_s clr = { 0,0,0,255 };
+				UTIL_ScreenFade( this, clr, 0, 0, FFADE_IN | FFADE_PURGE );
+			}
+		}
 	}
 }
 
@@ -3752,7 +3820,7 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 					// play the critical shot sound to the shooter	
 					if ( pWpn )
 					{
-						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) )
+						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) || pWpn->IsWeapon( TF_WEAPON_REVOLVER ) )
 							pWpn->WeaponSound( BURST );
 
 						CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flDamage, headshot_damage_modify );
@@ -3812,7 +3880,7 @@ int CTFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	else
 	{
 		float flHealthToAdd = flHealth;
-		float flMaxHealth = GetPlayerClass()->GetMaxHealth();
+		float flMaxHealth = GetMaxHealth();
 		
 		// don't want to add more than we're allowed to have
 		if ( flHealthToAdd > flMaxHealth - m_iHealth )
@@ -4003,6 +4071,13 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
 	}
 
+	// If this is a base object get the builder
+	if ( pAttacker->IsBaseObject() )
+	{
+		CBaseObject *pObject = static_cast< CBaseObject * >( pAttacker );
+		pAttacker = pObject->GetBuilder();
+	}
+
 	int iHealthBefore = GetHealth();
 
 	bool bDebug = tf_debug_damage.GetBool();
@@ -4076,8 +4151,10 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
  
 	int bitsDamage = inputInfo.GetDamageType();
 
+	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
+
 	// If we're invulnerable or bonk, force ourselves to only take damage events only, so we still get pushed
-	if ( m_Shared.IsInvulnerable() || m_Shared.InCond( TF_COND_PHASE) )
+	if ( m_Shared.IsInvulnerable() || m_Shared.InCond( TF_COND_PHASE ) )
 	{
 		bool bAllowDamage = false;
 
@@ -4128,6 +4205,13 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
+	if ( m_Shared.InCond( TF_COND_URINE ) )
+	{
+		// Jarated players take mini crits
+		bitsDamage |= DMG_MINICRITICAL;
+		info.AddDamageType( DMG_MINICRITICAL );
+	}
+
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
@@ -4149,15 +4233,40 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 
+		int nMiniCritOnCond = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritOnCond, or_minicrit_vs_playercond_burning );
+
+		if ( nMiniCritOnCond )
+		{
+			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
+			{
+				int nCond = condition_to_attribute_translation[i];
+				int nFlag = ( 1 << i );
+				if ( ( nMiniCritOnCond & nFlag ) && m_Shared.InCond( nCond ) )
+				{
+					bitsDamage |= DMG_MINICRITICAL;
+					info.AddDamageType( DMG_MINICRITICAL );
+					break;
+				}
+			}
+		}
+
 		int nCritWhileAirborne = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
-
-		CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
 
 		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
 		{
 			bitsDamage |= DMG_CRITICAL;
 			info.AddDamageType( DMG_CRITICAL );
+		}
+
+		int nMiniCritWhileAirborne = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritWhileAirborne, crit_while_airborne );
+
+		if ( nMiniCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		{
+			bitsDamage |= DMG_MINICRITICAL;
+			info.AddDamageType( DMG_MINICRITICAL );
 		}
 		
 		// Notify the damaging weapon.
@@ -4192,6 +4301,39 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				EmitSound_t params;
 				params.m_flSoundTime = 0;
 				params.m_pSoundName = "TFPlayer.CritHit";
+				EmitSound( filter, pAttacker->entindex(), params );
+			}
+
+			// Burn sounds are handled in ConditionThink()
+			if ( !(bitsDamage & DMG_BURN ) )
+			{
+				SpeakConceptIfAllowed( MP_CONCEPT_HURT, "damagecritical:1" );
+			}
+		}
+		else if ( bitsDamage & DMG_MINICRITICAL )
+		{
+			if ( bDebug )
+			{
+				Warning( "    MINI-CRITICAL!\n");
+			}
+
+			flDamage = info.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
+
+			// Show the attacker, unless the target is a disguised spy
+			if ( pAttacker && pAttacker->IsPlayer() && !m_Shared.InCond( TF_COND_DISGUISED ) )
+			{
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
+				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
+
+				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+				EmitSound_t params;
+				params.m_flSoundTime = 0;
+				params.m_pSoundName = "TFPlayer.CritHitMini";
 				EmitSound( filter, pAttacker->entindex(), params );
 			}
 
@@ -4528,10 +4670,27 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pWeapon = info.GetWeapon();
 
+	// If this is an object get the builder
+	if ( pAttacker->IsBaseObject() )
+	{
+		CBaseObject *pObject = static_cast< CBaseObject * >( pAttacker );
+		pAttacker = pObject->GetBuilder();
+	}
+
+	CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
+
 	Vector vecDir = vec3_origin;
 	if ( pInflictor )
 	{
-		vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
+		// Huntsman should not do too much knockback
+		if ( pTFWeapon && pTFWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
+		{
+			vecDir = -info.GetDamageForce();
+		}
+		else
+		{
+			vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
+		}
 		VectorNormalize( vecDir );
 	}
 	g_vecAttackDir = vecDir;
@@ -4604,7 +4763,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( bIgniting )
 	{
-		CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
 		m_Shared.Burn( ToTFPlayer( pAttacker ), pTFWeapon );
 	}
 
@@ -4616,6 +4774,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		event->SetInt( "health", max( 0, m_iHealth ) );
 		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
 		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+		event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
 
 		// HLTV event priority, not transmitted
 		event->SetInt( "priority", 5 );	
@@ -4635,7 +4794,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	}
 
 	//No bleeding while invul or disguised.
-	bool bBleed = ( ( m_Shared.InCond( TF_COND_DISGUISED ) == false || m_Shared.GetDisguiseTeam() == GetTeamNumber() ) &&
+	bool bBleed = ( ( m_Shared.InCond( TF_COND_DISGUISED ) == false || m_Shared.InCond( TF_COND_PHASE ) == false || m_Shared.GetDisguiseTeam() == GetTeamNumber() ) &&
 		m_Shared.IsInvulnerable() == false );
 	if ( bBleed && pAttacker->IsPlayer() )
 	{
@@ -4930,11 +5089,38 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 			CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
 			if ( pWeapon )
 			{
+				// Apply on-kill effects.
 				float flCritOnKill = 0.0f;
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flCritOnKill, add_onkill_critboost_time );
 				if ( flCritOnKill )
 				{
 					m_Shared.AddCond( TF_COND_CRITBOOSTED_ON_KILL, flCritOnKill );
+				}
+
+				float flMiniCritOnKill = 0.0f;
+				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flMiniCritOnKill, add_onkill_minicritboost_time );
+				if ( flMiniCritOnKill )
+				{
+					m_Shared.AddCond( TF_COND_MINICRITBOOSTED_ON_KILL, flMiniCritOnKill );
+				}
+
+				float flHealthOnKill = 0.0f;
+				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flHealthOnKill, heal_on_kill );
+				if( flHealthOnKill )
+				{
+					int iHealthRestored = TakeHealth( flHealthOnKill, DMG_GENERIC );
+					if (iHealthRestored)
+					{
+						IGameEvent *event = gameeventmanager->CreateEvent("player_healonhit");
+				
+						if ( event )
+						{
+							event->SetInt( "amount", iHealthRestored );
+							event->SetInt( "entindex", entindex() );
+					
+							gameeventmanager->FireEvent( event );
+						}
+					}
 				}
 			}
 		}
@@ -4974,23 +5160,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 
 		CFmtStrN<128> modifiers( "%s,%s,victimclass:%s", pszCustomDeath, pszDomination, g_aPlayerClassNames_NonLocalized[TF_CLASS_UNDEFINED] );
 		SpeakConceptIfAllowed( MP_CONCEPT_KILLED_PLAYER, modifiers );
-			
-		if ( IsAlive() )
-		{
-			m_Shared.IncKillstreak();
-
-			// Apply on-kill effects.
-			CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
-			if ( pWeapon )
-			{
-				float flCritOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flCritOnKill, add_onkill_critboost_time );
-				if ( flCritOnKill )
-				{
-					m_Shared.AddCond( TF_COND_CRITBOOSTED_ON_KILL, flCritOnKill );
-				}
-			}
-		}
  	}
 }
 
@@ -5338,6 +5507,11 @@ bool CTFPlayer::PlayDeathAnimation( const CTakeDamageInfo &info, CTakeDamageInfo
 	}
 	// Check for a spy backstab. (Currently only on Sniper.)
 	else if ( pAttacker->GetPlayerClass()->IsClass( TF_CLASS_SPY ) && ( info.GetDamageCustom() == TF_DMG_CUSTOM_BACKSTAB ) )
+	{
+		bPlayDeathAnim = true;
+	}
+	// Check for a sword kill. (Currently only on Demo.)
+	else if ( pAttacker->GetPlayerClass()->IsClass( TF_CLASS_DEMOMAN ) && ( info.GetDamageCustom() == TF_DMG_CUSTOM_DECAPITATION ) )
 	{
 		bPlayDeathAnim = true;
 	}
@@ -7045,7 +7219,7 @@ void CTFPlayer::PainSound( const CTakeDamageInfo &info )
 	}
 
 	// play a crit sound to the victim ( us )
-	if ( info.GetDamageType() & DMG_CRITICAL )
+	if ( info.GetDamageType() & DMG_CRITICAL || info.GetDamageType() & DMG_MINICRITICAL )
 	{
 		flPainLength = PlayCritReceivedSound();
 
@@ -8036,17 +8210,17 @@ void CTFPlayer::Taunt( void )
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/sniper/low/taunt04.vcd" ) == 0 )
 		{
-			m_flTauntAttackTime = gpGlobals->curtime + 0.85f;
+			m_flTauntAttackTime = gpGlobals->curtime + 0.75f;
 			m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_IMPALE;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/medic/low/taunt08.vcd" ) == 0 )
 		{
-			m_flTauntAttackTime = gpGlobals->curtime + 2.2;
+			m_flTauntAttackTime = gpGlobals->curtime + 2.35f;
 			m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_IMPALE;
 		} // we need the correct time for these
 		else if ( V_stricmp( szResponse, "scenes/player/medic/low/taunt06.vcd" ) == 0 )
 		{
-			m_flTauntAttackTime = gpGlobals->curtime + 1.2f;
+			m_flTauntAttackTime = gpGlobals->curtime + 0.35;
 			m_iTauntAttack = TAUNTATK_MEDIC_INHALE;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/scout/low/taunt05_v1.vcd" ) == 0 )
@@ -8103,6 +8277,10 @@ void CTFPlayer::DoTauntAttack( void )
 		case TAUNTATK_SPY_FENCING_SLASH_B:
 		case TAUNTATK_SPY_FENCING_STAB:
 		case TAUNTATK_SCOUT_GRAND_SLAM:
+		case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
+		case TAUNTATK_SNIPER_ARROW_STAB_KILL:
+		case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
+		case TAUNTATK_MEDIC_UBERSLICE_KILL:
 		case TAUNTATK_DEMOMAN_BARBARIAN_SWING:
 		{
 			Vector vecAttackDir = BodyDirection2D();
@@ -8137,6 +8315,29 @@ void CTFPlayer::DoTauntAttack( void )
 				nDamageType = DMG_SLASH;
 				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_FENCING;
 				break;
+			case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
+ 				vecForce *= 0.0f;
+ 				flDamage = 1.0f;
+ 				nDamageType = DMG_SLASH;
+ 				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
+ 				break;
+ 			case TAUNTATK_SNIPER_ARROW_STAB_KILL:
+ 				vecForce *= -1000.0f;
+ 				flDamage = 500.0f;
+ 				nDamageType = DMG_SLASH;
+ 				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
+			case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
+				vecForce *= 0.0f;
+				flDamage = 1.0f;
+				nDamageType = DMG_SLASH;
+				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
+				break;
+			case TAUNTATK_MEDIC_UBERSLICE_KILL:
+				vecForce *= -1000.0f;
+				flDamage = 500.0f;
+				nDamageType = DMG_SLASH;
+				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
+				break;
 			case TAUNTATK_DEMOMAN_BARBARIAN_SWING:
 				vecForce *= 20000;
 				flDamage = 500;
@@ -8162,6 +8363,16 @@ void CTFPlayer::DoTauntAttack( void )
 				m_flTauntAttackTime = gpGlobals->curtime + 1.73;
 				m_iTauntAttack = TAUNTATK_SPY_FENCING_STAB;
 			}
+			else if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE )
+ 			{
+				m_flTauntAttackTime = gpGlobals->curtime + 1.25;
+ 				m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_KILL;
+ 			}
+			else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE )
+			{
+				m_flTauntAttackTime = gpGlobals->curtime + 0.70;
+				m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_KILL;
+			}
 
 			CBaseEntity *pList[256];
 
@@ -8178,6 +8389,26 @@ void CTFPlayer::DoTauntAttack( void )
 
 				if ( pEntity == this || !pEntity->IsAlive() || InSameTeam( pEntity ) || !FVisible( pEntity, MASK_SOLID ) )
 					continue;
+				/*
+				if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE )
+ 				{
+ 					CTFPlayer *pOther = ToTFPlayer( pEntity );
+ 					if( pOther )
+ 					{
+ 						pOther->Stun();
+ 					}
+ 				}
+ */
+				if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
+				{
+					CWeaponMedigun *pMedigun = GetMedigun();
+
+					if ( pMedigun )
+					{
+						// Successful kills gain +50% ubercharge
+						pMedigun->AddCharge( 0.50 );
+					}
+				}
 
 				Vector vecDamagePos = WorldSpaceCenter();
 				vecDamagePos += ( pEntity->WorldSpaceCenter() - vecDamagePos ) * 0.75f;
@@ -8264,103 +8495,10 @@ void CTFPlayer::DoTauntAttack( void )
 		}
 		case TAUNTATK_MEDIC_INHALE:
 		{
-			this->TakeHealth( 11, DMG_GENERIC );
-
+			// Taunt heals 10 health over the duration
+			TakeHealth( 1.0f, DMG_GENERIC );
+			m_flTauntAttackTime = gpGlobals->curtime + 0.38;
 			m_iTauntAttack = TAUNTATK_MEDIC_INHALE;
-			m_flTauntAttackTime = gpGlobals->curtime + 1.1f;
-
-			break;
-		}
-		case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
-		case TAUNTATK_SNIPER_ARROW_STAB_KILL:
-		case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
-		case TAUNTATK_MEDIC_UBERSLICE_KILL:
-		case TAUNTATK_ENGINEER_ARM_IMPALE:
-		case TAUNTATK_ENGINEER_ARM_KILL:
-		{
-			// Trace a bit ahead.
-			Vector vecSrc, vecShotDir, vecEnd;
-			QAngle angShot = EyeAngles();
-			AngleVectors( angShot, &vecShotDir );
-			vecSrc = Weapon_ShootPosition();
-			vecEnd = vecSrc + vecShotDir * 128;
-
-			trace_t tr;
-			UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID, this, COLLISION_GROUP_PLAYER, &tr );
-
-			if ( tr.fraction < 1.0f )
-			{
-				CTFPlayer *pPlayer = ToTFPlayer( tr.m_pEnt );
-				if ( pPlayer && !InSameTeam( pPlayer ) )
-				{
-					// First hit stuns, next hit kills.
-					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE );
-					Vector vecForce, vecDamagePos;
-
-					if ( bStun )
-					{
-						vecForce == vec3_origin;
-					}
-					else
-					{
-						// Pull them towards us.
-						Vector vecDir = WorldSpaceCenter() - pPlayer->WorldSpaceCenter();
-						VectorNormalize( vecDir );
-						vecForce = vecDir * 12000;
-					}
-
-					float flDamage = bStun ? 1.0f : 500.0f;
-					int nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
-					int iCustomDamage = 0;
-
-					switch ( iTauntType )
-					{
-					case TAUNTATK_SNIPER_ARROW_STAB_KILL:
-						nDamageType = DMG_CLUB;
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
-						break;
-					case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
-						nDamageType = DMG_SLASH;
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
-						break;
-					case TAUNTATK_ENGINEER_ARM_KILL:
-						nDamageType = DMG_SLASH;
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL;
-						break;
-					default:
-						nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
-						iCustomDamage = 0;
-						break;
-					}
-
-					vecDamagePos = tr.endpos;
-
-					if ( bStun )
-					{
-						pPlayer->m_Shared.StunPlayer( 3.0f, this );
-					}
-				
-					CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iCustomDamage );
-					pPlayer->TakeDamage( info );
-				}
-
-				if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE )
-				{
-					m_flTauntAttackTime = gpGlobals->curtime + 1.3f;
-					m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_KILL;
-				}
-				else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE )
-				{
-					m_flTauntAttackTime = gpGlobals->curtime + 0.75f;
-					m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_KILL;
-				}
-				else if ( iTauntType == TAUNTATK_ENGINEER_ARM_IMPALE )
-				{
-					m_flTauntAttackTime = gpGlobals->curtime + 1.75f;
-					m_iTauntAttack = TAUNTATK_ENGINEER_ARM_KILL;
-				}
-			}
-
 			break;
 		}
 	}
@@ -8384,9 +8522,24 @@ void CTFPlayer::ClearTauntAttack( void )
 		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
 		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX_DRINK ) )
 		{
-			m_Shared.AddCond( TF_COND_PHASE, 8.0f );
-			SpeakConceptIfAllowed( MP_CONCEPT_DODGING );
-			m_angTauntCamera = EyeAngles();
+			int iType = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iType, set_weapon_mode );
+			if ( iType == 0 ) // it's a bonk
+			{
+				m_Shared.AddCond( TF_COND_PHASE, 8.0f );
+				SpeakConceptIfAllowed( MP_CONCEPT_DODGING );
+				m_angTauntCamera = EyeAngles();
+			}
+			else if ( iType == 1 )
+			{ // it's a bonk again
+				m_Shared.AddCond( TF_COND_PHASE, 8.0f );
+				SpeakConceptIfAllowed( MP_CONCEPT_DODGING );
+				m_angTauntCamera = EyeAngles();
+			} // it's a cola
+			else if ( iType == 2 )
+			{
+				m_Shared.AddCond( TF_COND_MINICRITBOOSTED_ON_KILL, 8.0f );
+			}
 		}
 	}
 
@@ -8487,10 +8640,10 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 			criteriaSet.AppendCriteria( "weaponmode", "pda" );
 			break;
 		case TF_WPN_TYPE_ITEM1:
-			criteriaSet.AppendCriteria("weaponmode", "item1");
+			criteriaSet.AppendCriteria( "weaponmode", "item1" );
 			break;
 		case TF_WPN_TYPE_ITEM2:
-			criteriaSet.AppendCriteria("weaponmode", "item2");
+			criteriaSet.AppendCriteria( "weaponmode", "item2" );
 			break;
 		}
 
@@ -8502,7 +8655,7 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 				criteriaSet.AppendCriteria( "sniperzoomed", "1" );
 			}
 		}
-		else if ( pActiveWeapon->GetWeaponID() == TF_WEAPON_MINIGUN || pActiveWeapon->GetWeaponID() == TF_WEAPON_MINIGUN_TOMISLAV )
+		else if ( pActiveWeapon->GetWeaponID() == TF_WEAPON_MINIGUN )
 		{
 			CTFMinigun *pMinigun = dynamic_cast<CTFMinigun*>(pActiveWeapon);
 			if ( pMinigun )
@@ -9447,7 +9600,7 @@ uint64 powerplay_ids[] =
 	76561198177327375 ^ powerplaymask,		// ispuddy
 	76561198145444029 ^ powerplaymask,		// train
 	76561198080213691 ^ powerplaymask,		// alex
-	76561193821586408 ^ powerplaymask,		// swox
+	76561198116553704 ^ powerplaymask,		// swox
 	76561193736602772 ^ powerplaymask,		// leakdealer
 	76561198009837726 ^ powerplaymask		// richter
 };
