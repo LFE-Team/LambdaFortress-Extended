@@ -2622,7 +2622,7 @@ int CTFPlayer::GetAutoTeam( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 {
-	if ( !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
+	if (!TFGameRules()->IsAnyCoOp() && !TFGameRules()->IsZombieSurvival())
 	{
 		int iTeam = TF_TEAM_RED;
 		if ( stricmp( pTeamName, "auto" ) == 0 )
