@@ -190,6 +190,10 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	// Accessor for reload bodygroup switching
  	virtual void SwitchBodyGroups( void ) {}
 	virtual void UpdatePlayerBodygroups( void );
+#if defined( CLIENT_DLL )
+	virtual void UpdateExtraWearables( void );
+	CHandle<C_TFWeaponAttachmentModel> m_hAttachmentModel;
+#endif
 
 	// Sound.
 	bool PlayEmptySound();

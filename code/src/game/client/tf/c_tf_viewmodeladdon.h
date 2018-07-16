@@ -10,6 +10,7 @@
 #include "cbase.h"
 #include "c_baseanimating.h"
 #include "c_baseviewmodel.h"
+#include "c_playerattachedmodel.h"
 
 class C_TFViewModel;
 
@@ -26,12 +27,14 @@ public:
 
 	void SetViewmodel( C_TFViewModel *vm );
 
+	void UpdateExtraWearables( void );
+
 	CHandle< C_TFViewModel > m_viewmodel;
+	CHandle< C_TFWeaponAttachmentModel > m_hAttachmentModel;
 
 	virtual bool			IsViewModel() const { return true; }
 	virtual RenderGroup_t	GetRenderGroup( void ) { return RENDER_GROUP_VIEW_MODEL_TRANSLUCENT; }
 
 	virtual C_BaseEntity	*GetItemTintColorOwner( void ) { return GetOwner(); }
 };
-
 #endif

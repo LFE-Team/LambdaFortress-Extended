@@ -715,7 +715,65 @@ void CTFWeaponBase::UpdatePlayerBodygroups( void )
 		BaseClass::UpdatePlayerBodygroups();
 	}
 }
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: i don't even know if this is the right place to put.
+//-----------------------------------------------------------------------------
+void CTFWeaponBase::UpdateExtraWearables( void )
+{
+	//C_ViewmodelAttachmentModel *pAttachment = GetViewmodelAddon();
+	C_TFWeaponAttachmentModel *pAttachedModel = m_hAttachmentModel.Get();
 
+	if ( m_Item.GetStaticData() && ( !m_Item.GetStaticData()->lfe_attached_models || m_iState == WEAPON_IS_ACTIVE ) )
+	{
+		if ( pAttachedModel )
+		{
+			if ( pAttachedModel->GetModelIndex() == modelinfo->GetModelIndex( m_Item.GetAttachedDisplayModel() ) )
+			{
+				pAttachedModel->m_nSkin = GetSkin();
+	
+				if ( C_BasePlayer::GetLocalPlayer() != GetOwner() ) // Spectator fix
+				{
+					pAttachedModel->FollowEntity( this );
+					pAttachedModel->m_nRenderFX = m_nRenderFX;
+					pAttachedModel->UpdateVisibility();
+				}
+				return; // we already have the correct add-on
+			}
+			else
+			{
+				if ( m_hAttachmentModel.Get() )
+				{
+					m_hAttachmentModel->SetModel( "" );
+					m_hAttachmentModel->Remove();
+				}
+			}
+		}
+
+		pAttachedModel = new C_TFWeaponAttachmentModel();
+
+		if ( pAttachedModel->InitializeAsClientEntity( m_Item.GetAttachedDisplayModel(), RENDER_GROUP_VIEW_MODEL_TRANSLUCENT ) == false )
+		{
+			pAttachedModel->Release();
+			return;
+		}
+
+		m_hAttachmentModel = pAttachedModel;
+
+		pAttachedModel->m_nSkin = GetSkin();
+		//pAttachedModel->SetOwner( GetOwner() );
+		pAttachedModel->FollowEntity( this );
+		pAttachedModel->UpdateVisibility();
+
+		/*
+		if ( pAttachment )
+		{
+			pAttachment->UpdateExtraWearables();
+		}
+		*/
+	}
+}
+#endif
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2590,6 +2648,8 @@ void CTFWeaponBase::OnDataChanged( DataUpdateType_t type )
 			}
 		}
 	}
+
+	UpdateExtraWearables();
 }
 
 //-----------------------------------------------------------------------------

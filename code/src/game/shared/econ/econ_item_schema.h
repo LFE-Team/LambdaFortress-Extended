@@ -197,6 +197,7 @@ public:
 	CUtlDict< bool, unsigned short > player_bodygroups;
 	CUtlMap< int, int > animation_replacement;
 	CUtlDict< const char*, unsigned short > playback_activity;
+	CUtlDict< const char*, unsigned short > attached_models;
 	CUtlDict< const char*, unsigned short > misc_info;
 	char aWeaponSounds[NUM_SHOOT_SOUND_TYPES][MAX_WEAPON_STRING];
 	//CUtlDict< EconItemStyle*, unsigned short > styles;
@@ -232,12 +233,14 @@ public:
 		image_inventory_size_h = 0;
 		CLEAR_STR(model_player);
 		CLEAR_STR(model_world);
+		CLEAR_STR(lfe_attached_models);
 		memset( model_player_per_class, 0, sizeof( model_player_per_class ) );
 		attach_to_hands = 0;
 		act_as_wearable = false;
 		hide_bodygroups_deployed_only = 0;
 		CLEAR_STR(mouse_pressed_sound);
 		CLEAR_STR(drop_sound);
+		flip_viewmodel = false;
 	}
 
 	EconItemVisuals *GetVisuals( int iTeamNum = TEAM_UNASSIGNED );
@@ -270,6 +273,7 @@ public:
 	int	 image_inventory_size_h;
 	char model_player[128];
 	char model_world[128];
+	char lfe_attached_models[128];
 	char model_player_per_class[TF_CLASS_COUNT_ALL][128];
 	int attach_to_hands;
 	bool act_as_wearable;
@@ -278,6 +282,7 @@ public:
 	EconItemVisuals visual[TF_TEAM_COUNT];
 	char mouse_pressed_sound[128];
 	char drop_sound[128];
+	bool flip_viewmodel;
 };
 
 #endif // ECON_ITEM_SCHEMA_H

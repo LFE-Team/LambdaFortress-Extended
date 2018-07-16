@@ -314,11 +314,11 @@ public:
 			if ( !V_stricmp( pVisualData->GetName(), "player_bodygroups" ) )
 			{
 				GET_VALUES_FAST_BOOL( pVisuals->player_bodygroups, pVisualData );
-			}
+			}/*
 			else if ( !V_stricmp( pVisualData->GetName(), "attached_models" ) )
 			{
-				// TODO
-			}
+				GET_VALUES_FAST_STRING( pVisuals->attached_models, pVisualData );
+			}*/
 			else if ( !V_stricmp( pVisualData->GetName(), "animation_replacement" ) )
 			{
 				for ( KeyValues *pKeyData = pVisualData->GetFirstSubKey(); pKeyData != NULL; pKeyData = pKeyData->GetNextKey() )
@@ -461,6 +461,7 @@ public:
 
 		GET_STRING( pItem, pData, model_player );
 		GET_STRING( pItem, pData, model_world );
+		GET_STRING( pItem, pData, lfe_attached_models );
 
 		GET_INT( pItem, pData, attach_to_hands );
 		GET_BOOL( pItem, pData, act_as_wearable );
@@ -468,6 +469,8 @@ public:
 
 		GET_STRING( pItem, pData, mouse_pressed_sound );
 		GET_STRING( pItem, pData, drop_sound );
+
+		GET_BOOL( pItem, pData, flip_viewmodel );
 
 		for ( KeyValues *pSubData = pData->GetFirstSubKey(); pSubData != NULL; pSubData = pSubData->GetNextKey() )
 		{
@@ -636,6 +639,9 @@ void CEconItemSchema::Precache( void )
 		if ( pItem->model_player[0] != '\0' )
 			CBaseEntity::PrecacheModel( pItem->model_player );
 
+		if ( pItem->lfe_attached_models[0] != '\0' )
+			CBaseEntity::PrecacheModel( pItem->lfe_attached_models );
+
 		for ( int iClass = 0; iClass < TF_CLASS_COUNT_ALL; iClass++ )
 		{
 			const char *pszModel = pItem->model_player_per_class[iClass];
@@ -657,6 +663,10 @@ void CEconItemSchema::Precache( void )
 				if ( pVisuals->aWeaponSounds[i][0] != '\0' )
 					CBaseEntity::PrecacheScriptSound( pVisuals->aWeaponSounds[i] );
 			}
+/*
+			if ( pVisuals->attached_models[0] != '\0' )
+				CBaseEntity::PrecacheModel( pItem->attached_models );
+*/
 		}
 
 		// Cache all attrbute names.

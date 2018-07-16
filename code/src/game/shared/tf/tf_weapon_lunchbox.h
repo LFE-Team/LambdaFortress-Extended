@@ -46,10 +46,10 @@ private:
 #endif
 };
 
-class CTFLunchBox_Drink : public CTFWeaponBase
+class CTFLunchBox_Drink : public CTFLunchBox
 {
 public:
-	DECLARE_CLASS( CTFLunchBox_Drink, CTFWeaponBase );
+	DECLARE_CLASS( CTFLunchBox_Drink, CTFLunchBox );
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 

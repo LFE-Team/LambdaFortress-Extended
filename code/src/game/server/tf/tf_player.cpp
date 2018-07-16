@@ -3845,13 +3845,29 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		// Make bullet impacts
 		g_pEffects->Ricochet( ptr->endpos - (vecDir * 8), -vecDir );
 	}
-	else
-	{	
-		// Since this code only runs on the server, make sure it shows the tempents it creates.
-		CDisablePredictionFiltering disabler;
+	else if( m_Shared.InCond( TF_COND_PHASE ) )
+	{
+		CEffectData	data;
+		data.m_nHitBox = GetParticleSystemIndex( "miss_text" );
+		data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+		data.m_vAngles = vec3_angle;
+		data.m_nEntIndex = 0;
 
-		// This does smaller splotches on the guy and splats blood on the world.
-		TraceBleed( info_modified.GetDamage(), vecDir, ptr, info_modified.GetDamageType() );
+		CSingleUserRecipientFilter filter( ToBasePlayer( info.GetAttacker() ) );
+		te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+		SpeakConceptIfAllowed( MP_CONCEPT_DODGE_SHOT );
+	}
+	else
+	{
+		if ( !m_Shared.InCond( TF_COND_PHASE ) )
+		{
+			// Since this code only runs on the server, make sure it shows the tempents it creates.
+			CDisablePredictionFiltering disabler;
+
+			// This does smaller splotches on the guy and splats blood on the world.
+			TraceBleed( info_modified.GetDamage(), vecDir, ptr, info_modified.GetDamageType() );
+		}
 	}
 	/*
 	if ( pTFAttacker && pTFAttacker->GetActiveTFWeapon() && pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_HAMMERFISTS )
@@ -5040,6 +5056,8 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 	if ( InSameTeam( pVictim ) )
 		return;
 
+	CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
+
 	if ( pVictim->IsPlayer() )
 	{
 		CTFPlayer *pTFVictim = ToTFPlayer(pVictim);
@@ -5086,7 +5104,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 			m_Shared.IncKillstreak();
 
 			// Apply on-kill effects.
-			CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
 			if ( pWeapon )
 			{
 				// Apply on-kill effects.
@@ -5160,6 +5177,49 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 
 		CFmtStrN<128> modifiers( "%s,%s,victimclass:%s", pszCustomDeath, pszDomination, g_aPlayerClassNames_NonLocalized[TF_CLASS_UNDEFINED] );
 		SpeakConceptIfAllowed( MP_CONCEPT_KILLED_PLAYER, modifiers );
+
+		if ( IsAlive() )
+		{
+			m_Shared.IncKillstreak();
+
+			// Apply on-kill effects.
+			if ( pWeapon )
+			{
+				// Apply on-kill effects.
+				float flCritOnKill = 0.0f;
+				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flCritOnKill, add_onkill_critboost_time );
+				if ( flCritOnKill )
+				{
+					m_Shared.AddCond( TF_COND_CRITBOOSTED_ON_KILL, flCritOnKill );
+				}
+
+				float flMiniCritOnKill = 0.0f;
+				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flMiniCritOnKill, add_onkill_minicritboost_time );
+				if ( flMiniCritOnKill )
+				{
+					m_Shared.AddCond( TF_COND_MINICRITBOOSTED_ON_KILL, flMiniCritOnKill );
+				}
+
+				float flHealthOnKill = 0.0f;
+				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flHealthOnKill, heal_on_kill );
+				if( flHealthOnKill )
+				{
+					int iHealthRestored = TakeHealth( flHealthOnKill, DMG_GENERIC );
+					if (iHealthRestored)
+					{
+						IGameEvent *event = gameeventmanager->CreateEvent("player_healonhit");
+				
+						if ( event )
+						{
+							event->SetInt( "amount", iHealthRestored );
+							event->SetInt( "entindex", entindex() );
+					
+							gameeventmanager->FireEvent( event );
+						}
+					}
+				}
+			}
+		}
  	}
 }
 

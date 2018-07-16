@@ -139,6 +139,29 @@ const char *CEconItemView::GetPlayerDisplayModel( int iClass/* = 0*/ ) const
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: the crappy alternative fix
+//-----------------------------------------------------------------------------
+const char *CEconItemView::GetAttachedDisplayModel( int iClass/* = 0*/ ) const
+{
+	CEconItemDefinition *pStatic = GetStaticData();
+
+	const char *pszModelName = NULL;
+
+	if ( pStatic )
+	{
+		pszModelName = pStatic->lfe_attached_models;
+
+		// Assuming we're using same model for both 1st person and 3rd person view.
+		if ( !pszModelName[0] && pStatic->attach_to_hands == 1 )
+		{
+			pszModelName = pStatic->lfe_attached_models;
+		}
+	}
+
+	return pszModelName;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 const char* CEconItemView::GetEntityName()

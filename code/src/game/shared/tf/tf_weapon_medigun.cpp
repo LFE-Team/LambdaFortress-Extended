@@ -60,8 +60,8 @@ MedigunParticles_t g_MedigunParticles[TF_MEDIGUN_COUNT] =
 	// Kritzkrieg
 	{
 		"medicgun_invulnstatus_fullcharge_%s",
-		"kritz_beam_%s",
-		"kritz_beam_%s_invun"
+		"medicgun_beam_attrib_overheal_%s",
+		"medicgun_beam_%s_invun"
 	},
 	// Quick-Fix
 	{

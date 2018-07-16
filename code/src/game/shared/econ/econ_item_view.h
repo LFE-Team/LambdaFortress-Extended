@@ -37,6 +37,7 @@ public:
 
 	const char* GetWorldDisplayModel( int iClass = 0 ) const;
 	const char* GetPlayerDisplayModel( int iClass = 0 ) const;
+	const char* GetAttachedDisplayModel( int iClass = 0 ) const;
 	const char* GetEntityName( void );
 	bool IsCosmetic( void );
 	int GetAnimationSlot( void );

@@ -2481,7 +2481,11 @@ void CTFPlayerShared::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 		{
 			bShouldShow = false;
 		}
-		else if ( !IsCritBoosted() || !InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
+		else if ( !IsCritBoosted() )
+		{
+			bShouldShow = false;
+		}
+		else if ( !InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
 		{
 			bShouldShow = false;
 		}

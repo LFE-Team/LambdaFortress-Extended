@@ -31,9 +31,9 @@ void CTFLunchBox::PrimaryAttack( void )
 	if ( !pOwner )
 		return;
 
-#ifdef GAME_DLL
 	if (pOwner->GetGroundEntity() != NULL)
 	{
+#ifdef GAME_DLL
 		pOwner->Taunt();
 
 		//ApplyBiteEffects();
@@ -42,16 +42,15 @@ void CTFLunchBox::PrimaryAttack( void )
 			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
 			pOwner->SwitchToNextBestWeapon(this);
 			StartEffectBarRegen();
-		}
-	}
-	
+		}	
 #else
-	C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
-	if ( pAttach )
-	{
-		pAttach->SetBodygroup( SANDVICH_BODYGROUP_BITE, SANDVICH_STATE_BITTEN );
-	}
+		C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+		if ( pAttach )
+		{
+			pAttach->SetBodygroup( SANDVICH_BODYGROUP_BITE, SANDVICH_STATE_BITTEN );
+		}
 #endif
+	}
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 }
@@ -136,7 +135,6 @@ void CTFLunchBox::ApplyBiteEffects( void )
 
 	if ( pOwner )
 	{
-		//
 		pOwner->TakeHealth( 80, DMG_GENERIC );
 		//pOwner->TakeHealth( 120, DMG_GENERIC );
 		//pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
@@ -176,7 +174,7 @@ bool CTFLunchBox_Drink::Deploy( void )
 	}
 #endif
 
-	return BaseClass::Deploy();
+	return BaseClass::BaseClass::Deploy();
 }
 
 //-----------------------------------------------------------------------------
@@ -189,9 +187,9 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 	{
 		return;
 	}
+
 	if (pOwner->GetGroundEntity() != NULL)
 	{
-
 #ifdef GAME_DLL
 		pOwner->Taunt();
 #endif
@@ -214,7 +212,7 @@ void CTFLunchBox_Drink::Precache( void )
 {
 	PrecacheParticleSystem( "energydrink_splash" );
 	PrecacheParticleSystem( "energydrink_cola_splash" );
-	BaseClass::Precache();
+	BaseClass::BaseClass::Precache();
 }
 
 //-----------------------------------------------------------------------------
