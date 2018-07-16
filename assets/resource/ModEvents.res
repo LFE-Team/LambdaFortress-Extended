@@ -692,6 +692,8 @@
 		"minicrit" "bool"
 		"allseecrit" "bool"
 		"weaponid" "short"
+		"victim_index"	"short"	// entindex who died
+		"attacker_index"	"short"		// entindex that killed		
 		"bonuseffect" "byte"
 	}
 	

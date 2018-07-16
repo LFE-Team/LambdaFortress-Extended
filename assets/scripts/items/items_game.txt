@@ -5738,6 +5738,7 @@
 				"sound_burst"	"Weapon_Tomislav.FireCrit"
 				"sound_special1"	"Weapon_Tomislav.WindUp"
 				"sound_special2"	"Weapon_Tomislav.WindDown"
+				"sound_special3"	"Weapon_Tomislav.Spin"
 				"styles"
 				{
 					"0"
