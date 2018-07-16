@@ -3248,7 +3248,7 @@
 			"image_inventory"	"backpack/weapons/c_models/c_spy_watch/parts/c_spy_watch"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_spy_watch.mdl"
+			"model_player"	"models/weapons/v_models/v_watch_spy.mdl"
 			"used_by_classes"
 			{
 				"spy"	"1"
