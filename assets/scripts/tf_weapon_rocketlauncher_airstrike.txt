@@ -1,7 +1,7 @@
 WeaponData
 {
 	// Attributes Base.
-	"printname"		"#TF_Unique_Achievement_RocketLauncher"
+	"printname"		"#TF_Weapon_Airstrike"
 	"BuiltRightHanded"	"0"
 	"weight"		"3"
 	"WeaponType"		"primary"
@@ -35,7 +35,7 @@ WeaponData
 	"ExplosionPlayerEffect"		"ExplosionCore_MidAir"
 	"ExplosionWaterEffect"		"ExplosionCore_MidAir_underwater"
 
-	"ExplosionSound"	"Weapon_RPG_DirectHit.Explode"
+	"ExplosionSound"	"Weapon_Airstrike.Explosion"
 
 	// Animation.
 	"viewmodel"		"models/weapons/v_models/v_rocketlauncher_soldier.mdl"
@@ -46,7 +46,7 @@ WeaponData
 	// Max of 16 per category (ie. max 16 "single_shot" sounds).
 	SoundData
 	{
-		"single_shot"	"Weapon_RPG_DirectHit.Single"
+		"single_shot"	"Weapon_Airstrike.AltFire"
 		"burst"		"Weapon_RPG_DirectHit.SingleCrit"
 //		"reload"		"Weapon_RPG.WorldReload"
 	}

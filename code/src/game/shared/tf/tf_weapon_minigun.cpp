@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2003, Valve Corporation, All rights reserved. =======
+//====== Copyright Â© 1996-2003, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -557,9 +557,7 @@ void CTFMinigun::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternio
 		/*
 		RadianEuler a;
 		QuaternionAngles( q[iBarrelBone], a );
-
 		a.x = m_flBarrelAngle;
-
 		AngleQuaternion( a, q[iBarrelBone] );
 		*/
 
@@ -802,6 +800,9 @@ float CTFMinigun::GetBarrelRotation( void )
 //-----------------------------------------------------------------------------
 void CTFMinigun::CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles )
 {
+	// Stop reload from fucing states up -tf2vintage
+	pCmd->buttons &= ~IN_RELOAD;
+
 	// Prevent jumping while firing
 	if ( m_iWeaponState != AC_STATE_IDLE )
 	{

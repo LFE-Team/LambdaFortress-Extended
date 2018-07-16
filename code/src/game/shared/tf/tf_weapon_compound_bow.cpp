@@ -427,6 +427,9 @@ float CTFCompoundBow::GetChargeMaxTime( void )
 //-----------------------------------------------------------------------------
 void CTFCompoundBow::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
 {
+	// Stop reload from fucing states up -tf2vintage
+	pCmd->buttons &= ~IN_RELOAD;
+
 	// Prevent jumping while aiming
 	if (GetTFPlayerOwner()->m_Shared.InCond(TF_COND_AIMING))
 	{

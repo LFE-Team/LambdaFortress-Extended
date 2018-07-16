@@ -2438,6 +2438,7 @@
 
 		"weapon_flamethrower"
 		{
+			"prefab"	"weapon_baseflamethrower"
 			"capabilities"
 			{
 				"nameable"	"1"
@@ -8258,9 +8259,69 @@
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
 		}
+		"9000"
+		{
+			"name"	"Gravity Gun"
+			"prefab"	"valve"
+			"item_class"	"tf_weapon_physcannon"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+				"can_collect"	"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_deal_critical_damage"	"1"
+				"can_deal_posthumous_damage"	"1"
+				"can_deal_long_distance_damage"	"1"
+				"can_deal_taunt_damage" "1"
+				"can_be_festivized"		"1"
+			}
+			"show_in_armory"	"0"
+			"item_type_name"	"#TF_Weapon_Physcannon"
+			"item_name"	"#TF_Weapon_Physcannon"
+			"item_logname"	"physcannon"
+			"item_iconname"	"physcannon"
+			"item_slot"	"action"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"99"
+			"max_ilevel"	"99"
+			"anim_slot" "secondary"
+			"inspect_panel_dist" "45"
+			"attach_to_hands"	"0"
+			"image_inventory"	"sprites/bucket_physcannon"
+			"model_player"		"models/weapons/v_physcannon.mdl"
+			"model_world"		"models/weapons/w_Physics.mdl"
+			"used_by_classes"
+			{
+				"scout"	"1"
+				"sniper"	"1"
+				"soldier"	"1"
+				"demoman"	"1"
+				"medic"	"1"
+				"heavy"	"1"
+				"pyro" "1"
+				"spy" "1"
+				"engineer" "1"
+			}
+			"attributes"
+			{
+				"special taunt"
+				{
+					"attribute_class"	"special_taunt"
+					"value" "1"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
+			"drop_sound"		"ui/item_heavy_gun_drop.wav"
+		}
 		"9001"
 		{
-			"name"	"Fake Valve Rocket Launcher"
+			"name"	"Extended Rocket Launcher"
 			"prefab"	"weapon_rocketlauncher"
 			"baseitem"	"0"
 			"attributes"
@@ -8299,6 +8360,56 @@
 				{
 					"attribute_class"	"mult_player_movespeed"
 					"value"	"2.0"
+				}
+			}
+		}
+		"9002"
+		{
+			"name"	"Extended Flamethrower"
+			"prefab"	"weapon_flamethrower"
+			"baseitem"	"0"
+			"lfe_attached_models"	"models/weapons/c_models/c_flamethrower/c_flamethrower_pilotlight.mdl"
+			"attributes"
+			{
+				"damage bonus"
+				{
+					"attribute_class"	"mult_dmg"
+					"value"	"10100.0"
+				}
+				"clip size bonus"
+				{
+					"attribute_class"	"mult_clipsize"
+					"value"	"1100.0"
+				}
+				"fire rate bonus"
+				{
+					"attribute_class"	"mult_postfiredelay"
+					"value"	"0.25"
+				}
+				"heal on hit for slowfire"
+				{
+					"attribute_class"	"add_onhit_addhealth"
+					"value"	"250.0"
+				}
+				"critboost on kill"
+				{
+					"attribute_class"	"add_onkill_critboost_time"
+					"value"	"10.0"
+				}
+				"Projectile speed increased"
+				{
+					"atribute_class"	"mult_projectile_speed"
+					"value"	"1.5"
+				}
+				"move speed bonus"
+				{
+					"attribute_class"	"mult_player_movespeed"
+					"value"	"2.0"
+				}
+				"SPELL: Halloween green flames"
+				{
+					"attribute_class"	"halloween_green_flames"
+					"value"	"1"
 				}
 			}
 		}

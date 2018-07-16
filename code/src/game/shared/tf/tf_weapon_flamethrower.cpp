@@ -39,18 +39,19 @@
 	#include "npc_antlion.h"
 	#include "ai_condition.h"
 	#include "props.h"
+	#include "soundent.h"
 
-	ConVar	tf_debug_flamethrower("tf_debug_flamethrower", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Visualize the flamethrower damage." );
-	ConVar  tf_flamethrower_velocity( "tf_flamethrower_velocity", "2300.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Initial velocity of flame damage entities." );
-	ConVar	tf_flamethrower_drag("tf_flamethrower_drag", "0.89", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Air drag of flame damage entities." );
-	ConVar	tf_flamethrower_float("tf_flamethrower_float", "50.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Upward float velocity of flame damage entities." );
-	ConVar  tf_flamethrower_flametime("tf_flamethrower_flametime", "0.5", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to live of flame damage entities." );
-	ConVar  tf_flamethrower_vecrand("tf_flamethrower_vecrand", "0.05", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Random vector added to initial velocity of flame damage entities." );
-	ConVar  tf_flamethrower_boxsize("tf_flamethrower_boxsize", "8.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Size of flame damage entities." );
-	ConVar  tf_flamethrower_maxdamagedist("tf_flamethrower_maxdamagedist", "350.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Maximum damage distance for flamethrower." );
-	ConVar  tf_flamethrower_shortrangedamagemultiplier("tf_flamethrower_shortrangedamagemultiplier", "1.2", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Damage multiplier for close-in flamethrower damage." );
-	ConVar  tf_flamethrower_velocityfadestart("tf_flamethrower_velocityfadestart", ".3", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time at which attacker's velocity contribution starts to fade." );
-	ConVar  tf_flamethrower_velocityfadeend("tf_flamethrower_velocityfadeend", ".5", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time at which attacker's velocity contribution finishes fading." );
+	ConVar	tf_debug_flamethrower("tf_debug_flamethrower", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Visualize the flamethrower damage." );
+	ConVar  tf_flamethrower_velocity( "tf_flamethrower_velocity", "2450.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Initial velocity of flame damage entities." ); // old = 2300.0
+	ConVar	tf_flamethrower_drag("tf_flamethrower_drag", "0.87", FCVAR_CHEAT | FCVAR_REPLICATED, "Air drag of flame damage entities." );
+	ConVar	tf_flamethrower_float("tf_flamethrower_float", "50.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Upward float velocity of flame damage entities." );
+	ConVar  tf_flamethrower_flametime("tf_flamethrower_flametime", "0.6", FCVAR_CHEAT | FCVAR_REPLICATED, "Time to live of flame damage entities." );
+	ConVar  tf_flamethrower_vecrand("tf_flamethrower_vecrand", "0.05", FCVAR_CHEAT | FCVAR_REPLICATED, "Random vector added to initial velocity of flame damage entities." );
+	ConVar  tf_flamethrower_boxsize("tf_flamethrower_boxsize", "12.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Size of flame damage entities." );
+	ConVar  tf_flamethrower_maxdamagedist("tf_flamethrower_maxdamagedist", "350.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Maximum damage distance for flamethrower." );
+	ConVar  tf_flamethrower_shortrangedamagemultiplier("tf_flamethrower_shortrangedamagemultiplier", "1.2", FCVAR_CHEAT | FCVAR_REPLICATED, "Damage multiplier for close-in flamethrower damage." );
+	ConVar  tf_flamethrower_velocityfadestart("tf_flamethrower_velocityfadestart", ".3", FCVAR_CHEAT | FCVAR_REPLICATED, "Time at which attacker's velocity contribution starts to fade." );
+	ConVar  tf_flamethrower_velocityfadeend("tf_flamethrower_velocityfadeend", ".5", FCVAR_CHEAT | FCVAR_REPLICATED, "Time at which attacker's velocity contribution finishes fading." );
 	//ConVar  tf_flame_force( "tf_flame_force", "30" );
 #endif
 
@@ -70,13 +71,11 @@
 #endif
 
 ConVar  lfe_allow_airblast( "lfe_allow_airblast", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast function of the Flamethrower." );
-ConVar  lfe_allow_airblast_players( "lfe_allow_airblast_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing players." );
-ConVar  lfe_allow_airblast_npc( "lfe_allow_airblast_npc", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing NPCs." );
 ConVar  lfe_allow_airblast_physics( "lfe_allow_airblast_physics", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing Physics." );
 #ifdef GAME_DLL
 ConVar	lfe_debug_airblast( "lfe_debug_airblast", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Visualize airblast box." );
 ConVar  lfe_debug_airblast_physics_force( "lfe_debug_airblast_physics_force", "30.0f", FCVAR_CHEAT | FCVAR_REPLICATED, "How much is the power of airblast?" );
-ConVar  lfe_debug_airblast_physics_mass( "lfe_debug_airblast_physics_mass", "1000.0f", FCVAR_CHEAT | FCVAR_REPLICATED, "Don't push something too heavy." );
+ConVar  lfe_debug_airblast_physics_mass( "lfe_debug_airblast_physics_mass", "5000.0f", FCVAR_CHEAT | FCVAR_REPLICATED, "Don't push something too heavy." );
 ConVar  lfe_debug_airblast_physics_distance( "lfe_debug_airblast_physics_distance", "150", FCVAR_CHEAT | FCVAR_REPLICATED, "What distance that pyro can airblast physics?" );
 #endif
 
@@ -399,15 +398,41 @@ void CTFFlameThrower::PrimaryAttack()
 	// Handle the flamethrower light
 	if (lfe_muzzlelight.GetBool())
 	{
-		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
-		dl->origin = vecMuzzlePos;
-		dl->color.r = 255;
-		dl->color.g = 100;
-		dl->color.b = 10;
-		dl->die = gpGlobals->curtime + 0.01f;
-		dl->radius = 340.f;
-		dl->decay = 512.0f;
-		dl->style = 1;
+		if ( m_bCritFire )
+		{
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dl->origin = vecMuzzlePos;
+			dl->color.r = 255;
+			dl->color.g = 100;
+			dl->color.b = 10;
+			dl->die = gpGlobals->curtime + 0.01f;
+			dl->radius = 400.f;
+			dl->decay = 512.0f;
+			dl->style = 1;
+		}
+		else
+		{
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dl->origin = vecMuzzlePos;
+			dl->color.r = 255;
+			dl->color.g = 100;
+			dl->color.b = 10;
+			dl->die = gpGlobals->curtime + 0.01f;
+			dl->radius = 340.f;
+			dl->decay = 512.0f;
+			dl->style = 1;
+		}
+	}
+#endif
+
+#ifdef GAME_DLL
+	if ( m_bCritFire )
+	{
+		CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 500, 3.0 ); // CRIT IS DANGEROUS RUSH NOW PANIC!
+	}
+	else
+	{
+		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 400, 3.0 );
 	}
 #endif
 
@@ -523,6 +548,11 @@ void CTFFlameThrower::SecondaryAttack()
 	StopFlame();
 #endif
 
+	// i dunno how will this thing work since it won't even work in live tf2.
+	int iChargedAirblast = 0;
+	CALL_ATTRIB_HOOK_FLOAT( iChargedAirblast, set_charged_airblast );
+	if ( iChargedAirblast != 1 )
+	{
 	m_iWeaponState = FT_STATE_AIRBLASTING;
 	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 	WeaponSound( WPN_DOUBLE );
@@ -542,7 +572,7 @@ void CTFFlameThrower::SecondaryAttack()
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( pOwner, pOwner->GetCurrentCommand() );
 
-	Vector vecDir;
+	Vector vecDir = pOwner->EyeDirection3D();
 	QAngle angDir = pOwner->EyeAngles();
 	AngleVectors( angDir, &vecDir );
 
@@ -589,7 +619,7 @@ void CTFFlameThrower::SecondaryAttack()
 
 			CTFPlayer *pTFPlayer = ToTFPlayer( pEntity );
 
-			Vector vecPushDir;
+			Vector vecPushDir = pOwner->EyeDirection3D();
 			QAngle angPushDir = angDir;
 
 			// Push them at least 45 degrees up.
@@ -606,7 +636,7 @@ void CTFFlameThrower::SecondaryAttack()
 
 			CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
 
-			Vector vecPushDir;
+			Vector vecPushDir = pOwner->EyeDirection3D();
 			QAngle angPushDir = angDir;
 
 			// Push them at least 45 degrees up.
@@ -644,8 +674,22 @@ void CTFFlameThrower::SecondaryAttack()
 			Vector vecDeflect;
 			GetProjectileReflectSetup( GetTFPlayerOwner(), vecPos, &vecDeflect, false );
 
-			DeflectEntity( pEntity, pOwner, vecDeflect );
+			int nDestoryProj = 0;
+			int nDeflectDisabled = 0;
+			CALL_ATTRIB_HOOK_INT( nDestoryProj, airblast_destroy_projectile );
+			CALL_ATTRIB_HOOK_INT( nDeflectDisabled, airblast_deflect_projectiles_disabled );
+			if ( nDestoryProj != 0 && nDeflectDisabled !=0 )
+			{
+				// place holder
+				DeflectEntity( pEntity, pOwner, vecDeflect );
+			}
+			else
+			{
+				DeflectEntity( pEntity, pOwner, vecDeflect );
+			}
 		}
+
+		CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 300, 3.0 );
 	}
 
 	lagcompensation->FinishLagCompensation( pOwner );
@@ -658,6 +702,7 @@ void CTFFlameThrower::SecondaryAttack()
 
 	// Don't allow firing immediately after airblasting.
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + 0.75f;
+	}
 }
 
 #ifdef GAME_DLL
@@ -677,6 +722,9 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 {
 	if ( !pVictim )
 		return;
+
+	int nPushbackDisabled = 0;
+	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
 
 	if ( pVictim->InSameTeam( pAttacker ) )
 	{
@@ -710,14 +758,14 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
 		}
 	}
-	else if ( lfe_allow_airblast_players.GetBool() )
+	else if ( nPushbackDisabled != 1 )
 	{
 		// Don't push players if they're too far off to the side. Ignore Z.
 		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
 
 		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
 		VectorNormalize( vecVictimDir2D );
-
+	
 		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
 		VectorNormalize( vecDir2D );
 
@@ -739,6 +787,9 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 {
 	if ( !pVictim )
 		return;
+
+	int nPushbackDisabled = 0;
+	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
 
 	if ( pVictim->InSameTeam( pAttacker ) )
 	{
@@ -772,7 +823,7 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
 		}
 	}
-	else if ( lfe_allow_airblast_npc.GetBool() )
+	else if ( nPushbackDisabled != 1 )
 	{
 		// Don't push players if they're too far off to the side. Ignore Z.
 		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
@@ -800,9 +851,11 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 
 void CTFFlameThrower::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir ) // new one copy from physexplosion. // old one copy from deflected pipe grenade.
 {
-	if ( lfe_allow_airblast_physics.GetBool() )
+	int nPushbackDisabled = 0;
+	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
+
+	if ( lfe_allow_airblast_physics.GetBool() && nPushbackDisabled != 1 )
 	{
-		
 		float		flDist;
 		// iterate on all entities in the vicinity.
 		// I've removed the traceline heuristic from phys explosions. SO right now they will
@@ -817,7 +870,7 @@ void CTFFlameThrower::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker
 			//{
 				flDist = (pEntity->WorldSpaceCenter() - GetAbsOrigin()).Length();
 
-					CTakeDamageInfo info( this, this, 1, DMG_BLAST );
+					CTakeDamageInfo info( this, this, 0, DMG_BLAST );
 					CalculateExplosiveDamageForce( &info, (pEntity->GetAbsOrigin() - GetAbsOrigin()), pEntity->GetAbsOrigin() );
 					
 					if ( (pEntity->GetAbsOrigin() - GetAbsOrigin()).Length2D() <= lfe_debug_airblast_physics_distance.GetFloat() )
@@ -1204,11 +1257,55 @@ void CTFFlameThrower::RestartParticleEffect( void )
 	{
 		if ( m_bCritFire )
 		{
-			pszParticleEffect = ConstructTeamParticle( "flamethrower_crit_%s", iTeam, true );
+			// GREEN FLAMES
+			int nGreenFlames = 0;
+			CALL_ATTRIB_HOOK_INT( nGreenFlames, halloween_green_flames__halloween );
+			if ( nGreenFlames != 0 )
+			{
+				pszParticleEffect = ConstructTeamParticle( "flamethrower_halloween_crit_%s", iTeam, true );
+			}
+			else
+			{
+				pszParticleEffect = ConstructTeamParticle( "flamethrower_crit_%s", iTeam, true );
+			}
+
+			// THE NO SKILL FLAMES
+			int nPhlog = 0;
+			CALL_ATTRIB_HOOK_INT( nPhlog, burn_damage_earns_rage );
+			if ( nPhlog != 0 )
+			{
+				pszParticleEffect = "drg_phlo_stream_crit";
+			}
+			else
+			{
+				pszParticleEffect = ConstructTeamParticle( "flamethrower_crit_%s", iTeam, true );
+			}
 		}
 		else 
 		{
-			pszParticleEffect = iTeam == TF_TEAM_RED ? "flamethrower" : ConstructTeamParticle( "flamethrower_%s", pOwner->GetTeamNumber(), true );
+			// GREEN FLAMES
+			int nGreenFlames = 0;
+			CALL_ATTRIB_HOOK_INT( nGreenFlames, halloween_green_flames__halloween );
+			if ( nGreenFlames == 1 )
+			{
+				pszParticleEffect = "flamethrower_halloween";
+			}
+			else
+			{
+				pszParticleEffect = iTeam == TF_TEAM_RED ? "flamethrower" : ConstructTeamParticle( "flamethrower_%s", pOwner->GetTeamNumber(), true );
+			}
+
+			// THE NO SKILL FLAMES
+			int nPhlog = 0;
+			CALL_ATTRIB_HOOK_INT( nPhlog, burn_damage_earns_rage );
+			if ( nPhlog == 1 )
+			{
+				pszParticleEffect = "drg_phlo_stream";
+			}
+			else
+			{
+				pszParticleEffect = iTeam == TF_TEAM_RED ? "flamethrower" : ConstructTeamParticle( "flamethrower_%s", pOwner->GetTeamNumber(), true );
+			}
 		}		
 	}
 
@@ -1296,7 +1393,7 @@ IMPLEMENT_AUTO_LIST( ITFFlameEntityAutoList );
 LINK_ENTITY_TO_CLASS( tf_flame, CTFFlameEntity );
 
 //-----------------------------------------------------------------------------
-// Purpose: Spawns this entitye
+// Purpose: Spawns this entity
 //-----------------------------------------------------------------------------
 void CTFFlameEntity::Spawn( void )
 {
@@ -1307,7 +1404,13 @@ void CTFFlameEntity::Spawn( void )
 	SetSolidFlags( FSOLID_NOT_SOLID );
 	SetCollisionGroup( COLLISION_GROUP_NONE );
 	// move noclip: update position from velocity, that's it
-	SetMoveType( MOVETYPE_NOCLIP, MOVECOLLIDE_DEFAULT );
+	//SetMoveType( MOVETYPE_NOCLIP, MOVECOLLIDE_DEFAULT );
+
+	float flGravity = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwnerEntity(), flGravity, flame_gravity );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
+	SetGravity( flGravity );
+
 	AddEFlags( EFL_NO_WATER_VELOCITY_CHANGE );
 
 	float flBoxSize = tf_flamethrower_boxsize.GetFloat();
@@ -1318,9 +1421,17 @@ void CTFFlameEntity::Spawn( void )
 	m_takedamage = DAMAGE_NO;
 	m_vecInitialPos = GetAbsOrigin();
 	m_vecPrevPos = m_vecInitialPos;
-	m_flTimeRemove = gpGlobals->curtime + ( tf_flamethrower_flametime.GetFloat() * random->RandomFloat( 0.9, 1.1 ) );
+
+	float flLifeTime = tf_flamethrower_flametime.GetFloat();
+	float flLifeTimeRandom = random->RandomFloat( 0.9, 1.1 );
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwnerEntity(), flLifeTime, flame_lifetime );
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwnerEntity(), flLifeTimeRandom, flame_random_life_time_offset );
+	m_flTimeRemove = gpGlobals->curtime + ( flLifeTime * flLifeTimeRandom );
+
 	m_hLauncher = dynamic_cast<CTFFlameThrower *>( GetOwnerEntity() );
-	
+
+	//ParticleProp()->Create( "new_flame_core", PATTACH_ABSORIGIN_FOLLOW );
+
 	// Setup the think function.
 	SetThink( &CTFFlameEntity::FlameThink );
 	SetNextThink( gpGlobals->curtime );
@@ -1353,9 +1464,10 @@ CTFFlameEntity *CTFFlameEntity::Create( const Vector &vecOrigin, const QAngle &v
 	Vector vecForward, vecRight, vecUp;
 	AngleVectors( vecAngles, &vecForward, &vecRight, &vecUp );
 
-	float velocity = tf_flamethrower_velocity.GetFloat();
-	pFlame->m_vecBaseVelocity = vecForward * velocity;
-	pFlame->m_vecBaseVelocity += RandomVector( -velocity * tf_flamethrower_vecrand.GetFloat(), velocity * tf_flamethrower_vecrand.GetFloat() );
+	float flVelocity = tf_flamethrower_velocity.GetFloat();
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pOwner, flVelocity, flame_speed );
+	pFlame->m_vecBaseVelocity = vecForward * flVelocity;
+	pFlame->m_vecBaseVelocity += RandomVector( -flVelocity * tf_flamethrower_vecrand.GetFloat(), flVelocity * tf_flamethrower_vecrand.GetFloat() );
 	pFlame->m_vecAttackerVelocity = pOwner->GetOwnerEntity()->GetAbsVelocity();
 	pFlame->SetAbsVelocity( pFlame->m_vecBaseVelocity );	
 	// Setup the initial angles.
@@ -1461,6 +1573,7 @@ void CTFFlameEntity::FlameThink( void )
 
 	// Calculate how long the flame has been alive for
 	float flFlameElapsedTime = tf_flamethrower_flametime.GetFloat() - ( m_flTimeRemove - gpGlobals->curtime );
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwnerEntity(), flFlameElapsedTime, mult_flame_life );
 	// Calculate how much of the attacker's velocity to blend in to the flame's velocity.  The flame gets the attacker's velocity
 	// added right when the flame is fired, but that velocity addition fades quickly to zero.
 	float flAttackerVelocityBlend = RemapValClamped( flFlameElapsedTime, tf_flamethrower_velocityfadestart.GetFloat(), 
@@ -1470,7 +1583,9 @@ void CTFFlameEntity::FlameThink( void )
 	m_vecBaseVelocity *= tf_flamethrower_drag.GetFloat();
 
 	// Add our float upward velocity
-	Vector vecVelocity = m_vecBaseVelocity + Vector( 0, 0, tf_flamethrower_float.GetFloat() ) + ( flAttackerVelocityBlend * m_vecAttackerVelocity );
+	float flUpSpeed = tf_flamethrower_float.GetFloat();
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwnerEntity(), flUpSpeed, flame_up_speed );
+	Vector vecVelocity = m_vecBaseVelocity + Vector( 0, 0, flUpSpeed ) + ( flAttackerVelocityBlend * m_vecAttackerVelocity );
 
 	// Update our velocity
 	SetAbsVelocity( vecVelocity );
@@ -1573,13 +1688,13 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 
 			// if there is nothing solid in the way, damage the entity
 			OnCollide( pOther );
-		}					
+		}/*
 		else
 		{
 			// we hit the world, remove ourselves
 			*pbHitWorld = true;
 			UTIL_Remove( this );
-		}
+		}*/
 	}
 }
 
@@ -1617,14 +1732,36 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 
 	SetHitTarget();
 
-	CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, m_iDmgType, TF_DMG_CUSTOM_BURNING );
-	info.SetReportedPosition( pAttacker->GetAbsOrigin() );
+	// if we're behind the target and we're close enough.
+	int nBackCrit = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), nBackCrit, set_flamethrower_back_crit );
+	if ( nBackCrit != 0 )
+	{
+		trace_t tr;
+		if ( tr.m_pEnt->IsPlayer() && tr.m_pEnt->GetTeamNumber() != GetOwnerEntity()->GetTeamNumber() &&
+			m_hLauncher->IsBehindAndFacingTarget( tr.m_pEnt ) )
+			{
+				CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, DMG_CRITICAL, TF_DMG_CUSTOM_BURNING );
+				info.SetReportedPosition( pAttacker->GetAbsOrigin() );	
+				
+				// We collided with pOther, so try to find a place on their surface to show blood
+				trace_t pTrace;
+				UTIL_TraceLine( WorldSpaceCenter(), pOther->WorldSpaceCenter(), MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &pTrace );
 
-	// We collided with pOther, so try to find a place on their surface to show blood
-	trace_t pTrace;
-	UTIL_TraceLine( WorldSpaceCenter(), pOther->WorldSpaceCenter(), MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &pTrace );
+				pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+			}
+	}
+	else
+	{
+		CTakeDamageInfo info( GetOwnerEntity(), pAttacker, GetOwnerEntity(), flDamage, m_iDmgType, TF_DMG_CUSTOM_BURNING );
+		info.SetReportedPosition( pAttacker->GetAbsOrigin() );	
+		
+		// We collided with pOther, so try to find a place on their surface to show blood
+		trace_t pTrace;
+		UTIL_TraceLine( WorldSpaceCenter(), pOther->WorldSpaceCenter(), MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &pTrace );
 
-	pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+		pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
+	}
 	ApplyMultiDamage();
 
 	// It's better to ignite NPC here rather than NPC code.

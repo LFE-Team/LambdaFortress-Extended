@@ -129,7 +129,13 @@ CObjectSentrygun::CObjectSentrygun()
 	SetMaxHealth( SENTRYGUN_MAX_HEALTH );
 	m_iHealth = SENTRYGUN_MAX_HEALTH;
 	SetType( OBJ_SENTRYGUN );
-	m_bMiniBuilding = false;
+
+	int nMiniSentry = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+	if ( nMiniSentry != 1 )
+	{
+		m_bMiniBuilding = false;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -181,7 +187,7 @@ void CObjectSentrygun::Spawn()
 
 	int nMiniSentry = 0;
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
-	if ( nMiniSentry )
+	if ( nMiniSentry == 1 )
 	{
 		m_bMiniBuilding = true;
 		SetMaxHealth( MINI_SENTRYGUN_MAX_HEALTH );
@@ -276,8 +282,11 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 //-----------------------------------------------------------------------------
 bool CObjectSentrygun::CanBeUpgraded( CTFPlayer *pPlayer )
 {
-	if (m_bMiniBuilding)
+	int nMiniSentry = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+	if ( nMiniSentry == 1 )
 	{
+		m_bMiniBuilding = true;
 		return false;
 	}
 
@@ -986,11 +995,14 @@ void CObjectSentrygun::Attack()
 		{
 			// Level 1 sentries fire slower
 			m_flNextAttack = gpGlobals->curtime + 0.2;
-		}
-		if ( m_iUpgradeLevel == 1 && m_bMiniBuilding )
-		{
-			// Mini-Sentries fire 50% faster
-			m_flNextAttack = gpGlobals->curtime + 0.15;
+
+			int nMiniSentry = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+			if ( nMiniSentry == 1 )
+			{
+				m_flNextAttack = gpGlobals->curtime + 0.15;
+				m_bMiniBuilding = true;
+			}
 		}
 		else
 		{
@@ -1124,9 +1136,13 @@ bool CObjectSentrygun::Fire()
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
 		info.m_flDamage = tf_sentrygun_damage.GetFloat();
-		if ( m_bMiniBuilding )
+	
+		int nMiniSentry = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+		if ( nMiniSentry == 1 )
 		{
 			info.m_flDamage = 8;
+			m_bMiniBuilding = true;
 		}
 
 		FireBullets( info );

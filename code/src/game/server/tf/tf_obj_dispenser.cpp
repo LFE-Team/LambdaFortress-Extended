@@ -725,7 +725,7 @@ void CObjectDispenser::StartHealing( CBaseEntity *pOther )
 	else if ( pOther && pOther->IsNPC() )
 	{
 		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pOther );
-		pNPC->Heal( GetOwner(), obj_dispenser_heal_rate.GetFloat(), true );
+		pNPC->Heal( GetOwner(), GetHealRate(), true );
 	}
 }
 
@@ -742,10 +742,15 @@ void CObjectDispenser::StopHealing( CBaseEntity *pOther )
 	if ( bFound )
 	{
 		CTFPlayer *pPlayer = ToTFPlayer( pOther );
+		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pOther );
 
 		if ( pPlayer )
 		{
 			pPlayer->m_Shared.StopHealing( GetOwner() );
+		}
+		else if ( pOther && pOther->IsNPC() )
+		{	
+			pNPC->StopHealing( GetOwner() );
 		}
 
 		NetworkStateChanged();
@@ -760,18 +765,33 @@ bool CObjectDispenser::CouldHealTarget( CBaseEntity *pTarget )
 	if ( !HasSpawnFlags( SF_IGNORE_LOS ) && !pTarget->FVisible( this, MASK_BLOCKLOS ) )
 		return false;
 
+	int iTeam = GetTeamNumber();
+
 	if ( pTarget->IsPlayer() && pTarget->IsAlive() )
 	{
 		CTFPlayer *pTFPlayer = ToTFPlayer( pTarget );
 
 		// don't heal enemies unless they are disguised as our team
-		int iTeam = GetTeamNumber();
 		int iPlayerTeam = pTFPlayer->GetTeamNumber();
 
 		if ( iPlayerTeam != iTeam && pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && !HasSpawnFlags( SF_NO_DISGUISED_SPY_HEALING ) )
 		{
 			iPlayerTeam = pTFPlayer->m_Shared.GetDisguiseTeam();
 		}
+
+		if ( iPlayerTeam != iTeam )
+		{
+			return false;
+		}
+
+		return true;
+	}
+	else if ( pTarget->IsNPC() && pTarget->IsAlive() )
+	{
+		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pTarget );
+
+		// don't heal enemies npc.
+		int iPlayerTeam = pNPC->GetTeamNumber();
 
 		if ( iPlayerTeam != iTeam )
 		{
