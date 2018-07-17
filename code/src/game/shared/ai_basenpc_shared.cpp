@@ -35,7 +35,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT,
 	},
 	{
 		"npc_kleiner",
@@ -177,7 +177,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_nihilanth",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
 	},
 	{
 		"monster_hornet",
@@ -207,7 +207,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_barnacle",
 		TF_TEAM_YELLOW,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
 	},
 	{
 		"monster_osprey",
@@ -217,17 +217,17 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_sentry",
 		TF_TEAM_BLUE,
-		0,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"monster_tentacle",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
 	},
 	{
 		"monster_gman",
 		TF_TEAM_RED,
-		0,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT,
 	},
 	{
 		"monster_human_assassin",
@@ -254,6 +254,11 @@ TF_NPCData g_aNPCData[] =
 		"npc_citizen",
 		TF_TEAM_BLUE,
 		0,
+	},
+	{
+		"npc_breen",
+		TF_TEAM_BLUE,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT,
 	},
 	// Regular enemies.
 	{
@@ -296,48 +301,48 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_combine_camera",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"npc_rollermine",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_rollerminered",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_rollermine_hackable",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_rollermine_ep1",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_turret_ceiling",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"npc_turret_floor",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_turret_ground",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	// Combine synths.
 	{
 		"npc_combinegunship",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"npc_hunter",
@@ -347,22 +352,22 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_strider",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"npc_helicopter",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"npc_combinedropship",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	{
 		"npc_combineguard",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	// Misc Combine NPCs.
 	{
@@ -378,7 +383,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_sniper",
 		TF_TEAM_BLUE,
-		TFFL_NOHEALING,
+		TFFL_NOHEALING | TFFL_NODEFLECT,
 	},
 	// Headcrabs.
 	{
@@ -446,13 +451,13 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_antlionguard",
 		TF_TEAM_YELLOW,
-		TFFL_NOBACKSTAB,
+		TFFL_NOBACKSTAB | TFFL_NODEFLECT,
 	},
 	// Neutral NPCs.
 	{
 		"npc_barnacle",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
 	},
 	// Birds
 	{
@@ -469,6 +474,36 @@ TF_NPCData g_aNPCData[] =
 		"npc_seagull",
 		TEAM_UNASSIGNED,
 		TFFL_NOBACKSTAB,
+	},
+	{
+		"generic_actor",
+		TEAM_UNASSIGNED,
+		0,
+	},
+	{
+		"cyler_actor",
+		TEAM_UNASSIGNED,
+		0,
+	},
+	{
+		"monster_furniture",
+		TEAM_UNASSIGNED,
+		TFFL_BUILDING | TFFL_NODEFLECT,
+	},
+	{
+		"npc_furniture",
+		TEAM_UNASSIGNED,
+		TFFL_BUILDING | TFFL_NODEFLECT,
+	},
+	{
+		"monster_generic",
+		TEAM_UNASSIGNED,
+		TFFL_BUILDING | TFFL_NODEFLECT,
+	},
+	{
+		"npc_bullseye",
+		TEAM_UNASSIGNED,
+		TFFL_BUILDING | TFFL_NODEFLECT,
 	},
 	// End marker.
 	{

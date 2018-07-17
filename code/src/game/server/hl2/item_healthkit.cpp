@@ -15,6 +15,7 @@
 #ifdef TF_CLASSIC
 #include "tf_player.h"
 #include "tf_weapon_medigun.h"
+#include "tf_gamerules.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -47,7 +48,11 @@ PRECACHE_REGISTER(item_healthkit);
 void CHLHealthKit::Spawn( void )
 {
 	Precache();
+	#ifdef TF_CLASSIC
+	SetModel( STRING( GetModelName() ) );
+	#else
 	SetModel( "models/items/healthkit.mdl" );
+	#endif
 
 	BaseClass::Spawn();
 }
@@ -58,7 +63,18 @@ void CHLHealthKit::Spawn( void )
 //-----------------------------------------------------------------------------
 void CHLHealthKit::Precache( void )
 {
+	#ifdef TF_CLASSIC
+	if ( TFGameRules()->IsInHL1Map() )
+		SetModelName( AllocPooledString( "models/w_medkit.mdl" ) );	//If we're in HL1
+	else if ( CBaseEntity::GetModelName() == NULL_STRING )
+		SetModelName( AllocPooledString( "models/items/healthkit.mdl" ) );
+	else
+		SetModelName( CBaseEntity::GetModelName() );
+
+	PrecacheModel( STRING( GetModelName() ) );
+	#else
 	PrecacheModel("models/items/healthkit.mdl");
+	#endif
 
 	PrecacheScriptSound( "HealthKit.Touch" );
 }

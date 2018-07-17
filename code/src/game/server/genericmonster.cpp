@@ -211,7 +211,6 @@ public:
 	Class_T	Classify ( void );
 	float	MaxYawSpeed( void ){ return 0; }
 	virtual int	ObjectCaps( void );
-	virtual bool		IsDeflectable() { return false; }
 	bool	CreateVPhysics( void );
 	void	NPCThink( void );
 	void	UpdateOnRemove( void );

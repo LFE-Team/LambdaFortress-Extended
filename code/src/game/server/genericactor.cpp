@@ -43,8 +43,6 @@ public:
 	Class_T Classify ( void );
 	void	HandleAnimEvent( animevent_t *pEvent );
 	int		GetSoundInterests ( void );
-	virtual bool		IsDeflectable() { return false; }
-
 	
 	void	TempGunEffect( void );
 

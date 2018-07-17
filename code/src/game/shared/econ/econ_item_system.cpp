@@ -208,6 +208,12 @@ public:
 			ParseAttributes( pAttributes );
 		}
 
+		KeyValues *pStaticAttributes = pKeyValuesData->FindKey( "static_attrs" );
+		if ( pStaticAttributes )
+		{
+			ParseAttributes( pStaticAttributes );
+		}
+
 		KeyValues *pItems = pKeyValuesData->FindKey( "items" );
 		if ( pItems )
 		{
@@ -535,6 +541,29 @@ public:
 						CEconItemAttribute attribute( iAttributeID, pAttribData->GetFloat( "value" ), pAttribData->GetString( "attribute_class" ) );
 						pItem->attributes.AddToTail( attribute );
 					}
+				}
+			}
+			else if ( !V_stricmp( pSubData->GetName(), "static_attrs" ) )
+			{
+				for ( KeyValues *pAttribData = pSubData->GetFirstSubKey(); pAttribData != NULL; pAttribData = pAttribData->GetNextKey() )
+				{
+					int iAttributeID = GetItemSchema()->GetAttributeIndex( pAttribData->GetName() );
+
+					if ( iAttributeID == -1 )
+						continue;
+
+					//EconAttributeDefinition *pAttribDef = GetItemSchema()->GetAttributeDefinition( iAttributeID );
+					
+					/*if ( pAttribDef->string_attribute )
+					{
+						CEconItemAttribute attribute( iAttributeID, pAttribData->GetString( iAttributeID ) );
+						pItem->attributes.AddToTail( attribute );
+					}
+					else
+					{*/
+						CEconItemAttribute attribute( iAttributeID, pAttribData->GetFloat( iAttributeID ) );
+						pItem->attributes.AddToTail( attribute );
+					//}
 				}
 			}
 			else if ( !V_stricmp( pSubData->GetName(), "visuals_mvm_boss" ) )

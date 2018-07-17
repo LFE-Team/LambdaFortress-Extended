@@ -34,7 +34,6 @@ public:
 	void	HandleAnimEvent( animevent_t *pEvent );
 	int		GetSoundInterests ( void );
 	bool	UseSemaphore( void );
-	virtual bool		IsDeflectable() { return false; }
 };
 
 LINK_ENTITY_TO_CLASS( npc_breen, CNPC_Breen );

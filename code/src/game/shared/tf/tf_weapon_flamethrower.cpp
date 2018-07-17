@@ -42,10 +42,10 @@
 	#include "soundent.h"
 
 	ConVar	tf_debug_flamethrower("tf_debug_flamethrower", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Visualize the flamethrower damage." );
-	ConVar  tf_flamethrower_velocity( "tf_flamethrower_velocity", "2450.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Initial velocity of flame damage entities." ); // old = 2300.0
+	ConVar  tf_flamethrower_velocity( "tf_flamethrower_velocity", "2300.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Initial velocity of flame damage entities." ); // old = 2300.0
 	ConVar	tf_flamethrower_drag("tf_flamethrower_drag", "0.87", FCVAR_CHEAT | FCVAR_REPLICATED, "Air drag of flame damage entities." );
 	ConVar	tf_flamethrower_float("tf_flamethrower_float", "50.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Upward float velocity of flame damage entities." );
-	ConVar  tf_flamethrower_flametime("tf_flamethrower_flametime", "0.6", FCVAR_CHEAT | FCVAR_REPLICATED, "Time to live of flame damage entities." );
+	ConVar  tf_flamethrower_flametime("tf_flamethrower_flametime", "0.5", FCVAR_CHEAT | FCVAR_REPLICATED, "Time to live of flame damage entities." );
 	ConVar  tf_flamethrower_vecrand("tf_flamethrower_vecrand", "0.05", FCVAR_CHEAT | FCVAR_REPLICATED, "Random vector added to initial velocity of flame damage entities." );
 	ConVar  tf_flamethrower_boxsize("tf_flamethrower_boxsize", "12.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Size of flame damage entities." );
 	ConVar  tf_flamethrower_maxdamagedist("tf_flamethrower_maxdamagedist", "350.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Maximum damage distance for flamethrower." );
@@ -403,7 +403,7 @@ void CTFFlameThrower::PrimaryAttack()
 			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
 			dl->origin = vecMuzzlePos;
 			dl->color.r = 255;
-			dl->color.g = 100;
+			dl->color.g = 110;
 			dl->color.b = 10;
 			dl->die = gpGlobals->curtime + 0.01f;
 			dl->radius = 400.f;
@@ -428,7 +428,7 @@ void CTFFlameThrower::PrimaryAttack()
 #ifdef GAME_DLL
 	if ( m_bCritFire )
 	{
-		CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 500, 3.0 ); // CRIT IS DANGEROUS RUSH NOW PANIC!
+		CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 500, 3.0 ); // CRIT IS DANGEROUS NOW PANIC!
 	}
 	else
 	{
@@ -1507,10 +1507,6 @@ void CTFFlameEntity::FlameThink( void )
 		else
 			return;
 
-		//CTFTeam *pTeam = pAttacker->GetOpposingTFTeam();
-		//if ( !pTeam )
-		//	return;
-	
 		bool bHitWorld = false;
 
 		for (int i = 0; i < pTeamList.Size(); i++)

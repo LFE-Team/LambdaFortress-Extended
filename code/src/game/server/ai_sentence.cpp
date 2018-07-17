@@ -131,6 +131,13 @@ bool CAI_SentenceBase::MatchesCriteria( SentenceCriteria_t nCriteria )
 //-----------------------------------------------------------------------------
 int CAI_SentenceBase::PlaySentence( const char *pSentence )
 {
+	//SMOD: HL1 Port: Dumbass hack for Barnies and Scientists crashing the game when dying
+	if (!GetOuter() || !GetOuter()->edict())
+	{
+		SentenceMsg( "BOGUS", pSentence );
+		return -1;
+	}
+
 	int nSentenceIndex = SENTENCEG_PlayRndSz( GetOuter()->edict(), pSentence, GetVolume(), GetSoundLevel(), 0, GetVoicePitch());
 	if ( nSentenceIndex < 0 )
 	{

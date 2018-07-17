@@ -803,8 +803,7 @@ void CMissile::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 	ChangeTeam( pDeflectedBy->GetTeamNumber() );
 	SetScorer( pDeflectedBy );
 
-	CWeaponRPG *pRPG = dynamic_cast<CWeaponRPG*>(GetActiveWeapon());
-	pRPG->StopGuiding();
+	ShotDown();
 }
 
 //-----------------------------------------------------------------------------

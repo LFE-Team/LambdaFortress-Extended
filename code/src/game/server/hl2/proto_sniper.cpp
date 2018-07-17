@@ -240,7 +240,6 @@ public:
 
 	virtual int SelectSchedule( void );
 	virtual int TranslateSchedule( int scheduleType );
-	virtual bool		IsDeflectable() { return false; }
 
 	bool KeyValue( const char *szKeyName, const char *szValue );
 
@@ -1302,13 +1301,13 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( info.GetDamageType() == DMG_BULLET && info.GetInflictor() == this )
 		return CAI_BaseNPC::OnTakeDamage_Alive( newInfo );
 
-	if( !(info.GetDamageType() & (DMG_BULLET|DMG_BLAST) ) )
+	if( !(info.GetDamageType() & (DMG_BULLET|DMG_USE_HITLOCATIONS|DMG_BLAST) ) )
 	{
 		// Only blasts and burning hurt
 		return 10;
 	}
 
-	if( (info.GetDamageType() & DMG_BULLET|DMG_BLAST) && info.GetDamage() < m_iHealth )
+	if( (info.GetDamageType() & DMG_BULLET|DMG_USE_HITLOCATIONS|DMG_BLAST) && info.GetDamage() < m_iHealth )
 	{
 		// Only blasts powerful enough to kill hurt
 		return 10;
@@ -1324,7 +1323,7 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		return 10;
 	}
 
-	if( info.GetDamageType() & DMG_BULLET|DMG_BLAST )
+	if( info.GetDamageType() & DMG_BULLET|DMG_USE_HITLOCATIONS|DMG_BLAST )
 	{
 		newInfo.SetDamage( m_iHealth );
 	}
@@ -2050,9 +2049,6 @@ void CProtoSniper::StartTask( const Task_t *pTask )
 			if( GetEnemy()->IsPlayer() )
 			{
 				float delay = 0;
-#ifdef _XBOX
-				delay += sniper_xbox_delay.GetFloat();
-#endif
 
 				if( gpGlobals->curtime - m_flTimeLastAttackedPlayer <= SNIPER_FASTER_ATTACK_PERIOD )
 				{
@@ -3273,7 +3269,29 @@ void CSniperBullet::BulletThink( void )
 	if( tr.fraction != 1.0 )
 	{
 		// This slice of bullet will hit something.
-		GetOwnerEntity()->FireBullets( 1, vecStart, m_vecDir, vec3_origin, flDist, m_AmmoType, 0 );
+
+		CTakeDamageInfo info_modified;
+
+		//float flDamage = sk_dmg_sniper_penetrate_npc.GetInt();
+		//float flPLDamage = sk_dmg_sniper_penetrate_plr.GetInt();
+		float flDamage = info_modified.GetDamage();
+		float flPLDamage = info_modified.GetDamage();
+
+		info_modified.AddDamageType( DMG_CRITICAL );
+		info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
+
+		FireBulletsInfo_t info;
+		info.m_vecSrc = vecStart;
+		info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
+		info.m_flDistance = flDist;
+		info.m_iAmmoType = m_AmmoType;
+		info.m_iTracerFreq = 1;
+		info.m_vecDirShooting = m_vecDir;
+		info.m_nFlags = FIRE_BULLETS_TEMPORARY_DANGER_SOUND;
+		info.m_flDamage = flDamage;
+		info.m_iPlayerDamage = flPLDamage;
+		GetOwnerEntity()->FireBullets( info );
+		//GetOwnerEntity()->FireBullets( 1, vecStart, m_vecDir, vec3_origin, flDist, m_AmmoType, 0 );
 		m_iImpacts++;
 
 #ifdef HL2_EPISODIC

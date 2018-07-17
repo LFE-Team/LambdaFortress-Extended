@@ -334,7 +334,42 @@ public:
 
 	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
 	bool IsFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1); }
+#ifdef GAME_DLL
+	bool IsInHL1Map()
+	{
+		if (!Q_strnicmp(STRING(gpGlobals->mapname), "t0", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "c0", 2) \
+			|| !Q_strnicmp(STRING(gpGlobals->mapname), "c1", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "c2", 2) \
+			|| !Q_strnicmp(STRING(gpGlobals->mapname), "c3", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "c4", 2) \
+			|| !Q_strnicmp(STRING(gpGlobals->mapname), "c5", 2))
+			return true;
+		else
+			return false;
+	}
 
+	bool IsInHL2Map()
+	{
+		if (!Q_strnicmp(STRING(gpGlobals->mapname), "d1_", 3) || !Q_strnicmp(STRING(gpGlobals->mapname), "d2_", 3) || !Q_strnicmp(STRING(gpGlobals->mapname), "d3_", 4) )
+			return true;
+		else
+			return false;
+	}
+
+	bool IsInHL2EP1Map()
+	{
+		if (!Q_strnicmp(STRING(gpGlobals->mapname), "ep1_", 3))
+			return true;
+		else
+			return false;
+	}
+
+	bool IsInHL2EP2Map()
+	{
+		if (!Q_strnicmp(STRING(gpGlobals->mapname), "ep2_", 3))
+			return true;
+		else
+			return false;
+	}
+#endif
 	float GetMapRemainingTime();
 #ifdef CLIENT_DLL
 

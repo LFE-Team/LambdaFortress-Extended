@@ -12460,6 +12460,8 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_nTFFlags = 0;
 	memset( m_flChargeOffTime, 0, sizeof( m_flChargeOffTime ) );
 	memset( m_bChargeSounds, 0, sizeof( m_bChargeSounds ) );
+
+	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
 #endif
 }
 
@@ -12470,6 +12472,9 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 //-----------------------------------------------------------------------------
 CAI_BaseNPC::~CAI_BaseNPC(void)
 {
+	m_LagTrack->Purge();
+	delete m_LagTrack;
+
 	g_AI_Manager.RemoveAI( this );
 
 	delete m_pLockedBestSound;

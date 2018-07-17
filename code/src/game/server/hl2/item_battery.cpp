@@ -20,6 +20,7 @@ ConVar sk_battery( "sk_battery","15" );
 #include "entity_ammopack.h"
 #include "entity_healthkit.h"
 #include "tf_player.h"
+#include "tf_gamerules.h"
 
 #define TF_AMMOPACK_PICKUP_SOUND	"AmmoPack.Touch"
 
@@ -76,13 +77,28 @@ public:
 	void Spawn( void )
 	{ 
 		Precache( );
+		#ifdef TF_CLASSIC
+		SetModel( STRING( GetModelName() ) );
+		#else
 		SetModel( "models/items/battery.mdl" );
+		#endif
 		BaseClass::Spawn( );
 	}
 	void Precache( void )
 	{
-		PrecacheModel ("models/items/battery.mdl");
+		#ifdef TF_CLASSIC
+		if (TFGameRules()->IsInHL1Map())
+			SetModelName( AllocPooledString( "models/w_battery.mdl") );	//If we're in HL1
+		else if ( CBaseEntity::GetModelName() == NULL_STRING )
+			SetModelName( AllocPooledString( "models/items/battery.mdl") );
+		else
+			SetModelName( CBaseEntity::GetModelName() );
 
+		PrecacheModel( STRING( GetModelName() ) );
+
+		#else
+		PrecacheModel ( "models/items/battery.mdl" );
+		#endif
 		PrecacheScriptSound( "ItemBattery.Touch" );
 
 	}

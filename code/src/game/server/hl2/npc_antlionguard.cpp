@@ -233,7 +233,6 @@ public:
 	Class_T	Classify( void ) { return CLASS_ANTLION; }
 	virtual int		GetSoundInterests( void ) { return (SOUND_WORLD|SOUND_COMBAT|SOUND_PLAYER|SOUND_DANGER); }
 	virtual bool	QueryHearSound( CSound *pSound );
-	virtual bool		IsDeflectable() { return false; }
 
 	const impactdamagetable_t &GetPhysicsImpactDamageTable( void );
 

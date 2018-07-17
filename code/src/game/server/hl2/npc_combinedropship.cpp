@@ -275,7 +275,6 @@ public:
 
 	// Sounds
 	virtual void UpdateRotorWashVolume();
-	virtual bool		IsDeflectable() { return false; }
 
 private:
 	void SetLandingState( LandingState_t landingState );
