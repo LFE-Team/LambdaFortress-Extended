@@ -863,8 +863,9 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 #else
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 #endif
-
+/*
 #ifdef TF_CLASSIC
+
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
 	if ( pPlayer->IRelationType( this ) != D_LI )
 	{
@@ -874,8 +875,9 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 		{
 			alyx->EnemyIgnited( this );
 		}
-	}
+	}	
 #endif
+*/
 }
 
 //-----------------------------------------------------------------------------
