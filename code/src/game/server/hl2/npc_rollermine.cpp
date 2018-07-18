@@ -324,6 +324,7 @@ protected:
 	void	Explode( void );
 	void	PreDetonate( void );
 	void	Hop( float height );
+	void	HackThink(void);
 
 	void	ShockTarget( CBaseEntity *pOther );
 
@@ -622,6 +623,7 @@ void CNPC_RollerMine::Spawn( void )
 	//Set their yaw speed to 0 so the motor doesn't rotate them.
 	GetMotor()->SetYawSpeed( 0.0f );
 	SetRollerSkin();
+	HackThink();
 }
 
 //-----------------------------------------------------------------------------
@@ -633,6 +635,23 @@ unsigned int CNPC_RollerMine::PhysicsSolidMaskForEntity( void ) const
 		return MASK_SOLID;
 
 	return MASK_NPCSOLID;
+}
+
+void CNPC_RollerMine::HackThink(void)
+{
+	CBaseEntity *pHacker = gEntList.FindEntityByClassname(NULL, "npc_alyx");
+	if (pHacker)
+	{
+		float flDistanceHack = GetAbsOrigin().DistTo(pHacker->GetAbsOrigin());
+		if (flDistanceHack < 120 && m_bHackedByAlyx == false)
+		{
+			m_bHackedByAlyx = true;
+			SetRollerSkin();
+			variant_t sVariant;
+			pHacker->AcceptInput("HackFinishedMine", NULL, NULL, sVariant, NULL);
+		}
+	}
+	SetContextThink(&CNPC_RollerMine::HackThink, gpGlobals->curtime + 0.01, "ThinkContextHack");
 }
 
 //-----------------------------------------------------------------------------
@@ -2442,6 +2461,7 @@ void CNPC_RollerMine::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_
 	m_bHeld = true;
 	m_RollerController.Off();
 	EmitSound( "NPC_RollerMine.Held" );
+		
 }
 
 //-----------------------------------------------------------------------------
