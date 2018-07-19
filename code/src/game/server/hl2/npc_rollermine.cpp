@@ -220,6 +220,7 @@ public:
 	void	UpdatePingSound();
 	void	StopRollingSound();
 	void	StopPingSound();
+	void	InputDisableInvincibility(inputdata_t &inputdata);
 	float	RollingSpeed();
 	float	GetStunDelay();
 	void	EmbedOnGroundImpact();
@@ -361,6 +362,8 @@ protected:
 	bool	m_bIsPrimed;
 	bool	m_wakeUp;
 	bool	m_bEmbedOnGroundImpact;
+	void	InputEnableInvincibility(inputdata_t &inputdata);
+	bool	m_bNeedsHacking;
 	CNetworkVar( bool,	m_bHackedByAlyx );
 
 	// Constraint used to stick us to a vehicle
@@ -405,6 +408,7 @@ BEGIN_DATADESC( CNPC_RollerMine )
 	DEFINE_FIELD( m_rollingSoundState, FIELD_INTEGER ),
 
 	DEFINE_KEYFIELD( m_bStartBuried, FIELD_BOOLEAN, "StartBuried" ),
+	DEFINE_KEYFIELD(m_bNeedsHacking, FIELD_BOOLEAN, "NeedsHacking"),
 	DEFINE_FIELD( m_bBuried, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_wakeUp, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bEmbedOnGroundImpact, FIELD_BOOLEAN ),
@@ -426,6 +430,7 @@ BEGIN_DATADESC( CNPC_RollerMine )
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOn", InputTurnOn ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "TurnOff", InputTurnOff ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "PowerDown", InputPowerdown ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableInvincibility", InputEnableInvincibility),
 
 	// Function Pointers
 	DEFINE_ENTITYFUNC( SpikeTouch ),
@@ -502,6 +507,17 @@ CNPC_RollerMine::~CNPC_RollerMine( void )
 	}
 
 	UnstickFromVehicle();
+	m_bNeedsHacking = false;
+}
+
+void CNPC_RollerMine::InputEnableInvincibility(inputdata_t &inputdata)
+{
+	m_bNeedsHacking = true;
+}
+
+void CNPC_RollerMine::InputDisableInvincibility(inputdata_t &inputdata)
+{
+	m_bNeedsHacking = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -649,6 +665,7 @@ void CNPC_RollerMine::HackThink(void)
 			SetRollerSkin();
 			variant_t sVariant;
 			pHacker->AcceptInput("HackFinishedMine", NULL, NULL, sVariant, NULL);
+			m_OnAlyxFinishedInteraction.FireOutput(pHacker, this);
 		}
 	}
 	SetContextThink(&CNPC_RollerMine::HackThink, gpGlobals->curtime + 0.01, "ThinkContextHack");
@@ -2495,38 +2512,41 @@ void CNPC_RollerMine::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t Re
 // Input  : &info - 
 // Output : float
 //-----------------------------------------------------------------------------
-int CNPC_RollerMine::OnTakeDamage( const CTakeDamageInfo &info )
+int CNPC_RollerMine::OnTakeDamage(const CTakeDamageInfo &info)
 {
-	if ( !(info.GetDamageType() & DMG_BURN) )
+	if (!m_bNeedsHacking)
 	{
-		if ( GetMoveType() == MOVETYPE_VPHYSICS )
+		if (!(info.GetDamageType() & DMG_BURN))
 		{
-			AngularImpulse	angVel;
-			angVel.Random( -400.0f, 400.0f );
-			VPhysicsGetObject()->AddVelocity( NULL, &angVel );
-			m_RollerController.m_vecAngular *= 0.8f;
+			if (GetMoveType() == MOVETYPE_VPHYSICS)
+			{
+				AngularImpulse	angVel;
+				angVel.Random(-400.0f, 400.0f);
+				VPhysicsGetObject()->AddVelocity(NULL, &angVel);
+				m_RollerController.m_vecAngular *= 0.8f;
 
-			VPhysicsTakeDamage( info );
+				VPhysicsTakeDamage(info);
+			}
+			SetCondition(COND_LIGHT_DAMAGE);
 		}
-		SetCondition( COND_LIGHT_DAMAGE );
+
+		if (info.GetDamageType() & (DMG_BURN | DMG_BLAST))
+		{
+			if (info.GetAttacker() && info.GetAttacker()->m_iClassname != m_iClassname)
+			{
+				SetThink(&CNPC_RollerMine::PreDetonate);
+				SetNextThink(gpGlobals->curtime + random->RandomFloat(0.1f, 0.5f));
+			}
+			else
+			{
+				// dazed
+				m_RollerController.m_vecAngular.Init();
+				m_flActiveTime = gpGlobals->curtime + GetStunDelay();
+				Hop(300);
+			}
+		}
+
 	}
-
-	if ( info.GetDamageType() & (DMG_BURN|DMG_BLAST) )
-	{
-		if ( info.GetAttacker() && info.GetAttacker()->m_iClassname != m_iClassname )
-		{
-			SetThink( &CNPC_RollerMine::PreDetonate );
-			SetNextThink( gpGlobals->curtime + random->RandomFloat( 0.1f, 0.5f ) );
-		}
-		else
-		{
-			// dazed
-			m_RollerController.m_vecAngular.Init();
-			m_flActiveTime = gpGlobals->curtime + GetStunDelay();
-			Hop( 300 );
-		}
-	}
-
 	return 0;
 }
 
