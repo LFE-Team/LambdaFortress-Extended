@@ -902,7 +902,9 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 {
 	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
 	Vector vecForward;
-	Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+	//Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+	Vector vecOrigin = GetAbsOrigin();
+	Vector velocity = vec3_origin;
 	//CBaseEntity *pTeamPlayer = gEntList.FindEntityByClassname(NULL, "player");
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -911,7 +913,7 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 		{
 			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED)
 			{
-				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, &velocity);
 			}
 		}
 		else if (iTeamToTeleport == 2)
