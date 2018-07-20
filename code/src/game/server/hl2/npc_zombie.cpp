@@ -17,6 +17,7 @@
 #include "soundenvelope.h"
 #include "engine/IEngineSound.h"
 #include "ammodef.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -282,6 +283,10 @@ void CZombie::Spawn( void )
 #endif // HL2_EPISODIC
 
 	m_iHealth			= sk_zombie_health.GetFloat();
+	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		m_iHealth = sk_zombie_health.GetFloat() * 1.5;
+	}
 	m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();

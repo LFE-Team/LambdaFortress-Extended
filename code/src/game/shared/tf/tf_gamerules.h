@@ -48,6 +48,7 @@ class CHealthKit;
 
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;
+extern ConVar	sv_dynamicnpcs;
 
 extern ConVar	fraglimit;
 
@@ -334,6 +335,8 @@ public:
 
 	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
 	bool IsFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1); }
+	int iDirectorAnger;
+	int iMaxDirectorAnger;
 #ifdef GAME_DLL
 	bool IsInHL1Map()
 	{

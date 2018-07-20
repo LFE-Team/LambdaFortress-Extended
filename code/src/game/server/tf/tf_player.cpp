@@ -5051,6 +5051,10 @@ bool CTFPlayer::ShouldGib( const CTakeDamageInfo &info )
 void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
 	BaseClass::Event_KilledOther( pVictim, info );
+	if (pVictim->IsPlayer() && pVictim->GetTeamNumber() == 3 && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger + 3;
+	}
 
 	// No taunts after killing teammates.
 	if ( InSameTeam( pVictim ) )
@@ -5228,6 +5232,10 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 //-----------------------------------------------------------------------------
 void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	if (GetTeamNumber() == TF_TEAM_RED && (info.GetAttacker()->IsNPC() || info.GetAttacker()->IsPlayer() && info.GetAttacker()->GetTeamNumber() == TF_TEAM_BLUE) && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger - 3;
+	}
 	SpeakConceptIfAllowed( MP_CONCEPT_DIED );
 
 	StateTransition( TF_STATE_DYING );	// Transition into the dying state.
@@ -9012,15 +9020,8 @@ void CTFPlayer::NoteSpokeVoiceCommand( const char *pszScenePlayed )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::WantsLagCompensationOnEntity(const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits) const
+bool CTFPlayer::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
 {
-	// No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently.
-	if (!(pCmd->buttons & IN_ATTACK) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5))
-		return false;
-
-	return BaseClass::WantsLagCompensationOnEntity(pEntity, pCmd, pEntityTransmitBits);
-
 	bool bIsMedic = false;
 
 	CTFPlayer *pPlayer = ToTFPlayer( (CBaseEntity*)pEntity );
