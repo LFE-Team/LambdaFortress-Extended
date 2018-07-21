@@ -666,6 +666,7 @@ void CNPC_RollerMine::HackThink(void)
 			variant_t sVariant;
 			pHacker->AcceptInput("HackFinishedMine", NULL, NULL, sVariant, NULL);
 			m_OnAlyxFinishedInteraction.FireOutput(pHacker, this);
+			AcceptInput("TurnOn", NULL, NULL, sVariant, NULL);
 		}
 	}
 	SetContextThink(&CNPC_RollerMine::HackThink, gpGlobals->curtime + 0.01, "ThinkContextHack");
@@ -2396,9 +2397,14 @@ void CNPC_RollerMine::InputTurnOn( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_RollerMine::InputTurnOff( inputdata_t &inputdata )
 {
+	variant_t sVariant;
 	m_RollerController.Off();
 	m_bTurnedOn = false;
 	StopLoopingSounds();
+	if (GetTeamNumber() == 2)
+	{
+		AcceptInput("TurnOn", NULL, NULL, sVariant, NULL);
+	}
 }
 
 //-----------------------------------------------------------------------------

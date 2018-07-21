@@ -79,8 +79,54 @@ void CObjectSapper::Spawn()
 
 	m_takedamage = DAMAGE_YES;
 	m_iHealth = GetBaseHealth();
+	Vector m_SapPos;
+	//m_SapPos = pOwner->EyePosition();
+	m_SapPos = GetAbsOrigin();
+	//float flSapRadius = 200.0;
 
 	SetType( OBJ_ATTACHMENT_SAPPER );
+	variant_t sVariant;
+	/*
+	CBaseEntity *pTurret = gEntList.FindEntityByClassnameNearest("npc_turret_floor", m_SapPos, flSapRadius);
+	CBaseEntity *pScanner = gEntList.FindEntityByClassnameNearest("npc_cscanner", m_SapPos, flSapRadius);
+	CBaseEntity *pCamera = gEntList.FindEntityByClassnameNearest("npc_combine_camera", m_SapPos, flSapRadius);
+	CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
+	CBaseEntity *pManHack = gEntList.FindEntityByClassnameNearest("npc_manhack", m_SapPos, flSapRadius);
+	*/
+	CBaseEntity *pTurret = gEntList.FindEntityByClassname(this, "npc_turret_floor");
+	CBaseEntity *pScanner = gEntList.FindEntityByClassname(this, "npc_cscanner");
+	CBaseEntity *pCamera = gEntList.FindEntityByClassname(this, "npc_combine_camera");
+	CBaseEntity *pMine = gEntList.FindEntityByClassname(this, "npc_rollermine");
+	CBaseEntity *pManHack = gEntList.FindEntityByClassname(this, "npc_manhack");
+	//if (pTurret && pTurret->GetTeamNumber() != GetOwnerEntity()->GetTeamNumber())
+	if (pTurret)
+	{
+		pTurret->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
+	}
+	//if ((pScanner || pCamera || pManHack) && GetOwnerEntity()->GetTeamNumber() == 2)
+	/*
+	if (pScanner || pCamera || pManHack)
+	{
+	pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+	}
+	*/
+	if (pScanner)
+	{
+		pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+	}
+	if (pCamera)
+	{
+		pCamera->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+	}
+	if (pManHack)
+	{
+		pManHack->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+	}
+	//if (pMine && pMine->GetTeamNumber() == 3 && GetOwnerEntity()->GetTeamNumber() == 2)
+	if (pMine)
+	{
+		pMine->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
+	}
 
 	BaseClass::Spawn();
 

@@ -1765,7 +1765,10 @@ void CNPC_FloorTurret::InputEnable( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_FloorTurret::InputDisable( inputdata_t &inputdata )
 {
-	Disable();
+	if (GetTeamNumber() == 3)
+	{
+		Disable();
+	}
 }
 
 //-----------------------------------------------------------------------------
