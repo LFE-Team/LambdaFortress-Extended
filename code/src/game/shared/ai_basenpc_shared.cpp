@@ -858,8 +858,7 @@ bool CAI_BaseNPC::IsInvulnerable( void )
 	if ( InCond( TF_COND_INVULNERABLE ) ||
 		InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE ) ||
 		InCond( TF_COND_INVULNERABLE_USER_BUFF ) ||
-		InCond( TF_COND_INVULNERABLE_CARD_EFFECT ) ||
-		InCond( TF_COND_INVULNERABLE_SPAWN_PROTECT ) )
+		InCond( TF_COND_INVULNERABLE_CARD_EFFECT ) )
 		return true;
 
 	return false;
@@ -871,8 +870,7 @@ bool CAI_BaseNPC::IsInvulnerable( void )
 bool CAI_BaseNPC::IsStealthed( void )
 {
 	if ( InCond( TF_COND_STEALTHED ) ||
-		InCond( TF_COND_STEALTHED_USER_BUFF ) ||
-		InCond( TF_COND_POWERUP_CLOAK ) )
+		InCond( TF_COND_STEALTHED_USER_BUFF ) )
 		return true;
 
 	return false;
@@ -1067,7 +1065,12 @@ void CAI_BaseNPC::OnAddUrine( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnRemoveUrine(void)
 {
-#ifdef CLIENT_DLL
+#ifdef GAME_DLL
+	if( IsAlive() )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
 	SetRenderColor( 255, 255, 255 );
 	ParticleProp()->StopParticlesNamed( "peejar_drips" );
 #endif

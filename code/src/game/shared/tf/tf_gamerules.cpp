@@ -903,22 +903,27 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
 	Vector vecForward;
 	Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
-	//CBaseEntity *pTeamPlayer = gEntList.FindEntityByClassname(NULL, "player");
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	Vector velocity = vec3_origin;
+
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
-		CTFPlayer *pTeamPlayer = ToTFPlayer(UTIL_PlayerByIndex(i));
-		if (iTeamToTeleport == 1)
+		CTFPlayer *pTeamPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pTeamPlayer || !pTeamPlayer->IsAlive() )
+			continue;
+
+		if ( iTeamToTeleport == 1 )
 		{
-			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED)
+			if ( pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED )
 			{
-				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+				pTeamPlayer->Teleport( &vecOrigin, &vecAngles, &velocity );
 			}
 		}
-		else if (iTeamToTeleport == 2)
+		else if ( iTeamToTeleport == 2)
 		{
-			if (pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_BLUE)
+			if ( pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_BLUE )
 			{
-				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, NULL);
+				pTeamPlayer->Teleport( &vecOrigin, &vecAngles, &velocity );
 			}
 		}
 	}
@@ -2551,7 +2556,7 @@ bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
 		{
 			if ( !pTFPlayer->InSameTeam( pAttacker ) )
 			{
-				pTFPlayer->m_Shared.AddCond( TF_COND_URINE, 10.0f );
+				pTFPlayer->m_Shared.AddCond( iCond, 10.0f );
 				pTFPlayer->m_Shared.m_hUrineAttacker.Set( pAttacker );
 			}
 			else
@@ -2574,8 +2579,10 @@ bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
 		{
 			if ( !pNPC->InSameTeam( pAttacker ) )
 			{
-				pNPC->AddCond( TF_COND_URINE, 10.0f );
-				//pNPC->m_hUrineAttacker.Set( pAttacker );
+				pNPC->AddCond( iCond, 10.0f );
+				#ifdef GAME_DLL
+				pNPC->m_hUrineAttacker.Set( pAttacker );
+				#endif
 			}
 			else
 			{
@@ -2592,31 +2599,7 @@ bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
 			}
 		}
 	}
-	// For attacker, radius and damage need to be consistent so custom weapons don't screw up rocket jumping.
-	/*if ( radiusInfo.m_flSelfDamageRadius != 0.0f )
-	{
-		if ( pAttacker )
-		{
-			// Get stock damage.
-			CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
-			if ( pWeapon )
-			{
-				info.SetDamage( (float)pWeapon->GetTFWpnData().GetWeaponData( TF_WEAPON_PRIMARY_MODE ).m_nDamage );
-			}
 
-			// Use stock radius.
-			radiusInfo.m_flRadius = radiusInfo.m_flSelfDamageRadius;
-
-			Vector vecHitPoint;
-			pAttacker->CollisionProp()->CalcNearestPoint( radiusInfo.m_vecSrc, &vecHitPoint );
-			Vector vecDir = vecHitPoint - radiusInfo.m_vecSrc;
-
-			if ( vecDir.LengthSqr() <= ( radiusInfo.m_flRadius * radiusInfo.m_flRadius ) )
-			{
-				radiusInfo.ApplyToEntity( pAttacker );
-			}
-		}
-	}*/
 	return bExtinguished;
 }
 
@@ -5174,6 +5157,37 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 			iWeaponID = TF_WEAPON_FLAMETHROWER;
 		}
 	}
+	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
+	{
+		// Player stores last weapon that burned him so if he burns to death we know what killed him.
+		if ( pWeapon )
+		{
+			killer_weapon_name = pWeapon->GetClassname();
+			iWeaponID = pWeapon->GetWeaponID();
+
+			if ( pInflictor && pInflictor != pScorer )
+			{
+				CTFBaseRocket *pRocket = dynamic_cast<CTFBaseRocket *>( pInflictor );
+
+				if ( pRocket && pRocket->m_iDeflected )
+				{
+					// Fire weapon deflects go here.
+					switch ( pRocket->GetWeaponID() )
+					{
+					case TF_WEAPON_ROCKETLAUNCHER_FIREBALL:
+						killer_weapon_name = "dragons_fury";
+						break;
+					}
+				}
+			}
+		}
+		else
+		{
+			// Default to flamethrower if no burn weapon is specified.
+			killer_weapon_name = "tf_weapon_flamethrower";
+			iWeaponID = TF_WEAPON_FLAMETHROWER;
+		}
+	}
 	else if ( pScorer && pInflictor && ( pInflictor == pScorer ) )
 	{
 		// If the inflictor is the killer, then it must be their current weapon doing the damage
@@ -5403,14 +5417,12 @@ CBasePlayer *CTFGameRules::GetAssister( CBasePlayer *pVictim, CBasePlayer *pScor
 		{
 			return pHealer;
 		}
-		/*
 		// Players who apply jarate should get next priority
 		CTFPlayer *pThrower = ToTFPlayer( static_cast<CBaseEntity *>( pTFVictim->m_Shared.m_hUrineAttacker.Get() ) );
 		if( pThrower && pThrower != pTFScorer )
 		{
 			return pThrower;
 		}
-		*/
 
 		// See who has damaged the victim 2nd most recently (most recent is the killer), and if that is within a certain time window.
 		// If so, give that player an assist.  (Only 1 assist granted, to single other most recent damager.)
@@ -5442,13 +5454,7 @@ CBaseEntity *CTFGameRules::GetAssister( CBaseEntity *pVictim, CBaseEntity *pKill
 		if ( pHealer && pHealer->IsPlayerClass( TF_CLASS_MEDIC ) && ( dynamic_cast<CObjectSentrygun *>( pInflictor ) ) == NULL )
 		{
 			return pHealer;
-		}/*
-		// Players who apply jarate should get next priority
-		CTFPlayer *pThrower = ToTFPlayer( static_cast<CBaseEntity *>( pTFVictim->m_Shared.m_hUrineAttacker.Get() ) );
-		if( pThrower && pThrower != pTFScorer )
-		{
-			return pThrower;
-		}*/
+		}
 
 		// See who has damaged the victim 2nd most recently (most recent is the killer), and if that is within a certain time window.
 		// If so, give that player an assist.  (Only 1 assist granted, to single other most recent damager.)

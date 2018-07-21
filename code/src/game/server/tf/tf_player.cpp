@@ -128,6 +128,7 @@ extern ConVar tf_gravetalk;
 
 // Team Fortress 2 Classic commands
 ConVar tf2c_random_weapons( "tf2c_random_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with random loadout. CURRENTLY BROKEN!!!" );
+ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with gravity gun. CURRENTLY BROKEN!!!" );
 
 ConVar tf2c_force_stock_weapons( "tf2c_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
 ConVar tf2c_legacy_weapons( "tf2c_legacy_weapons", "0", FCVAR_DEVELOPMENTONLY, "Disables all new weapons as well as Econ Item System." );
@@ -552,6 +553,8 @@ CTFPlayer::CTFPlayer()
 	m_nBlastJumpFlags = 0;
 	m_bBlastLaunched = false;
 	m_bJumpEffect = false;
+
+	m_bAirblasted = false;
 
 	memset( m_WeaponPreset, 0, TF_CLASS_COUNT_ALL * TF_LOADOUT_SLOT_COUNT * sizeof( int ) );
 
@@ -1697,7 +1700,8 @@ void CTFPlayer::GiveDefaultItems()
 	ManageBuilderWeapons( pData );
 
 	// Give gravity gun if allowed.
-	ManageTeamWeapons( pData );
+	if ( lfe_allow_team_weapons.GetBool() )
+		ManageTeamWeapons( pData );
 
 	// Equip weapons set by tf_player_equip
 	CBaseEntity	*pWeaponEntity = NULL;
@@ -1907,22 +1911,21 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 		return;
 
 	CTFTeam *pTeam = GetTFTeam();
-	
+
 	if ( !pTeam )
 		return;
 
 	// Remove any weapons that we're not supposed to carry.
-	for ( int i = 0; i < MAX_WEAPONS; i++ )
+	for ( int i = 0; i < WeaponCount(); i++) 
 	{
 		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( i );
 
 		if ( pWeapon )
 		{
-			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) )
+			if ( pWeapon->IsWeapon( TF_WEAPON_PHYSCANNON ) && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) ) //TF_LOADOUT_SLOT_ACTION
 			{
 				// Not supposed to be carrying this weapon, nuke it.
-				Weapon_Detach( pWeapon );
-				UTIL_Remove( pWeapon );
+				pWeapon->UnEquip( this );
 			}
 		}
 	}
@@ -4227,7 +4230,13 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		bitsDamage |= DMG_MINICRITICAL;
 		info.AddDamageType( DMG_MINICRITICAL );
 	}
-
+	/*
+	if ( pTFAttacker->m_Shared.IsMiniCritBoosted() )
+	{
+		bitsDamage |= DMG_MINICRITICAL;
+		info.AddDamageType( DMG_MINICRITICAL );
+	}
+	*/
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
@@ -4284,7 +4293,16 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			bitsDamage |= DMG_MINICRITICAL;
 			info.AddDamageType( DMG_MINICRITICAL );
 		}
-		
+
+		int nMiniCritOnAirborne = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritOnAirborne, mini_crit_airborne );
+
+		if ( nMiniCritOnAirborne && m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		{
+			bitsDamage |= DMG_MINICRITICAL;
+			info.AddDamageType( DMG_MINICRITICAL );
+		}
+
 		// Notify the damaging weapon.
 		pWeapon->ApplyOnHitAttributes( this, info );
 	}
@@ -4744,9 +4762,10 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	}
 	else
 	{
-		if ( m_Shared.InCond( TF_COND_POWERUP_SHIELD ) )
+		if ( m_Shared.InCond( TF_COND_AIMING ) )
 		{
-			flDamage *= 0.4f;
+			flDamage *= 0.0f;
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, spunup_damage_resistance );
 		}
 	}
 
@@ -4910,7 +4929,7 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: mini-crits for reserve shooter
 //-----------------------------------------------------------------------------
 void CTFPlayer::SetBlastJumpState( int iJumpType, bool bPlaySound )
 {
@@ -4973,6 +4992,27 @@ void CTFPlayer::ClearBlastJumpState( void )
 	m_nBlastJumpFlags = 0;
 	m_bJumpEffect = false;
 	m_Shared.RemoveCond( TF_COND_BLASTJUMPING );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: no mini-crits for reserve shooter
+//-----------------------------------------------------------------------------
+void CTFPlayer::SetAirblastState( bool bAirblastState )
+{
+	bAirblastState = m_bAirblasted;
+	bAirblastState = true;
+
+	m_Shared.AddCond( TF_COND_KNOCKED_INTO_AIR );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CTFPlayer::ClearAirblastState( void )
+{
+	m_bAirblasted = false;
+
+	m_Shared.RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 }
 
 //-----------------------------------------------------------------------------
@@ -5084,6 +5124,14 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		{
 			pszCustomDeath = "customdeath:burning";
 		}
+		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
+		{
+			pszCustomDeath = "customdeath:burning";
+		}
+		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
+		{
+			pszCustomDeath = "customdeath:burning";
+		}
 
 		// Revenge handler
 		const char *pszDomination = "domination:none";
@@ -5168,6 +5216,14 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 			pszCustomDeath = "customdeath:backstab";
 		}
 		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING )
+		{
+			pszCustomDeath = "customdeath:burning";
+		}
+		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
+		{
+			pszCustomDeath = "customdeath:burning";
+		}
+		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
 		{
 			pszCustomDeath = "customdeath:burning";
 		}
@@ -6007,7 +6063,7 @@ void CTFPlayer::DropPowerups( void )
 		int nCond = g_aPowerupConds[i];
 		if ( m_Shared.InCond( nCond ) )
 		{
-			CTFRune::Create( WorldSpaceCenter(), vec3_angle, this, g_aPowerupNames[i], m_Shared.GetConditionDuration( nCond ) );
+			CTFRune::Create( WorldSpaceCenter(), vec3_angle, this, "item_powerup_rune", m_Shared.GetConditionDuration( nCond ) );
 		}
 	}
 }
@@ -9691,17 +9747,6 @@ void CTFPlayer::UpdatePlayerColor( void )
 	vecNewColor.z = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_b" ) ) / 255.0f;
 
 	m_vecPlayerColor = vecNewColor;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::RemoveSpawnProtection( void )
-{
-	if ( m_Shared.InCond( TF_COND_INVULNERABLE_SPAWN_PROTECT ) )
-	{
-		m_Shared.RemoveCond( TF_COND_INVULNERABLE_SPAWN_PROTECT );
-	}
 }
 
 //-----------------------------------------------------------------------------

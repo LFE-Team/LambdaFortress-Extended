@@ -499,6 +499,16 @@ CTFTeam *GetGlobalTFTeam( int iIndex )
 
 void CTFTeam::GetOpposingTFTeamList(CUtlVector<CTFTeam *> *pTeamList)
 {
+	// if it's friendlyfire then everyone is enemy
+	if ( TFGameRules()->IsFriendlyFire() )
+	{
+		pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_RED));
+		pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_BLUE));
+		pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_GREEN));
+		pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_YELLOW));
+		return;
+	}
+
 	int iTeam = GetTeamNumber();
 	switch (iTeam)
 	{
@@ -525,7 +535,7 @@ void CTFTeam::GetOpposingTFTeamList(CUtlVector<CTFTeam *> *pTeamList)
 			pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_BLUE));
 			pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_GREEN));
 			break;
-			
+
 		default:
 			// Makes unassigned sentries shoot everyone, hehe.
 			pTeamList->AddToTail(TFTeamMgr()->GetTeam(TF_TEAM_RED));

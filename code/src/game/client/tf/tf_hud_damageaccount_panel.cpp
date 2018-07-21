@@ -275,7 +275,7 @@ void CDamageAccountPanel::OnDamaged( IGameEvent *event )
 	}
 	else
 	{
-		vecTextPos = pVictim->EyePosition();
+		vecTextPos = pVictim->WorldSpaceCenter() +  Vector( 0, 0, pVictim->WorldAlignMaxs().z );;
 	}
 
 	bool bBatch = false;

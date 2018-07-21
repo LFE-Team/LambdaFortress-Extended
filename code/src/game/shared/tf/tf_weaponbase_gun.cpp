@@ -143,7 +143,6 @@ void CTFWeaponBaseGun::PrimaryAttack( void )
 #ifndef CLIENT_DLL
 	pPlayer->RemoveInvisibility();
 	pPlayer->RemoveDisguise();
-	pPlayer->RemoveSpawnProtection();
 
 	// Minigun has custom handling
 	if ( GetWeaponID() != TF_WEAPON_MINIGUN )
@@ -224,6 +223,7 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 		break;
 
 	case TF_PROJECTILE_ROCKET:
+	case TF_PROJECTILE_BALLOFFIRE:
 		pProjectile = FireRocket( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
@@ -522,19 +522,9 @@ CBaseEntity *CTFWeaponBaseGun::FireRocket( CTFPlayer *pPlayer, int iType )
 	case TF_PROJECTILE_ROCKET:
 		pProjectile = CTFProjectile_Rocket::Create( this, vecSrc, angForward, pPlayer, pPlayer );
 		break;
-	case TF_PROJECTILE_FLARE:
-		pProjectile = CTFProjectile_Flare::Create( this, vecSrc, angForward, pPlayer, pPlayer );
+	case TF_PROJECTILE_BALLOFFIRE:
+		pProjectile = CTFProjectile_BallOfFire::Create( this, vecSrc, angForward, pPlayer, pPlayer );
 		break;
-		/*
-	case TF_PROJECTILE_ARROW:
-	case TF_PROJECTILE_HEALING_BOLT:
-	case TF_PROJECTILE_BUILDING_REPAIR_BOLT:
-	case TF_PROJECTILE_FESTITIVE_ARROW:
-	case TF_PROJECTILE_FESTITIVE_HEALING_BOLT:
-	//case TF_PROJECTILE_GRAPPLINGHOOK:
-		pProjectile = CTFProjectile_Arrow::Create( this, vecSrc, angForward, GetProjectileSpeed(), GetProjectileGravity(), pPlayer, pPlayer, iType );
-		break;
-		*/
 	default:
 		Assert( false );
 		break;

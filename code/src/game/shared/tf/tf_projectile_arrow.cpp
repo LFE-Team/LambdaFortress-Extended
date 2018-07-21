@@ -16,6 +16,7 @@
 #include "debugoverlay_shared.h"
 #include "te_effect_dispatch.h"
 #include "decals.h"
+#include "bone_setup.h"
 #endif
 
 #ifdef GAME_DLL
@@ -257,117 +258,113 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 
 	if ( pPlayer )
 	{
-		//trace_t trPlayerHit;
-		//Trace ahead to see if we're going to hit player's hitbox.
-		UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * gpGlobals->frametime, MASK_SHOT, this, COLLISION_GROUP_NONE, &trHit );
-		if ( trHit.m_pEnt != pOther )
+		// Determine where we should land
+		Vector vecDir = GetAbsVelocity();
+		VectorNormalizeFast( vecDir );
+		CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
+		if ( !pStudioHdr )
+			return;
+
+		mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pPlayer->GetHitboxSet() );
+		if ( !set )
+			return;
+
+		if ( pStudioHdr )
 		{
-			// Determine where we should land
-
-			Vector vecDir = GetAbsVelocity();
-			VectorNormalizeFast( vecDir );
-			/*
-			CStudioHdr *pStudioHdr = pPlayer->GetModelPtr();
-			if ( !pStudioHdr )
-				return;
-
-			mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pPlayer->GetHitboxSet() );
-			if ( !set )
-				return;
-			*/
-			
-			CStudioHdr *pHdr = pPlayer->GetModelPtr();
-			if ( pHdr )
+			int set = pPlayer->GetHitboxSet();
+			for( int i = 0; i < pStudioHdr->iHitboxCount(set); i++ )
 			{
-				int set = pPlayer->GetHitboxSet();
-				for( int i = 0; i < pHdr->iHitboxCount(set); i++ )
-				{
-					mstudiobbox_t *pBox = pHdr->pHitbox( i, set );
-					if ( !pBox )
-						continue;
+				mstudiobbox_t *pBox = pStudioHdr->pHitbox( i, set );
+				if ( !pBox )
+					continue;
 
-					if ( pBox->group == HITGROUP_HEAD )
+				if ( pBox->group == HITGROUP_HEAD )
+				{
+					float flDamage = info_modified.GetDamage();
+					bool bCritical = true;
+
+					if ( pWeapon && !pWeapon->CanFireCriticalShot( true ) )
 					{
-						float flDamage = info_modified.GetDamage();
-						bool bCritical = true;
-
-						if ( pWeapon && !pWeapon->CanFireCriticalShot( true ) )
-						{
-							bCritical = false;
-						}
-
-						if ( bCritical )
-						{
-							info_modified.AddDamageType( DMG_CRITICAL );
-							info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
-
-							// play the critical shot sound to the shooter	
-							if ( pWeapon )
-							{
-								pWeapon->WeaponSound( BURST );
-								CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, headshot_damage_modify );
-							}
-						}
-
-						info_modified.SetDamage( flDamage );
-
-						break;
+						bCritical = false;
 					}
+
+					if ( bCritical )
+					{
+						info_modified.AddDamageType( DMG_CRITICAL );
+						info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
+
+						// play the critical shot sound to the shooter	
+						if ( pWeapon )
+						{
+							//pWeapon->WeaponSound( BURST );
+							CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, headshot_damage_modify );
+						}
+					}
+
+					info_modified.SetDamage( flDamage );
+
+					break;
 				}
 			}
-
-			// Oh boy... we gotta figure out the closest hitbox on player model to land a hit on.
-			// Trace a bit ahead, to get closer to player's body.
-			//UTIL_TraceLine( vecOrigin, vecOrigin + vecDir * 16.0f, MASK_SHOT, this, COLLISION_GROUP_NONE, &trPlayerHit );
-
-			QAngle angHit;
-			/*
-			float flClosest = FLT_MAX;
-			mstudiobbox_t *pBox;
-			//int group = 0;
-			//Msg( "\nNum of Hitboxes: %i", set->numhitboxes );
-
-			for ( int i = 0; i < set->numhitboxes; i++ )
-			{
-				pBox = set->pHitbox( i );
-				//Msg( "\nGroup: %i", pBox->group );
-
-				Vector boxPosition;
-				QAngle boxAngles;
-				pPlayer->GetBonePosition( pBox->bone, boxPosition, boxAngles );
-				Vector vecCross = CrossProduct( vecOrigin + vecDir * 16, boxPosition );
-
-				trace_t tr;
-				UTIL_TraceLine( vecOrigin, boxPosition, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-
-				float flLengthSqr = ( boxPosition - vecCross ).LengthSqr();
-				if ( flLengthSqr < flClosest )
-				{
-					//Msg( "\nCLOSER: %i", pBox->group );
-					//group = pBox->group;
-					flClosest = flLengthSqr;
-					trHit = tr;
-				}
-			}
-			//Msg("\nClosest: %i\n", group);
-
-			if ( tf_debug_arrows.GetBool() )
-			{
-				//Msg("\nHitBox: %i\nHitgroup: %i\n", trHit.hitbox, trHit.hitgroup);
-				NDebugOverlay::Line( trHit.startpos, trHit.endpos, 0, 255, 0, true, 5.0f );
-				NDebugOverlay::Line( vecOrigin, vecOrigin + vecDir * 16, 255, 0, 0, true, 5.0f );
-			}
-*/
-			// Place arrow at hitbox.
-			SetAbsOrigin( trHit.endpos );
-
-			Vector vecHitDir = trHit.plane.normal * -1.0f;
-			AngleVectors( angHit, &vecHitDir );
-			SetAbsAngles( angHit );
 		}
+
+		// Oh boy... we gotta figure out the closest hitbox on player model to land a hit on.
+
+		QAngle angHit;
+		float flClosest = FLT_MAX;
+		mstudiobbox_t *pBox = NULL, *pCurrentBox = NULL;
+		//int bone = -1;
+		//int group = 0;
+		//Msg( "\nNum of Hitboxes: %i", set->numhitboxes );
+
+		for ( int i = 0; i < set->numhitboxes; i++ )
+		{
+			pCurrentBox = set->pHitbox( i );
+			//Msg( "\nGroup: %i", pBox->group );
+
+			Vector boxPosition;
+			QAngle boxAngles;
+			pPlayer->GetBonePosition( pCurrentBox->bone, boxPosition, boxAngles );
+			Vector vecCross = CrossProduct( vecOrigin + vecDir * 16, boxPosition );
+
+			trace_t tr;
+			UTIL_TraceLine( vecOrigin, boxPosition, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+
+			float flLengthSqr = ( boxPosition - vecCross ).LengthSqr();
+			if ( flLengthSqr < flClosest )
+			{
+				//Msg( "\nCLOSER: %i", pBox->group );
+				//group = pBox->group;
+				flClosest = flLengthSqr;
+				trHit = tr;
+				pBox = pCurrentBox;
+			}
+		}
+		//Msg("\nClosest: %i\n", group);
+ 
+		if ( tf_debug_arrows.GetBool() )
+		{
+			//Msg("\nHitBox: %i\nHitgroup: %i\n", trHit.hitbox, trHit.hitgroup);
+			NDebugOverlay::Line( trHit.startpos, trHit.endpos, 0, 255, 0, true, 5.0f );
+			NDebugOverlay::Line( vecOrigin, vecOrigin + vecDir * 16, 255, 0, 0, true, 5.0f );
+ 		}
 		EmitSound( "Weapon_Arrow.ImpactFlesh" );
 
-		// Only do skewer effects if the player is going to die
+		if ( !PositionArrowOnBone( pBox , pPlayer ) )
+		{
+			// This shouldn't happen
+			UTIL_Remove( this );
+			return;
+		}
+
+		Vector vecOrigin;
+		QAngle vecAngles;
+		int bone, iPhysicsBone;
+		GetBoneAttachmentInfo( pBox, pPlayer, vecOrigin, vecAngles, bone, iPhysicsBone );
+
+		// TODO: Redo the whole "BoltImpact" logic
+
+		// CTFProjectile_Arrow::CheckRagdollPinned
 		if( GetDamage() > pPlayer->GetHealth() )
 		{
 			Vector vForward;
@@ -392,6 +389,26 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 			
 					DispatchEffect( "BoltImpact", data );
 				}
+			}
+		}
+		else
+		{
+			
+			IGameEvent *event = gameeventmanager->CreateEvent( "arrow_impact" );
+			
+			if ( event )
+			{
+				event->SetInt( "attachedEntity", pOther->entindex() );
+				event->SetInt( "shooter", pAttacker->entindex() );
+				event->SetInt( "boneIndexAttached", bone );
+				event->SetFloat( "bonePositionX", vecOrigin.x );
+				event->SetFloat( "bonePositionY", vecOrigin.y );
+				event->SetFloat( "bonePositionZ", vecOrigin.z );
+				event->SetFloat( "boneAnglesX", vecAngles.x );
+				event->SetFloat( "boneAnglesY", vecAngles.y );
+				event->SetFloat( "boneAnglesZ", vecAngles.z );
+				
+				gameeventmanager->FireEvent( event );
 			}
 		}
 	}
@@ -610,6 +627,64 @@ void CTFProjectile_Arrow::UpdateOnRemove( void )
 	BaseClass::UpdateOnRemove();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFProjectile_Arrow::PositionArrowOnBone(mstudiobbox_t *pbox, CBaseAnimating *pAnim )
+{
+	matrix3x4_t *bones[MAXSTUDIOBONES];
+
+	CStudioHdr *pStudioHdr = pAnim->GetModelPtr();	
+	if ( !pStudioHdr )
+		return false;
+
+	mstudiohitboxset_t *set = pStudioHdr->pHitboxSet( pAnim->GetHitboxSet() );
+
+	if ( !set->numhitboxes || pbox->bone > 127 )
+		return false;
+
+	CBoneCache *pCache = pAnim->GetBoneCache();
+	if ( !pCache )
+		return false;
+
+	pCache->ReadCachedBonePointers( bones, pStudioHdr->numbones() );
+	
+	Vector vecMins, vecMaxs, vecResult;
+	TransformAABB( *bones[pbox->bone], pbox->bbmin, pbox->bbmax, vecMins, vecMaxs );
+	vecResult = vecMaxs - vecMins;
+
+	// This is a mess
+	SetAbsOrigin( ( ( ( vecResult ) * 0.60000002f ) + vecMins ) + ( ( ( rand() / RAND_MAX ) *  vecResult ) * -0.2f ) );
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFProjectile_Arrow::GetBoneAttachmentInfo( mstudiobbox_t *pbox, CBaseAnimating *pAnim, Vector &vecOrigin, QAngle &vecAngles, int &bone, int &iPhysicsBone )
+{
+	bone = pbox->bone;
+	iPhysicsBone = pAnim->GetPhysicsBone( bone );
+	//pAnim->GetBonePosition( bone, vecOrigin, vecAngles );
+
+	matrix3x4_t arrowToWorld, boneToWorld, invBoneToWorld, boneToWorldTransform;
+	MatrixCopy( EntityToWorldTransform(), arrowToWorld );
+	pAnim->GetBoneTransform( bone, boneToWorld );
+
+	MatrixInvert( boneToWorld, invBoneToWorld );
+	ConcatTransforms( invBoneToWorld, arrowToWorld, boneToWorldTransform );
+	MatrixAngles( boneToWorldTransform, vecAngles );
+	MatrixGetColumn( boneToWorldTransform, 3, vecOrigin );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFProjectile_Arrow::CheckRagdollPinned( Vector &, Vector &, int, int, CBaseEntity *, int, int )
+{
+}
+
 #else
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -629,6 +704,13 @@ void C_TFProjectile_Arrow::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void C_TFProjectile_Arrow::ClientThink( void )
 {
+	if ( m_bAttachment && m_flDieTime < gpGlobals->curtime )
+	{
+		SetNextClientThink( CLIENT_THINK_NEVER );
+		Remove();
+		return;
+	}
+
 	if( m_bFlame && !bEmitting )
 	{
 		Light();
@@ -650,4 +732,12 @@ void C_TFProjectile_Arrow::Light( void )
 	ParticleProp()->Create( "flying_flaming_arrow", PATTACH_ABSORIGIN_FOLLOW );
 }
 
+void C_TFProjectile_Arrow::NotifyBoneAttached( C_BaseAnimating* attachTarget )
+ {
+ 	BaseClass::NotifyBoneAttached( attachTarget );
+
+	m_flDieTime = gpGlobals->curtime + 60.0f;
+	m_bAttachment = true;
+	SetNextClientThink( CLIENT_THINK_ALWAYS );
+}
 #endif

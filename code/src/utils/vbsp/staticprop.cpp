@@ -168,18 +168,25 @@ bool LoadStudioModel( char const* pModelName, char const* pEntityType, CUtlBuffe
 	}
 
 	isstaticprop_ret isStaticProp = IsStaticProp(pHdr);
-	if ( isStaticProp != RET_VALID )
+	if (isStaticProp == RET_FAIL_NOT_MARKED_STATIC_PROP)
 	{
-		if ( isStaticProp == RET_FAIL_NOT_MARKED_STATIC_PROP )
-		{
-			Warning("Error! To use model \"%s\"\n"
-				"      with %s, it must be compiled with $staticprop!\n", pModelName, pEntityType );
-		}
-		else if ( isStaticProp == RET_FAIL_DYNAMIC )
-		{
-			Warning("Error! %s using model \"%s\", which must be used on a dynamic entity (i.e. prop_physics). Deleted.\n", pEntityType, pModelName );
-		}
+		Warning("Error! To use model \"%s\"\n"
+			"      with %s, it must be compiled with $staticprop!\n", pModelName, pEntityType);
+
 		return false;
+	}
+	else if (isStaticProp == RET_FAIL_DYNAMIC)
+	{
+		if (!g_bAllowDynamicPropsAsStatic)
+		{
+			Warning("Error! %s using model \"%s\", which must be used on a dynamic entity (i.e. prop_physics). Deleted.\n", pEntityType, pModelName);
+
+			return false;
+		}
+		else //Warn the user about using a dynamic prop as a prop_static
+		{
+			Warning("Warning! %s using model \"%s\", is used on a prop_static.\n", pEntityType, pModelName);
+		}
 	}
 
 	// ensure reset

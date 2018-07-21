@@ -13,6 +13,7 @@
 #include "mathlib/mathlib.h"
 #endif
 
+#include "mathlib/vector4d.h"
 #include "datamap.h"
 #include "mathlib/bumpvects.h"
 #include "mathlib/compressed_light_cube.h"
@@ -22,7 +23,7 @@
 
 // MINBSPVERSION is the minimum acceptable version.  The engine will load MINBSPVERSION through BSPVERSION
 #define MINBSPVERSION 19
-#define BSPVERSION 20
+#define BSPVERSION 21 // 20
 
 
 // This needs to match the value in gl_lightmap.h
@@ -59,7 +60,7 @@
 // 16 bit short limits
 #define	MAX_MAP_MODELS					1024
 #define	MAX_MAP_BRUSHES					8192
-#define	MAX_MAP_ENTITIES				8192
+#define	MAX_MAP_ENTITIES				16384 // 8192
 #define	MAX_MAP_TEXINFO					12288
 #define MAX_MAP_TEXDATA					2048
 #define MAX_MAP_DISPINFO				2048
@@ -149,7 +150,7 @@
 #endif // BSP_USE_LESS_MEMORY
 
 // key / value pair sizes
-#define	MAX_KEY		32
+#define	MAX_KEY		64 // original = 32
 #define	MAX_VALUE	1024
 
 
@@ -300,10 +301,11 @@ enum
 	LUMP_BRUSHSIDES					= 19,	// *
 	LUMP_AREAS						= 20,	// *
 	LUMP_AREAPORTALS				= 21,	// *
-	LUMP_UNUSED0					= 22,
-	LUMP_UNUSED1					= 23,
-	LUMP_UNUSED2					= 24,
-	LUMP_UNUSED3					= 25,
+	LUMP_PROPCOLLISION				= 22,	// static props convex hull lists 					//LUMP_UNUSED0					= 22,
+	LUMP_PROPHULLS					= 23,	// static prop convex hulls							//LUMP_UNUSED1					= 23,
+	LUMP_PROPHULLVERTS				= 24,	// static prop collision verts						//LUMP_UNUSED2					= 24,
+	LUMP_PROPTRIS					= 25,	// static prop per hull triangle index start/count	//LUMP_UNUSED3					= 25,
+
 	LUMP_DISPINFO					= 26,
 	LUMP_ORIGINALFACES				= 27,
 	LUMP_PHYSDISP					= 28,
@@ -338,7 +340,7 @@ enum
 	LUMP_LEAFMINDISTTOWATER			= 46,
 	LUMP_FACE_MACRO_TEXTURE_INFO	= 47,
 	LUMP_DISP_TRIS					= 48,
-	LUMP_PHYSCOLLIDESURFACE			= 49,	// deprecated.  We no longer use win32-specific havok compression on terrain
+	LUMP_PROP_BLOB					= 49,	// static prop triangle & string data	//LUMP_PHYSCOLLIDESURFACE			= 49,	// deprecated.  We no longer use win32-specific havok compression on terrain
 	LUMP_WATEROVERLAYS              = 50,
 	LUMP_LEAF_AMBIENT_INDEX_HDR		= 51,	// index of LUMP_LEAF_AMBIENT_LIGHTING_HDR
 	LUMP_LEAF_AMBIENT_INDEX         = 52,	// index of LUMP_LEAF_AMBIENT_LIGHTING
@@ -353,6 +355,9 @@ enum
 	LUMP_FACES_HDR					= 58,	// HDR maps may have different face data.
 	LUMP_MAP_FLAGS                  = 59,   // extended level-wide flags. not present in all levels
 	LUMP_OVERLAY_FADES				= 60,	// Fade distances for overlays
+	LUMP_OVERLAY_SYSTEM_LEVELS		= 61,	// System level settings (min/max CPU & GPU to render this overlay) 
+	LUMP_PHYSLEVEL                  = 62,
+	LUMP_DISP_MULTIBLEND			= 63,	// Displacement multiblend info
 };
 
 
@@ -364,6 +369,7 @@ enum
 	LUMP_OCCLUSION_VERSION         = 2,
 	LUMP_LEAFS_VERSION			   = 1,
 	LUMP_LEAF_AMBIENT_LIGHTING_VERSION = 1,
+	LUMP_WORLDLIGHTS_VERSION	   = 1
 };
 
 
@@ -635,6 +641,21 @@ public:
 	unsigned short m_uiTags;		// Displacement triangle tags.
 };
 
+#define MAX_MULTIBLEND_CHANNELS		4
+
+class CDispMultiBlend
+{
+public:
+	DECLARE_BYTESWAP_DATADESC();
+
+	Vector4D	m_vMultiBlend;
+	Vector4D	m_vAlphaBlend;
+	Vector		m_vMultiBlendColors[ MAX_MULTIBLEND_CHANNELS ];
+};
+
+#define DISP_INFO_FLAG_HAS_MULTIBLEND	0x40000000
+#define DISP_INFO_FLAG_MAGIC			0x80000000
+
 class ddispinfo_t
 {
 public:
@@ -786,10 +807,11 @@ struct dfaceid_t
 };
 
 
-// NOTE: Only 7-bits stored!!!
+// NOTE: Only 7-bits stored on disk!!!
 #define LEAF_FLAGS_SKY			0x01		// This leaf has 3D sky in its PVS
 #define LEAF_FLAGS_RADIAL		0x02		// This leaf culled away some portals due to radial vis
 #define LEAF_FLAGS_SKY2D		0x04		// This leaf has 2D sky in its PVS
+#define LEAF_FLAGS_CONTAINS_DETAILOBJECTS 0x08				// this leaf has at least one detail object in it (set by loader).
 
 #if defined( _X360 )
 #pragma bitfield_order( push, lsb_to_msb )
@@ -963,7 +985,31 @@ enum emittype_t
 
 // Flags for dworldlight_t::flags
 #define DWL_FLAGS_INAMBIENTCUBE		0x0001	// This says that the light was put into the per-leaf ambient cubes.
+#define DWL_FLAGS_CASTENTITYSHADOWS	0x0002	// This says that the light will cast shadows from entities
 
+// Old version of the worldlight struct, used for backward compatibility loading.
+struct dworldlight_version0_t
+{
+	DECLARE_BYTESWAP_DATADESC();
+	Vector		origin;
+	Vector		intensity;
+	Vector		normal;			// for surfaces and spotlights
+	int			cluster;
+	emittype_t	type;
+	int			style;
+	float		stopdot;		// start of penumbra for emit_spotlight
+	float		stopdot2;		// end of penumbra for emit_spotlight
+	float		exponent;		// 
+	float		radius;			// cutoff distance
+	// falloff for emit_spotlight + emit_point: 
+	// 1 / (constant_attn + linear_attn * dist + quadratic_attn * dist^2)
+	float		constant_attn;	
+	float		linear_attn;
+	float		quadratic_attn;
+	int			flags;			// Uses a combination of the DWL_FLAGS_ defines.
+	int			texinfo;		// 
+	int			owner;			// entity that this light it relative to
+};
 
 struct dworldlight_t
 {
@@ -971,6 +1017,7 @@ struct dworldlight_t
 	Vector		origin;
 	Vector		intensity;
 	Vector		normal;			// for surfaces and spotlights
+	Vector		shadow_cast_offset;	// gets added to the light origin when this light is used as a shadow caster (only if DWL_FLAGS_CASTENTITYSHADOWS flag is set)
 	int			cluster;
 	emittype_t	type;
     int			style;

@@ -290,7 +290,6 @@ public:
 	virtual void FireGameEvent( IGameEvent *event );
 
 	void UpdateSpyMask( void );
-	void UpdateShieldEffect( void );
 
 	void UpdateTypingBubble( void );
 	void UpdateOverhealEffect( void );

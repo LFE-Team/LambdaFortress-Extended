@@ -438,8 +438,7 @@ bool CTFPlayerShared::IsCritBoosted( void )
 		InCond( TF_COND_CRITBOOSTED_CTF_CAPTURE ) ||
 		InCond( TF_COND_CRITBOOSTED_ON_KILL ) ||
 		InCond( TF_COND_CRITBOOSTED_CARD_EFFECT ) ||
-		InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) ||
-		InCond( TF_COND_POWERUP_CRITDAMAGE ) )
+		InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) )
 		return true;
 
 	return false;
@@ -467,8 +466,7 @@ bool CTFPlayerShared::IsInvulnerable( void )
 	if ( InCond( TF_COND_INVULNERABLE ) ||
 		InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE ) ||
 		InCond( TF_COND_INVULNERABLE_USER_BUFF ) ||
-		InCond( TF_COND_INVULNERABLE_CARD_EFFECT ) ||
-		InCond( TF_COND_INVULNERABLE_SPAWN_PROTECT ) )
+		InCond( TF_COND_INVULNERABLE_CARD_EFFECT ) )
 		return true;
 
 	return false;
@@ -480,8 +478,7 @@ bool CTFPlayerShared::IsInvulnerable( void )
 bool CTFPlayerShared::IsStealthed( void )
 {
 	if ( InCond( TF_COND_STEALTHED ) ||
-		InCond( TF_COND_STEALTHED_USER_BUFF ) ||
-		InCond( TF_COND_POWERUP_CLOAK ) )
+		InCond( TF_COND_STEALTHED_USER_BUFF ) )
 		return true;
 
 	return false;
@@ -654,7 +651,6 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 
 	case TF_COND_STEALTHED:
 	case TF_COND_STEALTHED_USER_BUFF:
-	case TF_COND_POWERUP_CLOAK:
 		OnAddStealthed();
 		break;
 
@@ -690,7 +686,6 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-	case TF_COND_POWERUP_CRITDAMAGE:
 		OnAddCritboosted();
 		break;
 
@@ -738,7 +733,7 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 		OnAddUrine();
 		break;
 		
-	case TF_COND_POWERUP_SPEEDBOOST:
+	case TF_COND_SPEED_BOOST:
 		OnAddSpeedBoost();
 		break;
 
@@ -771,7 +766,6 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 		break;
 
 	case TF_COND_STEALTHED_USER_BUFF:
-	case TF_COND_POWERUP_CLOAK:
 		OnRemoveStealthed();
 		FadeInvis( tf_spy_invis_unstealth_time.GetFloat(), false );
 		break;
@@ -808,7 +802,6 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-	case TF_COND_POWERUP_CRITDAMAGE:
 		OnRemoveCritboosted();
 		break;
 
@@ -851,7 +844,7 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 		OnRemoveUrine();
 		break;
 
-	case TF_COND_POWERUP_SPEEDBOOST:
+	case TF_COND_SPEED_BOOST:
 		OnRemoveSpeedBoost();
 		break;
 
@@ -1660,7 +1653,7 @@ void CTFPlayerShared::OnAddShield( void )
 #ifdef GAME_DLL
 
 #else
-	m_pOuter->UpdateShieldEffect();
+	//m_pOuter->UpdateShieldEffect();
 #endif
 }
 
@@ -1672,7 +1665,7 @@ void CTFPlayerShared::OnRemoveShield( void )
 #ifdef GAME_DLL
 
 #else
-	m_pOuter->UpdateShieldEffect();
+	//m_pOuter->UpdateShieldEffect();
 #endif
 }
 
@@ -1708,7 +1701,7 @@ void CTFPlayerShared::OnAddUrine( void )
 	m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
 
 	// set the burning screen overlay
-	if ( m_pOuter->IsLocalPlayer() && !InCond( TF_COND_POWERUP_RAGEMODE ) )
+	if ( m_pOuter->IsLocalPlayer() )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
 		if ( !IsErrorMaterial( pMaterial ) )
@@ -1883,7 +1876,7 @@ void CTFPlayerShared::OnRemoveBurning( void )
 		m_pOuter->m_pBurningEffect = NULL;
 	}
 
-	if ( m_pOuter->IsLocalPlayer() && !InCond( TF_COND_POWERUP_RAGEMODE ) )
+	if ( m_pOuter->IsLocalPlayer() )
 	{
 		view->SetScreenOverlayMaterial( NULL );
 	}
@@ -2030,7 +2023,7 @@ void CTFPlayerShared::OnAddBurning( void )
 		m_pOuter->m_flBurnEffectEndTime = gpGlobals->curtime + TF_BURNING_FLAME_LIFE;
 	}
 	// set the burning screen overlay
-	if ( m_pOuter->IsLocalPlayer() && !InCond( TF_COND_POWERUP_RAGEMODE ) )
+	if ( m_pOuter->IsLocalPlayer() )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "effects/imcookin", TEXTURE_GROUP_CLIENT_EFFECTS, false );
 		if ( !IsErrorMaterial( pMaterial ) )
@@ -2999,6 +2992,9 @@ int CTFPlayerShared::GetSequenceForDeath( CBaseAnimating *pAnim, int iDamageCust
 	case TF_DMG_CUSTOM_BURNING:
 		pszSequence = "primary_death_burning"; // we need shorter animation
 		break;
+	case TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING:
+		pszSequence = "primary_death_burning"; // we need shorter animation
+		break;
 	case TF_DMG_CUSTOM_DECAPITATION:
 		pszSequence = "primary_death_headshot";
 		break;
@@ -3440,7 +3436,7 @@ void CTFPlayer::TeamFortress_SetSpeed()
 	//}
 
 	// 50% speed boost from the power-up.
-	if ( m_Shared.InCond( TF_COND_POWERUP_SPEEDBOOST ) )
+	if ( m_Shared.InCond( TF_COND_SPEED_BOOST ) )
 	{
 		maxfbspeed *= 1.5f;
 	}
@@ -3498,11 +3494,6 @@ void CTFPlayer::TeamFortress_SetSpeed()
 	if ( m_Shared.InCond( TF_COND_SPEED_BOOST ) )
 	{
 		maxfbspeed *= 1.5f;
-	}
-
-	if ( m_Shared.InCond( TF_COND_POWERUP_RAGEMODE ) )
-	{
-		maxfbspeed *= maxfbspeed;
 	}
 
 	if ( m_Shared.InCond( TF_COND_DISGUISED_AS_DISPENSER ) )

@@ -2259,17 +2259,19 @@ public:
 	void	OnRemoveInvulnerable( void );
 	void	OnAddSlowed( void );
 	void	OnRemoveSlowed( void );
-	void OnAddCritboosted( void );
-	void OnRemoveCritboosted( void );
-	void OnAddMiniCritboosted( void );
-	void OnRemoveMiniCritboosted( void );
-	void OnAddUrine( void );
-	void OnRemoveUrine( void );
+	void	OnAddCritboosted( void );
+	void	OnRemoveCritboosted( void );
+	void	OnAddMiniCritboosted( void );
+	void	OnRemoveMiniCritboosted( void );
+	void	OnAddUrine( void );
+	void	OnRemoveUrine( void );
 
 	// Damager history, used for TF2 assists.
 	void				AddDamagerToHistory( EHANDLE hDamager );
 	void				ClearDamagerHistory();
 	DamagerHistory_t	&GetDamagerHistory( int i ) { return m_DamagerHistory[i]; }
+	void				SetAirblastState( bool bAirblastState );
+	void				ClearAirblastState( void );
 
 	bool	AllowBackstab( void ) { return ( m_nTFFlags & TFFL_NOBACKSTAB ) == 0; }
 	bool	IsMech( void ) { return ( m_nTFFlags & TFFL_MECH ) != 0; }
@@ -2282,6 +2284,11 @@ public:
 	void	SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider );
 
 	CTFTeam *GetTFTeam( void );
+
+	// Jarate Player
+	EHANDLE	m_hUrineAttacker;
+
+	bool	m_bAirblasted;
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;

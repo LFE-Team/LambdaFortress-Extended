@@ -618,10 +618,11 @@ bool CTFWeaponBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	CTFPlayer *pPlayer = GetTFPlayerOwner();
 	if ( pPlayer )
  	{
-		for ( int i = 0; i < m_iHiddenBodygroups.Count(); i++ )
+		while( !m_iHiddenBodygroups.IsEmpty() )
 		{
 			// Reset all hidden bodygroups on holster
-			pPlayer->SetBodygroup( m_iHiddenBodygroups[i] , 0 );
+			pPlayer->SetBodygroup( m_iHiddenBodygroups[0] , 0 );
+			m_iHiddenBodygroups.Remove( 0 );
 		}
 	}
 
@@ -990,38 +991,14 @@ void CTFWeaponBase::CalcIsAttackCritical( void )
 	{
 		m_bCurrentAttackIsCrit = true;
 	}
+	else if ( pPlayer->m_Shared.IsMiniCritBoosted() )
+	{
+		m_bCurrentAttackIsMiniCrit = true;
+	}
 	else
 	{
 		// call the weapon-specific helper method
 		m_bCurrentAttackIsCrit = CalcIsAttackCriticalHelper();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Most calls use the prediction seed
-//-----------------------------------------------------------------------------
-void CTFWeaponBase::CalcIsAttackMiniCritical( void )
-{
-	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
-	if ( !pPlayer )
-		return;
-
-	if ( gpGlobals->framecount == m_iLastCritCheckFrame )
-		return;
-
-	m_iLastCritCheckFrame = gpGlobals->framecount;
-
-	// if base entity seed has changed since last calculation, reseed with new seed
-	int iSeed = CBaseEntity::GetPredictionRandomSeed();
-	if ( iSeed != m_iCurrentSeed )
-	{
-		m_iCurrentSeed = iSeed;
-		RandomSeed( m_iCurrentSeed );
-	}
-
-	if ( pPlayer->m_Shared.IsMiniCritBoosted() )
-	{
-		m_bCurrentAttackIsMiniCrit = true;
 	}
 }
 

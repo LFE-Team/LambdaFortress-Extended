@@ -711,7 +711,7 @@ void CTFFlameThrower::DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker,
 	if ( !TFGameRules() )
 		return;
 
-	if ( ( pEntity->GetTeamNumber() == pAttacker->GetTeamNumber() ) )
+	if ( ( pEntity->GetTeamNumber() == pAttacker->GetTeamNumber() ) && !TFGameRules()->IsFriendlyFire() )
 		return;
 
 	pEntity->Deflected( pAttacker, vecDir );
@@ -726,7 +726,7 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 	int nPushbackDisabled = 0;
 	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
 
-	if ( pVictim->InSameTeam( pAttacker ) )
+	if ( pVictim->InSameTeam( pAttacker ) && !TFGameRules()->IsFriendlyFire() )
 	{
 		if ( pVictim->m_Shared.InCond( TF_COND_BURNING ) )
 		{
@@ -776,6 +776,7 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 			pVictim->SetGroundEntity( NULL );
 			pVictim->SetAbsVelocity( vecDir * 500 );
 			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+			pVictim->SetAirblastState( true );
 
 			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
 			pVictim->AddDamagerToHistory( pAttacker );
@@ -791,7 +792,7 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 	int nPushbackDisabled = 0;
 	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
 
-	if ( pVictim->InSameTeam( pAttacker ) )
+	if ( pVictim->InSameTeam( pAttacker ) && !TFGameRules()->IsHL1FriendlyFire() )
 	{
 		if ( pVictim->IsOnFire() )
 		{
@@ -841,6 +842,7 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 			pVictim->SetGroundEntity( NULL );
 			pVictim->SetAbsVelocity( vecDir * 500 );
 			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+			pVictim->AddCond( TF_COND_KNOCKED_INTO_AIR, PERMANENT_CONDITION );
 
 			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
 			pVictim->AddDamagerToHistory( pAttacker );
@@ -870,7 +872,7 @@ void CTFFlameThrower::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker
 			//{
 				flDist = (pEntity->WorldSpaceCenter() - GetAbsOrigin()).Length();
 
-					CTakeDamageInfo info( this, this, 0, DMG_BLAST );
+					CTakeDamageInfo info( this, this, 2, DMG_BLAST );
 					CalculateExplosiveDamageForce( &info, (pEntity->GetAbsOrigin() - GetAbsOrigin()), pEntity->GetAbsOrigin() );
 					
 					if ( (pEntity->GetAbsOrigin() - GetAbsOrigin()).Length2D() <= lfe_debug_airblast_physics_distance.GetFloat() )
@@ -1670,6 +1672,14 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 				return;
 			}
 
+			// if there is nothing solid in the way, damage the entity
+			OnCollide( pOther );
+		}
+		else
+		{
+			// we hit the world
+			*pbHitWorld = true;
+
 			if ( pProp )
 			{
 				// If we won't be able to break it, don't burn
@@ -1682,15 +1692,9 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 				}
 			}
 
-			// if there is nothing solid in the way, damage the entity
 			OnCollide( pOther );
-		}/*
-		else
-		{
-			// we hit the world, remove ourselves
-			*pbHitWorld = true;
-			UTIL_Remove( this );
-		}*/
+			//UTIL_Remove( this );
+		}
 	}
 }
 

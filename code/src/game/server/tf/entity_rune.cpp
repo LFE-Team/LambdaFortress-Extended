@@ -331,6 +331,6 @@ LINK_ENTITY_TO_CLASS( item_powerup_rune_custom, CTFRuneCustom );
 //-----------------------------------------------------------------------------
 CTFRuneCustom::CTFRuneCustom()
 {	
-	m_iPowerupCondition = TF_COND_POWERUP_CRITDAMAGE;
+	m_iPowerupCondition = TF_COND_INVULNERABLE;
 	m_flEffectDuration = 15.0f;
 }

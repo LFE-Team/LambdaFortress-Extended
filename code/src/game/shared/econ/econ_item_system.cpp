@@ -552,18 +552,20 @@ public:
 					if ( iAttributeID == -1 )
 						continue;
 
-					//EconAttributeDefinition *pAttribDef = GetItemSchema()->GetAttributeDefinition( iAttributeID );
-					
-					/*if ( pAttribDef->string_attribute )
+					EconAttributeDefinition *pAttribDef = GetItemSchema()->GetAttributeDefinition( iAttributeID );
+
+					if ( pAttribDef->string_attribute )
 					{
-						CEconItemAttribute attribute( iAttributeID, pAttribData->GetString( iAttributeID ) );
+						//GET_VALUES_FAST_BOOL( pItem->tags, pAttribDef );
+						//GET_VALUES_FAST_BOOL( pAttribDef, attribute_class );
+						CEconItemAttribute attribute( iAttributeID, pAttribData->GetFloat( iAttributeID ) );
 						pItem->attributes.AddToTail( attribute );
 					}
 					else
-					{*/
+					{
 						CEconItemAttribute attribute( iAttributeID, pAttribData->GetFloat( iAttributeID ) );
 						pItem->attributes.AddToTail( attribute );
-					//}
+					}
 				}
 			}
 			else if ( !V_stricmp( pSubData->GetName(), "visuals_mvm_boss" ) )

@@ -342,6 +342,7 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 
 #ifdef GAME_DLL
 	m_pTFPlayer->m_bBlastLaunched = false;
+	m_pTFPlayer->m_bAirblasted = false;
 #endif
 }
 
@@ -1860,6 +1861,8 @@ void CTFGameMovement::SetGroundEntity( trace_t *pm )
 		{
 			m_pTFPlayer->ClearBlastJumpState();
 		}
+
+		m_pTFPlayer->ClearAirblastState();
 	}
 #endif
 }

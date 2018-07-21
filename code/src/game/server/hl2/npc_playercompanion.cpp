@@ -2887,7 +2887,7 @@ int CNPC_PlayerCompanion::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 		bool bIsEnvFire;
 		if ((bIsEnvFire = FClassnameIs(info.GetAttacker(), "env_fire")) != false || FClassnameIs(info.GetAttacker(), "entityflame") || FClassnameIs(info.GetAttacker(), "env_entity_igniter")
 #ifdef TF_CLASSIC
-			|| (info.GetDamageCustom() & TF_DMG_CUSTOM_BURNING)
+			|| (info.GetDamageCustom() & TF_DMG_CUSTOM_BURNING) || (info.GetDamageCustom() & TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE) || (info.GetDamageCustom() & TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING)
 #endif
 			)
 		{

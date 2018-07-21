@@ -33,7 +33,7 @@ void CTFPowerupPanel::ApplySchemeSettings( IScheme *pScheme )
 {
 	LoadControlSettings( "resource/UI/PowerupPanel.res" );
 
-	if ( m_pProgressBar )
+	/*if ( m_pProgressBar )
 	{
 		for ( int i = 0; g_aPowerupConds[i] != TF_COND_LAST; i++ )
 		{
@@ -47,7 +47,7 @@ void CTFPowerupPanel::ApplySchemeSettings( IScheme *pScheme )
 				m_pProgressBar->SetIcon( szIcon );
 			}
 		}
-	}
+	}*/
 
 	BaseClass::ApplySchemeSettings( pScheme );
 }
@@ -90,12 +90,12 @@ CTFHudCondStatus::CTFHudCondStatus( const char *pElementName ) : CHudElement( pE
 	Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	for ( int i = 0; g_aPowerupConds[i] != TF_COND_LAST; i++ )
+	/*for ( int i = 0; g_aPowerupConds[i] != TF_COND_LAST; i++ )
 	{
 		CTFPowerupPanel *pPowerup = new CTFPowerupPanel( this, "PowerupPanel" );
 		pPowerup->SetData( g_aPowerupConds[i], 0.0f, 0.0f );
 		m_pPowerups.AddToTail( pPowerup );
-	}
+	}*/
 
 	SetHiddenBits( HIDEHUD_MISCSTATUS );
 

@@ -45,7 +45,7 @@ public:
 
 	void			SetCritical( bool bCritical ) { m_bCritical = bCritical; }
 
-	virtual float	GetDetonateTime( void ){ return gpGlobals->curtime + 5.0f; }
+	virtual float	SetTimer( void ){ return gpGlobals->curtime + 5.0f; }
 
 	virtual bool	IsDeflectable() { return true; }
 	virtual void	Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );

@@ -152,7 +152,6 @@ void CTFWeaponBaseMelee::PrimaryAttack()
 #if !defined( CLIENT_DLL ) 
 	pPlayer->RemoveInvisibility();
 	pPlayer->RemoveDisguise();
-	pPlayer->RemoveSpawnProtection();
 
 	pPlayer->SpeakWeaponFire();
 	CTF_GameStats.Event_PlayerFiredWeapon( pPlayer, IsCurrentAttackACritical() );
@@ -221,6 +220,9 @@ void CTFWeaponBaseMelee::DoViewModelAnimation( void )
 	Activity act = ( m_iWeaponMode == TF_WEAPON_PRIMARY_MODE ) ? ACT_VM_HITCENTER : ACT_VM_SWINGHARD;
 
 	if ( IsCurrentAttackACritical() )
+		act = ACT_VM_SWINGHARD;
+
+	if ( IsCurrentAttackAMiniCrit() )
 		act = ACT_VM_SWINGHARD;
 
 	SendWeaponAnim( act );

@@ -330,8 +330,8 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_physcannon",			// Medic
 	"tf_weapon_physcannon",			// Heavy
 	"tf_weapon_physcannon",			// Pyro
-	"tf_weapon_physcannon",			// Spy
-	"tf_weapon_physcannon_secondary",	// Engineer
+	"tf_weapon_physcannon_secondary",	// Spy
+	"tf_weapon_physcannon",	// Engineer
 
 	"tf_weapon_physgun",			// Base weapon to translate
 	NULL,
@@ -410,10 +410,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_LUNCHBOX",
 	"TF_WEAPON_LUNCHBOX_DRINK",
 	"TF_WEAPON_COMPOUND_BOW",
-	// ADD NEW WEAPONS AFTER THIS
-
-	"TF_WEAPON_PHYSCANNON",
-	"TF_WEAPON_PHYSGUN",
 
 	"TF_WEAPON_BAT_FISH",
 	"TF_WEAPON_BAT_GIFTWARP",
@@ -445,7 +441,7 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_ROBOT_ARM",
 	"TF_WEAPON_ROCKETLAUNCHER_AIRSTRIKE",
 	"TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT",
-	"TF_WEPON_FLAME_BALL",
+	"TF_WEAPON_ROCKETLAUNCHER_FIREBALL", //"TF_WEPON_FLAME_BALL",
 	"TF_WEAPON_ROCKETPACK",
 	"TF_WEAPON_SENTRY_REVENGE",
 	"TF_WEAPON_SHOTGUN_BUILDING_RESCUE",
@@ -457,6 +453,10 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_SWORD",
 
 	"TF_WEAPON_STICKBOMB",
+	// ADD NEW WEAPONS AFTER THIS
+
+	"TF_WEAPON_PHYSCANNON",
+	"TF_WEAPON_PHYSGUN",
 
 	"TF_WEAPON_COUNT",	// end marker, do not add below here
 };
@@ -522,9 +522,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC,	// TF_WEAPON_LUNCHBOX,
 	DMG_GENERIC,	// TF_WEAPON_LUNCHBOX_DRINK,
 	DMG_BULLET,		// TF_WEAPON_COMPOUND_BOW
-	// ADD NEW WEAPONS AFTER THIS
-	DMG_GENERIC,	// TF_WEAPON_PHYSCANNON
-	DMG_GENERIC,	// TF_WEAPON_PHYSGUN
 
 	DMG_CLUB,		// TF_WEAPON_BAT_FISH,
 	DMG_CLUB,		// TF_WEAPON_BAT_GIFTWARP,
@@ -556,7 +553,7 @@ int g_aWeaponDamageTypes[] =
 	DMG_CLUB,	// TF_WEAPON_ROBOT_ARM,
 	DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_ROCKETLAUNCHER_AIRSTRIKE,
 	DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT,
-	DMG_IGNITE | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEPON_FLAME_BALL,
+	DMG_IGNITE | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_ROCKETLAUNCHER_FIREBALL //TF_WEPON_FLAME_BALL,
 	DMG_GENERIC,	// TF_WEAPON_ROCKETPACK,
 	DMG_BULLET,	// TF_WEAPON_SENTRY_REVENGE,
 	DMG_BULLET,	// TF_WEAPON_SHOTGUN_BUILDING_RESCUE,
@@ -567,7 +564,11 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK,
 	DMG_CLUB,	// TF_WEAPON_SWORD,
 
-	DMG_CLUB | DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,	// TF_WEAPON_STICKBOMB,
+	DMG_CLUB,	// TF_WEAPON_STICKBOMB,
+
+	// ADD NEW WEAPONS AFTER THIS
+	DMG_GENERIC,	// TF_WEAPON_PHYSCANNON
+	DMG_GENERIC,	// TF_WEAPON_PHYSGUN
 
 	// This is a special entry that must match with TF_WEAPON_COUNT
 	// to protect against updating the weapon list without updating this list
@@ -660,7 +661,7 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_SENTRY_ROCKET,
 	TF_WEAPON_JAR,
 	TF_WEAPON_JAR_GAS,
-	TF_WEPON_FLAME_BALL,
+	TF_WEAPON_ROCKETLAUNCHER_FIREBALL,
 };
 
 const char *g_pszHintMessages[] =
@@ -833,24 +834,20 @@ int condition_to_attribute_translation[] =
 
 int g_aPowerupConds[] =
 {
-	TF_COND_POWERUP_CRITDAMAGE,
-	TF_COND_POWERUP_SHIELD,
-	TF_COND_POWERUP_SPEEDBOOST,
-	TF_COND_POWERUP_CLOAK,
-	TF_COND_POWERUP_RAGEMODE,
+	TF_COND_RUNE_STRENGTH,
+	TF_COND_RUNE_HASTE,
+	TF_COND_RUNE_REGEN,
+	TF_COND_RUNE_RESIST,
+	TF_COND_RUNE_VAMPIRE,
+	TF_COND_RUNE_WARLOCK,
+	TF_COND_RUNE_PRECISION,
+	TF_COND_RUNE_AGILITY,
+	TF_COND_RUNE_KNOCKOUT,
+	TF_COND_RUNE_KING,
+	TF_COND_RUNE_PLAGUE,
+	TF_COND_RUNE_SUPERNOVA,
 	TF_COND_LAST
 };
-
-const char *g_aPowerupNames[] =
-{
-	"item_powerup_critdamage", // TF_COND_POWERUP_CRITDAMAGE,
-	"item_powerup_shield", // TF_COND_POWERUP_SHIELD,
-	"item_powerup_speedboost", // TF_COND_POWERUP_SPEEDBOOST,
-	"item_powerup_cloak", // TF_COND_POWERUP_CLOAK,
-	"item_powerup_ragemode", // TF_COND_POWERUP_RAGEMODE,
-};
-
-COMPILE_TIME_ASSERT( ( ARRAYSIZE( g_aPowerupConds ) - 1 ) == ARRAYSIZE( g_aPowerupNames ) );
 
 bool ConditionExpiresFast( int nCond )
 {

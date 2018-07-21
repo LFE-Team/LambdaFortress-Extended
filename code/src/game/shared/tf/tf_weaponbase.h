@@ -166,7 +166,6 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 	void CalcIsAttackCritical( void );
-	void CalcIsAttackMiniCritical( void );
 	virtual bool CalcIsAttackCriticalHelper();
 	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
 	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }

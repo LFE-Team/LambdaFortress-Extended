@@ -6,8 +6,8 @@
 		"fieldName"			"CTFToolTipPanel"
 		"xpos"				"0"
 		"ypos"				"0"
-		"wide"				"150"
-		"tall"				"50"
+		"wide"				"200"
+		"tall"				"100"
 		"autoResize"		"0"
 		"pinCorner"			"0"
 		"visible"			"1"
@@ -34,6 +34,5 @@
 		"wrap"				"1"
 		"font"				"HudFontSmallBold"
 		"fgcolor"			"MainMenuTextDepressed"
-		"auto_wide_tocontents" "1"
 	}		
 }		

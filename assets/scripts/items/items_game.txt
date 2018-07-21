@@ -6688,26 +6688,6 @@
 			{
 				"can_be_festivized"		"1"
 			}
-			"visuals_red"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer_festivizer.mdl"
-					}
-				}
-			}
-			"visuals_blu"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer_festivizer.mdl"
-					}
-				}
-			}
 		}
 		"36"
 		{
@@ -6922,13 +6902,6 @@
 			}
 			"visuals"
 			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_minigun/c_minigun_festivizer.mdl"
-					}
-				}
 				"sound_reload"	"Weapon_Minifun.Reload"
 				"sound_empty"	"Weapon_Minifun.ClipEmpty"
 				"sound_double_shot"	"Weapon_Minifun.Fire"
@@ -7069,13 +7042,6 @@
 						"skin_blu"		"1"
 					}
 				}
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_wooden_bat/c_wooden_bat_festivizer.mdl"
-					}
-				}
 			}
 			"used_by_classes"
 			{
@@ -7139,7 +7105,7 @@
 			"name"	"Jarate"
 			"prefab"	"valve weapon_jarate"
 			"first_sale_date"	"2010/09/29"
-			"show_in_armory"	"0"
+			"show_in_armory"	"1"
 		}
 		"59"
 		{
@@ -7665,16 +7631,6 @@
 			{
 				"can_be_festivized"		"1"
 			}
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/workshop/weapons/c_models/c_blackbox/c_blackbox_festivizer.mdl"
-					}
-				}
-			}
 		}
 		"230"
 		{
@@ -8061,16 +8017,6 @@
 			{
 				"can_be_festivized"		"1"
 			}
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/workshop/weapons/c_models/c_tomislav/c_tomislav_festivizer.mdl"
-					}
-				}
-			}
 		}
 		"425"
 		{
@@ -8083,16 +8029,6 @@
 				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"0"
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/workshop/weapons/c_models/c_russian_riot/c_russian_riot_festivizer.mdl"
-					}
-				}
-			}
 		}
 		"426"
 		{
@@ -8180,9 +8116,9 @@
 		{
 			"name"	"The Dragon's Fury"
 			"item_class"	"tf_weapon_rocketlauncher_fireball"
-			"craft_class"	"" 
+			"craft_class"	"weapon" 
 			"craft_material_type"	"weapon"
-			"show_in_armory"	"0"
+			"show_in_armory"	"1"
 			"capabilities"
 			{
 				"nameable"		"1"
@@ -8219,27 +8155,31 @@
 			"static_attrs"
 			{
 				"min_viewmodel_offset"					"10 -3 -10"
-				"item_meter_charge_type"							"1"
+				"item_meter_charge_type"				"1"
 				"item_meter_charge_rate"				"0.8"
 				"meter_label"							"#TF_Pressure"
-				"hidden primary max ammo bonus"			"0.2"
-				"airblast cost scale hidden"			"0.25"
 				"dragons fury neutral properties"		"1"
 				"dragons fury positive properties"		"1"
 				"dragons fury negative properties"		"1"
 				"extinguish restores health"			"20"
 			}
+			"attributes"
+			{
+				"hidden primary max ammo bonus"
+				{
+					"attribute_class"	"mult_maxammo_primary"
+					"value"	"0.2"
+				}
+				"airblast cost scale hidden"
+				{
+					"attribute_class"	"mult_airblast_cost"
+					"value"	"0.25"
+				}
+			}
 			"visuals"
 			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_flameball/c_flameball_festivizer.mdl"
-					}
-				}
-				"sound_single_shot"		"Weapon_Airstrike.AltFire"
-				"sound_special1"		"Weapon_Airstrike.Explosion"
+				"sound_single_shot"		"Weapon_DragonsFury.Single"
+				"sound_special1"		"Weapon_DragonsFury.Impact"
 				"animation_replacement"
 				{
 					"ACT_VM_PRIMARYATTACK"		"ACT_PRIMARY_VM_PRIMARYATTACK_3"
@@ -8325,6 +8265,7 @@
 			"name"	"Extended Rocket Launcher"
 			"prefab"	"weapon_rocketlauncher"
 			"baseitem"	"0"
+			"item_quality"	"valve"
 			"attributes"
 			{
 				"damage bonus"
@@ -8370,6 +8311,7 @@
 			"prefab"	"weapon_flamethrower"
 			"baseitem"	"0"
 			"lfe_attached_models"	"models/weapons/c_models/c_flamethrower/c_flamethrower_pilotlight.mdl"
+			"item_quality"	"valve"
 			"attributes"
 			{
 				"damage bonus"
@@ -8411,6 +8353,83 @@
 				{
 					"attribute_class"	"halloween_green_flames"
 					"value"	"1"
+				}
+			}
+		}
+		"9003"
+		{
+			"name"	"ERROR"
+			"baseitem"	"0"
+			"item_class"	"saxxy"
+			"prefab"	"weapon_melee_allclass"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_deal_critical_damage"	"1"
+				"can_be_equipped_by_soldier_or_demo"	"1"
+			}
+			"item_logname"	"have_an_error"
+			"item_iconname"	"have_an_error"
+			"show_in_armory"	"0"
+			"item_type_name"	"ERROR"
+			"item_name"	"ERROR"
+			"item_slot"	"melee"
+			"image_inventory"	"backpack/error"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"model_player"	"models/error.mdl"
+			"attach_to_hands"	"1"
+			"inspect_panel_dist" "40"
+			"item_quality"	"valve"
+			"propername"	"1"
+			"min_ilevel"	"0"
+			"max_ilevel"	"0"
+			"used_by_classes"
+			{
+				"scout"	"1"
+				"sniper"	"1"
+				"soldier"	"1"
+				"demoman"	"1"
+				"medic"	"1"
+				"heavy"	"1"
+				"pyro" "1"
+				"engineer" "1"
+				"spy" "1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"10 0 -7"
+			}
+			"attributes"
+			{
+				"damage bonus"
+				{
+					"attribute_class"	"mult_dmg"
+					"value"	"10100.0"
+				}
+				"fire rate bonus"
+				{
+					"attribute_class"	"mult_postfiredelay"
+					"value"	"0.25"
+				}
+				"heal on hit for slowfire"
+				{
+					"attribute_class"	"add_onhit_addhealth"
+					"value"	"250.0"
+				}
+				"critboost on kill"
+				{
+					"attribute_class"	"add_onkill_critboost_time"
+					"value"	"10.0"
+				}
+				"move speed bonus"
+				{
+					"attribute_class"	"mult_player_movespeed"
+					"value"	"2.0"
 				}
 			}
 		}
@@ -16025,6 +16044,116 @@
 			"name"	"cannot delete"
 			"hidden"	"1"
 		}
+		"2051"
+		{
+			"name"		"quest loaner id low"
+			"hidden"	"1"
+			"stored_as_integer"	"1"
+		}
+		"2052"
+		{
+			"name"		"quest loaner id hi"
+			"hidden"	"1"
+			"stored_as_integer"	"1"
+		}
+		"2053"
+		{
+			"name"	"is_festivized"
+			"attribute_class"	"is_festivized"
+			"description_string"	"#Attrib_IsFestivized"
+			"description_format"	"value_is_additive"
+			"hidden"	"0"
+			"effect_type"	"unusual"	
+			"can_affect_market_name"	"1"
+		}
+		"2054"
+		{
+			"name"					"fire particle blue"
+			"attribute_type"		"string"
+			"hidden"				"1"
+		}
+		"2055"
+		{
+			"name"					"fire particle red"
+			"attribute_type"		"string"
+			"hidden"				"1"
+		}
+		"2056"
+		{
+			"name"					"fire particle blue crit"
+			"attribute_type"		"string"
+			"hidden"				"1"
+		}
+		"2057"
+		{
+			"name"					"fire particle red crit"
+			"attribute_type"		"string"
+			"hidden"				"1"
+		}
+		"2058"
+		{
+			"name"					"meter_label"
+			"attribute_type"		"string"
+			"hidden"				"1"
+		}
+		"2059"
+		{
+			"name"					"item_meter_damage_for_full_charge"
+			"attribute_class"		"item_meter_damage_for_full_charge"
+			"description_format"	"value_is_additive"
+			"hidden"				"1"
+			"stored_as_integer"		"0"
+		}
+		"2062"
+		{
+			"name"	"airblast cost scale hidden"
+			"attribute_class"	"mult_airblast_cost"
+			"hidden"	"1"
+			"description_format"	"value_is_percentage"
+			"stored_as_integer"	"0"
+		}
+		"2063"
+		{
+			"name"	"dragons fury positive properties"
+			"attribute_class"	"dragons_fury_positive_properties"
+			"description_string"	"#TF_Weapon_DragonsFury_PositiveDesc"
+			"description_format"	"value_is_additive"
+			"hidden"	"0"
+			"effect_type"	"positive"
+		}
+		"2064"
+		{
+			"name"	"dragons fury negative properties"
+			"attribute_class"	"dragons_fury_negative_properties"
+			"description_string"	"#TF_Weapon_DragonsFury_NegativeDesc"
+			"description_format"	"value_is_additive"
+			"hidden"	"0"
+			"effect_type"	"negative"
+		}
+		"2065"
+		{
+			"name"	"dragons fury neutral properties"
+			"attribute_class"	"dragons_fury_neutral_properties"
+			"description_string"	"#TF_Weapon_DragonsFury_NeutralDesc"
+			"description_format"	"value_is_additive"
+			"hidden"	"0"
+			"effect_type"	"neutral"
+		}
+		"2066"
+		{
+			"name"				"force center wrap"
+			"hidden"			"1"
+		}
+		"2067"
+		{
+			"name"	"attack_minicrits_and_consumes_burning"
+			"attribute_class"	"attack_minicrits_and_consumes_burning"
+			"description_string"	"#Attrib_ConsumesBurning"
+			"description_format"	"value_is_additive"
+			"hidden"	"0"
+			"effect_type"	"positive"
+		}
+
 		"3000"
 		{
 			"name"	"item slot criteria 1"

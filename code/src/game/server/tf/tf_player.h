@@ -119,6 +119,8 @@ public:
 	void				SetBlastJumpState( int iJumpType, bool bPlaySound );
 	void				ClearBlastJumpState( void );
 	int					GetBlastJumpFlags( void ) { return m_nBlastJumpFlags; }
+	void				SetAirblastState( bool bAirblastState );
+	void				ClearAirblastState( void );
 	void				AddDamagerToHistory( EHANDLE hDamager );
 	void				ClearDamagerHistory();
 	DamagerHistory_t	&GetDamagerHistory( int i ) { return m_DamagerHistory[i]; }
@@ -369,7 +371,6 @@ public:
 	virtual void ReapplyProvision( void ) { /*Do nothing*/ };
 
 	void UpdatePlayerColor( void );
-	void RemoveSpawnProtection( void );
 
 	// Entity inputs
 	void	InputIgnitePlayer( inputdata_t &inputdata );
@@ -472,6 +473,7 @@ public:
 	float	m_flNextNameChangeTime;
 
 	bool	m_bBlastLaunched;
+	bool	m_bAirblasted;
 
 	bool	m_bIsPlayerADev;
 

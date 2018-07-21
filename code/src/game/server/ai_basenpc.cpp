@@ -864,7 +864,7 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 #endif
 
-#ifdef TF_CLASSIC
+/*#ifdef TF_CLASSIC
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
 	if ( pPlayer->IRelationType( this ) != D_LI )
 	{
@@ -875,7 +875,7 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 			alyx->EnemyIgnited( this );
 		}
 	}
-#endif
+#endif*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1003,7 +1003,13 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
-
+	/*
+	if ( pTFAttacker->m_Shared.IsMiniCritBoosted() )
+	{
+		bitsDamage |= DMG_MINICRITICAL;
+		info.AddDamageType( DMG_MINICRITICAL );
+	}
+	*/
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
@@ -5466,6 +5472,7 @@ void CAI_BaseNPC::CheckOnGround( void )
 		if ( bScriptedWait || GetMoveParent() != NULL || (GetFlags() & FL_ONGROUND ) || GetNavType() != NAV_GROUND )
 		{
 			ClearCondition( COND_FLOATING_OFF_GROUND );
+			ClearAirblastState();
 		}
 	}
 
@@ -12461,6 +12468,8 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	memset( m_flChargeOffTime, 0, sizeof( m_flChargeOffTime ) );
 	memset( m_bChargeSounds, 0, sizeof( m_bChargeSounds ) );
 
+	m_bAirblasted = false;
+
 	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
 #endif
 }
@@ -15771,6 +15780,27 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 
 	TestAndExpireChargeEffect( TF_CHARGE_INVULNERABLE );
 	TestAndExpireChargeEffect( TF_CHARGE_CRITBOOSTED );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: no mini-crits for reserve shooter
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::SetAirblastState( bool bAirblastState )
+{
+	bAirblastState = m_bAirblasted;
+	bAirblastState = true;
+
+	AddCond( TF_COND_KNOCKED_INTO_AIR );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::ClearAirblastState( void )
+{
+	m_bAirblasted = false;
+
+	RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 }
 
 //-----------------------------------------------------------------------------

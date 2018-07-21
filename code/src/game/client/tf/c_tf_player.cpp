@@ -601,6 +601,11 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 		ParticleProp()->Create( "burningplayer_corpse", PATTACH_ABSORIGIN_FOLLOW );
 	}
 
+	if ( pPlayer )
+	{
+		pPlayer->MoveBoneAttachments( this );
+	}
+
 	if ( m_flInvisibilityLevel != 0.0f )
 	{
 		m_flUncloakCompleteTime = gpGlobals->curtime + 2.0f * m_flInvisibilityLevel;
@@ -980,8 +985,7 @@ public:
 		if ( pPlayer )
 		{
 			if ( pPlayer->m_Shared.IsInvulnerable() &&
-				!pPlayer->m_Shared.InCond( TF_COND_INVULNERABLE_WEARINGOFF ) &&
-				( !pPlayer->m_Shared.InCond( TF_COND_INVULNERABLE_SPAWN_PROTECT ) || pPlayer->m_Shared.GetConditionDuration( TF_COND_INVULNERABLE_SPAWN_PROTECT ) > 1.0f ) )
+				!pPlayer->m_Shared.InCond( TF_COND_INVULNERABLE_WEARINGOFF ) )
 			{
 				m_pResult->SetFloatValue( 1.0 );
 			}
@@ -995,8 +999,7 @@ public:
 			// See if it's NPC.
 			C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEntity );
 			if ( pNPC->IsInvulnerable() &&
-				!pNPC->InCond( TF_COND_INVULNERABLE_WEARINGOFF ) &&
-				( !pNPC->InCond( TF_COND_INVULNERABLE_SPAWN_PROTECT ) || pNPC->GetConditionDuration( TF_COND_INVULNERABLE_SPAWN_PROTECT ) > 1.0f ) )
+				!pNPC->InCond( TF_COND_INVULNERABLE_WEARINGOFF ) )
 			{
 				m_pResult->SetFloatValue( 1.0 );
 			}
@@ -2402,6 +2405,9 @@ CStudioHdr *C_TFPlayer::OnNewModel( void )
 {
 	CStudioHdr *hdr = BaseClass::OnNewModel();
 
+	// Reset attachments
+	DestroyBoneAttachments();
+
 	// Initialize the gibs.
 	InitPlayerGibs();
 
@@ -2710,7 +2716,6 @@ void C_TFPlayer::ThirdPersonSwitch( bool bThirdPerson )
 	m_Shared.UpdateCritBoostEffect();
 	UpdateOverhealEffect();
 	//UpdateSpyMask();
-	UpdateShieldEffect();
 
 	if ( GetViewModel() )
 	{
@@ -4797,35 +4802,6 @@ void C_TFPlayer::UpdateSpyMask( void )
 	{
 		pMask->Release();
 		m_hSpyMask = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_TFPlayer::UpdateShieldEffect( void )
-{
-	C_PlayerAttachedModel *pShield = m_hPowerupShield.Get();
-
-	if ( m_Shared.InCond( TF_COND_POWERUP_SHIELD ) )
-	{
-		if ( !pShield )
-		{
-			pShield = C_PlayerAttachedModel::Create( TF_POWERUP_SHIELD_MODEL, this );
-			if ( !pShield )
-				return;
-
-			ClientLeafSystem()->SetRenderGroup( pShield->GetRenderHandle(), RENDER_GROUP_TRANSLUCENT_ENTITY );
-
-			m_hPowerupShield = pShield;
-		}
-
-		pShield->UpdateVisibility();
-	}
-	else if ( pShield )
-	{
-		pShield->Release();
-		m_hPowerupShield = NULL;
 	}
 }
 

@@ -67,10 +67,17 @@ public:
 	void			CreateTrail( void );
 
 	virtual void	UpdateOnRemove( void );
+
+	// Vintage Arrow attachment functions
+	bool			PositionArrowOnBone( mstudiobbox_t *pbox, CBaseAnimating *pAnim );
+	void			GetBoneAttachmentInfo( mstudiobbox_t *pbox, CBaseAnimating *pAnim, Vector &vecOrigin, QAngle &vecAngles, int &bone, int &iPhysicsBone );
+	void			CheckRagdollPinned( Vector &, Vector &, int, int, CBaseEntity *, int, int );
+
 #else
 	virtual void	ClientThink( void );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	Light( void );
+	virtual void    NotifyBoneAttached( C_BaseAnimating* attachTarget );
 #endif
 
 private:
@@ -86,6 +93,8 @@ private:
 	bool		m_bCritical;
 	bool		m_bFlame;
 	int			m_iType;
+	float		m_flDieTime;
+	bool		m_bAttachment;
 #endif
 };
 
