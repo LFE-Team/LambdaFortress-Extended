@@ -211,6 +211,10 @@ void CNPC_Zombine::Spawn(void)
 #endif // HL2_EPISODIC
 
 	m_iHealth = sk_zombie_soldier_health.GetFloat();
+	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		m_iHealth = sk_zombie_soldier_health.GetFloat() * 1.5;
+	}
 	SetMaxHealth(m_iHealth);
 
 	m_flFieldOfView = 0.2;

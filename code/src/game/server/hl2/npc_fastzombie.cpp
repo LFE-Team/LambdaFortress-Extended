@@ -26,6 +26,7 @@
 #include "props.h"
 #include "physics_npc_solver.h"
 #include "physics_prop_ragdoll.h"
+#include "tf_gamerules.h"
 
 #ifdef HL2_EPISODIC
 #include "episodic/ai_behavior_passenger_zombie.h"
@@ -672,6 +673,10 @@ void CFastZombie::Spawn( void )
 #endif // HL2_EPISODIC
 
 	m_iHealth			= sk_fastzombie_health.GetFloat();
+	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		m_iHealth = sk_fastzombie_health.GetFloat() * 1.5;
+	}
 	m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();

@@ -50,6 +50,7 @@ extern ConVar sv_hl1_ff;
 
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;
+extern ConVar	sv_dynamicnpcs;
 
 extern ConVar	fraglimit;
 
@@ -335,9 +336,14 @@ public:
 	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
 	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
+
 	bool IsFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1 && sv_hl1_ff.GetFloat() == 1 ); }
 	bool IsHL1FriendlyFire( void ) { return ( sv_hl1_ff.GetFloat() == 1 ); }
 	bool IsMPFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1 ); }
+
+	int iDirectorAnger;
+	int iMaxDirectorAnger;
+
 #ifdef GAME_DLL
 	bool IsInHL1Map()
 	{

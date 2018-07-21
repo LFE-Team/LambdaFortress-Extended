@@ -657,6 +657,13 @@ void CAI_BaseNPC::SelectDeathPose( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 {
+	if (FClassnameIs(this, "npc_turret_floor"))
+	{
+	}
+	else if (info.GetAttacker()->GetTeamNumber() == TF_TEAM_RED && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && sv_dynamicnpcs.GetFloat() == 1 && (GetTeamNumber() == TF_TEAM_BLUE || GetTeamNumber() == TF_TEAM_YELLOW || GetTeamNumber() == TF_TEAM_GREEN))
+	{
+		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger + 2;
+	}
 	if (IsCurSchedule(SCHED_NPC_FREEZE))
 	{
 		// We're frozen; don't die.

@@ -122,6 +122,7 @@ ConVar tf_gamemode_passtime( "tf_gamemode_passtime", "0" , FCVAR_NOTIFY | FCVAR_
 ConVar lfe_versus( "lfe_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_blucoop( "lfe_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_gamemode_zs( "lfe_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar sv_dynamicnpcs("sv_dynamicnpcs", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable The Dynamic NPC System.");
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -902,10 +903,11 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 {
 	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
 	Vector vecForward;
-	Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+	//Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
+	Vector vecOrigin = GetAbsOrigin();
 	Vector velocity = vec3_origin;
-
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	//CBaseEntity *pTeamPlayer = gEntList.FindEntityByClassname(NULL, "player");
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CTFPlayer *pTeamPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
 
@@ -916,7 +918,7 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 		{
 			if ( pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED )
 			{
-				pTeamPlayer->Teleport( &vecOrigin, &vecAngles, &velocity );
+				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, &velocity);
 			}
 		}
 		else if ( iTeamToTeleport == 2)
@@ -1597,6 +1599,8 @@ unsigned char g_aAuthDataXOR[8] = TF2C_AUTHDATA_XOR;
 CTFGameRules::CTFGameRules()
 {
 	m_bMegaPhysgun = false;
+	iDirectorAnger = 0;
+	iMaxDirectorAnger = 100;
 #ifdef GAME_DLL
 	// Create teams.
 	TFTeamMgr()->Init();
@@ -2916,6 +2920,24 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 						return;
 				}
 			}
+		}
+		if (iDirectorAnger > iMaxDirectorAnger)
+		{
+			iDirectorAnger = 100;
+		}
+		if (iDirectorAnger < 0)
+		{
+			iDirectorAnger = 0;
+		}
+		if (iDirectorAnger == 100)
+		{
+			CBaseEntity *pBossSpawnpoint = gEntList.FindEntityByClassname(NULL, "info_directorboss");
+			variant_t sVariant2;
+			if (pBossSpawnpoint)
+			{
+				pBossSpawnpoint->AcceptInput("SpawnBoss", NULL, NULL, sVariant2, NULL);
+			}
+			iDirectorAnger = 20;
 		}
 		if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_longjump"))
 		{

@@ -126,6 +126,7 @@ DEFINE_INPUTFUNC(FIELD_BOOLEAN, "AllowDarknessSpeech", InputAllowDarknessSpeech)
 DEFINE_INPUTFUNC(FIELD_BOOLEAN, "GiveEMP", InputGiveEMP),
 DEFINE_INPUTFUNC(FIELD_VOID, "VehiclePunted", InputVehiclePunted),
 DEFINE_INPUTFUNC(FIELD_VOID, "OutsideTransition", InputOutsideTransition),
+DEFINE_INPUTFUNC(FIELD_VOID, "HackFinishedMine", InputHackFinishedMine),
 
 DEFINE_OUTPUT(m_OnFinishInteractWithObject, "OnFinishInteractWithObject"),
 DEFINE_OUTPUT(m_OnPlayerUse, "OnPlayerUse"),
@@ -314,6 +315,11 @@ bool CNPC_Alyx::CreateBehaviors()
 	bool result = BaseClass::CreateBehaviors();
 
 	return result;
+}
+
+void CNPC_Alyx::InputHackFinishedMine(inputdata_t &inputdata)
+{
+	m_OnFinishInteractWithObject.FireOutput(GetInteractTarget(), this);
 }
 
 
@@ -734,12 +740,14 @@ void CNPC_Alyx::SearchForInteractTargets()
 
 	m_fTimeNextSearchForInteractTargets = gpGlobals->curtime + ALYX_INTERACT_SEARCH_FREQUENCY;
 
+	
 	// Ensure player can be seen.
 	if (!HasCondition(COND_SEE_PLAYER))
 	{
 		//Msg("ALYX Can't interact: can't see player\n");
 		return;
 	}
+	
 
 	//CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin(), 2);

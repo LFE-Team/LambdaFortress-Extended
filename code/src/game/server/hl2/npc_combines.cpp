@@ -61,8 +61,17 @@ extern Activity ACT_WALK_MARCH;
 //-----------------------------------------------------------------------------
 void CNPC_CombineS::Spawn( void )
 {
+	//char* Value[260];
 	Precache();
 	SetModel( STRING( GetModelName() ) );
+	if (TFGameRules()->iDirectorAnger > 74 && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		PrecacheModel("models/combine_super_soldier.mdl");
+		PrecacheModel("models/combine_super_soldier_ep2.mdl");
+		m_fIsElite = true;
+		SetModel("models/combine_super_soldier.mdl");
+		AddSpawnFlags(16384);
+	}
 
 	if( IsElite() )
 	{
@@ -70,12 +79,20 @@ void CNPC_CombineS::Spawn( void )
 		SetHealth( sk_combine_guard_health.GetFloat() );
 		SetMaxHealth( sk_combine_guard_health.GetFloat() );
 		SetKickDamage( sk_combine_guard_kick.GetFloat() );
+		if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+		{
+			SetMaxHealth(sk_combine_guard_health.GetFloat() * 1.5);
+		}
 	}
 	else
 	{
 		SetHealth( sk_combine_s_health.GetFloat() );
 		SetMaxHealth( sk_combine_s_health.GetFloat() );
 		SetKickDamage( sk_combine_s_kick.GetFloat() );
+		if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+		{
+			SetMaxHealth(sk_combine_s_health.GetFloat() * 1.5);
+		}
 	}
 
 	CapabilitiesAdd( bits_CAP_ANIMATEDFACE );
@@ -96,9 +113,19 @@ void CNPC_CombineS::Spawn( void )
 		PrecacheModel("models/combine_soldier_ep2.mdl");
 		SetModel("models/combine_soldier_ep2.mdl");
 	}
+	/*
+	if (GetKeyValue("additionalequipment", "weapon_smg1", 11) && TFGameRules()->iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		KeyValue("additionalequipment", "weapon_ar2");
+	}
+	*/
+	if (!HasShotgun() && TFGameRules()->iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
+	{
+		KeyValue("additionalequipment", "weapon_ar2");
+	}
 
 	BaseClass::Spawn();
-	SetUse( &CNPCSimpleTalker::FollowerUse );	
+	SetUse( &CNPCSimpleTalker::FollowerUse );
 
 #if HL2_EPISODIC
 	if (m_iUseMarch && !HasSpawnFlags(SF_NPC_START_EFFICIENT))
