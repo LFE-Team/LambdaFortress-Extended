@@ -300,7 +300,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		}
 		if (pManHack)
 		{
-			pManHack->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+			pManHack->AcceptInput("InteractivePowerDown", NULL, NULL, sVariant, NULL);
 		}
 		//if (pMine && pMine->GetTeamNumber() == 3 && GetOwnerEntity()->GetTeamNumber() == 2)
 		if (pMine)
