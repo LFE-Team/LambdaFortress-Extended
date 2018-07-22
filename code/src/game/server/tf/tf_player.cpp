@@ -128,7 +128,7 @@ extern ConVar tf_gravetalk;
 
 // Team Fortress 2 Classic commands
 ConVar tf2c_random_weapons( "tf2c_random_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with random loadout. CURRENTLY BROKEN!!!" );
-ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with gravity gun. CURRENTLY BROKEN!!!" );
+ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun. CURRENTLY BROKEN!!!" );
 
 ConVar tf2c_force_stock_weapons( "tf2c_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
 ConVar tf2c_legacy_weapons( "tf2c_legacy_weapons", "0", FCVAR_DEVELOPMENTONLY, "Disables all new weapons as well as Econ Item System." );
@@ -1735,8 +1735,18 @@ void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
 {
 	if ( pData->m_aBuildable[0] != OBJ_LAST )
 	{
-		CEconItemView *pItem = GetLoadoutItem( GetPlayerClass()->GetClassIndex(), TF_LOADOUT_SLOT_BUILDING );
+		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), TF_LOADOUT_SLOT_BUILDING );
 		CTFWeaponBase *pBuilder = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
+
+		//const char *pszClassname = pItem->GetEntityName();
+		const char *pszClassname = WeaponIdToClassname( TF_WEAPON_BUILDER );
+		Assert( pszClassname );
+
+		/*if ( GetEntityForLoadoutSlot( TF_LOADOUT_SLOT_BUILDING ) != NULL )
+		{
+			// Nothing to do here.
+			continue;
+		}*/
 
 		// Give the player a new builder weapon when they switch between engy and spy
 		if ( pBuilder && !ItemsMatch( pBuilder->GetItem(), pItem, pBuilder ) )
@@ -1747,21 +1757,11 @@ void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
 		
 		if ( pBuilder )
 		{
-			pBuilder->GiveDefaultAmmo();
-			pBuilder->ChangeTeam( GetTeamNumber() );
+			CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
 
-			if ( m_bRegenerating == false )
+			if ( pEntity )
 			{
-				pBuilder->WeaponReset();
-			}
-		}
-		else
-		{
-			pBuilder = (CTFWeaponBase *)GiveNamedItem( "tf_weapon_builder", pData->m_aBuildable[0], pItem );
-
-			if ( pBuilder )
-			{
-				pBuilder->DefaultTouch( this );				
+				pEntity->GiveTo( this );
 			}
 		}
 
@@ -1937,7 +1937,7 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 
 		if ( iWeaponID == TF_WEAPON_NONE )
 			continue;
-
+/*
 		const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
 
 		CTFWeaponBase *pWeapon = Weapon_OwnsThisID( iWeaponID );
@@ -1959,6 +1959,33 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 			if ( pWeapon )
 			{
 				pWeapon->DefaultTouch( this );
+			}
+		}
+*/
+		if ( GetEntityForLoadoutSlot( TF_LOADOUT_SLOT_ACTION ) != NULL )
+		{
+			// Nothing to do here.
+			continue;
+		}
+
+		// Give us an item from the inventory.
+		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), TF_LOADOUT_SLOT_ACTION );
+
+		//const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
+
+		//CTFWeaponBase *pWeapon = Weapon_OwnsThisID( iWeaponID );
+
+		if ( pItem )
+		{
+			//const char *pszClassname = pItem->GetEntityName();
+			const char *pszClassname = WeaponIdToClassname( iWeaponID );
+			Assert( pszClassname );
+
+			CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
+
+			if ( pEntity )
+			{
+				pEntity->GiveTo( this );
 			}
 		}
 	}
@@ -2708,54 +2735,8 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 	}
 	else
 	{
-		int iTeam = TF_TEAM_RED;
-		if ( stricmp( pTeamName, "spectate" ) == 0 )
-		{
-			iTeam = TEAM_SPECTATOR;
-		}
-		else if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
-		{
-			iTeam = TF_TEAM_RED;
-		}
-		else if ( TFGameRules()->IsBluCoOp() )
-		{
-			iTeam = TF_TEAM_BLUE;
-		}
-
-		if (iTeam == GetTeamNumber())
-		{
-			return;	// we wouldn't change the team
-		}
-
-		if ( HasTheFlag() )
-		{
-			DropFlag();
-			DropPowerups();
-		}
-
-		if ( iTeam == TEAM_SPECTATOR )
-		{
-			// Prevent this is the cvar is set
-			if ( !mp_allowspectators.GetInt() && !IsHLTV() )
-			{
-				ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
-				return;
-			}
-		
-			if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
-			{
-				CommitSuicide( false, true );
-			}
-
-			ChangeTeam( TEAM_SPECTATOR );
-
-			// do we have fadetoblack on? (need to fade their screen back in)
-			if ( mp_fadetoblack.GetBool() )
-			{
-				color32_s clr = { 0,0,0,255 };
-				UTIL_ScreenFade( this, clr, 0, 0, FFADE_IN | FFADE_PURGE );
-			}
-		}
+		ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
+		return;
 	}
 }
 

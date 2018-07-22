@@ -382,7 +382,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 	int iLocalPlayerIndex = GetLocalPlayerIndex();
 	const char *pszEventName = event->GetName();
 
-    bool bPlayerDeath = FStrEq( pszEventName, "player_death" );
+    bool bPlayerDeath = EventIsPlayerDeath( pszEventName );
 	bool bObjectDeath = FStrEq( pszEventName, "object_destroyed" );
 	bool bNPCDeath = FStrEq( pszEventName, "npc_death" );
 
@@ -433,8 +433,8 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 
 	if ( bPlayerDeath || bObjectDeath || bNPCDeath )
 	{
-		int victim = event->GetInt( "victim_index" );
-        int killer = event->GetInt( "attacker_index" );
+		int victim = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) : event->GetInt( "victim_index" );
+		int killer = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );
 
 		const char *killedwith = event->GetString( "weapon" );
 		const char *killedwithweaponlog = event->GetString( "weapon_logclassname" );
@@ -446,13 +446,6 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 		const char *killer_classname = event->GetString( "attacker_name" );
 		int victim_team = event->GetInt( "victim_team" );
 		int killer_team = event->GetInt( "attacker_team" );
-
-		if ( bObjectDeath && victim == 0 )
-		{
-			// for now, no death notices of map placed objects
-			m_DeathNotices.Remove( iMsg );
-			return;
-		}
 
 		// Get the names of the players
 		const char *killer_name = NULL;

@@ -17,6 +17,7 @@
 #include "vguiscreen.h"
 #include "tf_gamerules.h"
 #include "tf_obj_teleporter.h"
+#include "ai_basenpc.h"
 
 extern ConVar tf2_object_hard_limits;
 extern ConVar tf_fastbuild;
@@ -331,6 +332,15 @@ void CTFWeaponBuilder::PrimaryAttack( void )
 							}
 						}
 					}
+
+					CAI_BaseNPC *pNPC = pParentObject->MyNPCPointer();
+					if ( pNPC )
+					{
+						variant_t sVariant;
+						pNPC->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
+						pNPC->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+						pNPC->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
+					}
 				}
 
 				// Should we switch away?
@@ -603,7 +613,23 @@ bool CTFWeaponBuilder::HasAmmo( void )
 //-----------------------------------------------------------------------------
 int CTFWeaponBuilder::GetSlot( void ) const
 {
-	return GetObjectInfo( m_iObjectType )->m_SelectionSlot;
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
+	// slot hack for spy
+	if ( pOwner->IsPlayerClass( TF_CLASS_SPY ) )
+	{
+		return 2;
+	}
+	else if ( pOwner->IsPlayerClass( TF_CLASS_ENGINEER ) )
+	{
+		return GetObjectInfo( m_iObjectType )->m_SelectionSlot;
+	}
+	else
+	{
+		return GetObjectInfo( m_iObjectType )->m_SelectionSlot;
+	}
+
+	return BaseClass::GetSlot();
 }
 
 //-----------------------------------------------------------------------------

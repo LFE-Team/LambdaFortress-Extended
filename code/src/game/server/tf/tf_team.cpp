@@ -8,10 +8,11 @@
 #include "tf_obj.h"
 #include "tf_gamerules.h"
 #include "ai_basenpc.h"
+#include "econ_item_schema.h"
+#include "tf_playerclass.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
 
 //-----------------------------------------------------------------------------
 // Purpose: SendProxy that converts the UtlVector list of objects to entindexes, where it's reassembled on the client
@@ -574,12 +575,23 @@ void CTFTeam::AddWeapon( int iWeapon )
 		
 		if ( pPlayer && pPlayer->IsAlive() && !pPlayer->Weapon_OwnsThisID( iWeapon ) )
 		{
-			const char *pszWeaponName = WeaponIdToClassname( iWeapon );
-			CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
+			CEconItemView *pItem = pPlayer->GetLoadoutItem( pPlayer->GetPlayerClass()->GetClassIndex(), TF_LOADOUT_SLOT_ACTION );
 
-			if ( pWeapon )
+			//const char *pszWeaponName = WeaponIdToClassname( iWeapon );
+			//CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
+
+			if ( pItem )
 			{
-				pWeapon->DefaultTouch( this );
+				//const char *pszClassname = pItem->GetEntityName();
+				const char *pszClassname = WeaponIdToClassname( iWeapon );
+				Assert( pszClassname );
+
+				CEconEntity *pEntity = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, pItem ) );
+
+				if ( pEntity )
+				{
+					pEntity->GiveTo( pPlayer );
+				}
 			}
 		}
 	}

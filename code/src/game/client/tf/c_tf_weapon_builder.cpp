@@ -203,7 +203,23 @@ bool C_TFWeaponBuilder::IsPlacingObject( void )
 //-----------------------------------------------------------------------------
 int C_TFWeaponBuilder::GetSlot( void ) const
 {
-	return GetObjectInfo( m_iObjectType )->m_SelectionSlot;
+	C_TFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
+	// slot hack for spy
+	if ( pOwner->IsPlayerClass( TF_CLASS_SPY ) )
+	{
+		return 2;
+	}
+	else if ( pOwner->IsPlayerClass( TF_CLASS_ENGINEER ) )
+	{
+		return GetObjectInfo( m_iObjectType )->m_SelectionSlot;
+	}
+	else
+	{
+		return GetObjectInfo( m_iObjectType )->m_SelectionSlot;
+	}
+
+	return BaseClass::GetSlot();
 }
 
 //-----------------------------------------------------------------------------

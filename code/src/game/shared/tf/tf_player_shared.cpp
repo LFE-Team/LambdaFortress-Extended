@@ -1799,10 +1799,18 @@ void CTFPlayerShared::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NUL
 
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pAttacker, flFlameLife, mult_wpn_burntime );
 
-	m_flFlameRemoveTime = gpGlobals->curtime + flFlameLife;
+	if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_FIREBALL ) )
+	{
+		m_flFlameRemoveTime = gpGlobals->curtime + flFlameLife;
+	}
+	else
+	{
+		// dragon's fury afterburn is 2 second
+		m_flFlameRemoveTime = bVictimIsPyro ? gpGlobals->curtime + flFlameLife : gpGlobals->curtime + flFlameLife - 8.0f;
+	}
+
 	m_hBurnAttacker = pAttacker;
 	m_hBurnWeapon = pWeapon;
-
 #endif
 }
 

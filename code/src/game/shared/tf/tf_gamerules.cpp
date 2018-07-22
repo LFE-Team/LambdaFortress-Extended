@@ -5062,6 +5062,9 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	case TF_DMG_CUSTOM_TAUNTATK_HADOUKEN:
 		pszCustomKill = "taunt_pyro";
 		break;
+	case TF_DMG_CUSTOM_BURNING_FLARE:
+		pszCustomKill = "flaregun";
+		break;
 	case TF_DMG_CUSTOM_TAUNTATK_HIGH_NOON:
 		pszCustomKill = "taunt_heavy";
 		break;

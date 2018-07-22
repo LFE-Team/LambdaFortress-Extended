@@ -1,7 +1,7 @@
 //====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
 //
 // OLD Purpose: XBox Rich Presence support.
-// NEW Purpose: Discord Rich Presence support.
+// NEW Purpose: Discord and Steam Rich Presence support.
 //
 //=============================================================================
 
@@ -21,12 +21,11 @@
 
 #define DISCORD_FIELD_SIZE 128
 
-// this is actually from ff
-class CTFDiscordRPC : public CGameEventListener
+class CTFRichPresence : public CGameEventListener
 {
 public:
-	CTFDiscordRPC();
-	~CTFDiscordRPC();
+	CTFRichPresence();
+	~CTFRichPresence();
 	void RunFrame();
 	void Init();
 	void LevelInit(const char *szMapname);
@@ -63,7 +62,7 @@ private:
 	//HINSTANCE m_hDiscordDLL;
 };
 
-extern CTFDiscordRPC g_discordrpc;
+extern CTFRichPresence g_discordrpc;
 
 /*
 
