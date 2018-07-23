@@ -29,7 +29,7 @@
 		"scaleimage"		"1"
 		"border"			"AdvRoundedButtonDefault"
 		"visible"			"1"
-		//"fillcolor"			"46 43 42 255"
+		"fillcolor"			"32 48 32 127"
 		"enabled"			"1"
 	}
 
@@ -47,7 +47,7 @@
 		"scaleimage"		"1"
 		"border"			"AdvRoundedButtonDefault"
 		"visible"			"1"
-		//"fillcolor"			"46 43 42 255"
+		//"fillcolor"			"32 48 32 255"
 		"enabled"			"1"
 	}
 
@@ -165,24 +165,29 @@
 			}
 			"animation"
 			{
+				"name"		"GRENADE"
+				"activity"	""
+			}	
+			"animation"
+			{
 				"name"		"BUILDING"
 				"activity"	"ACT_MP_STAND_BUILDING"
-			}
+			}	
 			"animation"
 			{
 				"name"		"PDA"
 				"activity"	"ACT_MP_STAND_PDA"
-			}
+			}	
 			"animation"
 			{
 				"name"		"ITEM1"
 				"activity"	"ACT_MP_STAND_ITEM1"
-			}						
+			}
 			"animation"
 			{
 				"name"		"ITEM2"
 				"activity"	"ACT_MP_STAND_ITEM2"
-			}									
+			}
 			"animation"
 			{
 				"name"		"MELEE_ALLCLASS"
@@ -190,13 +195,13 @@
 			}
 			"animation"
 			{
-				"name"		"PRIMARY2"
-				"activity"	"ACT_MP_STAND_PRIMARY"
+				"name"		"SECONDARY2"
+				"activity"	"ACT_MP_STAND_SECONDARY2"
 			}
 			"animation"
 			{
-				"name"		"SECONDARY2"
-				"activity"	"ACT_MP_STAND_SECONDARY2"
+				"name"		"PRIMARY2"
+				"activity"	"ACT_MP_STAND_PRIMARY2"
 			}
 		}
 	}
