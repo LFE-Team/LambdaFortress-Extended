@@ -472,14 +472,6 @@ DESCRIPTION INFO_OPTIONS
 	//	{ BOOL }
 	//	{ "1" }
 	//}
-
-	"r_drawviewmodel"
-	{
-		"#TF_drawviewmodel_option"
-		"#Tooltip_drawviewmodel_option"
-		{ BOOL }
-		{ "1" }
-	}	
 	
 	"cl_flipviewmodels"
 	{
@@ -571,7 +563,7 @@ DESCRIPTION INFO_OPTIONS
 		{ "1" }
 	}
 
-	"lf_muzzlelight"
+	"lfe_muzzlelight"
 	{
 		"#TFOption_muzzlelight"
 		{ BOOL }

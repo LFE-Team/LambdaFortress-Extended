@@ -107,24 +107,31 @@ DESCRIPTION SERVER_OPTIONS
 		}
 		{ "1" }
 	}
-
+	
+	"sv_dynamicnpcs"
+	{
+		"#LFE_DynamicNPC"
+		{ BOOL }
+		{ "0" }
+	}	
+	
 	"sv_hl2_beta"
 	{
-		"Enable HL2 Cut Npcs Spawning"
+		"#LFE_HL2BetaNpcs"
 		{ BOOL }
 		{ "0" }
 	}
 
 	"sv_hl1_ff"
 	{
-		"HL1: Enable Friendly Fire Monsters"
+		"#LFE_HL1FriendlyFire"
 		{ BOOL }
 		{ "0" }
-}
+    }
 	
 	"sv_hl1_hd"
 	{
-		"HL1: Enable HD Models"
+		"#LFE_HL1HDModels"
 		{ BOOL }
 		{ "0" }
 }
