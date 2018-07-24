@@ -34,7 +34,10 @@ public:
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_REVOLVER; }
 	virtual int	GetDamageType() const;
-	virtual bool CanFireCriticalShot( bool bIsHeadshot = false );
+	virtual bool CanFireCriticalShot( CBaseEntity *pEntity, bool bIsHeadshot = false );
+
+	float flDistanceToTarget;
+
 private:
 
 	CTFRevolver( const CTFRevolver & ) {}

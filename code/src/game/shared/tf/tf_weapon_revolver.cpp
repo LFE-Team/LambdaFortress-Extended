@@ -47,10 +47,15 @@ IMPLEMENT_ACTTABLE( CTFRevolver );
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-bool CTFRevolver::CanFireCriticalShot( bool bIsHeadshot )
+bool CTFRevolver::CanFireCriticalShot( CBaseEntity *pEntity, bool bIsHeadshot )
 {
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	if (pEntity)
+	{
+		flDistanceToTarget = pOwner->GetAbsOrigin().DistTo(pEntity->GetAbsOrigin());
+	}
 	// can only fire a crit shot if this is a headshot
-	if ( !bIsHeadshot )
+	if ( !bIsHeadshot || !pEntity || (!pEntity->IsPlayer() && !pEntity->IsNPC()) || flDistanceToTarget > 512 )
 		return false;
 
 	int iType = 0;
