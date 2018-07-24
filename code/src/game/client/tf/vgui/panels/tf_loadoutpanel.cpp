@@ -3,7 +3,6 @@
 #include "tf_mainmenu.h"
 #include "controls/tf_advitembutton.h"
 #include "controls/tf_advmodelpanel.h"
-#include "tf_rgbpanel.h"
 #include "basemodelpanel.h"
 #include <vgui/ILocalize.h>
 #include "script_parser.h"
@@ -186,7 +185,6 @@ bool CTFLoadoutPanel::Init()
 	m_iCurrentSlot = TF_LOADOUT_SLOT_PRIMARY;
 	m_pClassModelPanel = new CTFAdvModelPanel( this, "classmodelpanel" );
 	m_pWeaponSetPanel = new CTFWeaponSetPanel( this, "weaponsetpanel" );
-	m_pRGBPanel = new CTFRGBPanel( this, "rgbpanel" );
 	g_TFWeaponScriptParser.InitParser( "scripts/tf_weapon_*.txt", true, false );
 
 	for ( int i = 0; i < INVENTORY_VECTOR_NUM; i++ )
@@ -612,7 +610,6 @@ void CTFLoadoutPanel::UpdateModelPanels()
 
 	m_pClassModelPanel->SetVisible( true );
 	m_pWeaponSetPanel->SetVisible( true );
-	m_pRGBPanel->SetVisible( false );
 
 	SetModelClass( iClassIndex );
 	UpdateModelWeapons();

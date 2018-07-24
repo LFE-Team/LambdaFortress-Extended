@@ -124,7 +124,7 @@ static void EnableCommand(IConVar *var, const char *pOldValue, float flOldValue)
 		GetCueBuilder()->StopCue();
 	}
 }
-ConVar tf2c_cues_enabled("tf2c_cues_enabled", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Enable dynamic music", EnableCommand);
+ConVar tf2c_cues_enabled("lfe_cues_enabled", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Enable dynamic music", EnableCommand);
 
 void PlayCommand(const CCommand &args)
 {

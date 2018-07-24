@@ -80,9 +80,9 @@ CON_COMMAND_F( tf2c_updateserverlist, "Check for the messages", FCVAR_DEVELOPMEN
 	GetNotificationManager()->UpdateServerlistInfo();
 }
 
-ConVar tf2c_checkfrequency( "tf2c_checkfrequency", "900", FCVAR_DEVELOPMENTONLY, "Messages check frequency (seconds)" );
-ConVar tf2c_updatefrequency( "tf2c_updatefrequency", "15", FCVAR_DEVELOPMENTONLY, "Updatelist update frequency (seconds)" );
-ConVar tf2c_latest_notification( "tf2c_latest_notification", "0", FCVAR_ARCHIVE );
+ConVar tf2c_checkfrequency( "lfe_checkfrequency", "900", FCVAR_DEVELOPMENTONLY, "Messages check frequency (seconds)" );
+ConVar tf2c_updatefrequency( "lfe_updatefrequency", "15", FCVAR_DEVELOPMENTONLY, "Updatelist update frequency (seconds)" );
+ConVar tf2c_latest_notification( "lfe_latest_notification", "0", FCVAR_ARCHIVE );
 
 //-----------------------------------------------------------------------------
 // Purpose: constructor

@@ -104,8 +104,8 @@ ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLI
 ConVar  alyx_darkness_force("alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED);
 
 // TF2C specific cvars.
-ConVar tf2c_falldamage_disablespread( "tf2c_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
-ConVar tf2c_allow_thirdperson( "tf2c_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
+ConVar tf2c_falldamage_disablespread( "lfe_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
+ConVar tf2c_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
 
 #ifdef GAME_DLL
 // TF overrides the default value of this convar

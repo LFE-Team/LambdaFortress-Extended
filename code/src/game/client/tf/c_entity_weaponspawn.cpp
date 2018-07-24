@@ -13,8 +13,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar tf2c_weapon_respawn_timer( "tf2c_weapon_respawn_timer", "1", FCVAR_ARCHIVE, "Show visual respawn timers for weapons in Deathmatch." );
-ConVar tf2c_weapon_respawn_size( "tf2c_weapon_respawn_size", "20", FCVAR_CHEAT );
+ConVar tf2c_weapon_respawn_timer( "lfe_weapon_respawn_timer", "1", FCVAR_ARCHIVE, "Show visual respawn timers for weapons in Deathmatch." );
+ConVar tf2c_weapon_respawn_size( "lfe_weapon_respawn_size", "20", FCVAR_CHEAT );
 
 class C_WeaponSpawner : public C_BaseAnimating
 {

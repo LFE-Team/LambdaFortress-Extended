@@ -100,11 +100,6 @@ static void OnMercParticleChange( IConVar *var, const char *pOldValue, float flO
 	pLocalPlayer->m_Shared.SetRespawnParticleID( pCvar->GetInt() );
 }
 
-ConVar tf2c_setmerccolor_r( "tf2c_setmerccolor_r", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets merc color's red channel value", true, 0, true, 255 );
-ConVar tf2c_setmerccolor_g( "tf2c_setmerccolor_g", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets merc color's green channel value", true, 0, true, 255 );
-ConVar tf2c_setmerccolor_b( "tf2c_setmerccolor_b", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets merc color's blue channel value", true, 0, true, 255 );
-ConVar tf2c_setmercparticle( "tf2c_setmercparticle", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets merc's respawn particle index", OnMercParticleChange );
-
 #define BDAY_HAT_MODEL		"models/effects/bday_hat.mdl"
 
 IMaterial	*g_pHeadLabelMaterial[4] = { NULL, NULL }; 
@@ -1338,55 +1333,6 @@ public:
 };
 
 EXPOSE_INTERFACE( CProxyModelGlowColor, IMaterialProxy, "ModelGlowColor" IMATERIAL_PROXY_INTERFACE_VERSION );
-
-//-----------------------------------------------------------------------------
-// Purpose: Used for coloring items 
-//-----------------------------------------------------------------------------
-class CProxyItemTintColor : public CResultProxy
-{
-public:
-	void OnBind( void *pC_BaseEntity )
-	{
-		Assert( m_pResult );
-
-		if ( !pC_BaseEntity )
-		{
-			// Assuming we're at the menus... Use cvar values.
-			float r = floorf( tf2c_setmerccolor_r.GetFloat() ) / 255.0f;
-			float g = floorf( tf2c_setmerccolor_g.GetFloat() ) / 255.0f;
-			float b = floorf( tf2c_setmerccolor_b.GetFloat() ) / 255.0f;
-
-			m_pResult->SetVecValue( r, g, b );
-			return;
-		}
-
-		C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-		if ( !pEntity )
-			return;
-		/*
-		if ( TFGameRules() && TFGameRules()->IsDeathmatch() )
-		{*/
-			Vector vecColor = pEntity->GetItemTintColor();
-
-			if ( vecColor == vec3_origin )
-			{
-				// Entity doesn't have its own color, get the controlling entity.
-				C_BaseEntity *pOwner = pEntity->GetItemTintColorOwner();
-				if ( pOwner )
-				{
-					vecColor = pOwner->GetItemTintColor();
-				}
-			}
-
-			m_pResult->SetVecValue( vecColor.x, vecColor.y, vecColor.z );
-			return;
-		//}
-
-		m_pResult->SetVecValue( 1, 1, 1 );
-	}
-};
-
-EXPOSE_INTERFACE( CProxyItemTintColor, IMaterialProxy, "ItemTintColor" IMATERIAL_PROXY_INTERFACE_VERSION );
 
 //-----------------------------------------------------------------------------
 // Purpose: Stub class for the CommunityWeapon material proxy used by live TF2

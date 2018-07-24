@@ -52,7 +52,7 @@ ConVar tf_spy_invis_unstealth_time( "tf_spy_invis_unstealth_time", "2.0", FCVAR_
 
 ConVar tf_spy_max_cloaked_speed( "tf_spy_max_cloaked_speed", "999", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED );	// no cap
 ConVar tf_max_health_boost( "tf_max_health_boost", "1.5", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max health factor that players can be boosted to by healers.", true, 1.0, false, 0 );
-ConVar tf2c_dm_max_health_boost( "tf2c_dm_max_health_boost", "2.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max health factor that players can be boosted to by overheal pickups.", true, 1.0, false, 0 );
+ConVar tf2c_dm_max_health_boost( "lfe_dm_max_health_boost", "2.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max health factor that players can be boosted to by overheal pickups.", true, 1.0, false, 0 );
 ConVar tf_invuln_time( "tf_invuln_time", "1.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Time it takes for invulnerability to wear off." );
 
 #ifdef GAME_DLL
@@ -77,8 +77,8 @@ ConVar tf_always_loser( "tf_always_loser", "0", FCVAR_REPLICATED | FCVAR_CHEAT, 
 ConVar sv_showimpacts( "sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point (1=both, 2=client-only, 3=server-only)" );
 ConVar sv_showplayerhitboxes( "sv_showplayerhitboxes", "0", FCVAR_REPLICATED, "Show lag compensated hitboxes for the specified player index whenever a player fires." );
 
-ConVar tf2c_building_hauling( "tf2c_building_hauling", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Toggle Engineer's building hauling ability." );
-ConVar tf2c_disable_player_shadows( "tf2c_disable_player_shadows", "0", FCVAR_REPLICATED, "Disables rendering of player shadows regardless of client's graphical settings." );
+ConVar tf2c_building_hauling( "lfe_building_hauling", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Toggle Engineer's building hauling ability." );
+ConVar tf2c_disable_player_shadows( "lfe_disable_player_shadows", "0", FCVAR_REPLICATED, "Disables rendering of player shadows regardless of client's graphical settings." );
 
 //
 #ifdef GAME_DLL 

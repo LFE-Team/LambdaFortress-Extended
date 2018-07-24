@@ -47,7 +47,7 @@ extern ConVar lfe_muzzlelight;
 #endif
 
 ConVar tf_weapon_criticals( "tf_weapon_criticals", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled." );
-ConVar tf2c_weapon_noreload( "tf2c_weapon_noreload", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Disables reloading for all weapons." );
+ConVar tf2c_weapon_noreload( "lfe_weapon_noreload", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Disables reloading for all weapons." );
 
 #ifdef GAME_DLL
 ConVar tf_debug_criticals( "tf_debug_criticals", "0", FCVAR_CHEAT );

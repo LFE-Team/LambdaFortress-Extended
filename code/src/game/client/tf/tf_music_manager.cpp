@@ -34,11 +34,11 @@ static void MusicManagerToggle( IConVar *var, const char *pOldValue, float flOld
 	}
 }
 
-ConVar tf2c_music_manager( "tf2c_music_manager", "0", FCVAR_ARCHIVE, "Enable dynamic music in Deathmatch.", MusicManagerToggle );
-ConVar tf2c_music_manager_volume( "tf2c_music_manager_volume", "0.75", FCVAR_ARCHIVE );
-ConVar tf2c_music_manager_track( "tf2c_music_manager_track", "1", FCVAR_ARCHIVE, NULL, true, 1, true, 3 );
+ConVar tf2c_music_manager( "lfe_music_manager", "0", FCVAR_ARCHIVE, "Enable dynamic music in Deathmatch.", MusicManagerToggle );
+ConVar tf2c_music_manager_volume( "lfe_music_manager_volume", "0.75", FCVAR_ARCHIVE );
+ConVar tf2c_music_manager_track( "lfe_music_manager_track", "1", FCVAR_ARCHIVE, NULL, true, 1, true, 3 );
 
-ConVar tf2c_music_manager_debug( "tf2c_music_manager_debug", "0", FCVAR_CHEAT );
+ConVar tf2c_music_manager_debug( "lfe_music_manager_debug", "0", FCVAR_CHEAT );
 
 
 CTFMusicManager::CTFMusicManager() : CAutoGameSystemPerFrame( "CTFMusicManager" )

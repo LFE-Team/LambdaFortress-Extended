@@ -127,12 +127,12 @@ extern ConVar sv_alltalk;
 extern ConVar tf_gravetalk;
 
 // Team Fortress 2 Classic commands
-ConVar tf2c_random_weapons( "tf2c_random_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with random loadout. CURRENTLY BROKEN!!!" );
+ConVar tf2c_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with random loadout. CURRENTLY BROKEN!!!" );
 ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun. CURRENTLY BROKEN!!!" );
 
-ConVar tf2c_force_stock_weapons( "tf2c_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
-ConVar tf2c_legacy_weapons( "tf2c_legacy_weapons", "0", FCVAR_DEVELOPMENTONLY, "Disables all new weapons as well as Econ Item System." );
-ConVar tf2c_dm_spawnprotecttime( "tf2c_dm_spawnprotecttime", "5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time (in seconds) that the DM spawn protection lasts" );
+ConVar tf2c_force_stock_weapons( "lfe_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
+ConVar tf2c_legacy_weapons( "lfe_legacy_weapons", "0", FCVAR_DEVELOPMENTONLY, "Disables all new weapons as well as Econ Item System." );
+ConVar tf2c_dm_spawnprotecttime( "lfe_dm_spawnprotecttime", "5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time (in seconds) that the DM spawn protection lasts" );
 
 // Cvars from HL2 player
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
