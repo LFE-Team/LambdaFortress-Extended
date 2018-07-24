@@ -1731,41 +1731,45 @@ void CTFPlayer::GiveDefaultItems()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
+void CTFPlayer::ManageBuilderWeapons(TFPlayerClassData_t *pData)
 {
-	if ( pData->m_aBuildable[0] != OBJ_LAST )
+	if (pData->m_aBuildable[0] != OBJ_LAST)
 	{
-		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), TF_LOADOUT_SLOT_BUILDING );
-		CTFWeaponBase *pBuilder = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
+		CEconItemView *pItem = GetLoadoutItem(GetPlayerClass()->GetClassIndex(), TF_LOADOUT_SLOT_BUILDING);
+		CTFWeaponBase *pBuilder = Weapon_OwnsThisID(TF_WEAPON_BUILDER);
 
-		//const char *pszClassname = pItem->GetEntityName();
-		const char *pszClassname = WeaponIdToClassname( TF_WEAPON_BUILDER );
-		Assert( pszClassname );
-
-		/*if ( GetEntityForLoadoutSlot( TF_LOADOUT_SLOT_BUILDING ) != NULL )
+		// Give the player a new builder weapon when they switch between engy and spy 
+		if (pBuilder && !GetPlayerClass()->CanBuildObject(pBuilder->GetSubType()))
 		{
-			// Nothing to do here.
-			continue;
-		}*/
+			if (pBuilder == GetActiveWeapon())
+				pBuilder->Holster();
 
-		// Give the player a new builder weapon when they switch between engy and spy
-		if ( pBuilder && !ItemsMatch( pBuilder->GetItem(), pItem, pBuilder ) )
-		{
-			pBuilder->UnEquip( this );
+			Weapon_Detach(pBuilder);
+			UTIL_Remove(pBuilder);
 			pBuilder = NULL;
 		}
-		
-		if ( pBuilder )
-		{
-			CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
 
-			if ( pEntity )
+		if (pBuilder)
+		{
+			pBuilder->GiveDefaultAmmo();
+			pBuilder->ChangeTeam(GetTeamNumber());
+
+			if (m_bRegenerating == false)
 			{
-				pEntity->GiveTo( this );
+				pBuilder->WeaponReset();
+			}
+		}
+		else
+		{
+			pBuilder = (CTFWeaponBase *)GiveNamedItem("tf_weapon_builder", pData->m_aBuildable[0], pItem);
+
+			if (pBuilder)
+			{
+				pBuilder->DefaultTouch(this);
 			}
 		}
 
-		if ( pBuilder )
+		if (pBuilder)
 		{
 			pBuilder->m_nSkin = GetTeamNumber() - 2;	// color the w_model to the team
 		}
@@ -1773,12 +1777,16 @@ void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
 	else
 	{
 		//Not supposed to be holding a builder, nuke it from orbit
-		CTFWeaponBase *pWpn = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
+		CTFWeaponBase *pWpn = Weapon_OwnsThisID(TF_WEAPON_BUILDER);
 
-		if ( pWpn )
-		{
-			pWpn->UnEquip( this );
-		}
+		if (pWpn == NULL)
+			return;
+
+		if (pWpn == GetActiveWeapon())
+			pWpn->Holster();
+
+		Weapon_Detach(pWpn);
+		UTIL_Remove(pWpn);
 	}
 }
 
@@ -9634,7 +9642,6 @@ uint64 powerplay_ids[] =
 	76561198080213691 ^ powerplaymask,		// alex
 	76561198116553704 ^ powerplaymask,		// swox
 	76561193736602772 ^ powerplaymask,		// leakdealer
-	76561198009837726 ^ powerplaymask		// richter
 };
 
 //-----------------------------------------------------------------------------
