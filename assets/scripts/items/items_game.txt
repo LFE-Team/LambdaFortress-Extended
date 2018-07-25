@@ -1048,11 +1048,11 @@
 
 		"weapon_sword"
 		{
-			"enabled"	"1"
+			"enabled"	"0"
 			"item_class"	"tf_weapon_sword"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
-			"show_in_armory"	"1"
+			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Sword"
 			"item_slot"	"melee"
 			"anim_slot"	"item1"
@@ -4798,8 +4798,9 @@
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
 			"inspect_panel_dist" 			"25"
-			"attach_to_hands"	"1"
-			"model_player"	"models/weapons/c_models/c_sapper/c_sapper.mdl"
+			"attach_to_hands"	"0"
+			"model_world"	"models/weapons/w_models/w_sapper.mdl"
+			"model_player"	"models/weapons/v_models/v_sapper_spy.mdl"
 			"used_by_classes"
 			{
 				"spy"	"1"
