@@ -1,6 +1,6 @@
 "GameInfo"
 {
-	game	"Lambda Fortress: Extended Dev Version"
+	game	"Lambda Fortress: Extended Beta Testers Version"
 	gamelogo 1
 	type 	multiplayer_only
 	icon	"resource/game"
