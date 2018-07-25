@@ -1,0 +1,23 @@
+Original mod by: Nicknine
+
+LFE-Team:
+
+Alex (Alex Episode): Lead Project, Programmer, Map Editor
+Richter (Mr. Meatball): Art /Materials
+Train: Programmer, Map Editor
+Swox: Programmer, Art /Materials
+LeadKiller: Programmer, Linux compiler, Map Editor
+ISPuddy: Programmer.
+
+Open source code repositories used for mod:
+Lambda Fortress (The original Lambda Fortress source code) https://github.com/Benoist3012/TF2HLCoop
+Team Fortress 2 Classic: https://github.com/AgentAgrimar/TF2Classic-Outdated
+Half-Life 2 Community edition for discord rich presence code and sound timescale: https://gitlab.com/RaraCerberus/HL2CE
+Team Fortress 2 Vintage: https://github.com/bachingo/TF2Vintage
+
+Community Contributors:
+
+Rad: Gravity Gun viewmodels
+Username: Improved viewmodels
+Sergant Stacker: HL2 Beta SNPCS, Gonome and Hgrunts Red, Blue npcs.
+
