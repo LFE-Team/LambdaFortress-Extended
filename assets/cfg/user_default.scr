@@ -556,7 +556,7 @@ DESCRIPTION INFO_OPTIONS
 		"#TF_OptionCategory_Extended"
 		{ CATEGORY }
 	}
-	"tf2c_ammobucket"
+	"lfe_ammobucket"
 	{
 		"#TFOption_ammobucket"
 		{ BOOL }
