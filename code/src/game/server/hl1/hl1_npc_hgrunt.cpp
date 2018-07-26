@@ -462,7 +462,7 @@ Class_T	CNPC_HGrunt::Classify(void)
 	{
 		return CLASS_PLAYER_ALLY;
 	}
-	else
+	else (FClassnameIs(this, "monster_human_grunt_blue"));
 	{
 		return CLASS_HUMAN_MILITARY;
 	}
