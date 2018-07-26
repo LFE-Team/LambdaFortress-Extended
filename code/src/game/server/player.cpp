@@ -6125,55 +6125,6 @@ static void CreateAirboat( CBasePlayer *pPlayer )
 	}
 }
 
-#ifdef TF_CLASSIC
-static void CreateAirboat2( CBasePlayer *pPlayer )
-{
-	CBaseEntity *pEnt = NULL;
-	while ( ( pEnt = gEntList.FindEntityByClassname( pEnt, "lfe_vehicle_block" ) ) != NULL )
-	{
-		CTFVehicleBlock *pVehicleBlock = dynamic_cast<CTFVehicleBlock *>( pEnt );
-
-	if ( pVehicleBlock && pVehicleBlock->m_bAllowAirboat )
-	{
-		CBaseEntity *pJeep2 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
-		if (gEntList.FindEntityByClassname(pJeep2, "prop_vehicle_airboat"))
-		{
-			CBaseEntity *pJeep3 = (gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat"));
-			if (pJeep3)
-			{
-				if (pJeep3->GetOwnerEntity()->IsPlayer())
-				{
-					pJeep3->Remove();
-				}
-			}
-			// Cheat to create a jeep in front of the player
-			Vector vecForward;
-			AngleVectors(pPlayer->EyeAngles(), &vecForward);
-			CBaseEntity *pBoat = (CBaseEntity*)CreateEntityByName( "prop_vehicle_airboat" );
-			if (pBoat)
-			{
-				Vector vecOrigin = pPlayer->GetAbsOrigin() + vecForward * 256 + Vector(0, 0, 64);
-				QAngle vecAngles(0, pPlayer->GetAbsAngles().y - 90, 0);
-				pBoat->SetAbsOrigin(vecOrigin);
-				pBoat->SetAbsAngles(vecAngles);
-				pBoat->KeyValue( "model", "models/airboat.mdl" );
-				pBoat->KeyValue( "solid", "6" );
-				pBoat->KeyValue( "targetname", "airboat" );
-				pBoat->KeyValue( "vehiclescript", "scripts/vehicles/airboat.txt" );
-				pBoat->SetOwnerEntity( pPlayer );
-				DispatchSpawn( pBoat );
-				pBoat->Activate();
-			}
-		}
-	}
-	else
-	{
-		return;
-	}
-	}
-}
-#endif
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -6188,19 +6139,6 @@ void CC_CH_CreateAirboat( void )
 }
 
 static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
-
-#ifdef TF_CLASSIC
-void CC_CH_LFEAirboat(void)
-{
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if (!pPlayer)
-		return;
-
-	CreateAirboat2(pPlayer);
-}
-
-static ConCommand lfe_createairboat("lfe_createairboat", CC_CH_LFEAirboat, "Spawn an airboat.");
-#endif
 
 //=========================================================
 //=========================================================
