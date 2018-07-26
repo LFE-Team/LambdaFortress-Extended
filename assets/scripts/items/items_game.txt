@@ -2859,7 +2859,7 @@
 
 		"weapon_gru"
 		{
-			"enabled"	"1"
+			"enabled"	"0"
 			"item_class"	"tf_weapon_fists"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
@@ -2873,7 +2873,7 @@
 				"can_deal_critical_damage"	"1"
 			}
 			"base_item_name"	"Gloves of Running Urgently"
-			"show_in_armory"	"1"
+			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Gloves"
 			"item_name"	"#TF_Unique_Gloves_of_Running_Urgently"
 			"item_slot"	"melee"
