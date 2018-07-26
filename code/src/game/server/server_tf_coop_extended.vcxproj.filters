@@ -1709,6 +1709,9 @@
     <ClInclude Include="hl1\hl1_npc_ichthyosaur.h">
       <Filter>Source Files\HL1 DLL</Filter>
     </ClInclude>
+    <ClInclude Include="hl1\hl1_npc_rgrunt.h">
+      <Filter>Source Files\HL1 DLL</Filter>
+    </ClInclude>
     <ClInclude Include="hl1\hl1_npc_scientist.h">
       <Filter>Source Files\HL1 DLL</Filter>
     </ClInclude>
@@ -3626,6 +3629,9 @@
       <Filter>Source Files\HL1 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl1\hl1_npc_osprey.cpp">
+      <Filter>Source Files\HL1 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="hl1\hl1_npc_rgrunt.cpp">
       <Filter>Source Files\HL1 DLL</Filter>
     </ClCompile>
     <ClCompile Include="hl1\hl1_npc_roach.cpp">

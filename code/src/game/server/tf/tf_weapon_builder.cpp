@@ -77,6 +77,8 @@ void CTFWeaponBuilder::Precache(void)
 {
 	BaseClass::Precache();
 
+	PrecacheScriptSound( "Weapon_Sapper.Plant" );
+
 	// Precache all the viewmodels we could possibly be building
 	for (int iObj = 0; iObj < OBJ_LAST; iObj++)
 	{
@@ -282,6 +284,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		if (pTurret)
 		{
 			pTurret->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
+			pTurret->EmitSound( "Weapon_Sapper.Plant" );
 		}
 		//if ((pScanner || pCamera || pManHack) && GetOwnerEntity()->GetTeamNumber() == 2)
 		/*
@@ -293,19 +296,23 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		if (pScanner)
 		{
 			pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+			pScanner->EmitSound( "Weapon_Sapper.Plant" );
 		}
 		if (pCamera)
 		{
 			pCamera->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+			pCamera->EmitSound( "Weapon_Sapper.Plant" );
 		}
 		if (pManHack)
 		{
 			pManHack->AcceptInput("InteractivePowerDown", NULL, NULL, sVariant, NULL);
+			pManHack->EmitSound( "Weapon_Sapper.Plant" );
 		}
 		//if (pMine && pMine->GetTeamNumber() == 3 && GetOwnerEntity()->GetTeamNumber() == 2)
 		if (pMine)
 		{
 			pMine->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
+			pMine->EmitSound( "Weapon_Sapper.Plant" );
 		}
 	}
 	if (!pOwner)

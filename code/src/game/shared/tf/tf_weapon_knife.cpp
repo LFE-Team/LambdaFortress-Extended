@@ -276,7 +276,7 @@ void CTFKnife::BackstabVMThink( void )
 	{
 		trace_t tr;
 		if ( CanAttack() && DoSwingTrace( tr ) &&
-			tr.m_pEnt->IsPlayer() && tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber() &&
+			tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC() && tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber() &&
 			IsBehindAndFacingTarget( tr.m_pEnt ) )
 		{
 			if ( !m_bReadyToBackstab )

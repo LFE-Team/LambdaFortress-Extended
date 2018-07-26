@@ -91,6 +91,8 @@ extern ConVar	tf_stalematechangeclasstime;
 
 extern ConVar	tf_damage_disablespread;
 
+extern ConVar	lfe_force_legacy;
+
 EHANDLE g_pLastSpawnPoints[TF_TEAM_COUNT];
 
 ConVar tf_playerstatetransitions( "tf_playerstatetransitions", "-2", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "tf_playerstatetransitions <ent index or -1 for all>. Show player state transitions." );
@@ -126,13 +128,11 @@ extern ConVar sv_maxunlag;
 extern ConVar sv_alltalk;
 extern ConVar tf_gravetalk;
 
-// Team Fortress 2 Classic commands
-ConVar tf2c_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY, "Makes players spawn with random loadout. CURRENTLY BROKEN!!!" );
+// Team Fortress 2 Classic's commands
+ConVar lfe_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Makes players spawn with random loadout. CURRENTLY STILL BROKEN!!!" );
 ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun. CURRENTLY BROKEN!!!" );
 
-ConVar tf2c_force_stock_weapons( "lfe_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
-ConVar tf2c_legacy_weapons( "lfe_legacy_weapons", "0", FCVAR_DEVELOPMENTONLY, "Disables all new weapons as well as Econ Item System." );
-ConVar tf2c_dm_spawnprotecttime( "lfe_dm_spawnprotecttime", "5", FCVAR_REPLICATED | FCVAR_NOTIFY, "Time (in seconds) that the DM spawn protection lasts" );
+ConVar lfe_force_stock_weapons( "lfe_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
 
 // Cvars from HL2 player
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
@@ -1685,10 +1685,10 @@ void CTFPlayer::GiveDefaultItems()
 	}
 
 	// Give weapons.
-	if ( tf2c_random_weapons.GetBool() )
+	if ( lfe_random_weapons.GetBool() )
 		ManageRandomWeapons( pData );
-	else if ( tf2c_legacy_weapons.GetBool() )
-		ManageRegularWeaponsLegacy( pData );
+	//else if ( lfe_force_legacy.GetBool() )
+	//	ManageRegularWeaponsLegacy( pData );
 	else
 		ManageRegularWeapons( pData );
 
@@ -2161,7 +2161,7 @@ CEconItemView *CTFPlayer::GetLoadoutItem( int iClass, int iSlot )
 {
 	int iPreset = m_WeaponPreset[iClass][iSlot];
 
-	if ( tf2c_force_stock_weapons.GetBool() )
+	if ( lfe_force_legacy.GetBool() )
 		iPreset = 0;
 
 	return GetTFInventory()->GetItem( iClass, iSlot, iPreset );

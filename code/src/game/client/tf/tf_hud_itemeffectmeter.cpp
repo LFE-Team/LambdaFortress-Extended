@@ -18,6 +18,7 @@
 #include <vgui_controls/ProgressBar.h>
 #include "engine/IEngineSound.h"
 #include "tf_controls.h"
+#include "tf_weaponbase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -72,7 +73,6 @@ void CHudItemEffectMeter::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	// load control settings...
 	LoadControlSettings( "resource/UI/HudItemEffectMeter.res" );
 }
 
@@ -159,6 +159,49 @@ void CHudItemEffectMeter::UpdateStatus( void )
 		}
 
 		m_flOldCharge = flCharge;
+	}
+
+	for ( int i = 0; i < MAX_WEAPONS; i++ )
+	{
+		C_TFWeaponBase *pWeapon = ( C_TFWeaponBase *)pPlayer->GetWeapon( i );
+		if ( !pWeapon )
+			return;
+
+		if ( pPlayer && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX_DRINK || pWeapon->GetWeaponID() == TF_WEAPON_JAR_MILK )
+		{
+			LoadControlSettings( "resource/UI/HudItemEffectMeter_Scout.res" );
+		}
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_SodaPopper.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Cleaver.res" );
+		else if ( pPlayer && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX )
+		{
+			LoadControlSettings( "resource/UI/HudItemEffectMeter_Heavy.res" );
+		}
+		else if ( pPlayer && pWeapon->GetWeaponID() == TF_WEAPON_JAR )
+		{
+			LoadControlSettings( "resource/UI/HudItemEffectMeter_Sniper.res" );
+		}
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_SniperFocus.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Demoman.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_ParticleCannon.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Raygun.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_SpyKnife.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Sapper.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Spy.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Engineer.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Pomson.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Pyro.res" );
+		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Organs.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Action.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_KillStreak.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_KartCharge.res" );
+		//LoadControlSettings( "resource/UI/HudItemEffectMeter_PowerupBottle.res" );
+		//LoadControlSettings( "resource/UI/HudRocketPack.res" );
+		else
+		{
+			LoadControlSettings( "resource/UI/HudItemEffectMeter.res" );
+		}
+		InvalidateLayout();
 	}
 }
 

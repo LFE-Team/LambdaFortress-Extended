@@ -47,7 +47,6 @@ extern ConVar lfe_muzzlelight;
 #endif
 
 ConVar tf_weapon_criticals( "tf_weapon_criticals", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled." );
-ConVar tf2c_weapon_noreload( "lfe_weapon_noreload", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Disables reloading for all weapons." );
 
 #ifdef GAME_DLL
 ConVar tf_debug_criticals( "tf_debug_criticals", "0", FCVAR_CHEAT );
@@ -1112,11 +1111,6 @@ int CTFWeaponBase::GetMaxClip1( void ) const
 
 	int iMaxClip = (int)( flMaxClip + 0.5f );
 
-	if ( tf2c_weapon_noreload.GetBool() && iMaxClip != 1 )
-	{
-		return WEAPON_NOCLIP;
-	}
-
 	// Round to the nearest integer.
 	return iMaxClip;
 }
@@ -1132,11 +1126,6 @@ int CTFWeaponBase::GetDefaultClip1( void ) const
 		return (int)flDefaultClip;
 
 	int iDefaultClip = (int)( flDefaultClip + 0.5f );
-
-	if ( tf2c_weapon_noreload.GetBool() && iDefaultClip != 1 )
-	{
-		return WEAPON_NOCLIP;
-	}
 
 	// Round to the nearest integer.
 	return iDefaultClip;
@@ -2046,6 +2035,7 @@ float CTFWeaponBase::GetEffectBarProgress( void )
 	{
 		float flTimeLeft = m_flEffectBarRegenTime - gpGlobals->curtime;
 		float flRechargeTime = InternalGetEffectBarRechargeTime();
+		CALL_ATTRIB_HOOK_FLOAT( flRechargeTime, item_meter_charge_rate );
 		return clamp( ( ( flRechargeTime - flTimeLeft ) / flRechargeTime ), 0.0f, 1.0f );
 	}
 

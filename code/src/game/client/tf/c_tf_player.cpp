@@ -4396,12 +4396,9 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 // Shadows
 
 ConVar cl_blobbyshadows( "cl_blobbyshadows", "0", FCVAR_CLIENTDLL );
-extern ConVar tf2c_disable_player_shadows;
+
 ShadowType_t C_TFPlayer::ShadowCastType( void ) 
 {
-	if ( tf2c_disable_player_shadows.GetBool() )
-		return SHADOWS_NONE;
-
 	// Removed the GetPercentInvisible - should be taken care off in BindProxy now.
 	if ( !IsVisible() /*|| GetPercentInvisible() > 0.0f*/ )
 		return SHADOWS_NONE;

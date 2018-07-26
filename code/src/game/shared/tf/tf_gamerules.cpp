@@ -103,9 +103,11 @@ ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLI
 
 ConVar  alyx_darkness_force("alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED);
 
-// TF2C specific cvars.
-ConVar tf2c_falldamage_disablespread( "lfe_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
-ConVar tf2c_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
+// TF2C's cvars.
+ConVar lfe_falldamage_disablespread( "lfe_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
+ConVar lfe_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
+
+ConVar lfe_force_legacy( "lfe_force_legacy", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Force original lambda fortress style mode" );
 
 #ifdef GAME_DLL
 // TF overrides the default value of this convar
@@ -4688,7 +4690,7 @@ void CTFGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	pTFPlayer->SetFlipViewModel( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "cl_flipviewmodels" ) ) > 0 );
 
 	// Keep track of their spawn particle.
-	pTFPlayer->m_Shared.SetRespawnParticleID( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "tf2c_setmercparticle" ) ) );
+	//pTFPlayer->m_Shared.SetRespawnParticleID( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "tf2c_setmercparticle" ) ) );
 
 	const char *pszFov = engine->GetClientConVarValue( pPlayer->entindex(), "fov_desired" );
 	int iFov = atoi( pszFov );
@@ -4718,13 +4720,13 @@ static const char *g_aTaggedConVars[] =
 	"tf_use_fixed_weaponspreads",
 	"nospread",
 
-	"tf2c_force_stock_weapons",
-	"stockweapons",
+	"lfe_force_legacy",
+	"legacy",
 
-	"tf2c_allow_thirdperson",
+	"lfe_allow_thirdperson",
 	"thirdperson",
 
-	"tf2c_random_weapons",
+	"lfe_random_weapons",
 	"randomizer",
 
 	"lf_autojump",
@@ -4735,9 +4737,6 @@ static const char *g_aTaggedConVars[] =
 
 	"lfe_allow_airblast",
 	"noairblast",
-
-	"tf2c_building_upgrades",
-	"nobuildingupgrades",
 
 	"mp_highlander",
 	"highlander",
@@ -4791,7 +4790,7 @@ static const char *g_aTaggedConVars[] =
 	"cheats",
 
 	"sv_infinite_ammo",
-	"infiniteammo",
+	"infinite",
 };
 
 //-----------------------------------------------------------------------------
@@ -5580,7 +5579,7 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 	CTFPlayer *pTFPlayerVictim = ToTFPlayer( pVictim );
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pKiller = info.GetAttacker();
-	CTFPlayer *pScorer = ToTFPlayer(GetDeathScorer( pKiller, pInflictor, pVictim ));
+	CTFPlayer *pScorer = ToTFPlayer( GetDeathScorer( pKiller, pInflictor, pVictim ) );
 	CBaseEntity *pAssister =  GetAssister( pVictim, pScorer, pInflictor );
 	CTFPlayer *pTFAssister = ToTFPlayer( pAssister );
 
@@ -5610,6 +5609,7 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 	if ( pScorer )	// Is the killer a client?
 	{
 		killer_ID = pScorer->GetUserID();
+		killer_index = pScorer->entindex();
 	}
 	else if ( pKiller && pKiller->IsNPC() )
 	{
@@ -5737,7 +5737,7 @@ float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 		float flRatio = (float)pPlayer->GetMaxHealth() / 100.0;
 		flFallDamage *= flRatio;
 
-		if ( tf2c_falldamage_disablespread.GetBool() == false )
+		if ( lfe_falldamage_disablespread.GetBool() == false )
 		{
 			flFallDamage *= random->RandomFloat( 0.8, 1.2 );
 		}
@@ -6784,7 +6784,7 @@ bool CTFGameRules::AllowThirdPersonCamera( void )
 	}
 #endif
 
-	return tf2c_allow_thirdperson.GetBool();
+	return lfe_allow_thirdperson.GetBool();
 }
 
 //-----------------------------------------------------------------------------
