@@ -27,7 +27,6 @@ static const char *pszClassModels[TF_CLASS_COUNT_ALL] =
 	"models/player/pyro.mdl",
 	"models/player/spy.mdl",
 	"models/player/engineer.mdl",
-	"",
 };
 
 static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
@@ -80,9 +79,6 @@ static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
-	},
-	{
-		-1, -1, -1,
 	}
 };
 
@@ -624,79 +620,75 @@ void CTFLoadoutPanel::DefaultLayout()
 	int iClassIndex = m_iCurrentClass;
 	SetDialogVariable( "classname", g_pVGuiLocalize->Find( g_aPlayerClassNames[iClassIndex] ) );
 
-	// No point in updating all those buttons if they're not visible.
-	if ( iClassIndex != TF_CLASS_CIVILIAN )
+	for ( int iRow = 0; iRow < INVENTORY_ROWNUM; iRow++ )
 	{
-		for ( int iRow = 0; iRow < INVENTORY_ROWNUM; iRow++ )
+		int iColumnCount = 0;
+		int iPresetID = 0;
+		int iPos = m_RawIDPos[iRow];
+		CTFAdvItemButton *m_pSlideButtonL = m_pSlideButtons[iRow * 2];
+		CTFAdvItemButton *m_pSlideButtonR = m_pSlideButtons[( iRow * 2 ) + 1];
+		int iSlot = g_aClassLoadoutSlots[iClassIndex][iRow];
+
+		for ( int iColumn = 0; iColumn < INVENTORY_COLNUM; iColumn++ )
 		{
-			int iColumnCount = 0;
-			int iPresetID = 0;
-			int iPos = m_RawIDPos[iRow];
-			CTFAdvItemButton *m_pSlideButtonL = m_pSlideButtons[iRow * 2];
-			CTFAdvItemButton *m_pSlideButtonR = m_pSlideButtons[( iRow * 2 ) + 1];
-			int iSlot = g_aClassLoadoutSlots[iClassIndex][iRow];
+			CTFAdvItemButton *m_pWeaponButton = m_pWeaponIcons[INVENTORY_COLNUM * iRow + iColumn];
+			CEconItemView *pItem = NULL;
 
-			for ( int iColumn = 0; iColumn < INVENTORY_COLNUM; iColumn++ )
+			if ( iSlot != -1 )
 			{
-				CTFAdvItemButton *m_pWeaponButton = m_pWeaponIcons[INVENTORY_COLNUM * iRow + iColumn];
-				CEconItemView *pItem = NULL;
+				pItem = GetTFInventory()->GetItem( iClassIndex, iSlot, iColumn );
+			}
 
-				if ( iSlot != -1 )
+			CEconItemDefinition *pItemData = pItem ? pItem->GetStaticData() : NULL;
+
+			if ( pItemData )
+			{
+				m_pWeaponButton->SetVisible( true );
+				m_pWeaponButton->SetItemDefinition( pItemData );
+				m_pWeaponButton->SetLoadoutSlot( iSlot, iColumn );
+
+				int iWeaponPreset = GetTFInventory()->GetWeaponPreset( iClassIndex, iSlot );
+				if ( iColumn == iWeaponPreset )
 				{
-					pItem = GetTFInventory()->GetItem( iClassIndex, iSlot, iColumn );
-				}
-
-				CEconItemDefinition *pItemData = pItem ? pItem->GetStaticData() : NULL;
-
-				if ( pItemData )
-				{
-					m_pWeaponButton->SetVisible( true );
-					m_pWeaponButton->SetItemDefinition( pItemData );
-					m_pWeaponButton->SetLoadoutSlot( iSlot, iColumn );
-
-					int iWeaponPreset = GetTFInventory()->GetWeaponPreset( iClassIndex, iSlot );
-					if ( iColumn == iWeaponPreset )
-					{
-						m_pWeaponButton->SetBorderByString( "AdvRoundedButtonDefault", "AdvRoundedButtonArmed", "AdvRoundedButtonDepressed" );
-					}
-					else
-					{
-						m_pWeaponButton->SetBorderByString( "AdvRoundedButtonDisabled", "AdvRoundedButtonArmed", "AdvRoundedButtonDepressed" );
-					}
-					m_pWeaponButton->GetButton()->SetSelected( ( iColumn == iWeaponPreset ) );
-
-					if ( iColumn == iWeaponPreset )
-						iPresetID = iColumn;
-					iColumnCount++;
+					m_pWeaponButton->SetBorderByString( "AdvRoundedButtonDefault", "AdvRoundedButtonArmed", "AdvRoundedButtonDepressed" );
 				}
 				else
 				{
-					m_pWeaponButton->SetVisible( false );
+					m_pWeaponButton->SetBorderByString( "AdvRoundedButtonDisabled", "AdvRoundedButtonArmed", "AdvRoundedButtonDepressed" );
 				}
-			}
-			if ( iColumnCount > 2 )
-			{
-				if ( iPos == 0 )	//left
-				{
-					m_pSlideButtonL->SetVisible( false );
-					m_pSlideButtonR->SetVisible( true );
-				}
-				else if ( iPos == iColumnCount - 2 )	//right
-				{
-					m_pSlideButtonL->SetVisible( true );
-					m_pSlideButtonR->SetVisible( false );
-				}
-				else  //middle
-				{
-					m_pSlideButtonL->SetVisible( true );
-					m_pSlideButtonR->SetVisible( true );
-				}
+				m_pWeaponButton->GetButton()->SetSelected( ( iColumn == iWeaponPreset ) );
+
+				if ( iColumn == iWeaponPreset )
+					iPresetID = iColumn;
+				iColumnCount++;
 			}
 			else
 			{
+				m_pWeaponButton->SetVisible( false );
+			}
+		}
+		if ( iColumnCount > 2 )
+		{
+			if ( iPos == 0 )	//left
+			{
 				m_pSlideButtonL->SetVisible( false );
+				m_pSlideButtonR->SetVisible( true );
+			}
+			else if ( iPos == iColumnCount - 2 )	//right
+			{
+				m_pSlideButtonL->SetVisible( true );
 				m_pSlideButtonR->SetVisible( false );
 			}
+			else  //middle
+			{
+				m_pSlideButtonL->SetVisible( true );
+				m_pSlideButtonR->SetVisible( true );
+			}
+		}
+		else
+		{
+			m_pSlideButtonL->SetVisible( false );
+			m_pSlideButtonR->SetVisible( false );
 		}
 	}
 };

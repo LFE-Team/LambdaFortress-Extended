@@ -329,7 +329,7 @@ void CDamageAccountPanel::OnHealed( IGameEvent *event )
 	bool bIsPlayer = V_strcmp( event->GetName(), "npc_healed" ) != 0;
 
 	//int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "entindex" );;
-	int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "patient" );;
+	int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "patient" );
 	int iHealer = bIsPlayer ? event->GetInt( "healer" ) : event->GetInt( "healer" );
 	int iAmount = event->GetInt( "amount" );
 

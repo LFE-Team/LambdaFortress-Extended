@@ -121,7 +121,7 @@ enum
 #define TF_CLASS_COUNT			( TF_CLASS_COUNT_ALL - 1 )
 
 #define TF_FIRST_NORMAL_CLASS	( TF_CLASS_UNDEFINED + 1 )
-#define TF_LAST_NORMAL_CLASS	( TF_CLASS_CIVILIAN - 1 )
+#define TF_LAST_NORMAL_CLASS	( TF_CLASS_ENGINEER - 1 )
 
 #define	TF_CLASS_MENU_BUTTONS	( TF_CLASS_RANDOM + 1 )
 
@@ -140,7 +140,6 @@ enum
 	TF_CLASS_ENGINEER,		// TF_LAST_NORMAL_CLASS
 
 	// Add any new classes after Engineer.
-	TF_CLASS_CIVILIAN,		// Civilians are a special class. It is not a player class.
 	TF_CLASS_COUNT_ALL,
 
 	TF_CLASS_RANDOM

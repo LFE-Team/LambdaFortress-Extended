@@ -112,6 +112,8 @@ const char *pszHeadLabelNames[] =
 {
 	"effects/speech_voice_red",
 	"effects/speech_voice_blue",
+	"effects/speech_voice_red",
+	"effects/speech_voice_blue",
 };
 
 #define TF_PLAYER_HEAD_LABEL_RED 0
@@ -4610,7 +4612,7 @@ IMaterial *C_TFPlayer::GetHeadLabelMaterial( void )
 
 void SetupHeadLabelMaterials( void )
 {
-	for (int i = 0; i < (TF_TEAM_COUNT - 2); i++)
+	for ( int i = 0; i < TF_TEAM_COUNT - 2; i++ )
 	{
 		if ( g_pHeadLabelMaterial[i] )
 		{
