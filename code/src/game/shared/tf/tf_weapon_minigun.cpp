@@ -363,7 +363,12 @@ bool CTFMinigun::CanHolster( void ) const
 	if ( m_iWeaponState > AC_STATE_IDLE )
 		return false;
 
-	if ( GetActivity() == ACT_MP_ATTACK_STAND_POSTFIRE )
+	if ( GetActivity() == ACT_MP_ATTACK_STAND_POSTFIRE ||
+		GetActivity() == ACT_PRIMARY_ATTACK_STAND_POSTFIRE ||
+		GetActivity() == ACT_SECONDARY_ATTACK_STAND_POSTFIRE ||
+		GetActivity() == ACT_MELEE_ATTACK_STAND_POSTFIRE ||
+		GetActivity() == ACT_ITEM1_ATTACK_STAND_POSTFIRE ||
+		GetActivity() == ACT_ITEM2_ATTACK_STAND_POSTFIRE )
 	{
 		if ( !IsViewModelSequenceFinished() )
 			return false;
@@ -381,6 +386,7 @@ bool CTFMinigun::Holster( CBaseCombatWeapon *pSwitchingTo )
 	{
 		WindDown();
 	}
+	m_flBarrelCurrentVelocity = 0.0f;
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -584,7 +590,7 @@ void CTFMinigun::ViewModelAttachmentBlending( CStudioHdr *hdr, Vector pos[], Qua
 
 		a.x = GetBarrelRotation();
 
-		AngleQuaternion( RadianEuler( 0, 0, GetBarrelRotation() ), q[ iBarrelBone ] );
+		AngleQuaternion( RadianEuler( 0, 0, GetBarrelRotation() ), q[iBarrelBone] );
 	}
 }
 
