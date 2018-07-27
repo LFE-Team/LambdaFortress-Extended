@@ -5120,9 +5120,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	case TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL:
 		pszCustomKill = "robot_arm_blender_kill";
 		break;
-	case TF_DMG_CUSTOM_STICKBOMB_EXPLOSION:
-		pszCustomKill = "ullapool_caber_explosion";
-		break;
 	case TF_DMG_CUSTOM_DECAPITATION_BOSS:
 		pszCustomKill = "battleaxe";
 		break;

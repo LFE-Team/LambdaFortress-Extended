@@ -1048,11 +1048,9 @@
 
 		"weapon_sword"
 		{
-			"enabled"	"0"
 			"item_class"	"tf_weapon_sword"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
-			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Sword"
 			"item_slot"	"melee"
 			"anim_slot"	"item1"
@@ -7879,7 +7877,6 @@
 				"can_deal_gib_damage"	"1"
 				"can_be_equipped_by_soldier_or_demo"	"1"
 			}
-			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_StickBomb"
 			"item_name"	"#TF_UllapoolCaber"
 			"item_description"	"#TF_UllapoolCaber_Desc"
@@ -7946,7 +7943,6 @@
 			"item_class"	"tf_weapon_shovel"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
-			"show_in_armory"	"0"
 			"capabilities"
 			{
 				"nameable"		"1"
@@ -7958,7 +7954,6 @@
 				"can_be_equipped_by_soldier_or_demo"	"1"
 				"can_deal_critical_damage"	"1"
 			}
-			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_Shovel"
 			"item_name"	"#TF_MarketGardener"
 			"item_logname"	"market_gardener"

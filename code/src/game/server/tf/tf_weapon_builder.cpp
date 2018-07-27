@@ -271,7 +271,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		CBaseEntity *pTurret = gEntList.FindEntityByClassnameNearest("npc_turret_floor", m_SapPos, flSapRadius);
 		CBaseEntity *pScanner = gEntList.FindEntityByClassnameNearest("npc_cscanner", m_SapPos, flSapRadius);
 		CBaseEntity *pCamera = gEntList.FindEntityByClassnameNearest("npc_combine_camera", m_SapPos, flSapRadius);
-		CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
+		//CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
 		CBaseEntity *pManHack = gEntList.FindEntityByClassnameNearest("npc_manhack", m_SapPos, flSapRadius);
 		/*
 		CBaseEntity *pTurret = gEntList.FindEntityByClassname(this, "npc_turret_floor");
@@ -309,11 +309,12 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 			pManHack->EmitSound( "Weapon_Sapper.Plant" );
 		}
 		//if (pMine && pMine->GetTeamNumber() == 3 && GetOwnerEntity()->GetTeamNumber() == 2)
+		/*
 		if (pMine)
 		{
 			pMine->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
 			pMine->EmitSound( "Weapon_Sapper.Plant" );
-		}
+		*/
 	}
 	if (!pOwner)
 		return;
