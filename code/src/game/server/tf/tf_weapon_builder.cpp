@@ -262,8 +262,8 @@ void CTFWeaponBuilder::ItemPostFrame(void)
 //-----------------------------------------------------------------------------
 void CTFWeaponBuilder::PrimaryAttack(void)
 {
-	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
-	if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	if ( pOwner && pOwner->IsPlayerClass( TF_CLASS_SPY ) )
 	{
 		Vector m_SapPos = pOwner->GetAbsOrigin();
 		float flSapRadius = 80.0;
@@ -273,18 +273,11 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		CBaseEntity *pCamera = gEntList.FindEntityByClassnameNearest("npc_combine_camera", m_SapPos, flSapRadius);
 		//CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
 		CBaseEntity *pManHack = gEntList.FindEntityByClassnameNearest("npc_manhack", m_SapPos, flSapRadius);
-		/*
-		CBaseEntity *pTurret = gEntList.FindEntityByClassname(this, "npc_turret_floor");
-		CBaseEntity *pScanner = gEntList.FindEntityByClassname(this, "npc_cscanner");
-		CBaseEntity *pCamera = gEntList.FindEntityByClassname(this, "npc_combine_camera");
-		CBaseEntity *pMine = gEntList.FindEntityByClassname(this, "npc_rollermine");
-		CBaseEntity *pManHack = gEntList.FindEntityByClassname(this, "npc_manhack");
-		//if (pTurret && pTurret->GetTeamNumber() != GetOwnerEntity()->GetTeamNumber())
-		*/
+
 		if (pTurret)
 		{
-			pTurret->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
-			pTurret->EmitSound( "Weapon_Sapper.Plant" );
+			pTurret->AcceptInput("SelfDestruct", NULL, NULL, sVariant, NULL);
+			EmitSound( "Weapon_Sapper.Plant" );
 		}
 		//if ((pScanner || pCamera || pManHack) && GetOwnerEntity()->GetTeamNumber() == 2)
 		/*
@@ -316,6 +309,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 			pMine->EmitSound( "Weapon_Sapper.Plant" );
 		*/
 	}
+
 	if (!pOwner)
 		return;
 

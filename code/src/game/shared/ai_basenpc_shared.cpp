@@ -35,7 +35,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
 	},
 	{
 		"npc_kleiner",
@@ -177,7 +177,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_nihilanth",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR,
 	},
 	{
 		"monster_hornet",
@@ -222,12 +222,12 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_tentacle",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR,
 	},
 	{
 		"monster_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
 	},
 	{
 		"monster_human_assassin",
@@ -258,7 +258,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_breen",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
 	},
 	// Regular enemies.
 	{
@@ -440,11 +440,6 @@ TF_NPCData g_aNPCData[] =
 	// Antlions.
 	{
 		"npc_antlion",
-		TF_TEAM_YELLOW,
-		TFFL_NOBACKSTAB,
-	},
-	{
-		"npc_antlion_worker",
 		TF_TEAM_YELLOW,
 		TFFL_NOBACKSTAB,
 	},
@@ -900,9 +895,12 @@ void CAI_BaseNPC::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/,
 
 	if ( !InCond( TF_COND_BURNING ) )
 	{
-		// Start burning
-		AddCond( TF_COND_BURNING );
-		m_flFlameBurnTime = gpGlobals->curtime;	//asap
+		if ( AllowedToIgnite() == true )
+		{
+			// Start burning
+			AddCond( TF_COND_BURNING );
+			m_flFlameBurnTime = gpGlobals->curtime;	//asap
+		}
 		// let the attacker know he burned me
 		if ( pAttacker  )
 		{

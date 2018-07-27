@@ -2374,6 +2374,8 @@ void TE_DynamicLight( IRecipientFilter& filter, float delay,
 //
 void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nIndex )
 {
+	C_TFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
+
 	Vector vecOrigin;
 	QAngle angAngles;
 
@@ -2398,11 +2400,15 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 	{
 		pAttachEnt->GetAttachment( iMuzzleFlashAttachment, vecOrigin, angAngles );
 
-		// Muzzleflash light
-		if ( lfe_muzzlelight.GetBool() )
+		// huntsman can't have muzzlelight effect
+		if ( !pOwner->IsActiveTFWeapon( TF_WEAPON_COMPOUND_BOW ) )
 		{
-			CLocalPlayerFilter filter;
-			TE_DynamicLight( filter, 0.0f, &vecOrigin, 255, 192, 64, 5, 70.0f, 0.05f, 70.0f / 0.05f, LIGHT_INDEX_MUZZLEFLASH );
+			// Muzzleflash light
+			if ( lfe_muzzlelight.GetBool() )
+			{
+				CLocalPlayerFilter filter;
+				TE_DynamicLight( filter, 0.0f, &vecOrigin, 255, 192, 64, 5, 70.0f, 0.05f, 70.0f / 0.05f, LIGHT_INDEX_MUZZLEFLASH );
+			}
 		}
 
 		if ( pszMuzzleFlashEffect )

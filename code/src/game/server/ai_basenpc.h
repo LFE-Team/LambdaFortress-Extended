@@ -2276,6 +2276,7 @@ public:
 	bool	AllowBackstab( void ) { return ( m_nTFFlags & TFFL_NOBACKSTAB ) == 0; }
 	bool	IsMech( void ) { return ( m_nTFFlags & TFFL_MECH ) != 0; }
 	bool	CanBeHealed( void ) { return ( m_nTFFlags & TFFL_NOHEALING ) == 0; }
+	bool	AllowJar( void ) { return ( m_nTFFlags & TFFL_NOJAR ) == 0; }
 
 	// Invulnerable.
 	void	TestAndExpireChargeEffect( medigun_charge_types chargeType );

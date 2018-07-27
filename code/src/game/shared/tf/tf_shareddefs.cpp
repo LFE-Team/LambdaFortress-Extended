@@ -332,7 +332,7 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_physcannon",			// Pyro
 	"tf_weapon_physcannon_secondary",	// Spy
 	"tf_weapon_physcannon",	// Engineer
-
+/*
 	"tf_weapon_physgun",			// Base weapon to translate
 	NULL,
 	"tf_weapon_physgun",			// Scout
@@ -343,7 +343,7 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_physgun",			// Heavy
 	"tf_weapon_physgun",			// Pyro
 	"tf_weapon_physgun",			// Spy
-	"tf_weapon_physgun_secondary",	// Engineer
+	"tf_weapon_physgun_secondary",	// Engineer*/
 };
 
 //-----------------------------------------------------------------------------
@@ -456,7 +456,7 @@ const char *g_aWeaponNames[] =
 	// ADD NEW WEAPONS AFTER THIS
 
 	"TF_WEAPON_PHYSCANNON",
-	"TF_WEAPON_PHYSGUN",
+	//"TF_WEAPON_PHYSGUN",
 
 	"TF_WEAPON_COUNT",	// end marker, do not add below here
 };
@@ -568,7 +568,7 @@ int g_aWeaponDamageTypes[] =
 
 	// ADD NEW WEAPONS AFTER THIS
 	DMG_GENERIC,	// TF_WEAPON_PHYSCANNON
-	DMG_GENERIC,	// TF_WEAPON_PHYSGUN
+	//DMG_GENERIC,	// TF_WEAPON_PHYSGUN
 
 	// This is a special entry that must match with TF_WEAPON_COUNT
 	// to protect against updating the weapon list without updating this list

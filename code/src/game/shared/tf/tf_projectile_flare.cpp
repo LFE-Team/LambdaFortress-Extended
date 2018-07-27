@@ -31,7 +31,7 @@ ConVar  tf_fireball_burning_bonus("tf_fireball_burning_bonus", "3.0", FCVAR_CHEA
 ConVar  tf_fireball_damage("tf_fireball_damage", "25.0", FCVAR_CHEAT | FCVAR_REPLICATED, "" );
 ConVar  tf_fireball_distance("tf_fireball_distance", "500.0", FCVAR_CHEAT | FCVAR_REPLICATED, "" );
 ConVar  tf_fireball_draw_debug_radius("tf_fireball_draw_debug_radius", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "" );
-ConVar  tf_fireball_radius("tf_fireball_radius", "22.5", FCVAR_CHEAT | FCVAR_REPLICATED, "" );
+ConVar  tf_fireball_radius("tf_fireball_radius", "16", FCVAR_CHEAT | FCVAR_REPLICATED, "" ); // 22.5
 ConVar  tf_fireball_speed("tf_fireball_speed", "3000", FCVAR_CHEAT | FCVAR_REPLICATED, "" );
 ConVar  tf_fireball_flametime("tf_fireball_flametime", "0.15", FCVAR_CHEAT | FCVAR_REPLICATED, "" );
 #endif
@@ -968,7 +968,7 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 			#ifdef GAME_DLL
 			CEffectData	data;
 			data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
-			data.m_vOrigin = pPlayer->WorldSpaceCenter();
+			data.m_vOrigin = pPlayer->GetAbsOrigin();
 			data.m_vAngles = vec3_angle;
 			data.m_nEntIndex = 0;
 
@@ -1003,7 +1003,7 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 			#ifdef GAME_DLL
 			CEffectData	data;
 			data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
-			data.m_vOrigin = pNPC->WorldSpaceCenter();
+			data.m_vOrigin = pNPC->GetAbsOrigin();
 			data.m_vAngles = vec3_angle;
 			data.m_nEntIndex = 0;
 
@@ -1018,15 +1018,16 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 		}
 
 		flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
-	}/*
+	}
 	else
 	{
 		// Hit world, delet this.
-		UTIL_Remove( this );
-	}*/
+		//UTIL_Remove( this );
+		ApplyMultiDamage();
+	}
 
 	CTakeDamageInfo info( GetOwnerEntity(), pAttacker, m_hLauncher.Get(), flDamage, GetDamageType(), flDamageCustom );
-	//pOther->TakeDamage( info );
+	pOther->TakeDamage( info );
 
 	// Remove.
 	//UTIL_Remove( this );

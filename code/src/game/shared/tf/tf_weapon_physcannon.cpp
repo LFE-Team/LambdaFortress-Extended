@@ -26,6 +26,7 @@
 	#include "te_effect_dispatch.h"
 	#include "util.h"
     #include "physobj.h"
+	#include "tf_gamestats.h"
 #endif
 
 #include "gamerules.h"
@@ -1067,8 +1068,10 @@ void CWeaponPhysCannon::Spawn(void)
 
 	m_bPhyscannonState = IsMegaPhysCannon();
 
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 	// The megacannon uses a different skin
-	if (IsMegaPhysCannon())
+	if ( IsMegaPhysCannon() || iType == 1 )
 	{
 		m_nSkin = MEGACANNON_SKIN;
 	}
@@ -1176,8 +1179,11 @@ bool CWeaponPhysCannon::Deploy( void )
 
 	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime;
 
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
 	// Unbloat our bounds
-	if (IsMegaPhysCannon())
+	if ( IsMegaPhysCannon() || iType == 1 )
 	{
 		CollisionProp()->UseTriggerBounds(false);
 	}
@@ -1197,7 +1203,9 @@ bool CWeaponPhysCannon::Deploy( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SetViewModel( void )
 {
-	if (!IsMegaPhysCannon())
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( !IsMegaPhysCannon() || iType != 1 )
 	{
 		BaseClass::SetViewModel();
 		return;
@@ -1399,6 +1407,8 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 	pEntity->DispatchTraceAttack( info, forward, &tr );
 	ApplyMultiDamage();
 
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 
 	if ( Pickup_OnAttemptPhysGunPickup( pEntity, pOwner, PUNTED_BY_CANNON ) )
 	{
@@ -1429,7 +1439,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 			forward.Init();
 		}
 
-		if ( !IsMegaPhysCannon() && !Pickup_ShouldPuntUseLaunchForces( pEntity, PHYSGUN_FORCE_PUNTED ) )
+		if ( ( iType != 1 || !IsMegaPhysCannon() ) && !Pickup_ShouldPuntUseLaunchForces( pEntity, PHYSGUN_FORCE_PUNTED ) )
 		{
 			int i;
 
@@ -1628,7 +1638,9 @@ void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForwa
 //-----------------------------------------------------------------------------
 float CWeaponPhysCannon::TraceLength()
 {
-	if (!IsMegaPhysCannon())
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( !IsMegaPhysCannon() || iType != 1 )
 	{
 		return physcannon_tracelength.GetFloat();
 	}
@@ -1768,6 +1780,9 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 		pEntity = tr.m_pEnt;
 	}
 
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
 	// See if we hit something
 	if ( pEntity->GetMoveType() != MOVETYPE_VPHYSICS )
 	{
@@ -1777,7 +1792,8 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			return;
 		}
 #ifndef CLIENT_DLL 
-		if( GetOwner()->IsPlayer() && !IsMegaPhysCannon() )
+
+		if( GetOwner()->IsPlayer() && ( !IsMegaPhysCannon() || iType != 1 ) )
 		{
 			// Don't let the player zap any NPC's except regular antlions and headcrabs.
 			if( pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion") )
@@ -1786,8 +1802,9 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				return;
 			}
 		}
-
-		if ( IsMegaPhysCannon() )
+		pOwner->SpeakWeaponFire();
+		CTF_GameStats.Event_PlayerFiredWeapon( pOwner, false );
+		if ( IsMegaPhysCannon() || iType == 1 )
 		{
 			//SecobMod__Information: This line was modified with the classify check. This prevents the primary fire being used on the following friendly NPCs: Dog, Monk, Vortigaunt.
 			if ( pEntity->IsNPC() && !pEntity->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() )
@@ -1818,7 +1835,7 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			return;
 		}
 
-		if ( !IsMegaPhysCannon() )
+		if ( !IsMegaPhysCannon() || iType != 1 )
 		{
 			if ( pEntity->VPhysicsIsFlesh( ) )
 			{
@@ -1947,8 +1964,11 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 
 	bool bKilledByGrab = false;
 
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
 	bool bIsMegaPhysCannon = IsMegaPhysCannon();
-	if (bIsMegaPhysCannon)
+	if ( bIsMegaPhysCannon || iType == 1 )
 	{
 		//SecobMod__Information: This prevents the secondary fire being used to grab ragdolls out of certain NPCs: Dog, Monk, Vortigaunt.
 		if (pObject->IsNPC() && (pObject->Classify() == CLASS_PLAYER_ALLY_VITAL) || pObject->ClassMatches("npc_vortigaunt"))
@@ -2079,10 +2099,13 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 			bPull = true;
 		}
 	}
-	
+
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
 	// Find anything within a general cone in front
 	CBaseEntity *pConeEntity = NULL;
-	if (!IsMegaPhysCannon())
+	if ( !IsMegaPhysCannon() || iType != 1)
 	{
 		if (!bAttach && !bPull)
 		{
@@ -2316,6 +2339,9 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	playerAngles.x = clamp( pitch, -75, 75 );
 	AngleVectors( playerAngles, &forward, &right, &up );
 
+	//int iType = 0;
+	//CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
 	if (TFGameRules()->MegaPhyscannonActive())
 	{
 		Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
@@ -2326,7 +2352,19 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 		//Let go of the item if we turn around too fast.
 		if (flDot <= 0.35f)
 			return false;
-	}
+	}/*
+	else if ( iType == 1 )
+	{
+		Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
+		VectorNormalize(los);
+
+		float flDot = DotProduct(los, forward);
+
+		//Let go of the item if we turn around too fast.
+		if (flDot <= 0.35f)
+			return false;
+	}*/
+	
 
 	// Now clamp a sphere of object radius at end to the player's bbox
 	Vector radial = physcollision->CollideGetExtent( pPhys->GetCollide(), vec3_origin, pEntity->GetAbsAngles(), -forward );
@@ -2829,7 +2867,9 @@ void CWeaponPhysCannon::ItemPostFrame()
 		WeaponIdle();
 	}
 
-	if ( IsMegaPhysCannon() )
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( IsMegaPhysCannon() || iType == 1 )
 	{
 		if ( !( pOwner->m_nButtons & IN_ATTACK ) )
 		{
@@ -2935,7 +2975,9 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 		return CBasePlayer::CanPickupObject( pTarget, 0, 0 );
 	}
 
-	if ( !IsMegaPhysCannon() )
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( !IsMegaPhysCannon() || iType != 1 )
 	{
 		if (pTarget->VPhysicsIsFlesh())
 			return false;
@@ -2989,11 +3031,14 @@ void CWeaponPhysCannon::OpenElements( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::CloseElements( void )
 {
-
 	//TDT USE!!!!!
 	CDisablePredictionFiltering disabler;
+
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
 	// The mega cannon cannot be closed!
-	if (IsMegaPhysCannon())
+	if ( IsMegaPhysCannon() || iType == 1 )
 	{
 		OpenElements();
 		return;
@@ -3055,8 +3100,11 @@ CSoundPatch *CWeaponPhysCannon::GetMotorSound(void)
 	if (m_sndMotor == NULL)
 	{
 		CPASAttenuationFilter filter(this);
-	
-		if ( IsMegaPhysCannon() )
+
+		int iType = 0;
+		CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+
+		if ( IsMegaPhysCannon() || iType == 1 )
 		{
 			m_sndMotor = ( CSoundEnvelopeController::GetController()).SoundCreate( filter, entindex(), CHAN_STATIC, "Weapon_MegaPhysCannon.HoldSound", ATTN_NORM );
 		}

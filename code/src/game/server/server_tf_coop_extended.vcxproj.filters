@@ -2306,12 +2306,6 @@
     <ClInclude Include="..\..\game\shared\tf\tf_weapon_physcannon.h">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\game\shared\tf\tf_weapon_physgun.h">
-      <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\tf\tf_weapon_sword.h">
-      <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
-    </ClInclude>
     <ClInclude Include="tf\entity_grenadepack.h">
       <Filter>Source Files\TF\Unused</Filter>
     </ClInclude>
@@ -4607,12 +4601,6 @@
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
     <ClCompile Include="..\..\game\shared\tf\tf_weapon_physcannon.cpp">
-      <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\tf\tf_weapon_physgun.cpp">
-      <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\tf\tf_weapon_sword.cpp">
       <Filter>Source Files\TF\Shared\Weapons\Custom</Filter>
     </ClCompile>
     <ClCompile Include="tf\entity_grenadepack.cpp">

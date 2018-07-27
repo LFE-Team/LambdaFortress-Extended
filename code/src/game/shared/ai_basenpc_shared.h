@@ -26,8 +26,9 @@ class CAI_BaseNPC;
 #define TFFL_NOHEALING				( 1 << 2 )
 #define TFFL_FIREPROOF				( 1 << 3 )
 #define TFFL_NODEFLECT				( 1 << 4 )
+#define TFFL_NOJAR					( 1 << 6 )
 
-#define TFFL_BUILDING				( TFFL_MECH | TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF )
+#define TFFL_BUILDING				( TFFL_MECH | TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NOJAR )
 
 struct TF_NPCData
 {
