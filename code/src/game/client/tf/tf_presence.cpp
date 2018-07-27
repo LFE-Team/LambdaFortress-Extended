@@ -51,8 +51,6 @@ CTFRichPresence::~CTFRichPresence()
 
 void CTFRichPresence::Shutdown()
 {
-	steamapicontext->SteamFriends()->ClearRichPresence();
-
 	Discord_Shutdown();
 }
 

@@ -255,9 +255,27 @@ void CTFKnife::DoViewModelAnimation( void )
 //-----------------------------------------------------------------------------
 bool CTFKnife::SendWeaponAnim( int iActivity )
 {
-	if ( m_bReadyToBackstab && iActivity == ACT_VM_IDLE )
+	switch( iActivity )
 	{
-		return BaseClass::SendWeaponAnim( ACT_BACKSTAB_VM_IDLE );
+	case ACT_VM_IDLE:
+	case ACT_MELEE_VM_IDLE:
+	case ACT_ITEM1_VM_IDLE:
+	case ACT_ITEM2_VM_IDLE:
+		if ( m_bReadyToBackstab )
+			iActivity = ACT_BACKSTAB_VM_IDLE;
+
+		break;
+	case ACT_BACKSTAB_VM_UP:
+	case ACT_ITEM1_BACKSTAB_VM_UP:
+	case ACT_ITEM2_BACKSTAB_VM_UP:
+		m_bReadyToBackstab = true;
+		break;
+	case ACT_BACKSTAB_VM_DOWN:
+	case ACT_ITEM1_BACKSTAB_VM_DOWN:
+	case ACT_ITEM2_BACKSTAB_VM_DOWN:
+	default:
+		m_bReadyToBackstab = false;
+		break;
 	}
 
 	return BaseClass::SendWeaponAnim( iActivity );
@@ -272,11 +290,17 @@ void CTFKnife::BackstabVMThink( void )
 	if ( !pOwner )
 		return;
 
-	if ( GetActivity() == ACT_VM_IDLE || GetActivity() == ACT_BACKSTAB_VM_IDLE )
+	if ( GetActivity() == ACT_VM_IDLE ||
+		GetActivity() == ACT_MELEE_VM_IDLE ||
+		GetActivity() == ACT_BACKSTAB_VM_IDLE ||
+		GetActivity() == ACT_ITEM1_VM_IDLE  ||
+		GetActivity() == ACT_ITEM1_BACKSTAB_VM_IDLE ||
+		GetActivity() == ACT_ITEM2_VM_IDLE  ||
+		GetActivity() == ACT_ITEM2_BACKSTAB_VM_IDLE )
 	{
 		trace_t tr;
 		if ( CanAttack() && DoSwingTrace( tr ) &&
-			tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC() && tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber() &&
+			( tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC() ) && tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber() &&
 			IsBehindAndFacingTarget( tr.m_pEnt ) )
 		{
 			if ( !m_bReadyToBackstab )

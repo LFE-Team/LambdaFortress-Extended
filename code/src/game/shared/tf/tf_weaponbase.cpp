@@ -2377,7 +2377,7 @@ void CTFWeaponBase::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int nInd
 	Vector vecOrigin;
 	QAngle angAngles;
 
-	int iMuzzleFlashAttachment = pAttachEnt->LookupAttachment( "muzzle" );
+	int iMuzzleFlashAttachment = m_iMuzzleAttachment != -1 ? m_iMuzzleAttachment : pAttachEnt->LookupAttachment( "muzzle" );
 
 	const char *pszMuzzleFlashEffect = NULL;
 	//const char *pszMuzzleFlashModel = GetMuzzleFlashModel();
@@ -3665,7 +3665,7 @@ bool CTFWeaponBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& orig
 	if ( event == 6002 )
 	{
 		CEffectData data;
-		pViewModel->GetAttachment( atoi( options ), data.m_vOrigin, data.m_vAngles );
+		pViewModel->GetAttachment( m_iBrassAttachment != -1 ? m_iBrassAttachment : atoi( options ), data.m_vOrigin, data.m_vAngles );
 		data.m_nHitBox = GetWeaponID();
 		DispatchEffect( "TF_EjectBrass", data );
 		return true;

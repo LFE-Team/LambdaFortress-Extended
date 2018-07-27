@@ -180,3 +180,23 @@ void C_ViewmodelAttachmentModel::UpdateExtraWearables( void )
 		}
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_ViewmodelAttachmentModel::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask )
+{
+	BaseClass::StandardBlendingRules( hdr, pos, q, currentTime, boneMask );
+
+	CTFWeaponBase *pWeapon = ( CTFWeaponBase * )m_viewmodel->GetOwningWeapon();
+	if ( !pWeapon )
+		return;
+
+	if ( m_viewmodel->GetViewModelType() == VMTYPE_TF2 )
+	{
+		pWeapon->m_iMuzzleAttachment = LookupAttachment( "muzzle" );
+		pWeapon->m_iBrassAttachment = LookupAttachment( "eject_brass" );
+	}
+
+	pWeapon->ViewModelAttachmentBlending( hdr, pos, q, currentTime, boneMask );
+}

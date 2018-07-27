@@ -91,6 +91,14 @@ bool CEconEntity::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin
 	return false;
 }
 
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+void CEconEntity::ViewModelAttachmentBlending( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask )
+{
+	// NUB
+}
+
 #endif
 
 //-----------------------------------------------------------------------------

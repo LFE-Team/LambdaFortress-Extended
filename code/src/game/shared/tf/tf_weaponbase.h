@@ -363,6 +363,11 @@ protected:
 
 #ifdef CLIENT_DLL
 	bool m_bOldResetParity;
+
+	friend class C_ViewmodelAttachmentModel;
+
+	int m_iMuzzleAttachment;
+	int m_iBrassAttachment;
 #endif
 
 	CNetworkVar( bool, m_bReloadedThroughAnimEvent );

@@ -14,6 +14,7 @@
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
 #include "soundenvelope.h"
+#include "bone_setup.h"
 
 // Server specific.
 #else
@@ -562,6 +563,28 @@ void CTFMinigun::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternio
 		*/
 
 		AngleQuaternion( RadianEuler( 0, 0, m_flBarrelAngle ), q[m_iBarrelBone] );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFMinigun::ViewModelAttachmentBlending( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask )
+{
+	// Weapon happens to be aligned to (0,0,0)
+	// If that changes, use this code block instead to
+	// modify the angles
+
+	int iBarrelBone = Studio_BoneIndexByName( hdr, "barrel" );
+
+	if  ( iBarrelBone != -1 && ( hdr->boneFlags( iBarrelBone ) & boneMask ) )
+	{
+		RadianEuler a;
+		QuaternionAngles( q[ iBarrelBone ], a );
+
+		a.x = GetBarrelRotation();
+
+		AngleQuaternion( RadianEuler( 0, 0, GetBarrelRotation() ), q[ iBarrelBone ] );
 	}
 }
 
