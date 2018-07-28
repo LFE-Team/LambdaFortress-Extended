@@ -278,6 +278,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		{
 			pTurret->AcceptInput("SelfDestruct", NULL, NULL, sVariant, NULL);
 			EmitSound( "Weapon_Sapper.Plant" );
+			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
 		//if ((pScanner || pCamera || pManHack) && GetOwnerEntity()->GetTeamNumber() == 2)
 		/*
@@ -290,16 +291,19 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		{
 			pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
 			pScanner->EmitSound( "Weapon_Sapper.Plant" );
+			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
 		if (pCamera)
 		{
 			pCamera->AcceptInput("Break", NULL, NULL, sVariant, NULL);
 			pCamera->EmitSound( "Weapon_Sapper.Plant" );
+			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
 		if (pManHack)
 		{
 			pManHack->AcceptInput("InteractivePowerDown", NULL, NULL, sVariant, NULL);
 			pManHack->EmitSound( "Weapon_Sapper.Plant" );
+			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
 		//if (pMine && pMine->GetTeamNumber() == 3 && GetOwnerEntity()->GetTeamNumber() == 2)
 		/*
