@@ -1932,7 +1932,7 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 		{
 			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) )
 			{
-				// Not supposed to be carrying this weapon, nuke it.
+				// Not supposed to be carrying this weapon, delet.
 				Weapon_Detach( pWeapon );
 				UTIL_Remove( pWeapon );
 			}
@@ -3778,7 +3778,7 @@ void CTFPlayer::StartBuildingObjectOfType( int iType, int iMode )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
