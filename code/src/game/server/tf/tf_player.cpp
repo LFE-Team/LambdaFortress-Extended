@@ -1932,7 +1932,7 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 		{
 			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) )
 			{
-				// Not supposed to be carrying this weapon, delet.
+				// Not supposed to be carrying this weapon now delet.
 				Weapon_Detach( pWeapon );
 				UTIL_Remove( pWeapon );
 			}
