@@ -276,7 +276,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 
 		if (pTurret)
 		{
-			pTurret->AcceptInput("SelfDestruct", NULL, NULL, sVariant, NULL);
+			pTurret->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
 			EmitSound( "Weapon_Sapper.Plant" );
 			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
@@ -289,13 +289,13 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		*/
 		if (pScanner)
 		{
-			pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+			pScanner->AcceptInput("Ignite", NULL, NULL, sVariant, NULL);
 			pScanner->EmitSound( "Weapon_Sapper.Plant" );
 			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
 		if (pCamera)
 		{
-			pCamera->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+			pCamera->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
 			pCamera->EmitSound( "Weapon_Sapper.Plant" );
 			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
