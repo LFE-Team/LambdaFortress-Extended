@@ -8375,6 +8375,17 @@
 					"value" "1"
 				}
 			}
+			"visuals"
+			{
+				"sound_single_shot"		"Weapon_PhysCannon.Launch"
+				"sound_reload"			"Weapon_PhysCannon.Charge"
+				"sound_empty"			"Weapon_PhysCannon.DryFire"
+				"sound_melee_hit"		"Weapon_PhysCannon.CloseClaws"
+				"sound_melee_miss"		"Weapon_PhysCannon.Drop"
+				"sound_special1"		"Weapon_PhysCannon.Pickup"
+				"sound_special2"		"Weapon_PhysCannon.OpenClaws"
+				"sound_special3"		"Weapon_PhysCannon.TooHeavy"
+			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
 		}
@@ -8402,8 +8413,8 @@
 			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Physcannon"
 			"item_name"	"#TF_Weapon_Physcannon"
-			"item_logname"	"physcannon"
-			"item_iconname"	"physcannon"
+			"item_logname"	"physcannon_mega"
+			"item_iconname"	"physcannon_mega"
 			"item_slot"	"action"
 			"item_quality"	"unique"
 			"propername"	"1"
@@ -8439,6 +8450,13 @@
 					"attribute_class" "set_weapon_mode"
 					"value" "1"
 				}
+			}
+			"visuals"
+			{
+				"sound_single_shot"		"Weapon_MegaPhysCannon.Launch"
+				"sound_empty"			"Weapon_MegaPhysCannon.DryFire"
+				"sound_melee_miss"		"Weapon_MegaPhysCannon.Drop"
+				"sound_special1"		"Weapon_MegaPhysCannon.Pickup"
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"

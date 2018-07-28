@@ -575,23 +575,12 @@ void CTFTeam::AddWeapon( int iWeapon )
 		
 		if ( pPlayer && pPlayer->IsAlive() && !pPlayer->Weapon_OwnsThisID( iWeapon ) )
 		{
-			CEconItemView *pItem = pPlayer->GetLoadoutItem( pPlayer->GetPlayerClass()->GetClassIndex(), TF_LOADOUT_SLOT_ACTION );
+			const char *pszWeaponName = WeaponIdToClassname( iWeapon );
+			CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
 
-			//const char *pszWeaponName = WeaponIdToClassname( iWeapon );
-			//CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
-
-			if ( pItem )
+			if ( pWeapon )
 			{
-				//const char *pszClassname = pItem->GetEntityName();
-				const char *pszClassname = WeaponIdToClassname( iWeapon );
-				Assert( pszClassname );
-
-				CEconEntity *pEntity = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, pItem ) );
-
-				if ( pEntity )
-				{
-					pEntity->GiveTo( pPlayer );
-				}
+				pWeapon->DefaultTouch( this );
 			}
 		}
 	}

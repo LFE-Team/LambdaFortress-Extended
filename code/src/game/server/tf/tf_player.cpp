@@ -1924,16 +1924,17 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 		return;
 
 	// Remove any weapons that we're not supposed to carry.
-	for ( int i = 0; i < WeaponCount(); i++) 
+	for ( int i = 0; i < MAX_WEAPONS; i++ )
 	{
 		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( i );
 
 		if ( pWeapon )
 		{
-			if ( pWeapon->IsWeapon( TF_WEAPON_PHYSCANNON ) && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) ) //TF_LOADOUT_SLOT_ACTION
+			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) )
 			{
 				// Not supposed to be carrying this weapon, nuke it.
-				pWeapon->UnEquip( this );
+				Weapon_Detach( pWeapon );
+				UTIL_Remove( pWeapon );
 			}
 		}
 	}
@@ -1945,8 +1946,8 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 
 		if ( iWeaponID == TF_WEAPON_NONE )
 			continue;
-/*
-		const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
+
+		//const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
 
 		CTFWeaponBase *pWeapon = Weapon_OwnsThisID( iWeaponID );
 
@@ -1962,38 +1963,48 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 		}
 		else
 		{
+			CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( 9000 );
+			if ( !pItemDef )
+				return;
+
+			int iClass = GetPlayerClass()->GetClassIndex();
+			int iSlot = pItemDef->GetLoadoutSlot( iClass );
+			CEconEntity *pEntity = GetEntityForLoadoutSlot( iSlot );
+/*
 			pWeapon = (CTFWeaponBase *)GiveNamedItem( pszWeaponName );
 
 			if ( pWeapon )
 			{
 				pWeapon->DefaultTouch( this );
 			}
-		}
 */
-		if ( GetEntityForLoadoutSlot( TF_LOADOUT_SLOT_ACTION ) != NULL )
-		{
-			// Nothing to do here.
-			continue;
-		}
-
-		// Give us an item from the inventory.
-		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), TF_LOADOUT_SLOT_ACTION );
-
-		//const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
-
-		//CTFWeaponBase *pWeapon = Weapon_OwnsThisID( iWeaponID );
-
-		if ( pItem )
-		{
-			//const char *pszClassname = pItem->GetEntityName();
-			const char *pszClassname = WeaponIdToClassname( iWeaponID );
-			Assert( pszClassname );
-
-			CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
 
 			if ( pEntity )
 			{
-				pEntity->GiveTo( this );
+				CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
+
+				if ( pWeapon )
+				{
+					if ( pWeapon == GetActiveWeapon() )
+						pWeapon->Holster();
+
+					Weapon_Detach( pWeapon );
+					UTIL_Remove( pWeapon );
+				}
+				else
+				{
+					AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
+					UTIL_Remove( pEntity );
+				}
+			}
+
+			CEconItemView econItem( 9000 );
+			const char *pszClassname = pItemDef->item_class;
+			CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, &econItem ) );
+
+			if ( pEconEnt )
+			{
+				pEconEnt->GiveTo( this );
 			}
 		}
 	}
@@ -2743,7 +2754,7 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 	}
 	else
 	{
-		ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
+		ClientPrint( this, HUD_PRINTCENTER, "Nope" );
 		return;
 	}
 }
@@ -2764,20 +2775,23 @@ void CTFPlayer::HandleCommand_JoinTeam_NoMenus( const char *pTeamName )
 		Assert( IsX360() );
 	}
 
-	int iTeam = TEAM_SPECTATOR;
-	if ( Q_stricmp( pTeamName, "spectate" ) )
+	if (!TFGameRules()->IsAnyCoOp() && !TFGameRules()->IsZombieSurvival())
 	{
-		for ( int i = 0; i < TF_TEAM_COUNT; ++i )
+		int iTeam = TEAM_SPECTATOR;
+		if ( Q_stricmp( pTeamName, "spectate" ) )
 		{
-			if ( stricmp( pTeamName, g_aTeamNames[i] ) == 0 )
+			for ( int i = 0; i < TF_TEAM_COUNT; ++i )
 			{
-				iTeam = i;
-				break;
+				if ( stricmp( pTeamName, g_aTeamNames[i] ) == 0 )
+				{
+					iTeam = i;
+					break;
+				}
 			}
 		}
-	}
 
 	ForceChangeTeam( iTeam );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -8296,7 +8310,12 @@ void CTFPlayer::Taunt( void )
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_HEAVY_HIGH_NOON;
 		}
-		else if ( V_strnicmp( szResponse, "scenes/player/spy/low/taunt03", 29 ) == 0 )
+		else if ( V_stricmp( szResponse, "scenes/player/spy/low/taunt03_v1.vcd" ) == 0 )
+		{
+			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
+			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
+		}
+		else if ( V_stricmp( szResponse, "scenes/player/spy/low/taunt03_v2.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;

@@ -76,12 +76,17 @@ extern ConVar hl2_walkspeed;
 
 	//Precahce the effects
 	CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectPhysCannon )
-	CLIENTEFFECT_MATERIAL( "sprites/orangelight1" )
-	CLIENTEFFECT_MATERIAL( "sprites/orangelight1_noz" )
+	CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE )
+	CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE_NOZ )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_GLOW_SPRITE )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_ENDCAP_SPRITE )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_CENTER_GLOW )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_BLAST_SPRITE )
+	CLIENTEFFECT_MATERIAL( MEGACANNON_BEAM_SPRITE )
+	CLIENTEFFECT_MATERIAL( MEGACANNON_GLOW_SPRITE )
+	CLIENTEFFECT_MATERIAL( MEGACANNON_ENDCAP_SPRITE )
+	CLIENTEFFECT_MATERIAL( MEGACANNON_CENTER_GLOW )
+	CLIENTEFFECT_MATERIAL( MEGACANNON_BLAST_SPRITE )
 	CLIENTEFFECT_REGISTER_END()
 
 #endif	// CLIENT_DLL
@@ -1807,7 +1812,8 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 		if ( IsMegaPhysCannon() || iType == 1 )
 		{
 			//SecobMod__Information: This line was modified with the classify check. This prevents the primary fire being used on the following friendly NPCs: Dog, Monk, Vortigaunt.
-			if ( pEntity->IsNPC() && !pEntity->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() )
+			if ( pEntity->IsNPC() && !pEntity->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && 
+				pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() && !pEntity->InSameTeam( pOwner ) )
 			{
 				CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC );
 				CBaseEntity *pRagdoll = CreateServerRagdoll( pEntity->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
@@ -1967,8 +1973,8 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 
-	bool bIsMegaPhysCannon = IsMegaPhysCannon();
-	if ( bIsMegaPhysCannon || iType == 1 )
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+	if ( bIsMegaPhysCannon )
 	{
 		//SecobMod__Information: This prevents the secondary fire being used to grab ragdolls out of certain NPCs: Dog, Monk, Vortigaunt.
 		if (pObject->IsNPC() && (pObject->Classify() == CLASS_PLAYER_ALLY_VITAL) || pObject->ClassMatches("npc_vortigaunt"))
@@ -1976,7 +1982,7 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 			return false;
 		}
 
-		if (pObject->IsNPC() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL))
+		if (pObject->IsNPC() || pObject->IsPlayer() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL))
 		{
 			Assert(pObject->MyNPCPointer()->CanBecomeRagdoll());
 			CTakeDamageInfo info(GetOwner(), GetOwner(), 1.0f, DMG_GENERIC);
@@ -2102,10 +2108,10 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
 	// Find anything within a general cone in front
 	CBaseEntity *pConeEntity = NULL;
-	if ( !IsMegaPhysCannon() || iType != 1)
+	if ( !bIsMegaPhysCannon )
 	{
 		if (!bAttach && !bPull)
 		{
@@ -2180,8 +2186,8 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	Vector	pullDir = start - pEntity->WorldSpaceCenter();
 	VectorNormalize( pullDir );
 
-	pullDir *= IsMegaPhysCannon() ? physcannon_mega_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
-	
+	pullDir *= bIsMegaPhysCannon ? physcannon_mega_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
+
 	float mass = PhysGetEntityMass( pEntity );
 	if ( mass < 50.0f )
 	{
@@ -2339,10 +2345,10 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	playerAngles.x = clamp( pitch, -75, 75 );
 	AngleVectors( playerAngles, &forward, &right, &up );
 
-	//int iType = 0;
-	//CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer->GetActiveWeapon(),iType, set_weapon_mode );
 
-	if (TFGameRules()->MegaPhyscannonActive())
+	if ( TFGameRules()->MegaPhyscannonActive())
 	{
 		Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
 		VectorNormalize(los);
@@ -2352,7 +2358,7 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 		//Let go of the item if we turn around too fast.
 		if (flDot <= 0.35f)
 			return false;
-	}/*
+	}
 	else if ( iType == 1 )
 	{
 		Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
@@ -2363,7 +2369,7 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 		//Let go of the item if we turn around too fast.
 		if (flDot <= 0.35f)
 			return false;
-	}*/
+	}
 	
 
 	// Now clamp a sphere of object radius at end to the player's bbox
@@ -2462,12 +2468,16 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	return true;
 }
 
-void CWeaponPhysCannon::UpdateObject(void)
+void CWeaponPhysCannon::UpdateObject( void )
 {
-	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
-	Assert(pPlayer);
+	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
+	Assert( pPlayer );
 
-	float flError = IsMegaPhysCannon() ? 18 : 12;
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+
+	float flError = bIsMegaPhysCannon ? 18 : 12;
 
 	if (!m_grabController.UpdateObject(pPlayer, flError))
 	{
@@ -3176,6 +3186,11 @@ void CWeaponPhysCannon::StopEffects( bool stopSound )
 void CWeaponPhysCannon::StartEffects( void )
 {
 #ifdef CLIENT_DLL
+
+	/*int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	bool bIsMegaPhysCannon = ( PlayerHasMegaPhysCannon() == true || iType == 1 );*/
+
 	// ------------------------------------------
 	// Core
 	// ------------------------------------------
@@ -3185,7 +3200,7 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[PHYSCANNON_CORE].GetScale().Init( 0.0f, 1.0f, 0.1f );
 		m_Parameters[PHYSCANNON_CORE].GetAlpha().Init( 255.0f, 255.0f, 0.1f );
 		m_Parameters[PHYSCANNON_CORE].SetAttachment( 1 );
-		
+
 		if ( m_Parameters[PHYSCANNON_CORE].SetMaterial( PHYSCANNON_CENTER_GLOW ) == false )
 		{
 			// This means the texture was not found
@@ -3203,7 +3218,6 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[PHYSCANNON_BLAST].GetAlpha().Init( 255.0f, 255.0f, 0.1f );
 		m_Parameters[PHYSCANNON_BLAST].SetAttachment( 1 );
 		m_Parameters[PHYSCANNON_BLAST].SetVisible( false );
-		
 		if ( m_Parameters[PHYSCANNON_BLAST].SetMaterial( PHYSCANNON_BLAST_SPRITE ) == false )
 		{
 			// This means the texture was not found
@@ -3254,7 +3268,7 @@ void CWeaponPhysCannon::StartEffects( void )
 			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlowThirdPerson[i-PHYSCANNON_GLOW1] ) );
 		}
 		m_Parameters[i].SetColor( Vector( 255, 128, 0 ) );
-		
+
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_GLOW_SPRITE ) == false )
 		{
 			// This means the texture was not found
@@ -3283,7 +3297,7 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[i].GetAlpha().SetAbsolute( 255.0f );
 		m_Parameters[i].SetAttachment( LookupAttachment( attachNamesEndCap[i-PHYSCANNON_ENDCAP1] ) );
 		m_Parameters[i].SetVisible( false );
-		
+
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_ENDCAP_SPRITE ) == false )
 		{
 			// This means the texture was not found
@@ -3880,6 +3894,10 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 	Vector	dir = ( data.m_vOrigin - vecAttachment );
 	VectorNormalize( dir );
 
+	/*int iType = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iType, set_weapon_mode );
+	bool bIsMegaPhysCannon = ( PlayerHasMegaPhysCannon() == true || iType == 1 );*/
+
 	// Do special first-person fix-up
 	if ( pWeapon->GetOwner() == CBasePlayer::GetLocalPlayer() )
 	{
@@ -3906,7 +3924,9 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 		beamInfo.m_nEndAttachment = -1;
 		beamInfo.m_vecStart = vec3_origin;
 		beamInfo.m_vecEnd = data.m_vOrigin;
+
 		beamInfo.m_pszModelName = PHYSCANNON_BEAM_SPRITE;
+
 		beamInfo.m_flHaloScale = 0.0f;
 		beamInfo.m_flLife = 0.1f;
 		beamInfo.m_flWidth = 12.0f;
