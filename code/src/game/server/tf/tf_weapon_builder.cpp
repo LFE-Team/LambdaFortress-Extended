@@ -269,6 +269,7 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		float flSapRadius = 80.0;
 		variant_t sVariant;
 		CBaseEntity *pTurret = gEntList.FindEntityByClassnameNearest("npc_turret_floor", m_SapPos, flSapRadius);
+		CBaseEntity *pGroundTurret = gEntList.FindEntityByClassnameNearest("npc_turret_ground", m_SapPos, flSapRadius);
 		CBaseEntity *pScanner = gEntList.FindEntityByClassnameNearest("npc_cscanner", m_SapPos, flSapRadius);
 		CBaseEntity *pCamera = gEntList.FindEntityByClassnameNearest("npc_combine_camera", m_SapPos, flSapRadius);
 		//CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
@@ -289,7 +290,8 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		*/
 		if (pScanner)
 		{
-			pScanner->AcceptInput("Ignite", NULL, NULL, sVariant, NULL);
+			//pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
+			pScanner->SetHealth(0);
 			pScanner->EmitSound( "Weapon_Sapper.Plant" );
 			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
@@ -303,6 +305,13 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		{
 			pManHack->AcceptInput("InteractivePowerDown", NULL, NULL, sVariant, NULL);
 			pManHack->EmitSound( "Weapon_Sapper.Plant" );
+			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
+		}
+		if (pGroundTurret)
+		{
+			//pGroundTurret->AcceptInput("Ignite", NULL, NULL, sVariant, NULL);
+			pGroundTurret->SetHealth(0);
+			pGroundTurret->EmitSound("Weapon_Sapper.Plant");
 			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
 		//if (pMine && pMine->GetTeamNumber() == 3 && GetOwnerEntity()->GetTeamNumber() == 2)
