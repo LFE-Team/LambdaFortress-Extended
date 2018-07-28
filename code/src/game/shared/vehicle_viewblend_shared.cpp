@@ -223,7 +223,10 @@ void SharedVehicleViewSmoothing(CBasePlayer *pPlayer,
 	AngleMatrix( vehicleEyeAngles, vehicleEyePosToWorld );
 
 	// Dampen the eye positional change as we drive around.
-	*pAbsAngles = pPlayer->EyeAngles();
+	if (pPlayer)
+	{
+		*pAbsAngles = pPlayer->EyeAngles();
+	}
 	if ( r_VehicleViewDampen.GetInt() && pData->bDampenEyePosition )
 	{
 		CPropVehicleDriveable *pDriveable = assert_cast<CPropVehicleDriveable*>(pData->pVehicle);
