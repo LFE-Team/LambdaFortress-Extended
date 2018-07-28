@@ -37,13 +37,13 @@ void CTFLunchBox::PrimaryAttack( void )
 		pOwner->Taunt();
 
 		//ApplyBiteEffects();
-		if (pOwner->GetHealth() < 300)
+		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() )
 		{
 			if (HasAmmo())
 			{
 				pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
 			}
-			pOwner->SwitchToNextBestWeapon(this);
+			pOwner->SwitchToNextBestWeapon( this );
 			StartEffectBarRegen();
 		}	
 #else
