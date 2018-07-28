@@ -1930,7 +1930,7 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 
 		if ( pWeapon )
 		{
-			if ( pWeapon->IsWeapon( TF_WEAPON_PHYSCANNON ) && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) ) //TF_LOADOUT_SLOT_ACTION
+			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) ) //TF_LOADOUT_SLOT_ACTION
 			{
 				// Not supposed to be carrying this weapon, nuke it.
 				pWeapon->UnEquip( this );
@@ -8278,11 +8278,23 @@ void CTFPlayer::Taunt( void )
 			{
 				m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
 				m_iTauntAttack = TAUNTATK_HEAVY_EAT;
+				if (pWeapon->HasAmmo() && GetHealth() < 299)
+				{
+					RemoveAmmo(1, pWeapon->m_iPrimaryAmmoType);
+					SwitchToNextBestWeapon(pWeapon);
+					pWeapon->StartEffectBarRegen();
+				}
 			}
 			else if ( pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX_DRINK ) )
 			{
 				m_flTauntAttackTime = gpGlobals->curtime + 1.2f;
 				m_iTauntAttack = TAUNTATK_SCOUT_DRINK;
+				if (pWeapon->HasAmmo())
+				{
+					RemoveAmmo(1, pWeapon->m_iPrimaryAmmoType);
+					SwitchToNextBestWeapon(pWeapon);
+					pWeapon->StartEffectBarRegen();
+				}
 			};
 		}
 		

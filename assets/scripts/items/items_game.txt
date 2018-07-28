@@ -926,13 +926,9 @@
 			{
 				"pyro"	"1"
 			}
-			"attributes"
+			"static_attrs"
 			{
-				"extinguish restores health"
-				{
-					"attribute_class"	"extinguish_restores_health"
-					"value"	"20"
-				}
+				"extinguish restores health"			"20"
 			}
 			"visuals"
 			{
@@ -1052,7 +1048,7 @@
 
 		"weapon_sword"
 		{
-			"enabled"	"1"
+			"enabled"	"0"
 			"item_class"	"tf_weapon_sword"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
@@ -1254,111 +1250,6 @@
 				{
 					"attribute_class"	"add_health_on_radius_damage"
 					"value"	"20"
-				}
-				"clip size penalty"
-				{
-					"attribute_class"	"mult_clipsize"
-					"value" "0.75"
-				}
-				"disable fancy class select anim"
-				{
-					"attribute_class"	"disable_fancy_class_select_anim"
-					"value"	"1"
-				}
-			}
-			"visuals"
-			{
-				"sound_single_shot"	"Weapon_RPG_BlackBox.Single"
-				"sound_burst"		"Weapon_RPG_BlackBox.SingleCrit"
-				"sound_special1"	"Weapon_RPG_BlackBox.Explode"
-				"animation_replacement"
-				{
-					"ACT_VM_RELOAD"	"ACT_PRIMARY_VM_RELOAD_2"
-					"ACT_RELOAD_START"	"ACT_PRIMARY_RELOAD_START_2"
-					"ACT_RELOAD_FINISH"	"ACT_PRIMARY_RELOAD_FINISH_2"
-					"ACT_MP_RELOAD_STAND"	"ACT_MP_RELOAD_STAND_PRIMARY_2"
-					"ACT_MP_RELOAD_STAND_LOOP"	"ACT_MP_RELOAD_STAND_PRIMARY_2"
-					"ACT_MP_RELOAD_STAND_END"	"ACT_MP_RELOAD_STAND_PRIMARY_END_2"
-					"ACT_MP_RELOAD_CROUCH"	"ACT_MP_RELOAD_CROUCH_PRIMARY_2"
-					"ACT_MP_RELOAD_CROUCH_END"	"ACT_MP_RELOAD_CROUCH_PRIMARY_END_2"
-					"ACT_MP_RELOAD_CROUCH_LOOP"	"ACT_MP_RELOAD_CROUCH_PRIMARY_LOOP_2"
-					"ACT_MP_RELOAD_AIRWALK"	"ACT_MP_RELOAD_AIRWALK_PRIMARY_2"
-					"ACT_MP_RELOAD_AIRWALK_END"	"ACT_MP_RELOAD_AIRWALK_PRIMARY_END_2"
-					"ACT_MP_RELOAD_AIRWALK_LOOP"	"ACT_MP_RELOAD_AIRWALK_PRIMARY_LOOP_2"
-				}
-				"styles"
-				{
-					"0"
-					{
-						"skin_red"	"0"
-						"skin_blu"	"1"
-						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/workshop/weapons/c_models/c_blackbox/c_blackbox_gold"
-					}
-				}
-			}
-			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
-			"drop_sound"		"ui/item_heavy_gun_drop.wav"
-			"xifier_class_remap"	"blackbox"
-			"particle_suffix"		"blackbox"
-		}
-
-		"weapon_lfe_blackbox"
-		{
-			"enabled"	"1"
-			"item_class"	"tf_weapon_rocketlauncher"
-			"craft_class"	"weapon"
-			"craft_material_type"	"weapon"
-			"capabilities"
-			{
-				"nameable"		"1"
-			}
-			"tags"
-			{
-				"can_deal_damage"		"1"
-				"can_deal_gib_damage"	"1"
-				"can_be_equipped_by_soldier_or_demo"	"1"
-				"can_deal_posthumous_damage"	"1"
-				"can_deal_critical_damage"	"1"
-				"can_deal_long_distance_damage"	"1"
-			}
-			"base_item_name"	"The Black Box"
-			"item_logname"	"blackbox"
-			"item_iconname"	"blackbox"
-			"show_in_armory"	"1"
-			"item_type_name"	"#TF_Weapon_RocketLauncher"
-			"item_name"	"#TF_TheBlackBox"
-			"item_slot"	"primary"
-			"item_quality"	"unique"
-			"propername"	"1"
-			"min_ilevel"	"5"
-			"max_ilevel"	"5"
-			"image_inventory"	"backpack/workshop/weapons/c_models/c_blackbox/c_blackbox"
-			"image_inventory_size_w"		"128"
-			"image_inventory_size_h"		"82"
-			"model_player"	"models/workshop/weapons/c_models/c_blackbox/c_blackbox.mdl"
-			"attach_to_hands" "1"
-			"inspect_panel_dist" "55"
-			"used_by_classes"
-			{
-				"soldier"	"1"
-			}
-			"static_attrs"
-			{
-				"min_viewmodel_offset"					"12 -4 -8"
-			}
-			"attributes"
-			{
-				"heal on hit for slowfire"
-				{
-					"attribute_class"	"add_onhit_addhealth"
-					"value"	"10.0"
 				}
 				"clip size penalty"
 				{
@@ -2581,13 +2472,9 @@
 			{
 				"pyro"	"1"
 			}
-			"attributes"
+			"static_attrs"
 			{
-				"extinguish restores health"
-				{
-					"attribute_class"	"extinguish_restores_health"
-					"value"	"20"
-				}
+				"extinguish restores health"			"20"
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"	"ui/item_heavy_gun_drop.wav"
@@ -2639,11 +2526,6 @@
 			}
 			"attributes"
 			{
-				"hidden secondary max ammo penalty"
-				{
-					"attribute_class"	"mult_maxammo_secondary"
-					"value"	"0.5"
-				}
 				"special taunt"
 				{
 					"attribute_class"	"special_taunt"
@@ -7204,6 +7086,10 @@
 			"image_inventory"	"backpack/weapons/c_models/c_energy_drink/c_energy_drink"
 			"model_player"	"models/weapons/c_models/c_energy_drink/c_energy_drink.mdl"
 			"show_in_armory"	"1"
+			"used_by_classes"
+			{
+				"scout"	"1"
+			}
 		}
 		"56"
 		{
@@ -7738,7 +7624,7 @@
 		"228"
 		{
 			"name"	"The Black Box"
-			"prefab" "weapon_lfe_blackbox"
+			"prefab" "weapon_blackbox"
 			"first_sale_date"	"2010/09/29"
 			"particle_suffix"	"black_box"
 			"tags"
@@ -8275,14 +8161,10 @@
 				"dragons fury neutral properties"		"1"
 				"dragons fury positive properties"		"1"
 				"dragons fury negative properties"		"1"
+				"extinguish restores health"			"20"
 			}
 			"attributes"
 			{
-				"extinguish restores health"
-				{
-					"attribute_class"	"extinguish_restores_health"
-					"value"	"20"
-				}
 				"hidden primary max ammo bonus"
 				{
 					"attribute_class"	"mult_maxammo_primary"
@@ -8380,71 +8262,6 @@
 		}
 		"9001"
 		{
-			"name"	"Mega Gravity Gun"
-			"prefab"	"valve"
-			"item_class"	"tf_weapon_physcannon"
-			"craft_class"	"weapon"
-			"craft_material_type"	"weapon"
-			"capabilities"
-			{
-				"nameable"		"1"
-				"can_collect"	"1"
-			}
-			"tags"
-			{
-				"can_deal_damage"			"1"
-				"can_deal_critical_damage"	"1"
-				"can_deal_posthumous_damage"	"1"
-				"can_deal_long_distance_damage"	"1"
-				"can_deal_taunt_damage" "1"
-				"can_be_festivized"		"1"
-			}
-			"show_in_armory"	"0"
-			"item_type_name"	"#TF_Weapon_Physcannon"
-			"item_name"	"#TF_Weapon_Physcannon"
-			"item_logname"	"physcannon"
-			"item_iconname"	"physcannon"
-			"item_slot"	"action"
-			"item_quality"	"unique"
-			"propername"	"1"
-			"min_ilevel"	"99"
-			"max_ilevel"	"99"
-			"anim_slot" "secondary"
-			"inspect_panel_dist" "45"
-			"attach_to_hands"	"0"
-			"image_inventory"	"sprites/bucket_physcannon"
-			"model_player"		"models/weapons/v_superphyscannon.mdl"
-			"model_world"		"models/weapons/w_Physics.mdl"
-			"used_by_classes"
-			{
-				"scout"	"1"
-				"sniper"	"1"
-				"soldier"	"1"
-				"demoman"	"1"
-				"medic"	"1"
-				"heavy"	"1"
-				"pyro" "1"
-				"spy" "1"
-				"engineer" "1"
-			}
-			"attributes"
-			{
-				"special taunt"
-				{
-					"attribute_class"	"special_taunt"
-					"value" "1"
-				}
-				"set physcannon mega"
-				{
-					"attribute_class" "set_weapon_mode"
-					"value" "1"
-				}
-			}
-			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
-			"drop_sound"		"ui/item_heavy_gun_drop.wav"
-		}
-		"9002"
-		{
 			"name"	"Extended Rocket Launcher"
 			"prefab"	"weapon_rocketlauncher"
 			"baseitem"	"0"
@@ -8488,7 +8305,7 @@
 				}
 			}
 		}
-		"9003"
+		"9002"
 		{
 			"name"	"Extended Flamethrower"
 			"prefab"	"weapon_flamethrower"
@@ -8539,7 +8356,7 @@
 				}
 			}
 		}
-		"9004"
+		"9003"
 		{
 			"name"	"ERROR"
 			"baseitem"	"0"
@@ -16508,16 +16325,6 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 			"armory_desc"	"on_hit"
-			"stored_as_integer"	"0"
-		}
-		"10007"
-		{
-			"name"	"set physcannon mega"
-			"attribute_class"	"set_weapon_mode"
-			"description_string"	"#Attrib_PhyscannonIsMega"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
 			"stored_as_integer"	"0"
 		}
 	}

@@ -39,7 +39,10 @@ void CTFLunchBox::PrimaryAttack( void )
 		//ApplyBiteEffects();
 		if (pOwner->GetHealth() < 300)
 		{
-			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+			if (HasAmmo())
+			{
+				pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+			}
 			pOwner->SwitchToNextBestWeapon(this);
 			StartEffectBarRegen();
 		}	
@@ -102,7 +105,10 @@ void CTFLunchBox::SecondaryAttack( void )
 #endif
 
 	// Switch away from it immediately, don't want it to stick around.
-	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	if (HasAmmo())
+	{
+		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	}
 	pOwner->SwitchToNextBestWeapon( this );
 
 	StartEffectBarRegen();
@@ -195,7 +201,10 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 #endif
 
 		// Switch away from it immediately, don't want it to stick around.
-		pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
+		if (HasAmmo())
+		{
+			pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		}
 		pOwner->SwitchToNextBestWeapon(this);
 
 		StartEffectBarRegen();
