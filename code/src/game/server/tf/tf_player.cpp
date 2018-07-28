@@ -1963,7 +1963,17 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 		}
 		else
 		{
-			CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( 9000 );
+			int iItemID = 9000;
+			if ( TFGameRules()->MegaPhyscannonActive())
+			{
+				iItemID = 9001;
+			}
+			else
+			{
+				iItemID = 9000;
+			}
+
+			CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
 			if ( !pItemDef )
 				return;
 
@@ -1998,7 +2008,7 @@ void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 				}
 			}
 
-			CEconItemView econItem( 9000 );
+			CEconItemView econItem( iItemID );
 			const char *pszClassname = pItemDef->item_class;
 			CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, &econItem ) );
 
