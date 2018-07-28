@@ -19,5 +19,6 @@ Team Fortress 2 Vintage: https://github.com/bachingo/TF2Vintage
 Community Contributors:
 
 Username: Improved viewmodels
+Rad: Gravity Gun Viewmodels, Floor Turret Sapper Model
 Sergant Stacker: HL2 Beta SNPCS, Gonome and Hgrunts Red, Blue npcs.
 
