@@ -60,10 +60,8 @@
 			platform			|all_source_engine_paths|platform
 			
 		  //Mount Counter Strike Source	and Left 4 Dead 2 for making custom maps	
-          game                 "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_english.vpk.vpk"		  
-          game                 "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_pak_dir.vpk"
-		  game				   "|all_source_engine_paths|../Left 4 Dead 2/left4dead2/"
-		  game				   "|all_source_engine_paths|../Left 4 Dead 2/left4dead2/pak01.vpk"
+       			game                 "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_english.vpk.vpk"
+        		game                 "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_pak_dir.vpk"
 		  
 			// Random files downloaded from gameservers go into a seperate directory, so
 			// that it's easy to keep those files segregated from the official game files
