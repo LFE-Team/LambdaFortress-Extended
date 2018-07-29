@@ -215,7 +215,7 @@ void CDamageAccountPanel::OnDamaged( IGameEvent *event )
         return;
 
 	// No self-damage notifications.
-	if ( bIsPlayer && iAttacker == iVictim )
+	if ( iAttacker == iVictim )
 		return;
 
 	// Don't show anything if no damage was done.
@@ -328,9 +328,8 @@ void CDamageAccountPanel::OnHealed( IGameEvent *event )
 
 	bool bIsPlayer = V_strcmp( event->GetName(), "npc_healed" ) != 0;
 
-	//int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "entindex" );;
-	int iPatient = bIsPlayer ? event->GetInt( "patient" ) : event->GetInt( "patient" );
-	int iHealer = bIsPlayer ? event->GetInt( "healer" ) : event->GetInt( "healer" );
+	int iPatient = event->GetInt( "patient" );
+	int iHealer = event->GetInt( "healer" );
 	int iAmount = event->GetInt( "amount" );
 
 	// Did we heal this guy?

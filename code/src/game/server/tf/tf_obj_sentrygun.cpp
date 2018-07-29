@@ -129,13 +129,6 @@ CObjectSentrygun::CObjectSentrygun()
 	SetMaxHealth( SENTRYGUN_MAX_HEALTH );
 	m_iHealth = SENTRYGUN_MAX_HEALTH;
 	SetType( OBJ_SENTRYGUN );
-
-	int nMiniSentry = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
-	if ( nMiniSentry != 1 )
-	{
-		m_bMiniBuilding = false;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -186,7 +179,7 @@ void CObjectSentrygun::Spawn()
 	m_iState.Set( SENTRY_STATE_INACTIVE );
 
 	int nMiniSentry = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetBuilder(), nMiniSentry, wrench_builds_minisentry );
 	if ( nMiniSentry == 1 )
 	{
 		m_bMiniBuilding = true;
@@ -282,14 +275,6 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 //-----------------------------------------------------------------------------
 bool CObjectSentrygun::CanBeUpgraded( CTFPlayer *pPlayer )
 {
-	int nMiniSentry = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
-	if ( nMiniSentry == 1 )
-	{
-		m_bMiniBuilding = true;
-		return false;
-	}
-
 	if ( !m_bWasMapPlaced || HasSpawnFlags( SF_OBJ_UPGRADABLE ) )
 	{
 		return BaseClass::CanBeUpgraded( pPlayer );
@@ -994,14 +979,13 @@ void CObjectSentrygun::Attack()
 		if ( m_iUpgradeLevel == 1 )
 		{
 			// Level 1 sentries fire slower
-			m_flNextAttack = gpGlobals->curtime + 0.2;
-
-			int nMiniSentry = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
-			if ( nMiniSentry == 1 )
+			if ( m_bMiniBuilding == true )
 			{
 				m_flNextAttack = gpGlobals->curtime + 0.15;
-				m_bMiniBuilding = true;
+			}
+			else
+			{
+				m_flNextAttack = gpGlobals->curtime + 0.2;
 			}
 		}
 		else
@@ -1135,14 +1119,13 @@ bool CObjectSentrygun::Fire()
 		info.m_vecSpread = vec3_origin;
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
-		info.m_flDamage = tf_sentrygun_damage.GetFloat();
-	
-		int nMiniSentry = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
-		if ( nMiniSentry == 1 )
+		if ( m_bMiniBuilding == 1 )
 		{
 			info.m_flDamage = 8;
-			m_bMiniBuilding = true;
+		}
+		else
+		{
+			info.m_flDamage = tf_sentrygun_damage.GetFloat();
 		}
 
 		FireBullets( info );
