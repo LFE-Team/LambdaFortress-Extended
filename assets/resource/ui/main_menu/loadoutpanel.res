@@ -147,24 +147,29 @@
 			}
 			"animation"
 			{
+				"name"		"GRENADE"
+				"activity"	""
+			}	
+			"animation"
+			{
 				"name"		"BUILDING"
 				"activity"	"ACT_MP_STAND_BUILDING"
-			}
+			}	
 			"animation"
 			{
 				"name"		"PDA"
 				"activity"	"ACT_MP_STAND_PDA"
-			}
+			}	
 			"animation"
 			{
 				"name"		"ITEM1"
 				"activity"	"ACT_MP_STAND_ITEM1"
-			}						
+			}
 			"animation"
 			{
 				"name"		"ITEM2"
 				"activity"	"ACT_MP_STAND_ITEM2"
-			}									
+			}
 			"animation"
 			{
 				"name"		"MELEE_ALLCLASS"
@@ -172,13 +177,13 @@
 			}
 			"animation"
 			{
-				"name"		"PRIMARY2"
-				"activity"	"ACT_MP_STAND_PRIMARY"
+				"name"		"SECONDARY2"
+				"activity"	"ACT_MP_STAND_SECONDARY2"
 			}
 			"animation"
 			{
-				"name"		"SECONDARY2"
-				"activity"	"ACT_MP_STAND_SECONDARY2"
+				"name"		"PRIMARY2"
+				"activity"	"ACT_MP_STAND_PRIMARY2"
 			}
 		}
 	}
