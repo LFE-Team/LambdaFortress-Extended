@@ -204,6 +204,14 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFLunchBox_Drink::SecondaryAttack( void )
+{
+	BaseClass::BaseClass::SecondaryAttack();
+}
+
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: 
