@@ -3444,10 +3444,10 @@ void CTFPlayer::TeamFortress_SetSpeed()
 	CTFWeaponBase *pWeapon = GetActiveTFWeapon();
 
 	// lazy enough
-	//if ( IsAlive() && !pWeapon->OnActiveStateChanged( WEAPON_NOT_CARRIED ) )
-	//{
+	if ( IsAlive() && pWeapon )
+	{
 		CALL_ATTRIB_HOOK_FLOAT( maxfbspeed, mult_player_movespeed_active );
-	//}
+	}
 
 	// 50% speed boost from the power-up.
 	if ( m_Shared.InCond( TF_COND_SPEED_BOOST ) )

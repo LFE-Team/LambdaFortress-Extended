@@ -96,7 +96,7 @@ DESCRIPTION SERVER_OPTIONS
 		{ "1" }
 	}
 	
-	"skill"
+	"sv_difficulty"
 	{
 		"#TF_Difficulty"
 		{
@@ -113,7 +113,7 @@ DESCRIPTION SERVER_OPTIONS
 		"#LFE_DynamicNPC"
 		{ BOOL }
 		{ "0" }
-	}	
+	}
 	
 	"sv_hl2_beta"
 	{

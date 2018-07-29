@@ -51,6 +51,7 @@ extern ConVar sv_hl1_ff;
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;
 extern ConVar	sv_dynamicnpcs;
+extern ConVar	sv_difficulty;
 
 extern ConVar	fraglimit;
 
@@ -182,18 +183,20 @@ public:
 
 	virtual void	FrameUpdatePostEntityThink();
 
-	// HL2 NPC stuff
+	int	m_iDifficultyLevel;
+
+	virtual void OnSkillLevelChanged( int iNewLevel );
 	virtual void SetSkillLevel( int iLevel )
 	{
-		int oldLevel = g_iSkillLevel;
+		int oldLevel = m_iDifficultyLevel;
 
 		iLevel = clamp( iLevel, 1, 2 );
 
-		g_iSkillLevel = iLevel;
+		m_iDifficultyLevel = iLevel;
 
-		if ( g_iSkillLevel != oldLevel )
+		if ( m_iDifficultyLevel != oldLevel )
 		{
-			OnSkillLevelChanged( g_iSkillLevel );
+			OnSkillLevelChanged( m_iDifficultyLevel );
 		}
 	}
 

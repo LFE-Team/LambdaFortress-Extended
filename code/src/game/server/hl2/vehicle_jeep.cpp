@@ -377,6 +377,7 @@ int CPropJeep::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		// Scale the damage and mark that we're passing it in so the base player accepts the damage
 		info.ScaleDamage( PassengerDamageModifier( info ) );
 		info.SetDamageType( info.GetDamageType() | DMG_VEHICLE );
+		info.SetDamageCustom( info.GetDamageCustom() | LFE_DMG_CUSTOM_JEEP );
 		
 		// Deal the damage to the passenger
 		GetDriver()->TakeDamage( info );

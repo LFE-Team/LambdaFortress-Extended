@@ -3966,6 +3966,16 @@
 			"height"	"32"
 		}
 
+		"leeches"
+		{
+			"dfile"	"HUD/d_images_hl2"
+			"dnegfile"	"HUD/dneg_images_hl2"
+			"x"	"284"
+			"y"	"352"
+			"width"	"96"
+			"height"	"32"
+		}
+
 		"physcannon"
 		{
 			"dfile"	"HUD/d_images_hl2"
@@ -3995,6 +4005,7 @@
 			"width"	"96"
 			"height"	"32"
 		}
+
 		"explosion"
 		{
 			"dfile"	"HUD/d_images"

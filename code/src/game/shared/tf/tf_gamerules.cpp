@@ -125,6 +125,7 @@ ConVar lfe_versus( "lfe_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_D
 ConVar lfe_blucoop( "lfe_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_gamemode_zs( "lfe_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar sv_dynamicnpcs("sv_dynamicnpcs", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable The Dynamic NPC System.");
+ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set the New Difficulty System.");
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -1603,6 +1604,7 @@ CTFGameRules::CTFGameRules()
 	iDirectorAnger = 0;
 	iMaxDirectorAnger = 100;
 #ifdef GAME_DLL
+	m_iDifficultyLevel = 1;
 	// Create teams.
 	TFTeamMgr()->Init();
 
@@ -1837,6 +1839,28 @@ void CTFGameRules::Activate()
 		hl2_episodic.SetValue( 1 );
 		Msg( "Executing server zombie survival config file\n", 1 );
 		engine->ServerCommand( "exec config_zs.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+
+	if ( m_iDifficultyLevel == 1 )
+	{
+		Msg( "Executing Original Difficulty config file\n", 1 );
+		engine->ServerCommand( "exec skill1.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+	else if ( m_iDifficultyLevel == 2 )
+	{
+		Msg( "Executing Medium Difficulty config file\n", 1 );
+		engine->ServerCommand( "exec skill2.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+	else if ( m_iDifficultyLevel == 3 )
+	{
+		Msg( "Executing Hard Difficulty config file\n", 1 );
+		engine->ServerCommand( "exec skill3.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
@@ -2925,6 +2949,9 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 				}
 			}
 		}
+
+		SetSkillLevel( sv_difficulty.GetInt() );
+
 		if (iDirectorAnger > iMaxDirectorAnger)
 		{
 			iDirectorAnger = 100;
@@ -2943,6 +2970,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 			}
 			iDirectorAnger = 20;
 		}
+
 		if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_longjump"))
 		{
 			m_bLongJump = true;
@@ -5147,6 +5175,18 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	case TF_DMG_CUSTOM_TAUNTATK_GASBLAST:
 		pszCustomKill = "gas_blast";
 		break;
+	case LFE_DMG_CUSTOM_LEECHES:
+		pszCustomKill = "leeches";
+		break;
+	case LFE_DMG_CUSTOM_JEEP:
+		pszCustomKill = "jeep";
+		break;
+	case LFE_DMG_CUSTOM_AIRBOAT:
+		pszCustomKill = "airboat";
+		break;
+	case LFE_DMG_CUSTOM_JALOPY:
+		pszCustomKill = "jeep_episodic";
+		break;
 	}
 
 	if ( pszCustomKill != NULL )
@@ -5386,34 +5426,7 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 			killer_weapon_name = "helicopter";
 		}
 	}
-	else if ( V_strcmp( killer_weapon_name, "tf_weapon_physcannon" ) == 0 )
-	{
-		if ( info.GetDamageType() & DMG_GENERIC && GlobalEntity_IsInTable( "super_phys_gun" ) )
-		{
-			killer_weapon_name = "physcannon_mega";
-		}
-	}
-	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_jeep" ) == 0/* && V_strcmp( STRING( GetModelName() ), "models/buggy.mdl" )*/ )
-	{
-		if ( info.GetDamageType() & DMG_VEHICLE )
-		{
-			killer_weapon_name = "jeep";
-		}
-	}
-	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_airboat" ) == 0 )
-	{
-		if ( info.GetDamageType() & DMG_VEHICLE )
-		{
-			killer_weapon_name = "airboat";
-		}
-	}/*
-	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_jeep" ) == 0 && V_strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
-	{
-		if ( info.GetDamageType() & DMG_VEHICLE )
-		{
-			killer_weapon_name = "jeep_episodic";
-		}
-	}*/
+
 	else if ( iWeaponID )
 	{
 		iOutputID = iWeaponID;
@@ -7536,8 +7549,7 @@ void AddSubKeyNamed( KeyValues *pKeys, const char *pszName )
 }
 #endif
 
-//SecobMod__MiscFixes: Here we add darkness mode so that it now works.
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 
 //-----------------------------------------------------------------------------
 // Returns whether or not Alyx cares about light levels in order to see.
@@ -7558,6 +7570,51 @@ bool CTFGameRules::IsAlyxInDarknessMode()
 bool CTFGameRules::ShouldBurningPropsEmitLight()
 {
 	return IsAlyxInDarknessMode();
+}
+
+//-----------------------------------------------------------------------------
+//
+//
+//-----------------------------------------------------------------------------
+void CTFGameRules::OnSkillLevelChanged( int iNewLevel )
+{
+	Msg("Skill level changed\n");
+
+	const char *szDifficulty = "original";
+	if (iNewLevel == 1)	//  original
+	{
+		m_iDifficultyLevel = 1;
+		szDifficulty = "original";
+	}
+	else if (iNewLevel == 2) // medium
+	{
+		m_iDifficultyLevel = 2;
+		szDifficulty = "medium";
+	}
+	else if (iNewLevel == 3) // hard
+	{
+		m_iDifficultyLevel = 3;
+		szDifficulty = "hard";
+	}
+	else  // original
+	{
+		m_iDifficultyLevel = 1;
+		szDifficulty = "original";
+	}
+
+	/*if ( gameeventmanager )
+	{
+		IGameEvent * event = gameeventmanager->CreateEvent( "difficulty_changed" );
+		if ( event )
+		{
+			event->SetInt( "newDifficulty", iNewLevel );
+			event->SetInt( "oldDifficulty", m_iDifficultyLevel );
+			event->SetString( "strDifficulty", szDifficulty );
+			gameeventmanager->FireEvent( event );
+		}
+	}*/
+
+	m_iDifficultyLevel = iNewLevel;
 }
 
 #endif

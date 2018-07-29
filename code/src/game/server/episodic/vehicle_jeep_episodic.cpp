@@ -1345,7 +1345,7 @@ static void KillBlockingEnemyNPCs(CBasePlayer *pPlayer, CBaseEntity *pVehicleEnt
 			damageForce.z += len*phys_upimpactforcescale.GetFloat();
 			Vector vehicleForce = -damageForce;
 
-			CTakeDamageInfo dmgInfo(pVehicleEntity, pVehicleEntity, damageForce, contactList[i], 200.0f, DMG_CRUSH | DMG_VEHICLE);
+			CTakeDamageInfo dmgInfo(pVehicleEntity, pVehicleEntity, damageForce, contactList[i], 200.0f, DMG_CRUSH | DMG_VEHICLE, LFE_DMG_CUSTOM_JEEP); // need to detect jalopy model and put LFE_DMG_CUSTOM_JALOPY
 			npcList[i]->TakeDamage(dmgInfo);
 
 			//SecobMod__Information Occasionally on hitting an AI the game would crash, so fix the null error here.

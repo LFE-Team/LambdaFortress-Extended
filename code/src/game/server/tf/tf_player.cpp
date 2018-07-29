@@ -1451,6 +1451,8 @@ void CTFPlayer::Spawn()
 	}
 
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
+
+	m_Shared.AddCond( TF_COND_TEAM_GLOWS, 10 );
 }
 
 //-----------------------------------------------------------------------------
@@ -4200,10 +4202,16 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 
-		// Ubercharge does not save from telefrags.
+		// does not save from telefrags.
 		if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
 		{
 			bAllowDamage = true;
+		}
+
+		// Disallow Canal Slime
+		if ( info.GetDamageType() == DMG_RADIATION )
+		{
+			bAllowDamage = false;
 		}
 
 		if ( !bAllowDamage )
@@ -9599,6 +9607,81 @@ CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\
 	{
 		pEconEnt->GiveTo( pPlayer );
 
+		CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
+		if ( pWeapon )
+		{
+			// Give full ammo for this weapon.
+			int iAmmoType = pWeapon->GetPrimaryAmmoType();
+			pPlayer->SetAmmoCount( pPlayer->GetMaxAmmo( iAmmoType ), iAmmoType );
+		}
+	}
+}
+
+CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
+{
+	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
+	if ( !pPlayer->m_bIsPlayerADev )
+		return;
+
+	if ( args.ArgC() < 2 )
+		return;
+
+	int iItemID = atoi( args[1] );
+	CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
+	if ( !pItemDef )
+		return;
+
+	CEconItemView econItem( iItemID );
+
+	bool bAddedAttributes = false;
+
+	// Additonal params are attributes.
+	for ( int i = 3; i + 1 < args.ArgC(); i += 2 )
+	{
+		int iAttribIndex = atoi( args[i] );
+		float flValue = atof( args[i + 1] );
+
+		CEconItemAttribute econAttribute( iAttribIndex, flValue );
+		econAttribute.m_strAttributeClass = AllocPooledString( econAttribute.attribute_class );
+		bAddedAttributes = econItem.AddAttribute( &econAttribute );
+	}
+
+	econItem.SkipBaseAttributes( bAddedAttributes );
+
+	// Nuke whatever we have in this slot.
+	int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
+	int iSlot = pItemDef->GetLoadoutSlot( iClass );
+	CEconEntity *pEntity = pPlayer->GetEntityForLoadoutSlot( iSlot );
+
+	if ( pEntity )
+	{
+		CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
+
+		if ( pWeapon )
+		{
+			if ( pWeapon == pPlayer->GetActiveWeapon() )
+				pWeapon->Holster();
+
+			pPlayer->Weapon_Detach( pWeapon );
+			UTIL_Remove( pWeapon );
+		}
+		else if ( pEntity->IsWearable() )
+		{
+			CEconWearable *pWearable = static_cast<CEconWearable *>( pEntity );
+			pPlayer->RemoveWearable( pWearable );
+		}
+		else
+		{
+			AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
+			UTIL_Remove( pEntity );
+		}
+	}
+
+	const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
+	CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
+
+	if ( pEconEnt )
+	{
 		CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
 		if ( pWeapon )
 		{

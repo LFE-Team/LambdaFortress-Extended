@@ -1004,6 +1004,11 @@ enum
 	TF_DMG_CUSTOM_CROC, // Mercenary Park Crocodiles
 	TF_DMG_CUSTOM_TAUNTATK_GASBLAST, // Fart of death
 	TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED, // smack to death
+	// put new custom dmg here.
+	LFE_DMG_CUSTOM_LEECHES, // ocean mann become skeleton mann
+	LFE_DMG_CUSTOM_JEEP,
+	LFE_DMG_CUSTOM_AIRBOAT,
+	LFE_DMG_CUSTOM_JALOPY,
 };
 
 //  TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED

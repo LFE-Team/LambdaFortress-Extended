@@ -148,6 +148,9 @@ public:
 		if ( info.GetDamageType() & DMG_VEHICLE )
 			return true;
 
+		if ( info.GetDamageCustom() & LFE_DMG_CUSTOM_AIRBOAT )
+			return true;
+
 		return (info.GetDamageType() & (DMG_RADIATION|DMG_BLAST|DMG_CRUSH) ) == 0; 
 	}
 	
@@ -941,6 +944,7 @@ int CPropAirboat::OnTakeDamage( const CTakeDamageInfo &info )
 
 		// Mark that we're passing it to the player so the base player accepts the damage
 		playerDmg.SetDamageType( info.GetDamageType() | DMG_VEHICLE );
+		playerDmg.SetDamageCustom( info.GetDamageCustom() | LFE_DMG_CUSTOM_AIRBOAT );
 
 		// Deal the damage to the passenger
 		m_hPlayer->TakeDamage( playerDmg );

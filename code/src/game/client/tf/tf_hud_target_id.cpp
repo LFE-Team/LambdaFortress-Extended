@@ -301,13 +301,20 @@ void CTargetID::UpdateID( void )
 				pDisguiseTarget = ToTFPlayer( pPlayer->m_Shared.GetDisguiseTarget() );
 			}
 
-			// Get team color.
+			// get the avatar
+			pAvatarPlayer = pPlayer;
+			// get team color
 			iColorNum = pPlayer->GetTeamNumber();
 
-			// Get the avatar.
-			if ( tf_hud_target_id_show_avatars.GetBool() )
+			// offset the name if avatars are enabled
+			if ( tf_hud_target_id_show_avatars.GetBool() && !g_PR->IsFakePlayer( m_iTargetEntIndex ) )
 			{
-				pAvatarPlayer = pPlayer;
+				m_pTargetNameLabel->SetTextInset( 32, 0 );
+			}
+			else
+			{
+				// don't show avatars on undisguised bots
+				m_pTargetNameLabel->SetTextInset( 0, 0 );
 			}
 
 			if ( bDisguisedTarget )

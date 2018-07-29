@@ -2230,7 +2230,7 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 	CALL_ATTRIB_HOOK_FLOAT( flAddChargeRed, add_onhit_ubercharge_red );
 	if ( flAddChargeRed )
 	{
-		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_RED )
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && !pVictim->InSameTeam( pOwner ) && pVictim->GetTeamNumber() == TF_TEAM_RED )
 		{
 			if ( pMedigun )
 			{
@@ -2243,7 +2243,7 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 	CALL_ATTRIB_HOOK_FLOAT( flAddChargeBlu, add_onhit_ubercharge_blu );
 	if ( flAddChargeBlu )
 	{
-		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_BLUE )
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && !pVictim->InSameTeam( pOwner ) && pVictim->GetTeamNumber() == TF_TEAM_BLUE )
 		{
 			if ( pMedigun )
 			{
@@ -2256,7 +2256,7 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 	CALL_ATTRIB_HOOK_FLOAT( flAddChargeGrn, add_onhit_ubercharge_grn );
 	if ( flAddChargeGrn )
 	{
-		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_GREEN )
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && !pVictim->InSameTeam( pOwner ) && pVictim->GetTeamNumber() == TF_TEAM_GREEN )
 		{
 			if ( pMedigun )
 			{
@@ -2269,7 +2269,7 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 	CALL_ATTRIB_HOOK_FLOAT( flAddChargeYlw, add_onhit_ubercharge_ylw );
 	if ( flAddChargeYlw )
 	{
-		if ( pVictim->IsPlayer() || pVictim->IsNPC() && pVictim->GetTeamNumber() == TF_TEAM_YELLOW )
+		if ( pVictim->IsPlayer() || pVictim->IsNPC() && !pVictim->InSameTeam( pOwner ) && pVictim->GetTeamNumber() == TF_TEAM_YELLOW )
 		{
 			if ( pMedigun )
 			{
