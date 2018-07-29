@@ -138,7 +138,7 @@
 		"enabled"		"1"
 		"image"			"loadout_solid_line"
 		"scaleImage"	"1"
-	}	
+	}
 
 	"AvatarBG"
 	{
@@ -822,7 +822,7 @@
 		"enabled"			"1"
 		"bordervisible"		"1"
 		"labelText" 		""
-		"command"			"lf_mainmenu_music"	
+		"command"			"lfe_mainmenu_music"	
 		"valuetrue"			"0"
 		"valuefalse"		"1"		
 		
@@ -893,7 +893,7 @@
 		"enabled"			"1"
 		"bordervisible"		"1"
 		"labelText" 		""
-		"command"			"lf_mainmenu_showblog"	
+		"command"			"lfe_mainmenu_showblog"	
 		"valuetrue"			"0"
 		"valuefalse"		"1"		
 		

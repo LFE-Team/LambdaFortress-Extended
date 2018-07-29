@@ -406,18 +406,7 @@ void CTFProjectile_BallOfFire::Spawn()
 
 	float flLifeTime = tf_fireball_flametime.GetFloat();
 	m_flTimeRemove = gpGlobals->curtime + ( flLifeTime );
-}
 
-//-----------------------------------------------------------------------------
-// Purpose: Think method
-//-----------------------------------------------------------------------------
-void CTFProjectile_BallOfFire::FlameThink( void )
-{
-	// Render debug visualization if convar on
-	if ( tf_fireball_draw_debug_radius.GetInt() )
-	{
-		NDebugOverlay::EntityBounds(this, 0, 100, 255, 0 ,0) ;
-	}
 #ifdef CLIENT_DLL
 	// Handle the flamethrower light
 	if ( lfe_muzzlelight.GetBool() )
@@ -431,6 +420,19 @@ void CTFProjectile_BallOfFire::FlameThink( void )
 		dl->die = gpGlobals->curtime + 0.001;
 	}
 #endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Think method
+//-----------------------------------------------------------------------------
+void CTFProjectile_BallOfFire::FlameThink( void )
+{
+	// Render debug visualization if convar on
+	if ( tf_fireball_draw_debug_radius.GetInt() )
+	{
+		NDebugOverlay::EntityBounds(this, 0, 100, 255, 0 ,0) ;
+	}
+
 	SetNextThink( gpGlobals->curtime );
 
 	m_vecPrevPos = GetAbsOrigin();
@@ -637,103 +639,7 @@ void CTFProjectile_BallOfFire::Explode( trace_t *pTrace, CBaseEntity *pOther )
 	{
 		UTIL_DecalTrace( pTrace, "Scorch" );
 	}
-/*
-	// Damage.
-	CBaseEntity *pAttacker = GetOwnerEntity();
-	IScorer *pScorerInterface = dynamic_cast<IScorer*>( pAttacker );
-	if ( pScorerInterface )
-	{
-		pAttacker = pScorerInterface->GetScorer();
-	}
 
-	// Play explosion sound and effect.
-	Vector vecOrigin = GetAbsOrigin();
-	CTFPlayer *pPlayer = ToTFPlayer( pOther );
-	CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
-
-	float flDamage = 0;
-	float flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
-
-	//CTakeDamageInfo info;
-
-	if ( pPlayer )
-	{
-		if ( !pPlayer )
-			return;
-
-		flDamage = tf_fireball_damage.GetFloat();
-
-		// Hit player, do impact sound and more damage
-		if ( pPlayer->m_Shared.InCond( TF_COND_BURNING ) )
-		{
-			flDamage = tf_fireball_damage.GetFloat() * tf_fireball_burning_bonus.GetFloat();
-			
-			// gotta recharge fast
-			SetHitTarget();
-
-			flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING;
-			#ifdef GAME_DLL
-			CEffectData	data;
-			data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
-			data.m_vOrigin = pPlayer->WorldSpaceCenter();
-			data.m_vAngles = vec3_angle;
-			data.m_nEntIndex = 0;
-
-			CPVSFilter filter( vecOrigin );
-			te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-			EmitSound_t params;
-			params.m_flSoundTime = 0;
-			params.m_pSoundName = "Weapon_DragonsFury.BonusDamageHit";
-			EmitSound( filter, pAttacker->entindex(), params );
-			#endif
-		}
-
-		//CPVSFilter filter( vecOrigin );
-		//EmitSound( filter, pPlayer->entindex(), "Weapon_DragonsFury.BonusDamageHit" );
-	}
-	else if ( pNPC )
-	{
-		if ( !pNPC )
-			return;
-
-		flDamage = tf_fireball_damage.GetFloat();
-
-		// Hit npc, also do impact sound and more damage
-		if ( pNPC->InCond( TF_COND_BURNING ) )
-		{
-			flDamage = tf_fireball_damage.GetFloat() * tf_fireball_burning_bonus.GetFloat();
-			
-			// i said gotta recharge fast
-			SetHitTarget();
-
-			flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING;
-			#ifdef GAME_DLL
-			CEffectData	data;
-			data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
-			data.m_vOrigin = pNPC->WorldSpaceCenter();
-			data.m_vAngles = vec3_angle;
-			data.m_nEntIndex = 0;
-
-			CPVSFilter filter( vecOrigin );
-			te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-			EmitSound_t params;
-			params.m_flSoundTime = 0;
-			params.m_pSoundName = "Weapon_DragonsFury.BonusDamageHit";
-			EmitSound( filter, pAttacker->entindex(), params );
-			#endif
-		}
-	}
-	else
-	{
-		// Hit world, delet this.
-		UTIL_Remove( this );
-	}
-
-	CTakeDamageInfo info( this, pAttacker, m_hLauncher.Get(), flDamage, GetDamageType(), flDamageCustom );
-	pOther->TakeDamage( info );
-*/
 	// Remove.
 	UTIL_Remove( this );
 }
@@ -947,7 +853,7 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 	CAI_BaseNPC *pNPC = pOther->MyNPCPointer();
 
 	float flDamage = 0;
-	float flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
+	int iDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
 
 	if ( pPlayer )
 	{
@@ -957,32 +863,35 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 		flDamage = tf_fireball_damage.GetFloat();
 
 		// Hit player, do impact sound and more damage
-		if (  m_hEntitiesBurnt.Count() > 0 && pPlayer->m_Shared.InCond( TF_COND_BURNING ) )
+		if (  m_hEntitiesBurnt.Count() > 0 )
 		{
-			flDamage = tf_fireball_damage.GetFloat() * tf_fireball_burning_bonus.GetFloat();
-			
 			// gotta recharge fast
 			SetHitTarget();
 
-			flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING;
-			#ifdef GAME_DLL
-			CEffectData	data;
-			data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
-			data.m_vOrigin = pPlayer->GetAbsOrigin();
-			data.m_vAngles = vec3_angle;
-			data.m_nEntIndex = 0;
+			if ( pPlayer->m_Shared.InCond( TF_COND_BURNING ) )
+			{
+				flDamage = tf_fireball_damage.GetFloat() * tf_fireball_burning_bonus.GetFloat();
 
-			CPVSFilter filter( vecOrigin );
-			te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+				iDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING;
+				#ifdef GAME_DLL
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
+				data.m_vOrigin = pPlayer->GetAbsOrigin();
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
 
-			EmitSound_t params;
-			params.m_flSoundTime = 0;
-			params.m_pSoundName = "Weapon_DragonsFury.BonusDamageHit";
-			EmitSound( filter, pAttacker->entindex(), params );
-			#endif
+				CPVSFilter filter( vecOrigin );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+				EmitSound_t params;
+				params.m_flSoundTime = 0;
+				params.m_pSoundName = "Weapon_DragonsFury.BonusDamageHit";
+				EmitSound( filter, pAttacker->entindex(), params );
+				#endif
+			}
 		}
 
-		flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
+		iDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
 	}
 	else if ( pNPC )
 	{
@@ -992,32 +901,34 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 		flDamage = tf_fireball_damage.GetFloat();
 
 		// Hit npc, also do impact sound and more damage
-		if ( m_hEntitiesBurnt.Count() > 0 && pNPC->InCond( TF_COND_BURNING ) )
+		if ( m_hEntitiesBurnt.Count() > 0 )
 		{
-			flDamage = tf_fireball_damage.GetFloat() * tf_fireball_burning_bonus.GetFloat();
-			
 			// i said gotta recharge fast
 			SetHitTarget();
+			if ( pNPC->InCond( TF_COND_BURNING ) )
+			{
+				flDamage = tf_fireball_damage.GetFloat() * tf_fireball_burning_bonus.GetFloat();
 
-			flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING;
-			#ifdef GAME_DLL
-			CEffectData	data;
-			data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
-			data.m_vOrigin = pNPC->GetAbsOrigin();
-			data.m_vAngles = vec3_angle;
-			data.m_nEntIndex = 0;
+				iDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING;
+				#ifdef GAME_DLL
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "dragons_fury_effect_parent" );
+				data.m_vOrigin = pNPC->GetAbsOrigin();
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
 
-			CPVSFilter filter( vecOrigin );
-			te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+				CPVSFilter filter( vecOrigin );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
 
-			EmitSound_t params;
-			params.m_flSoundTime = 0;
-			params.m_pSoundName = "Weapon_DragonsFury.BonusDamageHit";
-			EmitSound( filter, pAttacker->entindex(), params );
-			#endif
+				EmitSound_t params;
+				params.m_flSoundTime = 0;
+				params.m_pSoundName = "Weapon_DragonsFury.BonusDamageHit";
+				EmitSound( filter, pAttacker->entindex(), params );
+				#endif
+			}
 		}
 
-		flDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
+		iDamageCustom = TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE;
 	}
 	else
 	{
@@ -1026,7 +937,7 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 		ApplyMultiDamage();
 	}
 
-	CTakeDamageInfo info( GetOwnerEntity(), pAttacker, m_hLauncher.Get(), flDamage, GetDamageType(), flDamageCustom );
+	CTakeDamageInfo info( GetOwnerEntity(), pAttacker, m_hLauncher.Get(), flDamage, GetDamageType(), iDamageCustom );
 	pOther->TakeDamage( info );
 
 	// Remove.
@@ -1051,7 +962,7 @@ void CTFProjectile_BallOfFire::OnCollide( CBaseEntity *pOther )
 		if ( pProp->m_takedamage == DAMAGE_YES )
 		{
 			pProp->IgniteLifetime( TF_BURNING_FLAME_LIFE );
-			//pProp->ApplyMultiDamage();
+			ApplyMultiDamage();
 		}
 	}
 }

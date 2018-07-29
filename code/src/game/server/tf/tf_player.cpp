@@ -4772,12 +4772,9 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, blast_dmg_to_self );
 			}
 		}
-	}
-	else
-	{
+
 		if ( m_Shared.InCond( TF_COND_AIMING ) )
 		{
-			flDamage *= 0.0f;
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, spunup_damage_resistance );
 		}
 	}

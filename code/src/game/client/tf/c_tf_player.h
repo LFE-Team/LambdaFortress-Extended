@@ -447,16 +447,6 @@ public:
 	EHANDLE			m_hLadder;
 	LadderMove_t	m_LadderMove;
 
-	virtual void CalcVehicleView(IClientVehicle* pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov);
-	virtual void CalcPlayerView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
-	virtual void CalcViewRoll(QAngle& eyeAngles);
-	virtual void CalcViewBob(Vector& eyeOrigin);
-	virtual void CalcViewIdle(QAngle& eyeAngles);
-
-	float ViewBob;
-	double BobTime;
-	float BobLastTime;
-	float IdleScale;
 private:
 
 	float m_flWaterImpactTime;

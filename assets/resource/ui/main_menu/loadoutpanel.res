@@ -29,7 +29,7 @@
 		"scaleimage"		"1"
 		"border"			"AdvRoundedButtonDefault"
 		"visible"			"1"
-		"fillcolor"			"32 48 32 127"
+		"fillcolor"			"46 53 42 255"
 		"enabled"			"1"
 	}
 
@@ -47,62 +47,44 @@
 		"scaleimage"		"1"
 		"border"			"AdvRoundedButtonDefault"
 		"visible"			"1"
-		//"fillcolor"			"32 48 32 255"
+		//"fillcolor"			"46 43 42 255"
 		"enabled"			"1"
 	}
 
-	"ClassLabel"
+	"ShadedBarBottom"
 	{
-		"ControlName"	"CExLabel"
-		"fieldName"		"ClassLabel"
-		"font"			"HudFontMediumBold"
-		"labelText"		"#ClassBeingEquipped"
-		"textAlignment"	"west"
-		"xpos"			"c-280"
-		"ypos"			"15"
-		"zpos"			"1"
-		"wide"			"200"
-		"tall"			"25"
+		"ControlName"	"ImagePanel"
+		"fieldName"		"ShadedBarBottom"
+		"xpos"			"101"
+		"ypos"			"395"
+		"zpos"			"-1"
+		"wide"			"651"
+		"tall"			"65"
 		"autoResize"	"0"
 		"pinCorner"		"0"
-		"visible"		"0"
+		"visible"		"1"
 		"enabled"		"1"
+		"tabPosition"	"0"	
+		"fillcolor"		"0 0 0 153"
+		"PaintBackgroundType"	"0"
 	}
-	
-	
-	"CharacterLoadout"
+
+	"ShadedBarTop"
 	{
-		"ControlName"		"Label"
-		"fieldName"		"CharacterLoadout"
-		"font"			"HudFontSmallestBold"
-		"labelText"		"#CharacterLoadout"
-		"textAlignment"	"south-west"
-		"xpos"			"c0"
-		"ypos"			"20"
-		"zpos"			"1"
-		"wide"			"f0"
-		"tall"			"15"
+		"ControlName"	"ImagePanel"
+		"fieldName"		"ShadedBarTop"
+		"xpos"			"101"
+		"ypos"			"21"
+		"zpos"			"-1"
+		"wide"			"651"
+		"tall"			"80"
 		"autoResize"	"0"
 		"pinCorner"		"0"
-		"visible"		"0"
+		"visible"		"1"
 		"enabled"		"1"
-	}
-	"EquipLabel"
-	{
-		"ControlName"		"Label"
-		"fieldName"		"EquipLabel"
-		"font"			"HudFontMediumBigBold"
-		"labelText"		"#EquipYourClass"
-		"textAlignment"	"north-west"
-		"xpos"			"0"
-		"ypos"			"35"
-		"zpos"			"1"
-		"wide"			"f0"
-		"tall"			"30"
-		"autoResize"	"0"
-		"pinCorner"		"0"
-		"visible"		"0"
-		"enabled"		"1"
+		"tabPosition"	"0"	
+		"fillcolor"		"0 0 0 153"
+		"PaintBackgroundType"	"0"
 	}
 	
 	"classmodelpanel"
@@ -165,29 +147,24 @@
 			}
 			"animation"
 			{
-				"name"		"GRENADE"
-				"activity"	""
-			}	
-			"animation"
-			{
 				"name"		"BUILDING"
 				"activity"	"ACT_MP_STAND_BUILDING"
-			}	
+			}
 			"animation"
 			{
 				"name"		"PDA"
 				"activity"	"ACT_MP_STAND_PDA"
-			}	
+			}
 			"animation"
 			{
 				"name"		"ITEM1"
 				"activity"	"ACT_MP_STAND_ITEM1"
-			}
+			}						
 			"animation"
 			{
 				"name"		"ITEM2"
 				"activity"	"ACT_MP_STAND_ITEM2"
-			}
+			}									
 			"animation"
 			{
 				"name"		"MELEE_ALLCLASS"
@@ -195,13 +172,13 @@
 			}
 			"animation"
 			{
-				"name"		"SECONDARY2"
-				"activity"	"ACT_MP_STAND_SECONDARY2"
+				"name"		"PRIMARY2"
+				"activity"	"ACT_MP_STAND_PRIMARY"
 			}
 			"animation"
 			{
-				"name"		"PRIMARY2"
-				"activity"	"ACT_MP_STAND_PRIMARY2"
+				"name"		"SECONDARY2"
+				"activity"	"ACT_MP_STAND_SECONDARY2"
 			}
 		}
 	}
@@ -289,10 +266,10 @@
 	{
 		"ControlName"	"CTFAdvButton"
 		"fieldName"		"BackButton"
-		"xpos"			"c-245"
+		"xpos"			"c-250"
 		"ypos"			"r60"
 		"zpos"			"20"
-		"wide"			"100"
+		"wide"			"124"
 		"tall"			"25"
 		"visible"		"1"
 		"enabled"		"1"
@@ -302,7 +279,32 @@
 		{
 			"labelText" 		"<< Back (&Q)"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
+			"border_default"	"AdvRoundedButtonDefault"
+			"border_armed"		"AdvRoundedButtonArmed"
+			"border_depressed"	"AdvRoundedButtonDepressed"	
+		}
+	}	
+	
+	"ResetButton"
+	{
+		"ControlName"	"CTFAdvButton"
+		"fieldName"		"ResetButton"
+		"xpos"			"c150"
+		"ypos"			"r60"
+		"zpos"			"20"
+		"wide"			"124"
+		"tall"			"25"
+		"visible"		"1"
+		"enabled"		"1"
+		"command"		"resetloadout"		
+		
+		"SubButton"
+		{
+			"labelText" 		"Reset"
+			"textAlignment"		"center"
+			"font"				"HudFontSmallBold"
+			"tooltip"			"Reset All Selected Weapons"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
@@ -392,6 +394,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -417,6 +421,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -442,6 +448,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -467,6 +475,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -492,6 +502,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -517,6 +529,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -542,6 +556,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -567,6 +583,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -592,6 +610,8 @@
 				"textAlignment"		"south"
 				"font"				"TallTextSmall"
 				"selectedFgColor_override"		"HudProgressBarActive"
+				"depressedFgColor_override"		"HudProgressBarInActive"
+				"armedFgColor_override"			"HudTrainingHint"
 			}
 			
 			"SubImage"
@@ -600,7 +620,5 @@
 				"imagewidth"		"55"
 			}
 		}
-	}
-
-	
+	}	
 }

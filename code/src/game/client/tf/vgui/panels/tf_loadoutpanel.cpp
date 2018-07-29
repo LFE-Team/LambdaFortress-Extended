@@ -323,6 +323,10 @@ void CTFLoadoutPanel::OnCommand( const char* command )
 	{
 		SetCurrentClass( TF_CLASS_SPY );
 	}
+	else if ( !Q_strcmp( command, "resetloadout" ) )
+	{
+		GetTFInventory()->ResetInventory();
+	}
 	else
 	{
 		char buffer[64];

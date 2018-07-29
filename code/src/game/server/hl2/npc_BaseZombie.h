@@ -239,7 +239,7 @@ public:
 public:
 	CAI_ActBusyBehavior		m_ActBusyBehavior;
 
-
+	bool	m_bNoHeadcrab; // spawn with no headcrab
 
 protected:
 

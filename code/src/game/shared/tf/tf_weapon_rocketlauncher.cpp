@@ -274,9 +274,10 @@ void CTFWeaponFlameBall::PrimaryAttack()
 			m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 		}
 	}
-
-
-	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	else
+	{
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	}
 #endif
 	BaseClass::PrimaryAttack();
 }

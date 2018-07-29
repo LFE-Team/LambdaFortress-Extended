@@ -219,6 +219,7 @@ BEGIN_DATADESC( CNPC_BaseZombie )
 	DEFINE_FIELD( m_iMoanSound, FIELD_INTEGER ),
 	DEFINE_FIELD( m_hObstructor, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bIsSlumped, FIELD_BOOLEAN ),
+	DEFINE_KEYFIELD( m_bNoHeadcrab, FIELD_BOOLEAN, "noheadcrab" ),
 
 END_DATADESC()
 
@@ -784,9 +785,9 @@ HeadcrabRelease_t CNPC_BaseZombie::ShouldReleaseHeadcrab( const CTakeDamageInfo 
 		// If I was killed by a bullet...
 		if ( info.GetDamageType() & DMG_BULLET )
 		{
-			if( m_bHeadShot ) 
+			if ( m_bHeadShot || m_bNoHeadcrab )
 			{
-				if( flDamageThreshold > 0.25 )
+				if ( flDamageThreshold > 0.25 || m_bNoHeadcrab )
 				{
 					//info_modified.AddDamageType( DMG_CRITICAL );
 					// Enough force to kill the crab.

@@ -194,15 +194,28 @@
 		104 : "TF_COND_RUNE_IMBALANCE"
 		105 : "TF_COND_CRITBOOSTED_RUNE_TEMP"
 		106 : "TF_COND_PASSTIME_INTERCEPTION"
-
-		107 : "TF_COND_SMOKE_BOMB"
-		108 : "TF_COND_SLOWED"
-		109 : "TF_COND_INVULNERABLE_SPAWN_PROTECT"
-		110 : "TF_COND_POWERUP_CRITDAMAGE"
-		111 : "TF_COND_POWERUP_SHIELD"
-		112 : "TF_COND_POWERUP_SPEEDBOOST"
-		113 : "TF_COND_POWERUP_CLOAK"
-		114 : "TF_COND_POWERUP_RAGEMODE"
+		107 : "TF_COND_SWIMMING_NO_EFFECTS"
+		108 : "TF_COND_PURGATORY"
+		109 : "TF_COND_RUNE_KING"
+		110 : "TF_COND_RUNE_PLAGUE"
+		111 : "TF_COND_RUNE_SUPERNOVA"
+		112 : "TF_COND_PLAGUE"
+		113 : "TF_COND_KING_BUFFED"
+		114 : "TF_COND_TEAM_GLOWS"
+		115 : "TF_COND_KNOCKED_INTO_AIR"
+		116 : "TF_COND_COMPETITIVE_WINNER"
+		117 : "TF_COND_COMPETITIVE_LOSER"
+		118 : "TF_COND_HEALING_DEBUFF"
+		119 : "TF_COND_PASSTIME_PENALTY_DEBUFF"
+		120 : "TF_COND_GRAPPLED_TO_PLAYER"
+		121 : "TF_COND_GRAPPLED_BY_PLAYER"
+		122 : "TF_COND_PARACHUTE_DEPLOYED"
+		123 : "TF_COND_GAS"
+		124 : "TF_COND_BURNING_PYRO"
+		125 : "TF_COND_ROCKETPACK"
+		126 : "TF_COND_LOST_FOOTING"
+		127 : "TF_COND_AIR_CURRENT"
+		128 : "TF_COND_SLOWED"
 	]
 ]
 
@@ -226,59 +239,23 @@
 	//	1 : "Yes"
 	//]
 
-	//team1choice(choices) : "Team 1" : 2 : "Sets the Attacker team" =
-	//[
-	//	2 : "RED"
-	//	3 : "BLU"
-	//	4 : "GRN"
-	//	5 : "YLW"
-	//]
-
-	//team2choice(choices) : "Team 2" : 3 : "Sets the Defender team" =
-	//[
-	//	2 : "RED"
-	//	3 : "BLU"
-	//	4 : "GRN"
-	//	5 : "YLW"
-	//]
-
-	fourteammode(choices) : "Four Team Map" : 0 : "Overrides the above values and allows all 4 teams in the map." =
-	[
-		0 : "Off"
-		1 : "On"
-	]
-
 	input SetRedTeamRespawnWaveTime(float) : "Set the RED team's respawn wave time"
 	input SetBlueTeamRespawnWaveTime(float) : "Set the BLU team's respawn wave time"
-	input SetGreenTeamRespawnWaveTime(float) : "Set the GRN team's respawn wave time"
-	input SetYellowTeamRespawnWaveTime(float) : "Set the YLW team's respawn wave time"
 	input AddRedTeamRespawnWaveTime(float) : "Add to the RED team's respawn wave time"
 	input AddBlueTeamRespawnWaveTime(float) : "Add to the BLU team's respawn wave time"
-	input AddGreenTeamRespawnWaveTime(float) : "Add to the GRN team's respawn wave time"
-	input AddYellowTeamRespawnWaveTime(float) : "Add to the YLW team's respawn wave time"
 	input SetRedTeamGoalString(string) : "Set the RED team's goal string to show in the hud"
 	input SetBlueTeamGoalString(string) : "Set the BLU team's goal string to show in the hud"
-	input SetGreenTeamGoalString(string) : "Set the GRN team's goal string to show in the hud"
-	input SetYellowTeamGoalString(string) : "Set the YLW team's goal string to show in the hud"
 	input SetRedTeamRole(integer) : "Set RED team role, 0=none, 1=defenders, 2=attackers"
 	input SetBlueTeamRole(integer) : "Set BLU team role, 0=none, 1=defenders, 2=attackers"
-	input SetGreenTeamRole(integer) : "Set GRN team role, 0=none, 1=defenders, 2=attackers"
-	input SetYellowTeamRole(integer) : "Set YLW team role, 0=none, 1=defenders, 2=attackers"
 	input AddRedTeamScore(integer) : "Add to the RED team score (can be a negative number)"
 	input AddBlueTeamScore(integer) : "Add to the BLU team score (can be a negative number)"
-	input AddGreenTeamScore(integer) : "Add to the GRN team score (can be a negative number)"
-	input AddYellowTeamScore(integer) : "Add to the YLW team score (can be a negative number)"
 	//input SetRequiredObserverTarget(string) : "Sets the given entity (by name) to be the required observer target for all spectators. Must be cleared to allow spectators to cycle through targets normally again."
 	//input SetStalemateOnTimelimit(bool) : "Determines whether mp_timelimit can end the match in the middle of a round."
 	input SetRedKothClockActive(void) : "Set the RED team clock active for KOTH maps."
 	input SetBlueKothClockActive(void) : "Set the BLU team clock active for KOTH maps."
-	input SetGreenKothClockActive(void) : "Set the GRN team clock active for KOTH maps."
-	input SetYellowKothClockActive(void) : "Set the YLW team clock active for KOTH maps."
 	input SetCTFCaptureBonusTime(float) : "Set the length (in seconds) of team crit time for CTF captures. 0 = none"
 	input PlayVORed(string) : "Play the given sound entry via the VO channel"
 	input PlayVOBlue(string) : "Play the given sound entry via the VO channel"
-	input PlayVOGreen(string) : "Play the given sound entry via the VO channel"
-	input PlayVOYellow(string) : "Play the given sound entry via the VO channel"
 	input PlayVO(string) : "Play the given sound entry via the VO channel"
 	//input HandleMapEvent(string) : "Handles map events. This will be different events for different maps."
 	//input SetCustomUpgradesFile(string) : "Specifies the path relative to the game directory to the upgrades file to be used."
@@ -300,7 +277,7 @@
 	round_yellowspawn(target_destination) : "Yellow spawn for round" : : "Yellow spawn point when the associated round is being played."
 ]
 
-@PointClass base(PlayerClass, Angles) studio("models/player/merc_deathmatch.mdl") = info_player_deathmatch :
+@PointClass base(PlayerClass, Angles) studio("models/player/heavy.mdl") = info_player_deathmatch :
 	"This entity indicates the position and facing direction at which the player will spawn during a deathmatch map. Any number of "+
 	"info_player_deathmatch entities may be placed in a map."
 [
@@ -505,23 +482,29 @@
 	controlpoint(target_destination) : "Associated Control Point" : "" : "The team_control_point associated with this filter. The filter does NOT need an associated control point to function properly, but ownership of the control point will control the team number the filter uses (setup during each round start)."
 ]
 
-@FilterClass base(TeamNum, BaseFilter) iconsprite("editor/filter_team.vmt") = filter_activator_tfclass :
-	"A filter that filters by the team and the class of the activator." +
-	"It will only allow the selected class through."
+@FilterClass base(BaseFilter,Condition) = filter_tf_condition : "A filter that filters by conditions on a player"
 [
-  classfilter(choices) : "Class to allow" : 1 : "Select which class you'd like to allow through the filter" =
+	
+]
+
+@FilterClass base(BaseFilter) iconsprite("editor/filter_class.vmt") = filter_tf_class :
+	"A filter that filters by the class of the activator.  The team number to filter by. " +
+	"If the filter mode is Allow, only entities whose class matches the given class will " +
+	"pass the filter. If the filter mode is Disallow, all entities EXCEPT those whose class " +
+	"matches the given class will pass the filter." 
+[
+	tfclass(choices) : "Class" : 0 : "Class" =
 	[
+		// 0 is undefined
 		1 : "Scout"
-    2 : "Sniper"
-    3 : "Soldier"
-    4 : "Demoman"
-    5 : "Medic"
-    6 : "Heavy"
-    7 : "Pyro"
-    8 : "Spy"
-    9 : "Engineer"
-    10 : "Civilian"
-    11 : "Mercenary"
+		2 : "Sniper"
+		3 : "Soldier"
+		4 : "Demoman"
+		5 : "Medic"
+		6 : "Heavy"
+		7 : "Pyro"
+		8 : "Spy"
+		9 : "Engineer"
 	]
 ]
 
@@ -1816,6 +1799,15 @@
 	input SetSpawnFrequency(float) : "Sets how often (in seconds) a new NPC will be spawned."
 ]
 
+@BaseClass = BaseZombie
+[
+	noheadcrab(choices) : "Allow Headcrab" : 1 =
+	[
+		0 : "Yes"
+		1 : "No"
+	]
+]
+
 
 
 
@@ -1841,6 +1833,40 @@
 
 @NPCClass base(BaseCombine) studio("models/cremator_npc.mdl") = npc_crematorred : "Rebel Cremator"
 [
+]
+
+@NPCClass base(BaseNPC, BaseZombie) studio("models/Zombie/fast.mdl") = npc_fastzombie : "Fast Zombie"
+[
+	input AttachToVehicle(string) : "Attach to a specified vehicle entity"
+]
+
+@NPCClass base(BaseNPC, BaseZombie) studio("models/Zombie/Fast_torso.mdl") = npc_fastzombie_torso : "Fast Zombie Torso"
+[
+
+]
+
+@NPCClass base(BaseNPC, BaseZombie) studio("models/Zombie/Classic.mdl") = npc_zombie : "Zombie"
+[
+]
+
+@NPCClass base(BaseNPC, BaseZombie) studio("models/Zombie/Classic_torso.mdl") = npc_zombie_torso : "Zombie Torso"
+[
+]
+
+@NPCClass base(BaseNPC, BaseZombie) studio("models/Zombie/zombie_soldier.mdl") = npc_zombine : "Combine Soldier Zombie"
+[
+	input StartSprint(void) : "Forces the zombine to sprint."
+	input PullGrenade(void) : "Forces the zombine to pull a grenade."
+]
+@NPCClass base(BaseNPC) studio("models/Zombie/Poison.mdl") = npc_poisonzombie :
+	"A bloated, disgusting, fluid-spurting zombie created by a poison headcrab."
+[
+	crabcount(choices) : "Crabs in nest" : 3 =
+	[
+		1 : "1 Crab"
+		2 : "2 Crabs"
+		3 : "3 Crabs"
+	]
 ]
 
 @PointClass base(Targetname) = lfe_logic_coop : "Forced Co-Op Logic" []

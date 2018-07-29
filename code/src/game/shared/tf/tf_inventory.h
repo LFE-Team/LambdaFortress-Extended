@@ -46,6 +46,7 @@ public:
 	int				GetWeaponPreset( int iClass, int iSlot );
 	void			SetWeaponPreset( int iClass, int iSlot, int iPreset );
 	const char		*GetSlotName( int iSlot );
+	void ResetInventory();
 #endif
 
 private:
@@ -54,7 +55,7 @@ private:
 
 #if defined( CLIENT_DLL )
 	void LoadInventory();
-	void ResetInventory();
+	//void ResetInventory();
 	void SaveInventory();
 	KeyValues* m_pInventory;
 #endif
