@@ -561,6 +561,11 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 				// drowned
 				V_wcsncpy( m_DeathNotices[iMsg].wzInfoText, g_pVGuiLocalize->Find( "#DeathMsg_Drown" ), sizeof( m_DeathNotices[iMsg].wzInfoText ) );
 			}
+			else if ( event->GetInt( "damagebits" ) & DMG_RADIATION )
+			{
+				// special case icon for toxic slime death
+				Q_strncpy( m_DeathNotices[iMsg].szIcon, "d_radiation", ARRAYSIZE( m_DeathNotices[iMsg].szIcon ) );
+			}
 		}
 
 		m_DeathNotices[iMsg].iKillerID = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );

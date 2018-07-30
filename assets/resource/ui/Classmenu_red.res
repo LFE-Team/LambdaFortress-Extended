@@ -395,9 +395,9 @@
 		"scaleImage"		"1"
 		"activeimage"		"class_sel_sm_spy_red"
 		"inactiveimage"		"class_sel_sm_spy_inactive"
-	}	
+	}
 
-	"LoadoutButton" [$WIN32] 
+	"LoadoutButton"
 	{
 		"ControlName"	"CExButton"
 		"fieldName"		"LoadoutButton"
@@ -415,10 +415,10 @@
 		"labelText"		"#TF_Edit_Loadout"
 		"textAlignment"	"center"
 		"Command"		"showloadout"
-		"font"			"MenuSmallFont"
+		"font"			"HudFontSmallBold"
 	}
 
-	"CancelButton" [$WIN32] 
+	"CancelButton"
 	{
 		"ControlName"	"CExButton"
 		"fieldName"		"CancelButton"
@@ -436,7 +436,7 @@
 		"labelText"		"#TF_Cancel"
 		"textAlignment"	"center"
 		"Command"		"vguicancel"
-		"font"			"MenuSmallFont"
+		"font"			"HudFontSmallBold"
 	}
 
 	"ClassMenuSelect"
@@ -491,7 +491,7 @@
 			"origin_y" "0"
 			"origin_z" "-40"
 		}
-	}	
+	}
 
 	"ShadedBar"
 	{
@@ -513,51 +513,7 @@
 		"tabPosition"	"0"	
 		"fillcolor"		"0 0 0 180"
 		"PaintBackgroundType"	"0"
-	}		
-	
-	"Footer" [$X360]
-	{
-		"ControlName"		"CTFFooter"
-		"fieldName"			"Footer"
-		"zpos"				"6"
-		"tall"				"80"
-		"button_separator"	"10"
-		"button_separator_lodef"	"5"
-		"buttongap"			"50"
-		"buttongap_hidef"		"35"
-		"buttongap_lodef"			"18"
-		"textadjust"		"3"
-		"textadjust_lodef"		"0"
-		"buttonoffsety"		"20"
-		"buttonoffsety_hidef"		"0"
-		"buttonoffsety_lodef"		"18"
-		"center"			"0"
-		"button_pin_right_lodef"	"55"
-		"fonttext"			"MatchmakingDialogMenuLarge"
-		"fonttext_lodef"			"MatchmakingDialogMenuSmall"
-		"fgcolor"			"HudOffWhite" 	
-		
-		"button"
-		{
-			"name"		"cancel"
-			"text"		"#GameUI_Cancel"
-			"icon"		"#GameUI_Icons_B_BUTTON"	
-		}
-		
-		"button"
-		{
-			"name"		"nextprev"
-			"text"		"#TF_NextPrev"
-			"icon"		"#GameUI_Icons_DPAD"	
-		}				
-		
-		"button"
-		{
-			"name"		"select"
-			"text"		"#GameUI_Select"
-			"icon"		"#GameUI_Icons_A_BUTTON"	
-		}
-	}		
+	}
 	
 	"countImage0" [$WIN32]
 	{

@@ -2263,6 +2263,10 @@ void CTFGameRules::SetupOnRoundRunning( void )
 		pPlayer->TeamFortress_SetSpeed();
 		pPlayer->SpeakConceptIfAllowed( MP_CONCEPT_ROUND_START );
 	}
+
+#ifdef GAME_DLL
+	OnSkillLevelChanged( m_iDifficultyLevel );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -4322,8 +4326,8 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 
 	int CTFGameRules::PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget)
 	{
-		//if ( IsDeathmatch() )
-		//	return GR_NOTTEAMMATE;
+		if ( IsFriendlyFire() )
+			return GR_NOTTEAMMATE;
 
 		return BaseClass::PlayerRelationship(pPlayer, pTarget);
 	}

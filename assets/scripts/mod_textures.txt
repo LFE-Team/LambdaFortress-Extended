@@ -3976,6 +3976,16 @@
 			"height"	"32"
 		}
 
+		"radiation"
+		{
+			"dfile"	"HUD/d_images_hl2"
+			"dnegfile"	"HUD/dneg_images_hl2"
+			"x"	"192"
+			"y"	"352"
+			"width"	"96"
+			"height"	"32"
+		}
+
 		"physcannon"
 		{
 			"dfile"	"HUD/d_images_hl2"

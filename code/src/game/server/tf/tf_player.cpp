@@ -9648,35 +9648,6 @@ CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema
 
 	econItem.SkipBaseAttributes( bAddedAttributes );
 
-	// Nuke whatever we have in this slot.
-	int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
-	int iSlot = pItemDef->GetLoadoutSlot( iClass );
-	CEconEntity *pEntity = pPlayer->GetEntityForLoadoutSlot( iSlot );
-
-	if ( pEntity )
-	{
-		CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
-
-		if ( pWeapon )
-		{
-			if ( pWeapon == pPlayer->GetActiveWeapon() )
-				pWeapon->Holster();
-
-			pPlayer->Weapon_Detach( pWeapon );
-			UTIL_Remove( pWeapon );
-		}
-		else if ( pEntity->IsWearable() )
-		{
-			CEconWearable *pWearable = static_cast<CEconWearable *>( pEntity );
-			pPlayer->RemoveWearable( pWearable );
-		}
-		else
-		{
-			AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
-			UTIL_Remove( pEntity );
-		}
-	}
-
 	const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
 	CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
 
