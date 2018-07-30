@@ -1,7 +1,7 @@
 "VertexLitGeneric"
 {
 	// Original shader: VertexLitSelfIlluminatedTexture
-	"$basetexture" "models/error/new light1"
+	"$basetexture" "models/Weapons/V_slam/new light1"
 	"$selfillum" 1
 	"Proxies"
 	{
