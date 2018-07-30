@@ -45,8 +45,6 @@ public:
 
 	void			SetCritical( bool bCritical ) { m_bCritical = bCritical; }
 
-	virtual float	SetDetonateTimerLength( void ){ return 5.0f; }
-
 	virtual bool	IsDeflectable() { return true; }
 	virtual void	Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
 

@@ -125,7 +125,7 @@ ConVar lfe_versus( "lfe_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_D
 ConVar lfe_blucoop( "lfe_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_gamemode_zs( "lfe_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar sv_dynamicnpcs("sv_dynamicnpcs", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable The Dynamic NPC System.");
-ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set the New Difficulty System.");
+ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set the New Difficulty System.\n1 = Original \n2 = Medium\n 3 = Hard");
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -1604,7 +1604,7 @@ CTFGameRules::CTFGameRules()
 	iDirectorAnger = 0;
 	iMaxDirectorAnger = 100;
 #ifdef GAME_DLL
-	m_iDifficultyLevel = 1;
+	m_iDifficultyLevel = sv_difficulty.GetInt();
 	// Create teams.
 	TFTeamMgr()->Init();
 
@@ -1843,6 +1843,7 @@ void CTFGameRules::Activate()
 		return;
 	}
 
+	SetSkillLevel( sv_difficulty.GetInt() );
 	if ( m_iDifficultyLevel == 1 )
 	{
 		Msg( "Executing Original Difficulty config file\n", 1 );
@@ -2230,6 +2231,8 @@ void CTFGameRules::SetupOnRoundStart( void )
 	}
 #ifdef GAME_DLL
 	m_szMostRecentCappers[0] = 0;
+
+	OnSkillLevelChanged( m_iDifficultyLevel );
 #endif
 }
 
@@ -2949,8 +2952,6 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 				}
 			}
 		}
-
-		SetSkillLevel( sv_difficulty.GetInt() );
 
 		if (iDirectorAnger > iMaxDirectorAnger)
 		{

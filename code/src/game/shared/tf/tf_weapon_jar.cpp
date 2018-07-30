@@ -80,6 +80,7 @@ CTFProjectile_Jar *CTFProjectile_Jar::Create( CBaseEntity *pWeapon, const Vector
 		DispatchSpawn( pJar );
 
 		pJar->InitGrenade( vecVelocity, angVelocity, pOwner, pWeapon );
+		pJar->SetDetonateTimerLength( 5.0f );
 
 		pJar->ApplyLocalAngularVelocityImpulse( angVelocity );
 	}

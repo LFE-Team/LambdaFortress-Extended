@@ -3970,7 +3970,7 @@
 		{
 			"dfile"	"HUD/d_images_hl2"
 			"dnegfile"	"HUD/dneg_images_hl2"
-			"x"	"284"
+			"x"	"192"
 			"y"	"352"
 			"width"	"96"
 			"height"	"32"
