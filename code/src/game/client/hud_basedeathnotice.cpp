@@ -433,8 +433,8 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 
 	if ( bPlayerDeath || bObjectDeath || bNPCDeath )
 	{
-		int victim = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "userid" ) ) : event->GetInt( "victim_index" );
-		int killer = bPlayerDeath ? engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) : event->GetInt( "attacker_index" );
+		int victim = event->GetInt("victim_index");
+		int killer = event->GetInt("attacker_index");
 
 		const char *killedwith = event->GetString( "weapon" );
 		const char *killedwithweaponlog = event->GetString( "weapon_logclassname" );
