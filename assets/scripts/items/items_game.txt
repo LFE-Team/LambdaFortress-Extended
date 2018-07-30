@@ -2639,11 +2639,6 @@
 			}
 			"attributes"
 			{
-				"hidden secondary max ammo penalty"
-				{
-					"attribute_class"	"mult_maxammo_secondary"
-					"value"	"0.5"
-				}
 				"special taunt"
 				{
 					"attribute_class"	"special_taunt"
