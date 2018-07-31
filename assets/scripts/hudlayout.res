@@ -35,8 +35,8 @@
 		"ypos"	"0"
 		"wide"	"f0"
 		"tall"	"480"
-	}	
-	
+	}
+
 	HudKothTimeStatus
 	{
 		"fieldName" "HudKothTimeStatus"
@@ -52,34 +52,24 @@
 	
 		"red_active_xpos"			"106"
 		"red_active_xpos_minmode"	"105"
-		
-		"green_active_xpos"				"16"
-		"green_active_xpos_minmode"		"55"
-		"green_active_ypos"				"39"
-		"green_active_ypos_minmode"		"14"
-	
-		"yellow_active_xpos"			"106"
-		"yellow_active_xpos_minmode"	"105"
-		"yellow_active_ypos"			"39"
-		"yellow_active_ypos_minmode"	"14"
 	}	
-	
-	HudCloakMeter
+
+	HudItemEffectMeter
 	{
-		"fieldName"		"HudCloakMeter"
+		"fieldName"		"HudItemEffectMeter"
 		"visible"		"1"
 		"enabled"		"1"
 		"xpos"			"r162"	[$WIN32]
-		"xpos_minmode"	"r125"	[$WIN32]
+		"xpos_minmode"	"r52"	[$WIN32]
 		"ypos"			"r52"	[$WIN32]
-		"ypos_minmode"	"r28"	[$WIN32]
+		"ypos_minmode"	"r50"	[$WIN32]
 		"xpos"			"r194"	[$X360]
 		"ypos"			"r74"	[$X360]
 		"wide"			"100"
 		"tall"			"50"
 		"MeterFG"		"White"
 		"MeterBG"		"Gray"
-	}	
+	}
 	
 	HudMedicCharge
 	{
@@ -95,7 +85,7 @@
 		"wide"			"200"
 		"tall"			"100"
 	}
-	
+
 	HudDemomanCharge
 	{
 		"fieldName"		"HudDemomanCharge"
@@ -114,7 +104,7 @@
 		"MeterFG"		"White"
 		"MeterBG"		"Gray"
 	}	
-	
+
 	HudBowCharge
 	{
 		"fieldName"		"HudBowCharge"
@@ -179,14 +169,14 @@
 		"RightMargin_lodef" "38"
 		"visible" "1"
 		"enabled" "1"
-		"SmallBoxWide" "74"
+		"SmallBoxWide" "72"
 		"SmallBoxTall" "54"
 		"PlusStyleBoxWide" "90"
 		"PlusStyleBoxTall" "63"
 		"PlusStyleExpandSelected"	"0.3"
-		"LargeBoxWide" "112"
-		"LargeBoxTall" "76"
-		"BoxGap" "5"	[$WIN32]
+		"LargeBoxWide" "110"
+		"LargeBoxTall" "77"
+		"BoxGap" "4"	[$WIN32]
 		"BoxGap" "4"	[$X360]
 		"SelectionNumberXPos" "12"
 		"SelectionNumberYPos" "4"
@@ -204,7 +194,7 @@
 		"SelectedBoxClor" "0 0 0 220"
 		"SelectionNumberFg"	"200 187 161 255"
 		"NumberFont" "HudSelectionText"
-	}	
+	}
 	
 	CHudAccountPanel
 	{
@@ -220,7 +210,7 @@
 		"enabled" 				"1"
 		"PaintBackgroundType"	"2"
 	}
-	
+
 	CHealthAccountPanel
 	{
 		"fieldName"				"CHealthAccountPanel"
@@ -246,7 +236,7 @@
 		"enabled" 				"1"
 		"PaintBackgroundType"	"2"
 	}
-	
+
 	DisguiseStatus
 	{
 		"fieldName" "DisguiseStatus"
@@ -267,12 +257,18 @@
 		"visible" 	"0"
 		"enabled" 	"1"
 		"xpos"		"c-126"
-		"ypos"		"250"
+		"ypos"		"285"
 		"wide"	 	"252"
-		"tall"	 	"50"
-		"tall_minmode"	 	"31"
+		"tall"	 	"35"
+		"tall_minmode"	 	"28"
 		"priority"	"40"
 		"priority_lodef"	"5"
+
+		if_vr
+		{
+			"ypos"		"370"
+			"x_offset"	"20"
+		}
 	}
 	
 	CSpectatorTargetID
@@ -283,10 +279,13 @@
 		"xpos"		"c-126"
 		"ypos"		"250"
 		"wide"	 	"252"
-		"tall"	 	"50"
-		"tall_minmode"	 	"31"
+		"tall"	 	"35"
+		"tall_minmode"	 	"28"
 		"priority"	"40"
 		"priority_lodef" "35"
+		
+		"x_offset" "20"
+		"y_offset" "20"
 	}
 	
 	CSecondaryTargetID
@@ -295,11 +294,18 @@
 		"visible" 	"0"
 		"enabled" 	"1"
 		"xpos"		"c-126"
-		"ypos"		"300"
+		"ypos"		"335"
 		"wide"	 	"252"
-		"tall"	 	"50"
-		"tall_minmode"	 	"31"
+		"tall"	 	"35"
+		"tall_minmode"	 	"28"
 		"priority"	"35"
+
+		if_vr
+		{
+			"ypos"		"330"
+			"x_offset"	"20"
+		}
+
 	}
 	
 	BuildingStatus_Spy
@@ -329,20 +335,6 @@
 		"ypos_hidef"		"16"
 		"ypos_lodef"		"25"
 		"wide"		"640"
-		"tall"		"480"
-		
-		"PaintBackgroundType"	"2"
-	}
-	
-	HudMannVsMachineStatus
-	{
-		"fieldName" "HudMannVsMachineStatus"
-		"visible"	"1"
-		"enabled"	"1"
-		"xpos"		"0"
-		"ypos"		"0"
-		"zpos"		"1"
-		"wide"		"f0"
 		"tall"		"480"
 		
 		"PaintBackgroundType"	"2"
@@ -478,7 +470,7 @@
 		"visible" "1"
 		"enabled" "1"
 		"xpos"	 "r640"	[$WIN32]
-		"ypos"	 "12"	[$WIN32]
+		"ypos"	 "18"	[$WIN32]
 		"xpos"	 "r672"	[$X360]
 		"ypos"	 "35"	[$X360]
 		"wide"	 "628"
@@ -571,22 +563,6 @@
 		"ItemFont"				"Default"
 		"ItemFontPulsing"		"Default"
 
-	}
-	
-	HudSpellMenu
-	{
-		"fieldName" "HudSpellMenu"
-		"visible" "1"
-		"enabled" "1"
-		"wide"	 "640"
-		"tall"	 "480"
-		"zpos" 	"2"
-		"xpos"			"130"
-		"ypos"			"r61"
-		
-		"TextFont"				"Default"
-		"ItemFont"				"Default"
-		"ItemFontPulsing"		"Default"
 	}
 
 	HudCloseCaption
@@ -720,36 +696,37 @@
 		"fieldName" "HudVoiceSelfStatus"
 		"visible" "1"
 		"enabled" "1"
-		"xpos" "r42"
-		"ypos" "343"
+		"xpos" "r42" 	[$WIN32]
+		"ypos" "355"	[$WIN32]
+		"xpos" "r75"	[$X360]
+		"ypos" "375"	[$X360]
 		"wide" "32"
 		"tall" "32"
 	}
 
 	HudVoiceStatus
 	{
-		"fieldName"				"HudVoiceStatus"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"r130"
-		"ypos"					"0"
-		"wide"					"150"
-		"tall"					"400"
+		"fieldName" "HudVoiceStatus"
+		"visible" "1"
+		"enabled" "1"
+		"xpos" "r130" [$WIN32]
+		"ypos" "0" [$WIN32]
+		"xpos" "r195" [$X360]
+		"ypos" "0" [$X360]
+		"wide" "150"
+		"tall" "400"
 
-		"item_wide"				"120"
-		"item_tall"				"28"
-		
-		"show_avatar"			"1"
-		"show_friend"			"0"
-		"avatar_xpos"			"2"
-		"avatar_ypos"			"2"
-		"avatar_wide"			"24"
-		"avatar_tall"			"24"
-		
-		"show_dead_icon"		"0"
-		"show_voice_icon"		"0"
-		
-		"text_xpos"				"30"
+		"item_tall"	"16"
+		"item_wide"	"120"
+
+		"item_spacing" "2"
+
+		"icon_ypos"	"0"
+		"icon_xpos"	"0"
+		"icon_tall"	"16"
+		"icon_wide"	"16"
+
+		"text_xpos"	"18"
 	}
 
 	HudHintDisplay
@@ -815,7 +792,7 @@
 		"tall"					"200"
 		"visible"				"1"
 		"enabled"				"1"
-		"separator_width"		"9"	// distance between the icons (including their backgrounds)
+		"separator_width"		"7"	// distance between the icons (including their backgrounds)
 		"separator_height"		"7"
 		"height_offset"			"0"	[$WIN32] // distance from the bottom of the panel
 		"height_offset"			"26"	[$X360]
@@ -849,31 +826,9 @@
 		"visible"				"1"
 		"enabled"				"1"
 		"xpos"					"c-150"
-		"ypos"					"215"
-		"wide"					"300"
-		"tall"					"300"
-	}
-
-	ArenaWinPanel
-	{
-		"fieldName"				"ArenaWinPanel"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"c-225"
-		"ypos"					"250"
-		"wide"					"450"
-		"tall"					"218"
-	}
-	
-	PVEWinPanel
-	{
-		"fieldName"				"PVEWinPanel"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"c-150"
 		"ypos"					"255"
 		"wide"					"300"
-		"tall"					"215"
+		"tall"					"200"
 	}
 
 	StatPanel
@@ -912,22 +867,6 @@
 		"wide"					"100"
 		"tall"					"50"
 	}
-	
-	AnnotationsPanelCallout
-	{
-		"fieldName"			"AnnotationsPanelCallout"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"200"
-		"ypos"					"200"
-		"wide"					"100"
-		"tall"					"50"
-	}
-	
-	AnnotationsPanel
-	{
-		
-	}
 
 	WaitingForPlayersPanel
 	{
@@ -938,17 +877,6 @@
 		"ypos"					"10"
 		"wide"					"292"
 		"tall"					"64"
-	}
-	
-	"HudUpgradePanel"
-	{
-		"fieldName"		"HudUpgradePanel"
-		"visible"		"0"
-		"enable"		"1"
-		"xpos"			"c-200"
-		"ypos"			"260"
-		"wide"			"400"
-		"tall"			"160"		
 	}
 
 	"HudChat"
@@ -989,19 +917,7 @@
 		"PaintBackgroundType"	"0"
 	}
 	
-	"HudEurekaEffectTeleportMenu"
-	{
-		"fieldName" 	"HudEurekaEffectTeleportMenu"
-		"visible" 		"1"
-		"enabled" 		"1"
-		"xpos"			"c-125"
-		"ypos"			"c-55"
-		"wide"			"250"
-		"tall"			"195"
-		"PaintBackgroundType"	"0"
-	}
-	
-	HudMenuSpyDisguise
+	"HudMenuSpyDisguise"
 	{
 		"fieldName" 	"HudMenuSpyDisguise"
 		"visible" 		"1"
@@ -1015,33 +931,6 @@
 		"tall"			"180"	[$X360]
 		"PaintBackgroundType"	"0"
 	}	
-	
-	HudMenuSelectBase
-	{
-		"fieldName" 	"HudMenuSlotSelect.res"
-		"visible" 		"1"
-		"enabled" 		"1"
-		"xpos"			"c"
-		"ypos"			"c"
-		"wide"			"450"
-		"tall"			"195"
-		"PaintBackgroundType"	"0"
-	}
-	
-	HudMenuWeaponIcon
-	{
-		"fieldName" 	"HudMenuWeaponIcon"
-		"visible" 		"1"
-		"enabled" 		"1"
-		"xpos"			"c-235"
-		"ypos"			"c-52"
-		"ypos_hidef"	"c-42"
-		"ypos_lodef"	"c-42"
-		"wide"			"100"
-		"tall"			"100"	[$WIN32]
-		"tall"			"180"	[$X360]
-		"PaintBackgroundType"	"0"
-	}		
 	
 	HudDemomanPipes
 	{
@@ -1069,18 +958,6 @@
 		"wide"					"320"
 		"tall"					"100"
 	}
-	
-	HudTeamGoalTournament
-	{
-		"fieldName"				"HudTeamGoalTournament"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"c-160"
-		"ypos"					"15"
-		"ypos_lodef"			"75"
-		"wide"					"320"
-		"tall"					"245"
-	}
 
 	HudTeamSwitch
 	{
@@ -1094,31 +971,6 @@
 		"wide"					"320"
 		"tall"					"100"
 	}
-	
-	HudArenaNotification
-	{
-		"fieldName"				"HudArenaNotification"
-		"visible"				"0"
-		"enabled"				"1"
-		"xpos"					"c-160"
-		"ypos"					"75"
-		"ypos_hidef"				"90"
-		"ypos_lodef"				"90"
-		"wide"					"320"
-		"tall"					"150"
-	}
-
-	HudArenaCapPointCountdown
-	{
-		"fieldName"				"HudArenaCapPointCountdown"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"c-15"
-		"ypos"					"442"
-		"wide"					"30"
-		"tall"					"30"
-		"zpos"					"99"
-	}
 
 	HudStalemate
 	{
@@ -1130,44 +982,6 @@
 		"ypos_lodef"			"75"
 		"wide"					"320"
 		"tall"					"100"
-	}
-	
-	HudTournament
-	{
-		"fieldName"				"HudTournament"
-		"visible"				"0"
-		"enabled"				"1"
-		"xpos"					"c-125"
-		"ypos"					"5"
-		"ypos_lodef"				"75"
-		"zpos"					"2"
-		"wide"					"250"
-		"tall"					"80"
-	}
-
-	HudTournamentSetup
-	{
-		"fieldName"				"HudTournamentSetup"
-		"visible"				"0"
-		"enabled"				"1"
-		"xpos"					"c-90"
-		"ypos"					"-70"
-		"ypos_lodef"				"75"
-		"wide"					"180"
-		"tall"					"65"
-	}
-
-	HudStopWatch
-	{
-		"fieldName"				"HudStopWatch"
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"c-160"
-		"ypos"					"5"
-		"ypos_minmode"				"15"
-		"ypos_lodef"				"75"
-		"wide"					"125"
-		"tall"					"55"
 	}
 	
 	NotificationPanel
@@ -1193,97 +1007,6 @@
 		"tall"					"100"
 	}
 
-	CriticalPanel [$WIN32]
-	{
-		"fieldName"				"CriticalPanel"		
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"r155"
-		"ypos"					"r75"
-		"wide"					"150"
-		"tall"					"25"
-	}
-	
-	HudArenaClassLayout [$WIN32]
-	{
-		"fieldName"				"HudArenaClassLayout"		
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"0"
-		"ypos"					"r320"
-		"wide"					"f0"
-		"tall"					"320"
-	}
-	
-	HudArenaVsPanel [$WIN32]
-	{
-		"fieldName"				"HudArenaVsPanel"		
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"0"
-		"ypos"					"240"
-		"wide"					"f0"
-		"tall"					"240"
-	}
-	
-	HudArenaPlayerCount [$WIN32]
-	{
-		"fieldName"				"HudArenaPlayerCount"		
-		"visible"				"1"
-		"enabled"				"1"
-		"xpos"					"0"
-		"ypos"					"0"
-		"wide"					"f0"
-		"tall"					"50"
-	}	
-	
-	"HudAchievementTracker"
-	{
-		"ControlName"	"EditablePanel"
-		"fieldName"		"HudAchievementTracker"
-		"xpos"			"5"
-		"NormalY"		"10"
-		"EngineerY"		"170"
-		"zpos"			"2"
-		"wide"			"280"
-		"tall"			"280"
-		"visible"		"1"
-		"enabled"		"1"	
-	}
-	
-	HudTrainingInfoMsg
-	{
-		"fieldName"				"HudTrainingInfoMsg"
-		"visible"				"0"
-		"enabled"				"1"
-		"xpos"					"10"
-		"ypos"					"50"
-		"wide"					"200"
-		"tall"					"300"
-	}
-	
-	HudTrainingMsg
-	{
-		
-	}
-	
-	TrainingComplete
-	{
-		
-	}
-
-	HudInspectPanel
-	{
-		"fieldName"				"HudInspectPanel"
-		"visible"				"0"
-		"enabled"				"1"
-		"xpos"					"r200"
-		"ypos"					"rs1"
-		"zpos"					"10"
-		"wide"					"190"
-		"tall"					"f0"
-	}
-	
 	HudTFCrosshair
 	{
 		"fieldName" "HudTFCrosshair"
@@ -1292,71 +1015,7 @@
 		"wide"	 "640"
 		"tall"	 "480"
 	}
-	
-	ItemQuickSwitchPanel
-	{
-		"fieldName"				"ItemQuickSwitchPanel"
-		"visible"				"0"
-		"enabled"				"1"
-		"xpos"			"c-125"
-		"ypos"			"280"
-		"wide"			"250"
-		"tall"			"160"
-	}
-	
-	ReplayReminder
-	{
-		"fieldName"		"ReplayReminder"
-		"visible"		"0"
-		"enable"		"1"
-	}
-	
-	MainMenuAdditions
-	{
-		"fieldName"		"MainMenuAdditions"
-		"visible"		"1"
-		"enabled"		"1"
-		"xpos"			"c0"
-		"ypos"			"310"
-		"zpos"			"0"
-		"wide"			"300"
-		"tall"			"100"
-	}	
 
-	CoachedByPanel
-	{
-		"fieldName"		"CoachedByPanel"
-		"visible"		"0"
-		"enable"		"1"
-		"xpos"			"5"
-		"ypos"			"10"
-		"wide"			"250"
-		"tall"			"44"
-	}
-
-	ItemTestHUDPanel
-	{
-		"fieldName"		"ItemTestHUDPanel"
-		"visible"		"0"
-		"enable"		"1"
-		"xpos"			"5"
-		"ypos"			"10"
-		"wide"			"150"
-		"tall"			"44"
-	}
-
-	NotificationQueuePanel
-	{
-		"fieldName"		"NotificationQueuePanel"
-		"visible"		"0"
-		"enable"		"1"
-		"xpos"			"r155"
-		"ypos"			"r90"
-		"zpos"			"100"
-		"wide"			"200"
-		"tall"			"0"
-	}
-	
 	"CHudVote"
 	{
 		"fieldName"		"CHudVote"
@@ -1368,151 +1027,5 @@
 		"enabled"		"1"
 		"bgcolor_override"	"0 0 0 0"
 		"PaintBackgroundType"	"0" // rounded corners
-	}
-
-	"HudAlert"
-	{
-		"fieldName"		"HudAlert"
-		"visible"		"0"
-		"enable"		"1"
-		"xpos"			"c-160"
-		"ypos"			"100"
-		"wide"			"320"
-		"tall"			"150"
-	}
-
-
-	"CTFStreakNotice"
-	{
-		"fieldName"		"CTFStreakNotice"
-		"xpos"			"0"
-		"ypos"			"0"
-		"wide"			"640"
-		"tall"			"480"
-		"visible"		"1"
-		"enabled"		"1"
-		"bgcolor_override"	"0 0 0 0"
-		"PaintBackgroundType"	"0" // rounded corners
-	}
-
-	CTFFlagCalloutPanel
-	{
-		"fieldName"		"CTFFlagCalloutPanel"
-		"visible" 		"0"
-		"enabled" 		"1"
-		"xpos"			"0"
-		"ypos"			"0"
-		"wide"	 		"40"
-		"tall"	 		"40"
-		"priority"		"40"
-	}
-
-	"HudMenuTauntSelection"
-	{
-		"fieldName" 	"HudMenuTauntSelection"
-		"visible" 		"1"
-		"enabled" 		"1"
-		"xpos"			"c-235"
-		"ypos"			"c-52"
-		"ypos_hidef"	"c-42"
-		"ypos_lodef"	"c-42"
-		"wide"			"470"
-		"tall"			"200"
-		"PaintBackgroundType"	"0"
-	}
-
-	"ItemAttributeTracker"
-	{
-		"fieldName" 	"ItemAttributeTracker"
-		"visible" 		"1"
-		"enabled" 		"1"
-		"xpos"			"0"
-		"ypos"			"0"
-		"wide"			"f5"
-		"tall"			"f0"
-		"PaintBackgroundType"	"0"
-	}
-
-	HudMiniGame
-	{
-		"fieldName" "HudMiniGame"
-		"visible" "1"
-		"enabled" "1"
-		"xpos"	"0"
-		"ypos"	"0"
-		"wide"	"f0"
-		"tall"	"480"
-	}
-
-	"QuestNotificationPanel"
-	{
-		"fieldName"	"QuestNotificationPanel"
-		"visible" "1"
-		"enabled" "1"
-		"xpos"	"0"
-		"ypos"	"0"
-		"wide"	"f0"
-		"tall"	"f0"
-	}
-
-	"QuestLogContainer"
-	{
-		"ControlName"		"EditablePanel"
-		"fieldName" 		"QuestLogContainer"
-		"visible" 		"1"
-		"enabled" 		"1"
-		"xpos"			"0"
-		"ypos"			"0"
-		"wide"	 		"f0"
-		"tall"	 		"f0"
-	}
-
-	HudLocator
-	{
-		"fieldName" "HudLocator"
-		"visible" "1"
-		"PaintBackgroundType"	"2"
-		"xpos"	"c8"
-		"ypos"	"r36"
-		"wide"	"64"
-		"tall"  "24"
-	}
-	HudVehicle
-	{
-		"fieldName" "HudVehicle"
-		"visible" "1"
-		"enabled" "1"
-		"wide"	 "640"
-		"tall"	 "480"
-	}
-	HudSquadStatus
-	{
-		"fieldName"	"HudSquadStatus"
-		"visible"	"1"
-		"enabled" "1"
-		"xpos"	"r120"
-		"ypos"	"380"
-		"wide"	"104"
-		"tall"	"46"
-		"text_xpos"	"8"
-		"text_ypos"	"34"
-		"SquadIconColor"	"255 220 0 160"
-		"IconInsetX"	"8"
-		"IconInsetY"	"0"
-		"IconGap"		"24"
-
-		"PaintBackgroundType"	"2"
-	}
-	HudCredits
-	{
-		"fieldName"	"HudCredits"
-		"TextFont"	"Default"
-		"visible"	"1"
-		"xpos"	"0"
-		"ypos"	"0"
-		"wide"	"640"
-		"tall"	"480"
-		"TextColor"	"255 255 255 192"
-
 	}
 }

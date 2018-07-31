@@ -36,6 +36,7 @@
 #include "vgui_avatarimage.h"
 #include "tf_gamerules.h"
 #include "tf_shareddefs.h"
+#include <KeyValues.h>
 
 #if defined ( _X360 )
 #include "engine/imatchmaking.h"
@@ -105,6 +106,14 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	LoadControlSettings( "Resource/UI/scoreboard.res" );
 
+	KeyValues *pConditions = NULL;
+
+	if ( TFGameRules() && TFGameRules()->IsBluCoOp() )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_team_blue" );
+	}
+
 	if ( m_pImageList )
 	{
 		m_iImageDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dead", true ) );
@@ -148,17 +157,8 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	Reset();
 
-	/*
-	if ( TFGameRules() && ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() ) )
-	{
-		LoadControlSettings( "Resource/UI/scoreboard_coop.res" );
-		m_pPlayerListBlue->SetVisible( false );
-	}
-	else if ( TFGameRules() && ( TFGameRules()->IsVersus() ) )
-	{
-		LoadControlSettings( "Resource/UI/scoreboard_vs.res" );
-	}
-	*/
+	if ( pConditions )
+		pConditions->deleteThis();
 }
 
 //-----------------------------------------------------------------------------
@@ -178,25 +178,55 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 	{
 		bShow = false;
 	}
-	
-//	if ( IsVisible() == bShow )
-//	{
-//		return;
-//	}
 
 	int iRenderGroup = gHUD.LookupRenderGroupIndexByName( "global" );
 
 	if ( bShow )
 	{
-		if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsBluCoOp() || TFGameRules()->IsZombieSurvival() )
+		if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
 		{
 			LoadControlSettings("Resource/UI/scoreboard_coop.res");
 			m_pPlayerListBlue->SetVisible( false );
+			MoveToFront();
+
+			gHUD.LockRenderGroup(iRenderGroup);
+
+			// Clear the selected item, this forces the default to the local player
+			SectionedListPanel *pList = GetSelectedPlayerList();
+			if (pList)
+			{
+				pList->ClearSelection();
+			}
+		}
+		else if ( TFGameRules() && TFGameRules()->IsBluCoOp() )
+		{
+			LoadControlSettings("Resource/UI/scoreboard_coop.res");
+			m_pPlayerListRed->SetVisible( false );
+			MoveToFront();
+
+			gHUD.LockRenderGroup(iRenderGroup);
+
+			// Clear the selected item, this forces the default to the local player
+			SectionedListPanel *pList = GetSelectedPlayerList();
+			if (pList)
+			{
+				pList->ClearSelection();
+			}
 		}
 		else if ( TFGameRules() && TFGameRules()->IsVersus() )
 		{
 			LoadControlSettings("Resource/UI/scoreboard_vs.res");
 			m_pPlayerListBlue->SetVisible( false );
+			MoveToFront();
+
+			gHUD.LockRenderGroup(iRenderGroup);
+
+			// Clear the selected item, this forces the default to the local player
+			SectionedListPanel *pList = GetSelectedPlayerList();
+			if (pList)
+			{
+				pList->ClearSelection();
+			}
 		}
 		else
 		{
