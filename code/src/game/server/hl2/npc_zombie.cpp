@@ -97,6 +97,7 @@ public:
 
 	void SetZombieModel( void );
 	void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );
+	void SpeedModThink(void);
 	bool ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold );
 	bool CanBecomeLiveTorso() { return !m_fIsHeadless; }
 
@@ -104,6 +105,8 @@ public:
 
 	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int TranslateSchedule( int scheduleType );
+	float flCustomSpeed;
+	int iHeadcrabDisabled;
 
 #ifndef HL2_EPISODIC
 	void CheckFlinches() {} // Zombie has custom flinch code
@@ -147,6 +150,7 @@ public:
 	void AttackMissSound( void );
 	void FootstepSound( bool fRightFoot );
 	void FootscuffSound( bool fRightFoot );
+	void Event_Killed(const CTakeDamageInfo &info);
 
 	const char *GetMoanSound( int nSound );
 	
@@ -217,13 +221,15 @@ enum
 int ACT_ZOMBIE_TANTRUM;
 int ACT_ZOMBIE_WALLPOUND;
 
-BEGIN_DATADESC( CZombie )
+BEGIN_DATADESC(CZombie)
 
-	DEFINE_FIELD( m_hBlockingDoor, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flDoorBashYaw, FIELD_FLOAT ),
-	DEFINE_EMBEDDED( m_DurationDoorBash ),
-	DEFINE_EMBEDDED( m_NextTimeToStartDoorBash ),
-	DEFINE_FIELD( m_vPositionCharged, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD(m_hBlockingDoor, FIELD_EHANDLE),
+	DEFINE_FIELD(m_flDoorBashYaw, FIELD_FLOAT),
+	DEFINE_EMBEDDED(m_DurationDoorBash),
+	DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
+	DEFINE_FIELD(m_vPositionCharged, FIELD_POSITION_VECTOR),
+	DEFINE_KEYFIELD(flCustomSpeed, FIELD_FLOAT, "customspeedboost"),
+	DEFINE_KEYFIELD(iHeadcrabDisabled, FIELD_INTEGER, "disableheadcrab"),
 
 END_DATADESC()
 
@@ -236,6 +242,7 @@ void CZombie::Precache( void )
 	BaseClass::Precache();
 
 	PrecacheModel( "models/zombie/classic.mdl" );
+	PrecacheModel("models/weapons/shell.mdl");
 	PrecacheModel( "models/zombie/classic_torso.mdl" );
 	PrecacheModel( "models/zombie/classic_legs.mdl" );
 
@@ -296,8 +303,25 @@ void CZombie::Spawn( void )
 	BaseClass::Spawn();
 
 	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
+	SpeedModThink();
 }
 
+void CZombie::Event_Killed(const CTakeDamageInfo &info)
+{
+	BaseClass::Event_Killed(info);
+	if (iHeadcrabDisabled == 1)
+	{
+		SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, 0);
+	}
+}
+void CZombie::SpeedModThink(void)
+{
+	if (flCustomSpeed > 0)
+	{
+		m_flGroundSpeed = m_flGroundSpeed + flCustomSpeed;
+	}
+	SetContextThink(&CZombie::SpeedModThink, gpGlobals->curtime + 0.01, "ThinkContextSpeed");
+}
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CZombie::PrescheduleThink( void )
@@ -453,14 +477,28 @@ void CZombie::AttackSound( void )
 //-----------------------------------------------------------------------------
 const char *CZombie::GetHeadcrabClassname( void )
 {
-	return "npc_headcrab";
+	if (iHeadcrabDisabled == 0)
+	{
+		return "npc_headcrab";
+	}
+	else
+	{
+		return "none";
+	}
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 const char *CZombie::GetHeadcrabModel( void )
 {
-	return "models/headcrabclassic.mdl";
+	if (iHeadcrabDisabled == 0)
+	{
+		return "models/headcrabclassic.mdl";
+	}
+	else
+	{
+		return "models/weapons/shell.mdl";
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -496,7 +534,14 @@ void CZombie::SetZombieModel( void )
 		SetHullType( HULL_HUMAN );
 	}
 
-	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless );
+	if (iHeadcrabDisabled == 0)
+	{
+		SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless);
+	}
+	else
+	{
+		SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless);
+	}
 
 	SetHullSizeNormal( true );
 	SetDefaultEyeOffset();

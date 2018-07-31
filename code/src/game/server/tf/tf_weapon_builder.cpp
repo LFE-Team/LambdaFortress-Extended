@@ -275,9 +275,11 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 		//CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
 		CBaseEntity *pManHack = gEntList.FindEntityByClassnameNearest("npc_manhack", m_SapPos, flSapRadius);
 
-		if (pTurret)
+		if (pTurret && pTurret->GetTeamNumber() == TF_TEAM_BLUE && pOwner->GetTeamNumber() == TF_TEAM_RED)
 		{
 			pTurret->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
+			PrecacheModel("models/combine_turrets/floor_turret_sapper.mdl");
+			pTurret->SetModel("models/combine_turrets/floor_turret_sapper.mdl");
 			EmitSound( "Weapon_Sapper.Plant" );
 			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
 		}
@@ -572,10 +574,9 @@ void CTFWeaponBuilder::StartPlacement(void)
 	m_hObjectBeingBuilt = (CBaseObject*)CreateEntityByName(GetObjectInfo(m_iObjectType)->m_pClassName);
 	if (m_hObjectBeingBuilt)
 	{
-		m_hObjectBeingBuilt->SetObjectMode( m_iObjectMode );
-		m_hObjectBeingBuilt->SetBuilder( ToTFPlayer( GetOwner() ) );
+		m_hObjectBeingBuilt->SetObjectMode(m_iObjectMode);
 		m_hObjectBeingBuilt->Spawn();
-		m_hObjectBeingBuilt->StartPlacement( ToTFPlayer( GetOwner() ) );
+		m_hObjectBeingBuilt->StartPlacement(ToTFPlayer(GetOwner()));
 
 		// Stomp this here in the same frame we make the object, so prevent clientside warnings that it's under attack
 		m_hObjectBeingBuilt->m_iHealth = OBJECT_CONSTRUCTION_STARTINGHEALTH;
