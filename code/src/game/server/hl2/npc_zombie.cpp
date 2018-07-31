@@ -105,8 +105,9 @@ public:
 
 	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int TranslateSchedule( int scheduleType );
-	float flCustomSpeed;
+	//float flCustomSpeed;
 	int iHeadcrabDisabled;
+	float flCustomModel;
 
 #ifndef HL2_EPISODIC
 	void CheckFlinches() {} // Zombie has custom flinch code
@@ -173,6 +174,7 @@ private:
 
 LINK_ENTITY_TO_CLASS( npc_zombie, CZombie );
 LINK_ENTITY_TO_CLASS( npc_zombie_torso, CZombie );
+LINK_ENTITY_TO_CLASS(npc_zombie_custom, CZombie);
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -228,8 +230,9 @@ BEGIN_DATADESC(CZombie)
 	DEFINE_EMBEDDED(m_DurationDoorBash),
 	DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
 	DEFINE_FIELD(m_vPositionCharged, FIELD_POSITION_VECTOR),
-	DEFINE_KEYFIELD(flCustomSpeed, FIELD_FLOAT, "customspeedboost"),
+	//DEFINE_KEYFIELD(flCustomSpeed, FIELD_FLOAT, "customspeedboost"),
 	DEFINE_KEYFIELD(iHeadcrabDisabled, FIELD_INTEGER, "disableheadcrab"),
+	//DEFINE_KEYFIELD(flCustomModel, FIELD_FLOAT, "custom_model"),
 
 END_DATADESC()
 
@@ -240,11 +243,18 @@ END_DATADESC()
 void CZombie::Precache( void )
 {
 	BaseClass::Precache();
+	if (FClassnameIs(this, "npc_zombie_custom"))
+	{
+		PrecacheModel(STRING(GetModelName()));
+	}
 
 	PrecacheModel( "models/zombie/classic.mdl" );
 	PrecacheModel("models/weapons/shell.mdl");
 	PrecacheModel( "models/zombie/classic_torso.mdl" );
 	PrecacheModel( "models/zombie/classic_legs.mdl" );
+	PrecacheModel("models/mapper/zombie_custom1.mdl");
+	PrecacheModel("models/mapper/zombie_custom2.mdl");
+	PrecacheModel("models/mapper/zombie_custom3.mdl");
 
 	PrecacheScriptSound( "Zombie.FootstepRight" );
 	PrecacheScriptSound( "Zombie.FootstepLeft" );
@@ -271,13 +281,13 @@ void CZombie::Spawn( void )
 {
 	Precache();
 
-	if( FClassnameIs( this, "npc_zombie" ) )
+	if( FClassnameIs( this, "npc_zombie" ) || FClassnameIs(this, "npc_zombie_custom") )
 	{
 		m_fIsTorso = false;
 	}
 	else
 	{
-		// This was placed as an npc_zombie_torso
+	// This was placed as an npc_zombie_torso
 		m_fIsTorso = true;
 	}
 
@@ -303,8 +313,9 @@ void CZombie::Spawn( void )
 	BaseClass::Spawn();
 
 	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
-	SpeedModThink();
+	//SpeedModThink();
 }
+
 
 void CZombie::Event_Killed(const CTakeDamageInfo &info)
 {
@@ -316,11 +327,13 @@ void CZombie::Event_Killed(const CTakeDamageInfo &info)
 }
 void CZombie::SpeedModThink(void)
 {
+	/*
 	if (flCustomSpeed > 0)
 	{
 		m_flGroundSpeed = m_flGroundSpeed + flCustomSpeed;
 	}
 	SetContextThink(&CZombie::SpeedModThink, gpGlobals->curtime + 0.01, "ThinkContextSpeed");
+	*/
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -521,40 +534,100 @@ const char *CZombie::GetTorsoModel( void )
 //---------------------------------------------------------
 void CZombie::SetZombieModel( void )
 {
-	Hull_t lastHull = GetHullType();
+	if (FClassnameIs(this, "npc_zombie_custom"))
+	{
+		Hull_t lastHull = GetHullType();
 
-	if ( m_fIsTorso )
-	{
-		SetModel( "models/zombie/classic_torso.mdl" );
-		SetHullType( HULL_TINY );
-	}
-	else
-	{
-		SetModel( "models/zombie/classic.mdl" );
-		SetHullType( HULL_HUMAN );
-	}
-
-	if (iHeadcrabDisabled == 0)
-	{
-		SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless);
-	}
-	else
-	{
-		SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless);
-	}
-
-	SetHullSizeNormal( true );
-	SetDefaultEyeOffset();
-	SetActivity( ACT_IDLE );
-
-	// hull changed size, notify vphysics
-	// UNDONE: Solve this generally, systematically so other
-	// NPCs can change size
-	if ( lastHull != GetHullType() )
-	{
-		if ( VPhysicsGetObject() )
+		if (m_fIsTorso)
 		{
-			SetupVPhysicsHull();
+			SetModel("models/zombie/classic_torso.mdl");
+			SetHullType(HULL_TINY);
+		}
+		else
+		{
+			SetModel(STRING(GetModelName()));
+			SetHullType(HULL_HUMAN);
+		}
+
+		if (iHeadcrabDisabled == 0)
+		{
+			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless);
+		}
+		else
+		{
+			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless);
+		}
+
+		SetHullSizeNormal(true);
+		SetDefaultEyeOffset();
+		SetActivity(ACT_IDLE);
+
+		// hull changed size, notify vphysics
+		// UNDONE: Solve this generally, systematically so other
+		// NPCs can change size
+		if (lastHull != GetHullType())
+		{
+			if (VPhysicsGetObject())
+			{
+				SetupVPhysicsHull();
+			}
+		}
+	}
+	else
+	{
+		Hull_t lastHull = GetHullType();
+
+		if (m_fIsTorso)
+		{
+			SetModel("models/zombie/classic_torso.mdl");
+			SetHullType(HULL_TINY);
+		}
+		else
+		{
+			if (flCustomModel == 1)
+			{
+				//KeyValue("model", "models/mapper/zombie_custom1.mdl");
+				SetModel("models/mapper/zombie_custom1.mdl");
+			}
+			else if (flCustomModel == 2)
+			{
+				//KeyValue("model", "models/mapper/zombie_custom2.mdl");
+				SetModel("models/mapper/zombie_custom2.mdl");
+			}
+			else if (flCustomModel == 3)
+			{
+				//KeyValue("model", "models/mapper/zombie_custom3.mdl");
+				SetModel("models/mapper/zombie_custom3.mdl");
+			}
+			else
+			{
+				SetModel("models/zombie/classic.mdl");
+			}
+			SetHullType(HULL_HUMAN);
+		}
+
+		if (iHeadcrabDisabled == 0)
+		{
+			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless);
+		}
+		else
+		{
+			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless);
+		}
+
+		SetHullSizeNormal(true);
+		SetDefaultEyeOffset();
+		SetActivity(ACT_IDLE);
+
+		// hull changed size, notify vphysics
+		// UNDONE: Solve this generally, systematically so other
+		// NPCs can change size
+		if (lastHull != GetHullType())
+		{
+			if (VPhysicsGetObject())
+			{
+				SetupVPhysicsHull();
+			}
 		}
 	}
 }

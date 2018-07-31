@@ -433,6 +433,11 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
+		"npc_zombie_custom",
+		TF_TEAM_GREEN,
+		0,
+	},
+	{
 		"npc_zombine",
 		TF_TEAM_GREEN,
 		0,
