@@ -201,8 +201,9 @@ void CHudItemEffectMeter::UpdateStatus( void )
 		{
 			LoadControlSettings( "resource/UI/HudItemEffectMeter.res" );
 		}
-		InvalidateLayout();
 	}
+
+	InvalidateLayout();
 }
 
 

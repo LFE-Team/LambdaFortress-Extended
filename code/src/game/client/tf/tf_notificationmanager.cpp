@@ -123,7 +123,7 @@ bool CTFNotificationManager::Init()
 		m_hRequest = 0;
 		MatchMakingKeyValuePair_t filter;
 		Q_strncpy( filter.m_szKey, "gamedir", sizeof( filter.m_szKey ) );
-		Q_strncpy( filter.m_szValue, engine->GetGameDirectory(), sizeof( filter.m_szKey ) ); // change "tf2classic" to engine->GetGameDirectory() before the release
+		Q_strncpy( filter.m_szValue, "tf_coop_extended", sizeof( filter.m_szKey ) ); // change "tf_coop_extended" to engine->GetGameDirectory() before the release
 		m_ServerFilters.AddToTail( filter );
 
 		if ( MAINMENU_ROOT )

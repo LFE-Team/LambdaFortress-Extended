@@ -166,17 +166,28 @@ void CItemModelPanel::SetWeapon( CEconItemDefinition *pItemDefinition, int iBord
 	m_ID = ID;
 	m_iBorderStyle = iBorderStyle;
 
-	wchar_t *pText = NULL;
+	IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+	if ( !pScheme )
+		return;
+
 	if ( pItemDefinition )
 	{
-		pText = g_pVGuiLocalize->Find( pItemDefinition->item_name );
 		char szImage[128];
 		Q_snprintf( szImage, sizeof( szImage ), "../%s_large", pItemDefinition->image_inventory );
 		m_pWeaponImage->SetImage( szImage );
 		m_pWeaponImage->SetBounds( XRES( 4 ), -1 * ( GetTall() / 5.0 ) + XRES( 4 ), GetWide() - XRES( 8 ), GetWide() - XRES( 8 ) );
 	}
 
-	m_pWeaponName->SetText( pText );
+	m_pWeaponName->SetText( pItemDefinition->GenerateLocalizedFullItemName() );
+
+	// Set the color according to quality.	
+	const char *pszColor = EconQuality_GetColorString( pItemDefinition->item_quality );
+
+	if ( pItemDefinition && pszColor )
+	{
+		m_pWeaponName->SetFgColor( pScheme->GetColor( pszColor, m_pWeaponName->GetFgColor() ) );
+	}
+
 	if ( ID != -1 )
 	{
 		char szSlotID[8];
