@@ -122,14 +122,6 @@ void CItemModelPanel::SetWeapon( C_BaseCombatWeapon *pWeapon, int iBorderStyle, 
 		Q_snprintf( szImage, sizeof( szImage ), "../%s_large", pItemDefinition->image_inventory );
 		m_pWeaponImage->SetImage( szImage );
 		m_pWeaponImage->SetBounds( XRES( 4 ), -1 * ( GetTall() / 5.0 ) + XRES( 4 ), GetWide() - XRES( 8 ), GetWide() - XRES( 8 ) );
-
-		// Set the color according to quality.	
-		const char *pszColor = EconQuality_GetColorString( pItemDefinition->item_quality );
-
-		if ( pszColor )
-		{
-			m_pWeaponName->SetFgColor( pScheme->GetColor( pszColor, m_pWeaponName->GetFgColor() ) );
-		}
 	}
 	else
 	{
@@ -145,6 +137,14 @@ void CItemModelPanel::SetWeapon( C_BaseCombatWeapon *pWeapon, int iBorderStyle, 
 	}
 
 	m_pWeaponName->SetText( pItemDefinition ? pItemDefinition->GenerateLocalizedFullItemName() : pText );
+
+	// Set the color according to quality.	
+	const char *pszColor = EconQuality_GetColorString( pItemDefinition->item_quality );
+
+	if ( pItemDefinition && pszColor )
+	{
+		m_pWeaponName->SetFgColor( pScheme->GetColor( pszColor, m_pWeaponName->GetFgColor() ) );
+	}
 
 	if ( ID != -1 )
 	{
