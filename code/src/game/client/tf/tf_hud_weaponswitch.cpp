@@ -32,8 +32,8 @@ DECLARE_HUDELEMENT( CTFHudWeaponSwitch );
 CItemModelPanel::CItemModelPanel( Panel *parent, const char* name ) : EditablePanel( parent, name )
 {
 	m_pWeapon = NULL;
-	m_pWeaponName = new vgui::Label( this, "WeaponName", "text" );
-	m_pSlotID = new vgui::Label( this, "SlotID", "0" );
+	m_pWeaponName = new vgui::Label ( this, "WeaponName", "" );
+	m_pSlotID = new vgui::Label( this, "SlotID", "" );
 	m_pWeaponImage = new vgui::ImagePanel( this, "WeaponImage" );
 	m_iBorderStyle = -1;
 	m_ID = -1;
