@@ -2574,8 +2574,7 @@
 			"image_inventory"	"backpack/weapons/c_models/c_flamethrower/c_flamethrower"
 			"image_inventory_size_w"	"128"
 			"image_inventory_size_h"	"82"
-			"model_world"	"models/weapons/w_models/w_flamethrower.mdl"
-			"model_player"	"models/weapons/v_models/v_flamethrower_pyro.mdl"
+			"model_player"	"models/weapons/c_models/c_flamethrower/c_flamethrower.mdl"
 			"attach_to_hands"	"1"
 			"used_by_classes"
 			{
