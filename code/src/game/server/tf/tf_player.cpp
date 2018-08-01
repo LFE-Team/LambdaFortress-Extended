@@ -8544,11 +8544,26 @@ void CTFPlayer::DoTauntAttack( void )
 
 				m_iTauntAttack = TAUNTATK_HEAVY_EAT;
 				m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
+				if (GetHealth() < 299)
+				{
+					RemoveAmmo(1, pLunch->m_iPrimaryAmmoType);
+					SwitchToNextBestWeapon(pLunch);
+
+					pLunch->StartEffectBarRegen();
+
+					pLunch->m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+				}
 			}
 			else if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX_DRINK ) )
 			{
 				m_iTauntAttack = TAUNTATK_SCOUT_DRINK;
 				m_flTauntAttackTime = gpGlobals->curtime + 0.1f;
+				RemoveAmmo(1, pWeapon->m_iPrimaryAmmoType);
+				SwitchToNextBestWeapon(pWeapon);
+
+				pWeapon->StartEffectBarRegen();
+
+				pWeapon->m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 			}	
 			break;
 		}
