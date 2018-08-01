@@ -2,6 +2,7 @@
 {
 	game	"Lambda Fortress: Extended Beta"
 	gamelogo 1
+	GameData	"tf_coop_extended.fgd"	
 	type 	multiplayer_only
 	icon	"resource/game"
 	nomodels 0
@@ -59,7 +60,7 @@
 			game				|all_source_engine_paths|hl2
 			platform			|all_source_engine_paths|platform
 			
-		  //Mount Counter Strike Source	and Left 4 Dead 2 for making custom maps	
+		  //Mount Counter Strike Source making custom maps	
        			game                 "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_english.vpk.vpk"
         		game                 "|all_source_engine_paths|../Counter-Strike Source/cstrike/cstrike_pak_dir.vpk"
 		  

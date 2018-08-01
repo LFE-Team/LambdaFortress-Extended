@@ -2206,15 +2206,22 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 	case TASK_GET_PATH_TO_PLAYER:
 		{
 			CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+			if (!pPlayer)
+			{
+				return;
+			}
+			else
+			{
 
-			AI_NavGoal_t goal;
+				AI_NavGoal_t goal;
 
-			goal.type = GOALTYPE_LOCATION;
-			goal.dest = pPlayer->WorldSpaceCenter();
-			goal.pTarget = pPlayer;
+				goal.type = GOALTYPE_LOCATION;
+				goal.dest = pPlayer->WorldSpaceCenter();
+				goal.pTarget = pPlayer;
 
-			GetNavigator()->SetGoal( goal );
-			break;
+				GetNavigator()->SetGoal( goal );
+				break;
+			}
 		}
 
 	case TASK_GET_PATH_TO_SAVEPOSITION_LOS:

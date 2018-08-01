@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2007, Valve Corporation, All rights reserved. ============//
+//========= Copyright ? 1996-2007, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -109,15 +109,12 @@ void CItemModelPanel::SetWeapon( C_BaseCombatWeapon *pWeapon, int iBorderStyle, 
 	m_ID = ID;
 	m_iBorderStyle = iBorderStyle;
 
-	IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
-	if ( !pScheme )
-		return;
-
 	int iItemID = m_pWeapon->GetItemID();
 	CEconItemDefinition *pItemDefinition = GetItemSchema()->GetItemDefinition( iItemID );
 	wchar_t *pText = NULL;
 	if ( pItemDefinition )
 	{
+		pText = g_pVGuiLocalize->Find( pItemDefinition->item_name );
 		char szImage[128];
 		Q_snprintf( szImage, sizeof( szImage ), "../%s_large", pItemDefinition->image_inventory );
 		m_pWeaponImage->SetImage( szImage );
@@ -136,15 +133,7 @@ void CItemModelPanel::SetWeapon( C_BaseCombatWeapon *pWeapon, int iBorderStyle, 
 		m_pWeaponImage->SetBounds( XRES( 4 ), -1 * ( GetTall() / 10.0 ) + XRES( 4 ), ( GetWide() * 1.5 ) - XRES( 8 ), ( GetWide() * 0.75 ) - XRES( 8 ) );
 	}
 
-	m_pWeaponName->SetText( pItemDefinition ? pItemDefinition->GenerateLocalizedFullItemName() : pText );
-
-	// Set the color according to quality.	
-	const char *pszColor = EconQuality_GetColorString( pItemDefinition->item_quality );
-
-	if ( pItemDefinition && pszColor )
-	{
-		m_pWeaponName->SetFgColor( pScheme->GetColor( pszColor, m_pWeaponName->GetFgColor() ) );
-	}
+	m_pWeaponName->SetText( pText );
 
 	if ( ID != -1 )
 	{
@@ -166,28 +155,17 @@ void CItemModelPanel::SetWeapon( CEconItemDefinition *pItemDefinition, int iBord
 	m_ID = ID;
 	m_iBorderStyle = iBorderStyle;
 
-	IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
-	if ( !pScheme )
-		return;
-
+	wchar_t *pText = NULL;
 	if ( pItemDefinition )
 	{
+		pText = g_pVGuiLocalize->Find( pItemDefinition->item_name );
 		char szImage[128];
 		Q_snprintf( szImage, sizeof( szImage ), "../%s_large", pItemDefinition->image_inventory );
 		m_pWeaponImage->SetImage( szImage );
 		m_pWeaponImage->SetBounds( XRES( 4 ), -1 * ( GetTall() / 5.0 ) + XRES( 4 ), GetWide() - XRES( 8 ), GetWide() - XRES( 8 ) );
 	}
 
-	m_pWeaponName->SetText( pItemDefinition->GenerateLocalizedFullItemName() );
-
-	// Set the color according to quality.	
-	const char *pszColor = EconQuality_GetColorString( pItemDefinition->item_quality );
-
-	if ( pItemDefinition && pszColor )
-	{
-		m_pWeaponName->SetFgColor( pScheme->GetColor( pszColor, m_pWeaponName->GetFgColor() ) );
-	}
-
+	m_pWeaponName->SetText( pText );
 	if ( ID != -1 )
 	{
 		char szSlotID[8];
