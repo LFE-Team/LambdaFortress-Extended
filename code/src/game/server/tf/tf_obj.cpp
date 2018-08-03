@@ -412,7 +412,7 @@ void CBaseObject::Spawn( void )
 	SetThink( &CBaseObject::FallThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
-	SetMoveType( MOVETYPE_FLYGRAVITY );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	UTIL_DropToFloor( this, MASK_SOLID );
 }
 
@@ -879,7 +879,7 @@ void CBaseObject::StartUpgrading(void)
 	SetThink( &CBaseObject::FallThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
-	SetMoveType( MOVETYPE_FLYGRAVITY );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
 	UTIL_DropToFloor( this, MASK_SOLID );
 }
 
@@ -3051,7 +3051,7 @@ void CBaseObject::FallThink ( void )
 	// which is the case when creating currencypacks in MvM
 	if ( !( GetFlags() & FL_ONGROUND ) )
 	{
-		if ( !GetAbsVelocity().Length() && GetMoveType() == MOVETYPE_FLYGRAVITY )
+		if (!GetAbsVelocity().Length() && GetMoveType() == MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE )
 		{
 			// Mr. Game, meet Mr. Hammer.  Mr. Hammer, meet the uncooperative Mr. Physics.
 			// Mr. Physics really doesn't want to give our friend the FL_ONGROUND flag.
