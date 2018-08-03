@@ -413,6 +413,10 @@ void CBaseObject::Spawn( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
+	SetElasticity( 0.01f );
+	SetGravity( 1.0f );
+	//SetFriction( 1.0f );
+
 	UTIL_DropToFloor( this, MASK_SOLID );
 }
 
@@ -880,6 +884,8 @@ void CBaseObject::StartUpgrading(void)
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
+	SetElasticity( 0.01f );
+	SetGravity( 1.0f );
 	UTIL_DropToFloor( this, MASK_SOLID );
 }
 

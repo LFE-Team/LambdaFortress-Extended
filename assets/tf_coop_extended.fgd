@@ -29,8 +29,38 @@
 		7 : "64x64"
 		8 : "128x128"
 		9 : "256x256"
+		10 : "512x512"
+		11 : "1024x1024"
+		12 : "2048x2048"
+		13 : "4096x4096"
 	]
 	sides(sidelist) : "Brush faces": : "(Optional) Brushes faces to directly attach to the env_cubemap. Press Pick then click on faces in the 3D View to select them. Use CTRL while clicking to add or remove from the selection."
+]
+
+@BaseClass = Targetname 
+[ 
+	targetname(target_source) : "Name" : : "The name that other entities refer to this entity by."
+	effects(string) : "Effect flags" : "0" : "For configuring visual effects."
+	//gravity(string) : "Gravity" : "1" : "1 = normal 0 = no gravity"
+	
+	// Inputs
+	input Kill(void) : "Removes this entity from the world."
+	input KillHierarchy(void) : "Removes this entity and all its children from the world."
+	input AddOutput(string) : "Adds an entity I/O connection to this entity. Format: <output name> <targetname>:<inputname>:<parameter>:<delay>:<max times to fire (-1 == infinite)>. Very dangerous, use with care."
+	input FireUser1(void) : "Causes this entity's OnUser1 output to be fired."
+	input FireUser2(void) : "Causes this entity's OnUser2 output to be fired."
+	input FireUser3(void) : "Causes this entity's OnUser3 output to be fired."
+	input FireUser4(void) : "Causes this entity's OnUser4 output to be fired."
+
+	input SetMoveType(integer) : "Changes the entity's Move Type."
+	// MOVETYPE_NONE, MOVETYPE_ISOMETRIC, MOVETYPE_WALK, MOVETYPE_STEP, MOVETYPE_FLY, MOVETYPE_FLYGRAVITY, MOVETYPE_VPHYSICS, 
+	// MOVETYPE_PUSH, MOVETYPE_NOCLIP, MOVETYPE_LADDER, MOVETYPE_OBSERVER, MOVETYPE_CUSTOM
+
+	// Outputs
+	output OnUser1(void) : "Fired in response to FireUser1 input."
+	output OnUser2(void) : "Fired in response to FireUser2 input."
+	output OnUser3(void) : "Fired in response to FireUser3 input."
+	output OnUser4(void) : "Fired in response to FireUser4 input."
 ]
 
 //-------------------------------------------------------------------------
@@ -1869,22 +1899,6 @@
 	]
 ]
 
-@PointClass base(Targetname) = lfe_logic_coop : "Forced Co-Op Logic" []
-
-@PointClass base(Targetname) = lfe_logic_blucoop : "BLU Co-Op Logic" []
-
-@PointClass base(Targetname) = lfe_logic_vs : "Versus Logic" []
-
-@PointClass base(Targetname) = lfe_logic_zs : "Zombie Survival Logic"
-[
-	// Inputs
-	input ForceTeleportToTeamSpawn(void) : "Teleport all alive player to info_player_teamspawn and freeze them."
-	input ReleaseTeamSpawn(void) : "Unfreeze all player that were teleported."
-	//input ForceFinaleStart(void) : "Force Finale Event."
-	//input StartIntro(void) : "Start Cutscene intro."
-	//input FinishIntro(void) : "Finish Cutscene intro."
-]
-
 @SolidClass base(Targetname, Parentname) = func_precipitation : 
 	"A brush entity that creates rain and snow inside its volume."
 [
@@ -1925,7 +1939,7 @@
 ]
 
 @SolidClass base(Targetname, TeamNum, Parentname, Origin, RenderFields, EnableDisable) = func_forcefield : 
-	"Brushes that become visible to enemy players when they get close. Use them to mark areas that they're unable to enter." 
+	"Brushes that become visible to players when they get close. Use them to mark areas that they're unable to enter." 
 [
 ]
 
@@ -1961,23 +1975,48 @@
 	duration(float)			: "Duration"		:  0	: "The duration of the condition. NOTE: -1 duration means last until the player exits the trigger."
 ]
 
-@PointClass base(Targetname, Origin) = lfe_vehiclespawner : "lfe_vehiclespawner"
+@PointClass base(Targetname) = lfe_logic_playerteleport : "Teleports a team's players."  
 [
+	team_to_teleport(choices) : "Team to Teleport" : 1 =
+	[
+		1 : "RED"
+		2 : "BLU"
+	]
+	input TeleportPlayers(void) : "Teleport the team's players."
+]
 
-	targetname(string) : "Name" : : ""
-	vehicle_to_spawn(integer) : "Vehicle Type" : : "1 - Airboat 2 - Jeep 3 - Jalopy"
+@PointClass base(Targetname) = lfe_logic_coop : "Forced Co-Op Logic" []
+
+@PointClass base(Targetname) = lfe_logic_blucoop : "BLU Co-Op Logic" []
+
+@PointClass base(Targetname) = lfe_logic_vs : "Versus Logic" []
+
+@PointClass base(Targetname) = lfe_logic_zs : "Zombie Survival Logic"
+[
+	// Inputs
+	input ForceTeleportToTeamSpawn(void) : "Teleport all alive player to info_player_teamspawn and freeze them."
+	input ReleaseTeamSpawn(void) : "Unfreeze all player that were teleported."
+	//input ForceFinaleStart(void) : "Force Finale Event."
+	//input StartIntro(void) : "Start Cutscene intro."
+	//input FinishIntro(void) : "Finish Cutscene intro."
+]
+
+@PointClass base(Targetname, Origin) = lfe_vehiclespawner : "Vehicle spawner."
+[
+	vehicle_to_spawn(choices) : "Vehicle Type" : 1 : "" =
+	[
+		1 : "Airboat"
+		2 : "Jeep"
+		3 : "Jalopy"
+	]
 	max_vehicles(integer) : "Max Vehicles" : : "Maximum owned vehicles at a time."
-	delay(integer) : "Spawn Delay" : : ""
-
-	// Outputs
-	output OnSomethingHappened(void) : "Fires when something happens"
-	output OnSomethingElse(void) : "Fires when something else happens"
+	delay(integer) : "Spawn Delay" : : "Delay before spawning vehicles."
 
 	// Inputs
-	input Enable(void) : "Enable"
-	input Disable(void) : "Disable"
-	input EnableGun(void) : "EnableGun"
-	input DisableGun(void) : "DisableGun"
-	input RemoveAllVehicles(void) : "RemoveAllVehicles"
-	input ForceSpawn(void ) : "ForceSpawn"
+	input Enable(void) : "Enable the spawner."
+	input Disable(void) : "Disable the spawner."
+	input EnableGun(void) : "Enable vehicle guns."
+	input DisableGun(void) : "Disable vehicle guns."
+	input RemoveAllVehicles(void) : "Remove all vehicles."
+	input ForceSpawn(void ) : "Spawn vehicles."
 ]

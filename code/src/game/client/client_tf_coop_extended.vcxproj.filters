@@ -4120,6 +4120,9 @@
     <ClCompile Include="tf\tf_hud_betastamp.cpp">
       <Filter>Source Files\TF</Filter>
     </ClCompile>
+    <ClCompile Include="tf\tf_hud_bowcharge.cpp">
+      <Filter>Source Files\TF</Filter>
+    </ClCompile>
     <ClCompile Include="tf\tf_hud_building_status.cpp">
       <Filter>Source Files\TF</Filter>
     </ClCompile>

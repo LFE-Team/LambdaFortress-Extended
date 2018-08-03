@@ -974,11 +974,15 @@ void CHL1BaseHelicopter::UpdatePlayerDopplerShift( )
 	}
 	else
 	{
+#ifndef TF_CLASSIC
 		CBaseEntity *pPlayer = NULL;
 
 		// UNDONE: this needs to send different sounds to every player for multiplayer.	
 		// FIXME: this isn't the correct way to find a player!!!
 		pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+#else
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+#endif
 		if (pPlayer)
 		{
 			Vector dir = pPlayer->GetLocalOrigin() - GetLocalOrigin();

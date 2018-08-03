@@ -400,7 +400,7 @@ void CTFFlameThrower::PrimaryAttack()
 	{
 		if ( m_bCritFire )
 		{
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
 			dl->origin = vecMuzzlePos;
 			dl->color.r = 255;
 			dl->color.g = 110;
@@ -412,7 +412,7 @@ void CTFFlameThrower::PrimaryAttack()
 		}
 		else
 		{
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
 			dl->origin = vecMuzzlePos;
 			dl->color.r = 255;
 			dl->color.g = 100;
@@ -1410,7 +1410,7 @@ void CTFFlameEntity::Spawn( void )
 
 	float flGravity = 0.0f;
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwnerEntity(), flGravity, flame_gravity );
-	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
+	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_SLIDE );
 	SetGravity( flGravity );
 
 	AddEFlags( EFL_NO_WATER_VELOCITY_CHANGE );

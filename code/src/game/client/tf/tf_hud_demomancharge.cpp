@@ -95,9 +95,7 @@ bool CHudDemomanChargeMeter::ShouldDraw( void )
 		return false;
 	}
 
-	if ( !pWpn->IsWeapon( TF_WEAPON_PIPEBOMBLAUNCHER ) &&
-		!pWpn->IsWeapon( TF_WEAPON_GRENADE_MIRV ) &&
-		!pWpn->IsWeapon( TF_WEAPON_COMPOUND_BOW ) )
+	if ( !pWpn->IsWeapon( TF_WEAPON_PIPEBOMBLAUNCHER ) )
 	{
 		return false;
 	}

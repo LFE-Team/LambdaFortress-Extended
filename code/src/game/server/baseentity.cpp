@@ -1962,6 +1962,9 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_ARRAY( m_nModelIndexOverrides, FIELD_INTEGER, MAX_VISION_MODES ),
 #endif
 
+#ifdef TF_CLASSIC
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetMoveType", InputSetMoveType ),
+#endif
 END_DATADESC()
 
 // For code error checking
@@ -4166,6 +4169,16 @@ void CBaseEntity::InputSetParent( inputdata_t &inputdata )
 
 	SetParent( inputdata.value.StringID(), inputdata.pActivator );
 }
+
+#ifdef TF_CLASSIC
+//------------------------------------------------------------------------------
+// Purpose: Input handler for changing this entity's movement parent.
+//------------------------------------------------------------------------------
+void CBaseEntity::InputSetMoveType( inputdata_t &inputdata )
+{
+	SetMoveType( (MoveType_t)inputdata.value.Int() );
+}
+#endif
 
 //------------------------------------------------------------------------------
 // Purpose: 

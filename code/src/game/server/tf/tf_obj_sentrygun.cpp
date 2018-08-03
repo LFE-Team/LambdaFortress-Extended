@@ -979,7 +979,7 @@ void CObjectSentrygun::Attack()
 		if ( m_iUpgradeLevel == 1 )
 		{
 			// Level 1 sentries fire slower
-			if ( m_bMiniBuilding == true )
+			if ( IsMiniBuilding() )
 			{
 				m_flNextAttack = gpGlobals->curtime + 0.15;
 			}
@@ -1119,7 +1119,7 @@ bool CObjectSentrygun::Fire()
 		info.m_vecSpread = vec3_origin;
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
-		if ( m_bMiniBuilding == 1 )
+		if ( IsMiniBuilding() )
 		{
 			info.m_flDamage = 8;
 		}
@@ -1203,7 +1203,7 @@ char *CObjectSentrygun::GetPlacementModel(void)
 //-----------------------------------------------------------------------------
 int CObjectSentrygun::GetMaxUpgradeLevel( void )
 {
-	return m_bMiniBuilding ? 1 : 3;
+	return IsMiniBuilding() ? 1 : 3;
 }
 
 //-----------------------------------------------------------------------------
@@ -1605,7 +1605,7 @@ float CObjectSentrygun::GetConstructionMultiplier( void )
 	if ( IsRedeploying() )
 		flMultiplier *= 2.0f;
 
-	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, sentry_build_rate_multiplier );
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flMultiplier, sentry_build_rate_multiplier );
 
 	return BaseClass::GetConstructionMultiplier();
 }

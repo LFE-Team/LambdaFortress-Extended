@@ -1707,7 +1707,11 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 	case TASK_TARGET_PLAYER:
 		{
+#ifndef TF_CLASSIC
 			CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+#else
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+#endif
 			if ( pPlayer )
 			{
 				SetTarget( pPlayer );
@@ -2205,7 +2209,11 @@ void CAI_BaseNPC::StartTask( const Task_t *pTask )
 
 	case TASK_GET_PATH_TO_PLAYER:
 		{
+#ifndef TF_CLASSIC
 			CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
+#else
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+#endif
 			if (!pPlayer)
 			{
 				return;

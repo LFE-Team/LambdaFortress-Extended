@@ -156,14 +156,28 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 
 	if ( lfe_muzzlelight.GetBool() )
 	{
-		dlight_t *dl = effects->CL_AllocDlight(LIGHT_INDEX_MUZZLEFLASH);
-		dl->origin = vecOrigin;
-		dl->color.r = 255;
-		dl->color.g = 220;
-		dl->color.b = 128;
-		dl->decay	= 200;
-		dl->radius	= 340.f;
-		dl->die		= gpGlobals->curtime + 0.1f;
+		if ( bCrit )
+		{
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
+			dl->origin = vecOrigin;
+			dl->color.r = 255;
+			dl->color.g = 250;
+			dl->color.b = 140;
+			dl->decay	= 200;
+			dl->radius	= 512.f;
+			dl->die		= gpGlobals->curtime + 0.1f;
+		}
+		else
+		{
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
+			dl->origin = vecOrigin;
+			dl->color.r = 255;
+			dl->color.g = 220;
+			dl->color.b = 128;
+			dl->decay	= 200;
+			dl->radius	= 340.f;
+			dl->die		= gpGlobals->curtime + 0.1f;
+		}
 	}
 
 	DispatchParticleEffect( pszEffect, vecOrigin, angExplosion );
