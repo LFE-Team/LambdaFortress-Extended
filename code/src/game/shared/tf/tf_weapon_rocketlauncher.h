@@ -126,7 +126,6 @@ public:
 
 	virtual CBaseEntity *FireProjectile( CTFPlayer *pPlayer );
 	virtual void	ItemPostFrame( void );
-	virtual bool	Deploy( void );
 	virtual bool	DefaultReload( int iClipSize1, int iClipSize2, int iActivity );
 
 	virtual void	GetProjectileFireSetup( CTFPlayer *pPlayer, Vector vecOffset, Vector *vecSrc, QAngle *angForward, bool bHitTeammates = true, bool bUseHitboxes = false );
@@ -138,6 +137,10 @@ public:
 
 	void			SetHitTarget( void );
 	void			HitTargetThink( void );
+#else
+	virtual void		OnDataChanged( DataUpdateType_t updateType );
+	virtual bool		Deploy( void );
+	void				UpdatePoseParam( void );
 #endif
 private:
 

@@ -556,7 +556,7 @@ void CTFProjectile_BallOfFire::FlameThink( void )
 		CPVSFilter filter( WorldSpaceCenter() );
 		te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
 		#endif
-		UTIL_Remove( this )
+		UTIL_Remove( this );
 		return;
 	}
 }

@@ -11,6 +11,8 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
+#include "tf_viewmodel.h"
+#include "c_tf_viewmodeladdon.h"
 // Server specific.
 #else
 #include "tf_player.h"
@@ -241,19 +243,6 @@ void CTFWeaponFlameBall::ItemPostFrame( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFWeaponFlameBall::Deploy( void )
-{
-	if ( BaseClass::Deploy() )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFWeaponFlameBall::DefaultReload( int iClipSize1, int iClipSize2, int iActivity )
 {
 	return BaseClass::DefaultReload( iClipSize1, iClipSize2, iActivity );
@@ -265,20 +254,7 @@ bool CTFWeaponFlameBall::DefaultReload( int iClipSize1, int iClipSize2, int iAct
 void CTFWeaponFlameBall::PrimaryAttack()
 {
 	m_bReloadedThroughAnimEvent = false;
-#ifdef GAME_DLL
-	if ( m_bHitTarget )
-	{
-		if ( tf_fireball_hit_recharge_boost.GetBool() )
-		{
-			// recharge faster when hit something.
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
-		}
-	}
-	else
-	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
-	}
-#endif
+
 	BaseClass::PrimaryAttack();
 }
 
@@ -444,14 +420,12 @@ void CTFWeaponFlameBall::SecondaryAttack()
 	lagcompensation->FinishLagCompensation( pOwner );
 
 #else
-		C_BaseEntity *pModel = GetWeaponForEffect();
+	C_BaseEntity *pModel = GetWeaponForEffect();
 
-		if ( pModel )
-		{
-			pModel->ParticleProp()->Create( "pyro_blast", PATTACH_POINT_FOLLOW, "muzzle" );
-		}
-
-		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRE );
+	if ( pModel )
+	{
+		pModel->ParticleProp()->Create( "pyro_blast", PATTACH_POINT_FOLLOW, "muzzle" );
+	}
 #endif
 
 	float flAmmoPerSecondaryAttack = TF_FLAMEBALL_AMMO_PER_SECONDARY_ATTACK;
@@ -657,10 +631,19 @@ void CTFWeaponFlameBall::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttac
 //-----------------------------------------------------------------------------
 void CTFWeaponFlameBall::SetHitTarget( void )
 {
-	if ( !m_bHitTarget )
-		m_bHitTarget = true;
+	if ( m_bHitTarget )
+	{
+		if ( tf_fireball_hit_recharge_boost.GetBool() )
+		{
+			// recharge faster when hit something.
+			m_flNextPrimaryAttack = 0.5f;
+		}
+	}
+	else
+	{
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	}
 
-	//m_flStopHitSoundTime = gpGlobals->curtime + 0.2f;
 	SetContextThink( &CTFWeaponFlameBall::HitTargetThink, gpGlobals->curtime + 0.1f, "FlameBallHitTargetThink" );
 }
 
@@ -687,3 +670,35 @@ void CTFWeaponFlameBall::GetProjectileFireSetup( CTFPlayer *pPlayer, Vector vecO
 {
 	BaseClass::GetProjectileFireSetup( pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, bUseHitboxes );
 }
+
+#ifdef CLIENT_DLL
+void CTFWeaponFlameBall::OnDataChanged( DataUpdateType_t updateType )
+{
+	BaseClass::OnDataChanged( updateType );
+	UpdatePoseParam();
+}
+
+bool CTFWeaponFlameBall::Deploy( void )
+{
+	if ( BaseClass::Deploy() )
+	{
+		UpdatePoseParam();
+		return true;
+	}
+
+	return false;
+}
+
+void CTFWeaponFlameBall::UpdatePoseParam( void )
+{
+	SetPoseParameter( "reload", m_flNextPrimaryAttack = m_flNextSecondaryAttack );
+	SetPoseParameter( "charge_level", m_flNextPrimaryAttack = m_flNextSecondaryAttack );
+
+	C_ViewmodelAttachmentModel *pAttachment = GetViewmodelAddon();
+	if ( pAttachment )
+ 	{
+		pAttachment->SetPoseParameter( "reload", m_flNextPrimaryAttack = m_flNextSecondaryAttack );
+		pAttachment->SetPoseParameter( "charge_level", m_flNextPrimaryAttack = m_flNextSecondaryAttack );
+	}
+}
+#endif
