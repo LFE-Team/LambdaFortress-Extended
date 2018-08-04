@@ -623,4 +623,43 @@ void C_AI_BaseNPC::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 		}
 	}
 }
+
+extern ConVar	tf_avoidteammates;
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : collisionGroup - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool C_AI_BaseNPC::ShouldCollide( int collisionGroup, int contentsMask ) const
+{
+	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
+		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
+	{
+
+		switch( GetTeamNumber() )
+		{
+		case TF_TEAM_RED:
+			if ( !( contentsMask & CONTENTS_REDTEAM ) )
+				return false;
+			break;
+
+		case TF_TEAM_BLUE:
+			if ( !( contentsMask & CONTENTS_BLUETEAM ) )
+				return false;
+			break;
+
+		case TF_TEAM_GREEN:
+			if ( !(contentsMask & CONTENTS_GREENTEAM ) )
+				return false;
+			break;
+
+		case TF_TEAM_YELLOW:
+			if ( !(contentsMask & CONTENTS_YELLOWTEAM ) )
+				return false;
+			break;
+		}
+	}
+	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
+}
 #endif

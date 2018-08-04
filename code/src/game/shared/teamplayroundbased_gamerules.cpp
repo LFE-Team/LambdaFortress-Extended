@@ -3315,7 +3315,7 @@ void CTeamplayRoundBasedRules::BalanceTeams( bool bRequireSwitcheesToBeDead )
 
 	if ( TFGameRules()->IsCoOp() )
 	{
-		iNumSwitchesRequired = lf_coop_min_red_players.GetInt() - pLightTeam->GetNumPlayers();
+		iNumSwitchesRequired = lfe_coop_min_red_players.GetInt() - pLightTeam->GetNumPlayers();
 	}
 	else
 	{
@@ -3789,7 +3789,7 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 			iRebelPlayers -= 1;
 		}
 
-		if ( iRebelPlayers < lf_coop_min_red_players.GetInt() )
+		if ( iRebelPlayers < lfe_coop_min_red_players.GetInt() )
 			return true;
 
 		// Allow joining Combine in Versus mode.
@@ -3861,7 +3861,7 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 		CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
 		CTeam *pCombine = GetGlobalTeam( TF_COMBINE_TEAM );
 
-		if ( pRebels->GetNumPlayers() < lf_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
+		if ( pRebels->GetNumPlayers() < lfe_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
 		{
 			iHeaviestTeam = TF_COMBINE_TEAM;
 			iLightestTeam = TF_STORY_TEAM;

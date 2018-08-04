@@ -112,8 +112,8 @@ ConVar tf_damage_range( "tf_damage_range", "0.5", FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_max_voice_speak_delay( "tf_max_voice_speak_delay", "1.5", FCVAR_NOTIFY, "Max time after a voice command until player can do another one" );
 
-ConVar lf_allow_spectate_npc( "lf_allow_spectate_npc", "0", 0, "Allow spectating NPC. Enabling this is not recommended." );
-ConVar lf_coop_lives( "lf_coop_lives", "-1", 0, "Amount of lives RED players start with in co-op. Set to -1 for unlimited lives." );
+ConVar lfe_allow_spectate_npc( "lfe_allow_spectate_npc", "0", 0, "Allow spectating NPC. Enabling this is not recommended." );
+ConVar lfe_coop_lives( "lfe_coop_lives", "-1", 0, "Amount of lives RED players start with in co-op. Set to -1 for unlimited lives." );
 
 ConVar tf_allow_player_use( "tf_allow_player_use", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Allow players to execute + use while playing." );
 
@@ -130,9 +130,9 @@ extern ConVar tf_gravetalk;
 
 // Team Fortress 2 Classic's commands
 ConVar lfe_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Makes players spawn with random loadout. CURRENTLY STILL BROKEN!!!" );
-ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun. CURRENTLY BROKEN!!!" );
 
-ConVar lfe_force_stock_weapons( "lfe_force_stock_weapons", "0", FCVAR_NOTIFY, "Forces players to use the stock loadout." );
+
+ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun." );
 
 // Cvars from HL2 player
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
@@ -142,7 +142,7 @@ ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
 ConVar player_squad_transient_commands( "player_squad_transient_commands", "1", FCVAR_REPLICATED );
 ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
 
-extern ConVar lf_use_hl2_player_hull;
+extern ConVar lfe_use_hl2_player_hull;
 
 #define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
 #define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
@@ -1210,7 +1210,7 @@ void CTFPlayer::InitialSpawn( void )
 	UpdatePlayerColor();
 
 	// Set initial lives count.
-	m_Shared.SetLivesCount( lf_coop_lives.GetInt() );
+	m_Shared.SetLivesCount( lfe_coop_lives.GetInt() );
 
 	StateEnter( TF_STATE_WELCOME );
 }
@@ -1452,7 +1452,7 @@ void CTFPlayer::Spawn()
 
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
 
-	m_Shared.AddCond( TF_COND_TEAM_GLOWS, 10 );
+	m_Shared.AddCond( TF_COND_TEAM_GLOWS, 5 );
 }
 
 //-----------------------------------------------------------------------------
@@ -2649,7 +2649,7 @@ int CTFPlayer::GetAutoTeam( void )
 				if ( TFGameRules()->IsVersus() )
 				{
 					// Check RED for min amount of players.
-					if ( pRed->GetNumPlayers() < lf_coop_min_red_players.GetInt() )
+					if ( pRed->GetNumPlayers() < lfe_coop_min_red_players.GetInt() )
 					{
 						iTeam = TF_TEAM_RED;
 					}
@@ -4043,7 +4043,7 @@ static float DamageForce( const Vector &size, float damage, float scale )
 	float force;
 
 	// Adjust for HL2 hull size if it's enabled.
-	if ( lf_use_hl2_player_hull.GetBool() )
+	if ( lfe_use_hl2_player_hull.GetBool() )
 		force = damage * ((32 * 32 * 72.0) / (size.x * size.y * size.z)) * scale;
 	else
 		force = damage * ((48 * 48 * 82.0) / (size.x * size.y * size.z)) * scale;
@@ -7880,7 +7880,7 @@ bool CTFPlayer::IsValidObserverTarget(CBaseEntity * target)
 
 		if ( target->IsNPC() )
 		{
-			if ( lf_allow_spectate_npc.GetBool() == false )
+			if ( lfe_allow_spectate_npc.GetBool() == false )
 				return false;
 
 			if ( target->IsEffectActive( EF_NODRAW ) ) // don't watch invisible NPC
@@ -8033,7 +8033,7 @@ CBaseEntity *CTFPlayer::FindNearestObservableTarget( Vector vecOrigin, float flM
 	}		
 
 	// Lastly, look for an allied NPC.
-	if ( !pReturnTarget && lf_allow_spectate_npc.GetBool() == true )
+	if ( !pReturnTarget && lfe_allow_spectate_npc.GetBool() == true )
 	{
 		CTFTeam *pTFTeam = GetTFTeam();
 		flCurDistSqr = ( flMaxDist * flMaxDist );
@@ -10453,7 +10453,7 @@ void CTFPlayer::UpdatePlayerSound ( void )
 void CTFPlayer::ResetPerRoundStats( void )
 {
 	// Reset lives count.
-	m_Shared.SetLivesCount( lf_coop_lives.GetInt() );
+	m_Shared.SetLivesCount( lfe_coop_lives.GetInt() );
 }
 
 //-----------------------------------------------------------------------------------

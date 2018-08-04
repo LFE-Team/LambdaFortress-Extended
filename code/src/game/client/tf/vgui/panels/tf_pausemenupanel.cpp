@@ -19,8 +19,8 @@ static void OnPauseBlogToggle(IConVar *var, const char *pOldValue, float flOldVa
 {
 	GET_MAINMENUPANEL(CTFPauseMenuPanel)->ShowBlogPanel(((ConVar*)var)->GetBool());
 }
-ConVar lf_pausemenu_music("lf_pausemenu_music", "0", FCVAR_ARCHIVE, "Toggle music in the pause menu");
-ConVar lf_pausemenu_showblog("lf_pausemenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnPauseBlogToggle);
+ConVar lfe_pausemenu_music("lfe_pausemenu_music", "0", FCVAR_ARCHIVE, "Toggle music in the pause menu");
+ConVar lfe_pausemenu_showblog("lfe_pausemenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnPauseBlogToggle);
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -91,7 +91,7 @@ void CTFPauseMenuPanel::PerformLayout()
 		(steamapicontext->SteamFriends() ? steamapicontext->SteamFriends()->GetPersonaName() : "Unknown"));
 	SetDialogVariable("nickname", szNickName);
 
-	ShowBlogPanel(lf_pausemenu_showblog.GetBool() || GetNotificationManager()->IsOutdated());
+	ShowBlogPanel(lfe_pausemenu_showblog.GetBool() || GetNotificationManager()->IsOutdated());
 	OnNotificationUpdate();
 	AutoLayout();
 };
@@ -163,7 +163,7 @@ void CTFPauseMenuPanel::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (lf_pausemenu_music.GetBool() && bInGameLayout)
+	if (lfe_pausemenu_music.GetBool() && bInGameLayout)
 	{
 		if ((m_psMusicStatus == PAUSE_MUSIC_FIND || m_psMusicStatus == PAUSE_MUSIC_STOP_FIND) && !enginesound->IsSoundStillPlaying(m_nSongGuid))
 		{
@@ -236,7 +236,7 @@ void CTFPauseMenuPanel::DefaultLayout()
 void CTFPauseMenuPanel::GameLayout()
 {
 	BaseClass::GameLayout();
-	ShowBlogPanel(lf_pausemenu_showblog.GetBool());
+	ShowBlogPanel(lfe_pausemenu_showblog.GetBool());
 };
 
 void CTFPauseMenuPanel::PlayMusic()

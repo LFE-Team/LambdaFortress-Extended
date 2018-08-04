@@ -565,7 +565,7 @@ inline CTFGameRules* TFGameRules()
 bool EntityPlacementTest( CBaseEntity *pMainEnt, const Vector &vOrigin, Vector &outPos, bool bDropToGround );
 #endif
 
-extern ConVar lf_coop_min_red_players;
+extern ConVar lfe_coop_min_red_players;
 
 #ifdef CLIENT_DLL
 void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );

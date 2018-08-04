@@ -118,12 +118,16 @@ public:
 	bool	IsMech( void ) { return ( m_nTFFlags & TFFL_MECH ) != 0; }
 	bool	CanBeHealed( void ) { return ( m_nTFFlags & TFFL_NOHEALING ) == 0; }
 	bool	AllowJar( void ) { return ( m_nTFFlags & TFFL_NOJAR ) == 0; }
+	bool	AllowDeathNotice( void ) { return ( m_nTFFlags & TFFL_NODEATHNOTICE ) == 0; }
+	bool	NoReward( void ) { return ( m_nTFFlags & TFFL_NOREWARD ) == 0; }
 
 	void	UpdateCritBoostEffect( bool bForceHide = false );
 
 	CNewParticleEffect *m_pCritEffect;
 	EHANDLE m_hCritEffectHost;
 	CSoundPatch *m_pCritSound;
+
+	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 #endif
 
 private:

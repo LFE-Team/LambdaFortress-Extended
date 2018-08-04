@@ -82,20 +82,20 @@ DESCRIPTION SERVER_OPTIONS
 		{ "0" }
 	}
 	
-	"lf_coop"
-	{
-		"#TF_CoopMode"
-		{ BOOL }
-		{ "1" }
-	}
+	//"lfe_coop"
+	//{
+	//	"#TF_CoopMode"
+	//	{ BOOL }
+	//	{ "1" }
+	//}
 	
-	"lf_use_hl2_player_hull"
+	"lfe_use_hl2_player_hull"
 	{
 		"#TF_HL2Hull"
 		{ BOOL }
 		{ "1" }
 	}
-	
+
 	"sv_difficulty"
 	{
 		"#TF_Difficulty"
@@ -104,6 +104,7 @@ DESCRIPTION SERVER_OPTIONS
 			"#TF_DifficultyOriginal" "1"
 			"#TF_DifficultyMedium"	"2"
 			"#TF_DifficultyHard"	"3"
+			"Unusual"	"3"
 		}
 		{ "1" }
 	}
@@ -134,4 +135,5 @@ DESCRIPTION SERVER_OPTIONS
 		"#LFE_HL1HDModels"
 		{ BOOL }
 		{ "0" }
+	}
 }

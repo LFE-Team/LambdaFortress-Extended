@@ -126,12 +126,12 @@ void CTFCompoundBow::PrimaryAttack( void )
 		m_flChargeBeginTime = gpGlobals->curtime;
 
 		SendWeaponAnim( ACT_ITEM2_VM_CHARGE );
-		
+
+		WeaponSound( SPECIAL1 );
+
 		CTFPlayer *pOwner = GetTFPlayerOwner();
 		if ( pOwner )
 		{
-			WeaponSound( SPECIAL1 );
-
 			pOwner->m_Shared.AddCond( TF_COND_AIMING );
 			pOwner->TeamFortress_SetSpeed();
 		}
@@ -224,8 +224,6 @@ void CTFCompoundBow::ItemPostFrame( void )
 //-----------------------------------------------------------------------------
 void CTFCompoundBow::FireArrow( void )
 {
-	m_bReloadedThroughAnimEvent = false; // Huntsman reload fix
-
 	// Get the player owning the weapon.
 	CTFPlayer *pPlayer = GetTFPlayerOwner();
 	if ( !pPlayer )
@@ -427,9 +425,6 @@ float CTFCompoundBow::GetChargeMaxTime( void )
 //-----------------------------------------------------------------------------
 void CTFCompoundBow::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
 {
-	// Stop reload from fucing states up -tf2vintage
-	pCmd->buttons &= ~IN_RELOAD;
-
 	// Prevent jumping while aiming
 	if (GetTFPlayerOwner()->m_Shared.InCond(TF_COND_AIMING))
 	{

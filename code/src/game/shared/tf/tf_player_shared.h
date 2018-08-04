@@ -302,9 +302,10 @@ private:
 	void OnAddHalloweenTiny( void );
 	void OnAddRagemode( void );
 	void OnAddPhase( void );
-	void OnAddShield( void );
 	void OnAddSpeedBoost( void );
 	void OnAddUrine( void );
+	void OnAddMilk( void );
+	void OnAddTeamGlows( void );
 
 	void OnRemoveZoomed( void );
 	void OnRemoveBurning( void );
@@ -322,9 +323,10 @@ private:
 	void OnRemoveHalloweenTiny( void );
 	void OnRemoveRagemode( void );
 	void OnRemovePhase( void );
-	void OnRemoveShield( void );
 	void OnRemoveSpeedBoost( void );
 	void OnRemoveUrine( void );
+	void OnRemoveMilk( void );
+	void OnRemoveTeamGlows( void );
 
 	float GetCritMult( void );
 

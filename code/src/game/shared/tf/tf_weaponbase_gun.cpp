@@ -504,13 +504,7 @@ CBaseEntity *CTFWeaponBaseGun::FireRocket( CTFPlayer *pPlayer, int iType )
 	{
 		vecOffset.z = 8.0f;
 	}
-	/*
-	if ( IsWeapon( TF_WEAPON_COMPOUND_BOW ) )
-	{
-		// Valve were apparently too lazy to fix the viewmodel and just flipped it through the code.
-		vecOffset.y *= -1.0f;
-	}
-	*/
+
 	bool bUseHitboxes = ( iType == TF_PROJECTILE_ARROW || iType == TF_PROJECTILE_FESTITIVE_ARROW );
 
 	GetProjectileFireSetup( pPlayer, vecOffset, &vecSrc, &angForward, false, bUseHitboxes );

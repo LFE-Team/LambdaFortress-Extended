@@ -435,7 +435,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_zombie_custom",
 		TF_TEAM_GREEN,
-		0,
+		TFFL_NODEATHNOTICE,
 	},
 	{
 		"npc_zombine",
@@ -463,17 +463,17 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_crow",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB,
+		TFFL_NOBACKSTAB | TFFL_NOREWARD,
 	},
 	{
 		"npc_pigeon",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB,
+		TFFL_NOBACKSTAB | TFFL_NOREWARD,
 	},
 	{
 		"npc_seagull",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB,
+		TFFL_NOBACKSTAB | TFFL_NOREWARD,
 	},
 	{
 		"generic_actor",
@@ -488,22 +488,22 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_furniture",
 		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING | TFFL_NODEFLECT | TFFL_NODEATHNOTICE | TFFL_NOREWARD,
 	},
 	{
 		"npc_furniture",
 		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING | TFFL_NODEFLECT | TFFL_NODEATHNOTICE | TFFL_NOREWARD,
 	},
 	{
 		"monster_generic",
 		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		0,
 	},
 	{
 		"npc_bullseye",
 		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING | TFFL_NODEFLECT | TFFL_NODEATHNOTICE | TFFL_NOREWARD,
 	},
 	// End marker.
 	{

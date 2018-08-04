@@ -27,6 +27,8 @@ class CAI_BaseNPC;
 #define TFFL_FIREPROOF				( 1 << 3 )
 #define TFFL_NODEFLECT				( 1 << 4 )
 #define TFFL_NOJAR					( 1 << 6 )
+#define TFFL_NODEATHNOTICE			( 1 << 7 )
+#define TFFL_NOREWARD				( 1 << 8 )
 
 #define TFFL_BUILDING				( TFFL_MECH | TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NOJAR )
 

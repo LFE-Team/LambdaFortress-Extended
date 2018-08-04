@@ -713,26 +713,30 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 		killer_index = pKiller->entindex();
 	}
 
-	IGameEvent *event = gameeventmanager->CreateEvent( "npc_death" );
-
-	if ( event )
+	// are we allowed to make deathnotice on THIS npc?
+	if ( AllowDeathNotice() )
 	{
-		event->SetInt( "victim_index", pVictim->entindex() );
-		event->SetString( "victim_name", pVictim->GetClassname() );
-		event->SetInt( "victim_team", pVictim->GetTeamNumber() );
-		event->SetInt( "attacker_index", killer_index );
-		event->SetString( "attacker_name", pKiller ? pKiller->GetClassname() : NULL );
-		event->SetInt( "attacker_team", pKiller ? pKiller->GetTeamNumber() : 0 );
-		event->SetInt( "assister_index", pAssister ? pAssister->entindex() : -1 );
-		event->SetString( "assister_name", pAssister ? pAssister->GetClassname() : NULL );
-		event->SetInt( "assister_team", pAssister ? pAssister->GetTeamNumber() : 0 );
-		event->SetString( "weapon", killer_weapon_name );
-		event->SetString( "weapon_logclassname", killer_weapon_log_name );
-		event->SetInt( "damagebits", info.GetDamageType() );
-		event->SetInt( "customkill", info.GetDamageCustom() );
-		event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
+		IGameEvent *event = gameeventmanager->CreateEvent( "npc_death" );
 
-		gameeventmanager->FireEvent( event );
+		if ( event )
+		{
+			event->SetInt( "victim_index", pVictim->entindex() );
+			event->SetString( "victim_name", pVictim->GetClassname() );
+			event->SetInt( "victim_team", pVictim->GetTeamNumber() );
+			event->SetInt( "attacker_index", killer_index );
+			event->SetString( "attacker_name", pKiller ? pKiller->GetClassname() : NULL );
+			event->SetInt( "attacker_team", pKiller ? pKiller->GetTeamNumber() : 0 );
+			event->SetInt( "assister_index", pAssister ? pAssister->entindex() : -1 );
+			event->SetString( "assister_name", pAssister ? pAssister->GetClassname() : NULL );
+			event->SetInt( "assister_team", pAssister ? pAssister->GetTeamNumber() : 0 );
+			event->SetString( "weapon", killer_weapon_name );
+			event->SetString( "weapon_logclassname", killer_weapon_log_name );
+			event->SetInt( "damagebits", info.GetDamageType() );
+			event->SetInt( "customkill", info.GetDamageCustom() );
+			event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
+
+			gameeventmanager->FireEvent( event );
+		}
 	}
 
 	// Ragdoll should burn if NPC burned to death.
@@ -746,7 +750,11 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	CTFPlayer *pPlayerScorer = ToTFPlayer( pScorer );
 	if ( pPlayerScorer )
 	{
-		CTF_GameStats.Event_PlayerKilledNPC( pPlayerScorer, this );
+		// can we reward score point?
+		if ( NoReward() )
+		{
+			CTF_GameStats.Event_PlayerKilledNPC( pPlayerScorer, this );
+		}
 		pPlayerScorer->Event_KilledOther(this, info);
 	}
 
@@ -778,15 +786,18 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 
 		if ( pTFDamager )
 		{
-			IGameEvent *event = gameeventmanager->CreateEvent( "npc_environmental_death" );
-
-			if ( event )
+			if ( AllowDeathNotice() )
 			{
-				event->SetInt( "killer", pTFDamager->GetUserID() );
-				event->SetInt( "victim", entindex() );
-				event->SetInt( "priority", 9 ); // HLTV event priority, not transmitted
+				IGameEvent *event = gameeventmanager->CreateEvent( "npc_environmental_death" );
+
+				if ( event )
+				{
+					event->SetInt( "killer", pTFDamager->GetUserID() );
+					event->SetInt( "victim", entindex() );
+					event->SetInt( "priority", 9 ); // HLTV event priority, not transmitted
 				
-				gameeventmanager->FireEvent( event );
+					gameeventmanager->FireEvent( event );
+				}
 			}
 		}
 	}

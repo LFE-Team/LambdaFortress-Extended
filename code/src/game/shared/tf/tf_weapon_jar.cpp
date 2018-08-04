@@ -206,12 +206,11 @@ void CTFProjectile_Jar::JarTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	// Blow up if we hit a player
-	if ( pOther->IsPlayer() )
+	// Blow up if we hit player, npc or building
+	if ( pOther->IsPlayer() || pOther->IsNPC() || pOther->IsBaseObject() )
 	{
 		Explode( &pTrace, GetDamageType() );
-	}
-	// We should bounce off of certain surfaces (resupply cabinets, spawn doors, etc.)
+	} // We should bounce off of certain surfaces (resupply cabinets, spawn doors, etc.)
 	else
 	{
 		return;

@@ -3074,7 +3074,7 @@ int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 #ifdef TF_CLASSIC
 	// Bullet damage reduces alternative health counter.
 	// Once alt health reaches 0 explosion is spawned and alt health is reset.
-	if ( (info.GetDamageType() & DMG_BULLET) && m_takedamage != DAMAGE_EVENTS_ONLY )
+	if ( ( info.GetDamageType() & DMG_BULLET || info.GetDamageType() & DMG_IGNITE) && m_takedamage != DAMAGE_EVENTS_ONLY )
 	{
 		m_iHealthAlt -= info.GetDamage();
 		if ( m_iHealthAlt <= 0 )

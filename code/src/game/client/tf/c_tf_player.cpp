@@ -89,6 +89,9 @@ ConVar lfe_muzzlelight("lfe_muzzlelight", "0", FCVAR_ARCHIVE, "Enable dynamic li
 
 ConVar lfe_dev_mark( "lfe_dev_mark", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );
 
+ConVar cl_npc_speedmod_intime( "cl_npc_speedmod_intime", "0.25", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
+ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
+
 static void OnMercParticleChange( IConVar *var, const char *pOldValue, float flOldValue )
 {
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
@@ -1641,7 +1644,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropInt( RECVINFO( m_nForceTauntCam ) ),
 	RecvPropTime( RECVINFO( m_flLastDamageTime ) ),
 	RecvPropBool( RECVINFO( m_bTyping ) ),
-	RecvPropInt(RECVINFO(m_bHasLongJump)),
+	RecvPropInt( RECVINFO( m_bHasLongJump ) ),
 
 END_RECV_TABLE()
 

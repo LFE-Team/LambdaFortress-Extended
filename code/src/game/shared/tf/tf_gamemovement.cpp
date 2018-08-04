@@ -39,10 +39,10 @@ ConVar	tf_clamp_back_speed( "tf_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCV
 ConVar  tf_clamp_back_speed_min( "tf_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_clamp_airducks( "tf_clamp_airducks", "1", FCVAR_REPLICATED );
 
-ConVar	lf_bunnyjump_max_speed_factor("lf_bunnyjump_max_speed_factor", "1.2", FCVAR_REPLICATED);
-ConVar  lf_autojump( "lf_autojump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Automatically jump while holding the jump button down" );
-ConVar  lf_duckjump( "lf_duckjump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Toggles jumping while ducked" );
-ConVar  lf_groundspeed_cap("lf_groundspeed_cap", "1", FCVAR_REPLICATED, "Toggles the max speed cap imposed when a player is standing on the ground");
+ConVar	lfe_bunnyjump_max_speed_factor("lfe_bunnyjump_max_speed_factor", "1.2", FCVAR_REPLICATED);
+ConVar  lfe_autojump( "lfe_autojump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Automatically jump while holding the jump button down" );
+ConVar  lfe_duckjump( "lfe_duckjump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Toggles jumping while ducked" );
+ConVar  lfe_groundspeed_cap("lfe_groundspeed_cap", "1", FCVAR_REPLICATED, "Toggles the max speed cap imposed when a player is standing on the ground");
 
 ConVar sv_autoladderdismount( "sv_autoladderdismount", "1", FCVAR_REPLICATED, "Automatically dismount from ladders when you reach the end (don't have to +USE)." );
 ConVar sv_ladderautomountdot( "sv_ladderautomountdot", "0.4", FCVAR_REPLICATED, "When auto-mounting a ladder by looking up its axis, this is the tolerance for looking now directly along the ladder axis." );
@@ -452,7 +452,7 @@ void CTFGameMovement::AirDash( void )
 void CTFGameMovement::PreventBunnyJumping()
 {
 	// Speed at which bunny jumping is limited
-	float maxscaledspeed = lf_bunnyjump_max_speed_factor.GetFloat() * player->m_flMaxspeed;
+	float maxscaledspeed = lfe_bunnyjump_max_speed_factor.GetFloat() * player->m_flMaxspeed;
 
 	if ( maxscaledspeed <= 0.0f )
 		return;
@@ -492,24 +492,24 @@ bool CTFGameMovement::CheckJumpButton()
 	if ( player->GetFlags() & FL_DUCKING )
 	{
 		// Let a scout do it.
-		bool bAllow = (bScout && !bOnGround) || lf_duckjump.GetBool();
+		bool bAllow = (bScout && !bOnGround) || lfe_duckjump.GetBool();
 
 		if ( !bAllow )
 			return false;
 	}
 
 	// Cannot jump while in the unduck transition.
-	if ( ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) ) || ( player->m_Local.m_flDuckJumpTime > 0.0f ) && !lf_duckjump.GetBool() )
+	if ( ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) ) || ( player->m_Local.m_flDuckJumpTime > 0.0f ) && !lfe_duckjump.GetBool() )
 		return false;
 
 	// Cannot jump again until the jump button has been released.
-	// Unless we're in deathmatch or we have lf_autojump enabled
+	// Unless we're in deathmatch or we have lfe_autojump enabled
 	if ( mv->m_nOldButtons & IN_JUMP )
 	{
 		if ( !bOnGround )
 			return false;
 
-		if ( !lf_autojump.GetBool())
+		if ( !lfe_autojump.GetBool())
 			return false;
 	}
 
@@ -882,7 +882,7 @@ void CTFGameMovement::WalkMove( void )
 	Assert( mv->m_vecVelocity.z == 0.0f );
 
 	// Clamp the players speed in x,y.
-	if ( lf_groundspeed_cap.GetBool() )
+	if ( lfe_groundspeed_cap.GetBool() )
 	{
 		float flNewSpeed = VectorLength(mv->m_vecVelocity);
 		if (flNewSpeed > mv->m_flMaxSpeed)

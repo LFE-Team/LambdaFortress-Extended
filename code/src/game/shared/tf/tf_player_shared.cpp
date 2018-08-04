@@ -31,6 +31,7 @@
 #include "c_tf_playerresource.h"
 #include "c_tf_team.h"
 #include "prediction.h"
+#include "glow_outline_effect.h"
 
 #define CTFPlayerClass C_TFPlayerClass
 
@@ -734,6 +735,10 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 	case TF_COND_SPEED_BOOST:
 		OnAddSpeedBoost();
 		break;
+		
+	case TF_COND_TEAM_GLOWS:
+		OnAddTeamGlows();
+		break;
 
 	default:
 		break;
@@ -844,6 +849,10 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 
 	case TF_COND_SPEED_BOOST:
 		OnRemoveSpeedBoost();
+		break;
+
+	case TF_COND_TEAM_GLOWS:
+		OnRemoveTeamGlows();
 		break;
 
 	default:
@@ -1646,25 +1655,53 @@ void CTFPlayerShared::OnRemoveRagemode( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddShield( void )
+void CTFPlayerShared::OnAddTeamGlows( void )
 {
-#ifdef GAME_DLL
+// need to be client.
+/*#ifdef GAME_DLL
+	for ( int i = 1;  i <= MAX_PLAYERS; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+		if ( pPlayer )
+		{
+			if ( pPlayer->InSameTeam( m_pOuter ) )
+			{
+				if ( pPlayer->IsAlive() )
+				{
+					pPlayer->AddGlowEffect();
+				}
 
+			}
+		}
+	}
 #else
-	//m_pOuter->UpdateShieldEffect();
-#endif
+#endif*/
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveShield( void )
+void CTFPlayerShared::OnRemoveTeamGlows( void )
 {
-#ifdef GAME_DLL
+// need to be client.
+/*#ifdef GAME_DLL
+	for ( int i = 1;  i <= MAX_PLAYERS; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+		if ( pPlayer )
+		{
+			if ( pPlayer->InSameTeam( m_pOuter ) )
+			{
+				if ( pPlayer->IsAlive() )
+				{
+					pPlayer->RemoveGlowEffect();
+				}
 
+			}
+		}
+	}
 #else
-	//m_pOuter->UpdateShieldEffect();
-#endif
+#endif*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1727,6 +1764,33 @@ void CTFPlayerShared::OnRemoveUrine(void)
 	{
 		view->SetScreenOverlayMaterial( NULL );
 	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddMilk( void )
+{
+#ifdef GAME_DLL
+	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
+#else
+	m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW ); 
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveMilk(void)
+{
+#ifdef GAME_DLL
+	if( m_nPlayerState != TF_STATE_DYING )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
+	m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
 #endif
 }
 

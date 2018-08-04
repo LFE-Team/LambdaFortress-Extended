@@ -161,7 +161,7 @@ void CHudItemEffectMeter::UpdateStatus( void )
 		m_flOldCharge = flCharge;
 	}
 
-	for ( int i = 0; i < MAX_WEAPONS; i++ )
+	/*for ( int i = 0; i < MAX_WEAPONS; i++ )
 	{
 		C_TFWeaponBase *pWeapon = ( C_TFWeaponBase *)pPlayer->GetWeapon( i );
 		if ( !pWeapon )
@@ -201,7 +201,7 @@ void CHudItemEffectMeter::UpdateStatus( void )
 		{
 			LoadControlSettings( "resource/UI/HudItemEffectMeter.res" );
 		}
-	}
+	}*/
 
 	InvalidateLayout();
 }

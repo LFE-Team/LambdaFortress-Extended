@@ -171,16 +171,16 @@ ConVar tf_flag_caps_per_round( "tf_flag_caps_per_round", "3", FCVAR_REPLICATED, 
 #endif
 							  );
 
-ConVar lf_use_hl2_player_hull( "lf_use_hl2_player_hull", "1", FCVAR_NOTIFY | FCVAR_REPLICATED );
-ConVar lf_coop( "lf_coop", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables cooperative mode. Changes will take effect upon map restart." );
-ConVar lf_coop_min_red_players( "lf_coop_min_red_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minumum amount of players on RED required to join BLU in Versus mode." );
+ConVar lfe_use_hl2_player_hull( "lfe_use_hl2_player_hull", "1", FCVAR_NOTIFY | FCVAR_REPLICATED );
+ConVar lfe_coop( "lfe_coop", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables cooperative mode. Changes will take effect upon map restart." );
+ConVar lfe_coop_min_red_players( "lfe_coop_min_red_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minumum amount of players on RED required to join BLU in Versus mode." );
 
 // This sets what percentage of players are required in the changelevel trigger before map change takes effect. Currently it's set to 100% (all players required).
 ConVar	mp_transition_players_percent( "mp_transition_players_percent",
 	"25",
 	FCVAR_NOTIFY | FCVAR_REPLICATED,
 	"How many players in percent are needed for a level transition?" );
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 ConVar sv_transitions( "sv_transitions", "1", FCVAR_NOTIFY | FCVAR_GAMEDLL, "Enable transitions" );
 #endif
 
@@ -237,7 +237,7 @@ Vector g_TFClassViewVectors[TF_CLASS_COUNT_ALL] =
 
 const CViewVectors *CTFGameRules::GetViewVectors() const
 {
-	if ( lf_use_hl2_player_hull.GetBool() )
+	if ( lfe_use_hl2_player_hull.GetBool() )
 		return &g_HLViewVectors;
 
 	return &g_TFViewVectors;
@@ -649,7 +649,7 @@ public:
 private:
 	bool m_bEnabled;
 	//string_t sVehicle;
-	int iVehicleNum2;
+	int iVehicleNum;
 	int iSpawnedVehicles;
 	int iMaxVehicles;
 	int iDelay;
@@ -660,7 +660,7 @@ BEGIN_DATADESC(CTFLogicVehicleSpawner)
 DEFINE_INPUTFUNC(FIELD_VOID, "ForceSpawn", InputForceSpawn),
 DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
 DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
-DEFINE_KEYFIELD(iVehicleNum2, FIELD_INTEGER, "vehicle_to_spawn"),
+DEFINE_KEYFIELD(iVehicleNum, FIELD_INTEGER, "vehicle_to_spawn"),
 DEFINE_KEYFIELD(iMaxVehicles, FIELD_INTEGER, "max_vehicles"),
 DEFINE_KEYFIELD(iDelay, FIELD_INTEGER, "delay"),
 DEFINE_INPUTFUNC(FIELD_VOID, "EnableGun", InputEnableGun),
@@ -765,7 +765,7 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				iSpawnedVehicles = iSpawnedVehicles - 1;
 			}
 		}
-		if (iVehicleNum2 == 1)
+		if (iVehicleNum == 1)
 		{
 			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_airboat", -1);
 			if (pBoat)
@@ -794,11 +794,11 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				pBoat->AcceptInput("FromSpawnerBoat", NULL, NULL, sVariant, NULL);
 				if (m_bGunEnabled)
 				{
-					pBoat->AcceptInput("enablegunspawnerboat", NULL, NULL, sVariant, NULL);
+					pBoat->AcceptInput("EnableGunSpawnerBoat", NULL, NULL, sVariant, NULL);
 				}
 			}
 		}
-		else if (iVehicleNum2 == 2)
+		else if (iVehicleNum == 2)
 		{
 			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_jeep", -1);
 			if (pBoat)
@@ -827,11 +827,11 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				pBoat->AcceptInput("FromSpawner", NULL, NULL, sVariant, NULL);
 				if (m_bGunEnabled)
 				{
-					pBoat->AcceptInput("enablegunspawner", NULL, NULL, sVariant, NULL);
+					pBoat->AcceptInput("EnableGunSpawner", NULL, NULL, sVariant, NULL);
 				}
 			}
 		}
-		else if (iVehicleNum2 == 3)
+		else if (iVehicleNum == 3)
 		{
 			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_jeep", -1);
 			if (pBoat)
@@ -1794,6 +1794,7 @@ void CTFGameRules::Activate()
 	tf_gamemode_mvm.SetValue( 0 );
 	tf_gamemode_rd.SetValue( 0 );
 	tf_gamemode_passtime.SetValue( 0 );
+	lfe_coop.SetValue( 0 );
 	lfe_versus.SetValue( 0 );
 	lfe_blucoop.SetValue( 0 );
 	lfe_gamemode_zs.SetValue( 0 );
@@ -1801,43 +1802,44 @@ void CTFGameRules::Activate()
 
 	SetMultipleTrains( false );
 
-	if ( (lf_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d2_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "d3_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep1_", 3 ) || !Q_strncmp( STRING( gpGlobals->mapname ), "ep2_", 3 )) && !gEntList.FindEntityByClassname(NULL, "lfe_logic_blucoop") )
+	if ( /*lfe_coop.GetBool() ||*/gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) || IsInHL2Map() || IsInHL2EP1Map() || IsInHL2EP2Map() || IsInHL1Map() && 
+		!gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop" ) )
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
-		lf_coop.SetValue( 1 );
-		Msg( "Executing server coop config file\n", 1 );
+		lfe_coop.SetValue( 1 );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server coop config file\n", NULL );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
 
-	if ( lfe_versus.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_versus" ) )
+	if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_versus" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "vs_", 3 ) )
 	{
 		m_nGameType.Set( TF_GAMETYPE_VS );
 		lfe_versus.SetValue( 1 );
-		Msg( "Executing server versus config file\n", 1 );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server versus config file\n", NULL );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
 
-	if ( lfe_blucoop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop"))
+	if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop"))
 	{
 		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
 		lfe_blucoop.SetValue( 1 );
-		Msg( "Executing blue coop file\n", 1 );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server blue coop file\n", NULL );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
 		return;
 	}
 
-	if ( lfe_gamemode_zs.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_zs" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "zs_", 3 ) )
+	if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_zs" ) || !Q_strncmp( STRING( gpGlobals->mapname ), "zs_", 3 ) )
 	{
 		m_nGameType.Set( TF_GAMETYPE_ZS );
 		lfe_gamemode_zs.SetValue( 1 );
 		alyx_darkness_force.SetValue( 1 );
 		hl2_episodic.SetValue( 1 );
-		Msg( "Executing server zombie survival config file\n", 1 );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server zombie survival config file\n", NULL );
 		engine->ServerCommand( "exec config_zs.cfg \n" );
 		engine->ServerExecute();
 		return;
@@ -1846,22 +1848,29 @@ void CTFGameRules::Activate()
 	SetSkillLevel( sv_difficulty.GetInt() );
 	if ( m_iDifficultyLevel == 1 )
 	{
-		Msg( "Executing Original Difficulty config file\n", 1 );
+		ConColorMsg( Color( 178, 178, 178, 255 ), "Executing λOriginal Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill1.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
 	else if ( m_iDifficultyLevel == 2 )
 	{
-		Msg( "Executing Medium Difficulty config file\n", 1 );
+		ConColorMsg( Color( 255, 215, 0, 255 ), "Executing Medium Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill2.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
 	else if ( m_iDifficultyLevel == 3 )
 	{
-		Msg( "Executing Hard Difficulty config file\n", 1 );
+		ConColorMsg( Color( 207, 160, 50, 255 ), "Executing Hard Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill3.cfg \n" );
+		engine->ServerExecute();
+		return;
+	}
+	else if ( m_iDifficultyLevel == 4 )
+	{
+		ConColorMsg( Color( 134, 80, 172, 255 ), "Executing Unusual Difficulty config file\n", NULL );
+		engine->ServerCommand( "exec skill4.cfg \n" );
 		engine->ServerExecute();
 		return;
 	}
@@ -2097,6 +2106,10 @@ bool CTFGameRules::RoundCleanupShouldIgnore( CBaseEntity *pEnt )
 	//There has got to be a better way of doing this.
 	if ( Q_strstr( pEnt->GetClassname(), "tf_weapon_" ) )
 		return true;
+
+	// remove gravity gun or shit will happen
+	if ( Q_strstr( pEnt->GetClassname(), "tf_weapon_physcannon" ) )
+		return false;
 
 	return BaseClass::RoundCleanupShouldIgnore( pEnt );
 }
@@ -4764,10 +4777,10 @@ static const char *g_aTaggedConVars[] =
 	"lfe_random_weapons",
 	"randomizer",
 
-	"lf_autojump",
+	"lfe_autojump",
 	"autojump",
 
-	"lf_duckjump",
+	"lfe_duckjump",
 	"duckjump",
 
 	"lfe_allow_airblast",
@@ -4809,7 +4822,7 @@ static const char *g_aTaggedConVars[] =
 	"tf_gamemode_passtime",
 	"passtime",
 
-	"lf_coop",
+	"lfe_coop",
 	"coop",
 
 	"lfe_versus",
@@ -7583,28 +7596,33 @@ bool CTFGameRules::ShouldBurningPropsEmitLight()
 //-----------------------------------------------------------------------------
 void CTFGameRules::OnSkillLevelChanged( int iNewLevel )
 {
-	Msg("Skill level changed\n");
+	Msg("Difficulty level changed\n");
 
-	const char *szDifficulty = "original";
+	const char *szDifficulty = "Original";
 	if (iNewLevel == 1)	//  original
 	{
 		m_iDifficultyLevel = 1;
-		szDifficulty = "original";
+		szDifficulty = "Original";
 	}
 	else if (iNewLevel == 2) // medium
 	{
 		m_iDifficultyLevel = 2;
-		szDifficulty = "medium";
+		szDifficulty = "Medium";
 	}
 	else if (iNewLevel == 3) // hard
 	{
 		m_iDifficultyLevel = 3;
-		szDifficulty = "hard";
+		szDifficulty = "Hard";
+	}
+	else if (iNewLevel == 4) // unusual
+	{
+		m_iDifficultyLevel = 4;
+		szDifficulty = "Unusual";
 	}
 	else  // original
 	{
 		m_iDifficultyLevel = 1;
-		szDifficulty = "original";
+		szDifficulty = "Original";
 	}
 
 	/*if ( gameeventmanager )

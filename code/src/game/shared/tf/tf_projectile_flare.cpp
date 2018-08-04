@@ -406,20 +406,6 @@ void CTFProjectile_BallOfFire::Spawn()
 
 	float flLifeTime = tf_fireball_flametime.GetFloat();
 	m_flTimeRemove = gpGlobals->curtime + ( flLifeTime );
-
-#ifdef CLIENT_DLL
-	// Handle the flamethrower light
-	if ( lfe_muzzlelight.GetBool() )
-	{
-		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_MUZZLEFLASH + index );
-		dl->origin = GetAbsOrigin();
-		dl->color.r = 255;
-		dl->color.g = 100;
-		dl->color.b = 10;
-		dl->radius = 400;
-		dl->die = gpGlobals->curtime + 0.001;
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -427,6 +413,20 @@ void CTFProjectile_BallOfFire::Spawn()
 //-----------------------------------------------------------------------------
 void CTFProjectile_BallOfFire::FlameThink( void )
 {
+#ifdef CLIENT_DLL
+	// Handle the flamethrower light
+	if ( lfe_muzzlelight.GetBool() )
+	{
+		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+		dl->origin = GetAbsOrigin();
+		dl->color.r = 255;
+		dl->color.g = 100;
+		dl->color.b = 10;
+		dl->radius = 400;
+		dl->die = gpGlobals->curtime + 0.002;
+	}
+#endif
+
 	// Render debug visualization if convar on
 	if ( tf_fireball_draw_debug_radius.GetInt() )
 	{
@@ -546,7 +546,17 @@ void CTFProjectile_BallOfFire::FlameThink( void )
 	// if we've expired, remove ourselves
 	if ( gpGlobals->curtime >= m_flTimeRemove )
 	{
-		UTIL_Remove( this );
+		#ifdef GAME_DLL
+		CEffectData	data;
+		data.m_nHitBox = GetParticleSystemIndex( "projectile_fireball_end" );
+		data.m_vOrigin = WorldSpaceCenter();
+		data.m_vAngles = vec3_angle;
+		data.m_nEntIndex = 0;
+
+		CPVSFilter filter( WorldSpaceCenter() );
+		te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+		#endif
+		UTIL_Remove( this )
 		return;
 	}
 }
@@ -639,6 +649,17 @@ void CTFProjectile_BallOfFire::Explode( trace_t *pTrace, CBaseEntity *pOther )
 	{
 		UTIL_DecalTrace( pTrace, "Scorch" );
 	}
+
+	#ifdef GAME_DLL
+	CEffectData	data;
+	data.m_nHitBox = GetParticleSystemIndex( "projectile_fireball_end" );
+	data.m_vOrigin = WorldSpaceCenter();
+	data.m_vAngles = vec3_angle;
+	data.m_nEntIndex = 0;
+
+	CPVSFilter filter( WorldSpaceCenter() );
+	te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+	#endif
 
 	// Remove.
 	UTIL_Remove( this );
