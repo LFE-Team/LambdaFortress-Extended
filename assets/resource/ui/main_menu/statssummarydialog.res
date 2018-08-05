@@ -92,17 +92,37 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"AveragesLabel"
-			"font"			"HudClassHealth"
+			"font"			"HudFontSmallBold"
 			"labelText"		"#StatSummary_Label_PerformanceReport"
 			"textAlignment"	"west"
 			"xpos"			"100"
 			"ypos"			"170"
+			"zpos"			"2"
 			"wide"			"300"
 			"tall"			"20"
 			"autoResize"	"0"
 			"pinCorner"		"0"
 			"visible"		"1"
 			"enabled"		"1"
+		}
+		"AveragesLabelShadow"
+		{
+			"ControlName"		"Label"
+			"fieldName"		"AveragesLabelShadow"
+			"font"			"HudFontSmallBold"
+			"labelText"		"#StatSummary_Label_PerformanceReport"
+			"textAlignment"	"west"
+			"xpos"			"102"
+			"ypos"			"172"
+			"wide"			"300"
+			"zpos"			"1"
+			"wide"			"300"
+			"tall"			"20"
+			"autoResize"	"0"
+			"pinCorner"		"0"
+			"visible"		"1"
+			"enabled"		"1"
+			"fgcolor_override"		"TransparentBlack"
 		}
 		"ClassBarBG1A"
 		{
@@ -120,7 +140,7 @@
 			"tabPosition"	"0"	
 			"fillcolor"		"0 0 0 80"
 			"PaintBackgroundType"	"0"
-		}	
+		}
 		"ClassBarBG1B"
 		{
 			"ControlName"		"ImagePanel"
@@ -210,7 +230,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel1"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class1%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -329,7 +349,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel2"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class2%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -448,7 +468,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel3"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class3%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -567,7 +587,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel4"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class4%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -686,7 +706,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel5"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class5%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -805,7 +825,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel6"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class6%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -924,7 +944,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel7"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class7%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -1043,7 +1063,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel8"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class8%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -1162,7 +1182,7 @@
 		{
 			"ControlName"		"Label"
 			"fieldName"		"ClassLabel9"
-			"font"			"ScoreboardSmall"
+			"font"			"HudFontSmall"
 			"labelText"		"%class9%"
 			"textAlignment"		"west"
 			"xpos"			"418"
@@ -1175,23 +1195,42 @@
 			"visible"		"1"
 			"enabled"		"1"
 		}	
-				
+
 		"RecordsLabel1"
 		{
 			"ControlName"		"Label"
 			"fieldName"		"RecordsLabel1"
-			"font"			"HudClassHealth"
+			"font"			"HudFontSmallBold"
 			"labelText"		"#StatSummary_Label_BestMoments"
 			"textAlignment"		"west"
 			"xpos"			"508"
 			"ypos"			"170"
+			"zpos"			"2"
 			"wide"			"300"
 			"tall"			"20"
 			"autoResize"	"0"
 			"pinCorner"		"0"
 			"visible"		"1"
 			"enabled"		"1"
-		}							
+		}
+		"RecordsLabel1Shadow"
+		{
+			"ControlName"		"Label"
+			"fieldName"		"RecordsLabel1Shadow"
+			"font"			"HudFontSmallBold"
+			"labelText"		"#StatSummary_Label_BestMoments"
+			"textAlignment"		"west"
+			"xpos"			"511"
+			"ypos"			"172"
+			"zpos"			"1"
+			"wide"			"300"
+			"tall"			"20"
+			"autoResize"	"0"
+			"pinCorner"		"0"
+			"visible"		"1"
+			"enabled"		"1"
+			"fgcolor_override"		"TransparentBlack"
+		}	
 		"RecordsSubBG1"
 		{
 			"ControlName"		"ImagePanel"
@@ -1774,10 +1813,10 @@
 	{
 		"ControlName"	"CTFAdvButton"
 		"fieldName"		"ResetStatsButton"
-		"xpos"			"430"
+		"xpos"			"428"
 		"ypos"			"232"
 		"zpos"			"6"
-		"wide"			"75"
+		"wide"			"90"
 		"tall"			"20"
 		"visible"		"1"
 		"enabled"		"1"
@@ -1787,7 +1826,7 @@
 		{
 			"labelText" 		"Reset stats"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
@@ -1811,10 +1850,35 @@
 		{
 			"labelText" 		"Close"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
+		}
+	}
+
+	"CloseX"
+	{
+		"ControlName"	"CTFAdvButton"
+		"fieldName"		"CloseX"
+		"xpos"			"595"
+		"ypos"			"-2"
+		"zpos"			"20"
+		"wide"			"30"
+		"tall"			"25"
+		"visible"		"1"
+		"enabled"		"1"
+		"command"		"vguicancel"
+		"bordervisible"		"0"
+		
+		"SubButton"
+		{
+			"labelText" 		"X"
+			"textAlignment"		"center"
+			"font"				"HudFontSmallBold"
+			"defaultFgColor_override"		"MainMenuTextDepressed"
+			"armedFgColor_override"			"AdvTextArmed"
+			"depressedFgColor_override"		"MainMenuTextDefault"
 		}
 	}
 }

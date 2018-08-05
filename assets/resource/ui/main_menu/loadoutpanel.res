@@ -290,7 +290,32 @@
 			"border_depressed"	"AdvRoundedButtonDepressed"	
 		}
 	}	
-	
+
+	"BackButtonX"
+	{
+		"ControlName"	"CTFAdvButton"
+		"fieldName"		"BackButtonX"
+		"xpos"			"c300"
+		"ypos"			"17"
+		"zpos"			"20"
+		"wide"			"30"
+		"tall"			"25"
+		"visible"		"1"
+		"enabled"		"1"
+		"command"		"back"
+		"bordervisible"		"0"
+		
+		"SubButton"
+		{
+			"labelText" 		"X"
+			"textAlignment"		"center"
+			"font"				"HudFontSmallBold"
+			"defaultFgColor_override"		"MainMenuTextDepressed"
+			"armedFgColor_override"			"AdvTextArmed"
+			"depressedFgColor_override"		"MainMenuTextDefault"
+		}
+	}
+
 	"ResetButton"
 	{
 		"ControlName"	"CTFAdvButton"

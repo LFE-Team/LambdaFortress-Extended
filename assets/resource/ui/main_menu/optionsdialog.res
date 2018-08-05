@@ -32,8 +32,27 @@
 		"textAlignment"		"west"
 		"font"				"HudFontBiggerBold"
 		"fgcolor"			"Button.ArmedTextColor"
+	}
+
+	"OptionLabel"
+	{
+		"ControlName"		"CExLabel"
+		"fieldName"			"OptionLabel"
+		"xpos"				"10"
+		"ypos"				"-10"
+		"zpos"				"20"
+		"wide"				"100"
+		"tall"				"50"
+		"autoResize"		"0"
+		"pinCorner"			"0"
+		"visible"			"1"
+		"enabled"			"1"
+		"labelText"			"#GameUI_GameMenu_Options"
+		"textAlignment"		"west"
+		"font"				"HudFontSmallBold"
+		"fgcolor"			"Button.ArmedTextColor"
 	}	
-	
+
 	"OK"
 	{
 		"ControlName"	"CTFAdvButton"
@@ -51,7 +70,7 @@
 		{
 			"labelText" 		"#GameUI_OK"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
@@ -75,7 +94,7 @@
 		{
 			"labelText" 		"#GameUI_Cancel"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
@@ -99,7 +118,7 @@
 		{
 			"labelText" 		"#GameUI_Apply"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
@@ -112,7 +131,7 @@
 		"fieldName"			"Defaults"
 		"xpos"				"20"
 		"ypos"				"370"
-		"wide"				"80"
+		"wide"				"110"
 		"tall"				"20"
 		"visible"			"1"
 		"enabled"			"1"
@@ -122,22 +141,46 @@
 		{
 			"labelText" 		"#GameUI_UseDefaults"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
 		}
 	}
-	
-	
+
+	"CancelX"
+	{
+		"ControlName"	"CTFAdvButton"
+		"fieldName"		"CancelX"
+		"xpos"			"375"
+		"ypos"			"0"
+		"zpos"			"20"
+		"wide"			"30"
+		"tall"			"25"
+		"visible"		"1"
+		"enabled"		"1"
+		"command"		"vguicancel"
+		"bordervisible"		"0"
+		
+		"SubButton"
+		{
+			"labelText" 		"X"
+			"textAlignment"		"center"
+			"font"				"HudFontSmallBold"
+			"defaultFgColor_override"		"MainMenuTextDepressed"
+			"armedFgColor_override"			"AdvTextArmed"
+			"depressedFgColor_override"		"MainMenuTextDefault"
+		}
+	}
+
 	"optionsbutton"
 	{
 		"ControlName"		"CAdvTabs"
 		"fieldName"			"optionsbutton"
-		"xpos"				"25"
-		"ypos"				"20"
+		"xpos"				"20"
+		"ypos"				"26"
 		"zpos"				"6"
-		"wide"				"350"
+		"wide"				"360"
 		"tall"				"25"
 		"visible"			"1"
 		"enabled"			"1"
@@ -159,7 +202,7 @@
 				"yshift"			"-3"
 				"stayselectedonclick"	"1"
 				"textAlignment"		"center"	
-				"font"				"TallTextSmall"
+				"font"				"HudFontSmall"
 				"border_default"		"AdvLeftButtonDefault"
 				"border_armed"			"AdvLeftButtonArmed"
 				"border_depressed"		"AdvLeftButtonDepressed"
@@ -184,7 +227,7 @@
 				"yshift"			"-3"
 				"stayselectedonclick"	"1"
 				"textAlignment"		"center"	
-				"font"				"TallTextSmall"
+				"font"				"HudFontSmall"
 				"border_default"		"AdvSquareButtonDefault"
 				"border_armed"			"AdvSquareButtonArmed"
 				"border_depressed"		"AdvSquareButtonDepressed"	
@@ -208,7 +251,7 @@
 				"yshift"			"-3"	
 				"stayselectedonclick"	"1"
 				"textAlignment"		"center"
-				"font"				"TallTextSmall"
+				"font"				"HudFontSmall"
 				"border_default"		"AdvSquareButtonDefault"
 				"border_armed"			"AdvSquareButtonArmed"
 				"border_depressed"		"AdvSquareButtonDepressed"
@@ -232,7 +275,7 @@
 				"yshift"			"-3"
 				"stayselectedonclick"	"1"
 				"textAlignment"		"center"	
-				"font"				"TallTextSmall"
+				"font"				"HudFontSmall"
 				"border_default"		"AdvSquareButtonDefault"
 				"border_armed"			"AdvSquareButtonArmed"
 				"border_depressed"		"AdvSquareButtonDepressed"	
@@ -256,7 +299,7 @@
 				"yshift"			"-3"
 				"stayselectedonclick"	"1"
 				"textAlignment"		"center"	
-				"font"				"TallTextSmall"
+				"font"				"HudFontSmall"
 				"border_default"		"AdvRightButtonDefault"
 				"border_armed"			"AdvRightButtonArmed"
 				"border_depressed"		"AdvRightButtonDepressed"	

@@ -39,7 +39,7 @@
 		"ControlName"		"CExLabel"
 		"fieldName"			"TitleLabelShadow"
 		"xpos"				"22"
-		"ypos"				"10"
+		"ypos"				"12"
 		"zpos"				"4"
 		"wide"				"600"
 		"tall"				"25"
@@ -50,7 +50,7 @@
 		"labelText"			"Exit Game"
 		"textAlignment"		"west"
 		"font"				"HudFontBiggerBold"
-		"fgcolor"			"Black"
+		"fgcolor"			"TransparentBlack"
 	}	
 	
 	"Logo"
@@ -91,11 +91,11 @@
 	{
 		"ControlName"		"CTFAdvButton"
 		"fieldName"			"ConfirmButton"
-		"xpos"				"265"
-		"ypos"				"170"
+		"xpos"				"10"
+		"ypos"				"167"
 		"zpos"				"6"
-		"wide"				"50"
-		"tall"				"20"
+		"wide"				"124"
+		"tall"				"25"
 		"visible"			"1"
 		"enabled"			"1"
 		"command"			"quitconfirm"
@@ -104,10 +104,10 @@
 		{
 			"labelText" 		"Quit"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
-			"border_armed"		"AdvRoundedButtonArmed"
-			"border_depressed"	"AdvRoundedButtonDepressed"	
+			"border_armed"		"AdvRoundedButtonDepressed"
+			"border_depressed"	"AdvRoundedButtonArmed"
 		}		
 	}			
 
@@ -115,11 +115,11 @@
 	{
 		"ControlName"		"CTFAdvButton"
 		"fieldName"			"CancelButton"
-		"xpos"				"325"
-		"ypos"				"170"
+		"xpos"				"265"
+		"ypos"				"167"
 		"zpos"				"6"
-		"wide"				"60"
-		"tall"				"20"
+		"wide"				"124"
+		"tall"				"25"
 		"visible"			"1"
 		"enabled"			"1"
 		"command"			"vguicancel"	
@@ -128,7 +128,7 @@
 		{
 			"labelText" 		"Cancel"
 			"textAlignment"		"center"
-			"font"				"TallTextSmall"
+			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	
