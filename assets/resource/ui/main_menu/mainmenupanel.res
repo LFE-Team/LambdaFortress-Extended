@@ -97,20 +97,6 @@
 		"fgcolor_override"	"235 227 203 255"
 	}
 
-	"BlogPanel"
-	{
-		"ControlName"		"CTFBlogPanel"
-		"fieldName"			"BlogPanel"
-		"xpos"				"r420"
-		"ypos"				"65"
-		"zpos"				"3"
-		"wide"				"400"
-		"tall"				"350"
-		"visible"			"1"
-		"enabled"			"1"
-		"border"			"MainMenuAdvButtonDepressed"	
-	}
-
 	"BackgroundFooter"
 	{
 		"ControlName"	"ImagePanel"
@@ -793,22 +779,7 @@
 			"imagewidth"		"14"
 		}
 	}
-
-	"ExtraButtonBG"
-	{
-		"ControlName"		"EditablePanel"
-		"fieldName"			"ExtraButtonBG"
-		"xpos"				"c190"
-		"ypos"				"25"
-		"zpos"				"-100"
-		"wide"				"120"
-		"tall"				"40"
-		"visible"			"1"
-		"enabled"			"1"
-		"border"			"AdvRoundedButtonDefault"
-		"font"				"MenuMainTitle"
-	}
-
+	
 	"MusicToggleCheck"
 	{
 		"ControlName"		"CTFAdvCheckButton"
@@ -879,44 +850,7 @@
 			"imagewidth"		"24"
 		}
 	}
-
-	"BlogToggleCheck"
-	{
-		"ControlName"		"CTFAdvCheckButton"
-		"fieldName"			"BlogToggleCheck"
-		"xpos"				"c200"
-		"ypos"				"30"
-		"zpos"				"10"
-		"wide"				"32"
-		"tall"				"32"
-		"visible"			"1"
-		"enabled"			"1"
-		"bordervisible"		"1"
-		"labelText" 		""
-		"command"			"lfe_mainmenu_showblog"	
-		"valuetrue"			"0"
-		"valuefalse"		"1"		
-		
-		"SubButton"
-		{
-			"labelText" 		""
-			"bordervisible"		"0"
-			"tooltip" 			"#MMenu_Tooltip_ToggleBlog"
-			"textAlignment"		"center"
-			"font"				"MenuSmallFont"
-			"border_default"	"AdvRoundedButtonDefault"
-			"border_armed"		"AdvRoundedButtonArmed"
-			"border_depressed"	"AdvRoundedButtonDepressed"
-		}
-		
-		"SubImage"
-		{
-			"image" 			"glyph_tv"
-			"imagecheck" 		"main_menu/glyph_disabled"	
-			"imagewidth"		"24"
-		}
-	}
-
+	
 	"NotificationButton"
 	{
 		"ControlName"		"CTFAdvButton"
