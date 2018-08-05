@@ -19,6 +19,7 @@
 // Server specific.
 #else
 #include "tf_player.h"
+#include "soundent.h"
 #include "te_effect_dispatch.h"
 #include "tf_fx.h"
 #include "tf_gamestats.h"
@@ -144,6 +145,9 @@ void CTFProjectile_Jar::Explode( trace_t *pTrace, int bitsDamageType )
 	//EmitSound( "Jar.Explode" );
 	CPVSFilter filter( vecOrigin );
 	TE_TFExplosion( filter, 0.0f, vecOrigin, pTrace->plane.normal, GetWeaponID(), -1 );
+
+	// no need for danger because it's just p i s s
+	CSoundEnt::InsertSound( SOUND_COMBAT, vecOrigin, 512, 3.0 );
 /*
 #ifdef CLIENT_DLL
 	CEffectData data;

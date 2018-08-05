@@ -1,5 +1,4 @@
 // Gravity Gun
-
 WeaponData
 {
 	// Weapon data is loaded by both the Game and Client DLLs.
@@ -44,7 +43,9 @@ WeaponData
 		// drop object
 		"melee_miss"		"Weapon_PhysCannon.Drop"
 		// too heavy
-		"special3"		"Weapon_PhysCannon.TooHeavy"
+		"special3"			"Weapon_PhysCannon.TooHeavy"
+		// crit
+		"burst"				"Weapon_PhysCannon.LaunchCrit"
 	}
 
 	// Weapon Sprite data is loaded by the Client DLL.

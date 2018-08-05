@@ -7,8 +7,8 @@
 	"$selfillum" 1
 
 	"$phong" "1"
-	"$phongexponent" "19"
-	"$phongboost" "2"
+	"$phongexponent" "18"
+	"$phongboost" "1"
 	"$lightwarptexture" "models\weapons\lightwarp_tf2style\lightwarp_tf2style02"
 
 	
@@ -29,5 +29,47 @@
 	"$rimlightexponent" "28"				
 	"$rimlightboost" "3"
 
+	// Cloaking
+	"$cloakPassEnabled" "1"
+	"$sheenPassEnabled" "1"
+
+	"$yellow" "0"
+
+	"Proxies"
+	{
+		"AnimatedWeaponSheen"
+		{
+			"animatedtexturevar" 		"$sheenmapmask"
+			"animatedtextureframenumvar" 	"$sheenmapmaskframe"
+			"animatedtextureframerate" 		"40"
+		}
+		"invis"
+		{
+		}
+		"ModelGlowColor"
+		{
+			"resultVar" "$glowcolor"
+		}
+		"Equals"
+		{
+			"srcVar1"  "$glowcolor"
+			"resultVar" "$selfillumtint"
+		}
+		"Equals"
+		{
+			"srcVar1"  "$glowcolor"
+			"resultVar" "$color2"
+		}
+		"YellowLevel"
+		{
+			"resultVar" "$yellow"
+		}
+		"Multiply"
+		{
+			"srcVar1" "$color2"
+			"srcVar2" "$yellow"
+			"resultVar" "$color2"
+		}
+	}
 }
 	

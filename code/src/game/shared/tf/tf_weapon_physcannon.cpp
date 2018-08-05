@@ -27,6 +27,7 @@
 	#include "util.h"
     #include "physobj.h"
 	#include "tf_gamestats.h"
+	#include "soundent.h"
 #endif
 
 #include "gamerules.h"
@@ -1314,16 +1315,43 @@ void CWeaponPhysCannon::DryFire( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PrimaryFireEffect( void )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
 
 	pOwner->ViewPunch( QAngle(-6, SharedRandomInt( "physcannonfire", -2,2) ,0) );
 	
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	color32 white = { 245, 245, 255, 32 };
-	UTIL_ScreenFade( pOwner, white, 0.1f, 0.0f, FFADE_IN );
+	color32 redcrit = { 237, 140, 55, 32 };
+	color32 blucrit = { 28, 168, 112, 32 };
+
+	if ( pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted() && pOwner->GetTeamNumber() == TF_STORY_TEAM )
+	{
+		UTIL_ScreenFade( pOwner, redcrit, 0.1f, 0.0f, FFADE_IN );
+	}
+	else if ( pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted() && pOwner->GetTeamNumber() == TF_COMBINE_TEAM )
+	{
+		UTIL_ScreenFade( pOwner, blucrit, 0.1f, 0.0f, FFADE_IN );
+	}
+	else
+	{
+		UTIL_ScreenFade( pOwner, white, 0.1f, 0.0f, FFADE_IN );
+	}
+
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( IsMegaPhysCannon() || iType == 1 ) // super charged gravity gun + full critical = ???
+	{
+		if ( pOwner->m_Shared.IsCritBoosted() )
+		{
+			UTIL_ScreenShake( GetAbsOrigin(), 20.0f, 200.0, 1.0, 512.0f, SHAKE_START );
+			CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 512, 3.0 );
+		}
+
+		WeaponSound( BURST );
+	}
 #endif
 
 	WeaponSound( SINGLE );
@@ -1339,13 +1367,28 @@ void CWeaponPhysCannon::PuntNonVPhysics( CBaseEntity *pEntity, const Vector &for
 	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
 		return;
 
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	CTakeDamageInfo	info;
-	
-	info.SetAttacker( GetOwner() );
+
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
+	info.SetAttacker( pOwner );
 	info.SetInflictor( this );
 	info.SetDamage( 1.0f );
-	info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN );
+
+	if ( pOwner->m_Shared.IsCritBoosted() )
+	{
+		info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN | DMG_CRITICAL );
+	}
+	else if ( pOwner->m_Shared.IsMiniCritBoosted() )
+	{
+		info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN | DMG_MINICRITICAL );
+	}
+	else
+	{
+		info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN );
+	}
+
 	info.SetDamageForce( forward );	// Scale?
 	info.SetDamagePosition( tr.endpos );
 
@@ -1391,8 +1434,7 @@ void CWeaponPhysCannon::Physgun_OnPhysGunPickup( CBaseEntity *pEntity, CBasePlay
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecForward, trace_t &tr )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
 	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
 		return;
@@ -1405,10 +1447,23 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 
 	Vector forward = vecForward;
 
-	info.SetAttacker( GetOwner() );
+	info.SetAttacker( pOwner );
 	info.SetInflictor( this );
 	info.SetDamage( 0.0f );
-	info.SetDamageType( DMG_PHYSGUN );
+
+	if ( pOwner->m_Shared.IsCritBoosted() )
+	{
+		info.SetDamageType( DMG_PHYSGUN | DMG_CRITICAL );
+	}
+	else if ( pOwner->m_Shared.IsMiniCritBoosted() )
+	{
+		info.SetDamageType( DMG_PHYSGUN | DMG_MINICRITICAL );
+	}
+	else
+	{
+		info.SetDamageType( DMG_PHYSGUN );
+	}
+
 	pEntity->DispatchTraceAttack( info, forward, &tr );
 	ApplyMultiDamage();
 
@@ -1577,22 +1632,36 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 
 }
 
-#ifndef CLIENT_DLL 
+#ifdef GAME_DLL 
 //-----------------------------------------------------------------------------
 // Punt non-physics
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForward, trace_t &tr)
 {
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
-	Pickup_OnPhysGunDrop(pEntity, pOwner, LAUNCHED_BY_CANNON);
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
+	Pickup_OnPhysGunDrop( pEntity, pOwner, LAUNCHED_BY_CANNON );
 
 	CTakeDamageInfo	info;
 
 	Vector forward = vecForward;
-	info.SetAttacker(GetOwner());
+	info.SetAttacker( pOwner );
 	info.SetInflictor(this);
 	info.SetDamage(0.0f);
-	info.SetDamageType(DMG_PHYSGUN);
+
+	if ( pOwner->m_Shared.IsCritBoosted() )
+	{
+		info.SetDamageType( DMG_PHYSGUN | DMG_CRITICAL );
+	}
+	else if ( pOwner->m_Shared.IsMiniCritBoosted() )
+	{
+		info.SetDamageType( DMG_PHYSGUN | DMG_MINICRITICAL );
+	}
+	else
+	{
+		info.SetDamageType( DMG_PHYSGUN );
+	}
+
 	pEntity->DispatchTraceAttack(info, forward, &tr);
 	ApplyMultiDamage();
 
@@ -1796,9 +1865,9 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			DryFire();
 			return;
 		}
-#ifndef CLIENT_DLL 
+#ifdef GAME_DLL 
 
-		if( GetOwner()->IsPlayer() && ( !IsMegaPhysCannon() || iType != 1 ) )
+		if( pOwner->IsPlayer() && ( !IsMegaPhysCannon() || iType != 1 ) )
 		{
 			// Don't let the player zap any NPC's except regular antlions and headcrabs.
 			if( pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion") )
@@ -1807,8 +1876,10 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				return;
 			}
 		}
+
 		pOwner->SpeakWeaponFire();
 		CTF_GameStats.Event_PlayerFiredWeapon( pOwner, false );
+
 		if ( IsMegaPhysCannon() || iType == 1 )
 		{
 			//SecobMod__Information: This line was modified with the classify check. This prevents the primary fire being used on the following friendly NPCs: Dog, Monk, Vortigaunt.
@@ -1822,6 +1893,20 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 
 				// Necessary to cause it to do the appropriate death cleanup
 				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+
+				if ( pOwner->m_Shared.IsCritBoosted() )
+				{
+					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
+				}
+				else if ( pOwner->m_Shared.IsMiniCritBoosted() )
+				{
+					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_MINICRITICAL );
+				}
+				else
+				{
+					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+				}
+
 				pEntity->TakeDamage( ragdollInfo );
 
 				PuntRagdoll( pRagdoll, forward, tr );
@@ -1958,6 +2043,7 @@ void CWeaponPhysCannon::WeaponIdle( void )
 //-----------------------------------------------------------------------------
 bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosition )
 {
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
 	if ( m_bActive )
 		return false;
@@ -1985,15 +2071,29 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 		if (pObject->IsNPC() || pObject->IsPlayer() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL))
 		{
 			Assert(pObject->MyNPCPointer()->CanBecomeRagdoll());
-			CTakeDamageInfo info(GetOwner(), GetOwner(), 1.0f, DMG_GENERIC);
+			CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC);
 			CBaseEntity *pRagdoll = CreateServerRagdoll(pObject->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true);
 			PhysSetEntityGameFlags(pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS);
 
 			pRagdoll->SetCollisionBounds(pObject->CollisionProp()->OBBMins(), pObject->CollisionProp()->OBBMaxs());
 
 			// Necessary to cause it to do the appropriate death cleanup
-			CTakeDamageInfo ragdollInfo(GetOwner(), GetOwner(), 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
-			pObject->TakeDamage(ragdollInfo);
+			CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
+
+			if ( pOwner->m_Shared.IsCritBoosted() )
+			{
+				ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
+			}
+			else if ( pOwner->m_Shared.IsMiniCritBoosted() )
+			{
+				ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_MINICRITICAL );
+			}
+			else
+			{
+				ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+			}
+
+			pObject->TakeDamage( ragdollInfo );
 
 			// Now we act on the ragdoll for the remainder of the time
 			pObject = pRagdoll;
@@ -2006,8 +2106,6 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 	// Must be valid
 	if ( !pPhysics )
 		return false;
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
 	m_bActive = true;
 	if( pOwner )

@@ -8168,3 +8168,38 @@
 	"wave"	")weapons/fx/nearmiss/dragons_fury_nearmiss.wav"
 
 }
+
+// ------------------------------------------------------------------------------------ //
+// GRAVITY GUN EXTRA
+// ------------------------------------------------------------------------------------ //
+"Weapon_PhysCannon.LaunchCrit"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.27"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+
+	"pitch"		"110,120"
+
+	"rndwave"
+	{
+		"wave"		"weapons/physcannon/superphys_launch1.wav"
+		"wave"		"weapons/physcannon/superphys_launch2.wav"
+		"wave"		"weapons/physcannon/superphys_launch4.wav"
+	}
+}
+
+"Weapon_MegaPhysCannon.LaunchCrit"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.6"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+	"pitch"		"130,140"
+
+	"rndwave"
+	{
+		"wave"		"weapons/physcannon/superphys_launch1.wav"
+		"wave"		"weapons/physcannon/superphys_launch2.wav"
+		"wave"		"weapons/physcannon/superphys_launch3.wav"
+		"wave"		"weapons/physcannon/superphys_launch4.wav"
+	}
+}

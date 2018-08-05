@@ -8335,7 +8335,7 @@
 			}
 			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Physcannon"
-			"item_name"	"#TF_Weapon_Physcannon"
+			"item_name"		"#TF_Weapon_Physcannon"
 			"item_logname"	"physcannon"
 			"item_iconname"	"physcannon"
 			"item_slot"	"action"
@@ -8381,13 +8381,14 @@
 				"sound_special1"		"Weapon_PhysCannon.Pickup"
 				"sound_special2"		"Weapon_PhysCannon.OpenClaws"
 				"sound_special3"		"Weapon_PhysCannon.TooHeavy"
+				"sound_burst"			"Weapon_PhysCannon.LaunchCrit"
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
 		}
 		"9001"
 		{
-			"name"	"Mega Gravity Gun"
+			"name"	"Super Charged Gravity Gun"
 			"prefab"	"valve"
 			"item_class"	"tf_weapon_physcannon"
 			"craft_class"	"weapon"
@@ -8408,7 +8409,7 @@
 			}
 			"show_in_armory"	"0"
 			"item_type_name"	"#TF_Weapon_Physcannon"
-			"item_name"	"#TF_Weapon_Physcannon"
+			"item_name"		"#TF_Weapon_Physcannon"
 			"item_logname"	"physcannon_mega"
 			"item_iconname"	"physcannon_mega"
 			"item_slot"	"action"
@@ -8448,6 +8449,11 @@
 					"attribute_class" "set_weapon_mode"
 					"value" "1"
 				}
+				"damage bonus"
+				{
+					"attribute_class"	"mult_dmg"
+					"value"	"1.25"
+				}
 			}
 			"visuals"
 			{
@@ -8455,6 +8461,7 @@
 				"sound_empty"			"Weapon_MegaPhysCannon.DryFire"
 				"sound_melee_miss"		"Weapon_MegaPhysCannon.Drop"
 				"sound_special1"		"Weapon_MegaPhysCannon.Pickup"
+				"sound_burst"			"Weapon_MegaPhysCannon.LaunchCrit"
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
