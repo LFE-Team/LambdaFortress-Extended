@@ -127,11 +127,11 @@ void CTFCompoundBow::PrimaryAttack( void )
 
 		SendWeaponAnim( ACT_ITEM2_VM_CHARGE );
 
-		//WeaponSound( SPECIAL1 );
-
 		CTFPlayer *pOwner = GetTFPlayerOwner();
 		if ( pOwner )
 		{
+			WeaponSound( SPECIAL1 );
+
 			pOwner->m_Shared.AddCond( TF_COND_AIMING );
 			pOwner->TeamFortress_SetSpeed();
 		}

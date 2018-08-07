@@ -26,7 +26,7 @@ WeaponData
 	"secondary_ammo"		"None"
 	"MaxAmmo"		"24"
 	"SpawnAmmo"		"24"
-	clip_size		1
+	clip_size		-1
 	default_clip		1
 	"ProjectileType"		"projectile_arrow"
 
