@@ -35,14 +35,12 @@
 #include "datacache/imdlcache.h"
 #include "basemultiplayerplayer.h"
 #include "voice_gamemgr.h"
+#include "tf_weapon_physcannon.h"
 
 #if defined( TF_DLL ) || defined ( TF_CLASSIC )
 #include "tf_player.h"
 #include "tf_gamerules.h"
-#endif
 
-#ifdef HL2_DLL
-#include "weapon_physcannon.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1014,7 +1012,6 @@ void CC_Player_TestDispatchEffect( const CCommand &args )
 
 static ConCommand test_dispatcheffect("test_dispatcheffect", CC_Player_TestDispatchEffect, "Test a clientside dispatch effect.\n\tUsage: test_dispatcheffect <effect name> <distance away> <flags> <magnitude> <scale>\n\tDefaults are: <distance 1024> <flags 0> <magnitude 0> <scale 0>\n", FCVAR_CHEAT);
 
-#ifdef HL2_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Quickly switch to the physics cannon, or back to previous item
 //-----------------------------------------------------------------------------
@@ -1033,20 +1030,19 @@ void CC_Player_PhysSwap( void )
 
 			const char *strWeaponName = pWeapon->GetName();
 
-			if ( !Q_stricmp( strWeaponName, "weapon_physcannon" ) )
+			if ( !Q_stricmp( strWeaponName, "tf_weapon_physcannon" ) )
 			{
 				PhysCannonForceDrop( pWeapon, NULL );
 				pPlayer->SelectLastItem();
 			}
 			else
 			{
-				pPlayer->SelectItem( "weapon_physcannon" );
+				pPlayer->SelectItem( "tf_weapon_physcannon" );
 			}
 		}
 	}
 }
 static ConCommand physswap("phys_swap", CC_Player_PhysSwap, "Automatically swaps the current weapon for the physcannon and back again." );
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Quickly switch to the bug bait, or back to previous item
