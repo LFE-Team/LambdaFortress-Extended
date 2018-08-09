@@ -1794,7 +1794,6 @@ void CTFGameRules::Activate()
 	tf_gamemode_mvm.SetValue( 0 );
 	tf_gamemode_rd.SetValue( 0 );
 	tf_gamemode_passtime.SetValue( 0 );
-	lfe_coop.SetValue( 0 );
 	lfe_versus.SetValue( 0 );
 	lfe_blucoop.SetValue( 0 );
 	lfe_gamemode_zs.SetValue( 0 );
@@ -1802,8 +1801,8 @@ void CTFGameRules::Activate()
 
 	SetMultipleTrains( false );
 
-	if ( /*lfe_coop.GetBool() ||*/gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) || IsInHL2Map() || IsInHL2EP1Map() || IsInHL2EP2Map() || IsInHL1Map() && 
-		!gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop" ) )
+	if ( lfe_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) &&
+		!gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop" ))
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
 		lfe_coop.SetValue( 1 );

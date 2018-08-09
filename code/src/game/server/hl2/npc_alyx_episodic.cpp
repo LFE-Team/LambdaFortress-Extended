@@ -501,12 +501,12 @@ void CNPC_Alyx::SelectModel()
 		PrecacheModel("models/hl2/alyx.mdl");
 		SetModel("models/hl2/alyx.mdl");
 	}
-	else if( !Q_strnicmp( szMapName,"d1_c17_01a", 10 ) )
+	else if( !Q_strnicmp( szMapName,"ep1_c17_01a", 10 ) )
 	{
 		PrecacheModel("models/ep1/alyx.mdl");
 		SetModel("models/ep1/alyx.mdl");
 	}
-	else if( !Q_strnicmp( szMapName,"ep1_citadel_00_fix", 18 ) )
+	else if( !Q_strnicmp( szMapName,"ep1_citadel_00", 18 ) )
 	{
 		PrecacheModel("models/ep1/alyx.mdl");
 		SetModel("models/ep1/alyx.mdl");
