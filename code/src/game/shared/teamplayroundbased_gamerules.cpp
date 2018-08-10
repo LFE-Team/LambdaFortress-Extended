@@ -1814,6 +1814,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 		if ( !bFoundLiveOne )
 		{
+			TFGameRules()->iDirectorAnger = 0;
 			// The live team has won. 
 			bool bMasterHandled = false;
 			if ( !m_bForceMapReset )

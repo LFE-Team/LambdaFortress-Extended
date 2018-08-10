@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve LLC, All rights reserved. ============
+//========= Copyright ï¿½ 1996-2005, Valve LLC, All rights reserved. ============
 //
 //=============================================================================
 #ifndef TF_PLAYER_H
@@ -92,6 +92,7 @@ public:
 	virtual bool		ShouldGainInstantSpawn( void );
 	virtual void		ResetScores( void );
 	virtual void		PlayerUse( void );
+	void CheckTeam(void);
 
 	void				CreateViewModel( int iViewModel = 0 );
 	CBaseViewModel		*GetOffHandViewModel();

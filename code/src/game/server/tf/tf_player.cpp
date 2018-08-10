@@ -634,6 +634,17 @@ void CTFPlayer::TFPlayerThink()
 	SetContextThink( &CTFPlayer::TFPlayerThink, gpGlobals->curtime, "TFPlayerThink" );
 }
 
+void CTFPlayer::CheckTeam(void)
+{
+	if (GetTeamNumber() == TF_TEAM_BLUE && TFGameRules()->IsCoOp())
+	{
+		ChangeTeam(TF_TEAM_RED);
+	}
+	else if (GetTeamNumber() == TF_TEAM_RED && TFGameRules()->IsBluCoOp())
+	{
+		ChangeTeam(TF_TEAM_BLUE);
+	}
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2683,8 +2694,6 @@ int CTFPlayer::GetAutoTeam( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 {
-	if (!TFGameRules()->IsAnyCoOp() && !TFGameRules()->IsZombieSurvival())
-	{
 		int iTeam = TF_TEAM_RED;
 		if ( stricmp( pTeamName, "auto" ) == 0 )
 		{
@@ -2709,6 +2718,10 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 		if (iTeam == GetTeamNumber())
 		{
 			return;	// we wouldn't change the team
+		}
+		if ((iTeam == TF_TEAM_BLUE && TFGameRules()->IsCoOp()) || (iTeam == TF_TEAM_RED && TFGameRules()->IsBluCoOp()) || (TFGameRules()->IsZombieSurvival() && iTeam == TF_TEAM_BLUE))
+		{
+			return;
 		}
 
 		if ( HasTheFlag() )
@@ -2763,12 +2776,7 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 				break;
 			}
 		}
-	}
-	else
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "Nope" );
-		return;
-	}
+		CheckTeam();
 }
 
 //-----------------------------------------------------------------------------

@@ -577,6 +577,16 @@ void CTFTeamMenu::OnKeyCodePressed( KeyCode code )
 void CTFTeamMenu::OnCommand( const char *command )
 {
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+	if (TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival())
+	{
+		m_bBlueDisabled = true;
+		m_bRedDisabled = false;
+	}
+	if (TFGameRules()->IsBluCoOp())
+	{
+		m_bBlueDisabled = false;
+		m_bRedDisabled = true;
+	}
 
 	if ( Q_stricmp( command, "vguicancel" ) )
 	{
@@ -590,7 +600,7 @@ void CTFTeamMenu::OnCommand( const char *command )
 			{
 				iTeam = TEAM_SPECTATOR;
 			}
-			else if ( Q_stricmp( pTeam, "red" ) == 0 )
+			else if ( Q_stricmp( pTeam, "red" ) == 0)
 			{
 				iTeam = TF_TEAM_RED;
 			}
