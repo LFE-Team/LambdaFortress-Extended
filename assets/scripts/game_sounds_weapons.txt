@@ -8197,9 +8197,6 @@
 
 	"rndwave"
 	{
-		"wave"		"weapons/physcannon/superphys_launch1.wav"
-		"wave"		"weapons/physcannon/superphys_launch2.wav"
-		"wave"		"weapons/physcannon/superphys_launch3.wav"
-		"wave"		"weapons/physcannon/superphys_launch4.wav"
+		"wave"		"weapons/physcannon/superphys_launch_crit.wav"
 	}
 }

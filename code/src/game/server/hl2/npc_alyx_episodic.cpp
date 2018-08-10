@@ -169,6 +169,9 @@ CNPC_Alyx::CNPC_Alyx()
 CNPC_Alyx::~CNPC_Alyx()
 {
 	g_AlyxList.Remove(this);
+#ifdef GLOWS_ENABLE
+	RemoveGlowEffect();
+#endif
 }
 
 //=========================================================
@@ -723,6 +726,25 @@ void CNPC_Alyx::PrescheduleThink(void)
 	{
 		CheckBlindedByFlare();
 	}
+
+#ifdef GLOWS_ENABLE
+	// ignore maps that isn't ep1 and ep2
+	if ( TFGameRules()->IsInHL2EP1Map() || TFGameRules()->IsInHL2EP2Map() && (!Q_strnicmp(STRING(gpGlobals->mapname), "ep2_outland_01", 14)) )
+	{
+		if ( GetHealth() < 60 )
+		{
+			AddGlowEffect();
+		}
+		else if ( GetHealth() > 60 )
+		{
+			RemoveGlowEffect();
+		}
+		else
+		{
+			RemoveGlowEffect();
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1035,6 +1057,10 @@ void CNPC_Alyx::Event_Killed(const CTakeDamageInfo &info)
 	{
 		UTIL_Remove(m_hEmpTool);
 	}
+
+#ifdef GLOWS_ENABLE
+	RemoveGlowEffect();
+#endif
 
 	BaseClass::Event_Killed(info);
 }

@@ -1348,9 +1348,16 @@ void CWeaponPhysCannon::PrimaryFireEffect( void )
 		{
 			UTIL_ScreenShake( GetAbsOrigin(), 20.0f, 200.0, 1.0, 512.0f, SHAKE_START );
 			CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 512, 3.0 );
-		}
 
-		WeaponSound( BURST );
+			WeaponSound( BURST );
+		}
+	}
+	else
+	{
+		if ( pOwner->m_Shared.IsCritBoosted() )
+		{
+			WeaponSound( BURST );
+		}
 	}
 #endif
 
@@ -1595,9 +1602,8 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 	CRagdollProp *pRagdoll = dynamic_cast<CRagdollProp*>(pEntity);
 	if (pRagdoll == NULL)
 	{
-#ifdef HL2_EPISODIC
-		// The jeep being punted needs special force overrides
-		if (pEntity->GetServerVehicle())
+		// The jeep being punted needs special force overrides and has to be episodic maps
+		if ( pEntity->GetServerVehicle() && ( TFGameRules()->IsInHL2EP1Map() || TFGameRules()->IsInHL2EP2Map() ) )
 		{
 			// We want the point to emanate low on the vehicle to move it along the ground, not to twist it
 			Vector vecFinalPos = aVel;
@@ -1608,11 +1614,6 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 		{
 			pPhysicsObject->AddVelocity(&vVel, &aVel);
 		}
-#else
-
-		pPhysicsObject->AddVelocity(&vVel, &aVel);
-
-#endif // HL2_EPISODIC
 	}
 	else
 	{
@@ -1897,6 +1898,24 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				if ( pOwner->m_Shared.IsCritBoosted() )
 				{
 					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
+
+					CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
+					int nNPCCount = g_AI_Manager.NumAIs();
+					for ( int iNPC = 0; iNPC < nNPCCount; ++iNPC )
+					{
+						CAI_BaseNPC *pNPC = ppAIs[iNPC];
+						if ( !pNPC )
+							continue;
+			
+						if ( !pNPC->InSameTeam( pOwner ) )
+							continue;
+						
+						CTakeDamageInfo allInfo( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+
+						// charged is already op, but what about charged + crit?
+						pNPC->TakeDamage( allInfo );
+					}
+
 				}
 				else if ( pOwner->m_Shared.IsMiniCritBoosted() )
 				{
@@ -1946,6 +1965,8 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				PuntVPhysics( pEntity, forward, tr );
 			}
 		}
+
+		PrimaryFireEffect();
 #endif
 	}
 #ifndef CLIENT_DLL

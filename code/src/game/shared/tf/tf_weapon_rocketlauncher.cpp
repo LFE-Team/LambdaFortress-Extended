@@ -631,35 +631,32 @@ void CTFWeaponFlameBall::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttac
 //-----------------------------------------------------------------------------
 void CTFWeaponFlameBall::SetHitTarget( void )
 {
-	if ( m_bHitTarget )
-	{
+	//if ( m_bHitTarget )
+	//{
 		if ( tf_fireball_hit_recharge_boost.GetBool() )
 		{
 			// recharge faster when hit something.
 			m_flNextPrimaryAttack = 0.5f;
 		}
-	}
-	else
-	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
-	}
+	//}
+	//else
+	//{
+	//	m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
+	//}
 
 	SetContextThink( &CTFWeaponFlameBall::HitTargetThink, gpGlobals->curtime + 0.1f, "FlameBallHitTargetThink" );
 }
 
 void CTFWeaponFlameBall::HitTargetThink( void )
 {
-	/*
-	if ( m_flStopHitSoundTime != 0.0f && m_flStopHitSoundTime > gpGlobals->curtime )
+	if ( !m_bHitTarget )
 	{
-		m_bHitTarget = false;
-		m_flStopHitSoundTime = 0.0f;
-		SetContextThink( NULL, 0, "FlameBallHitTargetThink" );
+		m_flNextPrimaryAttack = gpGlobals->curtime + 1.0f;
 	}
 	else
-	{*/
+	{
 		SetContextThink( &CTFWeaponFlameBall::HitTargetThink, gpGlobals->curtime + 0.1f, "FlameBallHitTargetThink" );
-	//}
+	}
 }
 #endif
 

@@ -340,7 +340,7 @@ bool C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x
 //-----------------------------------------------------------------------------
 int	C_AI_BaseNPC::InternalDrawModel( int flags )
 {
-	bool bUseInvulnMaterial = InCond( TF_COND_INVULNERABLE );
+	bool bUseInvulnMaterial = IsInvulnerable();
 	if ( bUseInvulnMaterial )
 	{
 		modelrender->ForcedMaterialOverride( *GetInvulnMaterialRef() );
@@ -367,7 +367,7 @@ void C_AI_BaseNPC::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		return;
 	}
 
-	if ( InCond( TF_COND_INVULNERABLE ) )
+	if ( IsInvulnerable() )
 	{ 
 		Vector vecDir = rayEnd - rayStart;
 		VectorNormalize(vecDir);
