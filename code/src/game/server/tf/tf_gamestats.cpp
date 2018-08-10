@@ -34,6 +34,10 @@ const char *g_aClassNames[] =
 	"TF_CLASS_SPY",
 	"TF_CLASS_ENGINEER",
 	"TF_CLASS_CIVILIAN",
+	"TF_CLASS_REBEL,"
+	"TF_CLASS_METROPOLICE,"
+	"TF_CLASS_COMBINE_SOLDIER,"
+	"TF_CLASS_APETURE_SUBJECT,"
 };
 
 //-----------------------------------------------------------------------------
