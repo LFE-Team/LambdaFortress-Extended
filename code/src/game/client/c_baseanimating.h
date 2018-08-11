@@ -27,6 +27,10 @@
 #include "tier0/threadtools.h"
 #include "datacache/idatacache.h"
 
+#ifdef GLOWS_ENABLE
+#include "glow_outline_effect.h"
+#endif // GLOWS_ENABLE
+
 #define LIPSYNC_POSEPARAM_NAME "mouth"
 #define NUM_HITBOX_FIRES	10
 
@@ -447,6 +451,14 @@ public:
 	virtual bool					IsViewModel() const;
 	virtual void					UpdateOnRemove( void );
 
+#ifdef GLOWS_ENABLE
+	CGlowObject			*GetGlowObject( void ){ return m_pGlowEffect; }
+	virtual void		GetGlowEffectColor( int *r, int *g, int *b, int *a );
+//	void				EnableGlowEffect( float r, float g, float b );
+
+	void				SetClientSideGlowEnabled( bool bEnabled ){ m_bClientSideGlowEnabled = bEnabled; UpdateGlowEffect(); }
+	bool				IsClientSideGlowEnabled( void ){ return m_bClientSideGlowEnabled; }
+#endif // GLOWS_ENABLE
 protected:
 	// View models scale their attachment positions to account for FOV. To get the unmodified
 	// attachment position (like if you're rendering something else during the view model's DrawModel call),
@@ -465,6 +477,10 @@ protected:
 
 	virtual bool					CalcAttachments();
 
+#ifdef GLOWS_ENABLE	
+	virtual void		UpdateGlowEffect( void );
+	virtual void		DestroyGlowEffect( void );
+#endif // GLOWS_ENABLE
 private:
 	// This method should return true if the bones have changed + SetupBones needs to be called
 	virtual float					LastBoneChangedTime() { return FLT_MAX; }
@@ -480,6 +496,13 @@ private:
 	void							AddBaseAnimatingInterpolatedVars();
 	void							RemoveBaseAnimatingInterpolatedVars();
 
+#ifdef GLOWS_ENABLE
+	bool				m_bClientSideGlowEnabled;	// client-side only value used for spectator
+	bool				m_bGlowEnabled;				// networked value
+	color32				m_iGlowColor;
+	bool				m_bOldGlowEnabled;
+	CGlowObject			*m_pGlowEffect;
+#endif // GLOWS_ENABLE
 public:
 	CRagdoll						*m_pRagdoll;
 

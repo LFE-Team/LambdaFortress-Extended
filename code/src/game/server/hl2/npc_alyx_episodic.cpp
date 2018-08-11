@@ -729,19 +729,32 @@ void CNPC_Alyx::PrescheduleThink(void)
 
 #ifdef GLOWS_ENABLE
 	// ignore maps that isn't ep1 and ep2
-	if (TFGameRules()->IsInHL2EP1Map() || TFGameRules()->IsInHL2EP2Map() && (!Q_strnicmp(STRING(gpGlobals->mapname), "ep2_outland_01" , 14)))
+	if ( TFGameRules()->IsInHL2EP1Map() || TFGameRules()->IsInHL2EP2Map() && (!Q_strnicmp(STRING(gpGlobals->mapname), "ep2_outland_01", 14)) )
 	{
 		if ( GetHealth() < 60 )
 		{
 			AddGlowEffect();
+			SetGlowEffectColor( 255, 128, 64, 255 );
+		}
+		else if ( GetHealth() < 20 )
+		{
+			AddGlowEffect();
+			SetGlowEffectColor( 255, 0, 0, 255 );
 		}
 		else if ( GetHealth() > 60 )
 		{
 			RemoveGlowEffect();
+			SetGlowEffectColor( 0, 0, 0, 0 );
+		}
+		else if ( GetHealth() > 20 )
+		{
+			RemoveGlowEffect();
+			SetGlowEffectColor( 255, 128, 64, 255 );
 		}
 		else
 		{
 			RemoveGlowEffect();
+			SetGlowEffectColor( 0, 0, 0, 0 );
 		}
 	}
 #endif

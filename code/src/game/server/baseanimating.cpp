@@ -215,6 +215,13 @@ BEGIN_DATADESC( CBaseAnimating )
 
 	DEFINE_FIELD( m_fBoneCacheFlags, FIELD_SHORT ),
 
+	#if GLOWS_ENABLE
+	DEFINE_KEYFIELD( m_iGlowColor, FIELD_COLOR32, "glowcolor" ),
+	DEFINE_INPUTFUNC( FIELD_COLOR32, "SetGlowColor", InputSetGlowColor ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StartGlowing", InputStartGlowing ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StopGlowing", InputStopGlowing ),
+	#endif
+
 	END_DATADESC()
 
 // Sendtable for fields we don't want to send to clientside animating entities
@@ -261,6 +268,10 @@ IMPLEMENT_SERVERCLASS_ST(CBaseAnimating, DT_BaseAnimating)
 	SendPropFloat( SENDINFO( m_fadeMaxDist ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_flFadeScale ), 0, SPROP_NOSCALE ),
 
+#ifdef GLOWS_ENABLE
+	SendPropBool( SENDINFO( m_bGlowEnabled ) ),
+	SendPropInt( SENDINFO( m_iGlowColor ), 32, SPROP_UNSIGNED ),
+#endif // GLOWS_ENABLE
 END_SEND_TABLE()
 
 
@@ -288,6 +299,11 @@ CBaseAnimating::CBaseAnimating()
 	m_fadeMaxDist = 0;
 	m_flFadeScale = 0.0f;
 	m_fBoneCacheFlags = 0;
+
+#ifdef GLOWS_ENABLE
+	m_bGlowEnabled.Set( false );
+	m_iGlowColor.Init( 76, 76, 76, 255 );
+#endif // GLOWS_ENABLE
 }
 
 CBaseAnimating::~CBaseAnimating()
@@ -296,6 +312,11 @@ CBaseAnimating::~CBaseAnimating()
 	delete m_pIk;
 	UnlockStudioHdr();
 	delete m_pStudioHdr;
+
+#ifdef GLOWS_ENABLE
+	RemoveGlowEffect();
+	m_iGlowColor.Init( 76, 76, 76, 255 );
+#endif // GLOWS_ENABLE
 }
 
 void CBaseAnimating::Precache()
@@ -3610,3 +3631,62 @@ CStudioHdr *CBaseAnimating::OnNewModel()
 
 	return hdr;
 }
+
+#ifdef GLOWS_ENABLE
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::AddGlowEffect( void )
+{
+	SetTransmitState( FL_EDICT_ALWAYS );
+	m_bGlowEnabled.Set( true );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::RemoveGlowEffect( void )
+{
+	m_bGlowEnabled.Set( false );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseAnimating::IsGlowEffectActive( void )
+{
+	return m_bGlowEnabled;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::SetGlowEffectColor( byte r, byte g, byte b, byte a )
+{
+	m_iGlowColor.Init( r, g, b, a );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::InputSetGlowColor(inputdata_t &inputdata)
+{
+	m_iGlowColor = inputdata.value.Color32();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::InputStartGlowing( inputdata_t &inputdata )
+{
+	AddGlowEffect();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::InputStopGlowing( inputdata_t &inputdata )
+{
+	RemoveGlowEffect();
+}
+#endif // GLOWS_ENABLE

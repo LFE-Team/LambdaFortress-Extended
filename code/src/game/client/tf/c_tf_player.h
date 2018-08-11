@@ -144,7 +144,7 @@ public:
 
 	virtual void	InitPhonemeMappings();
 
-	virtual void	GetGlowEffectColor( float *r, float *g, float *b );
+	virtual void	GetGlowEffectColor( byte *r, byte *g, byte *b, byte *a );
 
 	// Gibs.
 	void InitPlayerGibs( void );

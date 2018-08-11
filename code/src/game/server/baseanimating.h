@@ -334,6 +334,16 @@ public:
 
 	bool PrefetchSequence( int iSequence );
 
+#ifdef GLOWS_ENABLE
+	// Glows
+	void				AddGlowEffect( void );
+	void				RemoveGlowEffect( void );
+	bool				IsGlowEffectActive( void );
+	void				SetGlowEffectColor( byte r, byte g, byte b, byte a );
+	void				InputSetGlowColor( inputdata_t &inputdata );
+	void				InputStartGlowing( inputdata_t &inputdata );
+	void				InputStopGlowing( inputdata_t &inputdata );
+#endif // GLOWS_ENABLE
 private:
 	void LockStudioHdr();
 	void UnlockStudioHdr();
@@ -375,6 +385,10 @@ protected:
   	CIKContext			*m_pIk;
 	int					m_iIKCounter;
 
+#ifdef GLOWS_ENABLE
+	CNetworkVar( bool, m_bGlowEnabled );
+	CNetworkColor32( m_iGlowColor );
+#endif // GLOWS_ENABLE
 public:
 	Vector	GetStepOrigin( void ) const;
 	QAngle	GetStepAngles( void ) const;
