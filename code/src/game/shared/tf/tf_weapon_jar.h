@@ -52,6 +52,7 @@ public:
 #else
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	CreateTrails( void );
+	virtual int		DrawModel( int flags );
 #endif
 
 private:
@@ -61,6 +62,7 @@ private:
 #else
 	bool		m_bCritical;
 #endif
+	float		m_flCreationTime;
 };
 
 class CTFJar : public CTFWeaponBaseGun

@@ -405,8 +405,8 @@ $Project "Client (TF)"
 				}	
 				$File	"tf\vgui\backgroundpanel.cpp"
 				$File	"tf\vgui\backgroundpanel.h"
-				$File	"tf\vgui\tf_deathmatchscoreboard.cpp"
-				$File	"tf\vgui\tf_deathmatchscoreboard.h"
+				$File	"tf\vgui\tf_coopscoreboard.cpp"
+				$File	"tf\vgui\tf_coopscoreboard.h"
 				$File	"tf\vgui\ObjectControlPanel.cpp"
 				$File	"tf\vgui\ObjectControlPanel.h"
 				$File	"tf\vgui\tf_classmenu.cpp"
@@ -573,6 +573,8 @@ $Project "Client (TF)"
 				$File	"$SRCDIR\game\shared\tf\tf_viewmodel.h"
 				$File	"$SRCDIR\game\shared\tf\tf_wearable.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_wearable.h"
+				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.cpp"
+				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.h"	
 			}
 		}
 	}

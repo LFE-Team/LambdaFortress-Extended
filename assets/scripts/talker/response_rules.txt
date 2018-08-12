@@ -149,6 +149,7 @@ enumeration "NPCState"
 criterion "ConceptPlayerTaunt" "Concept" "TLK_PLAYER_TAUNT" "required"
 criterion "ConceptPlayerThanks" "Concept" "TLK_PLAYER_THANKS" "required"
 criterion "ConceptPlayerMedic" "Concept" "TLK_PLAYER_MEDIC" required
+criterion "ConceptPlayerAskForBall" "Concept" "TLK_PLAYER_ASK_FOR_BALL" required
 criterion "ConceptPlayerHelp" "Concept" "TLK_PLAYER_HELP" required
 criterion "ConceptPlayerGo" "Concept"  "TLK_PLAYER_GO" required
 criterion "ConceptPlayerMoveUp" "Concept" "TLK_PLAYER_MOVEUP" required
@@ -180,10 +181,26 @@ criterion "ConceptCapBlocked" "Concept" "TLK_CAPTURE_BLOCKED" required
 criterion "ConceptMedicChargeDeployed" "Concept" "TLK_MEDIC_CHARGEDEPLOYED" required
 criterion "ConceptMedicChargeStopped" "Concept" "TLK_HEALTARGET_STOPPEDHEALING" required 
 
+criterion "ConceptEngineerPickupBuilding" "Concept" "TLK_PICKUP_BUILDING" required 
+criterion "ConceptEngineerDeployBuilding" "Concept" "TLK_REDEPLOY_BUILDING" required 
+criterion "ConceptEngineerCarryingBuilding" "Concept" "TLK_CARRYING_BUILDING" required 
+
+
+
+
+criterion "ConceptScoutBallGrab" "Concept" "TLK_GRAB_BALL" required 
+
+// Force weight to 2 so that this matches all classes
+criterion "ConceptPlayerTaunt2" "Concept" "TLK_PLAYER_TAUNT2" required
+
+criterion "ConceptPlayerShowItemTaunt" "Concept" "TLK_PLAYER_SHOW_ITEM_TAUNT" required
+
+criterion "ConceptPlayerHoldTaunt" "Concept" "TLK_PLAYER_HOLDTAUNT" required
 
 //Auto fire concepts
 criterion "ConceptPlayerCapturedPoint" "Concept" "TLK_CAPTURED_POINT" required
 criterion "ConceptPlayerRoundStart" "Concept" "TLK_ROUND_START" required
+criterion "ConceptPlayerRoundStartComp" "Concept" "TLK_ROUND_START_COMP" required
 criterion "ConceptPlayerSuddenDeathStart" "Concept" "TLK_SUDDENDEATH_START" required
 criterion "ConceptPlayerStalemate" "Concept" "TLK_STALEMATE" required
 criterion "ConceptPlayerBuildingObject" "Concept" "TLK_BUILDING_OBJECT" required
@@ -196,6 +213,45 @@ criterion "ConceptPlayerDead" "Concept" "TLK_DEAD" required
 
 criterion "ConceptPlayerGrabbedIntelligence" "Concept" "TLK_FLAGPICKUP" required          
 criterion "ConceptPlayerCapturedIntelligence" "Concept" "TLK_FLAGCAPTURED" required          
+
+//cart stuff
+criterion "ConceptCartMovingForward" "Concept" "TLK_CART_MOVING_FORWARD" required          
+criterion "ConceptCartMovingStopped" "Concept" "TLK_CART_STOP" required          
+criterion "ConceptCartMovingBackward" "Concept" "TLK_CART_MOVING_BACKWARD" required          
+
+criterion "ConceptAteFood" "Concept" "TLK_ATE_FOOD" required          
+
+//scout pack
+criterion "ConceptDoubleJump" "Concept" "TLK_DOUBLE_JUMP" required
+criterion "ConceptDodging" "Concept" "TLK_DODGING" required
+criterion "ConceptDodgeShot" "Concept" "TLK_DODGE_SHOT" required
+criterion "ConceptGrabBall" "Concept" "TLK_GRAB_BALL" required
+criterion "ConceptRegenBall" "Concept" "TLK_REGEN_BALL" required
+criterion "ConceptDeflected" "Concept" "TLK_DEFLECTED" required
+criterion "ConceptBallMissed" "Concept" "TLK_BALL_MISSED" required
+criterion "ConceptStunned" "Concept" "TLK_STUNNED" required
+criterion "ConceptStunnedTarget" "Concept" "TLK_STUNNED_TARGET" required
+criterion "ConceptTired" "Concept" "TLK_TIRED" required
+criterion "ConceptBatBall" "Concept" "TLK_BAT_BALL" required
+criterion "IsDoubleJumping" "DoubleJumping" "1" required
+criterion "ConceptAchievementAward" "Concept" "TLK_ACHIEVEMENT_AWARD" required
+// Custom stuff
+criterion "IsNotDoubleJumping" "DoubleJumping" "0" required // Needed to stop Scout saying double jump lines when he lands.
+
+// spy / sniper pack
+criterion "ConceptJarateLaunch" "Concept" "TLK_JARATE_LAUNCH" required
+criterion "ConceptJarateHit" "Concept" "TLK_JARATE_HIT" required
+
+// Item Taunts
+criterion "ConceptTauntReplay" "Concept" "TLK_TAUNT_REPLAY" required
+criterion "ConceptTauntLaugh" "Concept" "TLK_TAUNT_LAUGH" required
+criterion "ConceptTauntHeroicPose" "Concept" "TLK_TAUNT_HEROIC_POSE" required
+criterion "ConceptTauntPyroArmageddon" "Concept" "TLK_TAUNT_PYRO_ARMAGEDDON" required
+criterion "ConceptTauntGuitarRiff" "Concept" "TLK_TAUNT_GUITAR_RIFF" required
+criterion "ConceptTauntEurekaTeleport" "Concept" "TLK_TAUNT_EUREKA_EFFECT" required
+
+criterion "IsOnOffense" "teamrole" "offense" required
+criterion "IsOnDefense" "teamrole" "defense" required
 
 
 // Expressions
@@ -304,7 +360,6 @@ criterion "IsOnCappableControlPoint"  "OnCappableControlPoint"	"1"   required
 
 criterion "WeaponIsLaserPointer" "playerweapon" "tf_weapon_laser_pointer" "required"
 criterion "WeaponIsMinigun" "playerweapon" "tf_weapon_minigun" "required"
-criterion "WeaponIsTomislav" "playerweapon" "tf_weapon_minigun_tomislav" "required"
 criterion "WeaponIsShotgun" "playerweapon" "tf_weapon_shotgun_secondary" "required"
 criterion "WeaponIsShotgunSoldier" "playerweapon" "tf_weapon_shotgun_soldier" "required"
 criterion "WeaponIsShotgunHwg" "playerweapon" "tf_weapon_shotgun_hwg" "required"
@@ -331,7 +386,6 @@ criterion "WeaponIsChargedSMG" "playerweapon" "tf_weapon_charged_smg" "required"
 criterion "WeaponIsSMGScout" "playerweapon" "tf_weapon_smg_scout" "required"
 criterion "WeaponIsClub" "playerweapon" "tf_weapon_club" "required"
 criterion "WeaponIsRevolver" "playerweapon" "tf_weapon_revolver" "required"
-criterion "WeaponIsRevolverEngineer" "playerweapon" "tf_weapon_revolver_secondary" "required"
 criterion "WeaponIsKnife" "playerweapon" "tf_weapon_knife" "required"
 criterion "WeaponIsPipebomb" "playerweapon" "tf_weapon_pipebomblauncher" "required"
 criterion "WeaponIsGrenade" "playerweapon" "tf_weapon_grenadelauncher" "required"
@@ -474,7 +528,6 @@ criterion "WeaponIsSentrygun" "customdeath" "sentrygun" "required"
 criterion "WeaponIsNotSentrygun" "customdeath" "" "required"
 criterion "WeaponIsNotSentry" "customdeath" "none" "required"
 
-
 // Custom criterion to check if not scoped in, we do not want the lines to mix
 criterion "Unzoomed" "sniperzoomed" "!=1" "required"
 criterion "DeployedContext" "sniperzoomed" "1" "required"
@@ -525,6 +578,26 @@ criterion "IsMedicZombieBird" "IsMedicZombieBird" "1" "required" weight 100
 criterion "IsHauntedHat" "IsHauntedHat" "1" "required" weight 100
 
 criterion "HasTaunt2Item_TauntEnablerTest" "loadout_slot_action" "Taunt Enabler Test" "required"
+
+
+criterion "ConceptRequestDuel" "Concept" "TLK_REQUEST_DUEL" required
+criterion "ConceptDuelRejected" "Concept" "TLK_DUEL_WAS_REJECTED" required
+criterion "ConceptIAcceptDuel" "Concept" "TLK_ACCEPT_DUEL" required
+criterion "ConceptDuelAccepted" "Concept" "TLK_DUEL_WAS_ACCEPTED" required
+
+
+
+
+criterion "DuelTargetIsScout" "dueltargetclass" "Scout" required
+criterion "DuelTargetIsSniper" "dueltargetclass" "Sniper" required
+criterion "DuelTargetIsSoldier" "dueltargetclass" "Soldier" required
+criterion "DuelTargetIsDemoman" "dueltargetclass" "Demoman" required
+criterion "DuelTargetIsMedic" "dueltargetclass" "Medic" required
+criterion "DuelTargetIsHeavy" "dueltargetclass" "Heavy" required
+criterion "DuelTargetIsPyro" "dueltargetclass" "Pyro" required
+criterion "DuelTargetIsSpy" "dueltargetclass" "Spy" required
+criterion "DuelTargetIsEngineer" "dueltargetclass" "Engineer" required
+
 
 criterion "ConceptRocketDestroyed" "Concept" "TLK_ROCKET_DESTOYED" required 
 
@@ -630,3 +703,4 @@ criterion "ConceptPlayerMatchOverComp" "Concept" "TLK_MATCH_OVER_COMP" required
 #include "talker/Pyro.txt"
 #include "talker/Spy.txt"
 #include "talker/response_rules_hl2.txt"
+#include "talker/events.txt"

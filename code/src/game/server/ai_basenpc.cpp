@@ -89,8 +89,6 @@
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
 
-#include "tf_gamerules.h"
-
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
 #endif
@@ -103,11 +101,16 @@
 #include "collisionutils.h"
 
 extern ConVar sk_healthkit;
+
+#ifdef TF_CLASSIC
 extern ConVar tf_boost_drain_time;
 extern ConVar tf_invuln_time;
 extern ConVar tf_damage_disablespread;
 extern ConVar tf_damage_range;
 extern ConVar tf_damage_lineardist;
+extern ConVar tf_damage_events_track_for;
+extern ConVar lfe_debug_director_print;
+#endif
 
 // dvs: for opening doors -- these should probably not be here
 #include "ai_route.h"
@@ -149,6 +152,7 @@ bool RagdollManager_SaveImportant( CAI_BaseNPC *pNPC );
 
 #ifdef TF_CLASSIC
 #define NPC_DAMAGE_FORCE_SCALE_SELF				9
+#define MAX_NPC_DAMAGE_EVENTS		128
 extern ConVar tf_damageforcescale_other;
 #endif
 
@@ -801,6 +805,9 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}
 	}
+
+	// fixed jarate death
+	SetRenderColor( 255, 255, 255 );
 #endif
 	
 	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
@@ -3927,6 +3934,17 @@ void CAI_BaseNPC::RunAnimation( void )
 		}
 	}
 
+#ifdef TF_CLASSIC
+	if ( InCond( TF_COND_SLOWED ) )
+	{
+		SetPlaybackRate( 1.0f );
+	}
+	else
+	{
+		SetPlaybackRate( 0.6f );
+	}
+#endif
+
 	DispatchAnimEvents( this );
 }
 
@@ -5704,17 +5722,6 @@ void CAI_BaseNPC::PrescheduleThink( void )
 			m_iDesiredWeaponState = DESIREDWEAPONSTATE_IGNORE;
 		}
 	}
-
-#ifdef TF_CLASSIC
-	m_flPlaybackRate = 1.0;
-	m_flGroundSpeed = 1.0;
-
-	if ( InCond( TF_COND_SLOWED ) )
-	{
-		m_flPlaybackRate = 0.6;
-		m_flGroundSpeed = 0.6;
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -7250,10 +7257,6 @@ void CAI_BaseNPC::AdvanceToIdealActivity(void)
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::MaintainActivity(void)
 {
-#ifdef TF_CLASSIC
-	m_flPlaybackRate = 1.0;
-	m_flGroundSpeed = 1.0;
-#endif
 	AI_PROFILE_SCOPE( CAI_BaseNPC_MaintainActivity );
 
 	if ( m_lifeState == LIFE_DEAD )
@@ -7317,16 +7320,6 @@ void CAI_BaseNPC::MaintainActivity(void)
 			AdvanceToIdealActivity();
 		}
 	}
-#ifdef TF_CLASSIC
-	if ( InCond( TF_COND_SLOWED ) )
-	{
-		if ( GetActivity() == ACT_RUN || GetActivity() == ACT_WALK )
-		{
-			m_flPlaybackRate = 0.6;
-			m_flGroundSpeed = 0.6;
-		}
-	}
-#endif
 }
 
 
@@ -11834,6 +11827,10 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_INPUTFUNC( FIELD_STRING,	"ForceInteractionWithNPC", InputForceInteractionWithNPC ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "UpdateEnemyMemory", InputUpdateEnemyMemory ),
 
+	#ifdef TF_CLASSIC
+	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetPlaybackRate",	InputSetPlaybackRate ),
+	#endif
+
 	// Function pointers
 	DEFINE_USEFUNC( NPCUse ),
 	DEFINE_THINKFUNC( CallNPCThink ),
@@ -13658,7 +13655,7 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 #ifdef TF_CLASSIC
 		// Difficult to handle in TF2C since players can join different teams
 		// to ally themselves with different factions. For now, just check if they are on RED.
-		if ( GetTeamNumber() == TF_STORY_TEAM )
+		if ( InSameTeam( pPlayer ) )
 			return true;
 #endif
 		// in multiplayer mode we need a valid pPlayer 
@@ -15909,5 +15906,117 @@ CTFTeam *CAI_BaseNPC::GetTFTeam( void )
 	CTFTeam *pTeam = dynamic_cast<CTFTeam *>( GetTeam() );
 	Assert( pTeam );
 	return pTeam;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+float CAI_BaseNPC::GetCritMult( void )
+{
+	float flRemapCritMul = RemapValClamped( m_iCritMult, 0, 255, 1.0, TF_DAMAGE_CRITMOD_MAXMULT );
+
+	return flRemapCritMul;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::UpdateCritMult( void )
+{
+	const float flMinMult = 1.0;
+	const float flMaxMult = TF_DAMAGE_CRITMOD_MAXMULT;
+
+	if ( m_DamageEvents.Count() == 0 )
+	{
+		m_iCritMult = RemapValClamped( flMinMult, flMinMult, flMaxMult, 0, 255 );
+		return;
+	}
+
+	// Go through the damage multipliers and remove expired ones, while summing damage of the others
+	float flTotalDamage = 0;
+	for ( int i = m_DamageEvents.Count() - 1; i >= 0; i-- )
+	{
+		float flDelta = gpGlobals->curtime - m_DamageEvents[i].flTime;
+		if ( flDelta > tf_damage_events_track_for.GetFloat() )
+		{
+			//Msg( "      Discarded (%d: time %.2f, now %.2f)\n", i, m_DamageEvents[i].flTime, gpGlobals->curtime );
+			m_DamageEvents.Remove( i );
+			continue;
+		}
+
+		// Ignore damage we've just done. We do this so that we have time to get those damage events
+		// to the client in time for using them in prediction in this code.
+		if ( flDelta < TF_DAMAGE_CRITMOD_MINTIME )
+		{
+			continue;
+		}
+
+		if ( flDelta > TF_DAMAGE_CRITMOD_MAXTIME )
+			continue;
+
+		flTotalDamage += m_DamageEvents[i].flDamage;
+	}
+
+	float flMult = RemapValClamped( flTotalDamage, 0, TF_DAMAGE_CRITMOD_DAMAGE, flMinMult, flMaxMult );
+
+	m_iCritMult = (int)RemapValClamped( flMult, flMinMult, flMaxMult, 0, 255 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill )
+{
+	if ( m_DamageEvents.Count() >= MAX_NPC_DAMAGE_EVENTS )
+	{
+		// Remove the oldest event
+		m_DamageEvents.Remove( m_DamageEvents.Count() - 1 );
+	}
+
+	int iIndex = m_DamageEvents.AddToTail();
+	m_DamageEvents[iIndex].flDamage = info.GetDamage();
+	m_DamageEvents[iIndex].flTime = gpGlobals->curtime;
+	m_DamageEvents[iIndex].bKill = bKill;
+
+	// Don't count critical damage
+	if ( info.GetDamageType() & DMG_CRITICAL )
+	{
+		m_DamageEvents[iIndex].flDamage /= TF_DAMAGE_CRIT_MULTIPLIER;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int	CAI_BaseNPC::GetNumKillsInTime( float flTime )
+{
+	if ( tf_damage_events_track_for.GetFloat() < flTime )
+	{
+		Warning( "NPC asking for damage events for time %.0f, but tf_damage_events_track_for is only tracking events for %.0f\n", flTime, tf_damage_events_track_for.GetFloat() );
+	}
+
+	int iKills = 0;
+	for ( int i = m_DamageEvents.Count() - 1; i >= 0; i-- )
+	{
+		float flDelta = gpGlobals->curtime - m_DamageEvents[i].flTime;
+		if ( flDelta < flTime )
+		{
+			if ( m_DamageEvents[i].bKill )
+			{
+				iKills++;
+			}
+		}
+	}
+
+	return iKills;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::InputSetPlaybackRate( inputdata_t &inputdata )
+{
+	SetPlaybackRate( inputdata.value.Float() );
+	RunAnimation();
 }
 #endif

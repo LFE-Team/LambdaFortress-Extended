@@ -71,6 +71,19 @@ struct AI_Waypoint_t;
 class AI_Response;
 class CBaseFilter;
 
+#ifdef TF_CLASSIC
+//=============================================================================
+// Damage storage for crit multiplier calculation
+class CTFNPCDamageEvent
+{
+	DECLARE_SERVERCLASS_NOBASE();
+public:
+	float flDamage;
+	float flTime;
+	bool bKill;
+};
+#endif
+
 #define MAX_LAYER_RECORDS (CBaseAnimatingOverlay::MAX_OVERLAYS)
 
 struct LayerRecordNPC
@@ -2280,6 +2293,13 @@ public:
 	bool	AllowDeathNotice( void ) { return ( m_nTFFlags & TFFL_NODEATHNOTICE ) == 0; }
 	bool	NoReward( void ) { return ( m_nTFFlags & TFFL_NOREWARD ) == 0; }
 
+	float GetCritMult( void );
+
+	void  UpdateCritMult( void );
+	void  RecordDamageEvent( const CTakeDamageInfo &info, bool bKill );
+	void  ClearDamageEvents( void ) { m_DamageEvents.Purge(); }
+	int	  GetNumKillsInTime( float flTime );
+
 	// Invulnerable.
 	void	TestAndExpireChargeEffect( medigun_charge_types chargeType );
 	void	RecalculateChargeEffects( bool bInstantRemove = false );
@@ -2292,6 +2312,13 @@ public:
 	EHANDLE	m_hUrineAttacker;
 
 	bool	m_bAirblasted;
+
+	float	m_flNextCritUpdate;
+	CUtlVector<CTFNPCDamageEvent> m_DamageEvents;
+
+	int	m_iCritMult;
+
+	void InputSetPlaybackRate( inputdata_t &inputdata );
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;

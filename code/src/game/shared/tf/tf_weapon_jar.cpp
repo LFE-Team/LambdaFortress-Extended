@@ -28,7 +28,7 @@
 #define URINE_MODEL "models/weapons/c_models/urinejar.mdl"
 
 #define TF_JAR_DAMAGE 0.0f
-#define TF_JAR_VEL 935
+#define TF_JAR_VEL 1000.0f
 #define TF_JAR_GRAV 1.0f
 
 extern ConVar tf_grenade_show_radius;
@@ -96,7 +96,7 @@ void CTFProjectile_Jar::Precache( void )
 {
 	PrecacheModel( URINE_MODEL );
 
-	PrecacheTeamParticles( "peejar_trail_%s", true );
+	PrecacheTeamParticles( "peejar_trail_%s", false, g_aTeamNamesShort );
 	PrecacheParticleSystem( "peejar_impact" );
 
 	PrecacheScriptSound( "Jar.Explode" );
@@ -191,7 +191,10 @@ void CTFProjectile_Jar::Explode( trace_t *pTrace, int bitsDamageType )
 void CTFProjectile_Jar::JarTouch( CBaseEntity *pOther )
 {
 	if ( pOther == GetThrower() )
+	{
+		SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
 		return;
+	}
 
 	// Verify a correct "other."
 	if ( !pOther->IsSolid() || pOther->IsSolidFlagSet( FSOLID_VOLUME_CONTENTS ) )
@@ -317,20 +320,7 @@ void C_TFProjectile_Jar::OnDataChanged( DataUpdateType_t updateType )
 
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
-		// Now stick our initial velocity into the interpolation history 
-		CInterpolatedVar< Vector > &interpolator = GetOriginInterpolator();
-
-		interpolator.ClearHistory();
-		float changeTime = GetLastChangeTime( LATCH_SIMULATION_VAR );
-
-		// Add a sample 1 second back.
-		Vector vCurOrigin = GetLocalOrigin() - m_vInitialVelocity;
-		interpolator.AddToHead( changeTime - 1.0, &vCurOrigin, false );
-
-		// Add the current sample.
-		vCurOrigin = GetLocalOrigin();
-		interpolator.AddToHead( changeTime, &vCurOrigin, false );
-
+		m_flCreationTime = gpGlobals->curtime;
 		CreateTrails();
 	}
 
@@ -353,6 +343,17 @@ void C_TFProjectile_Jar::CreateTrails( void )
 
 	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Don't draw if we haven't yet gone past our original spawn point
+//-----------------------------------------------------------------------------
+int C_TFProjectile_Jar::DrawModel( int flags )
+{
+	if ( gpGlobals->curtime - m_flCreationTime < 0.1f )
+		return 0;
+ 	return BaseClass::DrawModel( flags );
+}
+
 #endif
 
 //=============================================================================

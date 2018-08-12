@@ -16,6 +16,7 @@
 #include <vgui_controls/QueryBox.h>
 #include <vgui_controls/ProgressBar.h>
 #include <vgui_controls/HTML.h>
+#include <vgui_controls/AnimationController.h>
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
@@ -371,6 +372,8 @@ void CTFLoadingProgress::OnActivate()
 #endif
 
 	UpdateDialog();
+
+	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 255, 0.0f, 0.4f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE);
 }
 
 //-----------------------------------------------------------------------------
@@ -379,4 +382,5 @@ void CTFLoadingProgress::OnActivate()
 void CTFLoadingProgress::OnDeactivate()
 {
 	ClearMapLabel();
+	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 0, 0.0f, 0.4f, vgui::AnimationController::INTERPOLATOR_LINEAR);
 }

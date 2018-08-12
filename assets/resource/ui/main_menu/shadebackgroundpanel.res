@@ -13,8 +13,9 @@
 		"pinCorner"			"0"
 		"visible"			"1"
 		"enabled"			"0"
-		"tabPosition"		"0"	
-		"fillcolor"			"0 0 0 255"
+		"tabPosition"		"0"
+		//"image"				"../vgui/main_menu/blurfact"	
+		"fillcolor"			"100 100 100 255"		
 		"alpha"				"0"
 		"PaintBackgroundType"	"0"
 	}

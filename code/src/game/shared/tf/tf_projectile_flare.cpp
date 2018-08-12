@@ -11,6 +11,8 @@
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
 #include "particles_new.h"
+#include "iefx.h"
+#include "dlight.h"
 #else
 #include "tf_player.h"
 #include "tf_fx.h"
@@ -413,20 +415,6 @@ void CTFProjectile_BallOfFire::Spawn()
 //-----------------------------------------------------------------------------
 void CTFProjectile_BallOfFire::FlameThink( void )
 {
-#ifdef CLIENT_DLL
-	// Handle the flamethrower light
-	if ( lfe_muzzlelight.GetBool() )
-	{
-		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-		dl->origin = GetAbsOrigin();
-		dl->color.r = 255;
-		dl->color.g = 100;
-		dl->color.b = 10;
-		dl->radius = 400;
-		dl->die = gpGlobals->curtime + 0.002;
-	}
-#endif
-
 	// Render debug visualization if convar on
 	if ( tf_fireball_draw_debug_radius.GetInt() )
 	{
@@ -749,6 +737,26 @@ void CTFProjectile_BallOfFire::CreateTrails( void )
 	const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
 
 	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Think method
+//-----------------------------------------------------------------------------
+void CTFProjectile_BallOfFire::ClientThink()
+{
+	// Handle the flamethrower light
+	if ( lfe_muzzlelight.GetBool() )
+	{
+		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+		dl->origin = GetAbsOrigin();
+		dl->color.r = 255;
+		dl->color.g = 100;
+		dl->color.b = 10;
+		dl->radius = 400;
+		dl->die = gpGlobals->curtime + 0.001;
+	}
+
+	BaseClass::ClientThink();
 }
 #endif
 

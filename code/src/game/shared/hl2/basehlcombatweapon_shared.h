@@ -33,6 +33,11 @@ public:
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 
+	#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
+	// Setup.
+	CBaseHLCombatWeapon();
+	#endif
+
 	virtual bool	WeaponShouldBeLowered( void );
 
 			bool	CanLower();
@@ -55,12 +60,26 @@ public:
 
 	int				m_iPrimaryAttacks;		// # of primary attacks performed with this weapon
 	int				m_iSecondaryAttacks;	// # of secondary attacks performed with this weapon
-
+#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
+	void CalcIsAttackCritical( void );
+	virtual bool CalcIsAttackCriticalHelper();
+	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
+	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }
+#endif
 protected:
 
 	bool			m_bLowered;			// Whether the viewmodel is raised or lowered
 	float			m_flRaiseTime;		// If lowered, the time we should raise the viewmodel
 	float			m_flHolsterTime;	// When the weapon was holstered
+
+#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
+	bool			m_bCurrentAttackIsCrit;
+	bool			m_bCurrentAttackIsMiniCrit;
+	float			m_flCritTime;
+	float			m_flLastCritCheckTime;
+	int				m_iLastCritCheckFrame;
+	int				m_iCurrentSeed;
+#endif
 };
 
 #endif // BASEHLCOMBATWEAPON_SHARED_H

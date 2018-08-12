@@ -2,7 +2,7 @@
 {
 	"scores"
 	{
-		"ControlName"	"CTFClientScoreBoardDialog"
+		"ControlName"	"CTFCoOpScoreBoardDialog"
 		"fieldName"		"scoreinfo"
 		"xpos"			"cs-0.5"
 		"ypos"			"31"

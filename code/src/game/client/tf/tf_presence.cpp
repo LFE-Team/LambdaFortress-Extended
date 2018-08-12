@@ -170,6 +170,7 @@ void CTFRichPresence::Reset()
 	Q_memset( &m_sDiscordRichPresence, 0, sizeof( m_sDiscordRichPresence ) );
 	m_sDiscordRichPresence.state = "In-Menu";
 	m_sDiscordRichPresence.details = "Main Menu";
+	m_sDiscordRichPresence.endTimestamp;
 
 	steamapicontext->SteamFriends()->SetRichPresence( "status", "Main Menu" );
 	steamapicontext->SteamFriends()->SetRichPresence( "connect", NULL );
@@ -193,6 +194,7 @@ void CTFRichPresence::UpdatePlayerInfo()
 	const char *pzePlayerName = NULL;
 
 	m_sDiscordRichPresence.state = "In-Game";
+	m_sDiscordRichPresence.startTimestamp;
 
 	for (int i = 1; i < maxPlayers; i++)
 	{

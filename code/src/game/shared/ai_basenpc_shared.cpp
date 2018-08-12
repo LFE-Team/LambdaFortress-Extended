@@ -1008,8 +1008,7 @@ void CAI_BaseNPC::OnRemoveInvulnerable( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnAddSlowed( void )
 {
-	m_flPlaybackRate = 0.6;
-	m_flGroundSpeed = 0.6;
+	SetPlaybackRate( 0.6f );
 }
 
 //-----------------------------------------------------------------------------
@@ -1017,8 +1016,7 @@ void CAI_BaseNPC::OnAddSlowed( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnRemoveSlowed( void )
 {
-	m_flPlaybackRate = 1.0;
-	m_flGroundSpeed = 1.0;
+	SetPlaybackRate( 1.0f );
 }
 
 //-----------------------------------------------------------------------------

@@ -348,14 +348,15 @@ Rule PlayerBuildingSentryEngineer
 
 Response PlayerBuildingTeleporterEngineer
 {
-	scene "scenes/Player/Engineer/low/AutoBuildingTeleporter01.vcd" 
-	scene "scenes/Player/Engineer/low/AutoBuildingTeleporter02.vcd" 
+	scene "scenes/Player/Engineer/low/13.vcd" 
+	scene "scenes/Player/Engineer/low/15.vcd" 
 }
 Rule PlayerBuildingTeleporterEngineer
 {
-	criteria ConceptPlayerBuildingObject IsTeleporterEntrance IsEngineer
+	criteria ConceptPlayerBuildingObject IsTeleporter IsEngineer
 	Response PlayerBuildingTeleporterEngineer
 }
+
 
 Response PlayerDispenserSappedEngineer
 {

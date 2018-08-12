@@ -12,7 +12,6 @@
 #ifdef GAME_DLL
 #include "SpriteTrail.h"
 #include "props_shared.h"
-#include "tf_player.h"
 #include "debugoverlay_shared.h"
 #include "te_effect_dispatch.h"
 #include "decals.h"
@@ -208,15 +207,6 @@ CBasePlayer *CTFProjectile_Arrow::GetScorer( void )
 //-----------------------------------------------------------------------------
 void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 {
-	if( pOther->GetCollisionGroup() == TFCOLLISION_GROUP_ROCKETS )
-	{
-		CTFProjectile_Arrow *pArrow = dynamic_cast< CTFProjectile_Arrow* >( pOther );
-		if( !pArrow )
-		{
-			return;
-		}
-	}
-
 	// Verify a correct "other."
 	Assert( pOther );
 	if ( pOther->IsSolidFlagSet( FSOLID_TRIGGER | FSOLID_VOLUME_CONTENTS ) )
@@ -252,6 +242,9 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( m_hLauncher.Get() );
 	trace_t trHit, tr;
 	trHit = *pTrace;
+
+	const char* pszImpactSound = NULL;
+	bool bPlayerImpact = false;
 
 	//CTakeDamageInfo info_modified( this, pAttacker, m_flDamage, DMG_BULLET );
 	CTakeDamageInfo info_modified;
@@ -348,7 +341,9 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 			NDebugOverlay::Line( trHit.startpos, trHit.endpos, 0, 255, 0, true, 5.0f );
 			NDebugOverlay::Line( vecOrigin, vecOrigin + vecDir * 16, 255, 0, 0, true, 5.0f );
  		}
-		EmitSound( "Weapon_Arrow.ImpactFlesh" );
+
+		pszImpactSound = "Weapon_Arrow.ImpactFlesh";
+		bPlayerImpact = true;
 
 		if ( !PositionArrowOnBone( pBox , pPlayer ) )
 		{
@@ -416,20 +411,25 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	{	
 		surfacedata_t *psurfaceData = physprops->GetSurfaceData( trHit.surface.surfaceProps );
 		int iMaterial = psurfaceData->game.material;
+		bool bArrowSound = false;
+
 		if ( ( iMaterial == CHAR_TEX_CONCRETE ) || ( iMaterial == CHAR_TEX_TILE ) )
 		{
-			EmitSound( "Weapon_Arrow.ImpactConcrete" );
+			pszImpactSound = "Weapon_Arrow.ImpactConcrete";
+			bArrowSound = true;
 		}
 		else if ( iMaterial == CHAR_TEX_WOOD )
 		{
-			EmitSound( "Weapon_Arrow.ImpactWood" );
+			pszImpactSound = "Weapon_Arrow.ImpactWood";
+			bArrowSound = true;
 		}
 		else if ( ( iMaterial == CHAR_TEX_METAL ) || ( iMaterial == CHAR_TEX_VENT ) )
 		{
-			EmitSound( "Weapon_Arrow.ImpactMetal" );
+			pszImpactSound = "Weapon_Arrow.ImpactMetal";
+			bArrowSound = true;
 		}
 
-				Vector vForward;
+		Vector vForward;
 
 		AngleVectors( GetAbsAngles(), &vForward );
 		VectorNormalize ( vForward );
@@ -453,27 +453,28 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 			}
 		}
 
-		UTIL_ImpactTrace( &trHit, DMG_BULLET );
+ 		// If we didn't play a collision sound already, play a bullet collision sound for this prop
+ 		if( !bArrowSound )
+ 		{
+ 			UTIL_ImpactTrace( &trHit, DMG_BULLET );
+ 		}
+ 		else
+ 		{
+ 			UTIL_ImpactTrace( &trHit, DMG_BULLET, "ImpactArrow" );
+ 		}
+
+		//UTIL_Remove( this );
 	}
 	else
 	{
-		Vector vForward;
-
-		AngleVectors( GetAbsAngles(), &vForward );
-		VectorNormalize ( vForward );
-
-			//NDebugOverlay::Box( tr.endpos, Vector( -16, -16, -16 ), Vector( 16, 16, 16 ), 0, 255, 0, 0, 10 );
-			//NDebugOverlay::Box( GetAbsOrigin(), Vector( -16, -16, -16 ), Vector( 16, 16, 16 ), 0, 0, 255, 0, 10 );
-
-		CEffectData	data;
-
-		data.m_vAngles = GetAbsAngles();
-		data.m_vOrigin = vecOrigin;
-		data.m_vNormal = vForward;
-		DispatchEffect( "ArrowBreak", data );
-
-		UTIL_ImpactTrace( &trHit, DMG_BULLET );
+		UTIL_Remove( this );
  	}
+
+	// Play sound
+	if ( pszImpactSound )
+	{
+		PlayImpactSound( ToTFPlayer( pAttacker ), pszImpactSound, bPlayerImpact );
+	}
 
 	// Stop the force from sending enemies flying
 	Vector vecForce = vecDir;
@@ -683,6 +684,26 @@ void CTFProjectile_Arrow::GetBoneAttachmentInfo( mstudiobbox_t *pbox, CBaseAnima
 //-----------------------------------------------------------------------------
 void CTFProjectile_Arrow::CheckRagdollPinned( Vector &, Vector &, int, int, CBaseEntity *, int, int )
 {
+}
+
+// ----------------------------------------------------------------------------
+// Purpose: Play the impact sound to nearby players of the recipient and the attacker
+//-----------------------------------------------------------------------------
+void CTFProjectile_Arrow::PlayImpactSound( CTFPlayer *pAttacker, const char *pszImpactSound, bool bIsPlayerImpact /*= false*/ )
+{
+	if ( pAttacker )
+	{
+		CRecipientFilter filter;
+		filter.AddRecipientsByPAS( GetAbsOrigin() );
+ 		// Only play the sound locally to the attacker if it's a player impact
+		if ( bIsPlayerImpact )
+		{
+			filter.RemoveRecipient( pAttacker );
+			CSingleUserRecipientFilter filterAttacker( pAttacker );
+			EmitSound( filterAttacker, pAttacker->entindex(), pszImpactSound );
+		}
+ 		EmitSound( filter, entindex(), pszImpactSound );
+	}
 }
 
 #else

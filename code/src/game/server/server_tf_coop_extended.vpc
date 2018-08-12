@@ -522,8 +522,6 @@ $Project "Server (TF)"
 			$File	"tf\func_respawnflag.h"	
 			$File	"tf\func_flagdetectionzone.cpp"
 			$File	"tf\func_flagdetectionzone.h"	
-			$File	"tf\tf_generic_bomb.cpp"
-			$File	"tf\tf_generic_bomb.h"	
 			$File	"tf\tf_dropped_weapon.cpp"
 			$File	"tf\tf_dropped_weapon.h"	
 			$File	"tf\tf_pushentity.cpp"	
@@ -675,6 +673,8 @@ $Project "Server (TF)"
 				$File	"$SRCDIR\game\shared\tf\tf_viewmodel.h"
 				$File	"$SRCDIR\game\shared\tf\tf_wearable.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_wearable.h"
+				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.cpp"
+				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.h"	
 			}
 		}
 	}

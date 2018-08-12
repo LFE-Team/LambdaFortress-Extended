@@ -111,6 +111,7 @@ public:
 #else
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
+	virtual void	ClientThink();
 	virtual void	CreateTrails( void );
 
 #endif

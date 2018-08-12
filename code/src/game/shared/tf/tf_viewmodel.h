@@ -73,13 +73,12 @@ public:
 
 	virtual int DrawModel( int flags );
 
-	CHandle< C_ViewmodelAttachmentModel > m_hViewmodelAddon;
+	CHandle< C_ViewmodelAttachmentModel > m_hViewmodelAddon[ MAX_VIEWMODELS ];
 
-	C_ViewmodelAttachmentModel *GetViewmodelAddon( void ) { return m_hViewmodelAddon.Get(); }
+	C_ViewmodelAttachmentModel *GetViewmodelAddon( int index = 0 ) { return m_hViewmodelAddon[index].Get(); }
+	void UpdateViewmodelAddon( const char *pszModelname, int index = 0 );
 
-	void UpdateViewmodelAddon( const char *pszModelname );
-
-	void RemoveViewmodelAddon( void );
+	void RemoveViewmodelAddon( int index = 0 );
 
 	// Attachments
 	virtual int				LookupAttachment( const char *pAttachmentName );

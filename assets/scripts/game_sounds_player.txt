@@ -627,6 +627,43 @@
 //-----------------------------------------------------------------------------
 //Taunts and Selection Menu
 //-----------------------------------------------------------------------------
+"Taunt.EngineerGunSlinger"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"
+	"wave"		")player/taunt_eng_gunslinger.wav"
+}
+
+"Taunt.EngineerSwoosh"
+{
+	"channel"	"CHAN_WEAPON"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"
+	"wave"		")player/taunt_eng_swoosh.wav"
+}
+
+"Taunt.EngineerSmash"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"
+	"rndwave"
+	{
+		"wave"		")player/taunt_eng_smash1.wav"
+		"wave"		")player/taunt_eng_smash2.wav"
+		"wave"		")player/taunt_eng_smash3.wav"
+	}
+}
+
+"Taunt.EngineerStrum"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"
+	"wave"		")player/taunt_eng_strum.wav"
+}
+
 "Taunt.Engineer01HandClap"
 {
 	"channel"	"CHAN_STATIC"
@@ -667,6 +704,22 @@
 	"wave"		"player/taunt_pistol_twirl.wav"
 }
 
+"Taunt.Engineer_Western_Shoot1"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1,0"
+	"soundlevel"  	"SNDLVL_75dB"
+	"wave"		")player/taunt_western_shoot1.wav"
+}
+
+"Taunt.Engineer_Western_Shoot2"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_75dB"
+	"wave"		")player/taunt_western_shoot2.wav"
+}
+
 "Selection.EngineerWrenchShoulder"
 {
 	"channel"	"CHAN_STATIC"
@@ -690,7 +743,6 @@
 	"soundlevel"  	"SNDLVL_NONE"
 	"wave"		"player/taunt_clothes_rustle.wav"
 }
-
 "Taunt.Demo01FootStompLight"
 {
 	"channel"	"CHAN_STATIC"
@@ -803,7 +855,29 @@
 	"wave"		"player/taunt_clip_spin.wav"
 }
 
+"Selection.DemoClipSpinLong"
+{
+	"channel"	"CHAN_BODY"
+	"volume"	".5"
+	"soundlevel"  	"SNDLVL_NONE"
+	"wave"		"player/taunt_clip_spin_long.wav"
+}
 
+"Taunt.DemoShakeIt"
+{
+	"channel"	"CHAN_BODY"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_NORM"
+	"wave"		"player/taunt_shake_it.wav"
+}
+
+"Taunt.Demo_Burp"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_85dB"
+	"wave"		")player/taunt_burp.wav"
+}
 
 "Taunt.MedicGloveStretch"
 {
@@ -812,6 +886,60 @@
 	"soundlevel"  	"SNDLVL_75dB"
 
 		"wave"	"player/taunt_rubberglove_stretch.wav"
+}
+
+"Taunt.MedicHardClap1"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".75"
+	"soundlevel"  	"SNDLVL_75dB"
+
+		"wave"	")player/taunt_hard_clap1.wav"
+}
+
+"Taunt.MedicHardClap2"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".75"
+	"soundlevel"  	"SNDLVL_75dB"
+
+		"wave"	")player/taunt_hard_clap2.wav"
+}
+
+"Taunt.MedicHardClap3"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".75"
+	"soundlevel"  	"SNDLVL_75dB"
+
+		"wave"	")player/taunt_hard_clap3.wav"
+}
+
+"Taunt.MedicHardClap4"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".25"
+	"soundlevel"  	"SNDLVL_75dB"
+
+		"wave"	")player/taunt_hard_clap1.wav"
+}
+
+"Taunt.MedicHardClap5"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".15"
+	"soundlevel"  	"SNDLVL_75dB"
+
+		"wave"	")player/taunt_hard_clap2.wav"
+}
+
+"Taunt.MedicHardClap6"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".05"
+	"soundlevel"  	"SNDLVL_75dB"
+
+		"wave"	")player/taunt_hard_clap3.wav"
 }
 
 "Taunt.MedicGloveSnap"
@@ -838,6 +966,53 @@
 		"wave"	"player/taunt_v05.wav"
 		"wave"	"player/taunt_v06.wav"
 		"wave"	"player/taunt_v07.wav"
+	}
+}
+"Taunt.MedicViolinUber"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".35"
+	"soundlevel"  	"SNDLVL_75dB"
+
+	"rndwave"
+	{	
+		"wave"	"player/uberTaunt_v01.wav"
+		"wave"	"player/uberTaunt_v02.wav"
+		"wave"	"player/uberTaunt_v03.wav"
+		"wave"	"player/uberTaunt_v04.wav"
+		"wave"	"player/uberTaunt_v05.wav"
+		"wave"	"player/uberTaunt_v06.wav"
+		"wave"	"player/uberTaunt_v07.wav"
+	}
+}
+
+"Taunt.MedicHeroic"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  "SNDLVL_95dB"
+
+	"wave"		")player/taunt_medic_heroic.wav"
+}
+
+"Taunt.GuitarRiff"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  "SNDLVL_95dB"
+
+	"wave"		")player\brutal_legend_taunt.wav"
+}
+
+"Taunt.WormsHHG"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"
+
+	"rndwave"
+	{	
+		"wave"	"player/taunt_wormsHHG.wav"
 	}
 }
 
@@ -998,6 +1173,14 @@
 	"wave"	"player/taunt_cig_flick.wav"
 }
 
+"Taunt.SpyCigCaseClose"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"		
+	"wave"	"player/taunt_cig_case_close.wav"
+}
+
 "Selection.SpyClothesRustle1"
 {
 	"channel"	"CHAN_STATIC"
@@ -1011,6 +1194,14 @@
 	"channel"	"CHAN_STATIC"
 	"volume"	".75"
 	"soundlevel"  	"SNDLVL_NONE"
+	"wave"	"player/taunt_clothes_swipe2.wav"
+}
+
+"Taunt.SoldierClothesRustle"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"
 	"wave"	"player/taunt_clothes_swipe2.wav"
 }
 
@@ -1060,6 +1251,95 @@
 	"volume"	".75"
 	"soundlevel"  	"SNDLVL_75dB"		
 	"wave"	"player/taunt_equipment_jingle3.wav"
+}
+
+"Taunt.SoldierKnuckleCrack"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"0.25"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"player/taunt_knuckle_crack.wav"
+}
+
+"Taunt.TauntChestThumpYell"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"vo/soldier_DirectHitTaunt02.mp3"
+}
+
+"Taunt.SoldierChestThump"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"0.25"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"player/taunt_chest_thump.wav"
+}
+
+"Taunt.SoldierChestThumpAlt"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"0.25"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"player/taunt_chest_thump_alt.wav"
+}
+
+"Taunt.SoldierChestThumpLow"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"0.1"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"player/taunt_chest_thump.wav"
+}
+
+
+"Taunt.SoldierGrenadePull"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"player/taunt_equipment_jingle3.wav"
+}
+
+"Taunt.SoldierShotgunFire"
+{
+	"channel"	"CHAN_ITEM"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"weapons/shotgun_shoot.wav"
+}
+
+"Taunt.SoldierShotgunCockBack"
+{
+	"channel"	"CHAN_WEAPON"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"weapons/shotgun_cock_back.wav"
+}
+
+"Taunt.SoldierShotgunCockForward"
+{
+	"channel"	"CHAN_WEAPON"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"weapons/shotgun_cock_forward.wav"
+}
+
+"Taunt.SoldierSaluteSwish"
+{
+	"channel"	"CHAN_BODY"
+	"volume"	"1.0"
+	"soundlevel"  	"SNDLVL_NORM"		
+	"wave"	"player/taunt_clothes_swipe2.wav"
+}
+
+"Taunt.SoldierTaps"
+{
+            "channel"          "CHAN_STATIC"
+            "volume"           "1.0"
+            "soundlevel"      "SNDLVL_NORM"
+             "wave"              ")misc/taps_02.wav"
 }
 
 "Taunt.Soldier02GrenadeCatch"
@@ -1172,6 +1452,22 @@
 	"volume"	".55"
 	"soundlevel"  	"SNDLVL_NONE"
 	"wave"	"player/taunt_equipment_gun1.wav"
+}
+
+"Taunt.HeavyUpperCut"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"		
+	"wave"	"player/taunt_heavy_upper_cut.wav"
+}
+
+"Taunt.HeavyBell"
+{
+	"channel"	"CHAN_ITEM"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_75dB"		
+	"wave"	"player/taunt_bell.wav"
 }
 
 "Taunt.Heavy01HoldGun"
@@ -1345,7 +1641,7 @@
 
 "Taunt.Pyro03RockStar"
 {
-	"channel"	"CHAN_BODY"
+	"channel"	"CHAN_VOICE"
 	"volume"	".75"
 	"soundlevel"  	"SNDLVL_75dB"		
 	"wave"	"player/taunt_rockstar.wav"
@@ -1353,7 +1649,7 @@
 
 "Taunt.Pyro03RockStarEnd"
 {
-	"channel"	"CHAN_BODY"
+	"channel"	"CHAN_VOICE"
 	"volume"	".75"
 	"soundlevel"  	"SNDLVL_75dB"		
 	"wave"	"player/taunt_rockstar_end.wav"
@@ -1391,8 +1687,88 @@
 	"soundlevel"  	"SNDLVL_NONE"
 	"wave"	"player/taunt_foot_stomp.wav"
 }
+"Taunt.PyroBalloonicorn"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".75"
+	"soundlevel"  	"SNDLVL_75dB"		
+	"wave"	"player/taunt_pyro_balloonicorn.wav"
 
+}
+"Taunt.PyroHellicorn"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".75"
+	"soundlevel"  	"SNDLVL_75dB"		
+	"wave"	"player/taunt_pyro_hellicorn.wav"
+}
+
+
+
+"Taunt.SpringRiderSit"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_sit.wav"
+}
+
+"Taunt.Taunt.SpringRiderSqueak1"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".25"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_squeak1.wav"
+}
+
+"Taunt.Taunt.SpringRiderSqueak2"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".25"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_squeak2.wav"
+}
+
+"Taunt.Taunt.SpringRiderSqueak3"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".25"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_squeak3.wav"
+}
+
+"Taunt.Taunt.SpringRiderSqueak4"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".25"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_squeak4.wav"
+}
+
+"Taunt.Taunt.SpringRiderSqueak5"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	".25"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_squeak5.wav"
+}
+
+"Taunt.Taunt.SpringRiderGetUp"
+{
+	"channel"	"CHAN_STATIC"
+	"volume"	"1"
+	"soundlevel"  	"SNDLVL_85dB"		
+	"wave"	")player/taunt_springrider_getup.wav"
+}
 
 //-----------------------------------------------------------------------------
 //End Taunts
 //-----------------------------------------------------------------------------
+
+"Medic.AutoCallerAnnounce"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"1.0"
+	"soundlevel"	"SNDLVL_86dBM"
+	"wave"		")ui/medic_alert.wav"
+}

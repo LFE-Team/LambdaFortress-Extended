@@ -2231,20 +2231,28 @@ void C_TFPlayer::StopBurningSound( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_TFPlayer::GetGlowEffectColor( byte *r, byte *g, byte *b, byte *a )
+void C_TFPlayer::GetGlowEffectColor( float *r, float *g, float *b )
 {
 	switch ( GetTeamNumber() )
 	{
 		case TF_TEAM_BLUE:
-			*r = 49; *g = 66; *b = 76; *a = 255;
+			*r = 0.49f; *g = 0.66f; *b = 0.7699971f;
 			break;
 
 		case TF_TEAM_RED:
-			*r = 74; *g = 23; *b = 23; *a = 255;
+			*r = 0.74f; *g = 0.23f; *b = 0.23f;
+			break;
+
+		case TF_TEAM_GREEN:
+			*r = 0.03f; *g = 0.68f; *b = 0;
+			break;
+
+		case TF_TEAM_YELLOW:
+			*r = 1.0f; *g = 0.62f; *b = 0;
 			break;
 
 		default:
-			*r = 76; *g = 76; *b = 76; *a = 255;
+			*r = 0.76f; *g = 0.76f; *b = 0.76f;
 			break;
 	}
 }
@@ -2754,10 +2762,13 @@ void C_TFPlayer::ClientThink()
 	{
 		if ( GetTeamNumber() != TEAM_SPECTATOR && GetObserverMode() != OBS_MODE_IN_EYE )
 		{
-			CTFViewModel *vm = dynamic_cast<CTFViewModel*>(GetViewModel(0));
-			if (vm)
+			CTFViewModel *vm = dynamic_cast<CTFViewModel*>(GetViewModel ( 0 ) );
+			if ( vm )
 			{
-				vm->RemoveViewmodelAddon();
+				for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+				{
+					vm->RemoveViewmodelAddon( i );
+				}
 			}
 		}
 	}

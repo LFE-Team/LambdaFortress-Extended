@@ -2599,6 +2599,7 @@ bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
 		if ( vecDir.LengthSqr() > ( radiusInfo.m_flRadius * radiusInfo.m_flRadius ) )
 			continue;
 
+		CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
 		CTFPlayer *pTFPlayer = ToTFPlayer( pEntity );
 		if ( pTFPlayer )
 		{
@@ -2617,6 +2618,20 @@ bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
 					if ( pEntity != pAttacker )
 					{
 						bExtinguished = true;
+
+						if ( pTFAttacker )
+						{
+							// Bonus points.
+							IGameEvent *event_bonus = gameeventmanager->CreateEvent( "player_bonuspoints" );
+							if ( event_bonus )
+							{
+								event_bonus->SetInt( "player_entindex", pEntity->entindex() );
+								event_bonus->SetInt( "source_entindex", pAttacker->entindex() );
+								event_bonus->SetInt( "points", 1 );
+ 								gameeventmanager->FireEvent( event_bonus );
+							}
+							CTF_GameStats.Event_PlayerAwardBonusPoints( pTFAttacker, pEntity, 1 );
+						}
 					}
 				}
 			}
@@ -2645,6 +2660,20 @@ bool CTFGameRules::RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond )
 					if ( pEntity != pAttacker )
 					{
 						bExtinguished = true;
+
+						if ( pTFAttacker )
+						{
+							// Bonus points.
+							IGameEvent *event_bonus = gameeventmanager->CreateEvent( "player_bonuspoints" );
+							if ( event_bonus )
+							{
+								event_bonus->SetInt( "player_entindex", pEntity->entindex() );
+								event_bonus->SetInt( "source_entindex", pAttacker->entindex() );
+								event_bonus->SetInt( "points", 1 );
+ 								gameeventmanager->FireEvent( event_bonus );
+							}
+							CTF_GameStats.Event_PlayerAwardBonusPoints( pTFAttacker, pEntity, 1 );
+						}
 					}
 				}
 			}
@@ -6874,7 +6903,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	// Respawn rooms only collide with players
 	if ( collisionGroup1 == TFCOLLISION_GROUP_RESPAWNROOMS )
 		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
-	
+
 /*	if ( collisionGroup0 == COLLISION_GROUP_PLAYER )
 	{
 		// Players don't collide with objects or other players
