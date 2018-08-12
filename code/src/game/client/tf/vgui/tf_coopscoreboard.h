@@ -5,8 +5,8 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef TF_FOURTEAMSCOREBOARD_H
-#define TF_FOURTEAMSCOREBOARD_H
+#ifndef TF_COOPSCOREBOARD_H
+#define TF_COOPSCOREBOARD_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -21,16 +21,16 @@
 // Purpose: displays the MapInfo menu
 //-----------------------------------------------------------------------------
 
-class CTFFourTeamScoreBoardDialog : public CClientScoreBoardDialog
+class CTFCoOpScoreBoardDialog : public CClientScoreBoardDialog
 {
 private:
-	DECLARE_CLASS_SIMPLE(CTFFourTeamScoreBoardDialog, CClientScoreBoardDialog);
+	DECLARE_CLASS_SIMPLE(CTFCoOpScoreBoardDialog, CClientScoreBoardDialog);
 
 public:
-	CTFFourTeamScoreBoardDialog(IViewPort *pViewPort);
-	virtual ~CTFFourTeamScoreBoardDialog();
+	CTFCoOpScoreBoardDialog(IViewPort *pViewPort);
+	virtual ~CTFCoOpScoreBoardDialog();
 
-	virtual const char *GetName(void) { return PANEL_FOURTEAMSCOREBOARD; }
+	virtual const char *GetName(void) { return PANEL_COOPSCOREBOARD; }
 	virtual void Reset();
 	virtual void Update();
 	virtual void ShowPanel( bool bShow );
@@ -50,20 +50,26 @@ private:
 	void UpdatePlayerDetails();
 	void ClearPlayerDetails();
 	bool ShouldShowAsSpectator( int iPlayerIndex );
-	
+	bool ShouldShowAsUnassigned( int iPlayerIndex );
+
 	virtual void FireGameEvent( IGameEvent *event );
 
 	static bool TFPlayerSortFunc( vgui::SectionedListPanel *list, int itemID1, int itemID2 );
 
 	vgui::SectionedListPanel *GetSelectedPlayerList( void );
 
-	vgui::SectionedListPanel	*m_pPlayerListRed;
 	vgui::SectionedListPanel	*m_pPlayerListBlue;
-	vgui::SectionedListPanel	*m_pPlayerListGreen;
-	vgui::SectionedListPanel	*m_pPlayerListYellow;
+	vgui::SectionedListPanel	*m_pPlayerListRed;
 	CExLabel					*m_pLabelPlayerName;
+	CExLabel					*m_pLabelMapName;
 	vgui::ImagePanel			*m_pImagePanelHorizLine;
 	CTFClassImage				*m_pClassImage;
+	EditablePanel				*m_pLocalPlayerStatsPanel;
+	EditablePanel				*m_pLocalPlayerDuelStatsPanel;
+	CExLabel					*m_pSpectatorsInQueue;
+	CExLabel					*m_pServerTimeLeftValue;
+	vgui::HFont					m_hTimeLeftFont;
+	vgui::HFont					m_hTimeLeftNotSetFont;
 
 	int							m_iImageDead;
 	int							m_iImageDominated;
@@ -77,4 +83,4 @@ private:
 
 const wchar_t *GetPointsString( int iPoints );
 
-#endif // TF_FOURTEAMSCOREBOARD_H
+#endif // TF_COOPSCOREBOARD_H
