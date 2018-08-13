@@ -49,7 +49,7 @@
 #include "tf_roundinfo.h"
 
 #include "tf_overview.h"
-#include "tf_deathmatchscoreboard.h"
+#include "tf_coopscoreboard.h"
 
 #include "tf_gamerules.h"
 
@@ -258,9 +258,9 @@ IViewPortPanel* TFViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTFIntroMenu( this );
 	}
-	else if (Q_strcmp(PANEL_DEATHMATCHSCOREBOARD, szPanelName) == 0)
+	else if (Q_strcmp(PANEL_COOPSCOREBOARD, szPanelName) == 0)
 	{
-		newpanel = new CTFDeathMatchScoreBoardDialog(this);
+		newpanel = new CTFCoOpScoreBoardDialog(this);
 	}
 	else if (Q_strcmp(PANEL_ARENATEAMSELECT, szPanelName) == 0)
 	{
@@ -283,7 +283,7 @@ void TFViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_CLASS_BLUE ), "PANEL_CLASS_BLUE" );
 	AddNewPanel( CreatePanelByName( PANEL_INTRO ), "PANEL_INTRO" );
 	AddNewPanel( CreatePanelByName( PANEL_ROUNDINFO ), "PANEL_ROUNDINFO" );
-	AddNewPanel( CreatePanelByName( PANEL_DEATHMATCHSCOREBOARD ), "PANEL_DEATHMATCHSCOREBOARD" );
+	AddNewPanel( CreatePanelByName( PANEL_COOPSCOREBOARD ), "PANEL_COOPSCOREBOARD" );
 	AddNewPanel( CreatePanelByName( PANEL_ARENATEAMSELECT ), "PANEL_ARENATEAMSELECT" );
 
 	BaseClass::CreateDefaultPanels();

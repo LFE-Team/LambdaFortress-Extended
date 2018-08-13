@@ -267,6 +267,11 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 	SetPoseParameter( m_iPitchPoseParameter, 0.0 );
 	SetPoseParameter( m_iYawPoseParameter, 0.0 );
 
+	if ( IsMiniBuilding() )
+	{
+		MakeMiniBuilding();
+	}
+
 	return BaseClass::StartBuilding( pBuilder );
 }
 
@@ -278,6 +283,11 @@ bool CObjectSentrygun::CanBeUpgraded( CTFPlayer *pPlayer )
 	if ( !m_bWasMapPlaced || HasSpawnFlags( SF_OBJ_UPGRADABLE ) )
 	{
 		return BaseClass::CanBeUpgraded( pPlayer );
+	}
+
+	if ( IsMiniBuilding() )
+	{
+		return false;
 	}
 
 	return false;

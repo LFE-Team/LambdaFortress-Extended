@@ -3937,11 +3937,11 @@ void CAI_BaseNPC::RunAnimation( void )
 #ifdef TF_CLASSIC
 	if ( InCond( TF_COND_SLOWED ) )
 	{
-		SetPlaybackRate( 1.0f );
+		SetPlaybackRate( 0.6f );
 	}
 	else
 	{
-		SetPlaybackRate( 0.6f );
+		SetPlaybackRate( 1.0f );
 	}
 #endif
 

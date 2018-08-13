@@ -33,6 +33,41 @@ obj*/
 # Specific Source build products
 client.pdb
 client.dll
+# Files to ignore when considering what GIT should commit.
+
+# Visual Studio 
+*.suo
+*.user
+*.sln.docstates
+*.obj
+*.pch
+*.tlog
+*.log
+*.scc
+*.exp
+*.ilk
+*.lastbuildstate
+vc100.pdb
+ipch
+*.sdf
+*.opensdf
+*.idb
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.vpc_crc
+*.sln
+
+# OSX/Linux build products
+*.mak
+*.mak.vpc_crc
+*.xcodeproj/
+obj*/
+!devtools/*.mak
+!utils/smdlexp/smdlexp.mak
+
+# Specific Source build products
+client.pdb
+client.dll
 client.lib
 server.pdb
 server.dll
@@ -57,13 +92,16 @@ config.cfg
 *.tmp
 
 # library files
-src/lib/public/mathlib.lib
-src/lib/public/raytrace.lib
-src/lib/public/tier1.lib
-src/lib/public/vgui_controls.lib
+code/src/lib/public/mathlib.lib
+code/src/lib/public/raytrace.lib
+code/src/lib/public/tier1.lib
+code/src/lib/public/vgui_controls.lib
 
 # misc files
 fgdlib.lib
-src/utils/sapi51/Samples/VB/TTSAppVB/ttsapp.RES
+code/src/utils/sapi51/Samples/VB/TTSAppVB/ttsapp.RES
 
 *.vcd
+*.pdb
+*.pdb
+code/src/game/server/Release_tf_coop_extended/vc120.pdb

@@ -922,11 +922,6 @@ void CTFArenaTeamMenu::OnKeyCodePressed(KeyCode code)
 			pButton->OnCursorEntered();
 		}
 	}
-	else if (m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code)
-	{
-		gViewPortInterface->ShowPanel( PANEL_DEATHMATCHSCOREBOARD, true );
-		gViewPortInterface->PostMessageToPanel( PANEL_DEATHMATCHSCOREBOARD, new KeyValues("PollHideCode", "code", code) );
-	}
 	else
 	{
 		BaseClass::OnKeyCodePressed(code);
