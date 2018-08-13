@@ -2231,28 +2231,20 @@ void C_TFPlayer::StopBurningSound( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_TFPlayer::GetGlowEffectColor( float *r, float *g, float *b )
+void C_TFPlayer::GetGlowEffectColor( byte *r, byte *g, byte *b, byte *a )
 {
 	switch ( GetTeamNumber() )
 	{
 		case TF_TEAM_BLUE:
-			*r = 0.49f; *g = 0.66f; *b = 0.7699971f;
+			*r = 0.49f; *g = 0.66f; *b = 0.7699971f; *a = 1;
 			break;
 
 		case TF_TEAM_RED:
-			*r = 0.74f; *g = 0.23f; *b = 0.23f;
-			break;
-
-		case TF_TEAM_GREEN:
-			*r = 0.03f; *g = 0.68f; *b = 0;
-			break;
-
-		case TF_TEAM_YELLOW:
-			*r = 1.0f; *g = 0.62f; *b = 0;
+			*r = 0.74f; *g = 0.23f; *b = 0.23f; *a = 1;
 			break;
 
 		default:
-			*r = 0.76f; *g = 0.76f; *b = 0.76f;
+			*r = 0.76f; *g = 0.76f; *b = 0.76f; *a = 1;
 			break;
 	}
 }
