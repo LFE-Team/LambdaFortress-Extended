@@ -133,6 +133,7 @@ void CNPC_CombineS::Spawn( void )
 		Msg( "Soldier %s is set to use march anim, but is not an efficient AI. The blended march anim can only be used for dead-ahead walks!\n", GetDebugName() );
 	}
 #endif
+	SpeedThink();
 }
 
 //-----------------------------------------------------------------------------
@@ -263,6 +264,14 @@ void CNPC_CombineS::BuildScheduleTestBits( void )
 int CNPC_CombineS::SelectSchedule ( void )
 {
 	return BaseClass::SelectSchedule();
+}
+
+void CNPC_CombineS::SpeedThink(void)
+{
+	if (sv_dynamicnpcs.GetFloat() == 1 && TFGameRules()->iDirectorAnger > 49)
+	{
+		SetPlaybackRate(1.5f);
+	}
 }
 
 //-----------------------------------------------------------------------------
