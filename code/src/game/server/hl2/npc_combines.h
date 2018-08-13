@@ -28,6 +28,7 @@ public:
 	void		DeathSound( const CTakeDamageInfo &info );
 	void		PrescheduleThink( void );
 	void		BuildScheduleTestBits( void );
+	void		SpeedThink(void);
 	int			SelectSchedule ( void );
 	float		GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info );
 	void		HandleAnimEvent( animevent_t *pEvent );

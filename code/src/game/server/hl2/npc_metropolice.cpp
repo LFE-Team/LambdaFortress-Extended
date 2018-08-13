@@ -742,12 +742,20 @@ void CNPC_MetroPolice::Spawn( void )
 	{
 		SetBodygroup( METROPOLICE_BODYGROUP_MANHACK, true );
 	}
+	SpeedThink();
 }
 
 
 //-----------------------------------------------------------------------------
 // Update weapon ranges
 //-----------------------------------------------------------------------------
+void CNPC_MetroPolice::SpeedThink(void)
+{
+	if (sv_dynamicnpcs.GetFloat() == 1 && TFGameRules()->iDirectorAnger > 49)
+	{
+		SetPlaybackRate(1.5f);
+	}
+}
 void CNPC_MetroPolice::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
 	BaseClass::Weapon_Equip( pWeapon );
