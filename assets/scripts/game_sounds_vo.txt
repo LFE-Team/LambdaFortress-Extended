@@ -21195,7 +21195,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt01.wav"
+	"wave"		"vo/heavy_SandwichTaunt01.mp3"
 }
 
 "Heavy.SandwichTaunt02"
@@ -21204,7 +21204,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt02.wav"
+	"wave"		"vo/heavy_SandwichTaunt02.mp3"
 }
 
 "Heavy.SandwichTaunt03"
@@ -21213,7 +21213,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt03.wav"
+	"wave"		"vo/heavy_SandwichTaunt03.mp3"
 }
 
 "Heavy.SandwichTaunt04"
@@ -21222,7 +21222,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt04.wav"
+	"wave"		"vo/heavy_SandwichTaunt04.mp3"
 }
 
 "Heavy.SandwichTaunt05"
@@ -21231,7 +21231,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt05.wav"
+	"wave"		"vo/heavy_SandwichTaunt05.mp3"
 }
 
 "Heavy.SandwichTaunt06"
@@ -21240,7 +21240,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt06.wav"
+	"wave"		"vo/heavy_SandwichTaunt06.mp3"
 }
 
 "Heavy.SandwichTaunt07"
@@ -21249,7 +21249,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt07.wav"
+	"wave"		"vo/heavy_SandwichTaunt07.mp3"
 }
 
 "Heavy.SandwichTaunt08"
@@ -21258,7 +21258,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt08.wav"
+	"wave"		"vo/heavy_SandwichTaunt08.mp3"
 }
 
 "Heavy.SandwichTaunt09"
@@ -21267,7 +21267,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt09.wav"
+	"wave"		"vo/heavy_SandwichTaunt09.mp3"
 }
 
 "Heavy.SandwichTaunt10"
@@ -21276,7 +21276,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt10.wav"
+	"wave"		"vo/heavy_SandwichTaunt10.mp3"
 }
 
 "Heavy.SandwichTaunt11"
@@ -21285,7 +21285,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt11.wav"
+	"wave"		"vo/heavy_SandwichTaunt11.mp3"
 }
 
 "Heavy.SandwichTaunt12"
@@ -21294,7 +21294,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt12.wav"
+	"wave"		"vo/heavy_SandwichTaunt12.mp3"
 }
 
 "Heavy.SandwichTaunt13"
@@ -21303,7 +21303,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt13.wav"
+	"wave"		"vo/heavy_SandwichTaunt13.mp3"
 }
 
 "Heavy.SandwichTaunt14"
@@ -21312,7 +21312,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt14.wav"
+	"wave"		"vo/heavy_SandwichTaunt14.mp3"
 }
 
 "Heavy.SandwichTaunt15"
@@ -21321,7 +21321,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt15.wav"
+	"wave"		"vo/heavy_SandwichTaunt15.mp3"
 }
 
 "Heavy.SandwichTaunt16"
@@ -21330,7 +21330,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt16.wav"
+	"wave"		"vo/heavy_SandwichTaunt16.mp3"
 }
 
 "Heavy.SandwichTaunt17"
@@ -21339,7 +21339,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/heavy_SandwichTaunt17.wav"
+	"wave"		"vo/heavy_SandwichTaunt17.mp3"
 }
 
 
