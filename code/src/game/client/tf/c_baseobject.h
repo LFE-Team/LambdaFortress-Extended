@@ -259,6 +259,7 @@ private:
 
 	int m_nObjectOldSequence;
 
+	bool			IsMiniBuilding( void ) { return m_bMiniBuilding; }
 protected:
 
 	int m_iUpgradeLevel;

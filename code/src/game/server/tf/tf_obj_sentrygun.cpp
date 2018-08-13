@@ -253,6 +253,11 @@ void CObjectSentrygun::StartPlacement( CTFPlayer *pPlayer )
 	m_vecBuildMaxs = SENTRYGUN_MAXS;
 	m_vecBuildMins -= Vector( 4,4,0 );
 	m_vecBuildMaxs += Vector( 4,4,0 );
+
+	if ( IsMiniBuilding() )
+	{
+		MakeMiniBuilding();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -266,11 +271,6 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 
 	SetPoseParameter( m_iPitchPoseParameter, 0.0 );
 	SetPoseParameter( m_iYawPoseParameter, 0.0 );
-
-	if ( IsMiniBuilding() )
-	{
-		MakeMiniBuilding();
-	}
 
 	return BaseClass::StartBuilding( pBuilder );
 }
@@ -392,6 +392,7 @@ void CObjectSentrygun::Precache()
 	PrecacheScriptSound( "Building_Sentrygun.Idle3" );	// level 3 sentry
 	PrecacheScriptSound( "Building_Sentrygun.Built" );
 	PrecacheScriptSound( "Building_Sentrygun.Empty" );
+	PrecacheScriptSound( "Building_MiniSentrygun.Fire" );
 
 	PrecacheParticleSystem( "sentrydamage_1" );
 	PrecacheParticleSystem( "sentrydamage_2" );
@@ -1153,7 +1154,10 @@ bool CObjectSentrygun::Fire()
 		{
 		case 1:
 		default:
-			EmitSound( "Building_Sentrygun.Fire" );
+			if ( !IsMiniBuilding() )
+				EmitSound( "Building_Sentrygun.Fire" );
+			else
+				EmitSound( "Building_MiniSentrygun.Fire" );
 			break;
 		case 2:
 			EmitSound( "Building_Sentrygun.Fire2" );
@@ -1396,16 +1400,35 @@ bool CObjectSentrygun::MoveTurret( void )
 		{
 			if ( flDist > 30 )
 			{
-				if ( m_flTurnRate < iBaseTurnRate * 10 )
+				if ( IsMiniBuilding() )
 				{
-					m_flTurnRate += iBaseTurnRate;
+					if ( m_flTurnRate < iBaseTurnRate * 11 )
+					{
+						m_flTurnRate += iBaseTurnRate;
+					}
+				}
+				else
+				{
+					if ( m_flTurnRate < iBaseTurnRate * 10 )
+					{
+						m_flTurnRate += iBaseTurnRate;
+					}	
 				}
 			}
 			else
 			{
-				// Slow down
-				if ( m_flTurnRate > (iBaseTurnRate * 5) )
-					m_flTurnRate -= iBaseTurnRate;
+				if ( IsMiniBuilding() )
+				{
+					// Slow down
+					if ( m_flTurnRate > (iBaseTurnRate * 6) )
+						m_flTurnRate -= iBaseTurnRate;
+				}
+				else
+				{
+					// Slow down
+					if ( m_flTurnRate > (iBaseTurnRate * 5) )
+						m_flTurnRate -= iBaseTurnRate;
+				}
 			}
 		}
 		else
@@ -1413,9 +1436,22 @@ bool CObjectSentrygun::MoveTurret( void )
 			// When tracking enemies, move faster and don't slow
 			if ( flDist > 30 )
 			{
-				if (m_flTurnRate < iBaseTurnRate * 30)
+				if ( IsMiniBuilding() )
 				{
-					m_flTurnRate += iBaseTurnRate * 3;
+					if (m_flTurnRate < iBaseTurnRate * 32)
+					{
+						m_flTurnRate += iBaseTurnRate * 4;
+					}
+				}
+				else
+				{
+				if ( IsMiniBuilding() )
+				{
+					if (m_flTurnRate < iBaseTurnRate * 30)
+					{
+						m_flTurnRate += iBaseTurnRate * 3;
+					}
+				}
 				}
 			}
 		}

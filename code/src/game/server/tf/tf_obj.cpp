@@ -49,6 +49,7 @@
 #define SCREEN_OVERLAY_MATERIAL "vgui/screens/vgui_overlay"
 
 #define ROPE_HANG_DIST	150
+#define MINI_SENTRY_LIGHT	2
 
 ConVar tf_obj_gib_velocity_min( "tf_obj_gib_velocity_min", "100", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar tf_obj_gib_velocity_max( "tf_obj_gib_velocity_max", "450", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
@@ -425,7 +426,8 @@ void CBaseObject::Spawn( void )
 //-----------------------------------------------------------------------------
 void CBaseObject::MakeMiniBuilding( void )
 {
-	m_flModelScale = 0.6f;
+	m_bMiniBuilding = true;
+
 	// Set the skin
 	switch ( GetTeamNumber() )
 	{
@@ -441,7 +443,9 @@ void CBaseObject::MakeMiniBuilding( void )
 		m_nSkin = 2;
 		break;
 	}
-	SetBodygroup( 1, true );
+
+	m_flModelScale = 0.6f;
+	SetBodygroup( MINI_SENTRY_LIGHT, true );
 }
 
 void CBaseObject::MakeCarriedObject( CTFPlayer *pPlayer )
@@ -1538,11 +1542,6 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 	// instantly play the build anim
 	DetermineAnimation();
 
-	if ( IsMiniBuilding() )
-	{
-		MakeMiniBuilding();
-	}
-
 	return true;
 }
 
@@ -1553,11 +1552,6 @@ void CBaseObject::BuildingThink( void )
 {
 	// Continue construction
 	Repair( (GetMaxHealth() - OBJECT_CONSTRUCTION_STARTINGHEALTH) / m_flTotalConstructionTime * OBJECT_CONSTRUCTION_INTERVAL );
-
-	if ( IsMiniBuilding() )
-	{
-		MakeMiniBuilding();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -2067,7 +2061,7 @@ float CBaseObject::GetConstructionMultiplier( void )
 
 	// Minis deploy faster.
 	if ( IsMiniBuilding() )
-		flMultiplier *= 1.5f;
+		flMultiplier *= 1.7f;
 
 	// Re-deploy twice as fast.
 	if ( IsRedeploying() )

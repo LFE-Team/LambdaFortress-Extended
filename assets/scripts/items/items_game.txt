@@ -7555,7 +7555,7 @@
 				"nameable"	"1"
 				"can_gift_wrap"	"1"
 			}
-			"show_in_armory"	"0"
+			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Wearable_Boots"
 			"item_name"	"#TF_Unique_Blast_Boots"
 			"item_slot"	"secondary"
@@ -7610,7 +7610,7 @@
 				"can_destroy_sappers"		"1"
 				"can_deal_taunt_damage"		"1"
 			}
-			"show_in_armory"	"0"
+			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_Robot_Arm"
 			"item_name"	"#TF_Unique_Robot_Arm"
 			"item_slot"	"melee"
@@ -8413,7 +8413,7 @@
 			"item_logname"	"physcannon_mega"
 			"item_iconname"	"physcannon_mega"
 			"item_slot"	"action"
-			"item_quality"	"unique"
+			"item_quality"	"vintage"
 			"propername"	"1"
 			"min_ilevel"	"99"
 			"max_ilevel"	"99"

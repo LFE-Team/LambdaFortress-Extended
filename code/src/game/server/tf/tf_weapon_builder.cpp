@@ -581,6 +581,16 @@ void CTFWeaponBuilder::StartPlacement(void)
 		// Stomp this here in the same frame we make the object, so prevent clientside warnings that it's under attack
 		m_hObjectBeingBuilt->m_iHealth = OBJECT_CONSTRUCTION_STARTINGHEALTH;
 	}
+
+	int nMiniSentry = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), nMiniSentry, wrench_builds_minisentry );
+	if ( nMiniSentry == 1 )
+	{
+		if ( GetType() == OBJ_SENTRYGUN )
+		{
+			m_hObjectBeingBuilt->MakeMiniBuilding();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -640,6 +650,16 @@ void CTFWeaponBuilder::StartBuilding(void)
 	Assert(pObj);
 
 	pObj->StartBuilding(GetOwner());
+
+	int nMiniSentry = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer, nMiniSentry, wrench_builds_minisentry );
+	if ( nMiniSentry == 1 )
+	{
+		if ( GetType() == OBJ_SENTRYGUN )
+		{
+			pObj->MakeMiniBuilding();
+		}
+	}
 
 	m_hObjectBeingBuilt = NULL;
 
