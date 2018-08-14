@@ -20808,7 +20808,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing01.wav"
+ "wave"  "vo/heavy_Meleeing01.mp3"
 }
  
 "Heavy.Meleeing02"
@@ -20817,7 +20817,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing02.wav"
+ "wave"  "vo/heavy_Meleeing02.mp3"
 }
  
 "Heavy.Meleeing03"
@@ -20826,7 +20826,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing03.wav"
+ "wave"  "vo/heavy_Meleeing03.mp3"
 }
  
 "Heavy.Meleeing04"
@@ -20835,7 +20835,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing04.wav"
+ "wave"  "vo/heavy_Meleeing04.mp3"
 }
  
 "Heavy.Meleeing05"
@@ -20844,7 +20844,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing05.wav"
+ "wave"  "vo/heavy_Meleeing05.mp3"
 }
  
 "Heavy.Meleeing06"
@@ -20853,7 +20853,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing06.wav"
+ "wave"  "vo/heavy_Meleeing06.mp3"
 }
  
 "Heavy.Meleeing07"
@@ -20862,7 +20862,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing07.wav"
+ "wave"  "vo/heavy_Meleeing07.mp3"
 }
  
 "Heavy.Meleeing08"
@@ -20871,7 +20871,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_Meleeing08.wav"
+ "wave"  "vo/heavy_Meleeing08.mp3"
 }
  
 "Heavy.Revenge01"
