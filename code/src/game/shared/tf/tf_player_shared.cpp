@@ -273,6 +273,7 @@ CTFPlayerShared::CTFPlayerShared()
 	m_pDisguiseWeaponInfo = NULL;
 	m_pCritSound = NULL;
 	m_pCritEffect = NULL;
+	m_pInvulnerableSound = NULL;
 #else
 	memset( m_flChargeOffTime, 0, sizeof( m_flChargeOffTime ) );
 	memset( m_bChargeSounds, 0, sizeof( m_bChargeSounds ) );
@@ -483,6 +484,19 @@ bool CTFPlayerShared::IsStealthed( void )
 	return false;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFPlayerShared::IsJared( void )
+{
+	if ( InCond( TF_COND_URINE ) ||
+		InCond( TF_COND_MAD_MILK ) ||
+		InCond( TF_COND_GAS ) )
+		return true;
+
+	return false;
+}
+
 void CTFPlayerShared::DebugPrintConditions( void )
 {
 #ifndef CLIENT_DLL
@@ -552,6 +566,11 @@ void CTFPlayerShared::OnDataChanged( void )
 	m_nOldConditionsEx = m_nPlayerCondEx;
 	m_nOldConditionsEx2 = m_nPlayerCondEx2;
 	m_nOldConditionsEx3 = m_nPlayerCondEx3;
+
+	if ( m_bWasCritBoosted != IsCritBoosted() )
+	{
+		UpdateCritBoostEffect();
+	}
 
 	if ( m_nOldDisguiseClass != GetDisguiseClass() || m_nOldDisguiseTeam != GetDisguiseTeam() )
 	{
@@ -729,7 +748,9 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 		break;
 
 	case TF_COND_URINE:
-		OnAddUrine();
+	case TF_COND_MAD_MILK:
+	case TF_COND_GAS:
+		OnAddJar();
 		break;
 		
 	case TF_COND_SPEED_BOOST:
@@ -844,7 +865,9 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 		break;
 
 	case TF_COND_URINE:
-		OnRemoveUrine();
+	case TF_COND_MAD_MILK:
+	case TF_COND_GAS:
+		OnRemoveJar();
 		break;
 
 	case TF_COND_SPEED_BOOST:
@@ -921,7 +944,7 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 					// If we're being healed, we reduce bad conditions faster
 					if ( m_aHealers.Count() > 0 )
 					{
-						if ( i == TF_COND_URINE )
+						if ( i == TF_COND_URINE || i == TF_COND_MAD_MILK || i == TF_COND_GAS )
 							flReduction *= m_aHealers.Count() + 1;
 						else
 							flReduction += ( m_aHealers.Count() * flReduction * 4 );
@@ -1155,9 +1178,11 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		}
 	}
 
-	if (InCond( TF_COND_URINE ) && m_pOuter->GetWaterLevel() >= WL_Waist )
+	if ( IsJared() && m_pOuter->GetWaterLevel() >= WL_Waist )
  	{
 		RemoveCond( TF_COND_URINE );
+		RemoveCond( TF_COND_MAD_MILK );
+		RemoveCond( TF_COND_GAS );
 	}
 
 	if ( InCond( TF_COND_DISGUISING ) )
@@ -1329,9 +1354,11 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 		RemoveCond( TF_COND_SLOWED );
 	}
 
-	if ( InCond( TF_COND_URINE ) )
+	if ( IsJared() )
 	{
 		RemoveCond( TF_COND_URINE );
+		RemoveCond( TF_COND_MAD_MILK );
+		RemoveCond( TF_COND_GAS );
 	}
 #else
 	if ( m_pOuter->IsLocalPlayer() )
@@ -1357,6 +1384,14 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 			view->SetScreenOverlayMaterial( pMaterial );
 		}
 	}
+
+	if ( !m_pInvulnerableSound )
+	{
+		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
+		CLocalPlayerFilter filter;
+		m_pInvulnerableSound = controller.SoundCreate( filter, m_pOuter->entindex(), "Weapon_General.CritPower" );
+		controller.Play( m_pInvulnerableSound, 1.0, 100 );
+	}
 #endif
 }
 
@@ -1369,6 +1404,12 @@ void CTFPlayerShared::OnRemoveInvulnerable( void )
 	if ( m_pOuter->IsLocalPlayer() )
 	{
 		view->SetScreenOverlayMaterial( NULL );
+	}
+
+	if ( m_pInvulnerableSound )
+	{
+		CSoundEnvelopeController::GetController().SoundDestroy( m_pInvulnerableSound );
+		m_pInvulnerableSound = NULL;
 	}
 #endif
 }
@@ -1509,6 +1550,13 @@ void CTFPlayerShared::OnAddStunned( void )
 	{
 		pWeapon->OnControlStunned();
 	}
+
+	m_pOuter->TeamFortress_SetSpeed();
+
+#ifdef CLIENT_DLL
+	if ( !m_pStun )
+		m_pStun = m_pOuter->ParticleProp()->Create( "conc_stars", PATTACH_POINT_FOLLOW, "head" );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1526,6 +1574,13 @@ void CTFPlayerShared::OnRemoveStunned( void )
 	{
 		pWeapon->SetWeaponVisible( true );
 	}
+
+	m_pOuter->TeamFortress_SetSpeed();
+
+#ifdef CLIENT_DLL
+	m_pOuter->ParticleProp()->StopEmission( m_pStun );
+	m_pStun = NULL;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1572,10 +1627,14 @@ void CTFPlayerShared::OnRemovePhase(void)
 {
 #ifdef GAME_DLL
 	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_TIRED );
+
+	for ( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+	{
+		m_pPhaseTrails[i]->SUB_Remove();
+	}
+	m_pPhaseTrails.RemoveAll();
 #else
-	m_pOuter->ParticleProp()->StopEmission( m_pPhaseTrails );
 	m_pOuter->ParticleProp()->StopEmission( m_pWarp );
-	m_pPhaseTrails = NULL;
 	m_pWarp = NULL;
 #endif
 }
@@ -1728,29 +1787,36 @@ void CTFPlayerShared::OnRemoveSpeedBoost( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddUrine( void )
+void CTFPlayerShared::OnAddJar( void )
 {
 #ifdef GAME_DLL
 	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
 #else
-	m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
-
-	// set the burning screen overlay
-	if ( m_pOuter->IsLocalPlayer() )
+	if ( InCond( TF_COND_URINE ) )
 	{
-		IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
-		if ( !IsErrorMaterial( pMaterial ) )
+		m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
+
+		// set the burning screen overlay
+		if ( m_pOuter->IsLocalPlayer() )
 		{
-			view->SetScreenOverlayMaterial( pMaterial );
+			IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
+			if ( !IsErrorMaterial( pMaterial ) )
+			{
+				view->SetScreenOverlayMaterial( pMaterial );
+			}
 		}
 	}
+	else if ( InCond( TF_COND_MAD_MILK ) )
+	{
+		m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
+	}
 #endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveUrine(void)
+void CTFPlayerShared::OnRemoveJar( void )
 {
 #ifdef GAME_DLL
 	if( m_nPlayerState != TF_STATE_DYING )
@@ -1758,11 +1824,18 @@ void CTFPlayerShared::OnRemoveUrine(void)
 		m_hUrineAttacker = NULL;
 	}
 #else
-	m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips" );
-
-	if ( m_pOuter->IsLocalPlayer() )
+	if ( InCond( TF_COND_URINE ) )
 	{
-		view->SetScreenOverlayMaterial( NULL );
+		m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips" );
+
+		if ( m_pOuter->IsLocalPlayer() )
+		{
+			view->SetScreenOverlayMaterial( NULL );
+		}
+	}
+	else if ( InCond( TF_COND_MAD_MILK ) )
+	{
+		m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
 	}
 #endif
 }
@@ -1770,27 +1843,28 @@ void CTFPlayerShared::OnRemoveUrine(void)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMilk( void )
+void CTFPlayerShared::OnAddPowerPlay( void )
 {
 #ifdef GAME_DLL
-	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
+	RecalculateChargeEffects();
+	Burn( m_pOuter );
 #else
-	m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW ); 
+	const char *pszEffectName = ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber(), true );
+	m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "head" );
 #endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMilk(void)
+void CTFPlayerShared::OnRemovePowerPlay(void)
 {
+	RemoveCond( TF_COND_BURNING );
 #ifdef GAME_DLL
-	if( m_nPlayerState != TF_STATE_DYING )
-	{
-		m_hUrineAttacker = NULL;
-	}
+	RecalculateChargeEffects();
 #else
-	m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
+	m_pOuter->ParticleProp()->StopParticlesNamed( "scout_dodge_red" );
+	m_pOuter->ParticleProp()->StopParticlesNamed( "scout_dodge_blue" );
 #endif
 }
 
@@ -1883,19 +1957,54 @@ void CTFPlayerShared::StunPlayer( float flDuration, CTFPlayer *pStunner )
 	AddCond( TF_COND_STUNNED );
 }
 
-#ifdef CLIENT_DLL
+#ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Bonk phase effects
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::AddPhaseEffects(void)
 {
-	/*
 	CTFPlayer *pPlayer = m_pOuter;
 	if ( !pPlayer)
 		return;
 
-	pPlayer->ParticleProp()->Create( "pyro_blast", PATTACH_POINT_FOLLOW, "muzzle" );
-	*/
+
+	// TF2Vintage's bonk effect
+	// TODO: Clean this up a bit more
+	const char* pszEffect = m_pOuter->GetTeamNumber() == TF_TEAM_BLUE ? "effects/beam001_blu.vmt" : "effects/beam001_red.vmt";
+	Vector vecOrigin = pPlayer->GetAbsOrigin();
+	
+	CSpriteTrail *pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 12.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "back_upper" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 16.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "back_lower" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	// White trail for socks
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 8.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 0.5 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "foot_R" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 8.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 0.5 );
+	pPhaseTrail->SetAttachment( pPlayer, pPlayer->LookupAttachment( "foot_L" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
 }
 #endif
 
@@ -1906,30 +2015,44 @@ void CTFPlayerShared::UpdatePhaseEffects(void)
 {
 	if ( !InCond( TF_COND_PHASE ) )
 	{
-		#ifdef CLIENT_DLL
-		m_pOuter->ParticleProp()->StopEmission( m_pWarp );
-		m_pWarp = NULL;
-		
-		m_pOuter->ParticleProp()->StopEmission( m_pPhaseTrails );
-		m_pPhaseTrails = NULL;
-		#endif
 		return;
+	}
+
+#ifdef CLIENT_DLL
+	if(  m_pOuter->GetAbsVelocity() != vec3_origin )
+	{
+		/*
+		// We're on the move
+		if( m_pWarp )
+		{
+			m_pOuter->ParticleProp()->StopEmission( m_pWarp );
+			m_pWarp = NULL;
+		}
+		*/
 	}
 	else
 	{
-#ifdef CLIENT_DLL
+		// We're not moving
 		if ( !m_pWarp )
 		{
 			m_pWarp = m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
 		}
-
-		if ( !m_pPhaseTrails )
-		{
-			const char *pszEffectName = ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber(), true );
-			m_pPhaseTrails = m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "head" );
-		}
-#endif
 	}
+#else
+	if ( m_pPhaseTrails.IsEmpty() )
+	{
+		AddPhaseEffects();
+	}
+		
+	// Turn on the trails if they're not active already
+	if ( m_pPhaseTrails[0] && !m_pPhaseTrails[0]->IsOn() )
+	{
+		for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+		{
+			m_pPhaseTrails[i]->TurnOn();
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2224,7 +2347,7 @@ void CTFPlayerShared::InvisibilityThink( void )
 {
 	float flTargetInvis = 0.0f;
 	float flTargetInvisScale = 1.0f;
-	if ( InCond( TF_COND_STEALTHED_BLINK ) || InCond( TF_COND_URINE ) )
+	if ( InCond( TF_COND_STEALTHED_BLINK ) || IsJared() )
 	{
 		// We were bumped into or hit for some damage.
 		flTargetInvisScale = TF_SPY_STEALTH_BLINKSCALE;/*tf_spy_stealth_blink_scale.GetFloat();*/
@@ -2797,7 +2920,9 @@ void CTFPlayerShared::SetChargeEffect( medigun_charge_types chargeType, bool bSh
 			m_flChargeOffTime[chargeType] = 0.0f;
 
 			if ( chargeEffect.condition_disable != TF_COND_LAST )
+			{
 				RemoveCond( chargeEffect.condition_disable );
+			}
 		}
 
 		// Charge on.
@@ -2827,7 +2952,9 @@ void CTFPlayerShared::SetChargeEffect( medigun_charge_types chargeType, bool bSh
 			RemoveCond( chargeEffect.condition_enable );
 
 			if ( chargeEffect.condition_disable != TF_COND_LAST )
+			{
 				RemoveCond( chargeEffect.condition_disable );
+			}
 		}
 		else
 		{

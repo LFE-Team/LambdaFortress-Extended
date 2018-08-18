@@ -119,6 +119,7 @@ public:
 	bool	IsMiniCritBoosted( void );
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
+	bool	IsJared( void );
 
 	void	ConditionGameRulesThink( void );
 
@@ -193,9 +194,11 @@ public:
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
 	void	StunPlayer( float flDuration, CTFPlayer *pStunner );
 
-#ifdef CLIENT_DLL
+#ifdef GAME_DLL
 	void	AddPhaseEffects( void );
-	CNewParticleEffect *m_pPhaseTrails;
+	CUtlVector< CSpriteTrail * > m_pPhaseTrails;
+#else
+	CNewParticleEffect *m_pStun;
 	CNewParticleEffect *m_pWarp;
 #endif
 
@@ -300,9 +303,10 @@ private:
 	void OnAddRagemode( void );
 	void OnAddPhase( void );
 	void OnAddSpeedBoost( void );
-	void OnAddUrine( void );
-	void OnAddMilk( void );
+	void OnAddJar( void );
 	void OnAddTeamGlows( void );
+
+	void OnAddPowerPlay( void );
 
 	void OnRemoveZoomed( void );
 	void OnRemoveBurning( void );
@@ -321,9 +325,10 @@ private:
 	void OnRemoveRagemode( void );
 	void OnRemovePhase( void );
 	void OnRemoveSpeedBoost( void );
-	void OnRemoveUrine( void );
-	void OnRemoveMilk( void );
+	void OnRemoveJar( void );
 	void OnRemoveTeamGlows( void );
+
+	void OnRemovePowerPlay( void );
 
 	float GetCritMult( void );
 
@@ -403,6 +408,7 @@ private:
 	float					m_flFlameBurnTime;
 	float					m_flFlameRemoveTime;
 	float					m_flTauntRemoveTime;
+	float					m_flStunTime;
 	float					m_flPhaseTime;
 
 	float m_flDisguiseCompleteTime;
@@ -454,6 +460,7 @@ private:
 	CNewParticleEffect *m_pCritEffect;
 	EHANDLE m_hCritEffectHost;
 	CSoundPatch *m_pCritSound;
+	CSoundPatch *m_pInvulnerableSound;
 
 	int	m_nOldDisguiseClass;
 	int m_nOldDisguiseTeam;

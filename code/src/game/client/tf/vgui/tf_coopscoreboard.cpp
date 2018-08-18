@@ -442,6 +442,8 @@ void CTFCoOpScoreBoardDialog::UpdatePlayerList()
 	if ( !pLocalPlayer )
 		return;
 
+	int localteam = pLocalPlayer->GetTeamNumber();
+
 	bool bMadeSelection = false;
 
 	for( int playerIndex = 1 ; playerIndex <= MAX_PLAYERS; playerIndex++ )
@@ -470,37 +472,60 @@ void CTFCoOpScoreBoardDialog::UpdatePlayerList()
 			pKeyValues->SetString( "name", szName );
 			pKeyValues->SetInt( "score", score );
 
-			// class name
-			if( g_PR->IsConnected( playerIndex ) )
+			// can only see class information if we're on the same team
+			if ( !AreEnemyTeams( g_PR->GetTeam( playerIndex ), localteam ) && !( localteam == TEAM_UNASSIGNED ) )
 			{
-				int iClass = tf_PR->GetPlayerClass( playerIndex );
-				if ( GetLocalPlayerIndex() == playerIndex && !tf_PR->IsAlive( playerIndex ) ) 
+				// class name
+				if( g_PR->IsConnected( playerIndex ) )
 				{
-					// If this is local player and he is dead, show desired class (which he will spawn as) rather than current class.
-					C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
-					int iDesiredClass = pPlayer->m_Shared.GetDesiredPlayerClassIndex();
-					// use desired class unless it's random -- if random, his future class is not decided until moment of spawn
-					if ( TF_CLASS_RANDOM != iDesiredClass )
+					int iClass = tf_PR->GetPlayerClass( playerIndex );
+					if ( GetLocalPlayerIndex() == playerIndex && !tf_PR->IsAlive( playerIndex ) ) 
 					{
-						iClass = iDesiredClass;
+						// If this is local player and he is dead, show desired class (which he will spawn as) rather than current class.
+						C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
+						int iDesiredClass = pPlayer->m_Shared.GetDesiredPlayerClassIndex();
+						// use desired class unless it's random -- if random, his future class is not decided until moment of spawn
+						if ( TF_CLASS_RANDOM != iDesiredClass )
+						{
+							iClass = iDesiredClass;
+						}
+					} 
+					else 
+					{
+						// for non-local players, show the current class
+						iClass = tf_PR->GetPlayerClass( playerIndex );
 					}
-				} 
-				else 
-				{
-					// for non-local players, show the current class
-					iClass = tf_PR->GetPlayerClass( playerIndex );
-				}
 
-				if( iClass >= TF_FIRST_NORMAL_CLASS )
+					if( iClass >= TF_FIRST_NORMAL_CLASS )
+					{
+						//pKeyValues->SetString( "class", g_aPlayerClassNames[iClass] );
+						pKeyValues->SetInt( "class", tf_PR->IsAlive( playerIndex) ? m_iClassEmblem[iClass] : m_iClassEmblemDead[iClass] );
+					}
+					else
+					{
+						pKeyValues->SetString( "class", "" );
+					}
+				}				
+			}
+			else
+			{
+				C_TFPlayer *pPlayerOther = ToTFPlayer( UTIL_PlayerByIndex( playerIndex ) );
+
+				bool bUseTruncatedNames = false;
+
+				if ( pPlayerOther && pPlayerOther->m_Shared.IsPlayerDominated( pLocalPlayer->entindex() ) )
 				{
-					//pKeyValues->SetString( "class", g_aPlayerClassNames[iClass] );
-					pKeyValues->SetInt( "class", tf_PR->IsAlive( playerIndex) ? m_iClassEmblem[iClass] : m_iClassEmblemDead[iClass] );
+					// if local player is dominated by this player, show a nemesis icon
+					pKeyValues->SetInt( "nemesis", m_iImageNemesis );
+					pKeyValues->SetString( "class", bUseTruncatedNames ? "#TF_Nemesis_lodef" : "#TF_Nemesis" );
 				}
-				else
+				else if ( pLocalPlayer->m_Shared.IsPlayerDominated( playerIndex) )
 				{
-					pKeyValues->SetString( "class", "" );
+					// if this player is dominated by the local player, show the domination icon
+					pKeyValues->SetInt( "nemesis", m_iImageDominated );
+					pKeyValues->SetString( "class", bUseTruncatedNames ? "#TF_Dominated_lodef" : "#TF_Dominated" );
 				}
-			}				
+			}
 
 			// display whether player is alive or dead (all players see this for all other players on both teams)
 			//pKeyValues->SetInt( "status", tf_PR->IsAlive( playerIndex ) ?  0 : m_iImageDead );

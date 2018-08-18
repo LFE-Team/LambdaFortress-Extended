@@ -9579,7 +9579,80 @@ CON_COMMAND_F( tf_crashclients, "testing only, crashes about 50 percent of the c
 	}
 }
 
-CON_COMMAND_F( give_weapon, "Give specified weapon.", FCVAR_CHEAT )
+// Add class name prefixes to show in the "give_weapon" command autocomplete here
+static ClassNamePrefix_t s_pWpnEntityPrefixes[] =
+{
+	ClassNamePrefix_t( "tf_weapon_", true ),
+};
+
+int GiveWpnAutoComplete( const char *partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH])
+{
+	// Find the first space in our input
+	const char *firstSpace = V_strstr(partial, " ");
+	if(!firstSpace)
+		return 0;
+
+	int commandLength = firstSpace - partial;
+
+	// Extract the command name from the input
+	char commandName[COMMAND_COMPLETION_ITEM_LENGTH];
+	V_StrSlice(partial, 0, commandLength, commandName, sizeof(commandName));
+
+	// Calculate the length of the command string (minus the command name)
+	partial += commandLength + 1;
+	int partialLength = V_strlen(partial);
+
+	// Grab the factory dictionary
+	if(!EntityFactoryDictionary())
+		return 0;
+
+	const EntityFactoryDict_t &factoryDict = EntityFactoryDictionary()->GetFactoryDictionary();
+	int numMatches = 0;
+
+	// Iterate through all entity factories
+	for(int i = factoryDict.First(); i != factoryDict.InvalidIndex() && numMatches < COMMAND_COMPLETION_MAXITEMS; i = factoryDict.Next(i))
+	{
+		const char *pszClassName = factoryDict.GetElementName(i);
+
+		// See if this entity classname has a prefix that we show in the
+		// autocomplete
+		// TODO: optimise by caching all autocompletable classnames into a hash
+		// table on first run
+		int j;
+		const ClassNamePrefix_t *pPrefix = NULL;
+
+		for(j = 0; j < ARRAYSIZE(s_pWpnEntityPrefixes); ++j)
+		{
+			pPrefix = &s_pWpnEntityPrefixes[j];
+
+			if(Q_strncmp(pszClassName, pPrefix->m_pszPrefix, pPrefix->m_nLength))
+				continue;
+
+			break;
+		}
+
+		// If this entity factory had no prefixes, we could not find the prefix, skip this entity
+		if(j == ARRAYSIZE(s_pWpnEntityPrefixes))
+			continue;
+
+		// Skip past the prefix if it shouldn't be kept
+		if(!pPrefix->m_bKeepPrefix)
+			pszClassName += pPrefix->m_nLength;
+
+		// Does this entity match our partial completion?
+		if(Q_strnicmp(pszClassName, partial, partialLength))
+			continue;
+
+		Q_snprintf(commands[numMatches++], COMMAND_COMPLETION_ITEM_LENGTH, "%s %s", commandName, pszClassName);
+	}
+
+	// Sort the commands alphabetically
+	qsort(commands, numMatches, COMMAND_COMPLETION_ITEM_LENGTH, StringSortFunc);
+
+	return numMatches;
+}
+
+CON_COMMAND_F_COMPLETION( give_weapon, "Give specified weapon.", FCVAR_CHEAT, GiveWpnAutoComplete )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
 	if ( args.ArgC() < 2 )
@@ -9616,7 +9689,7 @@ CON_COMMAND_F( give_weapon, "Give specified weapon.", FCVAR_CHEAT )
 	}
 }
 
-CON_COMMAND( dev_give_weapon, "Give specified weapon. \n for devs" )
+CON_COMMAND_F_COMPLETION( dev_give_weapon, "Give specified weapon. \n for devs", 0, GiveWpnAutoComplete )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer->m_bIsPlayerADev )
@@ -9893,16 +9966,13 @@ bool CTFPlayer::SetPowerplayEnabled( bool bOn )
 	if ( bOn )
 	{
 		m_flPowerPlayTime = gpGlobals->curtime + 99999;
-		m_Shared.RecalculateChargeEffects();
-		m_Shared.Burn( this );
-
+		m_Shared.OnAddPowerPlay();
 		PowerplayThink();
 	}
 	else
 	{
 		m_flPowerPlayTime = 0.0;
-		m_Shared.RemoveCond( TF_COND_BURNING );
-		m_Shared.RecalculateChargeEffects();
+		m_Shared.OnRemovePowerPlay();
 	}
 	return true;
 }
