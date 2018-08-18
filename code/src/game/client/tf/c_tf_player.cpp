@@ -2236,15 +2236,23 @@ void C_TFPlayer::GetGlowEffectColor( byte *r, byte *g, byte *b, byte *a )
 	switch ( GetTeamNumber() )
 	{
 		case TF_TEAM_BLUE:
-			*r = 0.49f; *g = 0.66f; *b = 0.7699971f; *a = 1;
+			*r = 0.49f; *g = 0.66f; *b = 0.7699971f;
 			break;
 
 		case TF_TEAM_RED:
-			*r = 0.74f; *g = 0.23f; *b = 0.23f; *a = 1;
+			*r = 0.74f; *g = 0.23f; *b = 0.23f;
+			break;
+
+		case TF_TEAM_GREEN:
+			*r = 0.03f; *g = 0.68f; *b = 0;
+			break;
+
+		case TF_TEAM_YELLOW:
+			*r = 1.0f; *g = 0.62f; *b = 0;
 			break;
 
 		default:
-			*r = 0.76f; *g = 0.76f; *b = 0.76f; *a = 1;
+			*r = 0.76f; *g = 0.76f; *b = 0.76f;
 			break;
 	}
 }

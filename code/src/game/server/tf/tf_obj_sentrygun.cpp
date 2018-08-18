@@ -54,6 +54,8 @@ extern bool IsInCommentaryMode();
 
 #define SENTRYGUN_SAPPER_OWNER_DAMAGE_MODIFIER	0.33f
 
+#define MINI_SENTRYGUN_PITCH	150
+
 enum
 {	
 	SENTRYGUN_ATTACHMENT_MUZZLE = 0,
@@ -895,17 +897,24 @@ void CObjectSentrygun::FoundTarget( CBaseEntity *pTarget, const Vector &vecSound
 		// Play one sound to everyone but the target.
 		CPASFilter filter( vecSoundCenter );
 
+		EmitSound_t params;
+		params.m_flSoundTime = 0;
+		params.m_pSoundName = "Building_Sentrygun.Alert";
+		params.m_nPitch = m_bMiniBuilding ? MINI_SENTRYGUN_PITCH : PITCH_NORM;
+
 		if ( pTarget->IsPlayer() )
 		{
 			CTFPlayer *pPlayer = ToTFPlayer( pTarget );
 
 			// Play a specific sound just to the target and remove it from the genral recipient list.
 			CSingleUserRecipientFilter singleFilter( pPlayer );
-			EmitSound( singleFilter, entindex(), "Building_Sentrygun.AlertTarget" );
+			params.m_pSoundName = "Building_Sentrygun.AlertTarget";
+			params.m_nPitch = m_bMiniBuilding ? MINI_SENTRYGUN_PITCH : PITCH_NORM;
+			EmitSound( singleFilter, entindex(), params );
 			filter.RemoveRecipient( pPlayer );
 		}
 
-		EmitSound( filter, entindex(), "Building_Sentrygun.Alert" );
+		EmitSound( filter, entindex(), params );
 	}
 
 	// Update timers, we are attacking now!
@@ -1154,10 +1163,7 @@ bool CObjectSentrygun::Fire()
 		{
 		case 1:
 		default:
-			if ( !IsMiniBuilding() )
-				EmitSound( "Building_Sentrygun.Fire" );
-			else
-				EmitSound( "Building_MiniSentrygun.Fire" );
+			EmitSound( m_bMiniBuilding ? "Building_MiniSentrygun.Fire" : "Building_Sentrygun.Fire" );
 			break;
 		case 2:
 			EmitSound( "Building_Sentrygun.Fire2" );
@@ -1259,6 +1265,12 @@ void CObjectSentrygun::SentryRotate( void )
 	if ( FindTarget() )
 		return;
 
+	CPASAttenuationFilter filter( this );
+	EmitSound_t params;
+	params.m_flSoundTime = 0;
+	params.m_pSoundName = "Building_Sentrygun.Idle";
+	params.m_nPitch = m_bMiniBuilding ? MINI_SENTRYGUN_PITCH : PITCH_NORM;
+
 	// Rotate
 	if ( !MoveTurret() )
 	{
@@ -1275,7 +1287,7 @@ void CObjectSentrygun::SentryRotate( void )
 			{
 			case 1:
 			default:
-				EmitSound( "Building_Sentrygun.Idle" );
+				EmitSound( filter, entindex(), params );
 				break;
 			case 2:
 				EmitSound( "Building_Sentrygun.Idle2" );

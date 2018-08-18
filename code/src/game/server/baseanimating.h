@@ -387,7 +387,7 @@ protected:
 
 #ifdef GLOWS_ENABLE
 	CNetworkVar( bool, m_bGlowEnabled );
-	CNetworkColor32( m_iGlowColor );
+	CNetworkVector( m_vGlowColor );
 #endif // GLOWS_ENABLE
 public:
 	Vector	GetStepOrigin( void ) const;

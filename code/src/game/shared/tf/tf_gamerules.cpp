@@ -5417,6 +5417,15 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 					killer_weapon_name = "obj_sentrygun3";
 					break;
 			}
+			
+			if ( pObject->IsMiniBuilding() )
+			{
+				killer_weapon_name = "obj_minisentry";
+			}
+			else
+			{
+				killer_weapon_name = "obj_sentrygun";
+			}
 		}
 	}
 	else if ( V_strcmp( killer_weapon_name, "tf_projectile_sentryrocket" ) == 0 )

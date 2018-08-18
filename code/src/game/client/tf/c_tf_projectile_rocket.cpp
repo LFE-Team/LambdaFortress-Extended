@@ -63,11 +63,21 @@ void C_TFProjectile_Rocket::CreateRocketTrails( void )
 	}
 	else
 	{
-		ParticleProp()->Create( GetTrailParticleName(), PATTACH_POINT_FOLLOW, "trail" );
+		const char *pszParticleEffect = "rockettrail";
+ 		// Halloween Spell Effect Check
+		int iHalloweenSpell = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), iHalloweenSpell, halloween_pumpkin_explosions );
+
+ 		if ( iHalloweenSpell != 0 )
+		{
+			pszParticleEffect = "halloween_rockettrail";
+		}
+ 		ParticleProp()->Create( pszParticleEffect, PATTACH_POINT_FOLLOW, "trail"  );
 	}
 
 	if ( m_bCritical )
 	{
-		ConstructTeamParticle( "critical_rocket_%s", GetTeamNumber(), false );
+		const char *pszEffectName = ConstructTeamParticle( "critical_rocket_%s", GetTeamNumber(), false );
+		ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
 }

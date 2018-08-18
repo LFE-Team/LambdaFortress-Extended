@@ -208,7 +208,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_BaseAnimating, DT_BaseAnimating, CBaseAnimating)
 
 #ifdef GLOWS_ENABLE
 	RecvPropBool( RECVINFO( m_bGlowEnabled ) ),
-	RecvPropInt( RECVINFO( m_iGlowColor ), 0, RecvProxy_IntToColor32 ),
+	RecvPropVector( RECVINFO( m_vGlowColor ) ),
 #endif // GLOWS_ENABLE
 END_RECV_TABLE()
 
@@ -6555,33 +6555,6 @@ void C_BaseAnimating::MoveBoneAttachments( C_BaseAnimating* attachTarget )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_BaseAnimating::GetGlowEffectColor( int *r, int *g, int *b, int *a )
-{
-	*r = 76;
-	*g = 76;
-	*b = 76;
-	*a = 255;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-/*
-void C_BaseAnimating::EnableGlowEffect( float r, float g, float b )
-{
-	// destroy the existing effect
-	if ( m_pGlowEffect )
-	{
-		DestroyGlowEffect();
-	}
-
-	m_pGlowEffect = new CGlowObject( this, Vector( r, g, b ), 1.0, true );
-}
-*/
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void C_BaseAnimating::UpdateGlowEffect( void )
 {
 	// destroy the existing effect
@@ -6593,14 +6566,10 @@ void C_BaseAnimating::UpdateGlowEffect( void )
 	// create a new effect
 	if ( m_bGlowEnabled || m_bClientSideGlowEnabled )
 	{
-		int r, g, b, a;
-		r = m_iGlowColor.r;
-		g = m_iGlowColor.g;
-		b = m_iGlowColor.b;
-		a = m_iGlowColor.a;
 		//GetGlowEffectColor( &r, &g, &b, &a );
 
-		m_pGlowEffect = new CGlowObject( this, Vector( r, g, b ), a, true, true );
+		m_pGlowEffect = new CGlowObject( this, Vector( 0, 0, 0 ), 1.0, true, true );
+		m_pGlowEffect->SetColor( m_vGlowColor );
 	}
 }
 

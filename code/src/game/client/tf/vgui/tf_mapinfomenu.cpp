@@ -664,7 +664,7 @@ static s_MapInfo s_Maps[] = {
 	"ep1_c17_02b",          "Urban Flight (Part 4)",    "#Gametype_CoOp",           "Train, Valve",
 	"ep1_c17_02a",          "Urban Flight (Part 5)",    "#Gametype_CoOp",           "Train, Valve",
 	"ep1_c17_05",           "Exit 17 (Part 1)",         "#Gametype_CoOp",           "Train, Valve",
-	"ep1_c17_06",           "Exit 17 (Part 2)",         "#Gametype_CoOp",           "Train, Valve",
+	"ep1_c17_06",           "Exit 17 (Finale)",         "#Gametype_CoOp",           "Train, Valve",
 	//---------------------- EP2 maps ----------------------
 	"ep2_outland_01",		"To The White Forest (Part 1)",	"#Gametype_CoOp",		"Train, Valve",
 	"ep2_outland_01a",		"To The White Forest (Part 1)",	"#Gametype_CoOp",		"Train, Valve",

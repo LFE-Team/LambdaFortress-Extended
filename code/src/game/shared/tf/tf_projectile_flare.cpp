@@ -84,6 +84,7 @@ void CTFProjectile_Flare::Precache()
 {
 	PrecacheModel( TF_WEAPON_FLARE_MODEL );
 
+	PrecacheParticleSystem( "rockettrail_waterbubbles" );
 	PrecacheTeamParticles( "flaregun_trail_%s", true );
 	PrecacheTeamParticles( "flaregun_trail_crit_%s", true );
 
@@ -295,6 +296,7 @@ void CTFProjectile_Flare::OnDataChanged( DataUpdateType_t updateType )
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
 		CreateTrails();		
+		CreateLight();
 	}
 
 	// Watch team changes and change trail accordingly.
@@ -302,6 +304,7 @@ void CTFProjectile_Flare::OnDataChanged( DataUpdateType_t updateType )
 	{
 		ParticleProp()->StopEmission();
 		CreateTrails();
+		CreateLight();
 	}
 }
 
@@ -313,11 +316,33 @@ void CTFProjectile_Flare::CreateTrails( void )
 	if ( IsDormant() )
 		return;
 
-	const char *pszFormat = m_bCritical ? "flaregun_trail_crit_%s" : "flaregun_trail_%s";
-	const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
+	if ( enginetrace->GetPointContents( GetAbsOrigin() ) & MASK_WATER )
+	{
+		ParticleProp()->Create( "rockettrail_waterbubbles", PATTACH_ABSORIGIN_FOLLOW );
+	}
+	else
+	{
+		const char *pszFormat = m_bCritical ? "flaregun_trail_crit_%s" : "flaregun_trail_%s";
+		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
 
-	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+		ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+	}
 }
+
+void CTFProjectile_Flare::CreateLight( void )
+{
+	if ( lfe_muzzlelight.GetBool() )
+	{
+		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+		dl->origin = GetAbsOrigin();
+		dl->color.r = 255;
+		dl->color.g = 100;
+		dl->color.b = 10;
+		dl->radius = 128;
+		dl->die = gpGlobals->curtime + 0.001;
+	}
+}
+
 #endif
 
 //=============================================================================
@@ -369,6 +394,7 @@ void CTFProjectile_BallOfFire::Precache()
 	PrecacheModel( TF_WEAPON_FIREBALL_MODEL );
 
 	PrecacheParticleSystem( "projectile_fireball" );
+	PrecacheParticleSystem( "rockettrail_waterbubbles" );
 	PrecacheTeamParticles( "projectile_fireball_crit_%s", true );
 
 	PrecacheScriptSound( "Weapon_DragonsFury.Impact" );
@@ -714,7 +740,8 @@ void CTFProjectile_BallOfFire::OnDataChanged( DataUpdateType_t updateType )
 
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
-		CreateTrails();	
+		CreateTrails();
+		CreateLight();
 	}
 
 	// Watch team changes and change trail accordingly.
@@ -722,6 +749,7 @@ void CTFProjectile_BallOfFire::OnDataChanged( DataUpdateType_t updateType )
 	{
 		ParticleProp()->StopEmission();
 		CreateTrails();
+		CreateLight();
 	}
 }
 
@@ -733,18 +761,21 @@ void CTFProjectile_BallOfFire::CreateTrails( void )
 	if ( IsDormant() )
 		return;
 
-	const char *pszFormat = m_bCritical ? "projectile_fireball_crit_%s" : "projectile_fireball";
-	const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
+	if ( enginetrace->GetPointContents( GetAbsOrigin() ) & MASK_WATER )
+	{
+		ParticleProp()->Create( "rockettrail_waterbubbles", PATTACH_ABSORIGIN_FOLLOW );
+	}
+	else
+	{
+		const char *pszFormat = m_bCritical ? "projectile_fireball_crit_%s" : "projectile_fireball";
+		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
 
-	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+		ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Think method
-//-----------------------------------------------------------------------------
-void CTFProjectile_BallOfFire::ClientThink()
+void CTFProjectile_BallOfFire::CreateLight( void )
 {
-	// Handle the flamethrower light
 	if ( lfe_muzzlelight.GetBool() )
 	{
 		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
@@ -752,11 +783,9 @@ void CTFProjectile_BallOfFire::ClientThink()
 		dl->color.r = 255;
 		dl->color.g = 100;
 		dl->color.b = 10;
-		dl->radius = 400;
+		dl->radius = 256;
 		dl->die = gpGlobals->curtime + 0.001;
 	}
-
-	BaseClass::ClientThink();
 }
 #endif
 

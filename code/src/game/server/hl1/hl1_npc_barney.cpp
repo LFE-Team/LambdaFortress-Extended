@@ -123,7 +123,7 @@ void CNPC_HL1Barney::Spawn()
 	m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
 	m_NPCState			= NPC_STATE_NONE;
 
-	SetBodygroup( 1, 0 );
+	SetBodygroup( 2, 0 );
 
 	m_fGunDrawn			= false;
 
@@ -465,9 +465,9 @@ void CNPC_HL1Barney::Event_Killed( const CTakeDamageInfo &info )
 		QAngle angGunAngles;
 		CBaseEntity *pGun = NULL;
 
-		SetBodygroup( 1, BARNEY_BODY_GUNGONE);
+		SetBodygroup( 2, BARNEY_BODY_GUNGONE );
 
-		GetAttachment( "0", vecGunPos, angGunAngles );
+		GetAttachment( "gun", vecGunPos, angGunAngles );
 		
 		angGunAngles.y += 180;
 		pGun = DropItem( "weapon_glock", vecGunPos, angGunAngles );
@@ -902,12 +902,12 @@ public:
 
 	int	m_iPose;// which sequence to display	-- temporary, don't need to save
 	int m_iDesiredSequence;
-	static char *m_szPoses[3];
+	static char *m_szPoses[];
 	
 	DECLARE_DATADESC();
 };
 
-char *CNPC_DeadBarney::m_szPoses[] = { "lying_on_back", "lying_on_side", "lying_on_stomach" };
+char *CNPC_DeadBarney::m_szPoses[] = { "lying_on_back", "lying_on_side", "lying_on_stomach", "stuffed_in_vent" };
 
 bool CNPC_DeadBarney::KeyValue( const char *szKeyName, const char *szValue )
 {

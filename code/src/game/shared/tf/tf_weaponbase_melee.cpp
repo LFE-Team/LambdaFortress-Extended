@@ -348,7 +348,18 @@ void CTFWeaponBaseMelee::Smack( void )
 
 		CTakeDamageInfo info( pPlayer, pPlayer, this, flDamage, iDmgType, iCustomDamage );
 		CalculateMeleeDamageForce( &info, vecForward, vecSwingEnd, 1.0f / flDamage * tf_meleeattackforcescale.GetFloat() );
-		trace.m_pEnt->DispatchTraceAttack( info, vecForward, &trace ); 
+
+		int iCleaveAttack = 0;
+		CALL_ATTRIB_HOOK_INT( iCleaveAttack, melee_cleave_attack );
+		if ( iCleaveAttack == 1 )
+		{
+			pPlayer->CheckTraceHullAttack( vecSwingStart, vecSwingEnd, Vector(-16,-16,-16), Vector(36,36,36), flDamage, iDmgType, 0.75f ); 
+		}
+		else
+		{
+			trace.m_pEnt->DispatchTraceAttack( info, vecForward, &trace ); 
+		}
+
 		ApplyMultiDamage();
 
 		OnEntityHit( trace.m_pEnt );

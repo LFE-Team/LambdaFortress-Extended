@@ -216,7 +216,7 @@ BEGIN_DATADESC( CBaseAnimating )
 	DEFINE_FIELD( m_fBoneCacheFlags, FIELD_SHORT ),
 
 	#if GLOWS_ENABLE
-	DEFINE_KEYFIELD( m_iGlowColor, FIELD_COLOR32, "glowcolor" ),
+	DEFINE_KEYFIELD( m_vGlowColor, FIELD_COLOR32, "glowcolor" ),
 	DEFINE_INPUTFUNC( FIELD_COLOR32, "SetGlowColor", InputSetGlowColor ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartGlowing", InputStartGlowing ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StopGlowing", InputStopGlowing ),
@@ -270,7 +270,7 @@ IMPLEMENT_SERVERCLASS_ST(CBaseAnimating, DT_BaseAnimating)
 
 #ifdef GLOWS_ENABLE
 	SendPropBool( SENDINFO( m_bGlowEnabled ) ),
-	SendPropInt( SENDINFO( m_iGlowColor ), 32, SPROP_UNSIGNED ),
+	SendPropVector( SENDINFO( m_vGlowColor ) ),
 #endif // GLOWS_ENABLE
 END_SEND_TABLE()
 
@@ -302,7 +302,7 @@ CBaseAnimating::CBaseAnimating()
 
 #ifdef GLOWS_ENABLE
 	m_bGlowEnabled.Set( false );
-	m_iGlowColor.Init( 76, 76, 76, 255 );
+	m_vGlowColor.Init( 76, 76, 76 );
 #endif // GLOWS_ENABLE
 }
 
@@ -315,7 +315,7 @@ CBaseAnimating::~CBaseAnimating()
 
 #ifdef GLOWS_ENABLE
 	RemoveGlowEffect();
-	m_iGlowColor.Init( 76, 76, 76, 255 );
+	m_vGlowColor.Init( 76, 76, 76 );
 #endif // GLOWS_ENABLE
 }
 
@@ -3663,7 +3663,9 @@ bool CBaseAnimating::IsGlowEffectActive( void )
 //-----------------------------------------------------------------------------
 void CBaseAnimating::SetGlowEffectColor( byte r, byte g, byte b, byte a )
 {
-	m_iGlowColor.Init( r, g, b, a );
+	m_vGlowColor.SetX( r / 255.0f );
+	m_vGlowColor.SetY( g / 255.0f );
+	m_vGlowColor.SetZ( b / 255.0f );
 }
 
 //-----------------------------------------------------------------------------
@@ -3671,7 +3673,9 @@ void CBaseAnimating::SetGlowEffectColor( byte r, byte g, byte b, byte a )
 //-----------------------------------------------------------------------------
 void CBaseAnimating::InputSetGlowColor(inputdata_t &inputdata)
 {
-	m_iGlowColor = inputdata.value.Color32();
+	m_vGlowColor.SetX(inputdata.value.Color32().r / 255.0f);
+	m_vGlowColor.SetY(inputdata.value.Color32().g / 255.0f);
+	m_vGlowColor.SetZ(inputdata.value.Color32().b / 255.0f);
 }
 
 //-----------------------------------------------------------------------------
