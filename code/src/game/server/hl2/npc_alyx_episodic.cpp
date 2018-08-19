@@ -757,6 +757,15 @@ void CNPC_Alyx::PrescheduleThink(void)
 			SetGlowEffectColor( 0, 0, 0, 0 );
 		}
 	}
+
+	// risky crash rate if add more.
+	if ( GetPassengerState() == PASSENGER_STATE_INSIDE )
+	{
+		CBaseAnimating *pVehilce = NULL;
+		pVehilce = (CBaseAnimating *)GetVehicle()->GetVehicleEnt();
+		pVehilce->AddGlowEffect();
+		pVehilce->SetGlowEffectColor( 255, 255, 255, 255 );
+	}
 #endif
 }
 
@@ -1036,7 +1045,7 @@ bool CNPC_Alyx::IsValidEnemy( CBaseEntity *pEnemy )
 			return false;
 		}
 
-		if (pEnemy->GetEnemy() != this && !pEnemy->GetEnemy()->IsPlayer())
+		if (pEnemy->GetEnemy() != this && !pEnemy->GetEnemy()->IsPlayer() )
 		{
 			return false;
 		}
@@ -1666,7 +1675,7 @@ bool CNPC_Alyx::FInViewCone(CBaseEntity *pEntity)
 	// large mob of enemies (usually antlions or zombies) closing in. This situation is so obvious to the 
 	// player that it doesn't make sense for Alyx to be unaware of the entire group simply because she 
 	// hasn't seen all of the enemies with her own eyes.
-	if ((pEntity->IsNPC() || pEntity->IsPlayer()) && pEntity->GetAbsOrigin().DistToSqr(GetAbsOrigin()) <= ALYX_360_VIEW_DIST_SQR)
+	if (( pEntity->IsNPC() || pEntity->IsPlayer() || pEntity->IsBaseObject() ) && pEntity->GetAbsOrigin().DistToSqr(GetAbsOrigin()) <= ALYX_360_VIEW_DIST_SQR)
 	{
 		// Only see players and NPC's with 360 cone
 		// For instance, DON'T tell the eyeball/head tracking code that you can see an object that is behind you!

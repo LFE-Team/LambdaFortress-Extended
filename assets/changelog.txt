@@ -1,0 +1,23 @@
+Welcome to our new Changelog! It may not be html based but it's good to have one anyways.
+The major changes include:
+ >Updated Blog panel
+ >Added Gunslinger
+ >Added Mini-Sentrygun
+ >Added autocomplete list to give and npc_create command
+ >Added SetMoveType, StartGlowing, StopGlowing, SetGlowColor to all model entity
+ >Added 4TH Difficulty: UNUSUAL
+ >Added Elasticity to buildings
+ >Added proper huntsman charge hud
+ >Added Glow outline effect on alyx in episodic maps
+ >Fixed Dragon's Fury particle effect
+ >Fixed crit effect on rockets
+ >Fixed missing player classes info tip
+ >Fixed Heavy Melee attack play only one voice
+ >Fixed Jarate won't break after collide with npcs
+ >Fixed Lag when player collide with npcs
+ >Fixed Player able to score point by killing birds
+ >Fixed player unable to join team after going spectate
+ >Fixed some npc following the !player instead of nearest player
+ >Updated the Director
+ >Updated Loadout, Options, Stats and Quit Panel 
+ >Updated the localization files

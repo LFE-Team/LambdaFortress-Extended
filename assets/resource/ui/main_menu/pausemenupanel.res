@@ -80,6 +80,20 @@
 		"fgcolor_override"	"235 227 203 255"
 	}
 
+	"BlogPanel"
+	{
+		"ControlName"		"CTFBlogPanel"
+		"fieldName"			"BlogPanel"
+		"xpos"				"r420"
+		"ypos"				"65"
+		"zpos"				"3"
+		"wide"				"300"
+		"tall"				"350"
+		"visible"			"1"
+		"enabled"			"1"
+		"border"			"MainMenuAdvButtonDepressed"	
+	}
+
 	"BackgroundFooter"
 	{
 		"ControlName"	"ImagePanel"
@@ -893,7 +907,78 @@
 			"imagewidth"		"24"
 		}
 	}
-	
+
+	"BlogToggleCheck"
+	{
+		"ControlName"		"CTFAdvCheckButton"
+		"fieldName"			"BlogToggleCheck"
+		"xpos"				"c200"
+		"ypos"				"30"
+		"zpos"				"10"
+		"wide"				"32"
+		"tall"				"32"
+		"visible"			"1"
+		"enabled"			"1"
+		"bordervisible"		"1"
+		"labelText" 		""
+		"command"			"lfe_pausemenu_showblog"	
+		"valuetrue"			"0"
+		"valuefalse"		"1"		
+		
+		"SubButton"
+		{
+			"labelText" 		""
+			"bordervisible"		"0"
+			"tooltip" 			"#MMenu_Tooltip_ToggleBlog"
+			"textAlignment"		"center"
+			"font"				"MenuSmallFont"
+			"border_default"	"AdvRoundedButtonDefault"
+			"border_armed"		"AdvRoundedButtonArmed"
+			"border_depressed"	"AdvRoundedButtonDepressed"
+		}
+		
+		"SubImage"
+		{
+			"image" 			"glyph_tv"
+			"imagecheck" 		"main_menu/glyph_disabled"	
+			"imagewidth"		"24"
+		}
+	}
+
+	"RandomMusicButton"
+	{
+		"ControlName"		"CTFAdvButton"
+		"fieldName"			"RandomMusicButton"
+		"xpos"				"c271"
+		"ypos"				"30"
+		"zpos"				"5"
+		"wide"				"32"
+		"tall"				"32"
+		"visible"			"1"
+		"enabled"			"1"
+		"bordervisible"		"1"
+		"labelText" 		""
+		"command"			"randommusic"			
+		
+		"SubButton"
+		{
+			"labelText" 		""
+			"bordervisible"		"0"
+			"tooltip" 			"#MMenu_Tooltip_RandomMusic"
+			"textAlignment"		"center"
+			"font"				"MenuSmallFont"
+			"border_default"	"AdvRightButtonDefault"
+			"border_armed"		"AdvRightButtonArmed"
+			"border_depressed"	"AdvRightButtonDepressed"
+		}
+		
+		"SubImage"
+		{
+			"image" 			"main_menu/glyph_random"
+			"imagewidth"		"24"
+		}
+	}
+
 	"NotificationButton"
 	{
 		"ControlName"		"CTFAdvButton"

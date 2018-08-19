@@ -145,6 +145,7 @@ public:
 
 	int GetUpgradeMetalRequired( void ) { return SENTRYGUN_UPGRADE_METAL; }
 
+	CNewParticleEffect	*m_pMiniSirenEffect;
 private:
 	void StopAnimGeneratedSounds( void );
 

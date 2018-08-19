@@ -2010,7 +2010,7 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 
 	case HITGROUP_HEAD:
 #ifdef TF_CLASSIC
-		// If we're attacked by a TF2 player then only the sniper can do headshot damage.
+		// If we're attacked by a TF2 player then only the sniper and spy can do headshot damage.
 		if ( info.GetAttacker()->IsPlayer() )
 		{
 			if ( subInfo.GetDamageType() & DMG_USE_HITLOCATIONS )
@@ -2917,7 +2917,7 @@ void CAI_BaseNPC::OnLooked( int iDistance )
 
 	while( pSightEnt )
 	{
-		if ( pSightEnt->IsPlayer() && !InSameTeam(pSightEnt) )
+		if ( pSightEnt->IsPlayer() || pSightEnt->IsBaseObject() && !InSameTeam(pSightEnt) )
 		{
 			// if we see a client, remember that (mostly for scripted AI)
 			SetCondition(COND_SEE_PLAYER);
@@ -4743,7 +4743,7 @@ public:
 		if ( m_pIgnore == pEntity )
 			return false;
 
-		if ( pEntity->IsPlayer() )
+		if ( pEntity->IsPlayer() || pEntity->IsBaseObject() )
 			return true;
 
 		return false;
@@ -6513,11 +6513,11 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 			SetCondition( COND_ENEMY_OCCLUDED );
 			ClearCondition( COND_SEE_ENEMY );
 
-			if (HasMemory( bits_MEMORY_HAD_LOS ))
+			if ( HasMemory( bits_MEMORY_HAD_LOS ) )
 			{
 				AI_PROFILE_SCOPE(CAI_BaseNPC_GatherEnemyConditions_Outputs);
 				// Send output event
-				if (GetEnemy()->IsPlayer() && !InSameTeam(pEnemy) )
+				if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && !InSameTeam(pEnemy) )
 				{
 					m_OnLostPlayerLOS.FireOutput( GetEnemy(), this );
 				}
@@ -6547,7 +6547,7 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 				EHANDLE hEnemy;
 				hEnemy.Set( GetEnemy() );
 
-				if (GetEnemy()->IsPlayer() && !InSameTeam(hEnemy))
+				if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && !InSameTeam( hEnemy ) )
 				{
 					m_OnFoundPlayer.Set(hEnemy, this, this);
 					m_OnFoundEnemy.Set(hEnemy, this, this);
@@ -6707,7 +6707,7 @@ float CAI_BaseNPC::GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t typ
 		
 	if ( !pGoalEnt->IsPlayer() )
 		result *= 1.20;
-		
+
 	return result;
 }
 
@@ -9900,7 +9900,7 @@ void CAI_BaseNPC::DrawDebugGeometryOverlays(void)
 					NDebugOverlay::Text( drawPos, debugText, false, 0.0 );
 
 					// If has a line on the player draw cross slightly in front so player can see
-					if (npcEnemy->IsPlayer() &&
+					if ( npcEnemy->IsPlayer() &&
 						(eMemory->vLastKnownLocation - npcEnemy->GetAbsOrigin()).Length()<10 )
 					{
 						Vector vEnemyFacing = npcEnemy->BodyDirection2D( );
@@ -10540,7 +10540,7 @@ Vector CAI_BaseNPC::GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy )
 void CAI_BaseNPC::CollectShotStats( const Vector &vecShootOrigin, const Vector &vecShootDir )
 {
 #if defined (HL2_DLL) || defined (TF_CLASSIC)
-	if( ai_shot_stats.GetBool() != 0 && GetEnemy()->IsPlayer() )
+	if( ai_shot_stats.GetBool() != 0 && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
 	{
 		int iterations = ai_shot_stats_term.GetInt();
 		int iHits = 0;
@@ -10711,7 +10711,7 @@ Vector CAI_BaseNPC::GetActualShootTrajectory( const Vector &shootOrigin )
 
 	// If we're above water shooting at a player underwater, bias some of the shots forward of
 	// the player so that they see the cool bubble trails in the water ahead of them.
-	if (GetEnemy()->IsPlayer() && (GetWaterLevel() != 3) && (GetEnemy()->GetWaterLevel() == 3))
+	if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && (GetWaterLevel() != 3) && (GetEnemy()->GetWaterLevel() == 3) )
 	{
 #if 1
 		if (random->RandomInt(0, 4) < 3)
@@ -11393,7 +11393,7 @@ bool CAI_BaseNPC::ChooseEnemy( void )
 		}
 		else
 		{
-			Remember( ( pChosenEnemy->IsPlayer() ) ? bits_MEMORY_HAD_PLAYER : bits_MEMORY_HAD_ENEMY );
+			Remember( ( pChosenEnemy->IsPlayer() || pChosenEnemy->IsBaseObject() ) ? bits_MEMORY_HAD_PLAYER : bits_MEMORY_HAD_ENEMY );
 		}
 	}
 
@@ -13653,11 +13653,15 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 	if ( pPlayer == NULL )
 	{
 #ifdef TF_CLASSIC
-		// Difficult to handle in TF2C since players can join different teams
-		// to ally themselves with different factions. For now, just check if they are on RED.
-		if ( InSameTeam( pPlayer ) )
-			return true;
-#endif
+
+		for (int i = 0; i <= gpGlobals->maxClients; i++ )
+		{
+			pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+		
+			if ( !InSameTeam( pPlayer ) )
+				return false;
+		}
+#else
 		// in multiplayer mode we need a valid pPlayer 
 		// or override this virtual function
 		if ( !AI_IsSinglePlayer() )
@@ -13665,6 +13669,7 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 
 		// NULL means single player mode
 		pPlayer = UTIL_GetLocalPlayer();
+#endif
 	}
 
 	return ( !pPlayer || IRelationType( pPlayer ) == D_LI ); 

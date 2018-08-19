@@ -86,6 +86,8 @@ C_BaseObject::C_BaseObject(  )
 
 	m_iLastPlacementPosValid = -1;
 	m_iOldUpgradeLevel = 0;
+
+	m_pMiniSirenEffect = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -103,27 +105,6 @@ void C_BaseObject::Spawn( void )
 	BaseClass::Spawn();
 
 	m_bServerOverridePlacement = true;	// assume valid at the start
-
-	const char *pszEffect = "";
-
-	switch( GetTeamNumber() )
-	{
-	case TF_TEAM_RED:
-		pszEffect = "cart_flashinglight";
-		break;
-	case TF_TEAM_BLUE:
-		pszEffect = "cart_flashinglight_red";
-		break;
-
-	default:
-		pszEffect = "cart_flashinglight";
-		break;
-	}
-
-	if ( IsMiniBuilding() && GetType() == OBJ_SENTRYGUN )
-	{
-		ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, "siren" );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -170,6 +151,40 @@ void C_BaseObject::OnDataChanged( DataUpdateType_t updateType )
 	if ( m_bWasBuilding && !m_bBuilding )
 	{
 		FinishedBuilding();
+
+		const char *pszEffect = "";
+		switch( GetTeamNumber() )
+		{
+		case TF_TEAM_RED:
+			pszEffect = "cart_flashinglight_red";
+			break;
+		case TF_TEAM_BLUE:
+			pszEffect = "cart_flashinglight";
+			break;
+
+		default:
+			pszEffect = "cart_flashinglight";
+			break;
+		}
+
+		if ( IsMiniBuilding() && GetType() == OBJ_SENTRYGUN )
+		{
+			if ( !m_pMiniSirenEffect )
+			{
+				if ( pszEffect )
+				{
+					m_pMiniSirenEffect = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, "siren" );
+				}
+			}
+		}
+		else
+		{
+			if ( m_pMiniSirenEffect )
+			{
+				ParticleProp()->StopEmission( m_pMiniSirenEffect );
+				m_pMiniSirenEffect = NULL;
+			}
+		}
 	}
 
 	// Did we just go active?

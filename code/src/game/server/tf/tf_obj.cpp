@@ -2190,6 +2190,11 @@ void CBaseObject::CreateObjectGibs( void )
 			pAmmoPack->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 			pAmmoPack->m_takedamage = DAMAGE_YES;		
 			pAmmoPack->SetHealth( 900 );
+
+			if ( IsMiniBuilding() )
+			{
+				pAmmoPack->SetModelScale( 0.6f );
+			}
 		}
 	}
 }
