@@ -88,6 +88,11 @@ private:
 	vgui::ImagePanel	*m_pLine;
 	CTFImagePanel		*m_pDownArrow;
 	vgui::ImagePanel	*m_pBox;
+protected:
+	char			pDefaultScrollImage[64];
+	char			pDefaultScrollUpImage[64];
+	char			pDefaultScrollLineImage[64];
+	char			pDefaultScrollDownImage[64];
 };
 
 //-----------------------------------------------------------------------------

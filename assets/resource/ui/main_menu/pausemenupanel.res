@@ -241,7 +241,7 @@
 		"SubButton"
 		{
 			"labelText" 		"#GameUI_GameMenu_FindServers"
-			"xshift" 			"10"
+			"xshift" 			"0"
 			"yshift" 			"0"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
@@ -277,7 +277,7 @@
 		"SubButton"
 		{
 			"labelText" 		"#GameUI_GameMenu_ResumeGame"
-			"xshift" 			"10"
+			"xshift" 			"0"
 			"yshift" 			"0"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
@@ -345,8 +345,8 @@
 		"SubButton"
 		{
 			"labelText" 		"Loadout"
-			"xshift" 			"10"
-			"yshift" 			"0"
+			"xshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			//"defaultFgColor_override"		"MainMenuTextDefault"
@@ -381,8 +381,8 @@
 		"SubButton"
 		{
 			"labelText" 		"#GameUI_GameMenu_Options"
-			"xshift" 			"10"
-			"yshift" 			"0"	
+			"xshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"	
 			"font"				"HudFontSmallBold"
 			//"defaultFgColor_override"		"MainMenuTextDefault"
@@ -449,7 +449,7 @@
 		"SubButton"
 		{
 			"labelText" 		"#GameUI_GameMenu_Achievements"
-			"xshift" 			"10"
+			"xshift" 			"0"
 			"yshift" 			"0"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
@@ -482,8 +482,8 @@
 		"SubButton"
 		{
 			"labelText" 		"#GameUI_GameMenu_PlayerStats"
-			"xshift" 			"10"
-			"yshift" 			"0"	
+			"xshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"	
 			"font"				"HudFontSmallBold"
 			"defaultFgColor_override"		"MainMenuTextDefault"
@@ -582,10 +582,10 @@
 		}	
 	}
 
-	"CommentaryButton"
+	"CreditsButton"
 	{
 		"ControlName"	"CTFAdvButton"
-		"fieldName"		"CommentaryButton"
+		"fieldName"		"CreditsButton"
 		"xpos"			"65"
 		"ypos"			"325"
 		"zpos"			"5"
@@ -596,7 +596,7 @@
 		"tabPosition"	"0"
 		"labelText"		""
 		"font"			"HudFontSmallBold"
-		"Command"		"gamemenucommand OpenLoadSingleplayerCommentaryDialog"
+		"Command"		"newcredits"
 		"bordervisible"		"1"
 
 		"sound_depressed"	"UI/buttonclick.wav"
@@ -608,7 +608,7 @@
 		{
 			"labelText" 		""
 			"bordervisible"		"0"
-			"tooltip" 			"#GameUI_GameMenu_Commentary"
+			"tooltip" 			"Credits"
 			"textAlignment"		"center"
 			"font"				"HudFontSmallBold"
 			"border_default"	"AdvSquareButtonDefault"
@@ -619,7 +619,7 @@
 		"SubImage"
 		{
 			"scaleImage"	"1"
-			"image" 			"glyph_forums"
+			"image" 			"glyph_multiplayer"
 			"imagewidth"		"22"
 		}				
 	}
@@ -783,7 +783,7 @@
 		{
 			"labelText" 		"#GameUI_GameMenu_Quit"
 			"bordervisible"		"0"
-			"xshift" 			"10"
+			"xshift" 			"0"
 			"yshift" 			"0"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
@@ -818,7 +818,7 @@
 		"SubButton"
 		{
 			"labelText" 		"#GameUI_GameMenu_Disconnect"
-			"xshift" 			"10"
+			"xshift" 			"0"
 			"yshift" 			"0"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"

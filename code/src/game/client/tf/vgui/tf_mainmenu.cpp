@@ -88,6 +88,7 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	AddMenuPanel(new CTFQuitDialogPanel(this, "CTFQuitDialogPanel"), QUIT_MENU);
 	AddMenuPanel(new CTFOptionsDialog(this, "CTFOptionsDialog"), OPTIONSDIALOG_MENU);
 	AddMenuPanel(new CTFCreateMultiplayerGame(this, "CTFCreateMultiplayerGame"), CREATESERVER_MENU);
+	AddMenuPanel(new CTFCreditsPanel(this, "CTFCreditsPanel"), CREDIT_MENU);
 	AddMenuPanel(new CTFStatsSummaryDialog(this, "CTFStatsSummaryDialog"), STATSUMMARY_MENU);
 	AddMenuPanel(new CTFToolTipPanel(this, "CTFToolTipPanel"), TOOLTIP_MENU);
 	AddMenuPanel(new CTFItemToolTipPanel(this, "CTFItemToolTipPanel"), ITEMTOOLTIP_MENU);
@@ -99,6 +100,7 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	HidePanel(LOADOUT_MENU);
 	HidePanel(NOTIFICATION_MENU);
 	HidePanel(QUIT_MENU);
+	HidePanel(CREDIT_MENU);
 	HidePanel(OPTIONSDIALOG_MENU);
 	HidePanel(CREATESERVER_MENU);
 	HidePanel(STATSUMMARY_MENU);

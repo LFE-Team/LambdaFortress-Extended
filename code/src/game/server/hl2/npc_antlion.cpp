@@ -1127,6 +1127,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 				{
 					CGrenadeSpit *pGrenade = (CGrenadeSpit*) CreateEntityByName( "grenade_spit" );
 					pGrenade->SetAbsOrigin( vSpitPos );
+					pGrenade->SetAbsAngles( vec3_angle );
 					DispatchSpawn( pGrenade );
 					pGrenade->SetThrower( this );
 					pGrenade->SetOwnerEntity( this );
@@ -1141,11 +1142,11 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 					if ( i == 0 )
 					{
 						pGrenade->SetSpitSize( SPIT_LARGE );
-						pGrenade->ApplyLocalAngularVelocityImpulse( vecVelocity );
+						pGrenade->ApplyAbsVelocityImpulse( vecVelocity );
 					}
 					else
 					{
-						pGrenade->ApplyLocalAngularVelocityImpulse( ( vecToss + RandomVector( -0.035f, 0.035f ) ) * flVelocity );
+						pGrenade->ApplyAbsVelocityImpulse( ( vecToss + RandomVector( -0.035f, 0.035f ) ) * flVelocity );
 						pGrenade->SetSpitSize( random->RandomInt( SPIT_SMALL, SPIT_MEDIUM ) );
 					}
 
@@ -1156,8 +1157,8 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 		
 					VectorAngles( vecVelocity, angles );
 					// Tumble through the air
-					pGrenade->SetAbsAngles( angles );
-					//pGrenade->SetLocalAngularVelocity( angles );
+					//pGrenade->ApplyLocalAngularVelocityImpulse( angles );
+					pGrenade->SetLocalAngularVelocity( angles );
 				}
 
 				for ( int i = 0; i < 8; i++ )

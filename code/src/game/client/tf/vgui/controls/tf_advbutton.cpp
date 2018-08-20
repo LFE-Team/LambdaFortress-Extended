@@ -127,7 +127,6 @@ void CTFAdvButton::OnThink()
 {
 	BaseClass::OnThink();
 
-	/*
 	if ( m_bGlowing && m_flAnimationThink < gpGlobals->curtime )
 	{
 		float m_fAlpha = (m_bAnimationIn ? 50.0f : 255.0f);
@@ -137,14 +136,12 @@ void CTFAdvButton::OnThink()
 		m_bAnimationIn = !m_bAnimationIn;
 		m_flAnimationThink = gpGlobals->curtime + 1.0f;
 	}
-	*/
 }
 
 void CTFAdvButton::SetGlowing(bool Glowing)
 { 
 	m_bGlowing = Glowing;
 
-	/*
 	if ( !m_bGlowing )
 	{
 		float m_fAlpha = 255.0f;
@@ -152,7 +149,6 @@ void CTFAdvButton::SetGlowing(bool Glowing)
 		float m_fDuration = 0.0f;
 		vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", m_fAlpha, m_fDelay, m_fDuration, vgui::AnimationController::INTERPOLATOR_LINEAR);
 	}
-	*/
 };
 
 void CTFAdvButton::SetSelected(bool bState)
@@ -185,8 +181,8 @@ void CTFAdvButton::SendAnimation(MouseState flag)
 
 	if ( m_pButton->IsSelected() && m_bSelected )
 		return;
-	
-	//bool bAnimation = ( ( m_pButton->m_fXShift == 0 && m_pButton->m_fYShift == 0 ) ? false : true );
+
+	bool bAnimation = ( ( m_pButton->m_fXShift == 0 && m_pButton->m_fYShift == 0 ) ? false : true );
 	AnimationController::PublicValue_t p_AnimLeave(0, 0);
 	AnimationController::PublicValue_t p_AnimHover( m_pButton->m_fXShift, m_pButton->m_fYShift );
 	switch (flag)
@@ -197,13 +193,13 @@ void CTFAdvButton::SendAnimation(MouseState flag)
 		break;
 	case MOUSE_ENTERED:
 		pButtonImage->SetDrawColor(GETSCHEME()->GetColor(pImageColorArmed, Color(255, 255, 255, 255)));
-		//if (bAnimation)
-			//vgui::GetAnimationController()->RunAnimationCommand( m_pButton, "Position", p_AnimHover, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
+		if (bAnimation)
+			vgui::GetAnimationController()->RunAnimationCommand( m_pButton, "Position", p_AnimHover, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
 		break;
 	case MOUSE_EXITED:
 		pButtonImage->SetDrawColor(GETSCHEME()->GetColor(pImageColorSelected, Color(255, 255, 255, 255)));
-		//if (bAnimation)
-			//vgui::GetAnimationController()->RunAnimationCommand( m_pButton, "Position", p_AnimLeave, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
+		if (bAnimation)
+			vgui::GetAnimationController()->RunAnimationCommand( m_pButton, "Position", p_AnimLeave, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
 		break;
 	case MOUSE_PRESSED:
 		pButtonImage->SetDrawColor(GETSCHEME()->GetColor(pImageColorDepressed, Color(255, 255, 255, 255)));

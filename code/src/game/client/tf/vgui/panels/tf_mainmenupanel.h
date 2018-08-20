@@ -4,6 +4,8 @@
 #include "tf_menupanelbase.h"
 #include "steam/steam_api.h"
 #include <vgui_controls/HTML.h>
+#include "tf_dialogpanelbase.h"
+#include "tf_controls.h"
 
 class CAvatarImagePanel;
 class CTFAdvButton;
@@ -80,6 +82,8 @@ public:
 
 private:
 	vgui::HTML			*m_pHTMLPanel;
+protected:
+	CExRichText			*m_pInfo;
 };
 
 class CTFServerlistPanel : public CTFMenuPanelBase
@@ -107,6 +111,25 @@ private:
 	CPanelAnimationVarAliasType(int, m_iMapWidth, "map_width", "23", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iScrollWidth, "scroll_width", "23", "proportional_int");
 	int		m_iSize;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+class CTFCreditsPanel : public CTFDialogPanelBase
+{
+	DECLARE_CLASS_SIMPLE(CTFCreditsPanel, CTFDialogPanelBase);
+
+public:
+	CTFCreditsPanel(vgui::Panel* parent, const char *panelName);
+	virtual ~CTFCreditsPanel();
+
+	void Show();
+	void Hide();
+	void OnCommand(const char* command);
+	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
+protected:
+	CExRichText			*m_pText;
 };
 
 #endif // TFMAINMENUPANEL_H

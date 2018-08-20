@@ -149,6 +149,10 @@ void CTFMainMenuPanel::OnCommand(const char* command)
 	{
 		MAINMENU_ROOT->ShowPanel(STATSUMMARY_MENU);
 	}
+	else if (!Q_strcmp(command, "newcredits"))
+	{
+		MAINMENU_ROOT->ShowPanel(CREDIT_MENU);
+	}
 	else if (!Q_strcmp(command, "checkversion"))
 	{
 		//MAINMENU_ROOT->CheckVersion();
@@ -335,6 +339,7 @@ void CTFMainMenuPanel::UpdateServerInfo()
 CTFBlogPanel::CTFBlogPanel(vgui::Panel* parent, const char *panelName) : CTFMenuPanelBase(parent, panelName)
 {
 	m_pHTMLPanel = new vgui::HTML(this, "HTMLPanel");
+	m_pInfo = new CExRichText( this, "InfoText" );
 }
 
 //-----------------------------------------------------------------------------
@@ -348,7 +353,7 @@ void CTFBlogPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
-	LoadControlSettings("resource/UI/main_menu/BlogPanel.res");
+	LoadControlSettings( "resource/UI/main_menu/BlogPanel.res" );
 }
 
 void CTFBlogPanel::PerformLayout()
@@ -562,3 +567,47 @@ void CTFServerlistPanel::UpdateServerInfo()
 	m_pServerList->GetScrollBar()->GetRange(min, max);
 	m_pListSlider->SetRange(min, max - m_pServerList->GetScrollBar()->GetButton(0)->GetTall() * 4);
 }
+
+//-----------------------------------------------------------------------------
+// LF:E Credits panel
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CTFCreditsPanel::CTFCreditsPanel( vgui::Panel* parent, const char *panelName ) : CTFDialogPanelBase( parent, panelName )
+{
+	m_pText = new CExRichText( this, "CreditText" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destructor
+//-----------------------------------------------------------------------------
+CTFCreditsPanel::~CTFCreditsPanel()
+{
+
+}
+
+void CTFCreditsPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
+{
+	BaseClass::ApplySchemeSettings(pScheme);
+	LoadControlSettings("resource/UI/main_menu/CreditsPanel.res");
+}
+
+void CTFCreditsPanel::OnCommand(const char* command)
+{
+	BaseClass::OnCommand( command );
+}
+
+
+void CTFCreditsPanel::Show()
+{
+	BaseClass::Show();
+	MAINMENU_ROOT->HidePanel(CURRENT_MENU);
+	MAINMENU_ROOT->HidePanel(NOTIFICATION_MENU);
+	MAINMENU_ROOT->ShowPanel(SHADEBACKGROUND_MENU);
+};
+
+void CTFCreditsPanel::Hide()
+{
+	BaseClass::Hide();
+	MAINMENU_ROOT->ShowPanel(CURRENT_MENU);
+	MAINMENU_ROOT->HidePanel(SHADEBACKGROUND_MENU);
+};

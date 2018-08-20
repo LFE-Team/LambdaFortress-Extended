@@ -80,6 +80,7 @@
 		"textAlignment"		"northwest"
 		"fgcolor"			"Black"
 		"textfile"			"changelog.txt"
+		"scroll_box_image"	"button_square"
 	}
 
 	"BlogBG"

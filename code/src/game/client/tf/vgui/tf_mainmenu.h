@@ -18,6 +18,7 @@ enum MenuPanel //position in this enum = zpos on the screen
 	NOTIFICATION_MENU,
 	OPTIONSDIALOG_MENU,
 	CREATESERVER_MENU,
+	CREDIT_MENU,
 	QUIT_MENU,
 	TOOLTIP_MENU,
 	ITEMTOOLTIP_MENU,

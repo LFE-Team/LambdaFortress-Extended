@@ -111,39 +111,47 @@ CExRichText::CExRichText(Panel *parent, const char *name) : RichText(parent, nam
 
 	SetCursor(dc_arrow);
 
+	Q_strncpy( pDefaultScrollUpImage, "chalkboard_scroll_up", sizeof( pDefaultScrollUpImage ) );
+
 	m_pUpArrow = new CTFImagePanel( this, "UpArrow" );
 	if ( m_pUpArrow )
 	{
 		//m_pUpArrow->SetShouldScaleImage( true );
-		m_pUpArrow->SetImage( "chalkboard_scroll_up" );
+		m_pUpArrow->SetImage( pDefaultScrollUpImage );
 		m_pUpArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
 		m_pUpArrow->SetAlpha( 255 );
 		m_pUpArrow->SetVisible( false );
 	}
 
+	Q_strncpy( pDefaultScrollLineImage, "chalkboard_scroll_line", sizeof( pDefaultScrollLineImage ) );
+
 	m_pLine = new ImagePanel( this, "Line" );
 	if ( m_pLine )
 	{
 		m_pLine->SetShouldScaleImage( true );
-		m_pLine->SetImage( "chalkboard_scroll_line" );
+		m_pLine->SetImage( pDefaultScrollLineImage );
 		m_pLine->SetVisible( false );
 	}
+
+	Q_strncpy( pDefaultScrollDownImage, "chalkboard_scroll_down", sizeof( pDefaultScrollDownImage ) );
 
 	m_pDownArrow = new CTFImagePanel( this, "DownArrow" );
 	if ( m_pDownArrow )
 	{
 		//m_pDownArrow->SetShouldScaleImage( true );
-		m_pDownArrow->SetImage( "chalkboard_scroll_down" );
+		m_pDownArrow->SetImage( pDefaultScrollDownImage );
 		m_pDownArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
 		m_pDownArrow->SetAlpha( 255 );
 		m_pDownArrow->SetVisible( false );
 	}
 
+	Q_strncpy( pDefaultScrollImage, "chalkboard_scroll_box", sizeof(pDefaultScrollImage) );
+
 	m_pBox = new ImagePanel( this, "Box" );
 	if ( m_pBox )
 	{
 		m_pBox->SetShouldScaleImage( true );
-		m_pBox->SetImage( "chalkboard_scroll_box" );
+		m_pBox->SetImage( pDefaultScrollImage );
 		m_pBox->SetVisible( false );
 	}
 
@@ -159,6 +167,10 @@ void CExRichText::ApplySettings( KeyValues *inResourceData )
 
 	Q_strncpy( m_szFont, inResourceData->GetString( "font", "Default" ), sizeof( m_szFont ) );
 	Q_strncpy( m_szColor, inResourceData->GetString( "fgcolor", "RichText.TextColor" ), sizeof( m_szColor ) );
+	Q_strncpy( pDefaultScrollImage, inResourceData->GetString( "scroll_box_image", "chalkboard_scroll_box" ), sizeof( pDefaultScrollImage ));
+	Q_strncpy( pDefaultScrollUpImage, inResourceData->GetString( "scroll_up_image", "chalkboard_scroll_up" ), sizeof( pDefaultScrollUpImage ));
+	Q_strncpy( pDefaultScrollLineImage, inResourceData->GetString( "scroll_line_image", "chalkboard_scroll_line" ), sizeof( pDefaultScrollLineImage ));
+	Q_strncpy( pDefaultScrollDownImage, inResourceData->GetString( "scroll_down_image", "chalkboard_scroll_down" ), sizeof( pDefaultScrollDownImage ));
 
 	InvalidateLayout( false, true ); // force ApplySchemeSettings to run
 }

@@ -130,6 +130,10 @@ void CTFPauseMenuPanel::OnCommand(const char* command)
 	{
 		MAINMENU_ROOT->ShowPanel(STATSUMMARY_MENU);
 	}
+	else if (!Q_strcmp(command, "newcredits"))
+	{
+		MAINMENU_ROOT->ShowPanel(CREDIT_MENU);
+	}
 	else if (!Q_strcmp(command, "checkversion"))
 	{
 		//MAINMENU_ROOT->CheckVersion();
