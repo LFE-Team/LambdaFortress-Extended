@@ -172,9 +172,13 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 
 	if ( bShow )
 	{
-		if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+		if ( TFGameRules() && TFGameRules()->IsCoOp()) 
 		{
 			gViewPortInterface->ShowPanel( PANEL_COOPSCOREBOARD, true );
+		}
+		else if (TFGameRules() && TFGameRules()->IsZombieSurvival())
+		{
+			gViewPortInterface->ShowPanel(PANEL_COOPSCOREBOARD, true);
 		}
 		else if ( TFGameRules() && TFGameRules()->IsVersus() )
 		{
@@ -199,9 +203,13 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 	}
 	else
 	{
-		if ( TFGameRules() && TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+		if (TFGameRules() && TFGameRules()->IsCoOp())
 		{
 			gViewPortInterface->ShowPanel( PANEL_COOPSCOREBOARD, false );
+		}
+		else if (TFGameRules() && TFGameRules()->IsZombieSurvival())
+		{
+			gViewPortInterface->ShowPanel(PANEL_COOPSCOREBOARD, false);
 		}
 		else
 		{
