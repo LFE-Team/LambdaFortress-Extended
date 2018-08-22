@@ -56,44 +56,6 @@ CHudRadar::CHudRadar( vgui::Panel *parent, const char *panelName ) : BaseClass( 
 CHudRadar::~CHudRadar()
 {
 	s_Radar = NULL;
-
-#if defined(_X360)
-	if( m_iImageID != -1 )
-	{
-		vgui::surface()->DestroyTextureID( m_iImageID );
-		m_iImageID  = -1;
-	}
-
-	if( m_textureID_IconLambda != -1 )
-	{
-		vgui::surface()->DestroyTextureID( m_textureID_IconLambda );
-		m_textureID_IconLambda  = -1;
-	}
-
-	if( m_textureID_IconBuster != -1 )
-	{
-		vgui::surface()->DestroyTextureID( m_textureID_IconBuster );
-		m_textureID_IconBuster  = -1;
-	}
-
-	if( m_textureID_IconStrider != -1 )
-	{
-		vgui::surface()->DestroyTextureID( m_textureID_IconStrider );
-		m_textureID_IconStrider  = -1;
-	}
-
-	if( m_textureID_IconDog != -1 )
-	{
-		vgui::surface()->DestroyTextureID( m_textureID_IconDog );
-		m_textureID_IconDog  = -1;
-	}
-
-	if( m_textureID_IconBase != -1 )
-	{
-		vgui::surface()->DestroyTextureID( m_textureID_IconBase );
-		m_textureID_IconBase  = -1;
-	}
-#endif//_X360
 }
 
 //---------------------------------------------------------

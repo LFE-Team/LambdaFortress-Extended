@@ -72,8 +72,9 @@ public:
 	bool					m_bCritical;
 	int						m_iOldTeamNum;
 
-	// Server specific.
-#else
+	virtual void			CreateLightEffects( void );
+
+#else // Server specific.
 
 public:
 
@@ -113,7 +114,6 @@ public:
 
 	virtual void			BlipSound( void ) { }
 	void					SetNextBlipTime( float flTime ) { m_flNextBlipTime = flTime; }
-
 protected:
 	void					DrawRadius( float flRadius );
 

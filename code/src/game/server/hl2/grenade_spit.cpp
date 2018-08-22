@@ -41,6 +41,8 @@ END_DATADESC()
 
 CGrenadeSpit::CGrenadeSpit( void ) : m_bPlaySound( true ), m_pHissSound( NULL )
 {
+	m_iDeflected = 0;
+	m_hDeflectOwner = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -90,6 +92,8 @@ void CGrenadeSpit::Spawn( void )
 		if ( gpGlobals->curtime > 0.5f )
 			m_hSpitEffect->Activate();
 	}
+
+	m_flDetonateTime = gpGlobals->curtime + 1.5f;
 }
 
 
@@ -203,7 +207,7 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 	Detonate();
 }
 
-void CGrenadeSpit::Detonate(void)
+void CGrenadeSpit::Detonate( void )
 {
 	m_takedamage = DAMAGE_NO;
 
@@ -276,6 +280,12 @@ void CGrenadeSpit::Think( void )
 		CSoundEnvelopeController::GetController().SoundChangePitch( m_pHissSound, iPitch, 0.1f );
 	}
 
+	if ( gpGlobals->curtime > m_flDetonateTime )
+	{
+		Detonate();
+		return;
+	}
+
 	// Set us up to think again shortly
 	SetNextThink( gpGlobals->curtime + 0.05f );
 }
@@ -293,4 +303,42 @@ void CGrenadeSpit::Precache( void )
 	PrecacheParticleSystem( "antlion_spit_player" );
 	PrecacheParticleSystem( "antlion_spit" );
 	PrecacheParticleSystem( "antlion_spit_trail" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CGrenadeSpit::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
+	if ( pPhysicsObject )
+	{
+		Vector vecOldVelocity, vecVelocity;
+
+		pPhysicsObject->GetVelocity( &vecOldVelocity, NULL );
+
+		float flSpeed = vecOldVelocity.Length();
+
+		vecVelocity = vecDir;
+		vecVelocity *= flSpeed;
+		AngularImpulse angVelocity( ( 600, random->RandomInt( -1200, 1200 ), 0 ) );
+
+		// Now change grenade's direction.
+		pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
+	}
+
+	CBaseCombatCharacter *pBCC = pDeflectedBy->MyCombatCharacterPointer();
+
+	IncremenentDeflected();
+	m_hDeflectOwner = pDeflectedBy;
+	SetThrower( pBCC );
+	ChangeTeam( pDeflectedBy->GetTeamNumber() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Increment deflects counter
+//-----------------------------------------------------------------------------
+void CGrenadeSpit::IncremenentDeflected( void )
+{
+	m_iDeflected++;
 }

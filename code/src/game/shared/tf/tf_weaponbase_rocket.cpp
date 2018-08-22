@@ -149,6 +149,7 @@ void CTFBaseRocket::Spawn( void )
 		SetModel( STRING( strModelOverride ) );
 	}
 
+	SetSolidFlags( FSOLID_NOT_STANDABLE );
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM );
 	AddEFlags( EFL_NO_WATER_VELOCITY_CHANGE );
@@ -171,6 +172,7 @@ void CTFBaseRocket::Spawn( void )
 	m_flCollideWithTeammatesTime = gpGlobals->curtime + 0.25;
 	m_bCollideWithTeammates = false;
 
+	AddEffects( EF_DIMLIGHT );
 #endif
 }
 
@@ -298,6 +300,7 @@ CTFBaseRocket *CTFBaseRocket::Create( CBaseEntity *pWeapon, const char *pszClass
 
 	// Set team.
 	pRocket->ChangeTeam( pOwner->GetTeamNumber() );
+	pRocket->AddEffects( EF_DIMLIGHT );
 
 	return pRocket;
 }

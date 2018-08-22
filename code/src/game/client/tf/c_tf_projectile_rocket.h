@@ -29,6 +29,7 @@ public:
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 
 	virtual void	CreateRocketTrails( void );
+	virtual void	CreateLightEffects( void );
 	virtual const char *GetTrailParticleName( void ) { return "rockettrail"; }
 };
 

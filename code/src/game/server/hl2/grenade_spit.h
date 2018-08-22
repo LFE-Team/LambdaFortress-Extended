@@ -45,6 +45,12 @@ public:
 	void				Detonate( void );
 	void				Think( void );
 
+	virtual bool			IsDeflectable() { return true; }
+	virtual void			Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
+	virtual void			IncremenentDeflected( void );
+
+	int m_iDeflected;
+	CHandle< CBaseEntity >	m_hDeflectOwner;
 private:
 	DECLARE_DATADESC();
 	
@@ -53,6 +59,8 @@ private:
 	CHandle< CParticleSystem >	m_hSpitEffect;
 	CSoundPatch		*m_pHissSound;
 	bool			m_bPlaySound;
+
+	float			m_flDetonateTime;
 };
 
 #endif	//GRENADESPIT_H

@@ -10,6 +10,10 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
+#include "iefx.h"
+#include "dlight.h"
+#include "tempent.h"
+#include "c_te_legacytempents.h"
 // Server specific.
 #else
 #include "soundent.h"
@@ -186,6 +190,40 @@ void CTFWeaponBaseGrenadeProj::OnDataChanged( DataUpdateType_t type )
 		// Add the current sample.
 		vCurOrigin = GetLocalOrigin();
 		interpolator.AddToHead( changeTime, &vCurOrigin, false );
+
+		CreateLightEffects();
+	}
+}
+
+void CTFWeaponBaseGrenadeProj::CreateLightEffects( void )
+{
+	dlight_t *dl;
+	if ( IsEffectActive( EF_DIMLIGHT ) )
+	{	
+		dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+		dl->origin = GetAbsOrigin();
+		switch ( GetTeamNumber() )
+			{
+			case TF_TEAM_RED:
+				dl->color.r = 255;
+				dl->color.g = 80;
+				dl->color.b = 10;
+				break;
+
+			case TF_TEAM_BLUE:
+				dl->color.r = 10;
+				dl->color.g = 80;
+				dl->color.b = 255;
+				break;
+			}
+
+		dl->die = gpGlobals->curtime + 0.01f;
+		dl->radius = 340.f;
+		dl->decay = 512.0f;
+		dl->style = 1;
+		dl->die = gpGlobals->curtime + 0.001;
+
+		tempents->RocketFlare( GetAbsOrigin() );
 	}
 }
 
@@ -246,6 +284,8 @@ void CTFWeaponBaseGrenadeProj::InitGrenade( const Vector &velocity, const Angula
 
 	ChangeTeam( pOwner->GetTeamNumber() );
 
+	AddEffects( EF_DIMLIGHT );
+
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
 	if ( pPhysicsObject )
 	{
@@ -289,6 +329,8 @@ void CTFWeaponBaseGrenadeProj::Spawn( void )
 
 	// Set skin based on team ( red = 1, blue = 2 )
 	m_nSkin = GetTeamNumber() - 2;
+
+	AddEffects( EF_DIMLIGHT );
 
 	// Setup the think and touch functions (see CBaseEntity).
 	SetThink( &CTFWeaponBaseGrenadeProj::DetonateThink );
@@ -829,6 +871,4 @@ void CTFWeaponBaseGrenadeProj::DrawRadius( float flRadius )
 		lastEdge = edge;
 	}
 }
-
-
 #endif

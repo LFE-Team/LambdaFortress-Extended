@@ -13,6 +13,8 @@
 #include "particles_new.h"
 #include "iefx.h"
 #include "dlight.h"
+#include "tempent.h"
+#include "c_te_legacytempents.h"
 #else
 #include "tf_player.h"
 #include "tf_fx.h"
@@ -331,8 +333,8 @@ void CTFProjectile_Flare::CreateTrails( void )
 
 void CTFProjectile_Flare::CreateLight( void )
 {
-	if ( lfe_muzzlelight.GetBool() )
-	{
+	if ( IsEffectActive( EF_DIMLIGHT ) )
+	{	
 		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
 		dl->origin = GetAbsOrigin();
 		dl->color.r = 255;
@@ -340,6 +342,8 @@ void CTFProjectile_Flare::CreateLight( void )
 		dl->color.b = 10;
 		dl->radius = 128;
 		dl->die = gpGlobals->curtime + 0.001;
+
+		tempents->RocketFlare( GetAbsOrigin() );
 	}
 }
 
@@ -776,8 +780,8 @@ void CTFProjectile_BallOfFire::CreateTrails( void )
 
 void CTFProjectile_BallOfFire::CreateLight( void )
 {
-	if ( lfe_muzzlelight.GetBool() )
-	{
+	if ( IsEffectActive( EF_DIMLIGHT ) )
+	{	
 		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
 		dl->origin = GetAbsOrigin();
 		dl->color.r = 255;
@@ -785,6 +789,8 @@ void CTFProjectile_BallOfFire::CreateLight( void )
 		dl->color.b = 10;
 		dl->radius = 256;
 		dl->die = gpGlobals->curtime + 0.001;
+
+		tempents->RocketFlare( GetAbsOrigin() );
 	}
 }
 #endif
