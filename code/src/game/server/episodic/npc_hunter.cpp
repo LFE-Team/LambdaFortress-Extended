@@ -6751,7 +6751,7 @@ void CAI_HunterEscortBehavior::GatherConditions( void )
 
 	BaseClass::GatherConditions();
 
-	if ( GetEnemy() && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && HasCondition( COND_SEE_ENEMY ) )
+	if (GetEnemy() && GetEnemy()->IsPlayer() && HasCondition(COND_SEE_ENEMY))
 	{
 		if ( GetOuter()->GetSquad()->GetSquadSoundWaitTime() <= gpGlobals->curtime && ((CBasePlayer *)GetEnemy())->IsInAVehicle() )
 		{
