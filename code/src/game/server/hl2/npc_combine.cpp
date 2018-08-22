@@ -817,7 +817,7 @@ void CNPC_Combine::StartTask( const Task_t *pTask )
 				// -----------------------------------------------------------
 				CBaseCombatCharacter *pBCC = GetEnemyCombatCharacterPointer();
 
-				if	(pBCC && pBCC->IsPlayer() || pBCC->IsBaseObject() && (!pBCC->FInViewCone ( this )) &&
+				if (pBCC && pBCC->IsPlayer() && (!pBCC->FInViewCone(this)) &&
 					(gpGlobals->curtime - m_flLastAttackTime > 3.0) )
 				{
 					m_flLastAttackTime = gpGlobals->curtime;
