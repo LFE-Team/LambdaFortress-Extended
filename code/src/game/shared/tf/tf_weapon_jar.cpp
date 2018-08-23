@@ -342,6 +342,8 @@ void C_TFProjectile_Jar::CreateTrails( void )
 	const char *pszEffectName = ConstructTeamParticle( "peejar_trail_%s", GetTeamNumber(), false, g_aTeamNamesShort );
 
 	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+
+	RemoveEffects( EF_DIMLIGHT );
 }
 
 //-----------------------------------------------------------------------------

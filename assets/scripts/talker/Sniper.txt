@@ -1736,13 +1736,13 @@ Response PlayerShinyCrySniper
 }
 Rule PlayerShinyCrySniper
 {
-	criteria ConceptPlayerBattleCry IsSniper 30PercentChance IsWeaponPrimary WeaponIsNotVanillaPrimary WeaponIsNotTaggedRifle
+	criteria ConceptPlayerBattleCry IsSniper 30PercentChance IsWeaponPrimary WeaponIsNotTaggedRifle
 	Response PlayerShinyCrySniper
 }
 
 Rule PlayerShinyCrySniperBow
 {
-	criteria ConceptPlayerBattleCry IsSniper 30PercentChance WeaponIsBow WeaponIsNotVanillaPrimary
+	criteria ConceptPlayerBattleCry IsSniper 30PercentChance WeaponIsBow
 	Response PlayerShinyCrySniper
 }
 
@@ -1750,20 +1750,20 @@ Rule PlayerShinyCrySniperBow
 
 Rule PlayerShinyCrySniperSecondary
 {
-	criteria ConceptPlayerBattleCry IsSniper 30PercentChance IsWeaponSecondary WeaponIsNotVanillaSecondary WeaponIsNotTaggedSMG
+	criteria ConceptPlayerBattleCry IsSniper 30PercentChance IsWeaponSecondary WeaponIsNotTaggedSMG
 	Response PlayerShinyCrySniper
 }
 
 // Some achievement weapons seem to use the item1 etc weapon mode, so we use a hard rule for Jarate or Bow
 Rule PlayerShinyCrySniperJarate
 {
-	criteria ConceptPlayerBattleCry IsSniper 30PercentChance WeaponIsJarate WeaponIsNotVanillaSecondary
+	criteria ConceptPlayerBattleCry IsSniper 30PercentChance WeaponIsJarate
 	Response PlayerShinyCrySniper
 }
 
 Rule PlayerShinyCrySniperMelee
 {
-	criteria ConceptPlayerBattleCry IsSniper 30PercentChance IsWeaponMelee IsNotCrossHairEnemy WeaponIsNotVanillaMelee WeaponIsNotTaggedKukri
+	criteria ConceptPlayerBattleCry IsSniper 30PercentChance IsWeaponMelee IsNotCrossHairEnemy WeaponIsNotTaggedKukri
 	Response PlayerShinyCrySniper
 }
 

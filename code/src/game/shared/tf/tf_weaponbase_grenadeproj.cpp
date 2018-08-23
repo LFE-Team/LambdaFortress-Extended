@@ -25,6 +25,10 @@
 #include "tf_fx.h"
 #endif
 
+#ifdef CLIENT_DLL
+	extern ConVar lfe_muzzlelight;
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -197,33 +201,38 @@ void CTFWeaponBaseGrenadeProj::OnDataChanged( DataUpdateType_t type )
 
 void CTFWeaponBaseGrenadeProj::CreateLightEffects( void )
 {
-	dlight_t *dl;
-	if ( IsEffectActive( EF_DIMLIGHT ) )
-	{	
-		dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-		dl->origin = GetAbsOrigin();
-		switch ( GetTeamNumber() )
+	// Handle the dynamic light
+	if (lfe_muzzlelight.GetBool())
+	{
+		dlight_t *dl;
+		if ( IsEffectActive( EF_DIMLIGHT ) )
+		{	
+			dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+			dl->origin = GetAbsOrigin();
+			switch ( GetTeamNumber() )
 			{
 			case TF_TEAM_RED:
-				dl->color.r = 255;
-				dl->color.g = 80;
-				dl->color.b = 10;
+				if ( !m_bCritical ) {
+				dl->color.r = 255; dl->color.g = 30; dl->color.b = 10; }
+				else {
+				dl->color.r = 255; dl->color.g = 10; dl->color.b = 10; }
 				break;
 
 			case TF_TEAM_BLUE:
-				dl->color.r = 10;
-				dl->color.g = 80;
-				dl->color.b = 255;
+				if ( !m_bCritical ) {
+				dl->color.r = 10; dl->color.g = 30; dl->color.b = 255; }
+				else {
+				dl->color.r = 10; dl->color.g = 10; dl->color.b = 255; }
 				break;
 			}
+			dl->die = gpGlobals->curtime + 0.01f;
+			dl->radius = 256.0f;
+			dl->decay = 512.0f;
+			dl->style = 1;
+			dl->die = gpGlobals->curtime + 0.001;
 
-		dl->die = gpGlobals->curtime + 0.01f;
-		dl->radius = 340.f;
-		dl->decay = 512.0f;
-		dl->style = 1;
-		dl->die = gpGlobals->curtime + 0.001;
-
-		tempents->RocketFlare( GetAbsOrigin() );
+			tempents->RocketFlare( GetAbsOrigin() );
+		}
 	}
 }
 

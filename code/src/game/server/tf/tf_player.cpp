@@ -1711,8 +1711,8 @@ void CTFPlayer::GiveDefaultItems()
 	// Give weapons.
 	if ( lfe_random_weapons.GetBool() )
 		ManageRandomWeapons( pData );
-	//else if ( lfe_force_legacy.GetBool() )
-	//	ManageRegularWeaponsLegacy( pData );
+	else if ( lfe_force_legacy.GetBool() )
+		ManageRegularWeaponsLegacy( pData );
 	else
 		ManageRegularWeapons( pData );
 
@@ -1750,6 +1750,24 @@ void CTFPlayer::GiveDefaultItems()
 	// We may have swapped away our current weapon at resupply locker.
 	if ( GetActiveWeapon() == NULL )
 		SwitchToNextBestWeapon( NULL );
+
+	int nMiniBuilding = 0;
+	CALL_ATTRIB_HOOK_INT( nMiniBuilding, wrench_builds_minisentry );
+
+	// If we've switched to/from gunslinger destroy all of our buildings
+	if ( nMiniBuilding != 1 )
+	{
+	    for (int i = GetObjectCount()-1; i >= 0; i--)
+	    {
+	        CBaseObject *obj = GetObject(i);
+	        Assert( obj );
+
+			if ( obj )
+			{
+				obj->DetonateObject();
+			}        
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -8339,22 +8357,22 @@ void CTFPlayer::Taunt( void )
 			};
 		}
 
-		else if ( V_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
+		else if ( Q_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
 			m_iTauntAttack = TAUNTATK_PYRO_HADOUKEN;
 		}
-		else if ( V_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
+		else if ( Q_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_HEAVY_HIGH_NOON;
 		}
-		else if ( V_stricmp( szResponse, "scenes/player/spy/low/taunt03_v1.vcd" ) == 0 )
+		else if ( Q_stricmp( szResponse, "scenes/player/spy/low/taunt03_v1.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
 		}
-		else if ( V_stricmp( szResponse, "scenes/player/spy/low/taunt03_v2.vcd" ) == 0 )
+		else if ( Q_stricmp( szResponse, "scenes/player/spy/low/taunt03_v2.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;

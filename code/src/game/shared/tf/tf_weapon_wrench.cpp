@@ -23,7 +23,6 @@
 // Weapon Wrench tables.
 //
 CREATE_SIMPLE_WEAPON_TABLE( TFWrench, tf_weapon_wrench )
-CREATE_SIMPLE_WEAPON_TABLE( TFRobotArm, tf_weapon_robot_arm )
 
 //=============================================================================
 //
@@ -119,3 +118,110 @@ float CTFWrench::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 
 	return flDamage;
 }
+
+//=============================================================================
+//
+// Vintage Weapon Robot Arm tables.
+//
+IMPLEMENT_NETWORKCLASS_ALIASED( TFRobotArm, DT_TFWeaponRobotArm )
+
+ BEGIN_NETWORK_TABLE( CTFRobotArm, DT_TFWeaponRobotArm )
+END_NETWORK_TABLE()
+
+ BEGIN_PREDICTION_DATA( CTFRobotArm )
+END_PREDICTION_DATA()
+
+ LINK_ENTITY_TO_CLASS( tf_weapon_robot_arm, CTFRobotArm );
+PRECACHE_WEAPON_REGISTER( tf_weapon_robot_arm );
+ //=============================================================================
+//
+// Weapon Robot Arm functions.
+//
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFRobotArm::Smack( void )
+{
+	//TODO: check if this needs lag compensation
+ 	trace_t tr;
+ 	// Did we hit an enemy player?
+	if ( DoSwingTrace( tr ) && tr.DidHitNonWorldEntity() && tr.m_pEnt && ( tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC() ) && tr.m_pEnt->GetTeamNumber() != GetTeamNumber() )
+	{
+		m_iConsecutivePunches++;
+		m_flComboDecayTime = gpGlobals->curtime;
+ 		if ( m_iConsecutivePunches > 2 )
+			m_bComboKill = true;
+	}
+	else
+	{
+		m_bComboKill = false;
+		m_iConsecutivePunches = 0;
+	}
+ 	BaseClass::Smack();
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFRobotArm::PrimaryAttack( void )
+{
+	// reset the combo if we've already hit 3 times or exceeded the decay time
+	if ( gpGlobals->curtime - m_flComboDecayTime > 1.0f || m_iConsecutivePunches > 2  )
+	{
+		m_iConsecutivePunches = 0;
+		m_bComboKill = false;
+	}
+ 	BaseClass::PrimaryAttack();
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFRobotArm::WeaponIdle( void )
+{
+	if ( m_bComboKill )
+	{
+		SendWeaponAnim( ACT_ITEM2_VM_IDLE_2 );
+		m_bComboKill = false;
+	}
+ 	BaseClass::WeaponIdle();
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+int CTFRobotArm::GetDamageCustom( void )
+{
+	if ( m_iConsecutivePunches == 3 )
+		return TF_DMG_CUSTOM_COMBO_PUNCH;
+ 	return TF_DMG_CUSTOM_NONE;
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFRobotArm::CalcIsAttackCriticalHelper( void )
+{
+	// punch after 2 consecutive hits always crits
+	return ( m_iConsecutivePunches == 2 );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFRobotArm::DoViewModelAnimation( void )
+{
+	if ( m_iConsecutivePunches == 2 )
+		SendWeaponAnim( ACT_ITEM2_VM_SWINGHARD );
+	else
+		SendWeaponAnim( ACT_ITEM2_VM_HITCENTER );
+}
+ #ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+float CTFRobotArm::GetForceScale( void )
+{
+	if ( m_iConsecutivePunches == 3 )
+	{
+		return 500.0f;
+	}
+	
+	return BaseClass::GetForceScale();
+}
+#endif 

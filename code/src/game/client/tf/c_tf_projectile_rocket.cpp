@@ -13,6 +13,8 @@
 #include "dlight.h"
 #include "c_te_legacytempents.h"
 
+extern ConVar lfe_muzzlelight;
+
 IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_Rocket, DT_TFProjectile_Rocket )
 
 BEGIN_NETWORK_TABLE( C_TFProjectile_Rocket, DT_TFProjectile_Rocket )
@@ -90,20 +92,39 @@ void C_TFProjectile_Rocket::CreateRocketTrails( void )
 
 void C_TFProjectile_Rocket::CreateLightEffects( void )
 {
-	dlight_t *dl;
-	if ( IsEffectActive( EF_DIMLIGHT ) )
-	{	
-		dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-		dl->origin = GetAbsOrigin();
-		dl->color.r = 255;
-		dl->color.g = 100;
-		dl->color.b = 10;
-		dl->die = gpGlobals->curtime + 0.01f;
-		dl->radius = 340.f;
-		dl->decay = 512.0f;
-		dl->style = 1;
-		dl->die = gpGlobals->curtime + 0.001;
+	// Handle the dynamic light
+	if (lfe_muzzlelight.GetBool())
+	{
+		dlight_t *dl;
+		if ( IsEffectActive( EF_DIMLIGHT ) )
+		{	
+			dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+			dl->origin = GetAbsOrigin();
+			dl->color.r = 255;
+			dl->color.g = 100;
+			dl->color.b = 10;
+			switch ( GetTeamNumber() )
+			{
+			case TF_TEAM_RED:
+				if ( !m_bCritical ) {
+				dl->color.r = 255; dl->color.g = 100; dl->color.b = 10; }
+				else {
+				dl->color.r = 255; dl->color.g = 10; dl->color.b = 10; }
+			break;
 
-		tempents->RocketFlare( GetAbsOrigin() );
+			case TF_TEAM_BLUE:
+				if ( !m_bCritical ) {
+				dl->color.r = 255; dl->color.g = 100; dl->color.b = 10; }
+				else {
+				dl->color.r = 10; dl->color.g = 10; dl->color.b = 255; }
+				break;
+			}
+			dl->die = gpGlobals->curtime + 0.01f;
+			dl->radius = 340.f;
+			dl->decay = 512.0f;
+			dl->style = 0;
+
+			tempents->RocketFlare( GetAbsOrigin() );
+		}
 	}
 }

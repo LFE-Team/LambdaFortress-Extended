@@ -526,7 +526,7 @@ Response KilledPlayerShinyHeavy
 }
 Rule KilledPlayerShinyHeavy
 {
-	criterion ConceptKilledPlayer KilledPlayerDelay 20PercentChance IsManyRecentKills IsWeaponPrimary WeaponIsNotVanillaPrimary HeavyNotKillSpeech IsHeavy WeaponIsNotTaggedMinigun
+	criterion ConceptKilledPlayer KilledPlayerDelay 20PercentChance IsManyRecentKills IsWeaponPrimary HeavyNotKillSpeech IsHeavy WeaponIsNotTaggedMinigun
 	ApplyContext "HeavyKillSpeech:1:90"
 	Response KilledPlayerShinyHeavy
 }
@@ -1202,13 +1202,14 @@ Response PlayerShinyCryHeavy
 }
 Rule PlayerShinyCryHeavy
 {
-	criteria ConceptPlayerBattleCry 30PercentChance IsWeaponPrimary IsHeavy WeaponIsNotVanillaPrimary WeaponIsNotTaggedMinigun
+	criteria ConceptPlayerBattleCry 30PercentChance IsWeaponPrimary IsHeavy WeaponIsNotTaggedMinigun
 	Response PlayerShinyCryHeavy
 }
 
 Rule PlayerShinyWindupHeavy
 {
 	criteria ConceptWindMinigun IsWeaponPrimary IsHeavy WeaponIsNotVanillaPrimary WeaponIsNotTaggedMinigun WeaponIsNotTomislav 5PercentChance HeavyNotShinySpeech HeavyNotKillSpeech
+	criteria ConceptWindMinigun IsWeaponPrimary IsHeavy WeaponIsNotTaggedMinigun WeaponIsNotTomislav 5PercentChance HeavyNotShinySpeech HeavyNotKillSpeech
 	ApplyContext "HeavyShinySpeech:1:300"
 	Response PlayerShinyCryHeavy
 }

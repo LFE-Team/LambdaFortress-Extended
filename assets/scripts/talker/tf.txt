@@ -220,6 +220,21 @@
 		criteria ConceptPlayerTaunt IsHeavy WeaponIsGloves
 		response HeavyTauntPlayerGloves
 	}
+	rule HeavyTauntPlayerKillingGloves
+    {
+        criteria ConceptPlayerTaunt IsHeavy WeaponIsKillingGloves
+        response HeavyTauntPlayerGloves
+    }
+    rule HeavyTauntPlayerRunningGloves
+    {
+        criteria ConceptPlayerTaunt IsHeavy WeaponIsRunningGloves
+        response HeavyTauntPlayerGloves
+    }
+    rule HeavyTauntPlayerBearGloves
+    {
+        criteria ConceptPlayerTaunt IsHeavy WeaponIsBearGloves
+        response HeavyTauntPlayerGloves
+    }
 	rule HeavyTauntPlayerItem1
 	{
 		criteria ConceptPlayerTaunt IsHeavy WeaponIsSandvich

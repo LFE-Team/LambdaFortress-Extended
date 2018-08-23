@@ -333,17 +333,34 @@ void CTFProjectile_Flare::CreateTrails( void )
 
 void CTFProjectile_Flare::CreateLight( void )
 {
-	if ( IsEffectActive( EF_DIMLIGHT ) )
-	{	
-		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-		dl->origin = GetAbsOrigin();
-		dl->color.r = 255;
-		dl->color.g = 100;
-		dl->color.b = 10;
-		dl->radius = 128;
-		dl->die = gpGlobals->curtime + 0.001;
+	// Handle the dynamic light
+	if (lfe_muzzlelight.GetBool())
+	{
+		if ( IsEffectActive( EF_DIMLIGHT ) )
+		{	
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+			dl->origin = GetAbsOrigin();
+			switch ( GetTeamNumber() )
+			{
+			case TF_TEAM_RED:
+				if ( !m_bCritical )  {
+				dl->color.r = 255; dl->color.g = 100; dl->color.b = 10; }
+				else {
+				dl->color.r = 255; dl->color.g = 10; dl->color.b = 10; }
+				break;
 
-		tempents->RocketFlare( GetAbsOrigin() );
+			case TF_TEAM_BLUE:
+				if ( !m_bCritical ) {
+				dl->color.r = 255; dl->color.g = 100; dl->color.b = 10; }
+				else {
+				dl->color.r = 10; dl->color.g = 10; dl->color.b = 255; }
+				break;
+			}
+			dl->radius = 128.0f;
+			dl->die = gpGlobals->curtime + 0.001;
+
+			tempents->RocketFlare( GetAbsOrigin() );
+		}
 	}
 }
 
@@ -780,17 +797,34 @@ void CTFProjectile_BallOfFire::CreateTrails( void )
 
 void CTFProjectile_BallOfFire::CreateLight( void )
 {
-	if ( IsEffectActive( EF_DIMLIGHT ) )
-	{	
-		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-		dl->origin = GetAbsOrigin();
-		dl->color.r = 255;
-		dl->color.g = 100;
-		dl->color.b = 10;
-		dl->radius = 256;
-		dl->die = gpGlobals->curtime + 0.001;
+	// Handle the dynamic light
+	if (lfe_muzzlelight.GetBool())
+	{
+		if ( IsEffectActive( EF_DIMLIGHT ) )
+		{	
+			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+			dl->origin = GetAbsOrigin();
+			switch ( GetTeamNumber() )
+			{
+			case TF_TEAM_RED:
+				if ( !m_bCritical ) {
+				dl->color.r = 255; dl->color.g = 30; dl->color.b = 10; }
+				else {
+				dl->color.r = 255; dl->color.g = 10; dl->color.b = 10; }
+				break;
 
-		tempents->RocketFlare( GetAbsOrigin() );
+			case TF_TEAM_BLUE:
+				if ( !m_bCritical ) {
+				dl->color.r = 10; dl->color.g = 30; dl->color.b = 255; }
+				else {
+				dl->color.r = 10; dl->color.g = 10; dl->color.b = 255; }
+				break;
+			}
+			dl->radius = 256.0f;
+			dl->die = gpGlobals->curtime + 0.001;
+
+			tempents->RocketFlare( GetAbsOrigin() );
+		}
 	}
 }
 #endif

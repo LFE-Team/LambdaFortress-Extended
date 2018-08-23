@@ -401,8 +401,11 @@ criterion "WeaponIsFestiveSandvich" "item_name" "Festive Sandvich" "required" we
 criterion "WeaponIsLunchboxDrink" "playerweapon" "tf_weapon_lunchbox_drink" "required"
 criterion "WeaponIsLunchbox" "playerweapon" "tf_weapon_lunchbox" "required"
 criterion "WeaponIsGloves" "item_type_name" "#TF_Weapon_Gloves" "required" weight 10
+criterion "WeaponIsKillingGloves" "item_name" "The Killing Gloves of Boxing" "required" weight 10
+criterion "WeaponIsRunningGloves" "item_name" "Gloves of Running Urgently" "required" weight 10
+criterion "WeaponIsBearGloves" "item_name" "Warrior's Spirit" "required" weight 10
 criterion "WeaponIsKritzkrieg" "item_name" "The Kritzkrieg" "required" weight 10
-criterion "WeaponIsBow" "item_type_name" "#TF_Weapon_CompoundBow" "required" weight 10
+criterion "WeaponIsBow" "playerweapon" "tf_weapon_compound_bow" "required"
 criterion "WeaponIsEqualizer" "item_name" "The Equalizer" "required" weight 10
 criterion "WeaponIsEscapePlan" "item_name" "The Escape Plan" "required" weight 10
 criterion "WeaponIsDirectHit" "item_name" "The Direct Hit" "required" weight 10
@@ -418,7 +421,7 @@ criterion "WeaponIsUbersaw" "item_name" "The Ubersaw" "required" weight 10
 criterion "WeaponIsFestiveUbersaw" "item_name" "Festive Ubersaw" "required" weight 10
 criterion "WeaponIsFrontierJustice" "item_name" "The Frontier Justice" "required" weight 10
 criterion "WeaponIsFestiveFrontierJustice" "item_name" "Festive Frontier Justice" "required" weight 10
-criterion "WeaponIsRobotArm" "item_name" "The Gunslinger" "required" weight 10
+criterion "WeaponIsRobotArm" "playerweapon" "tf_weapon_robot_arm" "required"
 criterion "WeaponIsGoldenWrench" "item_name" "Golden Wrench" "required" weight 10
 criterion "WeaponIsGoldenFryingPan" "item_name" "Gold Frying Pan" "required" weight 10
 criterion "WeaponIsShortstop" "item_name" "The Shortstop" "required" weight 10

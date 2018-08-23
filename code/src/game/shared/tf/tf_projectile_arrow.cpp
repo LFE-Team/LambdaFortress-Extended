@@ -480,8 +480,10 @@ void CTFProjectile_Arrow::ArrowTouch( CBaseEntity *pOther )
 	Vector vecForce = vecDir;
 	vecForce.z = pOther->GetAbsOrigin().z;
 
+	int iCustomDamage = m_bFlame ? TF_DMG_CUSTOM_BURNING_ARROW : TF_DMG_CUSTOM_NONE;
+
 	// Do damage.
-	CTakeDamageInfo info( this, pAttacker, pWeapon, GetDamage(), GetDamageType() );
+	CTakeDamageInfo info( this, pAttacker, pWeapon, GetDamage(), GetDamageType(), iCustomDamage );
 	CalculateBulletDamageForce( &info, pWeapon ? pWeapon->GetTFWpnData().iAmmoType : 0, vecForce, vecOrigin );
 	info.SetReportedPosition( pAttacker ? pAttacker->GetAbsOrigin() : vec3_origin );
 
@@ -616,6 +618,8 @@ void CTFProjectile_Arrow::CreateTrail( void )
 
 		m_hSpriteTrail.Set( pTrail );
 	}
+
+	RemoveEffects( EF_DIMLIGHT );
 }
 
 //-----------------------------------------------------------------------------

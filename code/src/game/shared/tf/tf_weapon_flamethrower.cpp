@@ -398,26 +398,23 @@ void CTFFlameThrower::PrimaryAttack()
 	// Handle the flamethrower light
 	if (lfe_muzzlelight.GetBool())
 	{
+		dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+		dl->origin = vecMuzzlePos;
+		dl->die = gpGlobals->curtime + 0.01f;
 		if ( m_bCritFire )
 		{
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-			dl->origin = vecMuzzlePos;
 			dl->color.r = 255;
 			dl->color.g = 110;
 			dl->color.b = 10;
-			dl->die = gpGlobals->curtime + 0.01f;
 			dl->radius = 400.f;
 			dl->decay = 512.0f;
 			dl->style = 1;
 		}
 		else
 		{
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-			dl->origin = vecMuzzlePos;
 			dl->color.r = 255;
 			dl->color.g = 100;
 			dl->color.b = 10;
-			dl->die = gpGlobals->curtime + 0.01f;
 			dl->radius = 340.f;
 			dl->decay = 512.0f;
 			dl->style = 1;

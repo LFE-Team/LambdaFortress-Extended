@@ -288,7 +288,7 @@ Response KritzSpeechMedic
 }
 Rule KritzSpeechMedic
 {
-	criteria ConceptMedicChargeDeployed IsMedic WeaponIsNotVanillaSecondary WeaponIsNotTaggedMedigun MedicNotInvulnerableSpeech
+	criteria ConceptMedicChargeDeployed IsMedic WeaponIsKritzkrieg WeaponIsNotTaggedMedigun MedicNotInvulnerableSpeech
 	ApplyContext "MedicInvulnerableSpeech:1:30"
 	Response InvulnerableSpeechMedic
 	Response KritzSpeechMedic

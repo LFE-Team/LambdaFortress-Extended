@@ -337,7 +337,7 @@ void CTFWeaponBaseMelee::Smack( void )
 
 #ifndef CLIENT_DLL
 		// Do Damage.
-		int iCustomDamage = TF_DMG_CUSTOM_NONE;
+		int iCustomDamage = GetDamageCustom();
 		float flDamage = GetMeleeDamage( trace.m_pEnt, iCustomDamage );
 		int iDmgType = DMG_NEVERGIB | DMG_CLUB;
 		if ( IsCurrentAttackACrit() )
@@ -347,7 +347,7 @@ void CTFWeaponBaseMelee::Smack( void )
 		}
 
 		CTakeDamageInfo info( pPlayer, pPlayer, this, flDamage, iDmgType, iCustomDamage );
-		CalculateMeleeDamageForce( &info, vecForward, vecSwingEnd, 1.0f / flDamage * tf_meleeattackforcescale.GetFloat() );
+		CalculateMeleeDamageForce( &info, vecForward, vecSwingEnd, 1.0f / flDamage * GetForceScale() );
 
 		int iCleaveAttack = 0;
 		CALL_ATTRIB_HOOK_INT( iCleaveAttack, melee_cleave_attack );
@@ -442,3 +442,13 @@ bool CTFWeaponBaseMelee::CalcIsAttackCriticalHelper( void )
 
 	return bSuccess;
 }
+
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+float CTFWeaponBaseMelee::GetForceScale( void )
+{
+	return tf_meleeattackforcescale.GetFloat();
+}
+#endif
