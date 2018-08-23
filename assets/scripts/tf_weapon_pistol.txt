@@ -20,6 +20,8 @@ WeaponData
 	"BrassModel"		"models/weapons/shells/shell_pistol.mdl"
 	"UseRapidFireCrits"	"1"
 	"TracerEffect"		"bullet_pistol_tracer01"
+	"HasTeamSkins"			"1"
+	"HasTeamSkins_Worldmodel"	"1"
 	"HasTeamSkins_Viewmodel"	"1"
 	"MaxAmmo"		"200"
 	"SpawnAmmo"		"200"

@@ -1916,7 +1916,7 @@
 // ------------------------------------------------------------------------------------ //
 // MEDIGUN
 // ------------------------------------------------------------------------------------ //
-"WeaponMedigun.HealingHealer"
+"WeaponMedigun.Healing"
 {
 	"channel"	"CHAN_WEAPON"
 	"soundlevel"	"SNDLVL_74dB"
@@ -1924,50 +1924,10 @@
 	"wave"		")weapons/medigun_heal.wav"
 }
 
-"WeaponMedigun.HealingTarget"
+"WeaponMedigun.HealingDetach"
 {
 	"channel"	"CHAN_WEAPON"
 	"soundlevel"	"SNDLVL_74dB"
-	"volume"	".5"
-	"wave"		")weapons/medigun_heal.wav"
-}
-
-"WeaponMedigun.HealingWorld"
-{
-	"channel"	"CHAN_WEAPON"
-	"soundlevel"	"SNDLVL_64dB"
-	"volume"	".75"
-	"wave"		")weapons/medigun_heal.wav"
-}
-
-"WeaponMedigun.HealingDisrupt"
-{
-	"channel"	"CHAN_STATIC"
-	"soundlevel"	"SNDLVL_74dB"
-	"volume"	"1"
-	"wave"		")weapons/medigun_heal_disrupt.wav"
-}
-
-"WeaponMedigun.HealingDetachHealer"
-{
-	"channel"	"CHAN_WEAPON"
-	"soundlevel"	"SNDLVL_74dB"
-	"volume"	".75"
-	"wave"		")weapons/medigun_heal_detach.wav"
-}
-
-"WeaponMedigun.HealingDetachTarget"
-{
-	"channel"	"CHAN_WEAPON"
-	"soundlevel"	"SNDLVL_74dB"
-	"volume"	"1"
-	"wave"		")weapons/medigun_heal_detach.wav"
-}
-
-"WeaponMedigun.HealingDetachWorld"
-{
-	"channel"	"CHAN_WEAPON"
-	"soundlevel"	"SNDLVL_64dB"
 	"volume"	".75"
 	"wave"		")weapons/medigun_heal_detach.wav"
 }
@@ -2020,7 +1980,6 @@
 	"volume"	".5"
 	"wave"		"weapons/draw_secondary.wav"
 }
-
 
 // ------------------------------------------------------------------------------------ //
 // OVERDOSE

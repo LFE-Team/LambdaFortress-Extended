@@ -6,13 +6,15 @@ WeaponData
 	"weight"			"5"
 	"WeaponType"			"item1"
 	"ITEM_FLAG_NOITEMPICKUP" 	"1"
+	"HasTeamSkins"			"1"
+	"HasTeamSkins_Worldmodel"	"1"
+	"HasTeamSkins_Viewmodel"	"1"
 	
 	// Attributes TF.
 	"Damage"			"5"
 	"DamageRadius"			"200"
 	"TimeFireDelay"			"0.8"
 	"TimeIdle"			"5.0"
-	"HasTeamSkins_Viewmodel"			"1"
 	"ProjectileType"		"projectile_jar_milk"
 
 	// Ammo & Clip

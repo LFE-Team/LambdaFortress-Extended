@@ -6,8 +6,9 @@ WeaponData
 	"weight"		"4"
 	"WeaponType"		"secondary"
 	"ITEM_FLAG_NOITEMPICKUP" 	"1"	
-	"HasTeamSkins_Viewmodel"	"1"	
+	"HasTeamSkins"			"1"
 	"HasTeamSkins_Worldmodel"	"1"
+	"HasTeamSkins_Viewmodel"	"1"
 
 	// Attributes TF.
 	"damage"		"100"

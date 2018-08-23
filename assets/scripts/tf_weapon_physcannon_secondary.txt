@@ -11,7 +11,9 @@ WeaponData
 	"autoswitchfrom"	"0"
 
 	// Primary Attributes
-	"HasTeamSkins_Viewmodel"	"0"
+	"HasTeamSkins"			"1"
+	"HasTeamSkins_Worldmodel"	"1"
+	"HasTeamSkins_Viewmodel"	"1"
 
 	// Ammo & Clip
 	"primary_ammo"			"None"

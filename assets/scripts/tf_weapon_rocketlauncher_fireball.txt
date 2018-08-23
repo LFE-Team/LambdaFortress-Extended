@@ -6,6 +6,9 @@ WeaponData
 	"weight"		"3"
 	"WeaponType"		"primary"
 	"ITEM_FLAG_NOITEMPICKUP" 	"1"
+	"HasTeamSkins"			"1"
+	"HasTeamSkins_Worldmodel"	"1"
+	"HasTeamSkins_Viewmodel"	"1"
 	
 	// Primary Attributes.
 	"Damage"		"25"
@@ -19,7 +22,6 @@ WeaponData
 	"clip_size"		"-1"
 
 	"ProjectileType"	"projectile_balloffire"
-	"HasTeamSkins_Viewmodel"	"1"
 	"MaxAmmo"		"200"
 	"SpawnAmmo"		"200"
 

@@ -3096,7 +3096,7 @@ void CTriggerCamera::InputDisable( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-#ifdef SecobMod__MULTIPLAYER_VIEWCONTROL_CAMERAS
+#ifdef TF_CLASSIC
 void CTriggerCamera::Enable( void )
 {
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -3117,12 +3117,12 @@ void CTriggerCamera::Enable( void )
 		if ( !m_hPlayer || !m_hPlayer->IsPlayer() )
 		{
 			Msg ("Not m_hPlayer or m_hPlayer isn't a player!");
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifdef TF_CLASSIC
 			m_hPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
 			Msg ("m_hPlayer should now be the nearest player.");
 #else
 			m_hPlayer = UTIL_GetLocalPlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+#endif //TF_CLASSIC
 
 		}
 
@@ -3318,11 +3318,11 @@ void CTriggerCamera::Enable( void )
 
 	if ( !m_hPlayer || !m_hPlayer->IsPlayer() )
 	{
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+#ifdef TF_CLASSIC
 		m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
 		m_hPlayer = UTIL_GetLocalPlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+#endif //TF_CLASSIC
 
 	}
 
@@ -3493,12 +3493,12 @@ void CTriggerCamera::Enable( void )
 
 		DispatchUpdateTransmitState();
 }
-#endif //SecobMod__MULTIPLAYER_VIEWCONTROL_CAMERAS
+#endif //TF_CLASSIC
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-#ifdef SecobMod__MULTIPLAYER_VIEWCONTROL_CAMERAS
+#ifdef TF_CLASSIC
 void CTriggerCamera::Disable( void )
 {
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -3569,9 +3569,9 @@ void CTriggerCamera::Disable( void )
 	}
 
 	//SecobMod__MiscFixes On ep2_outland_01 the game would crash as it didn't find a player, so define them as the nearest player.
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI	
+#ifdef TF_CLASSIC
 	CBasePlayer *m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+#endif //TF_CLASSIC
 	//return the player to previous takedamage state
 	m_hPlayer->m_takedamage = m_nOldTakeDamage;
 
@@ -3584,7 +3584,7 @@ void CTriggerCamera::Disable( void )
 
 	DispatchUpdateTransmitState();
 }
-#endif //SecobMod__MULTIPLAYER_VIEWCONTROL_CAMERAS
+#endif //TF_CLASSIC
 
 //-----------------------------------------------------------------------------
 // Purpose: 

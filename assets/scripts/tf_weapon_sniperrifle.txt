@@ -6,6 +6,9 @@ WeaponData
 	"weight"		"3"
 	"WeaponType"		"primary"
 	"ITEM_FLAG_NOITEMPICKUP" 	"1"
+	"HasTeamSkins"			"1"
+	"HasTeamSkins_Worldmodel"	"1"
+	"HasTeamSkins_Viewmodel"	"1"
 	
 	// Attributes TF.
 	"Damage"		"4"
@@ -14,8 +17,6 @@ WeaponData
 	"Spread"		"0.0"
 	"TimeFireDelay"		"1.5"
 	"ProjectileType"	"projectile_bullet"
-	"HasTeamSkins_Viewmodel"	"1"
-	"HasTeamSkins_Worldmodel"	"1"
 	"MaxAmmo"		"25"
 	"SpawnAmmo"		"10"
 	

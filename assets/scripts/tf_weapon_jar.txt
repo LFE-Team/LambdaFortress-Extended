@@ -12,7 +12,9 @@ WeaponData
 	"DamageRadius"			"200"
 	"TimeFireDelay"			"0.8"
 	"TimeIdle"			"5.0"
-	"HasTeamSkins_Viewmodel"			"1"
+	"HasTeamSkins"			"1"
+	"HasTeamSkins_Worldmodel"	"1"
+	"HasTeamSkins_Viewmodel"	"1"
 	"ProjectileType"		"projectile_jar"
 
 	// Ammo & Clip
