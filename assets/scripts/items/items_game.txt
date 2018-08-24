@@ -1464,10 +1464,6 @@
 			"image_inventory"	"backpack/weapons/c_models/c_energy_drink/c_energy_drink"
 			"model_player"	"models/weapons/c_models/c_energy_drink/c_energy_drink.mdl"
 			"xifier_class_remap"	"weapon_bonk"
-			"used_by_classes"
-			{
-				"scout"	"1"
-			}
 		}
 
 		"weapon_bottle"
@@ -7202,10 +7198,6 @@
 			"image_inventory"	"backpack/weapons/c_models/c_energy_drink/c_energy_drink"
 			"model_player"	"models/weapons/c_models/c_energy_drink/c_energy_drink.mdl"
 			"show_in_armory"	"1"
-			"used_by_classes"
-			{
-				"scout"	"1"
-			}
 		}
 		"56"
 		{
