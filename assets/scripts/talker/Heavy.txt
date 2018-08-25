@@ -1208,7 +1208,6 @@ Rule PlayerShinyCryHeavy
 
 Rule PlayerShinyWindupHeavy
 {
-	criteria ConceptWindMinigun IsWeaponPrimary IsHeavy WeaponIsNotVanillaPrimary WeaponIsNotTaggedMinigun WeaponIsNotTomislav 5PercentChance HeavyNotShinySpeech HeavyNotKillSpeech
 	criteria ConceptWindMinigun IsWeaponPrimary IsHeavy WeaponIsNotTaggedMinigun WeaponIsNotTomislav 5PercentChance HeavyNotShinySpeech HeavyNotKillSpeech
 	ApplyContext "HeavyShinySpeech:1:300"
 	Response PlayerShinyCryHeavy

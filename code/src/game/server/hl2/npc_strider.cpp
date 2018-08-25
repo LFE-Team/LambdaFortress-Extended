@@ -722,6 +722,14 @@ void CNPC_Strider::Activate()
 		VectorITransform( position, pStrider->EntityToWorldTransform(), gm_vLocalRelativePositionMinigun );
 		UTIL_Remove( pStrider );
 	}
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "strider_spawned" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 }
 
 //---------------------------------------------------------
@@ -3288,6 +3296,14 @@ void CNPC_Strider::Event_Killed( const CTakeDamageInfo &info )
 	EntityMessageBegin( this, true );
 		WRITE_BYTE( STRIDER_MSG_DEAD );
 	MessageEnd();
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "strider_killed" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 }
 
 //---------------------------------------------------------

@@ -638,6 +638,14 @@ void CNPC_CombineGunship::Spawn( void )
 	{
 		AddFlag( FL_AIMTARGET );
 	}
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "gunship_spawned" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1882,6 +1890,14 @@ void CNPC_CombineGunship::Event_Killed( const CTakeDamageInfo &info )
 	SendOnKilledGameEvent( info );
 
 	BeginCrash();
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "gunship_destoryed" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 
 	// we deliberately do not call BaseClass::EventKilled
 }

@@ -1328,6 +1328,14 @@ void CNPC_AttackHelicopter::Activate( void )
 	{
 		SetShadowCastDistance( 2048 );
 	}
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "helicopter_spawned" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 }
 
 	
@@ -3773,6 +3781,14 @@ void CNPC_AttackHelicopter::Event_Killed( const CTakeDamageInfo &info )
 	m_takedamage = DAMAGE_NO;
 
 	m_OnDeath.FireOutput( info.GetAttacker(), this );
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "helicopter_destoryed" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 }
 
 //------------------------------------------------------------------------------

@@ -616,7 +616,7 @@ void C_TFRagdoll::CreateTFRagdoll(void)
 	SetNextClientThink( gpGlobals->curtime + cl_ragdoll_fade_time.GetFloat() * 0.33f );
 
 	// Birthday mode.
-	if ( pPlayer && TFGameRules() && TFGameRules()->IsBirthday() )
+	if ( pPlayer && TFGameRules() && TFGameRules()->IsBirthday() || TFGameRules()->IsLFBirthday() )
 	{
 		AngularImpulse angularImpulse( RandomFloat( 0.0f, 120.0f ), RandomFloat( 0.0f, 120.0f ), 0.0 );
 		breakablepropparams_t breakParams( m_vecRagdollOrigin, GetRenderAngles(), m_vecRagdollVelocity, angularImpulse );
@@ -643,7 +643,7 @@ void C_TFRagdoll::CreateTFGibs( void )
 		pPlayer->CreatePlayerGibs( m_vecRagdollOrigin, vecVelocity, m_vecForce.Length(), m_bBurning );
 	}
 
-	if ( pPlayer && TFGameRules() && TFGameRules()->IsBirthday() )
+	if ( pPlayer && TFGameRules() && TFGameRules()->IsBirthday() || TFGameRules()->IsLFBirthday() )
 	{
 		DispatchParticleEffect( "bday_confetti", pPlayer->GetAbsOrigin() + Vector(0,0,32), vec3_angle );
 
@@ -2401,7 +2401,7 @@ CStudioHdr *C_TFPlayer::OnNewModel( void )
 //-----------------------------------------------------------------------------
 void C_TFPlayer::UpdatePartyHat( void )
 {
-	if ( TFGameRules() && TFGameRules()->IsBirthday() && !IsLocalPlayer() && IsAlive() && 
+	if ( TFGameRules() && ( TFGameRules()->IsBirthday() || TFGameRules()->IsLFBirthday() ) && !IsLocalPlayer() && IsAlive() && 
 		GetTeamNumber() >= FIRST_GAME_TEAM && !IsPlayerClass(TF_CLASS_UNDEFINED) )
 	{
 		if ( m_hPartyHat )
@@ -3737,7 +3737,7 @@ void C_TFPlayer::InitPlayerGibs( void )
 	m_aGibs.Purge();
 	BuildGibList( m_aGibs, GetModelIndex(), 1.0f, COLLISION_GROUP_NONE );
 
-	if ( TFGameRules() && TFGameRules()->IsBirthday() )
+	if ( TFGameRules() && TFGameRules()->IsBirthday() || TFGameRules()->IsLFBirthday() )
 	{
 		for ( int i = 0; i < m_aGibs.Count(); i++ )
 		{

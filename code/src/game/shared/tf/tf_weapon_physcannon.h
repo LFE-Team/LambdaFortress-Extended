@@ -298,7 +298,8 @@ public:
 
 	virtual void SetViewModel( void );
 	virtual const char *GetShootSound( int iIndex ) const;
-	
+
+	virtual void 			DefaultTouch( CBaseEntity *pOther );
 #ifndef CLIENT_DLL
 	CNetworkQAngle	( m_attachedAnglesPlayerSpace );
 #else

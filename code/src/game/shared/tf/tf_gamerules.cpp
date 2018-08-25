@@ -97,11 +97,12 @@ ConVar tf_caplinear( "tf_caplinear", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTON
 ConVar tf_stalematechangeclasstime( "tf_stalematechangeclasstime", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Amount of time that players are allowed to change class in stalemates." );
 ConVar tf_birthday( "tf_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
 
-ConVar lfe_force_aprilfool( "lfe_force_aprilfool", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
-ConVar lfe_force_halloween( "lfe_force_halloween", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
-ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
+ConVar lfe_force_aprilfool( "lfe_force_aprilfool", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force April Fool mode." );
+ConVar lfe_force_halloween( "lfe_force_halloween", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Halloween mode." );
+ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Smissmas mode." );
+ConVar lfe_force_birthday( "lfe_force_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Lambda Fortress's birthday mode." );
 
-ConVar  alyx_darkness_force("alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED);
+ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 // TF2C's cvars.
 ConVar lfe_falldamage_disablespread( "lfe_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
@@ -4779,7 +4780,7 @@ void CTFGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 static const char *g_aTaggedConVars[] =
 {
 	"tf_birthday",
-	"birthday",
+	"tf2birthday",
 
 	"mp_fadetoblack",
 	"fadetoblack",
@@ -4867,6 +4868,9 @@ static const char *g_aTaggedConVars[] =
 
 	"sv_infinite_ammo",
 	"infinite",
+
+	"lfe_force_birthday",
+	"birthday",
 };
 
 //-----------------------------------------------------------------------------
@@ -5296,8 +5300,8 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 		else
 		{
 			// Default to flamethrower if no burn weapon is specified.
-			killer_weapon_name = "tf_weapon_flamethrower";
-			iWeaponID = TF_WEAPON_FLAMETHROWER;
+			killer_weapon_name = "dragons_fury";
+			iWeaponID = TF_WEAPON_ROCKETLAUNCHER_FIREBALL;
 		}
 	}
 	else if ( pScorer && pInflictor && ( pInflictor == pScorer ) )
@@ -6718,7 +6722,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: TF's Birthday
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsBirthday( void )
 {
@@ -6745,6 +6749,36 @@ bool CTFGameRules::IsBirthday( void )
 	}
 
 	return ( m_iBirthdayMode == HOLIDAY_ON );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: LF's Birthday
+//-----------------------------------------------------------------------------
+bool CTFGameRules::IsLFBirthday( void )
+{
+	if ( m_iLFBirthdayMode == HOLIDAY_RECALCULATE )
+	{
+		m_iLFBirthdayMode = HOLIDAY_OFF;
+		if ( lfe_force_birthday.GetBool() )
+		{
+			m_iLFBirthdayMode = HOLIDAY_ON;
+		}
+		else
+		{
+			time_t ltime = time(0);
+			const time_t *ptime = &ltime;
+			struct tm *today = localtime( ptime );
+			if ( today )
+			{
+				if ( today->tm_mon == 7 && today->tm_mday == 18 ) // this is the date that nicknine made lambda public.
+				{
+					m_iLFBirthdayMode = HOLIDAY_ON;
+				}
+			}
+		}
+	}
+
+	return ( m_iLFBirthdayMode == HOLIDAY_ON );
 }
 
 //-----------------------------------------------------------------------------

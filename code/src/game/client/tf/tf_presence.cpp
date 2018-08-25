@@ -213,7 +213,7 @@ void CTFRichPresence::UpdatePlayerInfo()
 
 	if ( m_szLatchedHostname[0] != '\0' )
 	{
-		Q_snprintf(m_szServerInfo, DISCORD_FIELD_SIZE, "Server: %s [%d/%d]", m_szLatchedHostname, curPlayers, maxPlayers );
+		Q_snprintf(m_szServerInfo, DISCORD_FIELD_SIZE, "%s [%d/%d]", m_szLatchedHostname, curPlayers, maxPlayers );
 		if ( cl_richpresence_printmsg.GetBool() )
 		{
 			ConColorMsg( Color( 114, 137, 218, 255 ), "[Discord] sending details of\n '%s'\n", m_szServerInfo );

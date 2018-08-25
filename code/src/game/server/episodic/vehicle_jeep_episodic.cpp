@@ -391,7 +391,15 @@ m_bExitLocked(false),
 m_bAddingCargo(false),
 m_flNextAvoidBroadcastTime(0.0f)
 {
-	m_bHasGun = false;
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	{
+		m_bHasGun = false;
+	}
+	else
+	{
+		m_bHasGun = true;
+	}
+
 	m_bUnableToFire = true;
 	m_bRadarDetectsEnemies = false;
 }

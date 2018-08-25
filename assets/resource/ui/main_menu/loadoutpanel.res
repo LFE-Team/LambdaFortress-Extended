@@ -19,10 +19,10 @@
 	{
 		"ControlName"		"ImagePanel"
 		"fieldName"			"BackgroundImage"
-		"xpos"				"100"
+		"xpos"				"0"
 		"ypos"				"20"
 		"zpos"				"-2"
-		"wide"				"f+200"
+		"wide"				"f0"
 		"tall"				"f+40"
 		"autoResize"		"0"
 		"pinCorner"			"0"
@@ -33,33 +33,103 @@
 		"enabled"			"1"
 	}
 
-	"ExtraBackgroundImage"
+	"ShadedBackgroundImage"
 	{
 		"ControlName"		"ImagePanel"
-		"fieldName"			"ExtraBackgroundImage"
-		"xpos"				"100"
-		"ypos"				"20"
-		"zpos"				"-2"
-		"wide"				"f+200"
-		"tall"				"f+40"
+		"fieldName"			"ShadedBackgroundImage"
+		"xpos"				"0"
+		"ypos"				"21"
+		"zpos"				"-1"
+		"wide"				"f0"
+		"tall"				"60"
 		"autoResize"		"0"
 		"pinCorner"			"0"
 		"scaleimage"		"1"
-		"border"			"AdvRoundedButtonDefault"
+		"image"				"gradient_pure_black"
 		"visible"			"1"
-		//"fillcolor"			"46 43 42 255"
 		"enabled"			"1"
 	}
+
+	"BackgroundHeader"
+	{
+		"ControlName"	"ImagePanel"
+		"fieldName"		"BackgroundHeader"
+		"xpos"			"0"
+		"ypos"			"0"
+		"zpos"			"-2"
+		"wide"			"f0"
+		"tall"			"80"
+		"visible"		"1"
+		"enabled"		"1"
+		"image"			"loadout_header"
+		"tileImage"		"1"
+	}	
+	"BackgroundHeaderBP"
+	{
+		"ControlName"	"ImagePanel"
+		"fieldName"		"BackgroundHeaderBP"
+		"xpos"			"115"
+		"ypos"			"5"
+		"zpos"			"-1"
+		"wide"			"620"
+		"tall"			"75"
+		"visible"		"1"
+		"enabled"		"1"
+		"border"		"ReplayOutlinedGreyBox"
+		"tileImage"		"1"
+	}				
+	"BackgroundFooter"
+	{
+		"ControlName"	"ImagePanel"
+		"fieldName"		"BackgroundFooter"
+		"xpos"			"0"
+		"ypos"			"420"
+		"zpos"			"1"
+		"wide"			"f0"
+		"tall"			"60"
+		"visible"		"1"
+		"enabled"		"1"
+		"image"			"loadout_bottom_gradient"
+		"tileImage"		"1"
+	}
+	"FooterLine"
+	{
+		"ControlName"	"ImagePanel"
+		"fieldName"		"FooterLine"
+		"xpos"			"0"
+		"ypos"			"420"
+		"zpos"			"2"
+		"wide"			"f0"
+		"tall"			"10"
+		"visible"		"1"
+		"enabled"		"1"
+		"image"			"loadout_solid_line"
+		"scaleImage"	"1"
+	}
+	"HeaderLine"
+	{
+		"ControlName"	"ImagePanel"
+		"fieldName"		"HeaderLine"
+		"xpos"			"0"
+		"ypos"			"80"
+		"zpos"			"5"
+		"wide"			"f0"
+		"tall"			"10"
+		"visible"		"1"
+		"enabled"		"1"
+		"image"			"loadout_solid_line"
+		"scaleImage"	"1"
+	}				
 
 	"ShadedBarBottom"
 	{
 		"ControlName"	"ImagePanel"
 		"fieldName"		"ShadedBarBottom"
-		"xpos"			"101"
-		"ypos"			"395"
+		"xpos"			"0"
+		"ypos"			"365"
 		"zpos"			"-1"
-		"wide"			"651"
-		"tall"			"65"
+		"wide"			"f0"
+		"tall"			"55"
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"1"
@@ -73,11 +143,14 @@
 	{
 		"ControlName"	"ImagePanel"
 		"fieldName"		"ShadedBarTop"
-		"xpos"			"101"
-		"ypos"			"21"
+		//"xpos"			"0"
+		//"ypos"			"21"
+		//"zpos"			"-1"
+		"xpos"			"0"
+		"ypos"			"80"
 		"zpos"			"-1"
-		"wide"			"651"
-		"tall"			"80"
+		"wide"			"f0"
+		"tall"			"55"
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"1"
@@ -91,12 +164,11 @@
 	{
 		"ControlName"	"CTFAdvModelPanel"
 		"fieldName"		"classmodelpanel"
-		
-		"xpos"			"c-320"
-		"ypos"			"c-90"
+		"xpos"			"c-360"
+		"ypos"			"c-115"
 		"zpos"			"0"		
-		"wide"			"260"
-		"tall"			"280"
+		"wide"			"280"
+		"tall"			"300"
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"1"
@@ -104,6 +176,8 @@
 
 		"fov"			"25"
 		"allow_rot"		"1"
+		//"allow_pitch"	"1"
+		"allow_manip"	"1"
 				
 		"model"
 		{
@@ -111,17 +185,18 @@
 			"skin"	"0"
 
 			"angles_x" "0"
-			"angles_y" "200"
+			"angles_y" "210"
 			"angles_z" "0"
 			"origin_x" "190"
 			"origin_y" "0"
-			"origin_z" "-36"
+			"origin_z" "-40"
 			"frame_origin_x"	"0"
 			"frame_origin_y"	"0"
 			"frame_origin_z"	"0"
 			"spotlight" "1"
 		
 			"modelname"		"models/player/heavy.mdl"
+			"modelname_hwm"	"models/player/hwm/heavy.mdl"
 			
 			"attached_model"
 			{
@@ -187,68 +262,21 @@
 			}
 		}
 	}
-	
-	"gamemodelpanel"
-	{
-		"ControlName"	"CModelPanel"
-		"fieldName"		"gamemodelpanel"
-		
-		"xpos"			"c-320"
-		"ypos"			"c-90"
-		"zpos"			"2"		
-		"wide"			"260"
-		"tall"			"280"
-		"autoResize"	"0"
-		"pinCorner"		"0"
-		"visible"		"1"
-		"enabled"		"1"
-		"fov"			"28"
-				
-		"model"
-		{
-			"skin"	"0"
-			"angles_x" "0"
-			"angles_y" "175"
-			"angles_z" "0"
-			"origin_x" "190"
-			"origin_y" "0"
-			"origin_z" "-36"
-			"frame_origin_x"	"0"
-			"frame_origin_y"	"0"
-			"frame_origin_z"	"0"
-			"spotlight" "1"
-		
-			"modelname"		""
-			
-			"attached_model"
-			{
-				"modelname" "models/weapons/w_models/w_crowbar.mdl"
-				"skin"	"0"
-			}
-			
-			"animation"
-			{
-				"name"		"MELEE"
-				"activity"	"ACT_MP_STAND_MELEE"
-				"default"	"1"
-			}			
-		}
-	}
-	
+
 	"weaponsetpanel"
 	{
 		"ControlName"	"CTFWeaponSetPanel"
 		"fieldName"		"weaponsetpanel"		
 		"xpos"			"c-70"
-		"ypos"			"c-70"
-		"zpos"			"-1"		
-		"wide"			"380"
+		"ypos"			"c-100"
+		"zpos"			"2"		
+		"wide"			"308"
 		"tall"			"280"
 		"autoResize"	"0"
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
-		//"border"		"MainMenuHighlightBorder"
+		//"border"		"TFFatLineBorder"
 	}
 
 	"rgbpanel"
@@ -265,24 +293,28 @@
 		"visible"		"0"
 		"enabled"		"1"
 		"border"		"TFFatLineBorder"
-	}	
+	}
 	
 	"BackButton"
 	{
 		"ControlName"	"CTFAdvButton"
 		"fieldName"		"BackButton"
-		"xpos"			"c-250"
-		"ypos"			"r60"
-		"zpos"			"20"
+		"xpos"			"c-295"
+		"ypos"			"437"
+		"zpos"			"2"
 		"wide"			"124"
 		"tall"			"25"
+		"autoResize"	"0"
+		"pinCorner"		"3"
 		"visible"		"1"
 		"enabled"		"1"
 		"command"		"back"		
 		
 		"SubButton"
 		{
-			"labelText" 		"<< Back (&Q)"
+			"labelText" 		"<< Back (&Esc)"
+			"xshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"center"
 			"font"				"HudFontSmallBold"
 			"border_default"	"AdvRoundedButtonDefault"
@@ -291,38 +323,13 @@
 		}
 	}	
 
-	"BackButtonX"
-	{
-		"ControlName"	"CTFAdvButton"
-		"fieldName"		"BackButtonX"
-		"xpos"			"c300"
-		"ypos"			"17"
-		"zpos"			"20"
-		"wide"			"30"
-		"tall"			"25"
-		"visible"		"1"
-		"enabled"		"1"
-		"command"		"back"
-		"bordervisible"		"0"
-		
-		"SubButton"
-		{
-			"labelText" 		"X"
-			"textAlignment"		"center"
-			"font"				"HudFontSmallBold"
-			"defaultFgColor_override"		"MainMenuTextDepressed"
-			"armedFgColor_override"			"AdvTextArmed"
-			"depressedFgColor_override"		"MainMenuTextDefault"
-		}
-	}
-
 	"ResetButton"
 	{
 		"ControlName"	"CTFAdvButton"
 		"fieldName"		"ResetButton"
 		"xpos"			"c150"
-		"ypos"			"r60"
-		"zpos"			"20"
+		"ypos"			"437"
+		"zpos"			"2"
 		"wide"			"124"
 		"tall"			"25"
 		"visible"		"1"
@@ -332,6 +339,8 @@
 		"SubButton"
 		{
 			"labelText" 		"Reset"
+			"xshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"center"
 			"font"				"HudFontSmallBold"
 			"tooltip"			"Reset All Selected Weapons"
@@ -341,12 +350,30 @@
 		}
 	}	
 
-	"ParticleLabel"
+	"CaratLabel"
 	{
 		"ControlName"		"CExLabel"
-		"fieldName"			"ParticleLabel"
+		"fieldName"		"CaratLabel"
+		"font"			"HudFontSmallestBold"
+		"labelText"		">>"
+		"textAlignment"	"west"
+		"xpos"			"c-300"
+		"ypos"			"105"
+		"zpos"			"1"
+		"wide"			"20"
+		"tall"			"15"
+		"autoResize"	"1"
+		"pinCorner"		"0"
+		"visible"		"1"
+		"enabled"		"1"
+		"fgcolor_override" "200 80 60 255"
+	}
+	"ClassLabel"
+	{
+		"ControlName"		"CExLabel"
+		"fieldName"			"ClassLabel"
 		"xpos"				"c-280"
-		"ypos"				"115"
+		"ypos"				"95"
 		"zpos"				"5"
 		"wide"				"500"
 		"tall"				"30"
@@ -360,12 +387,12 @@
 		"fgcolor"			"Button.ArmedTextColor"
 	}	
 	
-	"ParticleLabelShadow"
+	"ClassLabelShadow"
 	{
 		"ControlName"		"CExLabel"
-		"fieldName"			"ParticleLabelShadow"
+		"fieldName"			"ClassLabelShadow"
 		"xpos"				"c-278"
-		"ypos"				"115"
+		"ypos"				"100"
 		"zpos"				"4"
 		"wide"				"500"
 		"tall"				"30"
@@ -378,27 +405,13 @@
 		"font"				"TeamMenuBold"
 		"fgcolor"			"Black"
 	}	
-	
-	"LogoCircle"
-	{
-		"ControlName"	"CTFRotatingImagePanel"
-		"fieldName"		"LogoCircle"
-		"xpos"			"87"
-		"ypos"			"44"
-		"zpos"			"5"
-		"wide"			"30"
-		"tall"			"30"
-		"image"			"vgui/class_icons/scout"
-		"visible"		"0"
-		"enabled"		"1"
-	}
-	
+
 	"classselection"
 	{
 		"ControlName"		"CAdvTabs"
 		"fieldName"			"classselection"
 		"xpos"				"c-300"
-		"ypos"				"30"
+		"ypos"				"10"
 		"zpos"				"6"
 		"wide"				"600"
 		"tall"				"63"

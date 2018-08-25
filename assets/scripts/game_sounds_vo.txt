@@ -21402,7 +21402,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award01.wav"
+	"wave"		"vo/scout_Award01.mp3"
 }
 
 "Scout.Award02"
@@ -21411,7 +21411,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award02.wav"
+	"wave"		"vo/scout_Award02.mp3"
 }
 
 "Scout.Award04"
@@ -21420,7 +21420,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award04.wav"
+	"wave"		"vo/scout_Award04.mp3"
 }
 
 "Scout.Award03"
@@ -21429,7 +21429,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award03.wav"
+	"wave"		"vo/scout_Award03.mp3"
 }
 
 "Scout.Award05"
@@ -21438,7 +21438,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award05.wav"
+	"wave"		"vo/scout_Award05.mp3"
 }
 
 "Scout.Award06"
@@ -21447,7 +21447,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award06.wav"
+	"wave"		"vo/scout_Award06.mp3"
 }
 
 "Scout.Award07"
@@ -21456,7 +21456,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award07.wav"
+	"wave"		"vo/scout_Award07.mp3"
 }
 
 "Scout.Award08"
@@ -21465,7 +21465,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award08.wav"
+	"wave"		"vo/scout_Award08.mp3"
 }
 
 "Scout.Award09"
@@ -21474,7 +21474,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award09.wav"
+	"wave"		"vo/scout_Award09.mp3"
 }
 
 "Scout.Award11"
@@ -21483,7 +21483,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award11.wav"
+	"wave"		"vo/scout_Award11.mp3"
 }
 
 "Scout.Award12"
@@ -21492,7 +21492,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award12.wav"
+	"wave"		"vo/scout_Award12.mp3"
 }
 
 "Scout.Award10"
@@ -21501,7 +21501,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Award10.wav"
+	"wave"		"vo/scout_Award10.mp3"
 }
 
 "Scout.BeingShotInvincible04"
@@ -21510,7 +21510,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible04.wav"
+	"wave"		"vo/scout_BeingShotInvincible04.mp3"
 }
 
 "Scout.BeingShotInvincible07"
@@ -21519,7 +21519,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible07.wav"
+	"wave"		"vo/scout_BeingShotInvincible07.mp3"
 }
 
 "Scout.BeingShotInvincible02"
@@ -21528,7 +21528,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible02.wav"
+	"wave"		"vo/scout_BeingShotInvincible02.mp3"
 }
 
 "Scout.BeingShotInvincible01"
@@ -21537,7 +21537,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible01.wav"
+	"wave"		"vo/scout_BeingShotInvincible01.mp3"
 }
 
 "Scout.BeingShotInvincible08"
@@ -21546,7 +21546,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible08.wav"
+	"wave"		"vo/scout_BeingShotInvincible08.mp3"
 }
 
 "Scout.BeingShotInvincible09"
@@ -21555,7 +21555,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible09.wav"
+	"wave"		"vo/scout_BeingShotInvincible09.mp3"
 }
 
 "Scout.BeingShotInvincible03"
@@ -21564,7 +21564,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible03.wav"
+	"wave"		"vo/scout_BeingShotInvincible03.mp3"
 }
 
 "Scout.BeingShotInvincible10"
@@ -21573,7 +21573,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible10.wav"
+	"wave"		"vo/scout_BeingShotInvincible10.mp3"
 }
 
 "Scout.BeingShotInvincible06"
@@ -21582,7 +21582,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible06.wav"
+	"wave"		"vo/scout_BeingShotInvincible06.mp3"
 }
 
 "Scout.BeingShotInvincible05"
@@ -21591,7 +21591,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible05.wav"
+	"wave"		"vo/scout_BeingShotInvincible05.mp3"
 }
 
 "Scout.BeingShotInvincible11"
@@ -21600,7 +21600,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible11.wav"
+	"wave"		"vo/scout_BeingShotInvincible11.mp3"
 }
 
 "Scout.BeingShotInvincible12"
@@ -21609,7 +21609,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible12.wav"
+	"wave"		"vo/scout_BeingShotInvincible12.mp3"
 }
 
 "Scout.BeingShotInvincible13"
@@ -21618,7 +21618,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible13.wav"
+	"wave"		"vo/scout_BeingShotInvincible13.mp3"
 }
 
 "Scout.BeingShotInvincible14"
@@ -21627,7 +21627,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible14.wav"
+	"wave"		"vo/scout_BeingShotInvincible14.mp3"
 }
 
 "Scout.BeingShotInvincible15"
@@ -21636,7 +21636,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible15.wav"
+	"wave"		"vo/scout_BeingShotInvincible15.mp3"
 }
 
 "Scout.BeingShotInvincible16"
@@ -21645,7 +21645,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible16.wav"
+	"wave"		"vo/scout_BeingShotInvincible16.mp3"
 }
 
 "Scout.BeingShotInvincible17"
@@ -21654,7 +21654,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible17.wav"
+	"wave"		"vo/scout_BeingShotInvincible17.mp3"
 }
 
 "Scout.BeingShotInvincible18"
@@ -21663,7 +21663,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible18.wav"
+	"wave"		"vo/scout_BeingShotInvincible18.mp3"
 }
 
 "Scout.BeingShotInvincible19"
@@ -21672,7 +21672,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible19.wav"
+	"wave"		"vo/scout_BeingShotInvincible19.mp3"
 }
 
 "Scout.BeingShotInvincible20"
@@ -21681,7 +21681,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible20.wav"
+	"wave"		"vo/scout_BeingShotInvincible20.mp3"
 }
 
 "Scout.BeingShotInvincible21"
@@ -21690,7 +21690,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible21.wav"
+	"wave"		"vo/scout_BeingShotInvincible21.mp3"
 }
 
 "Scout.BeingShotInvincible22"
@@ -21699,7 +21699,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible22.wav"
+	"wave"		"vo/scout_BeingShotInvincible22.mp3"
 }
 
 "Scout.BeingShotInvincible23"
@@ -21708,7 +21708,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible23.wav"
+	"wave"		"vo/scout_BeingShotInvincible23.mp3"
 }
 
 "Scout.BeingShotInvincible24"
@@ -21717,7 +21717,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible24.wav"
+	"wave"		"vo/scout_BeingShotInvincible24.mp3"
 }
 
 "Scout.BeingShotInvincible25"
@@ -21726,7 +21726,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible25.wav"
+	"wave"		"vo/scout_BeingShotInvincible25.mp3"
 }
 
 "Scout.BeingShotInvincible26"
@@ -21735,7 +21735,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible26.wav"
+	"wave"		"vo/scout_BeingShotInvincible26.mp3"
 }
 
 "Scout.BeingShotInvincible27"
@@ -21744,7 +21744,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible27.wav"
+	"wave"		"vo/scout_BeingShotInvincible27.mp3"
 }
 
 "Scout.BeingShotInvincible28"
@@ -21753,7 +21753,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible28.wav"
+	"wave"		"vo/scout_BeingShotInvincible28.mp3"
 }
 
 "Scout.BeingShotInvincible29"
@@ -21762,7 +21762,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible29.wav"
+	"wave"		"vo/scout_BeingShotInvincible29.mp3"
 }
 
 "Scout.BeingShotInvincible30"
@@ -21771,7 +21771,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible30.wav"
+	"wave"		"vo/scout_BeingShotInvincible30.mp3"
 }
 
 "Scout.BeingShotInvincible31"
@@ -21780,7 +21780,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible31.wav"
+	"wave"		"vo/scout_BeingShotInvincible31.mp3"
 }
 
 "Scout.BeingShotInvincible32"
@@ -21789,7 +21789,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible32.wav"
+	"wave"		"vo/scout_BeingShotInvincible32.mp3"
 }
 
 "Scout.BeingShotInvincible33"
@@ -21798,7 +21798,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible33.wav"
+	"wave"		"vo/scout_BeingShotInvincible33.mp3"
 }
 
 "Scout.BeingShotInvincible34"
@@ -21807,7 +21807,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible34.wav"
+	"wave"		"vo/scout_BeingShotInvincible34.mp3"
 }
 
 "Scout.BeingShotInvincible35"
@@ -21816,7 +21816,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible35.wav"
+	"wave"		"vo/scout_BeingShotInvincible35.mp3"
 }
 
 "Scout.BeingShotInvincible36"
@@ -21825,7 +21825,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_BeingShotInvincible36.wav"
+	"wave"		"vo/scout_BeingShotInvincible36.mp3"
 }
 
 "Scout.CartGoingBackDefense03"
@@ -22860,7 +22860,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Invincible01.wav"
+	"wave"		"vo/scout_Invincible01.mp3"
 }
 
 "Scout.Invincible02"
@@ -22869,7 +22869,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Invincible02.wav"
+	"wave"		"vo/scout_Invincible02.mp3"
 }
 
 "Scout.Invincible04"
@@ -22878,7 +22878,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Invincible04.wav"
+	"wave"		"vo/scout_Invincible04.mp3"
 }
 
 "Scout.Invincible03"
@@ -22887,7 +22887,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_Invincible03.wav"
+	"wave"		"vo/scout_Invincible03.mp3"
 }
 
 "Scout.InvincibleChgUnderFire01"
@@ -22896,7 +22896,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleChgUnderFire01.wav"
+	"wave"		"vo/scout_InvincibleChgUnderFire01.mp3"
 }
 
 "Scout.InvincibleChgUnderFire02"
@@ -22905,7 +22905,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleChgUnderFire02.wav"
+	"wave"		"vo/scout_InvincibleChgUnderFire02.mp3"
 }
 
 "Scout.InvincibleChgUnderFire04"
@@ -22914,7 +22914,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleChgUnderFire04.wav"
+	"wave"		"vo/scout_InvincibleChgUnderFire04.mp3"
 }
 
 "Scout.InvincibleChgUnderFire03"
@@ -22923,7 +22923,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleChgUnderFire03.wav"
+	"wave"		"vo/scout_InvincibleChgUnderFire03.mp3"
 }
 
 "Scout.InvincibleNotReady01"
@@ -22932,7 +22932,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady01.wav"
+	"wave"		"vo/scout_InvincibleNotReady01.mp3"
 }
 
 "Scout.InvincibleNotReady02"
@@ -22941,7 +22941,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady02.wav"
+	"wave"		"vo/scout_InvincibleNotReady02.mp3"
 }
 
 "Scout.InvincibleNotReady03"
@@ -22950,7 +22950,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady03.wav"
+	"wave"		"vo/scout_InvincibleNotReady03.mp3"
 }
 
 "Scout.InvincibleNotReady04"
@@ -22959,7 +22959,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady04.wav"
+	"wave"		"vo/scout_InvincibleNotReady04.mp3"
 }
 
 "Scout.InvincibleNotReady05"
@@ -22968,7 +22968,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady05.wav"
+	"wave"		"vo/scout_InvincibleNotReady05.mp3"
 }
 
 "Scout.InvincibleNotReady06"
@@ -22977,7 +22977,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady06.wav"
+	"wave"		"vo/scout_InvincibleNotReady06.mp3"
 }
 
 "Scout.InvincibleNotReady07"
@@ -22986,7 +22986,7 @@
 	"volume"		"0.820"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/scout_InvincibleNotReady07.wav"
+	"wave"		"vo/scout_InvincibleNotReady07.mp3"
 }
 
 "Scout.MedicFollow01"
@@ -27946,7 +27946,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_gunslingerpunch01.wav"
+	"wave"		"vo/engineer_gunslingerpunch01.mp3"
 }
 
 "engineer_gunslingerpunch02"
@@ -27955,7 +27955,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_gunslingerpunch02.wav"
+	"wave"		"vo/engineer_gunslingerpunch02.mp3"
 }
 
 "engineer_gunslingerpunch03"
@@ -27964,7 +27964,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_gunslingerpunch03.wav"
+	"wave"		"vo/engineer_gunslingerpunch03.mp3"
 }
 
 "engineer_gunslingertriplepunchfinal01"
@@ -27973,7 +27973,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_gunslingertriplepunchfinal01.wav"
+	"wave"		"vo/engineer_gunslingertriplepunchfinal01.mp3"
 }
 
 "engineer_gunslingertriplepunchfinal02"
@@ -27982,7 +27982,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_gunslingertriplepunchfinal02.wav"
+	"wave"		"vo/engineer_gunslingertriplepunchfinal02.mp3"
 }
 
 "engineer_gunslingertriplepunchfinal03"
@@ -27991,7 +27991,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_gunslingertriplepunchfinal03.wav"
+	"wave"		"vo/engineer_gunslingertriplepunchfinal03.mp3"
 }
 
 "engineer_littlesentry01"
@@ -28000,7 +28000,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_littlesentry01.wav"
+	"wave"		"vo/engineer_littlesentry01.mp3"
 }
 
 "engineer_littlesentry02"
@@ -28009,7 +28009,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_littlesentry02.wav"
+	"wave"		"vo/engineer_littlesentry02.mp3"
 }
 
 "engineer_littlesentry03"
@@ -28018,7 +28018,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_littlesentry03.wav"
+	"wave"		"vo/engineer_littlesentry03.mp3"
 }
 
 "engineer_medicfollow01"

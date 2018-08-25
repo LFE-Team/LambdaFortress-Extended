@@ -4076,6 +4076,28 @@ DECLARE_CLIENT_EFFECT( "PhyscannonImpact", CallbackPhyscannonImpact );
 
 #endif
 
+//------------------------------------------------------------------------------------
+// Purpose: Default Touch function for player picking up a weapon (not AI) - OVERRIDE.
+//------------------------------------------------------------------------------------
+void CWeaponPhysCannon::DefaultTouch( CBaseEntity *pOther )
+{
+#ifdef GAME_DLL
+	// Can't pick up dissolving weapons
+	if ( IsDissolving() )
+		return;
+
+	// if it's not a player, ignore
+	CTFPlayer *pPlayer = ToTFPlayer( pOther );
+	if ( !pPlayer )
+		return;
+
+	if( HasSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP ) )
+		return;
+	
+	BaseClass::DefaultTouch( pOther );
+#endif
+}
+
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponPhysCannon_Secondary, DT_WeaponPhysCannon_Secondary )
 
 BEGIN_NETWORK_TABLE( CWeaponPhysCannon_Secondary, DT_WeaponPhysCannon_Secondary )

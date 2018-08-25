@@ -896,6 +896,14 @@ void CNPC_AntlionGuard::Activate( void )
 			pObject->m_debugOverlays |= OVERLAY_BBOX_BIT;
 		}
 	}
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "antlionguard_spawned" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -4347,6 +4355,14 @@ void CNPC_AntlionGuard::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}	
 	}
+
+#ifdef TF_CLASSIC
+	IGameEvent *event = gameeventmanager->CreateEvent( "antlionguard_death" );
+	if ( event )
+	{
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 
 	DestroyGlows();
 

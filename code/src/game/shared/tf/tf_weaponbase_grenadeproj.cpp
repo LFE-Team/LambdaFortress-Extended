@@ -213,22 +213,21 @@ void CTFWeaponBaseGrenadeProj::CreateLightEffects( void )
 			{
 			case TF_TEAM_RED:
 				if ( !m_bCritical ) {
-				dl->color.r = 255; dl->color.g = 30; dl->color.b = 10; }
+				dl->color.r = 255; dl->color.g = 30; dl->color.b = 10; dl->style = 0; }
 				else {
-				dl->color.r = 255; dl->color.g = 10; dl->color.b = 10; }
+				dl->color.r = 255; dl->color.g = 10; dl->color.b = 10; dl->style = 1; }
 				break;
 
 			case TF_TEAM_BLUE:
 				if ( !m_bCritical ) {
-				dl->color.r = 10; dl->color.g = 30; dl->color.b = 255; }
+				dl->color.r = 10; dl->color.g = 30; dl->color.b = 255; dl->style = 0; }
 				else {
-				dl->color.r = 10; dl->color.g = 10; dl->color.b = 255; }
+				dl->color.r = 10; dl->color.g = 10; dl->color.b = 255; dl->style = 1; }
 				break;
 			}
 			dl->die = gpGlobals->curtime + 0.01f;
 			dl->radius = 256.0f;
 			dl->decay = 512.0f;
-			dl->style = 1;
 			dl->die = gpGlobals->curtime + 0.001;
 
 			tempents->RocketFlare( GetAbsOrigin() );

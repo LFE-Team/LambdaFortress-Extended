@@ -242,7 +242,7 @@
 		{
 			"labelText" 		"#GameUI_GameMenu_FindServers"
 			"xshift" 			"0"
-			"yshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			//"defaultFgColor_override"		"MainMenuTextDefault"
@@ -278,7 +278,7 @@
 		{
 			"labelText" 		"#GameUI_GameMenu_ResumeGame"
 			"xshift" 			"0"
-			"yshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			//"defaultFgColor_override"		"MainMenuTextDefault"
@@ -450,7 +450,7 @@
 		{
 			"labelText" 		"#GameUI_GameMenu_Achievements"
 			"xshift" 			"0"
-			"yshift" 			"0"
+			"yshift" 			"-1"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			"defaultFgColor_override"		"MainMenuTextDefault"
@@ -483,7 +483,7 @@
 		{
 			"labelText" 		"#GameUI_GameMenu_PlayerStats"
 			"xshift" 			"0"
-			"yshift" 			"-2"
+			"yshift" 			"-1"
 			"textAlignment"		"west"	
 			"font"				"HudFontSmallBold"
 			"defaultFgColor_override"		"MainMenuTextDefault"
@@ -567,6 +567,8 @@
 		{
 			"labelText" 		""
 			"bordervisible"		"0"
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"tooltip" 			"#MMenu_Tooltip_Achievements"
 			"textAlignment"		"center"
 			"font"				"HudFontSmallBold"
@@ -607,6 +609,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"Credits"
 			"textAlignment"		"center"
@@ -649,6 +653,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"#GameUI_GameMenu_PlayerStats"
 			"textAlignment"		"center"
@@ -685,6 +691,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"tooltip" 			"#MMenu_Tooltip_OldOptions"
 			"bordervisible"		"0"
 			"textAlignment"		"center"
@@ -718,6 +726,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"tooltip" 			"#MMenu_MutePlayers"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
@@ -750,6 +760,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"tooltip" 			"#MMenu_CallVote"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
@@ -784,7 +796,7 @@
 			"labelText" 		"#GameUI_GameMenu_Quit"
 			"bordervisible"		"0"
 			"xshift" 			"0"
-			"yshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			//"defaultFgColor_override"		"MainMenuTextDefault"
@@ -819,7 +831,7 @@
 		{
 			"labelText" 		"#GameUI_GameMenu_Disconnect"
 			"xshift" 			"0"
-			"yshift" 			"0"
+			"yshift" 			"-2"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
 			//"defaultFgColor_override"		"MainMenuTextDefault"
@@ -857,6 +869,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"#MMenu_Tooltip_ToggleRandomMusic"
 			"textAlignment"		"center"
@@ -892,6 +906,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"#MMenu_Tooltip_RandomMusic"
 			"textAlignment"		"center"
@@ -928,6 +944,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"#MMenu_Tooltip_ToggleBlog"
 			"textAlignment"		"center"
@@ -963,6 +981,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"#MMenu_Tooltip_RandomMusic"
 			"textAlignment"		"center"
@@ -996,6 +1016,8 @@
 		"SubButton"
 		{
 			"labelText" 		""
+			"xshift" 			"0"
+			"yshift" 			"-1"
 			"bordervisible"		"0"
 			"tooltip" 			"Show notification"
 			"textAlignment"		"center"

@@ -1560,4 +1560,37 @@
 	{
 		"level"		"short"		// leveled up to what
 	}
+
+	// put new events here
+	"antlionguard_spawned"
+	{
+	}
+
+	"antlionguard_killed"
+	{
+	}
+
+	"helicopter_spawned"
+	{
+	}
+
+	"helicopter_destoryed"
+	{
+	}
+
+	"gunship_spawned"
+	{
+	}
+
+	"gunship_destoryed"
+	{
+	}
+
+	"strider_spawned"
+	{
+	}
+
+	"strider_killed"
+	{
+	}
 }

@@ -533,6 +533,8 @@ void CTFLoadoutPanel::Show()
 {
 	BaseClass::Show();
 	MAINMENU_ROOT->ShowPanel( SHADEBACKGROUND_MENU );
+	MAINMENU_ROOT->HidePanel( CURRENT_MENU );
+	MAINMENU_ROOT->HidePanel( NOTIFICATION_MENU );
 
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( pPlayer )
@@ -547,6 +549,7 @@ void CTFLoadoutPanel::Show()
 void CTFLoadoutPanel::Hide()
 {
 	BaseClass::Hide();
+	MAINMENU_ROOT->ShowPanel( CURRENT_MENU );
 	MAINMENU_ROOT->HidePanel( SHADEBACKGROUND_MENU );
 
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();

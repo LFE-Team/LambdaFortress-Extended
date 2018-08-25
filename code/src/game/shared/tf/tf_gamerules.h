@@ -155,6 +155,7 @@ public:
 	bool			IsAprilFool( void );
 	bool			IsHalloween( void );
 	bool			IsSmissmas( void );
+	bool			IsLFBirthday( void );
 
 	virtual const unsigned char *GetEncryptionKey( void ) { return ( unsigned char * )"E2NcUkG2"; }
 
@@ -526,6 +527,7 @@ public:
 	int		m_iAprilFoolMode;
 	int		m_iHalloweenMode;
 	int		m_iSmissmasMode;
+	int		m_iLFBirthdayMode;
 
 #ifdef GAME_DLL
 	float	m_flCTFBonusTime;
