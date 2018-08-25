@@ -115,6 +115,8 @@ void CTFGrenadeStickybombProjectile::CreateTrails( void )
 
 		pParticle = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
+
+	RemoveEffects( EF_DIMLIGHT );
 }
 
 //-----------------------------------------------------------------------------
