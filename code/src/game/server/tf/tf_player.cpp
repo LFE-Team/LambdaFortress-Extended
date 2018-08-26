@@ -910,14 +910,14 @@ void CTFPlayer::PreThink()
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 220 ) )
 			{
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2 on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life 2 on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2" ) );
 			}
 
 			// installed the game yet?
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 220 ) )
 			{	
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2 installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life 2 installed on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2" ) );
 			}
 		}
 
@@ -926,13 +926,13 @@ void CTFPlayer::PreThink()
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 280 ) )
 			{
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life: Source on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life: Source on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL:S" ) );
 			}
 
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 280 ) )
 			{	
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life: Source installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life: Source installed on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL:S" ) );
 			}
 		}
 
@@ -941,13 +941,13 @@ void CTFPlayer::PreThink()
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 380 ) )
 			{
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode One on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode One on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2:EP1" ) );
 			}
 
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 380 ) )
 			{	
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode One installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode One installed on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP1" ) );
 			}
 		}
 
@@ -956,13 +956,13 @@ void CTFPlayer::PreThink()
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 420 ) )
 			{
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode Two on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode Two on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2:EP2" ) );
 			}
 
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 420 ) )
 			{	
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly." ) );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP2." ) );
 			}
 		}
 	}
