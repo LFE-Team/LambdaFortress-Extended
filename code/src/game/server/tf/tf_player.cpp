@@ -904,35 +904,35 @@ void CTFPlayer::PreThink()
 
 	if ( !IsHLTV() || !IsFakeClient()  )
 	{
-		/*if ( TFGameRules()->IsInHL2Map() )
+		if ( TFGameRules()->IsInHL2Map() )
 		{
 			// bought the game yet?
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 220 ) )
 			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2 on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life 2 on this steam account to function correctly." ) );
 			}
 
 			// installed the game yet?
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 220 ) )
 			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2 to be installed.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life 2" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2 installed on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life 2 installed on this steam account to function correctly." ) );
 			}
-		}*/
+		}
 
 		if ( TFGameRules()->IsInHL1Map() )
 		{
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 280 ) )
 			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life Half-Life 2 Episode 1.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2 Episode 1" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life: Source on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life: Source on this steam account to function correctly." ) );
 			}
 
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 280 ) )
 			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life to be installed.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life Source" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life: Source installed on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life: Source installed on this steam account to function correctly." ) );
 			}
 		}
 
@@ -940,14 +940,14 @@ void CTFPlayer::PreThink()
 		{
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 380 ) )
 			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life Half-Life 2 Episode 1.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2 Episode 1" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode One on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode One on this steam account to function correctly." ) );
 			}
 
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 380 ) )
 			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2 Episode 1 to be installed.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life 2 Episode 1" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode One installed on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode One installed on this steam account to function correctly." ) );
 			}
 		}
 
@@ -955,14 +955,14 @@ void CTFPlayer::PreThink()
 		{
 			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 420 ) )
 			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2 Episode 2.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2 Episode 2" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode Two on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode Two on this steam account to function correctly." ) );
 			}
 
 			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 420 ) )
 			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life Episode 2 to be installed.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life 2 Episode 2" ) );
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly." ) );
 			}
 		}
 	}
