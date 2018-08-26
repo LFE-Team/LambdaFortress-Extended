@@ -901,6 +901,71 @@ void CTFPlayer::PreThink()
 			}
 		}
 	}
+
+	if ( !IsHLTV() || !IsFakeClient()  )
+	{
+		/*if ( TFGameRules()->IsInHL2Map() )
+		{
+			// bought the game yet?
+			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 220 ) )
+			{
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2" ) );
+			}
+
+			// installed the game yet?
+			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 220 ) )
+			{	
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2 to be installed.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life 2" ) );
+			}
+		}*/
+
+		if ( TFGameRules()->IsInHL1Map() )
+		{
+			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 280 ) )
+			{
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life Half-Life 2 Episode 1.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2 Episode 1" ) );
+			}
+
+			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 280 ) )
+			{	
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life to be installed.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life Source" ) );
+			}
+		}
+
+		if ( TFGameRules()->IsInHL2EP1Map() )
+		{
+			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 380 ) )
+			{
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life Half-Life 2 Episode 1.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2 Episode 1" ) );
+			}
+
+			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 380 ) )
+			{	
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2 Episode 1 to be installed.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life 2 Episode 1" ) );
+			}
+		}
+
+		if ( TFGameRules()->IsInHL2EP2Map() )
+		{
+			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 420 ) )
+			{
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life 2 Episode 2.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Does not own Half-Life 2 Episode 2" ) );
+			}
+
+			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 420 ) )
+			{	
+				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Require Half-Life Episode 2 to be installed.", GetPlayerName() );
+				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Did not Installed Half-Life 2 Episode 2" ) );
+			}
+		}
+	}
 }
 
 ConVar mp_idledealmethod( "mp_idledealmethod", "1", FCVAR_GAMEDLL, "Deals with Idle Players. 1 = Sends them into Spectator mode then kicks them if they're still idle, 2 = Kicks them out of the game;" );

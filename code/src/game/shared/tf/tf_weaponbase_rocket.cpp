@@ -171,8 +171,6 @@ void CTFBaseRocket::Spawn( void )
 	// Don't collide with players on the owner's team for the first bit of our life
 	m_flCollideWithTeammatesTime = gpGlobals->curtime + 0.25;
 	m_bCollideWithTeammates = false;
-
-	AddEffects( EF_DIMLIGHT );
 #endif
 }
 

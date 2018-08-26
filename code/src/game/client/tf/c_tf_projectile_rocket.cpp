@@ -95,6 +95,8 @@ void C_TFProjectile_Rocket::CreateLightEffects( void )
 	// Handle the dynamic light
 	if (lfe_muzzlelight.GetBool())
 	{
+		AddEffects( EF_DIMLIGHT );
+
 		dlight_t *dl;
 		if ( IsEffectActive( EF_DIMLIGHT ) )
 		{	

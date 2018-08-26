@@ -607,7 +607,7 @@ void CTFProjectile_Arrow::CreateTrail( void )
 
 	if ( pTrail )
 	{
-		pTrail->FollowEntity( this );
+		pTrail->SetAttachment( this, LookupAttachment( "root" ) );
 		pTrail->SetTransparency( kRenderTransAlpha, -1, -1, -1, 255, kRenderFxNone );
 		pTrail->SetStartWidth( m_iType == TF_PROJECTILE_BUILDING_REPAIR_BOLT ? 5.0f : 3.0f );
 		pTrail->SetTextureResolution( 0.01f );
