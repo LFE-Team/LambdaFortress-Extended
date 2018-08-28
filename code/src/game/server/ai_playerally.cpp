@@ -373,11 +373,11 @@ void CAI_PlayerAlly::DisplayDeathMessage( void )
 #ifdef TF_CLASSIC
 	if ( TFGameRules()->IsCoOpGameRunning() )
 	{
-		if (hl2_episodic.GetInt() == 1) // ALYX DIE IN INFINITY WAR?!
+		if (TFGameRules()->IsInHL2EP2Map()) // ALYX DIE IN INFINITY WAR?!
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2EP_ALLY_DEATH);
 		}
-		else if (hl2_episodic.GetInt() == 0) // MANN CO NO MORE.
+		else if (TFGameRules()->IsInHL2Map() || (TFGameRules()->IsInHL2EP1Map())) // MANN CO NO MORE.
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2_ALLY_DEATH);
 		}

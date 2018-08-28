@@ -7764,11 +7764,11 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 #ifdef TF_CLASSIC
 	if ( TFGameRules()->IsCoOpGameRunning() )
 	{
-		if (hl2_episodic.GetInt() == 1)
+		if (TFGameRules()->IsInHL2EP2Map())
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT);
 		}
-		else if (hl2_episodic.GetInt() == 0)
+		else if (TFGameRules()->IsInHL2Map() || (TFGameRules()->IsInHL2EP1Map()))
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2_OBJECT);
 		}
