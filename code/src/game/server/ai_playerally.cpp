@@ -377,7 +377,7 @@ void CAI_PlayerAlly::DisplayDeathMessage( void )
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2EP_ALLY_DEATH);
 		}
-		else if (TFGameRules()->IsInHL2Map() || (TFGameRules()->IsInHL2EP1Map())) // MANN CO NO MORE.
+		else 
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2_ALLY_DEATH);
 		}

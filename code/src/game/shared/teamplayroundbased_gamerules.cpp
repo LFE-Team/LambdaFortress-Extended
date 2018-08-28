@@ -1839,7 +1839,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT, m_bForceMapReset );
 					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_ALL_DEATH, m_bForceMapReset );
 				}
-				else if (TFGameRules()->IsInHL2Map() || (TFGameRules()->IsInHL2EP1Map()))
+				else 
 				{
 					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_OBJECT, m_bForceMapReset );
 					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_ALL_DEATH, m_bForceMapReset );

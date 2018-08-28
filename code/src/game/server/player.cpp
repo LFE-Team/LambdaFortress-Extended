@@ -7768,7 +7768,7 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT);
 		}
-		else if (TFGameRules()->IsInHL2Map() || (TFGameRules()->IsInHL2EP1Map()))
+		else 
 		{
 			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2_OBJECT);
 		}
