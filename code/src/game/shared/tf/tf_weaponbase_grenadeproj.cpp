@@ -204,8 +204,6 @@ void CTFWeaponBaseGrenadeProj::CreateLightEffects( void )
 	// Handle the dynamic light
 	if (lfe_muzzlelight.GetBool())
 	{
-		AddEffects( EF_DIMLIGHT );
-
 		dlight_t *dl;
 		if ( IsEffectActive( EF_DIMLIGHT ) )
 		{	
@@ -294,6 +292,8 @@ void CTFWeaponBaseGrenadeProj::InitGrenade( const Vector &velocity, const Angula
 
 	ChangeTeam( pOwner->GetTeamNumber() );
 
+	AddEffects( EF_DIMLIGHT );
+
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
 	if ( pPhysicsObject )
 	{
@@ -337,6 +337,8 @@ void CTFWeaponBaseGrenadeProj::Spawn( void )
 
 	// Set skin based on team ( red = 1, blue = 2 )
 	m_nSkin = GetTeamNumber() - 2;
+
+	AddEffects( EF_DIMLIGHT );
 
 	// Setup the think and touch functions (see CBaseEntity).
 	SetThink( &CTFWeaponBaseGrenadeProj::DetonateThink );
