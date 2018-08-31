@@ -633,7 +633,7 @@ void CTFStatPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	LoadControlSettings( "resource/UI/StatPanel_Base.res" );
+	//LoadControlSettings( "resource/UI/StatPanel_Base.res" );
 
 	vgui::Panel *pStatBox = FindChildByName("StatBox");
 	if ( pStatBox )
