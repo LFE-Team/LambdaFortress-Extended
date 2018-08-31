@@ -366,7 +366,10 @@ CStudioHdr *C_ObjectSentrygun::OnNewModel( void )
 	// Reset Bodygroups
 	for ( int i = GetNumBodyGroups()-1; i >= 0; i-- )
 	{
-		SetBodygroup( i, 0 );
+		if ( IsMiniBuilding() && V_strcmp( GetBodygroupName( i ), "mini_sentry_light" ) == 0 )
+			SetBodygroup( i, 1 );
+		else
+			SetBodygroup( i, 0 );
 	}
 
 	m_iPlacementBodygroup = FindBodygroupByName( "sentry1_range" );

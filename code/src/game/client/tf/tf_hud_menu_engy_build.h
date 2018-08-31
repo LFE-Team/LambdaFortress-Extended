@@ -66,6 +66,9 @@ private:
 	CExLabel *m_pDestroyLabelDim;
 
 	bool m_bInConsoleMode;
+
+	// Vintage Gunslinger
+	bool m_bGunslinger;
 };
 
 #endif	// TF_HUD_MENU_ENGY_BUILD_H

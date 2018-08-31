@@ -5408,7 +5408,7 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	// In case of a sentry kill change the icon according to sentry level.
 	if ( V_strcmp( killer_weapon_name, "obj_sentrygun" ) == 0 )
 	{
-		CBaseObject *pObject = assert_cast<CBaseObject *>( pInflictor );
+		CObjectSentrygun *pObject = assert_cast<CObjectSentrygun *>( pInflictor );
 
 		if ( pObject )
 		{

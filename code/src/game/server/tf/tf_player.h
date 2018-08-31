@@ -536,6 +536,9 @@ public:
 
 	bool				SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot, bool bTelefrag = true );
 
+	// Vintage Gunslinger
+	bool				HasGunslinger( void ) { return m_Shared.m_bGunslinger; }
+
 private:
 
 	int					GetAutoTeam( void );

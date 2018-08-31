@@ -444,9 +444,13 @@ private:
 
 	CNetworkVar( int, m_nTeamTeleporterUsed );
 
+	// Co-Op Stuff
 	CNetworkVar( int, m_iLives );
-
 	CNetworkVar( bool, m_bInCutScene );
+
+	// Vintage Gunslinger
+	CNetworkVar( bool, m_bGunslinger );
+
 #ifdef GAME_DLL
 	float	m_flNextCritUpdate;
 	CUtlVector<CTFDamageEvent> m_DamageEvents;

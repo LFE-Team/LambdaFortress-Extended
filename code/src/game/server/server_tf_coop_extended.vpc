@@ -538,6 +538,7 @@ $Project "Server (TF)"
 				$File	"tf\func_forcefield.h"
 				$File	"tf\entity_training_annotations.cpp"
 				$File	"tf\entity_training_annotations.h"
+				$File	"tf\lfe_mapadd.cpp"
 			}
 
 			$Folder	"Unused"

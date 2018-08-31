@@ -158,6 +158,7 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropInt( RECVINFO( m_iRespawnParticleID ) ),
 	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
 	RecvPropInt( RECVINFO( m_bInCutScene ) ),
+	RecvPropBool( RECVINFO( m_bGunslinger ) ),
 	// Spy.
 	RecvPropTime( RECVINFO( m_flInvisChangeCompleteTime ) ),
 	RecvPropInt( RECVINFO( m_nDisguiseTeam ) ),
@@ -224,6 +225,7 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropInt( SENDINFO( m_iRespawnParticleID ), -1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iMaxHealth ), 10 ),
 	SendPropInt( SENDINFO( m_bInCutScene ), 1, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bGunslinger ) ),
 	// Spy
 	SendPropTime( SENDINFO( m_flInvisChangeCompleteTime ) ),
 	SendPropInt( SENDINFO( m_nDisguiseTeam ), 3, SPROP_UNSIGNED ),
@@ -267,6 +269,8 @@ CTFPlayerShared::CTFPlayerShared()
 	m_iStunPhase = 0;
 
 	m_nTeamTeleporterUsed = TEAM_UNASSIGNED;
+
+	m_bGunslinger = false;
 
 #ifdef CLIENT_DLL
 	m_iDisguiseWeaponModelIndex = -1;
@@ -3842,7 +3846,7 @@ int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
 	}
 
 	// Find out how much the object should cost
-	int iCost = CalculateObjectCost( iObjectType );
+	int iCost = CalculateObjectCost( iObjectType, HasGunslinger() );
 
 	// Make sure we have enough resources
 	if ( GetBuildResources() < iCost )

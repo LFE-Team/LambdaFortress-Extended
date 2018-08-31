@@ -304,11 +304,11 @@ bool C_TFWeaponBuilder::VisibleInWeaponSelection(void)
 //-----------------------------------------------------------------------------
 bool C_TFWeaponBuilder::HasAmmo(void)
 {
-	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
-	if (!pOwner)
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	if ( !pOwner )
 		return false;
 
-	int iCost = CalculateObjectCost(m_iObjectType);
+	int iCost = CalculateObjectCost( m_iObjectType, pOwner->HasGunslinger() );
 	return (pOwner->GetBuildResources() >= iCost);
 }
 
