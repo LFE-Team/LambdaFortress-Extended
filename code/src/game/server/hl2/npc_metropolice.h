@@ -46,7 +46,6 @@ public:
 	float		MaxYawSpeed( void );
 	void		HandleAnimEvent( animevent_t *pEvent );
 	Activity NPC_TranslateActivity( Activity newActivity );
-	void		SpeedThink(void);
 
 	Vector		EyeDirection3D( void )	{ return CAI_BaseHumanoid::EyeDirection3D(); } // cops don't have eyes
 

@@ -158,8 +158,7 @@ void CSquidSpit:: Spawn( void )
 
 void CSquidSpit::Shoot( CBaseEntity *pOwner, Vector vecStart, Vector vecVelocity )
 {
-	//CSquidSpit *pSpit = CREATE_ENTITY( CSquidSpit, "squidspit" );
-	CSquidSpit *pSpit = (CSquidSpit*)CreateEntityByName("squidspit");
+	CSquidSpit *pSpit = CREATE_ENTITY( CSquidSpit, "squidspit" );
 	pSpit->Spawn();
 	
 	UTIL_SetOrigin( pSpit, vecStart );
@@ -252,11 +251,6 @@ void CNPC_Bullsquid::Spawn()
 	Precache( );
 
 	SetModel( "models/bullsquid.mdl");
-	if ( sv_hl1_hd.GetFloat() == 1 )
-	{
-		PrecacheModel( "models/bullsquid_hd.mdl" );
-		SetModel( "models/bullsquid_hd.mdl" );
-	}
 	SetHullType(HULL_WIDE_SHORT);
 	SetHullSizeNormal();
 

@@ -385,7 +385,7 @@ DECLARE_MESSAGE(gHUD, SendAudio);
 CHud::CHud()
 {
 	SetDefLessFunc( m_RenderGroups );
-	m_bSkipClear = false;
+
 	m_flScreenShotTime = -1;
 }
 
@@ -1175,11 +1175,8 @@ bool CHud::DoesRenderGroupExist( int iGroupIndex )
 //-----------------------------------------------------------------------------
 void CHud::UpdateHud( bool bActive )
 {
-	if (!gHUD.m_bSkipClear)
-	{
-		// clear the weapon bits.
-		gHUD.m_iKeyBits &= (~(IN_WEAPON1 | IN_WEAPON2));
-	}
+	// clear the weapon bits.
+	gHUD.m_iKeyBits &= (~(IN_WEAPON1|IN_WEAPON2));
 
 	g_pClientMode->Update();
 

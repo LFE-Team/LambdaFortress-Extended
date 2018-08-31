@@ -151,7 +151,7 @@ public:
 
 	int				BloodColor( void ) { return DONT_BLEED; }
 
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	Class_T			Classify( void ) { return CLASS_METROPOLICE; }
 #else
 	Class_T			Classify( void ) { return CLASS_NONE; }

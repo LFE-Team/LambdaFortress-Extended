@@ -391,15 +391,7 @@ m_bExitLocked(false),
 m_bAddingCargo(false),
 m_flNextAvoidBroadcastTime(0.0f)
 {
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
-	{
-		m_bHasGun = false;
-	}
-	else
-	{
-		m_bHasGun = true;
-	}
-
+	m_bHasGun = false;
 	m_bUnableToFire = true;
 	m_bRadarDetectsEnemies = false;
 }
@@ -466,11 +458,8 @@ void CPropJeepEpisodic::Spawn(void)
 	BaseClass::Spawn();
 
 	SetBlocksLOS(false);
-#ifdef TF_CLASSIC
-	CBasePlayer	*pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
-#else
+
 	CBasePlayer	*pPlayer = UTIL_GetLocalPlayer();
-#endif
 	if (pPlayer != NULL)
 	{
 		pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
@@ -672,10 +661,6 @@ Vector CPropJeepEpisodic::PhysGunLaunchVelocity(const Vector &forward, float flM
 	if (PassengerInTransition())
 		return vec3_origin;
 
-	// if we're jeep then stop.
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
-		return vec3_origin;
-
 	Vector vecPuntDir = BaseClass::PhysGunLaunchVelocity(forward, flMass);
 	vecPuntDir.z = 150.0f;
 	vecPuntDir *= 600.0f;
@@ -689,10 +674,6 @@ AngularImpulse CPropJeepEpisodic::PhysGunLaunchAngularImpulse(void)
 {
 	if (IsOverturned())
 		return AngularImpulse(0, 300, 0);
-
-	// if we're jeep then stop oh wait
-	//if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
-	//	return AngularImpulse(0, 300, 0);
 
 	// Don't spin randomly, always spin reliably
 	return AngularImpulse(0, 0, 0);
@@ -739,18 +720,10 @@ void CPropJeepEpisodic::CreateCargoTrigger(void)
 //-----------------------------------------------------------------------------
 // Purpose: If the player uses the jeep while at the back, he gets ammo from the crate instead
 //-----------------------------------------------------------------------------
-void CPropJeepEpisodic::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+void CPropJeepEpisodic::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	// Andrew; don't skip giving ammo with the jeep if we're the buggy
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
-	{
-		BaseClass::Use( pActivator, pCaller, useType, value );
-	}
-	else
-	{
-		// Fall back and get in the vehicle instead, skip giving ammo
-		BaseClass::BaseClass::Use( pActivator, pCaller, useType, value );
-	}
+	// Fall back and get in the vehicle instead, skip giving ammo
+	BaseClass::BaseClass::Use(pActivator, pCaller, useType, value);
 }
 
 #define	MIN_WHEEL_DUST_SPEED	5
@@ -986,7 +959,7 @@ void CPropJeepEpisodic::UpdateRadar(bool forceUpdate)
 	//Msg("Server detected %d objects\n", m_iNumRadarContacts );
 
 	//SecobMod__Information: Fix pPlayer from sp to mp.
-#ifdef TF_CLASSIC
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
@@ -1006,10 +979,6 @@ void CPropJeepEpisodic::UpdateCargoEntry(void)
 {
 	// Don't bother if we have no prop to move
 	if (m_hCargoProp == NULL)
-		return;
-
-	// we don't have cargo for jeep
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
 		return;
 
 	// If we're past our animation point, then we're already done
@@ -1170,7 +1139,7 @@ CBaseEntity *CPropJeepEpisodic::OnFailedPhysGunPickup(Vector vPhysgunPos)
 		// Player's forward direction
 		Vector vecPlayerForward;
 		//SecobMod__Information: Fix pPlayer from sp to mp.
-#ifdef TF_CLASSIC
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #else
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
@@ -1353,7 +1322,7 @@ static void KillBlockingEnemyNPCs(CBasePlayer *pPlayer, CBaseEntity *pVehicleEnt
 			damageForce.z += len*phys_upimpactforcescale.GetFloat();
 			Vector vehicleForce = -damageForce;
 
-			CTakeDamageInfo dmgInfo(pVehicleEntity, pVehicleEntity, damageForce, contactList[i], 200.0f, DMG_CRUSH | DMG_VEHICLE, LFE_DMG_CUSTOM_JEEP); // need to detect jalopy model and put LFE_DMG_CUSTOM_JALOPY
+			CTakeDamageInfo dmgInfo(pVehicleEntity, pVehicleEntity, damageForce, contactList[i], 200.0f, DMG_CRUSH | DMG_VEHICLE);
 			npcList[i]->TakeDamage(dmgInfo);
 
 			//SecobMod__Information Occasionally on hitting an AI the game would crash, so fix the null error here.
@@ -1407,12 +1376,6 @@ void CPropJeepEpisodic::DriveVehicle(float flFrameTime, CUserCmd *ucmd, int iBut
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::CreateHazardLights(void)
 {
-#ifdef TF_CLASSIC
-	// only create lights on jalopy model
-	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
-		return;
-#endif
-
 	static const char *s_szAttach[NUM_HAZARD_LIGHTS] =
 	{
 		"rearlight_r",
@@ -1519,15 +1482,15 @@ void CPropJeepEpisodic::SpawnRadarPanel()
 	int nLLAttachmentIndex = pEntityToSpawnOn->LookupAttachment(pOrgLL);
 
 	if (nLLAttachmentIndex <= 0)
+	{
 		return;
+	}
 
 	int nURAttachmentIndex = pEntityToSpawnOn->LookupAttachment(pOrgUR);
 	if (nURAttachmentIndex <= 0)
+	{
 		return;
-
-	// we don't have radar for jeep
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
-		return;
+	}
 
 	const char *pScreenName = "jalopy_radar_panel";
 	const char *pScreenClassname = "vgui_screen";

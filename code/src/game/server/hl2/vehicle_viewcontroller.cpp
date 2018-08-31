@@ -10,9 +10,6 @@
 #include "cbase.h"
 #include "vehicle_base.h"
 #include "hl2_player.h"
-#ifdef TF_CLASSIC
-#include "tf_player.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -107,32 +104,20 @@ void CPropVehicleViewController::EnterVehicle( CBasePlayer *pPlayer )
 
 	m_VehiclePhysics.GetVehicle()->OnVehicleEnter();
 
-#if defined( HL2_DLL )
-			// Stop the player sprint and flashlight.
-			CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player*>( pPlayer );
-			if ( pHL2Player )
-			{
-				if ( pHL2Player->IsSprinting() )
-				{
-					pHL2Player->StopSprinting();
-				}
+	// Stop the player sprint and flashlight.
+	CHL2_Player *pHL2Player = dynamic_cast<CHL2_Player*>( pPlayer );
+	if ( pHL2Player )
+	{
+		if ( pHL2Player->IsSprinting() )
+		{
+			pHL2Player->StopSprinting();
+		}
 
-				if ( pHL2Player->FlashlightIsOn() )
-				{
-					pHL2Player->FlashlightTurnOff();
-				}
-			}
-#elif defined( TF_CLASSIC )
-			// Stop the player flashlight.
-			CTFPlayer *pTFPlayer = dynamic_cast<CTFPlayer*>( pPlayer );
-			if ( pTFPlayer )
-			{
-				if ( pTFPlayer->FlashlightIsOn() )
-				{
-					pTFPlayer->FlashlightTurnOff();
-				}
-			}
-#endif
+		if ( pHL2Player->FlashlightIsOn() )
+		{
+			pHL2Player->FlashlightTurnOff();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

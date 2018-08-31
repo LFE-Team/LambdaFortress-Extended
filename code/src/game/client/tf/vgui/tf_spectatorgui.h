@@ -53,7 +53,6 @@ public:
 	void		 UpdateReinforcements( void );
 	virtual void ShowPanel(bool bShow);
 	virtual Color GetBlackBarColor( void ) { return Color(52,48,45, 255); }
-	virtual const char *GetResFilename( void );
 
 	void		UpdateKeyLabels( void );
 protected:	
@@ -75,22 +74,5 @@ protected:
 	vgui::Label				*m_pCycleTargetRevKeyLabel;
 	vgui::Label				*m_pMapLabel;
 };
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CTFSpectatorExtras : public vgui::EditablePanel
-{
-	DECLARE_CLASS_SIMPLE( CTFSpectatorExtras, vgui::EditablePanel );
-
-public:
-	CTFSpectatorExtras( vgui::Panel *parent, const char *szLayout );
-
-	virtual void Reset( void );
-	virtual void RemoveEntity( int iEntity );
-	virtual void OnTick( void );
-	virtual void Paint( void );
-};
-
 
 #endif // TF_SPECTATORGUI_H

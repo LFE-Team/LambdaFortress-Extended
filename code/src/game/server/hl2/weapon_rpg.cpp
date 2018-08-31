@@ -27,7 +27,7 @@
 #include "hl2_shareddefs.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
-#include "iscorer.h"
+
 #ifdef PORTAL
 	#include "portal_util_shared.h"
 #endif
@@ -106,14 +106,13 @@ BEGIN_DATADESC( CMissile )
 	DEFINE_FIELD( m_flGracePeriodEndsAt,	FIELD_TIME ),
 	DEFINE_FIELD( m_flDamage,				FIELD_FLOAT ),
 	DEFINE_FIELD( m_bCreateDangerSounds,	FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_iDeflected,				FIELD_INTEGER ),
 	
 	// Function Pointers
-	DEFINE_ENTITYFUNC( MissileTouch ),
-	DEFINE_THINKFUNC( AccelerateThink ),
-	DEFINE_THINKFUNC( AugerThink ),
-	DEFINE_THINKFUNC( IgniteThink ),
-	DEFINE_THINKFUNC( SeekThink ),
+	DEFINE_FUNCTION( MissileTouch ),
+	DEFINE_FUNCTION( AccelerateThink ),
+	DEFINE_FUNCTION( AugerThink ),
+	DEFINE_FUNCTION( IgniteThink ),
+	DEFINE_FUNCTION( SeekThink ),
 
 END_DATADESC()
 LINK_ENTITY_TO_CLASS( rpg_missile, CMissile );
@@ -128,8 +127,6 @@ CMissile::CMissile()
 {
 	m_hRocketTrail = NULL;
 	m_bCreateDangerSounds = false;
-
-	m_iDeflected = 0;
 }
 
 CMissile::~CMissile()
@@ -177,9 +174,6 @@ void CMissile::Spawn( void )
 	m_flGracePeriodEndsAt = 0;
 
 	AddFlag( FL_OBJECT );
-
-	// Set the team.
-	ChangeTeam( GetOwnerEntity()->GetTeamNumber() );
 }
 
 
@@ -387,13 +381,6 @@ void CMissile::Explode( void )
 
 	StopSound( "Missile.Ignite" );
 	UTIL_Remove( this );
-
-	CBaseEntity *pAttacker = GetOwnerEntity();
-	IScorer *pScorerInterface = dynamic_cast<IScorer*>( pAttacker );
-	if ( pScorerInterface )
-	{
-		pAttacker = pScorerInterface->GetScorer();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -739,21 +726,6 @@ CMissile *CMissile::Create( const Vector &vecOrigin, const QAngle &vecAngles, ed
 	return pMissile;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CMissile::SetScorer( CBaseEntity *pScorer )
-{
-	m_hScorer = pScorer;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-CBaseEntity *CMissile::GetScorer( void )
-{
-	return m_hScorer.Get();
-}
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -782,37 +754,6 @@ void CMissile::RemoveCustomDetonator( CBaseEntity *pEntity )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CMissile::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
-{
-	// Get rocket's speed.
-	float flSpeed = GetAbsVelocity().Length();
-
-	QAngle angForward;
-	VectorAngles( vecDir, angForward );
-
-	// Now change rocket's direction.
-	SetAbsAngles( angForward );
-	SetAbsVelocity( vecDir * flSpeed );
-
-	// And change owner.
-	IncremenentDeflected();
-	SetOwnerEntity( pDeflectedBy );
-	ChangeTeam( pDeflectedBy->GetTeamNumber() );
-	SetScorer( pDeflectedBy );
-
-	ShotDown();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Increment deflects counter
-//-----------------------------------------------------------------------------
-void CMissile::IncremenentDeflected( void )
-{
-	m_iDeflected++;
-}
 
 //-----------------------------------------------------------------------------
 // This entity is used to create little force boxes that the helicopter
@@ -1011,7 +952,7 @@ BEGIN_DATADESC( CAPCMissile )
 	DEFINE_THINKFUNC( ExplodeThink ),
 	DEFINE_THINKFUNC( APCSeekThink ),
 
-	DEFINE_ENTITYFUNC( APCMissileTouch ),
+	DEFINE_FUNCTION( APCMissileTouch ),
 
 END_DATADESC()
 

@@ -20,7 +20,16 @@
 //
 // Weapon Bat tables.
 //
-CREATE_SIMPLE_WEAPON_TABLE( TFBat, tf_weapon_bat )
+IMPLEMENT_NETWORKCLASS_ALIASED( TFBat, DT_TFWeaponBat )
+
+BEGIN_NETWORK_TABLE( CTFBat, DT_TFWeaponBat )
+END_NETWORK_TABLE()
+
+BEGIN_PREDICTION_DATA( CTFBat )
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( tf_weapon_bat, CTFBat );
+PRECACHE_WEAPON_REGISTER( tf_weapon_bat );
 
 //=============================================================================
 //
@@ -34,20 +43,3 @@ CTFBat::CTFBat()
 {
 }
 
-//=============================================================================
-//
-// Weapon Bat Wood tables.
-//
-CREATE_SIMPLE_WEAPON_TABLE( TFBat_Wood, tf_weapon_bat_wood )
-/*
-//=============================================================================
-//
-// Weapon Bat Giftwarp tables.
-//
-CREATE_SIMPLE_WEAPON_TABLE( TFBat_Giftwarp, tf_weapon_bat_giftwarp )
-*/
-//=============================================================================
-//
-// Weapon Bat Fish tables.
-//
-CREATE_SIMPLE_WEAPON_TABLE( TFBat_Fish, tf_weapon_bat_fish )

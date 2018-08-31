@@ -18,6 +18,7 @@
 #include "tf_imagepanel.h"
 #include "tf_hud_playerstatus.h"
 #include "vgui_avatarimage.h"
+#include "c_tf_player.h"
 
 using namespace vgui;
 
@@ -88,11 +89,12 @@ public:
 	bool IsHoldingAfterScreenShot( void ) { return m_bHoldingAfterScreenshot; }
 
 protected:
-	CTFFreezePanelCallout *TestAndAddCallout( Vector &origin, Vector &vMins, Vector &vMaxs, CUtlVector<Vector> *vecCalloutsTL, 
+	CTFFreezePanelCallout *CTFFreezePanel::TestAndAddCallout( Vector &origin, Vector &vMins, Vector &vMaxs, CUtlVector<Vector> *vecCalloutsTL, 
 		CUtlVector<Vector> *vecCalloutsBR, Vector &vecFreezeTL, Vector &vecFreezeBR, Vector &vecStatTL, Vector &vecStatBR, int *iX, int *iY );
 
 private:
 	void ShowNemesisPanel( bool bShow );
+	void SetColorForTargetTeam( int iTeamNumber );
 
 	int						m_iYBase;
 	int						m_iKillerIndex;
@@ -103,6 +105,7 @@ private:
 	float					m_flShowSnapshotReminderAt;
 	EditablePanel			*m_pNemesisSubPanel;
 	vgui::Label				*m_pFreezeLabel;
+	vgui::Label				*m_pFreezeLabelKiller;
 	CTFImagePanel			*m_pFreezePanelBG;
 	CAvatarImagePanel		*m_pAvatar;
 	vgui::EditablePanel		*m_pScreenshotPanel;
@@ -112,6 +115,8 @@ private:
 	int 					m_iBasePanelOriginalY;
 
 	bool					m_bHoldingAfterScreenshot;
+
+	CPanelAnimationVarAliasType( int, m_iAvatarOffset, "avatar_offset", "0", "proportional_int" );
 
 	enum 
 	{

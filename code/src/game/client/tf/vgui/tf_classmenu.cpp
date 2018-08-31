@@ -17,7 +17,6 @@
 #include "c_tf_player.h"
 #include "c_tf_team.h"
 #include "c_tf_playerresource.h"
-#include "engine/IEngineSound.h"
 
 #include "tf_controls.h"
 #include "vguicenterprint.h"
@@ -48,26 +47,8 @@ static int iRemapIndexToClass[TF_CLASS_MENU_BUTTONS] =
 	TF_CLASS_SNIPER,
 	TF_CLASS_SPY,
 	0,
-	TF_CLASS_RANDOM
-};
-
-// background music
-static char* pszBackgroundMusic = "music.class_menu";
-
-// hoverup sounds for each class
-static char* pszHoverupSound[TF_CLASS_MENU_BUTTONS] =
-{
 	0,
-	"music.class_menu_01",
-	"music.class_menu_02",
-	"music.class_menu_03",
-	"music.class_menu_04",
-	"music.class_menu_05",
-	"music.class_menu_06",
-	"music.class_menu_07",
-	"music.class_menu_08",
-	"music.class_menu_09",
-	"music.class_menu_09",
+	TF_CLASS_RANDOM
 };
 
 int GetIndexForClass( int iClass )
@@ -135,7 +116,7 @@ void CTFClassMenu::PerformLayout()
 	BaseClass::PerformLayout();
 
 #ifndef _X360
-	m_pCountLabel = dynamic_cast< CExLabel * >(FindChildByName("CountLabel"));
+	m_pCountLabel = dynamic_cast< CTFLabel * >( FindChildByName( "CountLabel" ) );
 
 	if ( m_pCountLabel )
 	{
@@ -192,9 +173,6 @@ void CTFClassMenu::ShowPanel( bool bShow )
 
 		Activate();
 		SetMouseInputEnabled( true );
-	
-		CLocalPlayerFilter filter;
-		C_BaseEntity::EmitSound(filter, SOUND_FROM_UI_PANEL, pszBackgroundMusic);
 
 		m_iClassMenuKey = gameuifuncs->GetButtonCodeForBind( "changeclass" );
 		m_iScoreBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
@@ -239,8 +217,6 @@ void CTFClassMenu::ShowPanel( bool bShow )
 		// everything is off so just reset these for next time
 		g_lastButton = NULL;
 		g_lastPanel = NULL;
-		
-		C_BaseEntity::StopSound(SOUND_FROM_UI_PANEL, pszBackgroundMusic);
 
 		SetVisible( false );
 		SetMouseInputEnabled( false );
@@ -311,7 +287,7 @@ void CTFClassMenu::OnKeyCodePressed( KeyCode code )
 		// Scroll class info text up
 		if ( g_lastPanel )
 		{
-			CExRichText *pRichText = dynamic_cast< CExRichText * >( g_lastPanel->FindChildByName( "classInfo" ) );
+			CTFRichText *pRichText = dynamic_cast< CTFRichText * >( g_lastPanel->FindChildByName( "classInfo" ) );
 
 			if ( pRichText )
 			{
@@ -324,7 +300,7 @@ void CTFClassMenu::OnKeyCodePressed( KeyCode code )
 		// Scroll class info text up
 		if ( g_lastPanel )
 		{
-			CExRichText *pRichText = dynamic_cast< CExRichText * >( g_lastPanel->FindChildByName( "classInfo" ) );
+			CTFRichText *pRichText = dynamic_cast< CTFRichText * >( g_lastPanel->FindChildByName( "classInfo" ) );
 
 			if ( pRichText )
 			{
@@ -414,23 +390,6 @@ Panel *CTFClassMenu::CreateControlByName( const char *controlName )
 //-----------------------------------------------------------------------------
 void CTFClassMenu::OnShowPage( const char *pagename )
 {
-	for ( int i = 0; i < TF_CLASS_MENU_BUTTONS; i++ )
-	{
-		CImageMouseOverButton<CTFClassInfoPanel> *pButton = m_pClassButtons[i];
-
-		if ( pButton )
-		{
-			if ( pButton == g_lastButton )
-			{
-				CLocalPlayerFilter filter;
-				C_BaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, pszHoverupSound[i] );
-			}
-			else
-			{
-				C_BaseEntity::StopSound( SOUND_FROM_UI_PANEL, pszHoverupSound[i] );
-			}
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -585,7 +544,7 @@ void CTFClassMenu::UpdateNumClassLabels( int iTeam )
 	int nTotalCount = 0;
 
 	// count how many of each class there are
-	C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
+	C_TF_PlayerResource *tf_PR = dynamic_cast<C_TF_PlayerResource *>( g_PR );
 
 	if ( !tf_PR )
 		return;
@@ -593,7 +552,7 @@ void CTFClassMenu::UpdateNumClassLabels( int iTeam )
 	if ( iTeam < FIRST_GAME_TEAM || iTeam >= TF_TEAM_COUNT ) // invalid team number
 		return;
 
-	for (int i = TF_FIRST_NORMAL_CLASS; i <= TF_CLASS_ENGINEER; i++)
+	for( int i = TF_FIRST_NORMAL_CLASS ; i <= TF_LAST_NORMAL_CLASS ; i++ )
 	{
 		int classCount = tf_PR->GetCountForPlayerClass( iTeam, g_sClassDefines[i], true );
 
@@ -615,20 +574,7 @@ void CTFClassMenu::UpdateNumClassLabels( int iTeam )
 				if ( pImage )
 				{
 					pImage->SetVisible( true );
-					
-					switch (iTeam)
-					{
-						case TF_TEAM_RED:
-							pImage->SetImage(g_sClassImagesRed[i]);
-							break;
-
-						case TF_TEAM_BLUE:
-							pImage->SetImage(g_sClassImagesBlue[i]);
-							break;
-
-						default:
-							break;
-					}
+					pImage->SetImage( iTeam == TF_TEAM_BLUE ? g_sClassImagesBlue[i] : g_sClassImagesRed[i] );
 				}
 
 				nTotalCount++;

@@ -1006,10 +1006,6 @@ Class_T  CHL2_Player::Classify ( void )
 	}
 }
 
-extern int	g_interactionBarnacleVictimDangle;
-extern int	g_interactionBarnacleVictimReleased;
-extern int	g_interactionBarnacleVictimGrab;
-
 //-----------------------------------------------------------------------------
 // Purpose:  This is a generic function (to be implemented by sub-classes) to
 //			 handle specific interactions between different types of characters

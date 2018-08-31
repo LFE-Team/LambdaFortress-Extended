@@ -179,19 +179,7 @@ public:
 
 	static float	fMaxTipControllerVelocity;
 	static float	fMaxTipControllerAngularVelocity;
-#ifdef TF_CLASSIC
-	// Sappers
-	bool			HasSapper( void );
-	void			OnAddSapper( void );
-	void			OnRemoveSapper( void );
 
-	bool			IsDisabled( void ) { return m_bEnabled; }
-	void			UpdateDisabledState( void );
-	void			SetDisabled( bool bDisabled );
-private:
-	// Sapper on me
-	bool	m_bHasSapper;
-#endif
 protected:
 
 	virtual bool	PreThink( turretState_e state );

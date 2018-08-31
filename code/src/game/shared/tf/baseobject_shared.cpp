@@ -362,10 +362,6 @@ void CBaseObject::SetActivity( Activity act )
 		m_Activity = act; 
 		SetObjectSequence( sequence );
 	}
-	else
-	{
-		m_Activity = (Activity)ACTIVITY_NOT_AVAILABLE;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -424,21 +420,6 @@ void CBaseObject::OnGoActive( void )
 			SetBodygroup( index, 1 );
 		}
 	}
-
-	// TODO: Move this to InitializeMapPlacedObject
-
-	// Rapidly go through upgrade levels if the keyvalue is set.
-	if ( m_iDefaultUpgrade > 0 )
-	{
-		for ( int i = 0; i < min( m_iDefaultUpgrade, GetMaxUpgradeLevel() - 1 ); i++ )
-		{
-			StartUpgrading();
-			FinishUpgrading();
-		}
-
-		// Don't snap to default level again if we get picked up and re-deployed.
-		m_iDefaultUpgrade = 0;
-	}
 #endif
 }
 
@@ -467,7 +448,7 @@ void CBaseObject::OnGoInactive( void )
 //-----------------------------------------------------------------------------
 bool CBaseObject::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
-	if ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT )
+	if ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup == COLLISION_GROUP_NPC || collisionGroup == COLLISION_GROUP_NPC_ACTOR )
 	{
 		if ( GetCollisionGroup() == TFCOLLISION_GROUP_OBJECT_SOLIDTOPLAYERMOVEMENT )
 		{
@@ -483,16 +464,6 @@ bool CBaseObject::ShouldCollide( int collisionGroup, int contentsMask ) const
 
 		case TF_TEAM_BLUE:
 			if ( !( contentsMask & CONTENTS_BLUETEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_GREEN:
-			if (!(contentsMask & CONTENTS_GREENTEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_YELLOW:
-			if (!(contentsMask & CONTENTS_YELLOWTEAM ) )
 				return false;
 			break;
 		}

@@ -49,14 +49,6 @@
 #include "steam/steam_api.h"
 #include "cdll_int.h"
 #include "tf_weaponbase.h"
-#include "econ_wearable.h"
-#include "tf_wearable.h"
-#include "tf_dropped_weapon.h"
-#include "econ_item_schema.h"
-#include "baseprojectile.h"
-#include "tf_weapon_flamethrower.h"
-#include "entity_rune.h"
-#include "tf_weapon_lunchbox.h"
 #include "player_pickup.h"
 #include "weapon_physcannon.h"
 #include "eventqueue.h"
@@ -66,11 +58,6 @@
 #include "globalstate.h"
 #include "grenade_bugbait.h"
 #include "antlion_maker.h"
-#include "npc_barnacle.h"
-#include "trains.h"
-#include "nav_mesh.h"
-#include "tf_fx.h"
-#include "npc_alyx_episodic.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -91,21 +78,17 @@ extern ConVar	tf_stalematechangeclasstime;
 
 extern ConVar	tf_damage_disablespread;
 
-extern ConVar	lfe_force_legacy;
-extern ConVar	lfe_debug_director_print;
-
 EHANDLE g_pLastSpawnPoints[TF_TEAM_COUNT];
 
 ConVar tf_playerstatetransitions( "tf_playerstatetransitions", "-2", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "tf_playerstatetransitions <ent index or -1 for all>. Show player state transitions." );
-ConVar tf_playergib( "tf_playergib", "1", FCVAR_PROTECTED, "Allow player gibbing. 0: never, 1: normal, 2: always", true, 0, true, 2 );
+ConVar tf_playergib( "tf_playergib", "1", FCVAR_PROTECTED, "Allow player gibbing." );
 
 ConVar tf_weapon_ragdoll_velocity_min( "tf_weapon_ragdoll_velocity_min", "100", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar tf_weapon_ragdoll_velocity_max( "tf_weapon_ragdoll_velocity_max", "150", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar tf_weapon_ragdoll_maxspeed( "tf_weapon_ragdoll_maxspeed", "300", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_damageforcescale_other( "tf_damageforcescale_other", "6.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar tf_damageforcescale_self_soldier_rj( "tf_damageforcescale_self_soldier_rj", "10.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar tf_damageforcescale_self_soldier_badrj( "tf_damageforcescale_self_soldier_badrj", "5.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar tf_damageforcescale_self_soldier( "tf_damageforcescale_self_soldier", "10.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar tf_damagescale_self_soldier( "tf_damagescale_self_soldier", "0.60", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_damage_lineardist( "tf_damage_lineardist", "0", FCVAR_DEVELOPMENTONLY );
@@ -113,28 +96,8 @@ ConVar tf_damage_range( "tf_damage_range", "0.5", FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_max_voice_speak_delay( "tf_max_voice_speak_delay", "1.5", FCVAR_NOTIFY, "Max time after a voice command until player can do another one" );
 
-ConVar lfe_allow_spectate_npc( "lfe_allow_spectate_npc", "0", 0, "Allow spectating NPC. Enabling this is not recommended." );
-ConVar lfe_coop_lives( "lfe_coop_lives", "-1", 0, "Amount of lives RED players start with in co-op. Set to -1 for unlimited lives." );
-
-ConVar tf_allow_player_use( "tf_allow_player_use", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Allow players to execute + use while playing." );
-
-ConVar lfe_debug_transition( "lfe_debug_transition", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow new level transition system." );
-ConVar lfe_debug_tf_dropped_weapon( "lfe_debug_tf_dropped_weapon", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow weapons to drop on death." );
-
-ConVar tf_allow_sliding_taunt( "tf_allow_sliding_taunt", "0", 0, "Allow player to slide for a bit after taunting." );
-
-extern ConVar spec_freeze_time;
-extern ConVar spec_freeze_traveltime;
-extern ConVar sv_maxunlag;
-
-extern ConVar sv_alltalk;
-extern ConVar tf_gravetalk;
-
-// Team Fortress 2 Classic's commands
-ConVar lfe_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Makes players spawn with random loadout. CURRENTLY STILL BROKEN!!!" );
-
-
-ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun." );
+ConVar lf_allow_spectate_npc( "lf_allow_spectate_npc", "0", 0, "Allow spectating NPC. Enabling this is not recommended." );
+ConVar lf_coop_lives( "lf_coop_lives", "-1", 0, "Amount of lives RED players start with in co-op. Set to -1 for unlimited lives." );
 
 // Cvars from HL2 player
 ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
@@ -144,73 +107,26 @@ ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
 ConVar player_squad_transient_commands( "player_squad_transient_commands", "1", FCVAR_REPLICATED );
 ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
 
-extern ConVar lfe_use_hl2_player_hull;
-
-#define	FLASH_DRAIN_TIME	 1.1111	// 100 units / 90 secs
-#define	FLASH_CHARGE_TIME	 50.0f	// 100 units / 2 secs
-
-//==============================================================================================
-// CAPPED PLAYER PHYSICS DAMAGE TABLE
-//==============================================================================================
-static impactentry_t cappedPlayerLinearTable[] =
-{
-	{ 150*150, 5 },
-	{ 250*250, 10 },
-	{ 450*450, 20 },
-	{ 550*550, 30 },
-	//{ 700*700, 100 },
-	//{ 1000*1000, 500 },
-};
-
-static impactentry_t cappedPlayerAngularTable[] =
-{
-	{ 100*100, 10 },
-	{ 150*150, 20 },
-	{ 200*200, 30 },
-	//{ 300*300, 500 },
-};
-
-static impactdamagetable_t gCappedPlayerImpactDamageTable =
-{
-	cappedPlayerLinearTable,
-	cappedPlayerAngularTable,
-
-	ARRAYSIZE(cappedPlayerLinearTable),
-	ARRAYSIZE(cappedPlayerAngularTable),
-
-	24*24.0f,	// minimum linear speed
-	360*360.0f,	// minimum angular speed
-	2.0f,		// can't take damage from anything under 2kg
-
-	5.0f,		// anything less than 5kg is "small"
-	5.0f,		// never take more than 5 pts of damage from anything under 5kg
-	36*36.0f,	// <5kg objects must go faster than 36 in/s to do damage
-
-	0.0f,		// large mass in kg (no large mass effects)
-	1.0f,		// large mass scale
-	2.0f,		// large mass falling scale
-	320.0f,		// min velocity for player speed to cause damage
-
-};
+extern ConVar spec_freeze_time;
+extern ConVar spec_freeze_traveltime;
+extern ConVar sv_maxunlag;
+extern ConVar lf_use_hl2_player_hull;
 
 // -------------------------------------------------------------------------------- //
 //Transitions
 // -------------------------------------------------------------------------------- //
 struct TFPlayerTransitionStruct
 {
-	int			playerClass;
-	int			health;
-	const char	*weapon;
-	int			weaponslot;
-	int			clip1[TF_PLAYER_WEAPON_COUNT];
-	int			clip2[TF_PLAYER_WEAPON_COUNT];
-	int			ammo;
-	float		ubercharge;
+	int playerClass;
+	int	health;
+	int	weapon;
+	int clip1[MAX_WEAPON_SLOTS];
+	int clip2[MAX_WEAPON_SLOTS];
+	int ammo[MAX_AMMO_SLOTS];
 
 };
 
 CUtlMap<uint64, TFPlayerTransitionStruct> g_TFPlayerTransitions( DefLessFunc( uint64 ) );
-
 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
@@ -277,12 +193,8 @@ public:
 		m_iPlayerIndex.Set( TF_PLAYER_INDEX_NONE );
 		m_bGib = false;
 		m_bBurning = false;
-		m_bOnGround = false;
-		m_flInvisibilityLevel = 0.0f;
-		m_iDamageCustom = 0;
 		m_vecRagdollOrigin.Init();
 		m_vecRagdollVelocity.Init();
-		UseClientSideAnimation();
 	}
 
 	// Transmit ragdolls to everyone.
@@ -296,9 +208,6 @@ public:
 	CNetworkVector( m_vecRagdollOrigin );
 	CNetworkVar( bool, m_bGib );
 	CNetworkVar( bool, m_bBurning );
-	CNetworkVar( bool, m_bOnGround );
-	CNetworkVar( float, m_flInvisibilityLevel );
-	CNetworkVar( int, m_iDamageCustom );
 	CNetworkVar( int, m_iTeam );
 	CNetworkVar( int, m_iClass );
 };
@@ -306,18 +215,15 @@ public:
 LINK_ENTITY_TO_CLASS( tf_ragdoll, CTFRagdoll );
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CTFRagdoll, DT_TFRagdoll )
-	SendPropVector( SENDINFO( m_vecRagdollOrigin ), -1, SPROP_COORD ),
+	SendPropVector( SENDINFO( m_vecRagdollOrigin ), -1,  SPROP_COORD ),
 	SendPropInt( SENDINFO( m_iPlayerIndex ), 7, SPROP_UNSIGNED ),
-	SendPropVector( SENDINFO( m_vecForce ), -1, SPROP_NOSCALE ),
+	SendPropVector	( SENDINFO(m_vecForce), -1, SPROP_NOSCALE ),
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ), 13, SPROP_ROUNDDOWN, -2048.0f, 2048.0f ),
 	SendPropInt( SENDINFO( m_nForceBone ) ),
 	SendPropBool( SENDINFO( m_bGib ) ),
 	SendPropBool( SENDINFO( m_bBurning ) ),
-	SendPropBool( SENDINFO( m_bOnGround ) ),
-	SendPropFloat( SENDINFO( m_flInvisibilityLevel ), 8, 0, 0.0f, 1.0f ),
-	SendPropInt( SENDINFO( m_iDamageCustom ) ),
 	SendPropInt( SENDINFO( m_iTeam ), 3, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_iClass ), 4, SPROP_UNSIGNED ),
+	SendPropInt( SENDINFO( m_iClass ), 4, SPROP_UNSIGNED ),	
 END_SEND_TABLE()
 
 // -------------------------------------------------------------------------------- //
@@ -368,22 +274,7 @@ int SendProxyArrayLength_PlayerObjects( const void *pStruct, int objectID )
 }
 
 BEGIN_DATADESC( CTFPlayer )
-	DEFINE_INPUTFUNC( FIELD_STRING,	"SpeakResponseConcept",	InputSpeakResponseConcept ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"IgnitePlayer",	InputIgnitePlayer ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"ExtinguishPlayer",	InputExtinguishPlayer ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetForcedTauntCam", InputSetForcedTauntCam ),
-	DEFINE_FIELD(m_bHasLongJump, FIELD_BOOLEAN),
 	DEFINE_OUTPUT( m_OnDeath, "OnDeath" ),
-
-	DEFINE_FIELD( m_flAdmireGlovesAnimTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flNextFlashlightCheckTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flFlashlightPowerDrainScale, FIELD_FLOAT ),
-	DEFINE_FIELD( m_bFlashlightDisabled, FIELD_BOOLEAN ),
-
-	DEFINE_FIELD( m_bUseCappedPhysicsDamageTable, FIELD_BOOLEAN ),
-
-	DEFINE_SOUNDPATCH( m_sndLeeches ),
-	DEFINE_SOUNDPATCH( m_sndWaterSplashes ),
 END_DATADESC()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
@@ -438,21 +329,18 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropExclude( "DT_BaseFlex", "m_blinktoggle" ),
 	SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
 
-	SendPropBool( SENDINFO( m_bSaveMeParity ) ),
+	SendPropBool(SENDINFO(m_bSaveMeParity)),
 
 	// This will create a race condition will the local player, but the data will be the same so.....
 	SendPropInt( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 
-	SendPropEHandle( SENDINFO( m_hItem ) ),
-
-	SendPropVector( SENDINFO( m_vecPlayerColor ) ),
+	SendPropEHandle(SENDINFO(m_hItem)),
 
 	// Ragdoll.
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 
 	SendPropDataTable( SENDINFO_DT( m_PlayerClass ), &REFERENCE_SEND_TABLE( DT_TFPlayerClassShared ) ),
 	SendPropDataTable( SENDINFO_DT( m_Shared ), &REFERENCE_SEND_TABLE( DT_TFPlayerShared ) ),
-	SendPropDataTable( SENDINFO_DT( m_AttributeManager ), &REFERENCE_SEND_TABLE( DT_AttributeManager ) ),
 
 	// Data that only gets sent to the local player
 	SendPropDataTable( "tflocaldata", 0, &REFERENCE_SEND_TABLE(DT_TFLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
@@ -461,9 +349,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropDataTable( "tfnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_TFNonLocalPlayerExclusive), SendProxy_SendNonLocalDataTable ),
 
 	SendPropInt( SENDINFO( m_iSpawnCounter ) ),
-	SendPropInt( SENDINFO( m_nForceTauntCam ), 2, SPROP_UNSIGNED ),
-	SendPropTime( SENDINFO( m_flLastDamageTime ) ),
-	SendPropBool( SENDINFO( m_bTyping ) ),
 	SendPropBool( SENDINFO( m_bSearchingSpawn ) ),
 
 END_SEND_TABLE()
@@ -491,7 +376,7 @@ bool HintCallbackNeedsResources_Dispenser( CBasePlayer *pPlayer )
 }
 bool HintCallbackNeedsResources_Teleporter( CBasePlayer *pPlayer )
 {
-	return ( pPlayer->GetAmmoCount( TF_AMMO_METAL ) > CalculateObjectCost( OBJ_TELEPORTER ) );
+	return ( pPlayer->GetAmmoCount( TF_AMMO_METAL ) > CalculateObjectCost( OBJ_TELEPORTER_ENTRANCE ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -499,8 +384,6 @@ bool HintCallbackNeedsResources_Teleporter( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 CTFPlayer::CTFPlayer()
 {
-	m_pAttributes = this;
-
 	m_PlayerAnimState = CreateTFPlayerAnimState( this );
 	item_list = 0;
 
@@ -516,11 +399,8 @@ CTFPlayer::CTFPlayer()
 	m_iMaxSentryKills = 0;
 	m_flNextNameChangeTime = 0;
 
-	m_flNextHealthRegen = 0;
 	m_flNextTimeCheck = gpGlobals->curtime;
 	m_flSpawnTime = 0;
-
-	m_flNextCarryTalkTime = 0.0f;
 
 	SetViewOffset( TF_PLAYER_VIEW_OFFSET );
 
@@ -532,8 +412,6 @@ CTFPlayer::CTFPlayer()
 	m_bMedigunAutoHeal = false;
 
 	m_vecLastDeathPosition = Vector( FLT_MAX, FLT_MAX, FLT_MAX );
-
-	m_vecPlayerColor.Init( 1.0f, 1.0f, 1.0f );
 
 	SetDesiredPlayerClassIndex( TF_CLASS_UNDEFINED );
 
@@ -547,21 +425,14 @@ CTFPlayer::CTFPlayer()
 
 	m_bSpeakingConceptAsDisguisedSpy = false;
 
-	m_pPlayerAISquad = NULL;
-	m_bTransition = false;
+	m_iSpawnCounter = 0;
 
 	m_flTauntAttackTime = 0.0f;
-	m_iTauntAttack = TAUNTATK_NONE;
+	m_iTauntAttack = TF_TAUNT_NONE;
 
-	m_nBlastJumpFlags = 0;
-	m_bBlastLaunched = false;
-	m_bJumpEffect = false;
+	m_pPlayerAISquad = NULL;
 
-	m_bAirblasted = false;
-
-	memset( m_WeaponPreset, 0, TF_CLASS_COUNT_ALL * TF_LOADOUT_SLOT_COUNT * sizeof( int ) );
-
-	m_bIsPlayerADev = false;
+	m_bTransition = false;
 }
 
 
@@ -570,8 +441,6 @@ CTFPlayer::CTFPlayer()
 //-----------------------------------------------------------------------------
 void CTFPlayer::TFPlayerThink()
 {
-	//AddGlowEffect();
-
 	if ( m_pStateInfo && m_pStateInfo->pfnThink )
 	{
 		(this->*m_pStateInfo->pfnThink)();
@@ -598,104 +467,27 @@ void CTFPlayer::TFPlayerThink()
 		}
 	}
 
-	// If players is hauling a building have him talk about it from time to time.
-	if ( m_flNextCarryTalkTime != 0.0f && m_flNextCarryTalkTime < gpGlobals->curtime )
-	{
-		CBaseObject *pObject = m_Shared.GetCarriedObject();
-		if ( pObject )
-		{
-			const char *pszModifier = pObject->GetResponseRulesModifier();
-			SpeakConceptIfAllowed( MP_CONCEPT_CARRYING_BUILDING, pszModifier );
-			m_flNextCarryTalkTime = gpGlobals->curtime + RandomFloat( 6.0f, 12.0f );
-		}
-		else
-		{
-			// No longer hauling, shut up.
-			m_flNextCarryTalkTime = 0.0f;
-		}
-	}
-
-	// Add rocket trail if we haven't already.
-	if ( !m_bJumpEffect && ( m_nBlastJumpFlags & ( TF_JUMP_ROCKET | TF_JUMP_STICKY ) ) && IsAlive() )
-	{
-		DispatchParticleEffect( "rocketjump_smoke", PATTACH_POINT_FOLLOW, this, "foot_L" );
-		DispatchParticleEffect( "rocketjump_smoke", PATTACH_POINT_FOLLOW, this, "foot_R" );
-		m_bJumpEffect = true;
-	}
-
-	if( !IsPlayerClass( TF_CLASS_MEDIC ) && gpGlobals->curtime > m_flNextHealthRegen )
-	{
-		int iHealthDrain = 0;
-		CALL_ATTRIB_HOOK_INT( iHealthDrain, add_health_regen );
-		if( iHealthDrain )
-		{
-			RegenThink();
-			m_flNextHealthRegen = gpGlobals->curtime + TF_MEDIC_REGEN_TIME;
-		}			
-	}
-
 	SetContextThink( &CTFPlayer::TFPlayerThink, gpGlobals->curtime, "TFPlayerThink" );
 }
 
-void CTFPlayer::CheckTeam(void)
-{
-	if (GetTeamNumber() == TF_TEAM_BLUE && TFGameRules()->IsCoOp())
-	{
-		ChangeTeam(TF_TEAM_RED);
-	}
-	else if (GetTeamNumber() == TF_TEAM_RED && TFGameRules()->IsBluCoOp())
-	{
-		ChangeTeam(TF_TEAM_BLUE);
-	}
-}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::RegenThink( void )
+void CTFPlayer::MedicRegenThink( void )
 {
-	// Health drain attribute
-	int iHealthDrain = 0;
-	CALL_ATTRIB_HOOK_INT( iHealthDrain, add_health_regen );
-
 	if ( IsPlayerClass( TF_CLASS_MEDIC ) )
 	{
 		if ( IsAlive() )
 		{
 			// Heal faster if we haven't been in combat for a while
 			float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageTime();
-			float flScale = RemapValClamped( flTimeSinceDamage, 5, 10, 3.0, 6.0 );
+			float flScale = RemapValClamped( flTimeSinceDamage, 5, 10, 1.0, 3.0 );
 
-			float flHealingMastery = 0;
-			CALL_ATTRIB_HOOK_FLOAT( flHealingMastery, healing_mastery );
-			if ( flHealingMastery )
-			{
-				float flScaleMaster = RemapValClamped( flTimeSinceDamage, 0.0f, 4.0f, 1.00f, 2.00f );
-				flScale *= flScaleMaster;
-			}
+			int iHealAmount = ceil(TF_MEDIC_REGEN_AMOUNT * flScale);
+			TakeHealth( iHealAmount, DMG_GENERIC );
+		}
 
-			int iHealAmount = ceil( TF_MEDIC_REGEN_AMOUNT * flScale );
-			TakeHealth( iHealAmount + iHealthDrain, DMG_GENERIC );
-		}
-		SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
-	}
-	else
-	{
-		if( IsAlive() )
-		{
-			int iHealthRestored = TakeHealth( iHealthDrain, DMG_GENERIC );
-			if (iHealthRestored)
-			{
-				IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-				
-				if ( event )
-				{
-					event->SetInt( "amount", iHealthRestored );
-					event->SetInt( "entindex", entindex() );
-					
-					gameeventmanager->FireEvent( event );
-				}
-			}	
-		}
+		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
 	}
 }
 
@@ -726,12 +518,6 @@ void CTFPlayer::UpdateTimers( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::PreThink()
 {
-	// Update timers.
-	UpdateTimers();
-
-	// Pass through to the base class think.
-	BaseClass::PreThink();
-
 	if ( IsInAVehicle() )
 	{
 		// Skip most of the things if we're in a vehicle.
@@ -746,15 +532,11 @@ void CTFPlayer::PreThink()
 		return;
 	}
 
-	if (m_nButtons & IN_GRENADE1)
-	{
-		TFPlayerClassData_t *pData = m_PlayerClass.GetData();
-		CTFWeaponBase *pGrenade = Weapon_OwnsThisID(pData->m_aGrenades[0]);
-		if (pGrenade)
-		{
-			pGrenade->Deploy();
-		}
-	}
+	// Update timers.
+	UpdateTimers();
+
+	// Pass through to the base class think.
+	BaseClass::PreThink();
 
 	// Reset bullet force accumulator, only lasts one frame, for ragdoll forces from multiple shots.
 	m_vecTotalBulletForce = vec3_origin;
@@ -762,210 +544,6 @@ void CTFPlayer::PreThink()
 	CommanderUpdate();
 
 	CheckForIdle();
-
-	// So the correct flags get sent to client asap.
-	//
-	if ( m_afPhysicsFlags & PFLAG_DIROVERRIDE )
-		AddFlag( FL_ONTRAIN );
-	else 
-		RemoveFlag( FL_ONTRAIN );
-
-	// Train speed control
-	if ( m_afPhysicsFlags & PFLAG_DIROVERRIDE )
-	{
-		CBaseEntity *pTrain = GetGroundEntity();
-		float vel;
-
-		if ( pTrain )
-		{
-			if ( !(pTrain->ObjectCaps() & FCAP_DIRECTIONAL_USE) )
-				pTrain = NULL;
-		}
-		
-		if ( !pTrain )
-		{
-			if ( GetActiveWeapon() && (GetActiveWeapon()->ObjectCaps() & FCAP_DIRECTIONAL_USE) )
-			{
-				m_iTrain = TRAIN_ACTIVE | TRAIN_NEW;
-
-				if ( m_nButtons & IN_FORWARD )
-				{
-					m_iTrain |= TRAIN_FAST;
-				}
-				else if ( m_nButtons & IN_BACK )
-				{
-					m_iTrain |= TRAIN_BACK;
-				}
-				else
-				{
-					m_iTrain |= TRAIN_NEUTRAL;
-				}
-				return;
-			}
-			else
-			{
-				trace_t trainTrace;
-				// Maybe this is on the other side of a level transition
-				UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector(0,0,-38), 
-					MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trainTrace );
-
-				if ( trainTrace.fraction != 1.0 && trainTrace.m_pEnt )
-					pTrain = trainTrace.m_pEnt;
-
-
-				if ( !pTrain || !(pTrain->ObjectCaps() & FCAP_DIRECTIONAL_USE) || !pTrain->OnControls(this) )
-				{
-//					Warning( "In train mode with no train!\n" );
-					m_afPhysicsFlags &= ~PFLAG_DIROVERRIDE;
-					m_iTrain = TRAIN_NEW|TRAIN_OFF;
-					return;
-				}
-			}
-		}
-		else if ( !( GetFlags() & FL_ONGROUND ) || pTrain->HasSpawnFlags( SF_TRACKTRAIN_NOCONTROL ) || (m_nButtons & (IN_MOVELEFT|IN_MOVERIGHT) ) )
-		{
-			// Turn off the train if you jump, strafe, or the train controls go dead
-			m_afPhysicsFlags &= ~PFLAG_DIROVERRIDE;
-			m_iTrain = TRAIN_NEW|TRAIN_OFF;
-			return;
-		}
-
-		SetAbsVelocity( vec3_origin );
-		vel = 0;
-		if ( m_afButtonPressed & IN_FORWARD )
-		{
-			vel = 1;
-			pTrain->Use( this, this, USE_SET, (float)vel );
-		}
-		else if ( m_afButtonPressed & IN_BACK )
-		{
-			vel = -1;
-			pTrain->Use( this, this, USE_SET, (float)vel );
-		}
-
-		if (vel)
-		{
-			m_iTrain = TrainSpeed(pTrain->m_flSpeed, ((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
-			m_iTrain |= TRAIN_ACTIVE|TRAIN_NEW;
-		}
-	} 
-	else if (m_iTrain & TRAIN_ACTIVE)
-	{
-		m_iTrain = TRAIN_NEW; // turn off train
-	}
-
-	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
-	{
-		bool bOnBarnacle = false;
-		CNPC_Barnacle *pBarnacle = NULL;
-		do
-		{
-			// FIXME: Not a good or fast solution, but maybe it will catch the bug!
-			pBarnacle = (CNPC_Barnacle*)gEntList.FindEntityByClassname( pBarnacle, "npc_barnacle" );
-			if ( pBarnacle )
-			{
-				if ( pBarnacle->GetEnemy() == this )
-				{
-					bOnBarnacle = true;
-				}
-			}
-		} while ( pBarnacle );
-		
-		if ( !bOnBarnacle )
-		{
-			Warning( "Attached to barnacle?\n" );
-			Assert( 0 );
-			m_afPhysicsFlags &= ~PFLAG_ONBARNACLE;
-		}
-		else
-		{
-			SetAbsVelocity( vec3_origin );
-		}
-	}
-
-	if( !IsAlive() )
-	{
-		// CSS would like their players to continue to update their LastArea even when dead since it is displayed in the observer screen now.
-		// But we won't do the population tracking while dead.
-		CNavArea *area = TheNavMesh->GetNavArea( GetAbsOrigin(), 1000 );
-		if (area && area != m_lastNavArea)
-		{
-			m_lastNavArea = area;
-			if ( area->GetPlace() != UNDEFINED_PLACE )
-			{
-				const char *placeName = TheNavMesh->PlaceToName( area->GetPlace() );
-				if ( placeName && *placeName )
-				{
-					Q_strncpy( m_szLastPlaceName.GetForModify(), placeName, MAX_PLACE_NAME_LENGTH );
-				}
-			}
-		}
-	}
-
-	if ( !IsHLTV() || !IsFakeClient()  )
-	{
-		if ( TFGameRules()->IsInHL2Map() )
-		{
-			// bought the game yet?
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 220 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2 on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2" ) );
-			}
-
-			// installed the game yet?
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 220 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2 installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2" ) );
-			}
-		}
-
-		if ( TFGameRules()->IsInHL1Map() )
-		{
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 280 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life: Source on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL:S" ) );
-			}
-
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 280 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life: Source installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL:S" ) );
-			}
-		}
-
-		if ( TFGameRules()->IsInHL2EP1Map() )
-		{
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 380 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode One on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2:EP1" ) );
-			}
-
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 380 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode One installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP1" ) );
-			}
-		}
-
-		if ( TFGameRules()->IsInHL2EP2Map() )
-		{
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 420 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode Two on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2:EP2" ) );
-			}
-
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 420 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP2." ) );
-			}
-		}
-	}
 }
 
 ConVar mp_idledealmethod( "mp_idledealmethod", "1", FCVAR_GAMEDLL, "Deals with Idle Players. 1 = Sends them into Spectator mode then kicks them if they're still idle, 2 = Kicks them out of the game;" );
@@ -1057,7 +635,6 @@ void CTFPlayer::FlashlightTurnOn( void )
 	if( flashlight.GetInt() > 0 && IsAlive() )
 	{
 		AddEffects( EF_DIMLIGHT );
-		EmitSound( "HL2Player.FlashlightOn" );
 	}
 }
 
@@ -1065,13 +642,12 @@ void CTFPlayer::FlashlightTurnOn( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::FlashlightTurnOff( void )
 {
-	RemoveEffects( EF_DIMLIGHT );
-	
-	if( IsAlive() )
+	if( IsEffectActive(EF_DIMLIGHT) )
 	{
-		EmitSound( "HL2Player.FlashlightOff" );
-	}
+		RemoveEffects( EF_DIMLIGHT );
+	}	
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1094,9 +670,6 @@ void CTFPlayer::PostThink()
 		m_flTauntAttackTime = 0.0f;
 		DoTauntAttack();
 	}
-
-	// Check if player is typing.
-	m_bTyping = ( m_nButtons & IN_TYPING ) != 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1117,14 +690,9 @@ void CTFPlayer::Precache()
 	PrecacheScriptSound( "TFPlayer.Drown" );
 	PrecacheScriptSound( "TFPlayer.AttackerPain" );
 	PrecacheScriptSound( "TFPlayer.SaveMe" );
+	PrecacheScriptSound( "TFPlayer.InvulnerableOn" );
+	PrecacheScriptSound( "TFPlayer.InvulnerableOff" );
 	PrecacheScriptSound( "Camera.SnapShot" );
-	PrecacheScriptSound( "TFPlayer.ReCharged" );
-	PrecacheScriptSound( "TFPlayer.Dissolve" );
-	PrecacheScriptSound( "TFPlayer.DoubleDonk" );
-	PrecacheScriptSound( "TFPlayer.CritHitMini" );
-
-	PrecacheScriptSound( "HL2Player.FlashlightOn" );
-	PrecacheScriptSound( "HL2Player.FlashlightOff" );
 
 	PrecacheScriptSound( "Game.YourTeamLost" );
 	PrecacheScriptSound( "Game.YourTeamWon" );
@@ -1134,28 +702,22 @@ void CTFPlayer::Precache()
 
 	// Precache particle systems
 	PrecacheParticleSystem( "crit_text" );
-	PrecacheParticleSystem( "minicrit_text" );
 	PrecacheParticleSystem( "cig_smoke" );
 	PrecacheParticleSystem( "speech_mediccall" );
-	PrecacheTeamParticles( "player_recent_teleport_%s" );
-	PrecacheTeamParticles( "particle_nemesis_%s", true );
-	PrecacheTeamParticles( "spy_start_disguise_%s" );
-	PrecacheTeamParticles( "burningplayer_%s", true );
-	PrecacheTeamParticles( "critgun_weaponmodel_%s", true, g_aTeamNamesShort );
-	PrecacheTeamParticles( "critgun_weaponmodel_%s_glow", true, g_aTeamNamesShort );
-	PrecacheTeamParticles( "healthlost_%s", false, g_aTeamNamesShort );
-	PrecacheTeamParticles( "healthgained_%s", false, g_aTeamNamesShort );
-	PrecacheTeamParticles( "healthgained_%s_large", false, g_aTeamNamesShort );
+	PrecacheParticleSystem( "player_recent_teleport_blue" );
+	PrecacheParticleSystem( "player_recent_teleport_red" );
+	PrecacheParticleSystem( "particle_nemesis_red" );
+	PrecacheParticleSystem( "particle_nemesis_blue" );
+	PrecacheParticleSystem( "spy_start_disguise_red" );
+	PrecacheParticleSystem( "spy_start_disguise_blue" );
+	PrecacheParticleSystem( "burningplayer_red" );
+	PrecacheParticleSystem( "burningplayer_blue" );
 	PrecacheParticleSystem( "blood_spray_red_01" );
 	PrecacheParticleSystem( "blood_spray_red_01_far" );
 	PrecacheParticleSystem( "water_blood_impact_red_01" );
 	PrecacheParticleSystem( "blood_impact_red_01" );
 	PrecacheParticleSystem( "water_playerdive" );
 	PrecacheParticleSystem( "water_playeremerge" );
-	PrecacheParticleSystem( "rocketjump_smoke" );
-	PrecacheTeamParticles( "overhealedplayer_%s_pluses", false );
-	PrecacheParticleSystem( "speech_typing" );
-	PrecacheParticleSystem( "peejar_drips" );
 					 
 	BaseClass::Precache();
 }
@@ -1184,15 +746,9 @@ void CTFPlayer::PrecachePlayerModels( void )
 				PrecacheModel( pszHWMModel );
 			}
 		}
-
-		const char *pszHandModel = GetPlayerClassData(i)->m_szModelHandsName;
-		if ( pszHandModel && pszHandModel[0] )
-		{
-			PrecacheModel( pszHandModel );
-		}
 	}
 	
-	if ( TFGameRules() && TFGameRules()->IsBirthday() || TFGameRules()->IsLFBirthday() )
+	if ( TFGameRules() && TFGameRules()->IsBirthday() )
 	{
 		for ( i = 1; i < ARRAYSIZE(g_pszBDayGibs); i++ )
 		{
@@ -1200,15 +756,6 @@ void CTFPlayer::PrecachePlayerModels( void )
 		}
 		PrecacheModel( "models/effects/bday_hat.mdl" );
 	}
-
-	PrecacheModel( TF_SPY_MASK_MODEL );
-	PrecacheModel( TF_POWERUP_SHIELD_MODEL );
-	PrecacheModel( "models/props_trainyard/bomb_cart_red.mdl" );
-	PrecacheModel( "models/props_trainyard/bomb_cart.mdl" );
-	PrecacheModel( "models/items/ammopack_medium.mdl" );
-
-	// Gunslinger
-	PrecacheModel("models/weapons/c_models/c_engineer_gunslinger.mdl");
 
 	// Precache player class sounds
 	for ( i = TF_FIRST_NORMAL_CLASS; i < TF_CLASS_COUNT_ALL; ++i )
@@ -1282,17 +829,13 @@ void CTFPlayer::InitialSpawn( void )
 {
 	BaseClass::InitialSpawn();
 
-	m_AttributeManager.InitializeAttributes( this );
-
 	SetWeaponBuilder( NULL );
 
 	m_iMaxSentryKills = 0;
 	CTF_GameStats.Event_MaxSentryKills( this, 0 );
 
-	UpdatePlayerColor();
-
 	// Set initial lives count.
-	m_Shared.SetLivesCount( lfe_coop_lives.GetInt() );
+	m_Shared.SetLivesCount( lf_coop_lives.GetInt() );
 
 	StateEnter( TF_STATE_WELCOME );
 }
@@ -1321,7 +864,7 @@ void CTFPlayer::Spawn()
 	// Create our off hand viewmodel if necessary
 	CreateViewModel( 1 );
 	// Make sure it has no model set, in case it had one before
-	GetViewModel( 1 )->SetWeaponModel( NULL, NULL );
+	GetViewModel(1)->SetModel( "" );
 
 	// Kind of lame, but CBasePlayer::Spawn resets a lot of the state that we initially want on.
 	// So if we're in the welcome state, call its enter function to reset 
@@ -1396,81 +939,40 @@ void CTFPlayer::Spawn()
 				pEnt->AcceptInput( "MultiplayerSpawned", this, this, emptyVariant, 0 );
 			}
 		}
+
 		// Gotta make sure this is the first proper spawn.
-		if ( TFGameRules()->IsCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME || TFGameRules()->IsBluCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME )
+		if ( TFGameRules()->IsCoOp() && TFGameRules()->State_Get() != GR_STATE_PREGAME )
 		{
-			if ( lfe_debug_transition.GetBool() )
+			unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
+			if ( index != g_TFPlayerTransitions.InvalidIndex() )
 			{
-				unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
-				if ( index != g_TFPlayerTransitions.InvalidIndex() )
+				// Restore health, ammo and last weapon.
+				SetHealth( g_TFPlayerTransitions[index].health );
+
+				for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
 				{
-					// Restore health, ammo and last weapon.
-					SetHealth( g_TFPlayerTransitions[index].health );
-
-					ValidateWeapons( true );
-					ValidateWearables();
-
-					for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
-					{
-						CBaseCombatWeapon *pWeapon = Weapon_GetSlot( i );
-						if ( pWeapon )
-						{
-							pWeapon->m_iClip1 = g_TFPlayerTransitions[index].clip1[i];
-							pWeapon->m_iClip2 = g_TFPlayerTransitions[index].clip2[i];
-						}
-					}
-
-					for ( int iAmmo = 0; iAmmo < TF_AMMO_COUNT; iAmmo++ )
-					{
-						GiveAmmo( GetMaxAmmo( iAmmo ), g_TFPlayerTransitions[index].ammo, false, TF_AMMO_SOURCE_RESUPPLY );
-					}
-
-					for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
-					{
-						if ( GetEntityForLoadoutSlot( iSlot ) != NULL )
-						{
-							// Nothing to do here.
-							continue;
-						}
-
-						// Give us an item from the inventory.
-						CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), iSlot );
-
-						if ( pItem )
-						{
-							//Assert( g_TFPlayerTransitions[index].weapon );
-
-							CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( g_TFPlayerTransitions[index].weapon, 0, pItem ) );
-
-							if ( pEntity )
-							{
-								pEntity->GiveTo( (CTFPlayer *)index );
-							}
-						}
-
-						ManageRegularWeapons( m_PlayerClass.GetData() );
-					}
-
-					CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( g_TFPlayerTransitions[index].weaponslot );
-
+					CBaseCombatWeapon *pWeapon = Weapon_GetSlot( i );
 					if ( pWeapon )
-						Weapon_Switch( pWeapon );
-
-					// Restore ubercharge.
-					CWeaponMedigun *pMedigun = GetMedigun();
-					pMedigun->SetCharge( g_TFPlayerTransitions[index].ubercharge );
-
-					//m_Shared.SetDesiredWeaponIndex( g_TFPlayerTransitions[index].weapon );
-
-					PostInventoryApplication();
-					// Remove player info from the list.
-					DeleteForTransition();
+					{
+						pWeapon->m_iClip1 = g_TFPlayerTransitions[index].clip1[i];
+						pWeapon->m_iClip2 = g_TFPlayerTransitions[index].clip2[i];
+					}
 				}
+
+				for ( int i = 0; i < MAX_AMMO_SLOTS; i++ )
+				{
+					m_iAmmo.Set( i, g_TFPlayerTransitions[index].ammo[i] );
+				}
+
+				CBaseCombatWeapon *pWeapon = Weapon_GetSlot( g_TFPlayerTransitions[index].weapon );
+				if ( pWeapon )
+					Weapon_Switch( pWeapon );
+
+				// Remove player info from the list.
+				DeleteForTransition();
 			}
 		}
 	}
-
-	m_nForceTauntCam = 0;
 
 	CTF_GameStats.Event_PlayerSpawned( this );
 
@@ -1497,12 +999,6 @@ void CTFPlayer::Spawn()
 	m_bIsIdle = false;
 	m_flPowerPlayTime = 0.0;
 
-	m_nBlastJumpFlags = 0;
-
-	m_Shared.m_hUrineAttacker = NULL;
-
-	m_Shared.SetDesiredWeaponIndex( -1 );
-
 	// This makes the surrounding box always the same size as the standing collision box
 	// helps with parts of the hitboxes that extend out of the crouching hitbox, eg with the
 	// heavyweapons guy
@@ -1511,46 +1007,12 @@ void CTFPlayer::Spawn()
 	CollisionProp()->SetSurroundingBoundsType( USE_SPECIFIED_BOUNDS, &mins, &maxs );
 
 	// Hack to hide the chat on the background map.
-	if ( gpGlobals->eLoadType == MapLoad_Background )
+	if (!Q_strcmp(gpGlobals->mapname.ToCStr(), "background01"))
 	{
 		m_Local.m_iHideHUD |= HIDEHUD_CHAT;
 	}
 
-	IGameEvent *event = gameeventmanager->CreateEvent( "player_spawn" );
-
-	if ( event )
-	{
-		event->SetInt( "userid", GetUserID() );
-		event->SetInt( "team", GetTeamNumber() );
-		event->SetInt( "class", GetPlayerClass()->GetClassIndex() );
-		gameeventmanager->FireEvent( event );
-	}
-
 	m_pPlayerAISquad = g_AI_SquadManager.FindCreateSquad(AllocPooledString(PLAYER_SQUADNAME));
-
-	m_Shared.AddCond( TF_COND_TEAM_GLOWS, 5 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-int CTFPlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
-{
-	CTFPlayer *pPlayer = ToTFPlayer( CBaseEntity::Instance( pInfo->m_pClientEnt ) );
-	Assert( pPlayer );
-
-	// Always transmit all players to us if we're in spec.
-	if ( pPlayer->GetTeamNumber() < FIRST_GAME_TEAM )
-	{
-		return FL_EDICT_ALWAYS;
-	}
-	else if ( InSameTeam( pPlayer ) && !pPlayer->IsAlive() )
-	{
-		// Transmit teammates to us if we're dead.
-		return FL_EDICT_ALWAYS;
-	}
-
-	return BaseClass::ShouldTransmit( pInfo );
 }
 
 //-----------------------------------------------------------------------------
@@ -1594,40 +1056,6 @@ void CTFPlayer::Regenerate( void )
 	{
 		m_Shared.RemoveCond( TF_COND_BURNING );
 	}
-
-	// Remove slow life condition
-	if ( m_Shared.InCond( TF_COND_SLOWED ) )
-	{
-		m_Shared.RemoveCond( TF_COND_SLOWED );
-	}
-
-	if ( m_Shared.InCond( TF_COND_URINE ) )
-	{
-		m_Shared.RemoveCond( TF_COND_URINE );
-	}
-
-	if ( m_Shared.InCond( TF_COND_PHASE ) )
-	{
-		m_Shared.RemoveCond( TF_COND_PHASE );
-	}
-
-	// Fill Spy cloak
-	m_Shared.SetSpyCloakMeter( 100.0f );
-
-	for ( int i = 0; i < MAX_ITEMS; i++ )
-	{		
-		CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase * >( Weapon_GetSlot( i ) );
-		if ( pWeapon ) 
-		{
-			pWeapon->WeaponRegenerate();
-			pWeapon->UpdatePlayerBodygroups();
-		}
-	}
-
-	TFPlayerClassData_t *pData = m_PlayerClass.GetData();
-
-	// Give gravity gun if allowed.
-	ManageTeamWeapons( pData );
 }
 
 //-----------------------------------------------------------------------------
@@ -1636,21 +1064,8 @@ void CTFPlayer::Regenerate( void )
 void CTFPlayer::InitClass( void )
 {
 	// Set initial health and armor based on class.
-	int iHealthToAdd = 0;
-	CALL_ATTRIB_HOOK_INT( iHealthToAdd, add_maxhealth );
-	if( iHealthToAdd != 0 )
-	{
-		SetMaxHealth( GetPlayerClass()->GetMaxHealth() + iHealthToAdd );
-	}
-	else
-	{
-		SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
-	}
-
+	SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
 	SetHealth( GetMaxHealth() );
-
-	// Update network variables
-	m_Shared.SetMaxHealth( GetMaxHealth() );
 
 	SetArmorValue( GetPlayerClass()->GetMaxArmor() );
 
@@ -1660,19 +1075,6 @@ void CTFPlayer::InitClass( void )
 
 	// Give default items for class.
 	GiveDefaultItems();
-
-	// Update player's color.
-	UpdatePlayerColor();
-
-	for ( int i = 0; i < MAX_ITEMS; i++ )
-	{
-		// player_bodygroups
-		CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase * >( Weapon_GetSlot( i ) );
-		if ( pWeapon )
-		{
-			pWeapon->UpdatePlayerBodygroups();
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1720,32 +1122,6 @@ void CTFPlayer::SendOffHandViewModelActivity( Activity activity )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFPlayer::ItemsMatch( CEconItemView *pItem1, CEconItemView *pItem2, CTFWeaponBase *pWeapon )
-{
-	if ( pItem1 && pItem2 )
-	{
-		if ( pItem1->GetItemDefIndex() != pItem2->GetItemDefIndex() )
-			return false;
-
-		// Item might have different entities for each class (i.e. shotgun).
-		if ( pWeapon )
-		{
-			int iClass = m_PlayerClass.GetClassIndex();
-			const char *pszClassname = TranslateWeaponEntForClass( pItem1->GetEntityName(), iClass );
-
-			if ( !FClassnameIs( pWeapon, pszClassname ) )
-				return false;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Set the player up with the default weapons, ammo, etc.
 //-----------------------------------------------------------------------------
 void CTFPlayer::GiveDefaultItems()
@@ -1755,135 +1131,62 @@ void CTFPlayer::GiveDefaultItems()
 
 	RemoveAllAmmo();
 
-	// Reset all bodygroups
-	for ( int i = 0; i < GetNumBodyGroups(); i++ )
-	{
-		SetBodygroup( i, 0 );
-	}
-
 	// Give ammo. Must be done before weapons, so weapons know the player has ammo for them.
 	for ( int iAmmo = 0; iAmmo < TF_AMMO_COUNT; ++iAmmo )
 	{
-		GiveAmmo( GetMaxAmmo( iAmmo ), iAmmo, false, TF_AMMO_SOURCE_RESUPPLY );
+		GiveAmmo( pData->m_aAmmoMax[iAmmo], iAmmo );
 	}
 
 	// Give weapons.
-	if ( lfe_random_weapons.GetBool() )
-		ManageRandomWeapons( pData );
-	else if ( lfe_force_legacy.GetBool() )
-		ManageRegularWeaponsLegacy( pData );
-	else
-		ManageRegularWeapons( pData );
-
-
-	// Give grenades.
-	//ManageGrenades( pData );
+	ManageRegularWeapons( pData );
 
 	// Give a builder weapon for each object the playerclass is allowed to build
 	ManageBuilderWeapons( pData );
 
 	// Give gravity gun if allowed.
-	if ( lfe_allow_team_weapons.GetBool() )
-		ManageTeamWeapons( pData );
-
-	// Equip weapons set by tf_player_equip
-	CBaseEntity	*pWeaponEntity = NULL;
-	while ( ( pWeaponEntity = gEntList.FindEntityByClassname( pWeaponEntity, "tf_player_equip" ) ) != NULL )
-	{
-		pWeaponEntity->Touch( this );
-	}
-
-	// Now that we've got weapons update our ammo counts since weapons may override max ammo.
-	for ( int iAmmo = 0; iAmmo < TF_AMMO_COUNT; ++iAmmo )
-	{
-		SetAmmoCount( GetMaxAmmo( iAmmo ), iAmmo );
-	}
-
-	if ( m_bRegenerating == false )
-	{
-		SetActiveWeapon( NULL );
-		Weapon_Switch( Weapon_GetSlot( 0 ) );
-		Weapon_SetLast( Weapon_GetSlot( 1 ) );
-	}
-
-	// We may have swapped away our current weapon at resupply locker.
-	if ( GetActiveWeapon() == NULL )
-		SwitchToNextBestWeapon( NULL );
-
-	int nMiniBuilding = 0;
-	CALL_ATTRIB_HOOK_INT( nMiniBuilding, wrench_builds_minisentry );
-
-	// If we've switched to/from gunslinger destroy all of our buildings
-	if ( nMiniBuilding == 0 )
-	{
-	    for (int i = GetObjectCount()-1; i >= 0; i--)
-	    {
-	        CBaseObject *obj = GetObject(i);
-	        Assert( obj );
-
-			if ( !obj->IsMiniBuilding() )
-			{
-				obj->DetonateObject();
-			}        
-		}
-	}
-	else if ( nMiniBuilding == 1 )
-	{
-	    for (int i = GetObjectCount()-1; i >= 0; i--)
-	    {
-	        CBaseObject *obj = GetObject(i);
-	        Assert( obj );
-
-			if ( obj )
-			{
-				obj->DetonateObject();
-			}        
-		}
-	}
+	ManageTeamWeapons( pData );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::ManageBuilderWeapons(TFPlayerClassData_t *pData)
+void CTFPlayer::ManageBuilderWeapons( TFPlayerClassData_t *pData )
 {
-	if (pData->m_aBuildable[0] != OBJ_LAST)
+	if ( pData->m_aBuildable[0] != OBJ_LAST )
 	{
-		CEconItemView *pItem = GetLoadoutItem(GetPlayerClass()->GetClassIndex(), TF_LOADOUT_SLOT_BUILDING);
-		CTFWeaponBase *pBuilder = Weapon_OwnsThisID(TF_WEAPON_BUILDER);
+		CTFWeaponBase *pBuilder = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
 
-		// Give the player a new builder weapon when they switch between engy and spy 
-		if (pBuilder && !GetPlayerClass()->CanBuildObject(pBuilder->GetSubType()))
+		// Give the player a new builder weapon when they switch between engy and spy
+		if ( pBuilder && !GetPlayerClass()->CanBuildObject( pBuilder->GetSubType() ) )
 		{
-			if (pBuilder == GetActiveWeapon())
-				pBuilder->Holster();
+			Weapon_Detach( pBuilder );
+			UTIL_Remove( pBuilder );
 
-			Weapon_Detach(pBuilder);
-			UTIL_Remove(pBuilder);
 			pBuilder = NULL;
 		}
-
-		if (pBuilder)
+		
+		if ( pBuilder )
 		{
 			pBuilder->GiveDefaultAmmo();
-			pBuilder->ChangeTeam(GetTeamNumber());
+			pBuilder->ChangeTeam( GetTeamNumber() );
 
-			if (m_bRegenerating == false)
+			if ( m_bRegenerating == false )
 			{
 				pBuilder->WeaponReset();
 			}
 		}
 		else
 		{
-			pBuilder = (CTFWeaponBase *)GiveNamedItem("tf_weapon_builder", pData->m_aBuildable[0], pItem);
+			pBuilder = (CTFWeaponBase *)GiveNamedItem( "tf_weapon_builder" );
 
-			if (pBuilder)
+			if ( pBuilder )
 			{
-				pBuilder->DefaultTouch(this);
+				pBuilder->SetSubType( pData->m_aBuildable[0] );
+				pBuilder->DefaultTouch( this );				
 			}
 		}
 
-		if (pBuilder)
+		if ( pBuilder )
 		{
 			pBuilder->m_nSkin = GetTeamNumber() - 2;	// color the w_model to the team
 		}
@@ -1891,100 +1194,13 @@ void CTFPlayer::ManageBuilderWeapons(TFPlayerClassData_t *pData)
 	else
 	{
 		//Not supposed to be holding a builder, nuke it from orbit
-		CTFWeaponBase *pWpn = Weapon_OwnsThisID(TF_WEAPON_BUILDER);
+		CTFWeaponBase *pWpn = Weapon_OwnsThisID( TF_WEAPON_BUILDER );
 
-		if (pWpn == NULL)
+		if ( pWpn == NULL )
 			return;
 
-		if (pWpn == GetActiveWeapon())
-			pWpn->Holster();
-
-		Weapon_Detach(pWpn);
-		UTIL_Remove(pWpn);
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ValidateWeapons( bool bRegenerate )
-{
-	int iClass = m_PlayerClass.GetClassIndex();
-
-	for ( int i = 0; i < WeaponCount(); i++ )
-	{
-		CTFWeaponBase *pWeapon = static_cast<CTFWeaponBase *>( GetWeapon( i ) );
-		if ( !pWeapon )
-			continue;
-
-		// Skip builder as we'll handle it separately.
-		if ( pWeapon->IsWeapon( TF_WEAPON_BUILDER ) )
-			continue;
-
-		CEconItemDefinition *pItemDef = pWeapon->GetItem()->GetStaticData();
-
-		if ( pItemDef )
-		{
-			int iSlot = pItemDef->GetLoadoutSlot( iClass );
-			CEconItemView *pLoadoutItem = GetLoadoutItem( iClass, iSlot );
-
-			if ( !ItemsMatch( pWeapon->GetItem(), pLoadoutItem, pWeapon ) && pWeapon->GetPosition() >= 0 )
-			{
-				// If this is not a weapon we're supposed to have in this loadout slot then nuke it.
-				// Either changed class or changed loadout.
-				// also nuke if it's in hl2 weapon position of a slot
-				pWeapon->Holster();
-				pWeapon->UnEquip( this );
-			}
-			else if ( bRegenerate )
-			{
-				pWeapon->ChangeTeam( GetTeamNumber() );
-				pWeapon->GiveDefaultAmmo();
-
-				if ( m_bRegenerating == false )
-				{
-					pWeapon->WeaponReset();
-				}
-			}
-		}
-		else
-		{
-			// Nuke any weapons without item definitions, they're evil!
-			pWeapon->UnEquip( this );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ValidateWearables( void )
-{
-	int iClass = m_PlayerClass.GetClassIndex();
-
-	for ( int i = 0; i < GetNumWearables(); i++ )
-	{
-		CTFWearable *pWearable = static_cast<CTFWearable *>( GetWearable( i ) );
-		if ( !pWearable )
-			continue;
-
-		CEconItemDefinition *pItemDef = pWearable->GetItem()->GetStaticData();
-
-		if ( pItemDef )
-		{
-			int iSlot = pItemDef->GetLoadoutSlot( iClass );
-			CEconItemView *pLoadoutItem = GetLoadoutItem( iClass, iSlot );
-
-			if ( !ItemsMatch( pWearable->GetItem(), pLoadoutItem, NULL ) )
-			{
-				// Not supposed to carry this wearable, nuke it.
-				RemoveWearable( pWearable );
-			}
-			else if ( m_bRegenerating == false )
-			{
-				pWearable->UpdateModelToClass();
-			}
-		}
+		Weapon_Detach( pWpn );
+		UTIL_Remove( pWpn );
 	}
 }
 
@@ -1993,183 +1209,29 @@ void CTFPlayer::ValidateWearables( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::ManageRegularWeapons( TFPlayerClassData_t *pData )
 {
-	ValidateWeapons( true );
-	ValidateWearables();
-
-	for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
-	{
-		if ( GetEntityForLoadoutSlot( iSlot ) != NULL )
-		{
-			// Nothing to do here.
-			continue;
-		}
-
-		// Give us an item from the inventory.
-		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), iSlot );
-
-		if ( pItem )
-		{
-			const char *pszClassname = pItem->GetEntityName();
-			Assert( pszClassname );
-
-			CEconEntity *pEntity = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, pItem ) );
-
-			if ( pEntity )
-			{
-				pEntity->GiveTo( this );
-			}
-		}
-	}
-
-	PostInventoryApplication();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Give us all weapons shared by our team.
-//-----------------------------------------------------------------------------
-void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
-{
-	if ( IsPlayerClass( TF_CLASS_UNDEFINED ) )
-		return;
-
-	CTFTeam *pTeam = GetTFTeam();
-
-	if ( !pTeam )
-		return;
-
-	// Remove any weapons that we're not supposed to carry.
-	for ( int i = 0; i < MAX_WEAPONS; i++ )
-	{
-		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( i );
-
-		if ( pWeapon )
-		{
-			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) )
-			{
-				// Not supposed to be carrying this weapon now delet.
-				Weapon_Detach( pWeapon );
-				UTIL_Remove( pWeapon );
-			}
-		}
-	}
-
-	int numWeapons = pTeam->GetNumWeapons();
-	for ( int i = 0; i < numWeapons; i++ )
-	{
-		int iWeaponID = pTeam->GetWeapon( i );
-
-		if ( iWeaponID == TF_WEAPON_NONE )
-			continue;
-
-		//const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
-
-		CTFWeaponBase *pWeapon = Weapon_OwnsThisID( iWeaponID );
-
-		if ( pWeapon )
-		{
-			pWeapon->ChangeTeam( GetTeamNumber() );
-			pWeapon->GiveDefaultAmmo();
-
-			if ( m_bRegenerating == false )
-			{
-				pWeapon->WeaponReset();
-			}
-		}
-		else
-		{
-			int iItemID = 9000;
-			if ( TFGameRules()->MegaPhyscannonActive())
-			{
-				iItemID = 9001;
-			}
-			else
-			{
-				iItemID = 9000;
-			}
-
-			CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
-			if ( !pItemDef )
-				return;
-
-			int iClass = GetPlayerClass()->GetClassIndex();
-			int iSlot = pItemDef->GetLoadoutSlot( iClass );
-			CEconEntity *pEntity = GetEntityForLoadoutSlot( iSlot );
-/*
-			pWeapon = (CTFWeaponBase *)GiveNamedItem( pszWeaponName );
-
-			if ( pWeapon )
-			{
-				pWeapon->DefaultTouch( this );
-			}
-*/
-
-			if ( pEntity )
-			{
-				CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
-
-				if ( pWeapon )
-				{
-					if ( pWeapon == GetActiveWeapon() )
-						pWeapon->Holster();
-
-					Weapon_Detach( pWeapon );
-					UTIL_Remove( pWeapon );
-				}
-				else
-				{
-					AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
-					UTIL_Remove( pEntity );
-				}
-			}
-
-			CEconItemView econItem( iItemID );
-			const char *pszClassname = pItemDef->item_class;
-			CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( GiveNamedItem( pszClassname, 0, &econItem ) );
-
-			if ( pEconEnt )
-			{
-				pEconEnt->GiveTo( this );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::PostInventoryApplication( void )
-{
-	m_Shared.RecalculatePlayerBodygroups();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ManageRegularWeaponsLegacy( TFPlayerClassData_t *pData )
-{
 	for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
 	{
-		int iWeaponID = GetTFInventory()->GetWeapon( m_PlayerClass.GetClassIndex(), iWeapon );
-
-		if ( iWeaponID != TF_WEAPON_NONE )
+		if ( pData->m_aWeapons[iWeapon] != TF_WEAPON_NONE )
 		{
+			int iWeaponID = pData->m_aWeapons[iWeapon];
 			const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
 
 			CTFWeaponBase *pWeapon = (CTFWeaponBase *)Weapon_GetSlot( iWeapon );
 
 			//If we already have a weapon in this slot but is not the same type then nuke it (changed classes)
-			if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID && pWeapon->GetPosition() >= 0 )
+			if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID )
 			{
-				pWeapon->UnEquip( this );
+				Weapon_Detach( pWeapon );
+				UTIL_Remove( pWeapon );
 			}
 
-			pWeapon = Weapon_OwnsThisID( iWeaponID );
+			pWeapon = (CTFWeaponBase *)Weapon_OwnsThisID( iWeaponID );
 
 			if ( pWeapon )
 			{
 				pWeapon->ChangeTeam( GetTeamNumber() );
 				pWeapon->GiveDefaultAmmo();
-
+	
 				if ( m_bRegenerating == false )
 				{
 					pWeapon->WeaponReset();
@@ -2198,29 +1260,55 @@ void CTFPlayer::ManageRegularWeaponsLegacy( TFPlayerClassData_t *pData )
 			}
 		}
 	}
+
+	if ( m_bRegenerating == false )
+	{
+		SetActiveWeapon( NULL );
+		Weapon_Switch( Weapon_GetSlot( 0 ) );
+		Weapon_SetLast( Weapon_GetSlot( 1 ) );
+	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Give us all weapons shared by our team.
 //-----------------------------------------------------------------------------
-void CTFPlayer::ManageRandomWeapons( TFPlayerClassData_t *pData )
+void CTFPlayer::ManageTeamWeapons( TFPlayerClassData_t *pData )
 {
-	// TODO: Make this work with Econ weapons. Not a priority atm.
-	for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
+	if ( IsPlayerClass( TF_CLASS_UNDEFINED ) )
+		return;
+
+	CTFTeam *pTeam = GetTFTeam();
+	
+	if ( !pTeam )
+		return;
+
+	// Remove any weapons that we're not supposed to carry.
+	for ( int i = 0; i < MAX_WEAPONS; i++ )
 	{
-		int iWeaponID = RandomInt( TF_WEAPON_NONE + 1, TF_WEAPON_COUNT - 1 );
+		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( i );
+
+		if ( pWeapon )
+		{
+			if ( pWeapon->GetWeaponID() >= TF_WEAPON_PHYSCANNON && !pTeam->HasWeapon( pWeapon->GetWeaponID() ) )
+			{
+				// Not supposed to be carrying this weapon, nuke it.
+				Weapon_Detach( pWeapon );
+				UTIL_Remove( pWeapon );
+			}
+		}
+	}
+
+	int numWeapons = pTeam->GetNumWeapons();
+	for ( int i = 0; i < numWeapons; i++ )
+	{
+		int iWeaponID = pTeam->GetWeapon( i );
+
+		if ( iWeaponID == TF_WEAPON_NONE )
+			continue;
+
 		const char *pszWeaponName = WeaponIdToClassname( iWeaponID );
 
-		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( iWeapon );
-
-		//If we already have a weapon in this slot but is not the same type then nuke it (changed classes)
-		if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID )
-		{
-			Weapon_Detach( pWeapon );
-			UTIL_Remove( pWeapon );
-		}
-
-		pWeapon = Weapon_OwnsThisID( iWeaponID );
+		CTFWeaponBase *pWeapon = Weapon_OwnsThisID( iWeaponID );
 
 		if ( pWeapon )
 		{
@@ -2244,140 +1332,7 @@ void CTFPlayer::ManageRandomWeapons( TFPlayerClassData_t *pData )
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ManageGrenades( TFPlayerClassData_t *pData )
-{
-	for ( int iGrenade = 0; iGrenade < TF_PLAYER_GRENADE_COUNT; iGrenade++ )
-	{
-		if ( pData->m_aGrenades[iGrenade] != TF_WEAPON_NONE )
-		{
-			CTFWeaponBase *pGrenade = (CTFWeaponBase *)GetWeapon( pData->m_aGrenades[iGrenade] );
-
-			//If we already have a weapon in this slot but is not the same type then nuke it (changed classes)
-			if ( pGrenade && pGrenade->GetWeaponID() != pData->m_aGrenades[iGrenade] )
-			{
-				Weapon_Detach( pGrenade );
-				UTIL_Remove( pGrenade );
-			}
-
-			pGrenade = (CTFWeaponBase *)Weapon_OwnsThisID( pData->m_aGrenades[iGrenade] );
-
-			if ( pGrenade )
-			{
-				pGrenade->ChangeTeam( GetTeamNumber() );
-				pGrenade->GiveDefaultAmmo();
-
-				if ( m_bRegenerating == false )
-				{
-					pGrenade->WeaponReset();
-				}
-			}
-			else
-			{
-				const char *pszGrenadeName = WeaponIdToClassname( pData->m_aGrenades[iGrenade] );
-				pGrenade = (CTFWeaponBase *)GiveNamedItem( pszGrenadeName );
-
-				if ( pGrenade )
-				{
-					pGrenade->DefaultTouch( this );
-				}
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Get preset from the vector
-//-----------------------------------------------------------------------------
-CEconItemView *CTFPlayer::GetLoadoutItem( int iClass, int iSlot )
-{
-	int iPreset = m_WeaponPreset[iClass][iSlot];
-
-	if ( lfe_force_legacy.GetBool() )
-		iPreset = 0;
-
-	return GetTFInventory()->GetItem( iClass, iSlot, iPreset );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: WeaponPreset command handle
-//-----------------------------------------------------------------------------
-void CTFPlayer::HandleCommand_WeaponPreset( int iSlotNum, int iPresetNum )
-{
-	int iClass = m_PlayerClass.GetClassIndex();
-
-	if ( !GetTFInventory()->CheckValidSlot( iClass, iSlotNum ) )
-		return;
-
-	if ( !GetTFInventory()->CheckValidWeapon( iClass, iSlotNum, iPresetNum ) )
-		return;
-
-	m_WeaponPreset[iClass][iSlotNum] = iPresetNum;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: WeaponPreset command handle
-//-----------------------------------------------------------------------------
-void CTFPlayer::HandleCommand_WeaponPreset( int iClass, int iSlotNum, int iPresetNum )
-{
-	if ( !GetTFInventory()->CheckValidSlot( iClass, iSlotNum ) )
-		return;
-
-	if ( !GetTFInventory()->CheckValidWeapon( iClass, iSlotNum, iPresetNum ) )
-		return;
-
-	m_WeaponPreset[iClass][iSlotNum] = iPresetNum;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Create and give the named item to the player, setting the item ID. Then return it.
-//-----------------------------------------------------------------------------
-CBaseEntity	*CTFPlayer::GiveNamedItem( const char *pszName, int iSubType, CEconItemView* pItem )
-{
-	const char *pszEntName = TranslateWeaponEntForClass( pszName, m_PlayerClass.GetClassIndex() );
-
-	// If I already own this type don't create one
-	if ( Weapon_OwnsThisType( pszEntName ) )
-		return NULL;
-
-	CBaseEntity *pEntity = CreateEntityByName( pszEntName );
-	
-	if ( pEntity == NULL )
-	{
-		Msg( "NULL Ent in GiveNamedItem!\n" );
-		return NULL;
-	}
-
-	CEconEntity *pEcon = dynamic_cast<CEconEntity *>( pEntity );
-	if ( pEcon && pItem )
-	{
-		pEcon->SetItem( *pItem );
-	}
-
-	pEntity->SetLocalOrigin( GetLocalOrigin() );
-	pEntity->AddSpawnFlags( SF_NORESPAWN );
-
-	CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
-	if ( pWeapon )
-	{
-		pWeapon->SetSubType( iSubType );
-	}
-
-	DispatchSpawn( pEntity );
-	pEntity->Activate();
-
-	if ( pEntity && !pEntity->IsMarkedForDeletion() )
-	{
-		pEntity->Touch( this );
-	}
-
-	return pEntity;
-}
-
-CBaseEntity *FindPlayerStart(const char *pszClassName);
+CBaseEntity *FindPlayerStart( const char *pszClassName );
 
 //-----------------------------------------------------------------------------
 // Purpose: Find a spawn point for the player.
@@ -2385,9 +1340,9 @@ CBaseEntity *FindPlayerStart(const char *pszClassName);
 CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 {
 	// If we have a temp spawn point set up then use that.
-	if ( m_hTempSpawnSpot )
+	if ( m_hTempSpawnSpot.Get() != NULL )
 	{
-		return ( m_hTempSpawnSpot.Get() );
+		return m_hTempSpawnSpot.Get();
 	}
 
 	CBaseEntity *pSpot = g_pLastSpawnPoints[ GetTeamNumber() ];
@@ -2398,11 +1353,8 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	case TF_TEAM_RED:
 	case TF_TEAM_BLUE:
 		{
-			bool bSuccess = false;
 			pSpawnPointName = "info_player_teamspawn";
-			bSuccess = SelectSpawnSpot( pSpawnPointName, pSpot );
-
-			if ( bSuccess )
+			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
 			{
 				g_pLastSpawnPoints[ GetTeamNumber() ] = pSpot;
 			}
@@ -2422,6 +1374,9 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 
 	if ( !pSpot )
 	{
+		Warning( "PutClientInServer: no %s on level\n", pSpawnPointName );
+
+		// Look for info_player_start
 		pSpot = FindPlayerStart( "info_player_start" );
 		if ( pSpot )
 			return pSpot;
@@ -2445,13 +1400,6 @@ bool CTFPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot 
 		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	}
 
-	if ( !pSpot )
-	{
-		// Still NULL? That means there're no spawn points at all, bail.
-		return false;
-	}
-
-
 	// First we try to find a spawn point that is fully clear. If that fails,
 	// we look for a spawnpoint that's clear except for another players. We
 	// don't collide with our team members, so we should be fine.
@@ -2466,7 +1414,7 @@ bool CTFPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot 
 			if( TFGameRules()->IsSpawnPointValid( pSpot, this, bIgnorePlayers ) )
 			{
 				// Check for a bad spawn entity.
-				if ( pSpot->GetAbsOrigin() == vec3_origin )
+				if ( pSpot->GetAbsOrigin() == Vector( 0, 0, 0 ) )
 				{
 					pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 					continue;
@@ -2603,116 +1551,7 @@ bool CTFPlayer::ShouldUseCoopSpawning( void )
 	if ( IsAlive() )
 		return false;
 
-	return ( IsOnStoryTeam() && TFGameRules()->IsCoOpGameRunning() || IsOnCombineTeam() && TFGameRules()->IsBluCoOpGameRunning() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFPlayer::SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot, bool bTelefrag /*= true*/ )
-{
-	// Get an initial spawn point.
-	pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-	if ( !pSpot )
-	{
-		// Sometimes the first spot can be NULL????
-		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-	}
-
-	if ( !pSpot )
-	{
-		// Still NULL? That means there're no spawn points at all, bail.
-		return false;
-	}
-
-	// Find spawn point that is furthest from all other players.
-	CBaseEntity *pFirstSpot = pSpot;
-	float flFurthest = 0.0f;
-	CBaseEntity *pFurthest = NULL;
-	do
-	{
-		if ( !pSpot )
-		{
-			pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-			continue;
-		}
-
-		// Check to see if this is a valid team spawn (player is on this team, etc.).
-		if ( TFGameRules()->IsSpawnPointValid( pSpot, this, true ) )
-		{
-			// Check for a bad spawn entity.
-			if ( pSpot->GetAbsOrigin() == vec3_origin )
-			{
-				pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-				continue;
-			}
-
-			// Check distance from other players.
-			bool bOtherPlayersPresent = false;
-			float flClosestPlayerDist = FLT_MAX;
-			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-				if ( !pPlayer || pPlayer == this || !pPlayer->IsAlive() || ( InSameTeam( pPlayer ) ) )
-					continue;
-
-				bOtherPlayersPresent = true;
-
-				float flDistSqr = ( pPlayer->GetAbsOrigin() - pSpot->GetAbsOrigin() ).LengthSqr();
-				if ( flDistSqr < flClosestPlayerDist )
-				{
-					flClosestPlayerDist = flDistSqr;
-				}
-			}
-
-			// If there are no other players just pick the first valid spawn point.
-			if ( !bOtherPlayersPresent )
-			{
-				pFurthest = pSpot;
-				break;
-			}
-
-			if ( flClosestPlayerDist > flFurthest )
-			{
-				flFurthest = flClosestPlayerDist;
-				pFurthest = pSpot;
-			}
-		}
-
-		// Get the next spawning point to check.
-		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-	}
-	// Continue until a valid spawn point is found or we hit the start.
-	while ( pSpot != pFirstSpot );
-
-	if ( pFurthest )
-	{
-		if ( bTelefrag )
-		{
-			// Kill off anyone occupying this spot if it's somehow busy.
-			CBaseEntity *pList[MAX_PLAYERS];
-			Vector vecMins = pSpot->GetAbsOrigin() + VEC_HULL_MIN;
-			Vector vecMaxs = pSpot->GetAbsOrigin() + VEC_HULL_MAX;
-			int count = UTIL_EntitiesInBox( pList, MAX_PLAYERS, vecMins, vecMaxs, FL_CLIENT );
-
-			for ( int i = 0; i < count; i++ )
-			{
-				CBaseEntity *pEntity = pList[i];
-				if ( pEntity != this && ( !InSameTeam( pEntity ) ) )
-				{
-					CTakeDamageInfo info( this, this, 1000, DMG_CRUSH, TF_DMG_CUSTOM_TELEFRAG );
-					pEntity->TakeDamage( info );
-				}
-			}
-		}
-
-		pSpot = pFurthest;
-
-		// Found a valid spawn point.
-		return true;
-	}
-
-	return false;
+	return ( IsOnStoryTeam() && TFGameRules()->IsCoOpGameRunning() );
 }
 
 //-----------------------------------------------------------------------------
@@ -2751,41 +1590,41 @@ int CTFPlayer::GetAutoTeam( void )
 {
 	int iTeam = TEAM_SPECTATOR;
 
-	CTFTeam *pBlue = TFTeamMgr()->GetTeam(TF_TEAM_BLUE);
-	CTFTeam *pRed = TFTeamMgr()->GetTeam(TF_TEAM_RED);
+	CTFTeam *pBlue = TFTeamMgr()->GetTeam( TF_TEAM_BLUE );
+	CTFTeam *pRed = TFTeamMgr()->GetTeam( TF_TEAM_RED );
 
-		if (pBlue && pRed)
+	if ( pBlue && pRed )
+	{
+		if ( TFGameRules()->IsCoOp() )
 		{
-			if ( TFGameRules()->IsCoOp() )
+			if ( TFGameRules()->IsVersus() )
 			{
-				if ( TFGameRules()->IsVersus() )
+				// Check RED for min amount of players.
+				if ( pRed->GetNumPlayers() < lf_coop_min_red_players.GetInt() )
 				{
-					// Check RED for min amount of players.
-					if ( pRed->GetNumPlayers() < lfe_coop_min_red_players.GetInt() )
-					{
-						iTeam = TF_TEAM_RED;
-					}
+					return TF_TEAM_RED;
 				}
-				else
-				{
-					// Always join RED in co-op.
-					iTeam = TF_TEAM_RED;
-				}
-			}
-
-			if (pBlue->GetNumPlayers() < pRed->GetNumPlayers())
-			{
-				iTeam = TF_TEAM_BLUE;
-			}
-			else if (pRed->GetNumPlayers() < pBlue->GetNumPlayers())
-			{
-				iTeam = TF_TEAM_RED;
 			}
 			else
 			{
-				iTeam = RandomInt(0, 1) ? TF_TEAM_RED : TF_TEAM_BLUE;
+				// Always join RED in co-op.
+				return TF_TEAM_RED;
 			}
 		}
+
+		if ( pBlue->GetNumPlayers() < pRed->GetNumPlayers() )
+		{
+			iTeam = TF_TEAM_BLUE;
+		}
+		else if ( pRed->GetNumPlayers() < pBlue->GetNumPlayers() )
+		{
+			iTeam = TF_TEAM_RED;
+		}
+		else
+		{
+			iTeam = RandomInt( 0, 1 ) ? TF_TEAM_RED : TF_TEAM_BLUE;
+		}
+	}
 
 	return iTeam;
 }
@@ -2794,131 +1633,6 @@ int CTFPlayer::GetAutoTeam( void )
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
-{
-		int iTeam = TF_TEAM_RED;
-		if ( stricmp( pTeamName, "auto" ) == 0 )
-		{
-			iTeam = GetAutoTeam();
-		}
-		else if ( stricmp( pTeamName, "spectate" ) == 0 )
-		{
-			iTeam = TEAM_SPECTATOR;
-		}
-		else
-		{
-			for ( int i = 0; i < TF_TEAM_COUNT; ++i )
-			{
-				if ( stricmp( pTeamName, g_aTeamNames[i] ) == 0 )
-				{
-					iTeam = i;
-					break;
-				}
-			}
-		}
-
-		if (iTeam == GetTeamNumber())
-		{
-			return;	// we wouldn't change the team
-		}
-		if ((iTeam == TF_TEAM_BLUE && TFGameRules()->IsCoOp()) || (iTeam == TF_TEAM_RED && TFGameRules()->IsBluCoOp()) || (TFGameRules()->IsZombieSurvival() && iTeam == TF_TEAM_BLUE))
-		{
-			return;
-		}
-
-		if ( HasTheFlag() )
-		{
-			DropFlag();
-			DropPowerups();
-		}
-
-		if ( iTeam == TEAM_SPECTATOR )
-		{
-			// Prevent this is the cvar is set
-			if ( !mp_allowspectators.GetInt() && !IsHLTV() )
-			{
-				ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
-				return;
-			}
-		
-			if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
-			{
-				CommitSuicide( false, true );
-			}
-
-			ChangeTeam( TEAM_SPECTATOR );
-
-			// do we have fadetoblack on? (need to fade their screen back in)
-			if ( mp_fadetoblack.GetBool() )
-			{
-				color32_s clr = { 0,0,0,255 };
-				UTIL_ScreenFade( this, clr, 0, 0, FFADE_IN | FFADE_PURGE );
-			}
-		}
-		else
-		{
-			// if this join would unbalance the teams, refuse
-			// come up with a better way to tell the player they tried to join a full team!
-			if ( TFGameRules()->WouldChangeUnbalanceTeams( iTeam, GetTeamNumber() ) )
-			{
-				ShowViewPortPanel( PANEL_TEAM );
-				return;
-			}
-
-			ChangeTeam( iTeam );
-
-			switch ( iTeam )
-			{
-			case TF_TEAM_RED:
-				ShowViewPortPanel( PANEL_CLASS_RED );
-				break;
-
-			case TF_TEAM_BLUE:
-				ShowViewPortPanel( PANEL_CLASS_BLUE );
-				break;
-			}
-		}
-		CheckTeam();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Join a team without using the game menus
-//-----------------------------------------------------------------------------
-void CTFPlayer::HandleCommand_JoinTeam_NoMenus( const char *pTeamName )
-{
-	Assert( IsX360() );
-
-	Msg( "Client command HandleCommand_JoinTeam_NoMenus: %s\n", pTeamName );
-
-	// Only expected to be used on the 360 when players leave the lobby to start a new game
-	if ( !IsInCommentaryMode() )
-	{
-		Assert( GetTeamNumber() == TEAM_UNASSIGNED );
-		Assert( IsX360() );
-	}
-
-	if (!TFGameRules()->IsAnyCoOp() && !TFGameRules()->IsZombieSurvival())
-	{
-		int iTeam = TEAM_SPECTATOR;
-		if ( Q_stricmp( pTeamName, "spectate" ) )
-		{
-			for ( int i = 0; i < TF_TEAM_COUNT; ++i )
-			{
-				if ( stricmp( pTeamName, g_aTeamNames[i] ) == 0 )
-				{
-					iTeam = i;
-					break;
-				}
-			}
-		}
-
-	ForceChangeTeam( iTeam );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Join a team without suiciding
-//-----------------------------------------------------------------------------
-void CTFPlayer::HandleCommand_JoinTeam_NoKill( const char *pTeamName )
 {
 	int iTeam = TF_TEAM_RED;
 	if ( stricmp( pTeamName, "auto" ) == 0 )
@@ -2946,7 +1660,89 @@ void CTFPlayer::HandleCommand_JoinTeam_NoKill( const char *pTeamName )
 		return;	// we wouldn't change the team
 	}
 
-	BaseClass::ChangeTeam( iTeam );
+	if (HasTheFlag())
+	{
+		DropFlag();
+	}
+
+	if (iTeam == TEAM_SPECTATOR)
+	{
+		// Prevent this is the cvar is set
+		if ( !mp_allowspectators.GetInt() && !IsHLTV() )
+		{
+			ClientPrint( this, HUD_PRINTCENTER, "#Cannot_Be_Spectator" );
+			return;
+		}
+		
+		if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsDead() )
+		{
+			CommitSuicide( false, true );
+		}
+
+		ChangeTeam( TEAM_SPECTATOR );
+
+		// do we have fadetoblack on? (need to fade their screen back in)
+		if ( mp_fadetoblack.GetBool() )
+		{
+			color32_s clr = { 0,0,0,255 };
+			UTIL_ScreenFade( this, clr, 0, 0, FFADE_IN | FFADE_PURGE );
+		}
+	}
+	else
+	{
+		// if this join would unbalance the teams, refuse
+		// come up with a better way to tell the player they tried to join a full team!
+		if ( TFGameRules()->WouldChangeUnbalanceTeams( iTeam, GetTeamNumber() ) )
+		{
+			ShowViewPortPanel( PANEL_TEAM );
+			return;
+		}
+
+		ChangeTeam( iTeam );
+
+		switch (iTeam)
+		{
+			case TF_TEAM_RED:
+				ShowViewPortPanel(PANEL_CLASS_RED);
+				break;
+
+			case TF_TEAM_BLUE:
+				ShowViewPortPanel(PANEL_CLASS_BLUE);
+				break;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Join a team without using the game menus
+//-----------------------------------------------------------------------------
+void CTFPlayer::HandleCommand_JoinTeam_NoMenus( const char *pTeamName )
+{
+	Assert( IsX360() );
+
+	Msg( "Client command HandleCommand_JoinTeam_NoMenus: %s\n", pTeamName );
+
+	// Only expected to be used on the 360 when players leave the lobby to start a new game
+	if ( !IsInCommentaryMode() )
+	{
+		Assert( GetTeamNumber() == TEAM_UNASSIGNED );
+		Assert( IsX360() );
+	}
+
+	int iTeam = TEAM_SPECTATOR;
+	if ( Q_stricmp( pTeamName, "spectate" ) )
+	{
+		for ( int i = 0; i < TF_TEAM_COUNT; ++i )
+		{
+			if ( stricmp( pTeamName, g_aTeamNames[i] ) == 0 )
+			{
+				iTeam = i;
+				break;
+			}
+		}
+	}
+
+	ForceChangeTeam( iTeam );
 }
 
 //-----------------------------------------------------------------------------
@@ -2973,7 +1769,7 @@ void CTFPlayer::ForceChangeTeam( int iTeamNum )
 	if ( iNewTeam == iOldTeam )
 		return;
 
-	RemoveAllOwnedEntitiesFromWorld( false );
+	RemoveAllObjects(false);
 	RemoveNemesisRelationships();
 
 	BaseClass::ChangeTeam( iNewTeam );
@@ -3023,7 +1819,7 @@ void CTFPlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent )
 	if ( iTeamNum == iOldTeam )
 		return;
 
-	RemoveAllOwnedEntitiesFromWorld( false );
+	RemoveAllObjects(false);
 	RemoveNemesisRelationships();
 
 	BaseClass::ChangeTeam( iTeamNum, false, bSilent );
@@ -3043,7 +1839,7 @@ void CTFPlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent )
 	}
 	else // active player
 	{
-		if ( !IsDead() && ( iOldTeam >= FIRST_GAME_TEAM ) )
+		if ( !IsDead() && ( iOldTeam == TF_TEAM_RED || iOldTeam == TF_TEAM_BLUE ) )
 		{
 			// Kill player if switching teams while alive
 			CommitSuicide( false, true );
@@ -3076,9 +1872,6 @@ void CTFPlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 {
-	if ( GetNextChangeClassTime() > gpGlobals->curtime )
-		return;
-
 	// can only join a class after you join a valid team
 	if ( GetTeamNumber() <= LAST_SHARED_TEAM )
 		return;
@@ -3099,7 +1892,7 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 	int iClass = TF_CLASS_UNDEFINED;
 	bool bShouldNotRespawn = false;
 
-	if ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN )
+	if ( ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && ( TFGameRules()->GetWinningTeam() != GetTeamNumber() ) )
 	{
 		m_bAllowInstantSpawn = false;
 		bShouldNotRespawn = true;
@@ -3107,11 +1900,9 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 
 	if ( stricmp( pClassName, "random" ) != 0 )
 	{
-		int iLastClass = TF_LAST_NORMAL_CLASS;
-
 		int i = 0;
 
-		for ( i = TF_FIRST_NORMAL_CLASS; i < TF_CLASS_COUNT_ALL; i++ )
+		for ( i = TF_CLASS_SCOUT ; i < TF_CLASS_COUNT_ALL ; i++ )
 		{
 			if ( stricmp( pClassName, GetPlayerClassData( i )->m_szClassName ) == 0 )
 			{
@@ -3119,25 +1910,20 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 				break;
 			}
 		}
-		
-		if ( i > iLastClass )
+		if ( i > TF_LAST_NORMAL_CLASS )
 		{
-			ClientPrint( this, HUD_PRINTCONSOLE, UTIL_VarArgs( "Invalid class name \"%s\".\n", pClassName ) );
+			Warning( "HandleCommand_JoinClass( %s ) - invalid class name.\n", pClassName );
 			return;
 		}
 	}
 	else
 	{
 		// The player has selected Random class...so let's pick one for them.
-		do
-		{
+		do{
 			// Don't let them be the same class twice in a row
 			iClass = random->RandomInt( TF_FIRST_NORMAL_CLASS, TF_LAST_NORMAL_CLASS );
 		} while( iClass == GetPlayerClass()->GetClassIndex() );
 	}
-
-	if ( !TFGameRules()->CanPlayerChooseClass( this, iClass ) )
-		return;
 
 	// joining the same class?
 	if ( iClass != TF_CLASS_RANDOM && iClass == GetDesiredPlayerClassIndex() )
@@ -3151,8 +1937,6 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 		}
 		return;
 	}
-
-	SetNextChangeClassTime(gpGlobals->curtime + 2.0f);
 
 	SetDesiredPlayerClassIndex( iClass );
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_changeclass" );
@@ -3188,22 +1972,15 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 		// by spectating someone inside a respawn room.
 		bInRespawnRoom = (GetObserverTarget() == this);
 	}
-	bool bDeadInstantSpawn = !IsAlive();
-	if ( bDeadInstantSpawn && m_flDeathTime )
-	{
-		// In death mode, don't allow class changes to force respawns ahead of respawn waves
-		float flWaveTime = TFGameRules()->GetNextRespawnWave( GetTeamNumber(), this );
-		bDeadInstantSpawn = (gpGlobals->curtime > flWaveTime);
-	}
 	bool bInStalemateClassChangeTime = false;
 	if ( TFGameRules()->InStalemate() )
 	{
 		// Stalemate overrides respawn rules. Only allow spawning if we're in the class change time.
 		bInStalemateClassChangeTime = TFGameRules()->CanChangeClassInStalemate();
-		bDeadInstantSpawn = false;
 		bInRespawnRoom = false;
 	}
-	if ( bShouldNotRespawn == false && ( m_bAllowInstantSpawn || bDeadInstantSpawn || bInRespawnRoom || bInStalemateClassChangeTime ) )
+	
+	if ( bShouldNotRespawn == false && ( m_bAllowInstantSpawn || bInRespawnRoom || bInStalemateClassChangeTime ) )
 	{
 		ForceRespawn();
 		return;
@@ -3235,7 +2012,8 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 	if ( IsAlive() && ( GetHudClassAutoKill() == true ) && bShouldNotRespawn == false )
 	{
 		CommitSuicide( false, true );
-		RemoveAllObjects( false );
+		if ( GetPlayerClass()->GetClassIndex() == TF_CLASS_ENGINEER )
+			RemoveAllObjects( false );
 	}
 }
 
@@ -3286,7 +2064,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			}
 			return true;
 		}
-		return false;
 	}
 	else if ( FStrEq( pcmd, "removecond" ) )
 	{
@@ -3299,7 +2076,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			}
 			return true;
 		}
-		return false;
 	}
 	else if ( FStrEq( pcmd, "burn" ) ) 
 	{
@@ -3308,15 +2084,9 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			m_Shared.Burn( this );
 			return true;
 		}
-		return false;
 	}
 	else if ( FStrEq( pcmd, "jointeam" ) )
 	{
-		if (gpGlobals->curtime < GetNextChangeTeamTime())
-			return false;
-
-		SetNextChangeTeamTime(gpGlobals->curtime + 2.0f);
-
 		if ( args.ArgC() >= 2 )
 		{
 			HandleCommand_JoinTeam( args[1] );
@@ -3330,18 +2100,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			if ( args.ArgC() >= 2 )
 			{
 				HandleCommand_JoinTeam_NoMenus( args[1] );
-			}
-			return true;
-		}
-		return false;
-	}
-	else if ( FStrEq( pcmd, "jointeam_nokill" ) )
-	{
-		if ( sv_cheats->GetBool() )
-		{
-			if ( args.ArgC() >= 2 )
-			{
-				HandleCommand_JoinTeam_NoKill( args[1] );
 			}
 			return true;
 		}
@@ -3379,62 +2137,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 		}
 		return true;
 	}
-	else if (FStrEq(pcmd, "weaponpreset"))
-	{
-		if (args.ArgC() >= 3)
-		{
-			HandleCommand_WeaponPreset(abs(atoi(args[1])), abs(atoi(args[2])));
-		}
-		return true;
-	}
-	else if (FStrEq(pcmd, "weaponpresetclass"))
-	{
-		if (args.ArgC() >= 4)
-		{
-			HandleCommand_WeaponPreset(abs(atoi(args[1])), abs(atoi(args[2])), abs(atoi(args[3])));
-		}
-		return true;
-	}
-	else if ( FStrEq( pcmd, "getweaponinfos" ) )
-	{
-		for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
-		{
-			CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( iWeapon );
-
-			if ( pWeapon && pWeapon->HasItemDefinition() )
-			{
-				CEconItemView *econItem = pWeapon->GetItem();
-				CEconItemDefinition *itemdef = econItem->GetStaticData();
-
-				if ( itemdef )
-				{
-					Msg( "ItemID %i:\nname %s\nitem_class %s\nitem_type_name %s\n",
-						pWeapon->GetItemID(), itemdef->name, itemdef->item_class, itemdef->item_type_name );
-
-					Msg( "Attributes:\n" );
-					for ( int i = 0; i < itemdef->attributes.Count(); i++ )
-					{
-						CEconItemAttribute *pAttribute = &itemdef->attributes[i];
-						EconAttributeDefinition *pStatic = pAttribute->GetStaticData();
-
-						if ( pStatic )
-						{
-							float value = pAttribute->value;
-							if ( pStatic->description_format == ATTRIB_FORMAT_PERCENTAGE || pStatic->description_format == ATTRIB_FORMAT_INVERTED_PERCENTAGE )
-							{
-								value *= 100.0f;
-							}
-
-							Msg( "%s %g\n", pStatic->description_string, value );
-						}
-					}
-					Msg( "\n" );
-				}
-			}
-
-		}
-		return true;
-	}
 	else if ( FStrEq( pcmd, "disguise" ) ) 
 	{
 		if ( args.ArgC() >= 3 )
@@ -3446,24 +2148,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 				
 				// intercepting the team value and reassigning what gets passed into Disguise()
 				// because the team numbers in the client menu don't match the #define values for the teams
-				/*
-					switch (nTeam)
-					{
-					case 0:
-						m_Shared.Disguise(TF_TEAM_RED, nClass);
-						break;
-					case 1:
-						m_Shared.Disguise(TF_TEAM_BLUE, nClass);
-						break;
-					case 2:
-						m_Shared.Disguise(TF_TEAM_GREEN, nClass);
-						break;
-					case 3:
-						m_Shared.Disguise(TF_TEAM_YELLOW, nClass);
-						break;
-					}*/
-
-					m_Shared.Disguise((nTeam == 1) ? TF_TEAM_BLUE : TF_TEAM_RED, nClass);
+				m_Shared.Disguise( ( nTeam == 1 ) ? TF_TEAM_BLUE : TF_TEAM_RED, nClass );
 			}
 		}
 		return true;
@@ -3476,9 +2161,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			// disguise as the previous class, if one exists
 			int nClass = m_Shared.GetDesiredDisguiseClass();
 
-			// PistonMiner: try and disguise as the previous team
-			int nTeam = m_Shared.GetDesiredDisguiseTeam();
-
 			//If we pass in "random" or whatever then just make it pick a random class.
 			if ( args.ArgC() > 1 )
 			{
@@ -3489,19 +2171,13 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			{
 				// they haven't disguised yet, pick a nice one for them.
 				// exclude some undesirable classes 
-
-				// PistonMiner: Made it so it doesnt pick your own team.
 				do
 				{
 					nClass = random->RandomInt( TF_FIRST_NORMAL_CLASS, TF_LAST_NORMAL_CLASS );
-					
-					//	nTeam = random->RandomInt( TF_TEAM_RED, TF_TEAM_YELLOW );
-						GetTeamNumber() == TF_TEAM_BLUE ? nTeam = TF_TEAM_RED : nTeam = TF_TEAM_BLUE;
-
-				} while( nClass == TF_CLASS_SCOUT || nClass == TF_CLASS_SPY || nTeam == GetTeamNumber() );
+				} while( nClass == TF_CLASS_SCOUT || nClass == TF_CLASS_SPY );
 			}
 
-			m_Shared.Disguise( nTeam, nClass );
+			m_Shared.Disguise( ( GetTeamNumber() == TF_TEAM_BLUE ) ? TF_TEAM_RED : TF_TEAM_BLUE, nClass );
 		}
 
 		return true;
@@ -3574,66 +2250,24 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( FStrEq( pcmd, "build" ) )
 	{
-		int iBuilding = 0;
-		int iMode = 0;
-
 		if ( args.ArgC() == 2 )
 		{
 			// player wants to build something
-			iBuilding = atoi( args[ 1 ] );
-			iMode = 0;
+			int iBuilding = atoi( args[ 1 ] );
 
-			if (iBuilding == 3)
-				iBuilding = iMode = 1;
-
-			StartBuildingObjectOfType( iBuilding, iMode );
+			StartBuildingObjectOfType( iBuilding );
 		}
-		else if ( args.ArgC() == 3 )
-		{
-			// player wants to build something
-			iBuilding = atoi( args[ 1 ] );
-			iMode = atoi( args[ 2 ] );
-
-			StartBuildingObjectOfType( iBuilding, iMode );
-		}
-		else
-		{
-			Warning( "Usage: build <building> <mode>\n" );
-			return true;
-		}
-
 		return true;
 	}
 	else if ( FStrEq( pcmd, "destroy" ) )
 	{
-		int iBuilding = 0;
-		int iMode = 0;
-
 		if ( args.ArgC() == 2 )
 		{
 			// player wants to destroy something
-			iBuilding = atoi( args[ 1 ] );
-			iMode = 0;
+			int iBuilding = atoi( args[ 1 ] );
 
-			if ( iBuilding == 3 )
-				iBuilding = iMode = 1;
-
-			DetonateOwnedObjectsOfType( iBuilding, iMode );
+			DetonateOwnedObjectsOfType( iBuilding );
 		}
-		else if ( args.ArgC() == 3 )
-		{
-			// player wants to destroy something
-			iBuilding = atoi( args[ 1 ] );
-			iMode = atoi( args[ 2 ] );
-
-			DetonateOwnedObjectsOfType( iBuilding, iMode );
-		}
-		else
-		{
-			Warning( "Usage: destroy <building> <mode>\n" );
-			return true;
-		}
-
 		return true;
 	}
 	else if ( FStrEq( pcmd, "extendfreeze" ) )
@@ -3657,7 +2291,8 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	{
 		if ( !PlayerHasPowerplay() )
 		{
-			return false;
+			Msg("Console dumping on.\n");
+			return true;
 		}
 		else 
 		{
@@ -3684,7 +2319,8 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	{
 		if ( !PlayerHasPowerplay() )
 		{
-			return false;
+			Msg("Console dumping off.\n");
+			return true;
 		}
 		else
 		{
@@ -3704,28 +2340,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			{
 				if ( SetPowerplayEnabled( false ) )
 					return true;
-			}
-		}
-	}
-	else if ( FStrEq( pcmd, "condump_train" ) )
-	{
-		if ( !PlayerIsDevTrain() )
-		{
-			return false;
-		}
-		else 
-		{
-			if ( args.ArgC() == 2 && GetTeam() )
-			{
-				for ( int i = 0; i < GetTeam()->GetNumPlayers(); i++ )
-				{
-					CTFPlayer *pTeamPlayer = ToTFPlayer( GetTeam()->GetPlayer(i) );
-					if ( pTeamPlayer )
-					{
-						pTeamPlayer->SetModel( "models/props_trainyard/bomb_cart_red.mdl" );
-					}
-				}
-				return true;
 			}
 		}
 	}
@@ -3818,7 +2432,7 @@ bool CTFPlayer::CanDisguise( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::DetonateOwnedObjectsOfType( int iType, int iMode )
+void CTFPlayer::DetonateOwnedObjectsOfType( int iType )
 {
 	int i;
 	int iNumObjects = GetObjectCount();
@@ -3826,7 +2440,7 @@ void CTFPlayer::DetonateOwnedObjectsOfType( int iType, int iMode )
 	{
 		CBaseObject *pObj = GetObject(i);
 
-		if ( pObj && pObj->GetType() == iType && pObj->GetObjectMode() == iMode )
+		if ( pObj && pObj->GetType() == iType )
 		{
 			SpeakConceptIfAllowed( MP_CONCEPT_DETONATED_OBJECT, pObj->GetResponseRulesModifier() );
 			pObj->DetonateObject();
@@ -3859,10 +2473,10 @@ void CTFPlayer::DetonateOwnedObjectsOfType( int iType, int iMode )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::StartBuildingObjectOfType( int iType, int iMode )
+void CTFPlayer::StartBuildingObjectOfType( int iType )
 {
 	// early out if we can't build this type of object
-	if ( CanBuild( iType, iMode ) != CB_CAN_BUILD )
+	if ( CanBuild( iType ) != CB_CAN_BUILD )
 		return;
 
 	for ( int i = 0; i < WeaponCount(); i++) 
@@ -3881,7 +2495,6 @@ void CTFPlayer::StartBuildingObjectOfType( int iType, int iMode )
 		if ( pBuilder )
 		{
 			pBuilder->SetSubType( iType );
-			pBuilder->SetObjectMode( iMode );
 
 			if ( GetActiveTFWeapon() == pBuilder )
 			{
@@ -3899,7 +2512,7 @@ void CTFPlayer::StartBuildingObjectOfType( int iType, int iMode )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: 
 //-----------------------------------------------------------------------------
 void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
@@ -3908,7 +2521,7 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
 	if ( pTFAttacker )
- 	{
+	{
 		// Prevent team damage here so blood doesn't appear
 		if ( !g_pGameRules->FPlayerCanTakeDamage( this, pTFAttacker, info ) )
 			return;
@@ -3928,36 +2541,19 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		switch ( ptr->hitgroup )
 		{
 		case HITGROUP_HEAD:
+		{
+			CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
+
+			if ( pWeapon && pWeapon->CanFireCriticalShot( true ) )
 			{
-				CTFWeaponBase *pWpn = pTFAttacker->GetActiveTFWeapon();
+				info_modified.AddDamageType( DMG_CRITICAL );
+				info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
 
-				float flDamage = info_modified.GetDamage();
-				bool bCritical = true;
-
-				if ( pWpn && !pWpn->CanFireCriticalShot( true ) )
-				{
-					bCritical = false;
-				}
-
-				if ( bCritical )
-				{
-					info_modified.AddDamageType( DMG_CRITICAL );
-					info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
-
-					// play the critical shot sound to the shooter	
-					if ( pWpn )
-					{
-						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) || pWpn->IsWeapon( TF_WEAPON_REVOLVER ) )
-							pWpn->WeaponSound( BURST );
-
-						CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flDamage, headshot_damage_modify );
-					}
-				}
-
-				info_modified.SetDamage( flDamage );
-
-				break;
+				// play the critical shot sound to the shooter	
+				pWeapon->WeaponSound( BURST );
 			}
+			break;
+		}
 		default:
 			break;
 		}
@@ -3967,34 +2563,18 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 	{
 		// no impact effects
 	}
-	else if ( m_Shared.IsInvulnerable() )
+	else if ( m_Shared.InCond( TF_COND_INVULNERABLE ) )
 	{ 
 		// Make bullet impacts
 		g_pEffects->Ricochet( ptr->endpos - (vecDir * 8), -vecDir );
 	}
-	else if( m_Shared.InCond( TF_COND_PHASE ) )
-	{
-		CEffectData	data;
-		data.m_nHitBox = GetParticleSystemIndex( "miss_text" );
-		data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-		data.m_vAngles = vec3_angle;
-		data.m_nEntIndex = 0;
-
-		CSingleUserRecipientFilter filter( ToBasePlayer( info.GetAttacker() ) );
-		te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-		SpeakConceptIfAllowed( MP_CONCEPT_DODGE_SHOT );
-	}
 	else
-	{
-		if ( !m_Shared.InCond( TF_COND_PHASE ) )
-		{
-			// Since this code only runs on the server, make sure it shows the tempents it creates.
-			CDisablePredictionFiltering disabler;
+	{	
+		// Since this code only runs on the server, make sure it shows the tempents it creates.
+		CDisablePredictionFiltering disabler;
 
-			// This does smaller splotches on the guy and splats blood on the world.
-			TraceBleed( info_modified.GetDamage(), vecDir, ptr, info_modified.GetDamageType() );
-		}
+		// This does smaller splotches on the guy and splats blood on the world.
+		TraceBleed( info_modified.GetDamage(), vecDir, ptr, info_modified.GetDamageType() );
 	}
 
 	AddMultiDamage( info_modified, this );
@@ -4005,7 +2585,7 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 //-----------------------------------------------------------------------------
 int CTFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
-	int iResult = false;
+	int bResult = false;
 
 	// If the bit's set, add over the max health
 	if ( bitsDamageType & DMG_IGNORE_MAXHEALTH )
@@ -4013,12 +2593,12 @@ int CTFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 		int iTimeBasedDamage = g_pGameRules->Damage_GetTimeBased();
 		m_bitsDamageType &= ~(bitsDamageType & ~iTimeBasedDamage);
 		m_iHealth += flHealth;
-		iResult = (int)flHealth;
+		bResult = true;
 	}
 	else
 	{
 		float flHealthToAdd = flHealth;
-		float flMaxHealth = GetMaxHealth();
+		float flMaxHealth = GetPlayerClass()->GetMaxHealth();
 		
 		// don't want to add more than we're allowed to have
 		if ( flHealthToAdd > flMaxHealth - m_iHealth )
@@ -4028,15 +2608,15 @@ int CTFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 
 		if ( flHealthToAdd <= 0 )
 		{
-			iResult = 0;
+			bResult = false;
 		}
 		else
 		{
-			iResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
+			bResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
 		}
 	}
 
-	return iResult;
+	return bResult;
 }
 
 //-----------------------------------------------------------------------------
@@ -4088,9 +2668,52 @@ void CTFPlayer::DropFlag( void )
 
 				gameeventmanager->FireEvent( event );
 			}
-			RemoveGlowEffect();
 		}
 	}
+}
+
+bool CTFPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
+{
+	if ( dynamic_cast<CTFWeaponBase *>( pWeapon ) != NULL )
+		return BaseClass::BumpWeapon( pWeapon );
+
+	// TF players must NOT be able to use non-TF weapons. So make them restore 10% ammo for players.
+
+	// Can I have this weapon type?
+	if ( !IsAllowedToPickupWeapons() )
+		return false;
+
+	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
+	if( pWeapon->FVisible( this, MASK_SOLID ) == false && !(GetFlags() & FL_NOTARGET) )
+		return false;
+
+	bool bSuccess = false;
+
+	int iMaxPrimary = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_PRIMARY];
+	if ( GiveAmmo( ceil(iMaxPrimary * 0.10f), TF_AMMO_PRIMARY ) )
+	{
+		bSuccess = true;
+	}
+
+	int iMaxSecondary = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_SECONDARY];
+	if ( GiveAmmo( ceil(iMaxSecondary * 0.10f), TF_AMMO_SECONDARY ) )
+	{
+		bSuccess = true;
+	}
+
+	int iMaxMetal = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_METAL];
+	if ( GiveAmmo( ceil(iMaxMetal * 0.10f), TF_AMMO_METAL ) )
+	{
+		bSuccess = true;
+	}
+
+	// did we give them anything?
+	if ( bSuccess )
+	{
+		UTIL_Remove( pWeapon );
+	}
+
+	return bSuccess;
 }
 
 //-----------------------------------------------------------------------------
@@ -4152,7 +2775,7 @@ static float DamageForce( const Vector &size, float damage, float scale )
 	float force;
 
 	// Adjust for HL2 hull size if it's enabled.
-	if ( lfe_use_hl2_player_hull.GetBool() )
+	if ( lf_use_hl2_player_hull.GetBool() )
 		force = damage * ((32 * 32 * 72.0) / (size.x * size.y * size.z)) * scale;
 	else
 		force = damage * ((48 * 48 * 82.0) / (size.x * size.y * size.z)) * scale;
@@ -4165,7 +2788,7 @@ static float DamageForce( const Vector &size, float damage, float scale )
 	return force;
 }
 
-ConVar tf_debug_damage( "tf_debug_damage", "0", FCVAR_CHEAT );
+ConVar tf_debug_damage( "tf_debug_damage", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -4188,6 +2811,15 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( IsInCommentaryMode() )
 		return 0;
 
+	if ( m_debugOverlays & OVERLAY_BUDDHA_MODE ) 
+	{
+		if ((m_iHealth - info.GetDamage()) <= 0)
+		{
+			m_iHealth = 1;
+			return 0;
+		}
+	}
+
 	// Early out if there's no damage
 	if ( !info.GetDamage() )
 		return 0;
@@ -4209,13 +2841,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
 	}
 
-	// If this is a base object get the builder
-	if ( pAttacker->IsBaseObject() )
-	{
-		CBaseObject *pObject = static_cast< CBaseObject * >( pAttacker );
-		pAttacker = pObject->GetBuilder();
-	}
-
 	int iHealthBefore = GetHealth();
 
 	bool bDebug = tf_debug_damage.GetBool();
@@ -4234,11 +2859,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 	}
 
-	if ( info.GetDamage() > 0.0f )
-	{
-		if ( info.GetAttacker() )
-			NotifyFriendsOfDamage( pAttacker );
-	}
+	NotifyFriendsOfDamage( pAttacker );
 
 	AddDamagerToHistory( pAttacker );
 
@@ -4246,37 +2867,16 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	m_lastDamageAmount = info.GetDamage();
 	m_LastDamageType = info.GetDamageType();
 
-	if ( !( info.GetDamageType() & DMG_FALL ) )
+	if ( IsPlayerClass( TF_CLASS_SPY ) && !( info.GetDamageType() & DMG_FALL ) )
 	{
 		m_Shared.NoteLastDamageTime( m_lastDamageAmount );
 	}
 
-	// if this is our own rocket and we're in mid-air, scale down the damage
-	if ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_DEMOMAN ) )
+	// if this is our own rocket, scale down the damage
+	if ( IsPlayerClass( TF_CLASS_SOLDIER ) && pAttacker == this && ( info.GetDamageType() & DMG_BLAST ) ) 
 	{
-		if ( ( info.GetDamageType() & DMG_BLAST ) && pAttacker == this && GetGroundEntity() == NULL )
-		{
-			float flDamage = info.GetDamage();
-			int iJumpType = 0;
-
-			if ( !IsPlayerClass( TF_CLASS_DEMOMAN ) )
-			{
-				flDamage *= tf_damagescale_self_soldier.GetFloat();
-				iJumpType = TF_JUMP_ROCKET;
-			}
-			else
-			{
-				iJumpType = TF_JUMP_STICKY;
-			}
-
-			info.SetDamage( flDamage );
-
-			int iPlaySound = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iPlaySound, no_self_blast_dmg );
-
-			// Set blast jumping state. It will be cleared once we land.
-			SetBlastJumpState( iJumpType, iPlaySound != 0 );
-		}
+		float flDamage = info.GetDamage() * tf_damagescale_self_soldier.GetFloat();
+		info.SetDamage( flDamage );
 	}
 
 	// Save damage force for ragdolls.
@@ -4289,10 +2889,8 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
  
 	int bitsDamage = inputInfo.GetDamageType();
 
-	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
-
-	// If we're invulnerable or bonk, force ourselves to only take damage events only, so we still get pushed
-	if ( m_Shared.IsInvulnerable() || m_Shared.InCond( TF_COND_PHASE ) )
+	// If we're invulnerable, force ourselves to only take damage events only, so we still get pushed
+	if ( m_Shared.InCond( TF_COND_INVULNERABLE ) )
 	{
 		bool bAllowDamage = false;
 
@@ -4304,18 +2902,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			{
 				bAllowDamage = true;
 			}
-		}
-
-		// does not save from telefrags.
-		if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
-		{
-			bAllowDamage = true;
-		}
-
-		// Disallow Canal Slime
-		if ( info.GetDamageType() == DMG_RADIATION )
-		{
-			bAllowDamage = false;
 		}
 
 		if ( !bAllowDamage )
@@ -4331,109 +2917,12 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			{
 				SpeakConceptIfAllowed( MP_CONCEPT_HURT );
 			}
-
-			if( m_Shared.InCond( TF_COND_PHASE ) )
-			{
-				CEffectData	data;
-				data.m_nHitBox = GetParticleSystemIndex( "miss_text" );
-				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-				data.m_vAngles = vec3_angle;
-				data.m_nEntIndex = 0;
-
-				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
-				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-				SpeakConceptIfAllowed( MP_CONCEPT_DODGE_SHOT );
-			}
 			return 0;
 		}
 	}
 
-	if ( m_Shared.InCond( TF_COND_URINE ) )
-	{
-		// Jarated players take mini crits
-		bitsDamage |= DMG_MINICRITICAL;
-		info.AddDamageType( DMG_MINICRITICAL );
-	}
-	/*
-	if ( pTFAttacker->m_Shared.IsMiniCritBoosted() )
-	{
-		bitsDamage |= DMG_MINICRITICAL;
-		info.AddDamageType( DMG_MINICRITICAL );
-	}
-	*/
-	// Handle on-hit effects.
-	if ( pWeapon && pAttacker != this )
-	{
-		int nCritOnCond = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritOnCond, or_crit_vs_playercond );
-
-		if ( nCritOnCond )
-		{
-			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
-			{
-				int nCond = condition_to_attribute_translation[i];
-				int nFlag = ( 1 << i );
-				if ( ( nCritOnCond & nFlag ) && m_Shared.InCond( nCond ) )
-				{
-					bitsDamage |= DMG_CRITICAL;
-					info.AddDamageType( DMG_CRITICAL );
-					break;
-				}
-			}
-		}
-
-		int nMiniCritOnCond = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritOnCond, or_minicrit_vs_playercond_burning );
-
-		if ( nMiniCritOnCond )
-		{
-			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
-			{
-				int nCond = condition_to_attribute_translation[i];
-				int nFlag = ( 1 << i );
-				if ( ( nMiniCritOnCond & nFlag ) && m_Shared.InCond( nCond ) )
-				{
-					bitsDamage |= DMG_MINICRITICAL;
-					info.AddDamageType( DMG_MINICRITICAL );
-					break;
-				}
-			}
-		}
-
-		int nCritWhileAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
-
-		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
-		{
-			bitsDamage |= DMG_CRITICAL;
-			info.AddDamageType( DMG_CRITICAL );
-		}
-
-		int nMiniCritWhileAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritWhileAirborne, crit_while_airborne );
-
-		if ( nMiniCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
-		{
-			bitsDamage |= DMG_MINICRITICAL;
-			info.AddDamageType( DMG_MINICRITICAL );
-		}
-
-		int nMiniCritOnAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritOnAirborne, mini_crit_airborne );
-
-		if ( nMiniCritOnAirborne && m_Shared.InCond( TF_COND_BLASTJUMPING ) )
-		{
-			bitsDamage |= DMG_MINICRITICAL;
-			info.AddDamageType( DMG_MINICRITICAL );
-		}
-
-		// Notify the damaging weapon.
-		pWeapon->ApplyOnHitAttributes( this, info );
-	}
-
 	// If we're not damaging ourselves, apply randomness
-	if ( pAttacker != this && !( bitsDamage & ( DMG_DROWN | DMG_FALL ) ) )
+	if ( pAttacker != this && !(bitsDamage & (DMG_DROWN | DMG_FALL)) ) 
 	{
 		float flDamage = 0;
 		if ( bitsDamage & DMG_CRITICAL )
@@ -4454,45 +2943,12 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				data.m_vAngles = vec3_angle;
 				data.m_nEntIndex = 0;
 
-				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
+				CSingleUserRecipientFilter filter( ToBasePlayer( pAttacker ) );
 				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
 
 				EmitSound_t params;
 				params.m_flSoundTime = 0;
 				params.m_pSoundName = "TFPlayer.CritHit";
-				EmitSound( filter, pAttacker->entindex(), params );
-			}
-
-			// Burn sounds are handled in ConditionThink()
-			if ( !(bitsDamage & DMG_BURN ) )
-			{
-				SpeakConceptIfAllowed( MP_CONCEPT_HURT, "damagecritical:1" );
-			}
-		}
-		else if ( bitsDamage & DMG_MINICRITICAL )
-		{
-			if ( bDebug )
-			{
-				Warning( "    MINI-CRITICAL!\n");
-			}
-
-			flDamage = info.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
-
-			// Show the attacker, unless the target is a disguised spy
-			if ( pAttacker && pAttacker->IsPlayer() && !m_Shared.InCond( TF_COND_DISGUISED ) )
-			{
-				CEffectData	data;
-				data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
-				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-				data.m_vAngles = vec3_angle;
-				data.m_nEntIndex = 0;
-
-				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
-				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-				EmitSound_t params;
-				params.m_flSoundTime = 0;
-				params.m_pSoundName = "TFPlayer.CritHitMini";
 				EmitSound( filter, pAttacker->entindex(), params );
 			}
 
@@ -4553,28 +3009,18 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 				if ( flRandomVal > 0.5 )
 				{
-					// Rocket launcher, Sticky launcher and Scattergun have different short range bonuses
+					// Rocket launcher & Scattergun have different short range bonuses
 					if ( pWeapon )
 					{
-						switch ( pWeapon->GetWeaponID() )
+						if ( pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER ) )
 						{
-						case TF_WEAPON_ROCKETLAUNCHER:
-						case TF_WEAPON_PIPEBOMBLAUNCHER:
-							// Rocket launcher and sticky launcher only have half the bonus of the other weapons at short range
+							// Rocket launcher only has half the bonus of the other weapons at short range
 							flRandomDamage *= 0.5;
-							break;
-						case TF_WEAPON_SCATTERGUN:
+						}
+						else if ( pWeapon->IsWeapon( TF_WEAPON_SCATTERGUN ) )
+						{
 							// Scattergun gets 50% bonus of other weapons at short range
 							flRandomDamage *= 1.5;
-							break;
-
-						case TF_WEAPON_SHOTGUN_PRIMARY:
-						case TF_WEAPON_SHOTGUN_SOLDIER:
-						case TF_WEAPON_SHOTGUN_HWG:
-						case TF_WEAPON_SHOTGUN_PYRO:
-							// Shotguns gets 30% bonus of other weapons at short range
-							flRandomDamage *= 1.0;
-							break;
 						}
 					}
 				}
@@ -4599,15 +3045,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 
 		info.SetDamage( flDamage );
-	}
-
-	if ( m_debugOverlays & OVERLAY_BUDDHA_MODE ) 
-	{
-		if ((m_iHealth - info.GetDamage()) <= 0)
-		{
-			m_iHealth = 1;
-			return 0;
-		}
 	}
 
 	// NOTE: Deliberately skip base player OnTakeDamage, because we don't want all the stuff it does re: suit voice
@@ -4672,7 +3109,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	// Display any effect associate with this damage type
-	DamageEffect( info.GetDamage(),bitsDamage );
+	DamageEffect( info.GetDamage(), bitsDamage );
 
 	m_bitsDamageType |= bitsDamage; // Save this so we can report it to the client
 	m_bitsHUDDamage = -1;  // make sure the damage bits get resent
@@ -4759,16 +3196,6 @@ bool CTFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 			if ( !( contentsMask & CONTENTS_BLUETEAM ) )
 				return false;
 			break;
-
-		case TF_TEAM_GREEN:
-			if ( !(contentsMask & CONTENTS_GREENTEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_YELLOW:
-			if ( !(contentsMask & CONTENTS_YELLOWTEAM ) )
-				return false;
-			break;
 		}
 	}
 	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
@@ -4785,14 +3212,6 @@ bool CTFPlayer::IsPlayerClass( int iClass ) const
 		return false;
 
 	return ( pClass->IsClass( iClass ) );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles )
-{
-	BaseClass::LeaveVehicle( vecExitPoint, vecExitAngles );
 }
 
 //-----------------------------------------------------------------------------
@@ -4827,69 +3246,17 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// (Pretend that the inflictor is a little lower than it really is, so the body will tend to fly upward a bit).
 	CBaseEntity *pAttacker = info.GetAttacker();
 	CBaseEntity *pInflictor = info.GetInflictor();
-	CBaseEntity *pWeapon = info.GetWeapon();
-
-	// If this is an object get the builder
-	if ( pAttacker->IsBaseObject() )
-	{
-		CBaseObject *pObject = static_cast< CBaseObject * >( pAttacker );
-		pAttacker = pObject->GetBuilder();
-	}
-
-	CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
 
 	Vector vecDir = vec3_origin;
 	if ( pInflictor )
 	{
-		// Huntsman should not do too much knockback
-		if ( pTFWeapon && pTFWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
-		{
-			vecDir = -info.GetDamageForce();
-		}
-		else
-		{
-			vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
-		}
+		vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
 		VectorNormalize( vecDir );
 	}
 	g_vecAttackDir = vecDir;
 
 	// Do the damage.
-	// NOTE: None of the damage modifiers used here should affect the knockback force.
 	m_bitsDamageType |= info.GetDamageType();
-	float flDamage = info.GetDamage();
-
-	if ( flDamage == 0.0f )
-		return 0;
-
-	// Self-damage modifiers.
-	if ( pAttacker == this )
-	{
-		if ( ( info.GetDamageType() & DMG_BLAST ) && !info.GetDamagedOtherPlayers() )
-		{
-			CALL_ATTRIB_HOOK_FLOAT( flDamage, rocket_jump_dmg_reduction );
-		}
-
-		if ( pWeapon )
-		{
-			int iNoSelfDmg = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iNoSelfDmg, no_self_blast_dmg );
-
-			if ( iNoSelfDmg )
-			{
-				flDamage = 0.0f;
-			}
-			else
-			{
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, blast_dmg_to_self );
-			}
-		}
-
-		if ( m_Shared.InCond( TF_COND_AIMING ) )
-		{
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, spunup_damage_resistance );
-		}
-	}
 
 	int iOldHealth = m_iHealth;
 	bool bIgniting = false;
@@ -4899,15 +3266,11 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// Start burning if we took ignition damage
 		bIgniting = ( ( info.GetDamageType() & DMG_IGNITE ) && ( GetWaterLevel() < WL_Waist ) );
 
-		if ( !bIgniting )
-		{
-			int iIgniting = 0;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iIgniting, set_dmgtype_ignite );
-			bIgniting = ( iIgniting != 0 );
-		}
+		if ( info.GetDamage() == 0.0f )
+			return 0;
 
 		// Take damage - round to the nearest integer.
-		m_iHealth -= ( flDamage + 0.5f );
+		m_iHealth -= ( info.GetDamage() + 0.5f );
 	}
 
 	m_flLastDamageTime = gpGlobals->curtime;
@@ -4916,11 +3279,51 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( !pAttacker )
 		return 0;
 
-	ApplyPushFromDamage( info, vecDir );
+	if ( ( info.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE ) == 0 )
+	{
+		if ( pInflictor && ( GetMoveType() == MOVETYPE_WALK ) && 
+		   ( !pAttacker->IsSolidFlagSet( FSOLID_TRIGGER ) ) && 
+		   ( !m_Shared.InCond( TF_COND_DISGUISED ) ) )	
+		{
+			Vector vecForce;
+			vecForce.Init();
+			if ( pAttacker == this )
+			{
+				if ( IsPlayerClass( TF_CLASS_SOLDIER ) ) 
+				{
+					vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), tf_damageforcescale_self_soldier.GetFloat() );
+				}
+				else
+				{
+					vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), DAMAGE_FORCE_SCALE_SELF );
+				}
+			}
+			else
+			{
+				// Sentryguns push a lot harder
+				if ( ( info.GetDamageType() & DMG_BULLET ) && pInflictor->IsBaseObject() )
+				{
+					vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), 16 );
+				}
+				else
+				{
+					vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), tf_damageforcescale_other.GetFloat() );
+
+					if ( IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
+					{
+						// Heavies take less push from non sentryguns
+						vecForce *= 0.5;
+					}
+				}
+			}
+
+			ApplyAbsVelocityImpulse( vecForce );
+		}
+	}
 
 	if ( bIgniting )
 	{
-		m_Shared.Burn( ToTFPlayer( pAttacker ), pTFWeapon );
+		m_Shared.Burn( ToTFPlayer( pAttacker ) );
 	}
 
 	// Fire a global game event - "player_hurt"
@@ -4931,7 +3334,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		event->SetInt( "health", max( 0, m_iHealth ) );
 		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
 		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
-		event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
 
 		// HLTV event priority, not transmitted
 		event->SetInt( "priority", 5 );	
@@ -4951,16 +3353,9 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	}
 
 	//No bleeding while invul or disguised.
-	bool bBleed = ( ( m_Shared.InCond( TF_COND_DISGUISED ) == false || m_Shared.InCond( TF_COND_PHASE ) == false || m_Shared.GetDisguiseTeam() == GetTeamNumber() ) &&
-		m_Shared.IsInvulnerable() == false );
-	if ( bBleed && pAttacker->IsPlayer() )
-	{
-		CTFWeaponBase *pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
-		if ( pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER )
-		{
-			bBleed = false;
-		}
-	}
+	bool bBleed = ( m_Shared.InCond( TF_COND_DISGUISED ) == false &&
+		m_Shared.InCond( TF_COND_INVULNERABLE ) == false &&
+		( info.GetDamageType() & DMG_IGNITE ) == 0 );
 
 	if ( bBleed )
 	{
@@ -4977,164 +3372,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	// Done.
 	return 1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir )
-{
-	CBaseEntity *pAttacker = info.GetAttacker();
-	CBaseEntity *pInflictor = info.GetInflictor();
-
-	if ( info.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE )
-		return;
-
-	if( !info.GetInflictor() ||
-		( GetMoveType() != MOVETYPE_WALK ) ||
-		( pAttacker->IsSolidFlagSet( FSOLID_TRIGGER ) ) ||
-		( m_Shared.InCond( TF_COND_DISGUISED ) ) )
-		return;
-
-	Vector vecForce;
-	vecForce.Init();
-	if ( pAttacker == this )
-	{
-		if ( IsPlayerClass( TF_CLASS_SOLDIER ) && ( info.GetDamageType() & DMG_BLAST ) )
-		{
-			// Since soldier only takes reduced self-damage while in mid-air we have to accomodate for that.
-			float flScale = 1.0f;
-
-			if ( GetFlags() & FL_ONGROUND )
-			{
-				flScale = tf_damageforcescale_self_soldier_badrj.GetFloat();
-				SetBlastJumpState( TF_JUMP_ROCKET, false );
-			}
-			else
-			{
-				// If we're in mid-air then the code in OnTakeDamage should have already set blast jumping state.
-				flScale = tf_damageforcescale_self_soldier_rj.GetFloat();
-			}
-
-			vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), flScale );
-		}
-		else
-		{
-			vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), DAMAGE_FORCE_SCALE_SELF );
-		}
-	}
-	else
-	{
-		// Sentryguns push a lot harder
-		if ( ( info.GetDamageType() & DMG_BULLET ) && pInflictor->IsBaseObject() )
-		{
-			vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), 16 );
-		}
-		else
-		{
-			vecForce = vecDir * -DamageForce( WorldAlignSize(), info.GetDamage(), tf_damageforcescale_other.GetFloat() );
-
-			if ( IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
-			{
-				// Heavies take less push from non sentryguns
-				vecForce *= 0.5;
-			}
-		}
-
-		if ( info.GetDamageType() & DMG_BLAST )
-		{
-			m_bBlastLaunched = true;
-		}
-	}
-
-	ApplyAbsVelocityImpulse( vecForce );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: mini-crits for reserve shooter
-//-----------------------------------------------------------------------------
-void CTFPlayer::SetBlastJumpState( int iJumpType, bool bPlaySound )
-{
-	m_nBlastJumpFlags |= iJumpType;
-
-	const char *pszEventName = NULL;
-
-	switch ( iJumpType )
-	{
-	case TF_JUMP_ROCKET:
-		pszEventName = "rocket_jump";
-		break;
-	case TF_JUMP_STICKY:
-		pszEventName = "sticky_jump";
-		break;
-	}
-
-	if ( pszEventName )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( pszEventName );
-
-		if ( event )
-		{
-			event->SetInt( "userid", GetUserID() );
-			event->SetBool( "playsound", bPlaySound );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-
-	m_Shared.AddCond( TF_COND_BLASTJUMPING );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayer::ClearBlastJumpState( void )
-{
-	const char *pszEventName = NULL;
-
-	if ( m_nBlastJumpFlags & TF_JUMP_ROCKET )
-	{
-		pszEventName = "rocket_jump_landed";
-	}
-	else if ( m_nBlastJumpFlags & TF_JUMP_STICKY )
-	{
-		pszEventName = "sticky_jump_landed";
-	}
-
-	if ( pszEventName )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( pszEventName );
-
-		if ( event )
-		{
-			event->SetInt( "userid", GetUserID() );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-
-	m_nBlastJumpFlags = 0;
-	m_bJumpEffect = false;
-	m_Shared.RemoveCond( TF_COND_BLASTJUMPING );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: no mini-crits for reserve shooter
-//-----------------------------------------------------------------------------
-void CTFPlayer::SetAirblastState( bool bAirblastState )
-{
-	bAirblastState = m_bAirblasted;
-	bAirblastState = true;
-
-	m_Shared.AddCond( TF_COND_KNOCKED_INTO_AIR );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayer::ClearAirblastState( void )
-{
-	m_bAirblasted = false;
-
-	m_Shared.RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 }
 
 //-----------------------------------------------------------------------------
@@ -5182,27 +3419,11 @@ void CTFPlayer::ClearDamagerHistory()
 bool CTFPlayer::ShouldGib( const CTakeDamageInfo &info )
 {
 	// Check to see if we should allow players to gib.
-	int nGibCvar = tf_playergib.GetInt();
-	if ( nGibCvar == 0 )
+	if ( !tf_playergib.GetBool() )
 		return false;
 
-	if ( nGibCvar == 2 )
+	if ( ( ( info.GetDamageType() & DMG_BLAST ) != 0 ) || ( ( info.GetDamageType() & DMG_HALF_FALLOFF ) != 0 ) )
 		return true;
-
-	if ( info.GetDamageType() & DMG_NEVERGIB )
-		return false;
-
-	if ( info.GetDamageType() & DMG_ALWAYSGIB )
-		return true;
-
-	if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
-		return true;
-
-	if ( ( info.GetDamageType() & DMG_BLAST ) || ( info.GetDamageType() & DMG_HALF_FALLOFF ) )
-	{
-		if ( ( info.GetDamageType() & DMG_CRITICAL ) || m_iHealth < -9 )
-			return true;
-	}
 
 	return false;
 }
@@ -5213,16 +3434,10 @@ bool CTFPlayer::ShouldGib( const CTakeDamageInfo &info )
 void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
 	BaseClass::Event_KilledOther( pVictim, info );
-	if (pVictim->IsPlayer() && pVictim->GetTeamNumber() == 3 && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && sv_dynamicnpcs.GetFloat() == 1)
-	{
-		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger + 3;
-	}
 
 	// No taunts after killing teammates.
 	if ( InSameTeam( pVictim ) )
 		return;
-
-	CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
 
 	if ( pVictim->IsPlayer() )
 	{
@@ -5250,14 +3465,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		{
 			pszCustomDeath = "customdeath:burning";
 		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
 
 		// Revenge handler
 		const char *pszDomination = "domination:none";
@@ -5272,49 +3479,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 
 		CFmtStrN<128> modifiers( "%s,%s,victimclass:%s", pszCustomDeath, pszDomination, g_aPlayerClassNames_NonLocalized[ pTFVictim->GetPlayerClass()->GetClassIndex() ] );
 		SpeakConceptIfAllowed( MP_CONCEPT_KILLED_PLAYER, modifiers );
-
-		if ( IsAlive() )
-		{
-			m_Shared.IncKillstreak();
-
-			// Apply on-kill effects.
-			if ( pWeapon )
-			{
-				// Apply on-kill effects.
-				float flCritOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flCritOnKill, add_onkill_critboost_time );
-				if ( flCritOnKill )
-				{
-					m_Shared.AddCond( TF_COND_CRITBOOSTED_ON_KILL, flCritOnKill );
-				}
-
-				float flMiniCritOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flMiniCritOnKill, add_onkill_minicritboost_time );
-				if ( flMiniCritOnKill )
-				{
-					m_Shared.AddCond( TF_COND_MINICRITBOOSTED_ON_KILL, flMiniCritOnKill );
-				}
-
-				float flHealthOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flHealthOnKill, heal_on_kill );
-				if( flHealthOnKill )
-				{
-					int iHealthRestored = TakeHealth( flHealthOnKill, DMG_GENERIC );
-					if (iHealthRestored)
-					{
-						IGameEvent *event = gameeventmanager->CreateEvent("player_healonhit");
-				
-						if ( event )
-						{
-							event->SetInt( "amount", iHealthRestored );
-							event->SetInt( "entindex", entindex() );
-					
-							gameeventmanager->FireEvent( event );
-						}
-					}
-				}
-			}
-		}
 	}
 	else if ( pVictim->IsBaseObject() )
 	{
@@ -5345,64 +3509,13 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		{
 			pszCustomDeath = "customdeath:burning";
 		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
 
 		// No dominating NPCs.
 		const char *pszDomination = "domination:none";
 
 		CFmtStrN<128> modifiers( "%s,%s,victimclass:%s", pszCustomDeath, pszDomination, g_aPlayerClassNames_NonLocalized[TF_CLASS_UNDEFINED] );
 		SpeakConceptIfAllowed( MP_CONCEPT_KILLED_PLAYER, modifiers );
-
-		if ( IsAlive() )
-		{
-			m_Shared.IncKillstreak();
-
-			// Apply on-kill effects.
-			if ( pWeapon )
-			{
-				// Apply on-kill effects.
-				float flCritOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flCritOnKill, add_onkill_critboost_time );
-				if ( flCritOnKill )
-				{
-					m_Shared.AddCond( TF_COND_CRITBOOSTED_ON_KILL, flCritOnKill );
-				}
-
-				float flMiniCritOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flMiniCritOnKill, add_onkill_minicritboost_time );
-				if ( flMiniCritOnKill )
-				{
-					m_Shared.AddCond( TF_COND_MINICRITBOOSTED_ON_KILL, flMiniCritOnKill );
-				}
-
-				float flHealthOnKill = 0.0f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flHealthOnKill, heal_on_kill );
-				if( flHealthOnKill )
-				{
-					int iHealthRestored = TakeHealth( flHealthOnKill, DMG_GENERIC );
-					if (iHealthRestored)
-					{
-						IGameEvent *event = gameeventmanager->CreateEvent("player_healonhit");
-				
-						if ( event )
-						{
-							event->SetInt( "amount", iHealthRestored );
-							event->SetInt( "entindex", entindex() );
-					
-							gameeventmanager->FireEvent( event );
-						}
-					}
-				}
-			}
-		}
- 	}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -5410,10 +3523,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 //-----------------------------------------------------------------------------
 void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
-	if (GetTeamNumber() == TF_TEAM_RED && (info.GetAttacker()->IsNPC() || info.GetAttacker()->IsPlayer() && info.GetAttacker()->GetTeamNumber() == TF_TEAM_BLUE) && sv_dynamicnpcs.GetFloat() == 1)
-	{
-		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger - 3;
-	}
 	SpeakConceptIfAllowed( MP_CONCEPT_DIED );
 
 	StateTransition( TF_STATE_DYING );	// Transition into the dying state.
@@ -5446,10 +3555,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	bool bDisguised = m_Shared.InCond( TF_COND_DISGUISED );
 	// we want the rag doll to burn if the player was burning and was not a pryo (who only burns momentarily)
 	bool bBurning = m_Shared.InCond( TF_COND_BURNING ) && ( TF_CLASS_PYRO != GetPlayerClass()->GetClassIndex() );
-	bool bOnGround = ( GetFlags() & FL_ONGROUND ) != 0;
-	float flInvis = m_Shared.m_flInvisibility;
-
-	DropPowerups();
 
 	// Remove all conditions...
 	m_Shared.RemoveAllCond( NULL );
@@ -5462,15 +3567,11 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	RemoveTeleportEffect();
 
-	// Drop our weapon and ammo box
-	if ( lfe_debug_tf_dropped_weapon.GetBool() )
-	{
-		DropWeapon( GetActiveTFWeapon(), true );
-	}
-	DropAmmoPack();
+	// Stop being invisible
+	m_Shared.RemoveCond( TF_COND_STEALTHED );
 
-	m_Shared.SetDesiredWeaponIndex( -1 );
-	RemoveAllWeapons();
+	// Drop a pack with their leftover ammo
+	DropAmmoPack();
 
 	// If the player has a capture flag and was killed by another player, award that player a defense
 	if ( HasItem() && pTFAttacker && ( pTFAttacker != this ) )
@@ -5490,21 +3591,10 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if ( IsPlayerClass( TF_CLASS_ENGINEER ) && m_Shared.GetCarriedObject() )
-	{
-		// Blow it up at our position.
-		CBaseObject *pObject = m_Shared.GetCarriedObject();
-		pObject->Teleport( &WorldSpaceCenter(), &GetAbsAngles(), &vec3_origin );
-		pObject->DropCarriedObject( this );
-
-		CTakeDamageInfo newInfo( pInflictor, pAttacker, (float)pObject->GetHealth(), DMG_GENERIC, TF_DMG_CUSTOM_CARRIED_BUILDING );
-		pObject->Killed( newInfo );
-	}
-
 	// Remove all items...
 	RemoveAllItems( true );
 
-	for ( int iWeapon = 0; iWeapon < WeaponCount(); ++iWeapon )
+	for ( int iWeapon = 0; iWeapon < TF_PLAYER_WEAPON_COUNT; ++iWeapon )
 	{
 		CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon( iWeapon );
 
@@ -5555,13 +3645,13 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		{
 			// Catches the case where we're killed directly by the sentrygun (i.e. bullets)
 			// Look at the sentrygun
-			m_hObserverTarget.Set( pInflictor ); 
+			m_hObserverTarget.Set( info.GetInflictor() ); 
 		}
 		// See if we were killed by a projectile emitted from a base object. The attacker
 		// will still be the owner of that object, but we want the deathcam to point to the 
 		// object itself.
-		else if ( pInflictor && pInflictor->GetOwnerEntity() && 
-					pInflictor->GetOwnerEntity()->IsBaseObject() )
+		else if ( pInflictor && pInflictor->GetOwnerEntity() &&
+			pInflictor->GetOwnerEntity()->IsBaseObject() )
 		{
 			m_hObserverTarget.Set( pInflictor->GetOwnerEntity() );
 		}
@@ -5578,7 +3668,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		// Catches the case where we're killed by entities spawned by the sentrygun (i.e. rockets)
 		// Look at the sentrygun. 
-		m_hObserverTarget.Set( pAttacker ); 
+		m_hObserverTarget.Set( pAttacker );
 	}
 	else if ( pAttacker && pAttacker->IsNPC() )
 	{
@@ -5588,21 +3678,20 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		m_hObserverTarget.Set( NULL );
 	}
-	
-	if ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE )
-	{
-		// if this was suicide, recalculate attacker to see if we want to award the kill to a recent damager
-		info_modified.SetAttacker( TFGameRules()->GetDeathScorer( info.GetAttacker(), pInflictor, this ) );
-	}
-	else if ( (!pAttacker || pAttacker == this || pAttacker->IsBSPModel()))
+
+	bool bUsedSuicideButton = ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE );
+
+	if ( bUsedSuicideButton || pAttacker == this || pAttacker->IsBSPModel() )
 	{
 		// Recalculate attacker if player killed himself or this was environmental death.
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
-		if (pDamager)
+		float flCreditTime = bUsedSuicideButton ? TF_TIME_SUICIDE_KILL_CREDIT : TF_TIME_ENV_DEATH_KILL_CREDIT;
+		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, flCreditTime );
+
+		if ( pDamager )
 		{
-			info_modified.SetAttacker(pDamager);
-			info_modified.SetInflictor(NULL);
-			info_modified.SetWeapon(NULL);
+			info_modified.SetAttacker( pDamager );
+			info_modified.SetInflictor( NULL );
+			info_modified.SetWeapon( NULL );
 			info_modified.SetDamageType( DMG_GENERIC );
 			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
 		}
@@ -5627,7 +3716,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Create the ragdoll entity.
 	if ( bGib || bRagdoll )
 	{
-		CreateRagdollEntity( bGib, bBurning, bOnGround, flInvis, info.GetDamageCustom() );
+		CreateRagdollEntity( bGib, bBurning );
 	}
 
 	// Don't overflow the value for this.
@@ -5647,71 +3736,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			}		
 		}
 	}
-
-	m_Shared.SetKillstreak( 0 );
-
-	if ( pAttacker && pAttacker == pInflictor && pAttacker->IsBSPModel() )
-	{
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
-		CTFPlayer *pTFDamager = ToTFPlayer( pDamager );
-
-		if ( pTFDamager )
-		{
-			IGameEvent *event = gameeventmanager->CreateEvent( "environmental_death" );
-
-			if ( event )
-			{
-				event->SetInt( "killer", pTFDamager->GetUserID() );
-				event->SetInt( "victim", GetUserID() );
-				event->SetInt( "priority", 9 ); // HLTV event priority, not transmitted
-				
-				gameeventmanager->FireEvent( event );
-			}
-		}
-	}
-
-	if ( ( info.GetDamageType() & ( DMG_ALWAYSGIB | DMG_LASTGENERICFLAG | DMG_CRUSH )) == ( DMG_ALWAYSGIB | DMG_LASTGENERICFLAG | DMG_CRUSH ) )
-	{
-		if ( m_hRagdoll )
-		{
-			UTIL_RemoveImmediate( m_hRagdoll );	
-		}
-	}
-}
-
-bool CTFPlayer::Event_Gibbed( const CTakeDamageInfo &info )
-{
-	// CTFRagdoll takes care of gibbing.
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector )
-{
-	if ( CanBecomeRagdoll() )
-	{
-		VPhysicsDestroyObject();
-		AddSolidFlags( FSOLID_NOT_SOLID );
-		m_nRenderFX = kRenderFxRagdoll;
-
-		// Have to do this dance because m_vecForce is a network vector
-		// and can't be sent to ClampRagdollForce as a Vector *
-		Vector vecClampedForce;
-		ClampRagdollForce( forceVector, &vecClampedForce );
-		m_vecForce = vecClampedForce;
-
-		SetParent( NULL );
-
-		AddFlag( FL_TRANSRAGDOLL );
-
-		SetMoveType( MOVETYPE_NONE );
-
-		return true;
-	}
-
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -5719,6 +3743,9 @@ bool CTFPlayer::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceV
 //-----------------------------------------------------------------------------
 bool CTFPlayer::PlayDeathAnimation( const CTakeDamageInfo &info, CTakeDamageInfo &info_modified )
 {
+	// No supporting this for the initial release.
+	return false;
+
 	if ( SelectWeightedSequence( ACT_DIESIMPLE ) == -1 )
 		return false;
 
@@ -5732,17 +3759,18 @@ bool CTFPlayer::PlayDeathAnimation( const CTakeDamageInfo &info, CTakeDamageInfo
 	// Check for a sniper headshot. (Currently only on Heavy.)
 	if ( pAttacker->GetPlayerClass()->IsClass( TF_CLASS_SNIPER ) && ( info.GetDamageCustom() == TF_DMG_CUSTOM_HEADSHOT ) )
 	{
-		bPlayDeathAnim = true;
+		if ( GetPlayerClass()->IsClass( TF_CLASS_HEAVYWEAPONS ) )
+		{
+			bPlayDeathAnim = true;
+		}
 	}
 	// Check for a spy backstab. (Currently only on Sniper.)
 	else if ( pAttacker->GetPlayerClass()->IsClass( TF_CLASS_SPY ) && ( info.GetDamageCustom() == TF_DMG_CUSTOM_BACKSTAB ) )
 	{
-		bPlayDeathAnim = true;
-	}
-	// Check for a sword kill. (Currently only on Demo.)
-	else if ( pAttacker->GetPlayerClass()->IsClass( TF_CLASS_DEMOMAN ) && ( info.GetDamageCustom() == TF_DMG_CUSTOM_DECAPITATION ) )
-	{
-		bPlayDeathAnim = true;
+		if ( GetPlayerClass()->IsClass( TF_CLASS_SNIPER ) )
+		{
+			bPlayDeathAnim = true;
+		}
 	}
 
 	// Play death animation?
@@ -5832,66 +3860,22 @@ void CTFPlayer::AmmoPackCleanUp( void )
 	{
 		UTIL_Remove( pOldestBox );
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Clean up dropped weapons to avoid overpopulation.
-//-----------------------------------------------------------------------------
-void CTFPlayer::DroppedWeaponCleanUp( void )
-{
-	// If we have more than 3 dropped weapons out now, destroy the oldest one.
-	int iNumWeps = 0;
-	CTFDroppedWeapon *pOldestWeapon = NULL;
-
-	// Cycle through all weapons in the world and remove them
-	CBaseEntity *pEnt = gEntList.FindEntityByClassname( NULL, "tf_dropped_weapon" );
-	while ( pEnt )
-	{
-		CBaseEntity *pOwner = pEnt->GetOwnerEntity();
-		if ( pOwner == this )
-		{
-			CTFDroppedWeapon *pThisWeapon = dynamic_cast<CTFDroppedWeapon *>( pEnt );
-			Assert( pThisWeapon );
-			if ( pThisWeapon )
-			{
-				iNumWeps++;
-
-				// Find the oldest one
-				if ( pOldestWeapon == NULL || pOldestWeapon->GetCreationTime() > pThisWeapon->GetCreationTime() )
-				{
-					pOldestWeapon = pThisWeapon;
-				}
-			}
-		}
-
-		pEnt = gEntList.FindEntityByClassname( pEnt, "tf_dropped_weapon" );
-	}
-
-	// If they have more than 3 weapons active, remove the oldest one
-	if ( iNumWeps > 3 && pOldestWeapon )
-	{
-		UTIL_Remove( pOldestWeapon );
-	}
-}
+}		
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFPlayer::DropAmmoPack( void )
 {
-	// Since weapon is hidden in loser state don't drop ammo pack.
-	if ( m_Shared.IsLoser() )
-		return;
-
 	// We want the ammo packs to look like the player's weapon model they were carrying.
 	// except if they are melee or building weapons
 	CTFWeaponBase *pWeapon = NULL;
 	CTFWeaponBase *pActiveWeapon = m_Shared.GetActiveTFWeapon();
 
-	if ( !pActiveWeapon || pActiveWeapon->GetTFWpnData().m_bDontDrop ||
-		( pActiveWeapon->IsWeapon( TF_WEAPON_BUILDER ) && m_Shared.m_bCarryingObject ) )
+	if ( !pActiveWeapon || pActiveWeapon->GetTFWpnData().m_bDontDrop )
 	{
 		// Don't drop this one, find another one to drop
+
 		int iWeight = -1;
 
 		// find the highest weighted weapon
@@ -5924,9 +3908,8 @@ void CTFPlayer::DropAmmoPack( void )
 
 	// We need to find bones on the world model, so switch the weapon to it.
 	const char *pszWorldModel = pWeapon->GetWorldModel();
-
-
 	pWeapon->SetModel( pszWorldModel );
+
 
 	// Find the position and angle of the weapons so the "ammo box" matches.
 	Vector vecPackOrigin;
@@ -5937,11 +3920,10 @@ void CTFPlayer::DropAmmoPack( void )
 	// Fill the ammo pack with unused player ammo, if out add a minimum amount.
 	int iPrimary = max( 5, GetAmmoCount( TF_AMMO_PRIMARY ) );
 	int iSecondary = max( 5, GetAmmoCount( TF_AMMO_SECONDARY ) );
-	int iMetal = max( 5, GetAmmoCount( TF_AMMO_METAL ) );
+	int iMetal = max( 5, GetAmmoCount( TF_AMMO_METAL ) );	
 
 	// Create the ammo pack.
-	//CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, pszWorldModel );
-	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, "models/items/ammopack_medium.mdl" );
+	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, pszWorldModel );
 	Assert( pAmmoPack );
 	if ( pAmmoPack )
 	{
@@ -5980,23 +3962,9 @@ void CTFPlayer::DropAmmoPack( void )
 		}
 
 		pAmmoPack->SetInitialVelocity( vecImpulse );
-		/*
-		switch ( GetTeamNumber() )
-		{
-			case TF_TEAM_RED:
-				pAmmoPack->m_nSkin = 0;
-				break;
-			case TF_TEAM_BLUE:
-				pAmmoPack->m_nSkin = 1;
-				break;
-			case TF_TEAM_GREEN:
-				pAmmoPack->m_nSkin = 2;
-				break;
-			case TF_TEAM_YELLOW:
-				pAmmoPack->m_nSkin = 3;
-				break;
-		}
-		*/
+
+		pAmmoPack->m_nSkin = ( GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
+
 		// Give the ammo pack some health, so that trains can destroy it.
 		pAmmoPack->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
 		pAmmoPack->m_takedamage = DAMAGE_YES;		
@@ -6008,197 +3976,6 @@ void CTFPlayer::DropAmmoPack( void )
 		AmmoPackCleanUp();	
 	}	
 	pWeapon->SetModel( pWeapon->GetViewModel() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Creates an empty ammo pack to bypass non-working VPhysics on weapons.
-//-----------------------------------------------------------------------------
-void CTFPlayer::DropFakeWeapon( CTFWeaponBase *pWeapon )
-{
-	if ( !pWeapon || 
-		pWeapon->GetTFWpnData().m_bDontDrop ||
-		( pWeapon->IsWeapon( TF_WEAPON_BUILDER ) && m_Shared.IsCarryingObject() ) )
-	{
-		// Can't drop this weapon
-		return;
-	}
-
-	// We need to find bones on the world model, so switch the weapon to it.
-	const char *pszWorldModel = pWeapon->GetWorldModel();
-	pWeapon->SetModel( pszWorldModel );
-
-	// Find the position and angle of the weapons so the "ammo box" matches.
-	Vector vecPackOrigin;
-	QAngle vecPackAngles;
-	if ( !CalculateAmmoPackPositionAndAngles( pWeapon, vecPackOrigin, vecPackAngles ) )
-		return;
-
-	// Create the ammo pack using custom ammo which defaults to zero.
-	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, pszWorldModel, true );
-	Assert( pAmmoPack );
-	if ( pAmmoPack )
-	{
-		// We intentionally don't fill it up here so that the weapon can be picked up to avoid overpopulation but does not grant ammo.
-
-		Vector vecRight, vecUp;
-		AngleVectors( EyeAngles(), NULL, &vecRight, &vecUp );
-
-		// Calculate the initial impulse on the weapon.
-		Vector vecImpulse( 0.0f, 0.0f, 0.0f );
-		vecImpulse += vecUp * random->RandomFloat( -0.25, 0.25 );
-		vecImpulse += vecRight * random->RandomFloat( -0.25, 0.25 );
-		VectorNormalize( vecImpulse );
-		vecImpulse *= random->RandomFloat( tf_weapon_ragdoll_velocity_min.GetFloat(), tf_weapon_ragdoll_velocity_max.GetFloat() );
-		vecImpulse += GetAbsVelocity();
-
-		// Cap the impulse.
-		float flSpeed = vecImpulse.Length();
-		if ( flSpeed > tf_weapon_ragdoll_maxspeed.GetFloat() )
-		{
-			VectorScale( vecImpulse, tf_weapon_ragdoll_maxspeed.GetFloat() / flSpeed, vecImpulse );
-		}
-
-		if ( pAmmoPack->VPhysicsGetObject() )
-		{
-			// We can probably remove this when the mass on the weapons is correct!
-			pAmmoPack->VPhysicsGetObject()->SetMass( 25.0f );
-			AngularImpulse angImpulse( 0, random->RandomFloat( 0, 100 ), 0 );
-			pAmmoPack->VPhysicsGetObject()->SetVelocityInstantaneous( &vecImpulse, &angImpulse );
-		}
-
-		pAmmoPack->SetInitialVelocity( vecImpulse );
-
-		switch ( GetTeamNumber() )
-		{
-		case TF_TEAM_RED:
-			pAmmoPack->m_nSkin = 0;
-			break;
-		case TF_TEAM_BLUE:
-			pAmmoPack->m_nSkin = 1;
-			break;
-		}
-
-		// Give the ammo pack some health, so that trains can destroy it.
-		pAmmoPack->SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-		pAmmoPack->m_takedamage = DAMAGE_YES;
-		pAmmoPack->SetHealth( 900 );
-
-		pAmmoPack->SetBodygroup( 1, 1 );
-
-		// Clean up old ammo packs if they exist in the world
-		AmmoPackCleanUp();
-	}
-	pWeapon->SetModel( pWeapon->GetViewModel() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Creates tf_dropped_weapon based on selected weapon
-//-----------------------------------------------------------------------------
-void CTFPlayer::DropWeapon( CTFWeaponBase *pWeapon, bool bKilled /*= false*/ )
-{
-	if ( !pWeapon ||
-		pWeapon->GetTFWpnData().m_bDontDrop ||
-		!pWeapon->HasItemDefinition() ||
-		pWeapon->IsWeapon( TF_WEAPON_BUILDER ) )
-	{
-		// Can't drop this weapon
-		return;
-	}
-
-	int iClip = pWeapon->UsesClipsForAmmo1() ? pWeapon->Clip1() : WEAPON_NOCLIP;
-	int iAmmo = GetAmmoCount( pWeapon->GetPrimaryAmmoType() );
-
-	// Don't drop empty weapons
-	if ( iAmmo == 0 )
-		return;
-
-	// We need to find bones on the world model, so switch the weapon to it.
-	const char *pszWorldModel = pWeapon->GetWorldModel();
-	pWeapon->SetModel( pszWorldModel );
-
-	// Find the position and angle of the weapons so the dropped entity matches.
-	Vector vecPackOrigin;
-	QAngle vecPackAngles;
-	if ( !CalculateAmmoPackPositionAndAngles( pWeapon, vecPackOrigin, vecPackAngles ) )
-		return;
-
-	// Create dropped weapon entity.
-	CTFDroppedWeapon *pDroppedWeapon = CTFDroppedWeapon::Create( vecPackOrigin, vecPackAngles, this, pWeapon );;
-	Assert( pDroppedWeapon );
-
-	if ( pDroppedWeapon )
-	{
-		// Give the dropped weapon entity our ammo.
-		pDroppedWeapon->SetClip( iClip );
-		pDroppedWeapon->SetAmmo( iAmmo );
-		pDroppedWeapon->SetMaxAmmo( GetMaxAmmo( pWeapon->GetPrimaryAmmoType() ) );
-
-		// Randomize velocity if we dropped weapon upon being killed.
-		if ( bKilled )
-		{
-			// Remove all of the player's ammo.
-			RemoveAllAmmo();
-
-			Vector vecRight, vecUp;
-			AngleVectors( EyeAngles(), NULL, &vecRight, &vecUp );
-
-			// Calculate the initial impulse on the weapon.
-			Vector vecImpulse( 0.0f, 0.0f, 0.0f );
-			vecImpulse += vecUp * random->RandomFloat( -0.25, 0.25 );
-			vecImpulse += vecRight * random->RandomFloat( -0.25, 0.25 );
-			VectorNormalize( vecImpulse );
-			vecImpulse *= random->RandomFloat( tf_weapon_ragdoll_velocity_min.GetFloat(), tf_weapon_ragdoll_velocity_max.GetFloat() );
-			vecImpulse += GetAbsVelocity();
-
-			// Cap the impulse.
-			float flSpeed = vecImpulse.Length();
-			if ( flSpeed > tf_weapon_ragdoll_maxspeed.GetFloat() )
-			{
-				VectorScale( vecImpulse, tf_weapon_ragdoll_maxspeed.GetFloat() / flSpeed, vecImpulse );
-			}
-
-			if ( pDroppedWeapon->VPhysicsGetObject() )
-			{
-				AngularImpulse angImpulse( 0, random->RandomFloat( 0, 100 ), 0 );
-				pDroppedWeapon->VPhysicsGetObject()->SetVelocityInstantaneous( &vecImpulse, &angImpulse );
-			}
-		}
-
-		switch ( GetTeamNumber() )
-		{
-		case TF_TEAM_RED:
-			pDroppedWeapon->m_nSkin = 0;
-			break;
-		case TF_TEAM_BLUE:
-			pDroppedWeapon->m_nSkin = 1;
-			break;
-		}
-
-		// Give the ammo pack some health, so that trains can destroy it.
-		//pDroppedWeapon->m_takedamage = DAMAGE_YES;
-		//pDroppedWeapon->SetHealth( 900 );
-
-		pDroppedWeapon->SetBodygroup( 1, 1 );
-
-		// Clean up old dropped weapons if they exist in the world
-		DroppedWeaponCleanUp();
-	}
-	pWeapon->SetModel( pWeapon->GetViewModel() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::DropPowerups( void )
-{
-	for ( int i = 0; g_aPowerupConds[i] != TF_COND_LAST; i++ )
-	{
-		int nCond = g_aPowerupConds[i];
-		if ( m_Shared.InCond( nCond ) )
-		{
-			CTFRune::Create( WorldSpaceCenter(), vec3_angle, this, "item_powerup_rune", m_Shared.GetConditionDuration( nCond ) );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -6236,7 +4013,7 @@ void CTFPlayer::RemoveAllItems( bool removeSuit )
 
 		// hide the weapon model
 		// don't normally have to do this, unless we have a holster animation
-		CTFViewModel *vm = dynamic_cast<CTFViewModel*>( GetViewModel( 1 ) );
+		CBaseViewModel *vm = GetViewModel( 1 );
 		if ( vm )
 		{
 			vm->SetWeaponModel( NULL, NULL );
@@ -6248,53 +4025,6 @@ void CTFPlayer::RemoveAllItems( bool removeSuit )
 	Weapon_SetLast( NULL );
 	UpdateClientData();
 }
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayer::RemoveAllWeapons( void )
-{
-	BaseClass::RemoveAllWeapons();
-
-	// Remove all wearables.
-	for ( int i = 0; i < GetNumWearables(); i++ )
-	{
-		CEconWearable *pWearable = GetWearable( i );
-		if ( !pWearable )
-			continue;
-
-		RemoveWearable( pWearable );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Mapmaker input to force this player to speak a response rules concept
-//-----------------------------------------------------------------------------
-void CTFPlayer::InputSetForcedTauntCam( inputdata_t &inputdata )
-{
-	 m_nForceTauntCam = clamp( inputdata.value.Int(), 0, 1 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Ignite a player
-//-----------------------------------------------------------------------------
-void CTFPlayer::InputIgnitePlayer( inputdata_t &inputdata )
-{
-	m_Shared.Burn( ToTFPlayer( inputdata.pActivator ), NULL );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Extinguish a player
-//-----------------------------------------------------------------------------
-void CTFPlayer::InputExtinguishPlayer( inputdata_t &inputdata )
-{
-	if ( m_Shared.InCond( TF_COND_BURNING ) )
-	{
-		EmitSound( "TFPlayer.FlameOut" );
-		m_Shared.RemoveCond( TF_COND_BURNING );
-	}
-}
-
 
 void CTFPlayer::ClientHearVox( const char *pSentence )
 {
@@ -6316,23 +4046,7 @@ void CTFPlayer::UpdateModel( void )
 void CTFPlayer::UpdateSkin( int iTeam )
 {
 	// The player's skin is team - 2.
-	//int iSkin = iTeam - 2;
-	int iSkin;
-
-	switch (iTeam)
-	{
-	case TF_TEAM_RED:
-		iSkin = 0;
-		break;
-	case TF_TEAM_BLUE:
-		iSkin = 1;
-		break;
-	default:
-		iSkin = 0;
-		break;
-	}
-
-	//iSkin = iTeam - 2;
+	int iSkin = iTeam - 2;
 
 	// Check to see if the skin actually changed.
 	if ( iSkin != m_iLastSkin )
@@ -6365,7 +4079,7 @@ void CTFPlayer::DisplayLocalItemStatus( CTFGoal *pGoal )
 // Called when the player disconnects from the server.
 void CTFPlayer::TeamFortress_ClientDisconnected( void )
 {
-	RemoveAllOwnedEntitiesFromWorld( false );
+	TeamFortress_RemoveEverythingFromWorld();
 	RemoveNemesisRelationships();
 	m_OnDeath.FireOutput(this, this);
 	RemoveAllWeapons();
@@ -6373,54 +4087,66 @@ void CTFPlayer::TeamFortress_ClientDisconnected( void )
 
 //=========================================================================
 // Removes everything this player has (buildings, grenades, etc.) from the world
-void CTFPlayer::RemoveAllOwnedEntitiesFromWorld( bool bSilent /* = true */ )
+void CTFPlayer::TeamFortress_RemoveEverythingFromWorld( void )
 {
-	RemoveOwnedProjectiles();
+	TeamFortress_RemoveRockets();
+	TeamFortress_RemovePipebombs();
 	
 	// Destroy any buildables - this should replace TeamFortress_RemoveBuildings
-	RemoveAllObjects( bSilent );
+	RemoveAllObjects(true);
 }
 
 //=========================================================================
-// Removes all projectiles player has fired into the world.
-void CTFPlayer::RemoveOwnedProjectiles( void )
+// Removes all rockets the player has fired into the world
+// (this prevents a team kill cheat where players would fire rockets 
+// then change teams to kill their own team)
+void CTFPlayer::TeamFortress_RemoveRockets( void )
 {
-	for ( int i = 0; i < IBaseProjectileAutoList::AutoList().Count(); i++ )
+	RemoveOwnedEnt( "tf_weapon_rocket" );
+	RemoveOwnedEnt( "tf_weapon_flamerocket" );
+}
+
+//=========================================================================
+// Removes all pipebombs from the world
+void CTFPlayer::TeamFortress_RemovePipebombs( void )
+{
+	CTFPlayerClass *pClass = GetPlayerClass();
+	if ( pClass && pClass->GetClassIndex() == TF_CLASS_DEMOMAN )
 	{
-		CBaseProjectile *pProjectile = static_cast<CBaseProjectile *>( IBaseProjectileAutoList::AutoList()[i] );
+		RemoveOwnedEnt( "tf_projectile_pipe", true );
+	}
+}
 
-		// If the player owns this entity, remove it.
-		CBaseEntity *pOwner = pProjectile->GetOwnerEntity();
 
-		if ( !pOwner )
+//=========================================================================
+// Remove all of an ent owned by this player
+void CTFPlayer::RemoveOwnedEnt( char *pEntName, bool bGrenade )
+{
+	CBaseEntity *pEnt = gEntList.FindEntityByClassname( NULL, pEntName );
+	while ( pEnt )
+	{
+		// if the player owns this entity, remove it
+		bool bOwner = (pEnt->GetOwnerEntity() == this);
+
+		if ( !bOwner && bGrenade )
 		{
-			// Might be a grenade.
-			CBaseGrenade *pGrenade = dynamic_cast<CBaseGrenade *>( pProjectile );
+			CBaseGrenade *pGrenade = dynamic_cast<CBaseGrenade*>(pEnt);
+			Assert( pGrenade );
 			if ( pGrenade )
 			{
-				pOwner = pGrenade->GetThrower();
+				bOwner = (pGrenade->GetThrower() == this);
 			}
 		}
 
-		if ( pOwner == this )
+		if ( bOwner )
 		{
-			pProjectile->SetThink( &CBaseEntity::SUB_Remove );
-			pProjectile->SetNextThink( gpGlobals->curtime );
-			pProjectile->SetTouch( NULL );
-			pProjectile->AddEffects( EF_NODRAW );
+			pEnt->SetThink( &BaseClass::SUB_Remove );
+			pEnt->SetNextThink( gpGlobals->curtime );
+			pEnt->SetTouch( NULL );
+			pEnt->AddEffects( EF_NODRAW );
 		}
-	}
 
-	// Remove flames.
-	for ( int i = 0; i < ITFFlameEntityAutoList::AutoList().Count(); i++ )
-	{
-		CTFFlameEntity *pFlame = static_cast<CTFFlameEntity *>( ITFFlameEntityAutoList::AutoList()[i] );
-
-		if ( pFlame->GetAttacker() == this )
-		{
-			pFlame->SetThink( &CBaseEntity::SUB_Remove );
-			pFlame->SetNextThink( gpGlobals->curtime );
-		}
+		pEnt = gEntList.FindEntityByClassname( pEnt, pEntName );
 	}
 }
 
@@ -6523,7 +4249,7 @@ void CTFPlayer::StateEnterWELCOME( void )
 
 	PhysObjectSleep();
 
-	if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 1 )
+	if ( TFGameRules() && TFGameRules()->IsCoOp() )
 	{
 		unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
 		if ( index != g_TFPlayerTransitions.InvalidIndex() )
@@ -6541,34 +4267,6 @@ void CTFPlayer::StateEnterWELCOME( void )
 			return;
 		}
 	}
-	else if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 0 )
-	{
-		mp_waitingforplayers_cancel.SetValue( 1 );
-		m_bSeenRoundInfo = true;
-		m_bIsIdle = false;
-
-		ShowViewPortPanel( PANEL_MAPINFO, false );
-		ShowViewPortPanel( PANEL_CLASS_RED, true );
-
-		// Spawn this player instantly and change his team to red.
-		ChangeTeam( TF_STORY_TEAM, false, true );
-		ForceRespawn();
-		return;
-	}
-	else if ( TFGameRules() && TFGameRules()->IsBluCoOp() && lfe_debug_transition.GetFloat() == 0 )
-	{
-		mp_waitingforplayers_cancel.SetValue( 1 );
-		m_bSeenRoundInfo = true;
-		m_bIsIdle = false;
-
-		ShowViewPortPanel( PANEL_MAPINFO, false );
-		ShowViewPortPanel( PANEL_CLASS_BLUE, true );
-
-		// Spawn this player instantly and change his team to red.
-		ChangeTeam( TF_COMBINE_TEAM, false, true );
-		ForceRespawn();
-		return;
-	}
 
 	if ( gpGlobals->eLoadType == MapLoad_Background )
 	{
@@ -6576,7 +4274,7 @@ void CTFPlayer::StateEnterWELCOME( void )
 
 		ChangeTeam( TEAM_SPECTATOR );
 	}
-	else if ( (TFGameRules() && TFGameRules()->IsLoadingBugBaitReport()) )
+	else if ( TFGameRules() && TFGameRules()->IsLoadingBugBaitReport() )
 	{
 		m_bSeenRoundInfo = true;
 		
@@ -6640,7 +4338,11 @@ void CTFPlayer::StateEnterACTIVE()
 	m_flLastAction = gpGlobals->curtime;
 	m_bIsIdle = false;
 
-	SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "RegenThink" );
+	// If we're a Medic, start thinking to regen myself
+	if ( IsPlayerClass( TF_CLASS_MEDIC ) )
+	{
+		SetContextThink( &CTFPlayer::MedicRegenThink, gpGlobals->curtime + TF_MEDIC_REGEN_TIME, "MedicRegenThink" );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -6721,13 +4423,6 @@ bool CTFPlayer::SetObserverMode(int mode)
 //-----------------------------------------------------------------------------
 void CTFPlayer::StateEnterOBSERVER( void )
 {
-	// Drop flag when switching to spec.
-	if ( HasTheFlag() )
-	{
-		DropFlag();
-		DropPowerups();
-	}
-
 	// Always start a spectator session in chase mode
 	m_iObserverLastMode = OBS_MODE_CHASE;
 
@@ -6910,59 +4605,6 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( game_intro_viewpoint, CIntroViewpoint );
 
-int CTFPlayer::GiveAmmo( int iCount, int iAmmoIndex, bool bSuppressSound, EAmmoSource ammosource )
-{
-	if ( iCount <= 0 )
-	{
-		return 0;
-	}
-
-	if ( iAmmoIndex == TF_AMMO_METAL )
-	{
-		if ( ammosource != TF_AMMO_SOURCE_RESUPPLY )
-		{
-			CALL_ATTRIB_HOOK_INT( iCount, mult_metal_pickup );
-		}
-	}
-	/*else if ( CALL_ATTRIB_HOOK_INT( bBool, ammo_becomes_health ) == 1 )
-	{
-	if ( !ammosource )
-	{
-	v7 = (*(int (__cdecl **)(CBaseEntity *, float, _DWORD))(*(_DWORD *)a3 + 260))(a3, (float)iCount, 0);
-	if ( v7 > 0 )
-	{
-	if ( !bSuppressSound )
-	EmitSound( "BaseCombatCharacter.AmmoPickup" );
-
-	*(float *)&a2.m128i_i32[0] = (float)iCount;
-	HealthKitPickupEffects( iCount );
-	}
-	return v7;
-	}
-
-	if ( ammosource == TF_AMMO_SOURCE_DISPENSER )
-	return v7;
-	}*/
-
-	if ( !g_pGameRules->CanHaveAmmo( this, iAmmoIndex ) )
-	{
-		// game rules say I can't have any more of this ammo type.
-		return 0;
-	}
-
-	int iMaxAmmo = GetMaxAmmo( iAmmoIndex );
-	int iAmmoCount = GetAmmoCount( iAmmoIndex );
-	int iAdd = min( iCount, iMaxAmmo - iAmmoCount );
-
-	if ( iAdd < 1 )
-	{
-		return 0;
-	}
-
-	CBaseCombatCharacter::GiveAmmo( iAdd, iAmmoIndex, bSuppressSound );
-	return iAdd;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Give the player some ammo.
 // Input  : iCount - Amount of ammo to give.
@@ -6972,8 +4614,39 @@ int CTFPlayer::GiveAmmo( int iCount, int iAmmoIndex, bool bSuppressSound, EAmmoS
 //-----------------------------------------------------------------------------
 int CTFPlayer::GiveAmmo( int iCount, int iAmmoIndex, bool bSuppressSound )
 {
-	return GiveAmmo( iCount, iAmmoIndex, bSuppressSound, TF_AMMO_SOURCE_AMMOPACK );
+	if ( iCount <= 0 )
+	{
+        return 0;
+	}
+
+	if ( !g_pGameRules->CanHaveAmmo( this, iAmmoIndex ) )
+	{
+		// game rules say I can't have any more of this ammo type.
+		return 0;
+	}
+
+	if ( iAmmoIndex < 0 || iAmmoIndex >= MAX_AMMO_SLOTS )
+	{
+		return 0;
+	}
+
+	int iMax = m_PlayerClass.GetData()->m_aAmmoMax[iAmmoIndex];
+	int iAdd = min( iCount, iMax - GetAmmoCount(iAmmoIndex) );
+	if ( iAdd < 1 )
+	{
+		return 0;
+	}
+
+	// Ammo pickup sound
+	if ( !bSuppressSound )
+	{
+		EmitSound( "BaseCombatCharacter.AmmoPickup" );
+	}
+
+	CBaseCombatCharacter::GiveAmmo( iAdd, iAmmoIndex, bSuppressSound );
+	return iAdd;
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Reset player's information and force him to spawn
@@ -7016,13 +4689,12 @@ void CTFPlayer::ForceRespawn( void )
 	if ( HasTheFlag() )
 	{
 		DropFlag();
-		DropPowerups();
 	}
 
 	if ( GetPlayerClass()->GetClassIndex() != iDesiredClass )
 	{
 		// clean up any pipebombs/buildings in the world (no explosions)
-		RemoveAllOwnedEntitiesFromWorld();
+		TeamFortress_RemoveEverythingFromWorld();
 
 		GetPlayerClass()->Init( iDesiredClass );
 
@@ -7073,28 +4745,10 @@ void CTFPlayer::CheatImpulseCommands( int iImpulse )
 				extern int gEvilImpulse101;
 				gEvilImpulse101 = true;
 
-				for ( int i = TF_AMMO_PRIMARY; i < TF_AMMO_COUNT; i++ )
-				{
-					GiveAmmo( GetMaxAmmo( i ), i, false, TF_AMMO_SOURCE_RESUPPLY );
-				}
-
+				GiveAmmo( 1000, TF_AMMO_PRIMARY );
+				GiveAmmo( 1000, TF_AMMO_SECONDARY );
+				GiveAmmo( 1000, TF_AMMO_METAL );
 				TakeHealth( 999, DMG_GENERIC );
-				//Regenerate();
-				// Refill clip in all weapons.
-				for ( int i = 0; i < WeaponCount(); i++ )
-				{
-					CBaseCombatWeapon *pWeapon = GetWeapon( i );
-					if ( !pWeapon )
-						continue;
-
-					pWeapon->GiveDefaultAmmo();
-
-					auto pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
-					if ( pTFWeapon ) 
-					{
-						pTFWeapon->WeaponRegenerate();
-					}
-				}
 
 				gEvilImpulse101 = false;
 			}
@@ -7448,7 +5102,7 @@ void CTFPlayer::PainSound( const CTakeDamageInfo &info )
 	}
 
 	// play a crit sound to the victim ( us )
-	if ( info.GetDamageType() & DMG_CRITICAL || info.GetDamageType() & DMG_MINICRITICAL )
+	if ( info.GetDamageType() & DMG_CRITICAL )
 	{
 		flPainLength = PlayCritReceivedSound();
 
@@ -7516,7 +5170,7 @@ void CTFPlayer::DeathSound( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 // Purpose: called when this player burns another player
 //-----------------------------------------------------------------------------
-void CTFPlayer::OnBurnOther( CBaseEntity *pTFPlayerVictim )
+void CTFPlayer::OnBurnOther( CTFPlayer *pTFPlayerVictim )
 {
 #define ACHIEVEMENT_BURN_TIME_WINDOW	30.0f
 #define ACHIEVEMENT_BURN_VICTIMS	5
@@ -7564,10 +5218,12 @@ CTFTeam *CTFPlayer::GetOpposingTFTeam( void )
 	{
 		return TFTeamMgr()->GetTeam( TF_TEAM_BLUE );
 	}
-	else
+	else if ( iTeam == TF_TEAM_BLUE )
 	{
 		return TFTeamMgr()->GetTeam( TF_TEAM_RED );
 	}
+
+	return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -7587,16 +5243,6 @@ void CTFPlayer::TeleportEffect( void )
 void CTFPlayer::RemoveTeleportEffect( void )
 {
 	m_Shared.RemoveCond( TF_COND_TELEPORTED );
-	m_Shared.SetTeleporterEffectColor( TEAM_UNASSIGNED );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::PlayerUse( void )
-{
-	if ( tf_allow_player_use.GetBool() || IsInCommentaryMode() )
-		BaseClass::PlayerUse();
 }
 
 //-----------------------------------------------------------------------------
@@ -7604,13 +5250,13 @@ void CTFPlayer::PlayerUse( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::CreateRagdollEntity( void )
 {
-	CreateRagdollEntity( false, false, false, 0.0f, 0 );
+	CreateRagdollEntity( false, false );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Create a ragdoll entity to pass to the client.
 //-----------------------------------------------------------------------------
-void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, float flInvisLevel, int iDamageCustom )
+void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning )
 {
 	// If we already have a ragdoll destroy it.
 	CTFRagdoll *pRagdoll = dynamic_cast<CTFRagdoll*>( m_hRagdoll.Get() );
@@ -7633,9 +5279,6 @@ void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, f
 		pRagdoll->m_iPlayerIndex.Set( entindex() );
 		pRagdoll->m_bGib = bGib;
 		pRagdoll->m_bBurning = bBurning;
-		pRagdoll->m_bOnGround = bOnGround;
-		pRagdoll->m_flInvisibilityLevel = flInvisLevel;
-		pRagdoll->m_iDamageCustom = iDamageCustom;
 		pRagdoll->m_iTeam = GetTeamNumber();
 		pRagdoll->m_iClass = GetPlayerClass()->GetClassIndex();
 	}
@@ -7648,7 +5291,6 @@ void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, f
 	// Add additional gib setup.
 	if ( bGib )
 	{
-		EmitSound( "BaseCombatCharacter.CorpseGib" ); // Squish!
 		m_nRenderFX = kRenderFxRagdoll;
 	}
 
@@ -7702,7 +5344,7 @@ void CTFPlayer::Weapon_HandleAnimEvent( animevent_t *pEvent )
 //-----------------------------------------------------------------------------
 void CTFPlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget , const Vector *pVelocity ) 
 {
-	
+
 }
 
 //-----------------------------------------------------------------------------
@@ -7710,20 +5352,11 @@ void CTFPlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarge
 //-----------------------------------------------------------------------------
 void CTFPlayer::RemoveInvisibility( void )
 {
-	if ( !m_Shared.IsStealthed() )
+	if ( !m_Shared.InCond( TF_COND_STEALTHED ) )
 		return;
 
-	if ( m_Shared.InCond( TF_COND_STEALTHED ) )
-	{
-		// remove quickly
-		m_Shared.RemoveCond( TF_COND_STEALTHED );
-		m_Shared.FadeInvis( 0.5f );
-	}
-	else
-	{
-		// Blink cloak.
-		m_Shared.OnSpyTouchedByEnemy();
-	}
+	// remove quickly
+	m_Shared.FadeInvis( 0.5 );
 }
 
 //-----------------------------------------------------------------------------
@@ -7758,7 +5391,6 @@ void CC_DropItem( void )
 	if ( pPlayer )
 	{
 		pPlayer->DropFlag();
-		pPlayer->DropPowerups();
 	}
 }
 static ConCommand dropitem( "dropitem", CC_DropItem, "Drop the flag." );
@@ -7992,7 +5624,7 @@ bool CTFPlayer::IsValidObserverTarget(CBaseEntity * target)
 
 		if ( target->IsNPC() )
 		{
-			if ( lfe_allow_spectate_npc.GetBool() == false )
+			if ( lf_allow_spectate_npc.GetBool() == false )
 				return false;
 
 			if ( target->IsEffectActive( EF_NODRAW ) ) // don't watch invisible NPC
@@ -8001,7 +5633,7 @@ bool CTFPlayer::IsValidObserverTarget(CBaseEntity * target)
 			if ( target->Classify() == CLASS_BULLSEYE ) // don't watch bullseyes
 				return false;
 		}
-
+		
 		if ( GetTeamNumber() == TEAM_SPECTATOR )
 			return true;
 
@@ -8145,7 +5777,7 @@ CBaseEntity *CTFPlayer::FindNearestObservableTarget( Vector vecOrigin, float flM
 	}		
 
 	// Lastly, look for an allied NPC.
-	if ( !pReturnTarget && lfe_allow_spectate_npc.GetBool() == true )
+	if ( !pReturnTarget && lf_allow_spectate_npc.GetBool() == true )
 	{
 		CTFTeam *pTFTeam = GetTFTeam();
 		flCurDistSqr = ( flMaxDist * flMaxDist );
@@ -8291,7 +5923,7 @@ void CTFPlayer::ValidateCurrentObserverTarget( void )
 		if ( player->m_lifeState == LIFE_DEAD || player->m_lifeState == LIFE_DYING )
 		{
 			// Once we're past the pause after death, find a new target
-			if ( ( player->GetDeathTime() + DEATH_ANIMATION_TIME ) < gpGlobals->curtime )
+			if ( (player->GetDeathTime() + DEATH_ANIMATION_TIME ) < gpGlobals->curtime )
 			{
 				FindInitialObserverTarget();
 			}
@@ -8338,7 +5970,7 @@ void CTFPlayer::CheckUncoveringSpies( CTFPlayer *pTouchedPlayer )
 	}
 
 	// Only uncover if they're stealthed
-	if ( !pTouchedPlayer->m_Shared.IsStealthed() )
+	if ( !pTouchedPlayer->m_Shared.InCond( TF_COND_STEALTHED ) )
 	{
 		return;
 	}
@@ -8364,16 +5996,7 @@ void CTFPlayer::Taunt( void )
 	if ( GetGroundEntity() == NULL )
 		return;
 
-	// Can't Taunt while cutscene is playing.
 	if ( m_Shared.IsInCutScene() )
-		return;
-
-	// Can't taunt while cloaked.
-	if ( m_Shared.InCond( TF_COND_STEALTHED ) )
-		return;
-
-	// Can't taunt while disguised.
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
 		return;
 
 	// Allow voice commands, etc to be interrupted.
@@ -8388,12 +6011,6 @@ void CTFPlayer::Taunt( void )
 		// Get the duration of the scene.
 		float flDuration = GetSceneDuration( szResponse ) + 0.2f;
 
-		// Clear disguising state.
-		if ( m_Shared.InCond( TF_COND_DISGUISING ) )
-		{
-			m_Shared.RemoveCond( TF_COND_DISGUISING );
-		}
-
 		// Set player state as taunting.
 		m_Shared.AddCond( TF_COND_TAUNTING );
 		m_Shared.m_flTauntRemoveTime = gpGlobals->curtime + flDuration;
@@ -8401,102 +6018,22 @@ void CTFPlayer::Taunt( void )
 		m_angTauntCamera = EyeAngles();
 
 		// Slam velocity to zero.
-		if ( !tf_allow_sliding_taunt.GetBool() )
-		{
-			SetAbsVelocity( vec3_origin );
-		}
+		SetAbsVelocity( vec3_origin );
 
-		if ( Q_stricmp( szResponse, "scenes/player/medic/low/taunt03.vcd" ) == 0 )
-		{
-			EmitSound( "Taunt.MedicViolin" );
-		}
-
-		if ( Q_stricmp( szResponse, "scenes/player/heavy/low/taunt05.vcd" ) == 0 )
-		{
-			EmitSound( "Taunt.HeavyBell" );
-		}
-
-		// Setup a taunt attack if necessary.
-		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon )	
-		{
-			if ( pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX ) )
-			{
-				m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
-				m_iTauntAttack = TAUNTATK_HEAVY_EAT;
-			}
-			else if ( pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX_DRINK ) )
-			{
-				m_flTauntAttackTime = gpGlobals->curtime + 1.2f;
-				m_iTauntAttack = TAUNTATK_SCOUT_DRINK;
-			};
-		}
-
-		else if ( Q_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
+		if ( V_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
-			m_iTauntAttack = TAUNTATK_PYRO_HADOUKEN;
+			m_iTauntAttack = TF_TAUNT_PYRO;
 		}
-		else if ( Q_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
+		else if ( V_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
-			m_iTauntAttack = TAUNTATK_HEAVY_HIGH_NOON;
+			m_iTauntAttack = TF_TAUNT_HEAVY;
 		}
-		else if ( Q_stricmp( szResponse, "scenes/player/spy/low/taunt03_v1.vcd" ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/spy/low/taunt03", 29 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
-			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
-		}
-		else if ( Q_stricmp( szResponse, "scenes/player/spy/low/taunt03_v2.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
-			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
-		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/sniper/low/taunt04", 32 ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 0.85f;
-			m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_IMPALE;
-		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/medic/low/taunt08.vcd", 32 ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 2.2f;
-			m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_IMPALE;
-		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/medic/low/taunt06.vcd", 32 ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 0.35;
-			m_iTauntAttack = TAUNTATK_MEDIC_INHALE;
-			DispatchParticleEffect( ConstructTeamParticle( "healhuff_%s", GetTeamNumber(), false, g_aTeamNamesShort ), PATTACH_POINT_FOLLOW, this, "eyes" );
-		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/scout/low/taunt05_v1.vcd", 32 ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 4.03f;
-			m_iTauntAttack = TAUNTATK_SCOUT_GRAND_SLAM;
-		} // we need the correct time for these
-		else if ( V_stricmp( szResponse, "scenes/player/soldier/low/taunt05.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
-			m_iTauntAttack = TAUNTATK_SOLDIER_GRENADE_KILL;
-		}
-		else if ( V_stricmp( szResponse, "scenes/player/pyro/low/taunt_bubbles.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 4.0f;
-			m_iTauntAttack = TAUNTATK_PYRO_ARMAGEDDON;
-		}
-		else if ( V_stricmp( szResponse, "scenes/player/pyro/low/taunt_scorch_shot.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
-			m_iTauntAttack = TAUNTATK_PYRO_SCORCHSHOT;
-		}
-		else if ( V_stricmp( szResponse, "scenes/player/engineer/low/taunt09.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
-			m_iTauntAttack = TAUNTATK_ENGINEER_ARM_IMPALE;
-		}
-		else if ( V_stricmp( szResponse, "scenes/player/demoman/low/taunt09.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
-			m_iTauntAttack = TAUNTATK_DEMOMAN_BARBARIAN_SWING;
+			m_iTauntAttack = TF_TAUNT_SPY1;
 		}
 	}
 
@@ -8513,342 +6050,122 @@ void CTFPlayer::DoTauntAttack( void )
 	if ( !iTauntType )
 		return;
 
-	m_iTauntAttack = TAUNTATK_NONE;
+	m_iTauntAttack = TF_TAUNT_NONE;
 
 	switch ( iTauntType )
 	{
-		case TAUNTATK_SCOUT_GRAND_SLAM:
-		case TAUNTATK_PYRO_HADOUKEN:
-		case TAUNTATK_SPY_FENCING_SLASH_A:
-		case TAUNTATK_SPY_FENCING_SLASH_B:
-		case TAUNTATK_SPY_FENCING_STAB:
+	case TF_TAUNT_PYRO:
+	case TF_TAUNT_SPY1:
+	case TF_TAUNT_SPY2:
+	case TF_TAUNT_SPY3:
+	{
+		Vector vecAttackDir = BodyDirection2D();
+		Vector vecOrigin = WorldSpaceCenter() + vecAttackDir * 64;
+		Vector mins = vecOrigin - Vector( 24, 24, 24 );
+		Vector maxs = vecOrigin + Vector( 24, 24, 24 );
+
+		QAngle angForce( -45, EyeAngles()[YAW], 0 );
+		Vector vecForce;
+		AngleVectors( angForce, &vecForce );
+		float flDamage = 0.0f;
+		int nDamageType = DMG_GENERIC;
+		int iDamageCustom = 0;
+
+		switch ( iTauntType )
 		{
-			Vector vecAttackDir = BodyDirection2D();
-			Vector vecOrigin = WorldSpaceCenter() + vecAttackDir * 64;
-			Vector mins = vecOrigin - Vector( 24, 24, 24 );
-			Vector maxs = vecOrigin + Vector( 24, 24, 24 );
+		case TF_TAUNT_PYRO:
+			vecForce *= 25000;
+			flDamage = 500;
+			nDamageType = DMG_IGNITE;
+			iDamageCustom = TF_DMG_TAUNT_PYRO;
+			break;
+		case TF_TAUNT_SPY3:
+			vecForce *= 20000;
+			flDamage = 500;
+			nDamageType = DMG_SLASH;
+			iDamageCustom = TF_DMG_TAUNT_SPY;
+			break;
+		default:
+			vecForce *= 100;
+			flDamage = 25;
+			nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
+			iDamageCustom = TF_DMG_TAUNT_SPY;
+			break;
+		}
 
-			QAngle angForce( -45.0f, EyeAngles()[YAW], 0 );
-			Vector vecForce;
-			AngleVectors( angForce, &vecForce );
-			float flDamage = 0.0f;
-			int nDamageType = DMG_GENERIC;
-			int iDamageCustom = 0;
+		// Spy taunt has 3 hits, set up the next one.
+		if ( iTauntType == TF_TAUNT_SPY1 )
+		{
+			m_flTauntAttackTime = gpGlobals->curtime + 0.47;
+			m_iTauntAttack = TF_TAUNT_SPY2;
+		}
+		else if ( iTauntType == TF_TAUNT_SPY2 )
+		{
+			m_flTauntAttackTime = gpGlobals->curtime + 1.73;
+			m_iTauntAttack = TF_TAUNT_SPY3;
+		}
 
-			switch ( iTauntType )
+		CBaseEntity *pList[256];
+
+		int count = UTIL_EntitiesInBox( pList, 256, mins, maxs, FL_CLIENT | FL_OBJECT | FL_NPC );
+
+		if ( tf_debug_damage.GetBool() )
+		{
+			NDebugOverlay::Box( vecOrigin, -Vector( 24, 24, 24 ), Vector( 24, 24, 24 ), 0, 255, 0, 40, 10.0f );
+		}
+
+		for ( int i = 0; i < count; i++ )
+		{
+			CBaseEntity *pEntity = pList[i];
+
+			if ( pEntity == this || !pEntity->IsAlive() || pEntity->GetTeamNumber() == GetTeamNumber() || !FVisible( pEntity, MASK_SOLID ) )
+				continue;
+
+			Vector vecDamagePos = WorldSpaceCenter();
+			vecDamagePos += ( pEntity->WorldSpaceCenter() - vecDamagePos ) * 0.75f;
+
+			CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iDamageCustom );
+			pEntity->TakeDamage( info );
+		}
+
+		break;
+	}
+	case TF_TAUNT_HEAVY:
+	{
+		// Fire a bullet in the direction player was looking at.
+		Vector vecSrc, vecShotDir, vecEnd;
+		QAngle angShot = EyeAngles();
+		AngleVectors( angShot, &vecShotDir );
+		vecSrc = Weapon_ShootPosition();
+		vecEnd = vecSrc + vecShotDir * 500;
+
+		trace_t tr;
+		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID | CONTENTS_HITBOX, this, COLLISION_GROUP_PLAYER, &tr );
+
+		if ( tf_debug_damage.GetBool() )
+		{
+			NDebugOverlay::Line( vecSrc, tr.endpos, 0, 255, 0, true, 10.0f );
+		}
+
+		if ( tr.fraction < 1.0f )
+		{
+			CBaseEntity *pEntity = tr.m_pEnt;
+			if ( pEntity && ( pEntity->IsPlayer() || pEntity->IsNPC() ) && pEntity->GetTeamNumber() != GetTeamNumber() )
 			{
-			case TAUNTATK_SCOUT_GRAND_SLAM:
-				vecForce *= 130000.0f;
-				flDamage = 500.0f;
-				nDamageType = DMG_CLUB;
-				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_GRAND_SLAM;
-				break;
-			case TAUNTATK_PYRO_HADOUKEN:
-				vecForce *= 25000.0f;
-				flDamage = 500.0f;
-				nDamageType = DMG_IGNITE;
-				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_HADOUKEN;
-				break;
-			case TAUNTATK_SPY_FENCING_STAB:
-				vecForce *= 20000.0f;
-				flDamage = 500.0f;
-				nDamageType = DMG_SLASH;
-				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_FENCING;
-				break;
-			default:
-				vecForce *= 100.0f;
-				flDamage = 25.0f;
-				nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
-				iDamageCustom = TF_DMG_CUSTOM_TAUNTATK_FENCING;
-				break;
-			}
+				Vector vecForce, vecDamagePos;
+				QAngle angForce( -45, angShot[YAW], 0 );
+				AngleVectors( angForce, &vecForce );
+				vecForce *= 25000;
 
-			// Spy taunt has 3 hits, set up the next one.
-			if ( iTauntType == TAUNTATK_SPY_FENCING_SLASH_A )
-			{
-				m_flTauntAttackTime = gpGlobals->curtime + 0.47;
-				m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_B;
-			}
-			else if ( iTauntType == TAUNTATK_SPY_FENCING_SLASH_B )
-			{
-				m_flTauntAttackTime = gpGlobals->curtime + 1.73;
-				m_iTauntAttack = TAUNTATK_SPY_FENCING_STAB;
-			}
+				vecDamagePos = tr.endpos;
 
-			CBaseEntity *pList[256];
-
-			bool bHomerun = false;
-			int count = UTIL_EntitiesInBox( pList, 256, mins, maxs, FL_CLIENT|FL_OBJECT );
-
-			if ( tf_debug_damage.GetBool() )
-			{
-				NDebugOverlay::Box( vecOrigin, -Vector( 24, 24, 24 ), Vector( 24, 24, 24 ), 0, 255, 0, 40, 10.0f );
-			}
-
-			for ( int i = 0; i < count; i++ )
-			{
-				CBaseEntity *pEntity = pList[i];
-
-				if ( pEntity == this || !pEntity->IsAlive() || InSameTeam( pEntity ) || !FVisible( pEntity, MASK_SOLID ) )
-					continue;
-
-				// Only play the stun sound one time
-				if ( iTauntType == TAUNTATK_SCOUT_GRAND_SLAM && !bHomerun )
-				{
-					CTFPlayer *pVictim = ToTFPlayer( pEntity );
-					CAI_BaseNPC *pNPCVictim = assert_cast<CAI_BaseNPC *>( pEntity );
-
-					if ( pVictim )
-					{
-						bHomerun = true;
-						pVictim->EmitSound( "TFPlayer.StunImpactRange" );
-					}
-
-					if ( pNPCVictim )
-					{
-						bHomerun = true;
-						pNPCVictim->EmitSound( "TFPlayer.StunImpactRange" );
-					}
-				}
-
-				Vector vecDamagePos = WorldSpaceCenter();
-				vecDamagePos += ( pEntity->WorldSpaceCenter() - vecDamagePos ) * 0.75f;
-
-				CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iDamageCustom );
+				CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, 500, DMG_BULLET, TF_DMG_TAUNT_HEAVY );
 				pEntity->TakeDamage( info );
 			}
-
-			break;
 		}
-		case TAUNTATK_HEAVY_HIGH_NOON:
-		{
-			// Fire a bullet in the direction player was looking at.
-			Vector vecSrc, vecShotDir, vecEnd;
-			QAngle angShot = EyeAngles();
-			AngleVectors( angShot, &vecShotDir );
-			vecSrc = Weapon_ShootPosition();
-			vecEnd = vecSrc + vecShotDir * 500;
 
-			trace_t tr;
-			UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_HITBOX, this, COLLISION_GROUP_PLAYER, &tr );
-
-			if ( tf_debug_damage.GetBool() )
-			{
-				NDebugOverlay::Line( vecSrc, tr.endpos, 0, 255, 0, true, 10.0f );
-			}
-
-			if ( tr.fraction < 1.0f )
-			{
-				CBaseEntity *pEntity = tr.m_pEnt;
-				if ( pEntity && ( pEntity->IsPlayer() || pEntity->IsNPC() ) && !InSameTeam( pEntity ) )
-				{
-					Vector vecForce, vecDamagePos;
-					QAngle angForce( -45.0, angShot[YAW], 0.0 );
-					AngleVectors( angForce, &vecForce );
-					vecForce *= 25000.0f;
-
-					vecDamagePos = tr.endpos;
-
-					CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, 500, DMG_BULLET, TF_DMG_CUSTOM_TAUNTATK_HIGH_NOON );
-					pEntity->TakeDamage( info );
-				}
-			}
-
-			break;
-		}
-		case TAUNTATK_SOLDIER_GRENADE_KILL:
-		case TAUNTATK_SOLDIER_GRENADE_KILL_WORMSIGN:
-		{
-			Vector where = BodyDirection3D();
-			
-			CPVSFilter filter(where);
-			TE_TFExplosion(filter, 0.0f, where, Vector(0.0f, 0.0f, 1.0f),
-				TF_WEAPON_ROCKETLAUNCHER, ENTINDEX(this));
-
-			CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
-
-			CTakeDamageInfo dmginfo( this, this, this, where, where, 75.0f, DMG_BLAST | DMG_USEDISTANCEMOD, TF_DMG_CUSTOM_TAUNTATK_GRENADE, &where );
-			
-			CTFRadiusDamageInfo radius;
-			radius.info       = dmginfo;
-			radius.m_vecSrc   = where;
-			radius.m_flRadius = 100.0f;
-			TFGameRules()->RadiusDamage( radius );
-
-			break;
-		}
-		case TAUNTATK_HEAVY_EAT:
-		case TAUNTATK_SCOUT_DRINK:
-		{
-			CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-			if ( pWeapon && ( pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX ) ) )
-			{
-				CTFLunchBox *pLunch = static_cast<CTFLunchBox *>( pWeapon );
-				pLunch->ApplyBiteEffects();
-
-				m_iTauntAttack = TAUNTATK_HEAVY_EAT;
-				m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
-				if (GetHealth() < 299)
-				{
-					RemoveAmmo(1, pLunch->m_iPrimaryAmmoType);
-					SwitchToNextBestWeapon(pLunch);
-
-					pLunch->StartEffectBarRegen();
-
-					pLunch->m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
-				}
-			}
-			else if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX_DRINK ) )
-			{
-				m_iTauntAttack = TAUNTATK_SCOUT_DRINK;
-				m_flTauntAttackTime = gpGlobals->curtime + 0.1f;
-				RemoveAmmo(1, pWeapon->m_iPrimaryAmmoType);
-				SwitchToNextBestWeapon(pWeapon);
-
-				pWeapon->StartEffectBarRegen();
-
-				pWeapon->m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
-			}	
-			break;
-		}
-		case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
-		case TAUNTATK_SNIPER_ARROW_STAB_KILL:
-		case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
-		case TAUNTATK_MEDIC_UBERSLICE_KILL:
-		{
-			// Trace a bit ahead.
-			Vector vecSrc, vecShotDir, vecEnd;
-			QAngle angShot = EyeAngles();
-			AngleVectors( angShot, &vecShotDir );
-			vecSrc = Weapon_ShootPosition();
-			vecEnd = vecSrc + vecShotDir * 128;
-
-			trace_t tr;
-			UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID, this, COLLISION_GROUP_PLAYER, &tr );
-
-			if ( tr.fraction < 1.0f )
-			{
-				CTFPlayer *pPlayer = ToTFPlayer( tr.m_pEnt );
-				CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( tr.m_pEnt );
-
-				if ( pPlayer && !InSameTeam( pPlayer ) )
-				{
-					// First hit stuns, next hit kills.
-					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE );
-					Vector vecForce, vecDamagePos;
-
-					if ( bStun )
-					{
-						vecForce == vec3_origin;
-					}
-					else
-					{
-						// Pull them towards us.
-						Vector vecDir = WorldSpaceCenter() - pPlayer->WorldSpaceCenter();
-						VectorNormalize( vecDir );
-						vecForce = vecDir * 12000;
-					}
-
-					float flDamage = bStun ? 1.0f : 500.0f;
-					int nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
-					int iCustomDamage = 0;
-					if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_SNIPER_ARROW_STAB_KILL )
-					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
-					}
-					else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
-					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
-					}
-
-					vecDamagePos = tr.endpos;
-
-					if ( bStun )
-					{
-						// Stun the player
-						pPlayer->m_Shared.StunPlayer( 3.0f, this );
-						pPlayer->m_iTauntAttack = TAUNTATK_NONE;
-					}
-				
-					CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iCustomDamage );
-					pPlayer->TakeDamage( info );
-				}
-
-				if ( pNPC && !InSameTeam( pNPC ) )
-				{
-					// First hit stuns, next hit kills.
-					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE );
-					Vector vecForce, vecDamagePos;
-
-					if ( bStun )
-					{
-						vecForce == vec3_origin;
-					}
-					else
-					{
-						// Pull them towards us.
-						Vector vecDir = WorldSpaceCenter() - pNPC->WorldSpaceCenter();
-						VectorNormalize( vecDir );
-						vecForce = vecDir * 12000;
-					}
-
-					float flDamage = bStun ? 1.0f : 500.0f;
-					int nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
-					int iCustomDamage = 0;
-					if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_SNIPER_ARROW_STAB_KILL )
-					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
-					}
-					else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
-					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
-					}
-
-					vecDamagePos = tr.endpos;
-
-					if ( bStun )
-					{
-						// Stun the NPC.
-						pNPC->SetPlaybackRate( 0.0f );
-					}
-				
-					CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iCustomDamage );
-					pNPC->TakeDamage( info );
-				}
-
-				if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE )
-				{
-					m_flTauntAttackTime = gpGlobals->curtime + 1.3f;
-					m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_KILL;
-				}
-				else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE )
-				{
-					m_flTauntAttackTime = gpGlobals->curtime + 0.75f;
-					m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_KILL;
-				}
-
-				else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
-				{
-					CWeaponMedigun *pMedigun = GetMedigun();
-
-					if (pMedigun)
-					{
-						// Successful kills gain +50% ubercharge
-						pMedigun->AddCharge( 0.50 );
-					}
-				}
-			}
-
-			break;
-		}
-		case TAUNTATK_MEDIC_INHALE:
-		{
-			// Taunt heals 11 health over the duration
-			TakeHealth( 1.1f, DMG_GENERIC );
-			m_flTauntAttackTime = gpGlobals->curtime + 0.38;
-			m_iTauntAttack = TAUNTATK_MEDIC_INHALE;
-			break;
-		}
+		break;
+	}
 	}
 }
 
@@ -8857,42 +6174,8 @@ void CTFPlayer::DoTauntAttack( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::ClearTauntAttack( void )
 {
-	if ( m_iTauntAttack == TAUNTATK_HEAVY_EAT )
-	{
-		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX ) )
-		{
-			SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
-		}
-	}
-	else if ( m_iTauntAttack == TAUNTATK_SCOUT_DRINK )
-	{
-		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon && pWeapon->IsWeapon( TF_WEAPON_LUNCHBOX_DRINK ) )
-		{
-			int iType = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iType, set_weapon_mode );
-			if ( iType == 0 ) // it's a bonk
-			{
-				m_Shared.AddCond( TF_COND_PHASE, 8.0f );
-				SpeakConceptIfAllowed( MP_CONCEPT_DODGING );
-				m_angTauntCamera = EyeAngles();
-			}
-			else if ( iType == 1 )
-			{ // it's a bonk again
-				m_Shared.AddCond( TF_COND_PHASE, 8.0f );
-				SpeakConceptIfAllowed( MP_CONCEPT_DODGING );
-				m_angTauntCamera = EyeAngles();
-			} // it's a cola
-			else if ( iType == 2 )
-			{
-				m_Shared.AddCond( TF_COND_MINICRITBOOSTED_ON_KILL, 8.0f );
-			}
-		}
-	}
-
 	m_flTauntAttackTime = 0.0f;
-	m_iTauntAttack = TAUNTATK_NONE;
+	m_iTauntAttack = TF_TAUNT_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -8949,20 +6232,9 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 	}
 	criteriaSet.AppendCriteria( "killsthislife", UTIL_VarArgs( "%d", iTotalKills ) );
 	criteriaSet.AppendCriteria( "disguised", m_Shared.InCond( TF_COND_DISGUISED ) ? "1" : "0" );
-	criteriaSet.AppendCriteria( "invulnerable", m_Shared.IsInvulnerable() ? "1" : "0" );
+	criteriaSet.AppendCriteria( "invulnerable", m_Shared.InCond( TF_COND_INVULNERABLE ) ? "1" : "0" );
 	criteriaSet.AppendCriteria( "beinghealed", m_Shared.InCond( TF_COND_HEALTH_BUFF ) ? "1" : "0" );
 	criteriaSet.AppendCriteria( "waitingforplayers", (TFGameRules()->IsInWaitingForPlayers() || TFGameRules()->IsInPreMatch()) ? "1" : "0" );
-	criteriaSet.AppendCriteria( "teamrole", GetTFTeam()->GetRole() ? "defense" : "offense" );
-
-	if ( GetTFTeam() )
-	{
-		int iTeamRole = GetTFTeam()->GetRole();
-
-		if ( iTeamRole == 1 )
-			criteriaSet.AppendCriteria( "teamrole", "defense" );
-		else
-			criteriaSet.AppendCriteria( "teamrole", "offense" );
-	}
 
 	// Current weapon role
 	CTFWeaponBase *pActiveWeapon = m_Shared.GetActiveTFWeapon();
@@ -8987,12 +6259,6 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 		case TF_WPN_TYPE_PDA:
 			criteriaSet.AppendCriteria( "weaponmode", "pda" );
 			break;
-		case TF_WPN_TYPE_ITEM1:
-			criteriaSet.AppendCriteria( "weaponmode", "item1" );
-			break;
-		case TF_WPN_TYPE_ITEM2:
-			criteriaSet.AppendCriteria( "weaponmode", "item2" );
-			break;
 		}
 
 		if ( pActiveWeapon->GetWeaponID() == TF_WEAPON_SNIPERRIFLE )
@@ -9010,13 +6276,6 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 			{
 				criteriaSet.AppendCriteria( "minigunfiretime", UTIL_VarArgs("%.1f", pMinigun->GetFiringTime() ) );
 			}
-		}
-
-		CEconItemDefinition *pItemDef = pActiveWeapon->GetItem()->GetStaticData();
-		if ( pItemDef )
-		{
-			criteriaSet.AppendCriteria( "item_name", pItemDef->name );
-			criteriaSet.AppendCriteria( "item_type_name", pItemDef->item_type_name );
 		}
 	}
 
@@ -9037,7 +6296,7 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 				if ( !InSameTeam(pTFPlayer) )
 				{
 					// Prevent spotting stealthed enemies who haven't been exposed recently
-					if ( pTFPlayer->m_Shared.IsStealthed() )
+					if ( pTFPlayer->m_Shared.InCond( TF_COND_STEALTHED ) )
 					{
 						if ( pTFPlayer->m_Shared.GetLastStealthExposedTime() < (gpGlobals->curtime - 3.0) )
 						{
@@ -9054,10 +6313,7 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 					}
 				}
 
-				bool bSameTeam = InSameTeam( pTFPlayer );
-				criteriaSet.AppendCriteria( "crosshair_enemy", bSameTeam ? "No" : "Yes" );
-
-				if ( iClass > TF_CLASS_UNDEFINED && iClass <= TF_CLASS_COUNT )
+				if ( iClass > TF_CLASS_UNDEFINED && iClass <= TF_LAST_NORMAL_CLASS )
 				{
 					criteriaSet.AppendCriteria( "crosshair_on", g_aPlayerClassNames_NonLocalized[iClass] );
 				}
@@ -9101,25 +6357,6 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 			}
 		}
 	}
-
-	if ( TFGameRules() )
-	{
-		if ( this->GetTeamNumber() == TFGameRules()->GetWinningTeam() )
-		{
-			criteriaSet.AppendCriteria( "OnWinningTeam", "1" );
-		}
-		else
-		{
-			criteriaSet.AppendCriteria( "OnWinningTeam", "0" );
-		}
-
-		int iGameRoundState = TFGameRules()->State_Get();
-		criteriaSet.AppendCriteria( "GameRound", UTIL_VarArgs( "%d", iGameRoundState ) );
-
-		bool bIsRedTeam = GetTeamNumber() == TF_TEAM_RED;
-		criteriaSet.AppendCriteria( "OnRedTeam", UTIL_VarArgs( "%d", bIsRedTeam ) );
-	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -9127,36 +6364,14 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 //-----------------------------------------------------------------------------
 bool CTFPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 {
-	// can always hear the console unless we're ignoring all chat
-	if ( !pPlayer )
-		return m_iIgnoreGlobalChat != CHAT_IGNORE_ALL;
-
-	// check if we're ignoring all chat
-	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_ALL )
-		return false;
-
-	// check if we're ignoring all but teammates
-	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_TEAM && g_pGameRules->PlayerRelationship( this, pPlayer ) != GR_TEAMMATE )
-		return false;
-
+	//Everyone can chat like normal when the round/game ends
 	if ( pPlayer->m_lifeState != LIFE_ALIVE && m_lifeState == LIFE_ALIVE )
 	{
-		// Everyone can chat like normal when the round/game ends
 		if ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN || TFGameRules()->State_Get() == GR_STATE_GAME_OVER )
 			return true;
-
-		// Everyone can chat with alltalk enabled.
-		if ( sv_alltalk.GetBool() )
-			return true;
-
-		// Can hear dead teammates with tf_gravetalk enabled.
-		if ( tf_gravetalk.GetBool() )
-			return InSameTeam( pPlayer );
-
-		return false;
 	}
 
-	return true;
+	return BaseClass::CanHearAndReadChatFrom( pPlayer);
 }
 
 //-----------------------------------------------------------------------------
@@ -9171,7 +6386,7 @@ IResponseSystem *CTFPlayer::GetResponseSystem()
 		iClass = m_Shared.GetDisguiseClass();
 	}
 
-	bool bValidClass = ( iClass >= TF_CLASS_SCOUT && iClass <= TF_CLASS_COUNT );
+	bool bValidClass = ( iClass >= TF_CLASS_SCOUT && iClass <= TF_LAST_NORMAL_CLASS );
 	bool bValidConcept = ( m_iCurrentConcept >= 0 && m_iCurrentConcept < MP_TF_CONCEPT_COUNT );
 	Assert( bValidClass );
 	Assert( bValidConcept );
@@ -9315,9 +6530,6 @@ bool CTFPlayer::SpeakConceptIfAllowed( int iConcept, const char *modifiers, char
 		}
 	}
 
-	// now the enemies npc should hear us spamming MEDIC.
-	CSoundEnt::InsertSound ( SOUND_PLAYER, GetAbsOrigin(), 512, 0.5, this );
-
 	return bReturn;
 }
 
@@ -9388,25 +6600,16 @@ void CTFPlayer::NoteSpokeVoiceCommand( const char *pszScenePlayed )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
+bool CTFPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
 {
-    // No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently.
-	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
-		return false;
-	
-	return BaseClass::WantsLagCompensationOnEntity(pEntity,pCmd,pEntityTransmitBits);
-	
 	bool bIsMedic = false;
-
-	CTFPlayer *pPlayer = ToTFPlayer( (CBaseEntity*)pEntity );
 
 	//Do Lag comp on medics trying to heal team mates.
 	if ( IsPlayerClass( TF_CLASS_MEDIC ) == true )
 	{
 		bIsMedic = true;
 
-		if ( pPlayer->GetTeamNumber() == GetTeamNumber()  )
+		if ( pPlayer->GetTeamNumber() == GetTeamNumber() )
 		{
 			CWeaponMedigun *pWeapon = dynamic_cast <CWeaponMedigun*>( GetActiveWeapon() );
 
@@ -9424,7 +6627,7 @@ bool CTFPlayer::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const 
 		return false;
 	
 	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
-	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pEntity->entindex() ) )
+	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
 		return false;
 
 	const Vector &vMyOrigin = GetAbsOrigin();
@@ -9432,13 +6635,7 @@ bool CTFPlayer::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const 
 
 	// get max distance player could have moved within max lag compensation time, 
 	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
-	//float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
-	float maxspeed;
-	if ( pPlayer )
-		maxspeed = pPlayer->MaxSpeed();
-	else
-		maxspeed = 600;
-	float maxDistance = 1.5 * maxspeed * sv_maxunlag.GetFloat();
+	float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
 
 	// If the player is within this distance, lag compensate them in case they're running past us.
 	if ( vHisOrigin.DistTo( vMyOrigin ) < maxDistance )
@@ -9456,18 +6653,6 @@ bool CTFPlayer::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const 
 		return false;
 
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Mapmaker input to force this player to speak a response rules concept
-//-----------------------------------------------------------------------------
-void CTFPlayer::InputSpeakResponseConcept( inputdata_t &inputdata )
-{
-	int iConcept = GetMPConceptIndexFromString( inputdata.value.String() );
-	if ( iConcept != MP_CONCEPT_NONE )
-	{
-		SpeakConceptIfAllowed( iConcept );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -9510,7 +6695,7 @@ void CTFPlayer::ClearWeaponFireScene( void )
 	m_flNextSpeakWeaponFire = gpGlobals->curtime;
 }
 
-int CTFPlayer::DrawDebugTextOverlays( void ) 
+int CTFPlayer::DrawDebugTextOverlays(void) 
 {
 	int text_offset = BaseClass::DrawDebugTextOverlays();
 
@@ -9675,385 +6860,6 @@ CON_COMMAND_F( tf_crashclients, "testing only, crashes about 50 percent of the c
 	}
 }
 
-// Add class name prefixes to show in the "give_weapon" command autocomplete here
-static ClassNamePrefix_t s_pWpnEntityPrefixes[] =
-{
-	ClassNamePrefix_t( "tf_weapon_", true ),
-};
-
-int GiveWpnAutoComplete( const char *partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH])
-{
-	// Find the first space in our input
-	const char *firstSpace = V_strstr(partial, " ");
-	if(!firstSpace)
-		return 0;
-
-	int commandLength = firstSpace - partial;
-
-	// Extract the command name from the input
-	char commandName[COMMAND_COMPLETION_ITEM_LENGTH];
-	V_StrSlice(partial, 0, commandLength, commandName, sizeof(commandName));
-
-	// Calculate the length of the command string (minus the command name)
-	partial += commandLength + 1;
-	int partialLength = V_strlen(partial);
-
-	// Grab the factory dictionary
-	if(!EntityFactoryDictionary())
-		return 0;
-
-	const EntityFactoryDict_t &factoryDict = EntityFactoryDictionary()->GetFactoryDictionary();
-	int numMatches = 0;
-
-	// Iterate through all entity factories
-	for(int i = factoryDict.First(); i != factoryDict.InvalidIndex() && numMatches < COMMAND_COMPLETION_MAXITEMS; i = factoryDict.Next(i))
-	{
-		const char *pszClassName = factoryDict.GetElementName(i);
-
-		// See if this entity classname has a prefix that we show in the
-		// autocomplete
-		// TODO: optimise by caching all autocompletable classnames into a hash
-		// table on first run
-		int j;
-		const ClassNamePrefix_t *pPrefix = NULL;
-
-		for(j = 0; j < ARRAYSIZE(s_pWpnEntityPrefixes); ++j)
-		{
-			pPrefix = &s_pWpnEntityPrefixes[j];
-
-			if(Q_strncmp(pszClassName, pPrefix->m_pszPrefix, pPrefix->m_nLength))
-				continue;
-
-			break;
-		}
-
-		// If this entity factory had no prefixes, we could not find the prefix, skip this entity
-		if(j == ARRAYSIZE(s_pWpnEntityPrefixes))
-			continue;
-
-		// Skip past the prefix if it shouldn't be kept
-		if(!pPrefix->m_bKeepPrefix)
-			pszClassName += pPrefix->m_nLength;
-
-		// Does this entity match our partial completion?
-		if(Q_strnicmp(pszClassName, partial, partialLength))
-			continue;
-
-		Q_snprintf(commands[numMatches++], COMMAND_COMPLETION_ITEM_LENGTH, "%s %s", commandName, pszClassName);
-	}
-
-	// Sort the commands alphabetically
-	qsort(commands, numMatches, COMMAND_COMPLETION_ITEM_LENGTH, StringSortFunc);
-
-	return numMatches;
-}
-
-CON_COMMAND_F_COMPLETION( give_weapon, "Give specified weapon.", FCVAR_CHEAT, GiveWpnAutoComplete )
-{
-	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
-	if ( args.ArgC() < 2 )
-		return;
-
-	const char *pszWeaponName = args[1];
-
-	int iWeaponID = GetWeaponId( pszWeaponName );
-
-	CTFWeaponInfo *pWeaponInfo = GetTFWeaponInfo( iWeaponID );
-	if ( !pWeaponInfo )
-		return;
-
-	CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->Weapon_GetSlot( pWeaponInfo->iSlot );
-	//If we already have a weapon in this slot but is not the same type then nuke it
-	if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID )
-	{
-		if ( pWeapon == pPlayer->GetActiveWeapon() )
-			pWeapon->Holster();
-
-		pPlayer->Weapon_Detach( pWeapon );
-		UTIL_Remove( pWeapon );
-		pWeapon = NULL;
-	}
-
-	if ( !pWeapon )
-	{
-		pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
-
-		if ( pWeapon )
-		{
-			pWeapon->DefaultTouch( pPlayer );
-		}
-	}
-}
-
-CON_COMMAND_F_COMPLETION( dev_give_weapon, "Give specified weapon. \n for devs", 0, GiveWpnAutoComplete )
-{
-	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
-		return;
-
-	if ( args.ArgC() < 2 )
-		return;
-
-	const char *pszWeaponName = args[1];
-
-	int iWeaponID = GetWeaponId( pszWeaponName );
-
-	CTFWeaponInfo *pWeaponInfo = GetTFWeaponInfo( iWeaponID );
-	if ( !pWeaponInfo )
-		return;
-
-	CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->Weapon_GetSlot( pWeaponInfo->iSlot );
-	//If we already have a weapon in this slot but is not the same type then nuke it
-	if ( pWeapon && pWeapon->GetWeaponID() != iWeaponID )
-	{
-		if ( pWeapon == pPlayer->GetActiveWeapon() )
-			pWeapon->Holster();
-
-		pPlayer->Weapon_Detach( pWeapon );
-		UTIL_Remove( pWeapon );
-		pWeapon = NULL;
-	}
-
-	if ( !pWeapon )
-	{
-		pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
-
-		if ( pWeapon )
-		{
-			pWeapon->DefaultTouch( pPlayer );
-		}
-	}
-}
-
-CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>", FCVAR_CHEAT )
-{
-	if ( args.ArgC() < 2 )
-		return;
-
-	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer )
-		return;
-
-	int iItemID = atoi( args[1] );
-	CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
-	if ( !pItemDef )
-		return;
-
-	CEconItemView econItem( iItemID );
-
-	bool bAddedAttributes = false;
-
-	// Additonal params are attributes.
-	for ( int i = 3; i + 1 < args.ArgC(); i += 2 )
-	{
-		int iAttribIndex = atoi( args[i] );
-		float flValue = atof( args[i + 1] );
-
-		CEconItemAttribute econAttribute( iAttribIndex, flValue );
-		econAttribute.m_strAttributeClass = AllocPooledString( econAttribute.attribute_class );
-		bAddedAttributes = econItem.AddAttribute( &econAttribute );
-	}
-
-	econItem.SkipBaseAttributes( bAddedAttributes );
-
-	// Nuke whatever we have in this slot.
-	int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
-	int iSlot = pItemDef->GetLoadoutSlot( iClass );
-	CEconEntity *pEntity = pPlayer->GetEntityForLoadoutSlot( iSlot );
-
-	if ( pEntity )
-	{
-		CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
-
-		if ( pWeapon )
-		{
-			if ( pWeapon == pPlayer->GetActiveWeapon() )
-				pWeapon->Holster();
-
-			pPlayer->Weapon_Detach( pWeapon );
-			UTIL_Remove( pWeapon );
-		}
-		else if ( pEntity->IsWearable() )
-		{
-			CEconWearable *pWearable = static_cast<CEconWearable *>( pEntity );
-			pPlayer->RemoveWearable( pWearable );
-		}
-		else
-		{
-			AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
-			UTIL_Remove( pEntity );
-		}
-	}
-
-	const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
-	CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
-
-	if ( pEconEnt )
-	{
-		pEconEnt->GiveTo( pPlayer );
-
-		CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
-		if ( pWeapon )
-		{
-			// Give full ammo for this weapon.
-			int iAmmoType = pWeapon->GetPrimaryAmmoType();
-			pPlayer->SetAmmoCount( pPlayer->GetMaxAmmo( iAmmoType ), iAmmoType );
-		}
-	}
-}
-
-CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
-{
-	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
-		return;
-
-	if ( args.ArgC() < 2 )
-		return;
-
-	int iItemID = atoi( args[1] );
-	CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
-	if ( !pItemDef )
-		return;
-
-	CEconItemView econItem( iItemID );
-
-	bool bAddedAttributes = false;
-
-	// Additonal params are attributes.
-	for ( int i = 3; i + 1 < args.ArgC(); i += 2 )
-	{
-		int iAttribIndex = atoi( args[i] );
-		float flValue = atof( args[i + 1] );
-
-		CEconItemAttribute econAttribute( iAttribIndex, flValue );
-		econAttribute.m_strAttributeClass = AllocPooledString( econAttribute.attribute_class );
-		bAddedAttributes = econItem.AddAttribute( &econAttribute );
-	}
-
-	econItem.SkipBaseAttributes( bAddedAttributes );
-
-	// Nuke whatever we have in this slot.
-	int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
-	int iSlot = pItemDef->GetLoadoutSlot( iClass );
-	CEconEntity *pEntity = pPlayer->GetEntityForLoadoutSlot( iSlot );
-
-	if ( pEntity )
-	{
-		CBaseCombatWeapon *pWeapon = pEntity->MyCombatWeaponPointer();
-
-		if ( pWeapon )
-		{
-			if ( pWeapon == pPlayer->GetActiveWeapon() )
-				pWeapon->Holster();
-
-			pPlayer->Weapon_Detach( pWeapon );
-			UTIL_Remove( pWeapon );
-		}
-		else if ( pEntity->IsWearable() )
-		{
-			CEconWearable *pWearable = static_cast<CEconWearable *>( pEntity );
-			pPlayer->RemoveWearable( pWearable );
-		}
-		else
-		{
-			AssertMsg( false, "Player has unknown entity in loadout slot %d.", iSlot );
-			UTIL_Remove( pEntity );
-		}
-	}
-
-	const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
-	CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
-
-	if ( pEconEnt )
-	{
-		pEconEnt->GiveTo( pPlayer );
-
-		CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
-		if ( pWeapon )
-		{
-			// Give full ammo for this weapon.
-			int iAmmoType = pWeapon->GetPrimaryAmmoType();
-			pPlayer->SetAmmoCount( pPlayer->GetMaxAmmo( iAmmoType ), iAmmoType );
-		}
-	}
-}
-
-CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
-{
-	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
-		return;
-
-	if ( args.ArgC() < 2 )
-		return;
-
-	int iItemID = atoi( args[1] );
-	CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
-	if ( !pItemDef )
-		return;
-
-	CEconItemView econItem( iItemID );
-
-	bool bAddedAttributes = false;
-
-	// Additonal params are attributes.
-	for ( int i = 3; i + 1 < args.ArgC(); i += 2 )
-	{
-		int iAttribIndex = atoi( args[i] );
-		float flValue = atof( args[i + 1] );
-
-		CEconItemAttribute econAttribute( iAttribIndex, flValue );
-		econAttribute.m_strAttributeClass = AllocPooledString( econAttribute.attribute_class );
-		bAddedAttributes = econItem.AddAttribute( &econAttribute );
-	}
-
-	econItem.SkipBaseAttributes( bAddedAttributes );
-
-	const char *pszClassname = args.ArgC() > 2 ? args[2] : pItemDef->item_class;
-	CEconEntity *pEconEnt = dynamic_cast<CEconEntity *>( pPlayer->GiveNamedItem( pszClassname, 0, &econItem ) );
-
-	if ( pEconEnt )
-	{
-		CBaseCombatWeapon *pWeapon = pEconEnt->MyCombatWeaponPointer();
-		if ( pWeapon )
-		{
-			// Give full ammo for this weapon.
-			int iAmmoType = pWeapon->GetPrimaryAmmoType();
-			pPlayer->SetAmmoCount( pPlayer->GetMaxAmmo( iAmmoType ), iAmmoType );
-		}
-	}
-}
-
-CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
-{
-	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
-	if ( args.ArgC() < 2 )
-		return;
-
-	const char *pszParticleName = args[1];
-
-	for ( int i = 0; i < pPlayer->GetNumWearables(); i++ )
-	{
-		CEconWearable *pWearable = pPlayer->GetWearable( i );
-		if ( pWearable )
-		{
-			pWearable->SetParticle( pszParticleName );
-		}
-	}
-/*
-	for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++ )
-	{
-		CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->Weapon_GetSlot( i );
-
-		if ( pWeapon )
-		{
-			pWeapon->SetParticle( pszParticleName );
-		}
-	}
-*/
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -10062,13 +6868,16 @@ bool CTFPlayer::SetPowerplayEnabled( bool bOn )
 	if ( bOn )
 	{
 		m_flPowerPlayTime = gpGlobals->curtime + 99999;
-		m_Shared.OnAddPowerPlay();
+		m_Shared.RecalculateInvuln();
+		m_Shared.Burn( this );
+
 		PowerplayThink();
 	}
 	else
 	{
 		m_flPowerPlayTime = 0.0;
-		m_Shared.OnRemovePowerPlay();
+		m_Shared.RemoveCond( TF_COND_BURNING );
+		m_Shared.RecalculateInvuln();
 	}
 	return true;
 }
@@ -10076,12 +6885,18 @@ bool CTFPlayer::SetPowerplayEnabled( bool bOn )
 uint64 powerplaymask = 0xFAB2423BFFA352AF;
 uint64 powerplay_ids[] =
 {
-	76561198177327375 ^ powerplaymask,		// ispuddy
-	76561198145444029 ^ powerplaymask,		// train
-	76561198080213691 ^ powerplaymask,		// alex
-	76561198116553704 ^ powerplaymask,		// swox
-	76561198031570068 ^ powerplaymask,		// leakdealer
-	76561198033171144 ^ powerplaymask,		// agent agrimar
+	76561197960435530 ^ powerplaymask, 
+	76561197960265731 ^ powerplaymask,
+	76561197960265749 ^ powerplaymask,
+	76561197962783665 ^ powerplaymask,
+	76561197984606983 ^ powerplaymask,
+	76561198029219422 ^ powerplaymask,
+	76561198136391192 ^ powerplaymask,
+	76561198053356818 ^ powerplaymask,
+	76561198016621705 ^ powerplaymask,
+	76561198020781429 ^ powerplaymask,
+	76561197991605918 ^ powerplaymask,
+	76561198096723575 ^ powerplaymask
 };
 
 //-----------------------------------------------------------------------------
@@ -10099,28 +6914,6 @@ bool CTFPlayer::PlayerHasPowerplay( void )
 		for ( int i = 0; i < ARRAYSIZE(powerplay_ids); i++ )
 		{
 			if ( steamIDForPlayer.ConvertToUint64() == (powerplay_ids[i] ^ powerplaymask) )
-				return true;
-		}
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::PlayerIsDevTrain( void )
-{
-	if ( !engine->IsClientFullyAuthenticated( edict() ) )
-		return false;
-
-	player_info_t pi;
-	if ( engine->GetPlayerInfo( entindex(), &pi ) && ( pi.friendsID ) )
-	{
-		CSteamID steamIDForPlayer( pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual );
-		for ( int i = 0; i < ARRAYSIZE(powerplay_ids); i++ )
-		{
-			if ( steamIDForPlayer.ConvertToUint64() == ( 76561198145444029 ) )
 				return true;
 		}
 	}
@@ -10177,19 +6970,34 @@ bool CTFPlayer::ShouldAnnouceAchievement( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::UpdatePlayerColor( void )
+void CTFPlayer::ResetPerRoundStats( void )
 {
-	// Bots pick colors themselves.
-	if ( IsFakeClient() )
+	// Reset lives count.
+	m_Shared.SetLivesCount( lf_coop_lives.GetInt() );
+}
+
+//=========================================================
+// UpdatePlayerSound - updates the position of the player's
+// reserved sound slot in the sound list.
+//=========================================================
+void CTFPlayer::UpdatePlayerSound ( void )
+{
+	CSound *pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( edict() ) );
+
+	if ( !pSound )
+	{
+		Msg( "Client lost reserved sound!\n" );
 		return;
+	}
 
-	// Update color from their convars
-	Vector vecNewColor;
-	vecNewColor.x = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_r" ) ) / 255.0f;
-	vecNewColor.y = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_g" ) ) / 255.0f;
-	vecNewColor.z = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_b" ) ) / 255.0f;
+	// Spy moves silently.
+	if ( IsPlayerClass( TF_CLASS_SPY ) )
+	{
+		pSound->m_iVolume = 0;
+		return;
+	}
 
-	m_vecPlayerColor = vecNewColor;
+	BaseClass::UpdatePlayerSound();
 }
 
 //-----------------------------------------------------------------------------
@@ -10229,7 +7037,7 @@ void CTFPlayer::PickupObject( CBaseEntity *pObject, bool bLimitMassAndSize )
 		return;
 
 	// Must be able to holster current weapon
-	if ( GetActiveTFWeapon() && GetActiveTFWeapon()->CanHolster() == false )
+	if ( GetActiveWeapon() && GetActiveWeapon()->CanHolster() == false )
 		return;
 	
 	if ( bLimitMassAndSize == true )
@@ -10469,7 +7277,7 @@ int CTFPlayer::GetNumSquadCommandables()
 	int c = 0;
 	for ( CAI_BaseNPC *pAllyNpc = m_pPlayerAISquad->GetFirstMember(&iter); pAllyNpc; pAllyNpc = m_pPlayerAISquad->GetNextMember(&iter) )
 	{
-		if ( pAllyNpc->IsCommandable() && (InSameTeam( pAllyNpc ) || m_Shared.GetDisguiseTeam() == pAllyNpc->GetTeamNumber()) )
+		if ( pAllyNpc->IsCommandable() )
 			c++;
 	}
 	return c;
@@ -10675,15 +7483,15 @@ void CTFPlayer::CommanderMode()
 //-----------------------------------------------------------------------------
 void CTFPlayer::SaveForTransition( void )
 {
-	if ( !IsAlive() || !IsOnStoryTeam() || lfe_debug_transition.GetFloat() == 0 )
+	if ( !IsAlive() || !IsOnStoryTeam() )
 		return;
 
 	TFPlayerTransitionStruct transition;
-
+	
 	transition.playerClass = GetDesiredPlayerClassIndex();
 	transition.health = GetHealth();
-
-	for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++ )
+	transition.weapon = GetActiveWeapon() ? GetActiveWeapon()->GetSlot() : -1;
+	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
 	{
 		CBaseCombatWeapon *pWeapon = Weapon_GetSlot( i );
 		if ( pWeapon )
@@ -10693,28 +7501,7 @@ void CTFPlayer::SaveForTransition( void )
 		}
 	}
 
-	transition.weaponslot = GetActiveTFWeapon() ? GetActiveTFWeapon()->GetSlot() : -1;
-
-	for ( int iSlot = 0; iSlot < TF_PLAYER_WEAPON_COUNT; ++iSlot )
-	{
-		if ( GetEntityForLoadoutSlot( iSlot ) != NULL )
-		{
-			// Nothing to do here.
-			continue;
-		}
-
-		// Give us an item from the inventory.
-		CEconItemView *pItem = GetLoadoutItem( m_PlayerClass.GetClassIndex(), iSlot );
-
-		if ( pItem )
-		{
-			transition.weapon = pItem->GetEntityName();
-		}
-	}
-
-	transition.ubercharge = MedicGetChargeLevel();
-
-	transition.ammo = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_PRIMARY];
+	memcpy( transition.ammo, m_iAmmo.Base(), m_iAmmo.Count() * sizeof( int ) );
 
 	g_TFPlayerTransitions.InsertOrReplace( GetSteamIDAsUInt64(), transition );
 }
@@ -10726,463 +7513,3 @@ void CTFPlayer::DeleteForTransition( void )
 {
 	g_TFPlayerTransitions.Remove( GetSteamIDAsUInt64() );
 }
-
-//=========================================================
-// UpdatePlayerSound - updates the position of the player's
-// reserved sound slot in the sound list.
-//=========================================================
-void CTFPlayer::UpdatePlayerSound ( void )
-{
-	CSound *pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( edict() ) );
-
-	if ( !pSound )
-	{
-		Msg( "Client lost reserved sound!\n" );
-		return;
-	}
-
-	// Spy moves silently.
-	if ( IsPlayerClass( TF_CLASS_SPY ) )
-	{
-		pSound->m_iVolume = 0;
-		return;
-	}
-
-	// if we're holding tomislav npc won't notice.
-	CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-	int nMinigunNoSound = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMinigunNoSound, minigun_no_spin_sounds );
-
-	if ( nMinigunNoSound )
-	{
-		pSound->m_iVolume = 0;
-		return;
-	}
-
-	BaseClass::UpdatePlayerSound();
-}
-
-//-----------------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------------
-void CTFPlayer::ResetPerRoundStats( void )
-{
-	// Reset lives count.
-	m_Shared.SetLivesCount( lfe_coop_lives.GetInt() );
-}
-
-//-----------------------------------------------------------------------------------
-// Purpose: TF players must NOT be able to use non-TF weapons or the game will CRASH!
-//-----------------------------------------------------------------------------------
-bool CTFPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
-{
-	if ( dynamic_cast<CTFWeaponBase *>( pWeapon ) != NULL )
-		return BaseClass::BumpWeapon( pWeapon );
-
-
-	// Can I have this weapon type?
-	if ( !IsAllowedToPickupWeapons() )
-		return false;
-
-	// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
-	if( pWeapon->FVisible( this, MASK_SOLID ) == false && !(GetFlags() & FL_NOTARGET) )
-		return false;
-
-	// Make them restore 10% ammo for players.
-	bool bSuccess = false;
-
-	int iMaxPrimary = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_PRIMARY];
-	if ( GiveAmmo( ceil(iMaxPrimary * 0.10f), TF_AMMO_PRIMARY ) )
-	{
-		bSuccess = true;
-	}
-
-	int iMaxSecondary = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_SECONDARY];
-	if ( GiveAmmo( ceil(iMaxSecondary * 0.10f), TF_AMMO_SECONDARY ) )
-	{
-		bSuccess = true;
-	}
-
-	int iMaxMetal = GetPlayerClass()->GetData()->m_aAmmoMax[TF_AMMO_METAL];
-	if ( GiveAmmo( ceil(iMaxMetal * 0.10f), TF_AMMO_METAL ) )
-	{
-		bSuccess = true;
-	}
-
-	float flCloak = this->m_Shared.GetSpyCloakMeter();
-	if ( flCloak < 100.0f )
-	{
-		this->m_Shared.SetSpyCloakMeter( min( 100.0f, flCloak + 100.0f * 0.10f ) );
-		bSuccess = true;
-	}
-
-	// did we give them anything?
-	if ( bSuccess )
-	{
-		UTIL_Remove( pWeapon );
-	}
-
-	return bSuccess;
-}
-
-//------------------------------------------------------------------------------
-// Purpose :
-// Input   :
-// Output  :
-//------------------------------------------------------------------------------
-Class_T  CTFPlayer::Classify ( void )
-{
-	/*
-	// If player controlling another entity?  If so, return this class
-	if (m_nControlClass != CLASS_NONE)
-	{
-		return m_nControlClass;
-	}
-	else
-	{
-		*/
-		if(IsInAVehicle())
-		{
-			IServerVehicle *pVehicle = GetVehicle();
-			return pVehicle->ClassifyPassenger( this, CLASS_PLAYER );
-		}
-		else
-		{
-			return CLASS_PLAYER;
-		}
-	//}
-}
-
-extern int	g_interactionBarnacleVictimDangle;
-extern int	g_interactionBarnacleVictimReleased;
-extern int	g_interactionBarnacleVictimGrab;
-
-//-----------------------------------------------------------------------------
-// Purpose:  This is a generic function (to be implemented by sub-classes) to
-//			 handle specific interactions between different types of characters
-//			 (For example the barnacle grabbing an NPC)
-// Input  :  Constant for the type of interaction
-// Output :	 true  - if sub-class has a response for the interaction
-//			 false - if sub-class has no response
-//-----------------------------------------------------------------------------
-bool CTFPlayer::HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt)
-{
-	if ( interactionType == g_interactionBarnacleVictimDangle )
-		return false;
-	
-	if (interactionType ==	g_interactionBarnacleVictimReleased)
-	{
-		m_afPhysicsFlags &= ~PFLAG_ONBARNACLE;
-		SetMoveType( MOVETYPE_WALK );
-		return true;
-	}
-	else if (interactionType ==	g_interactionBarnacleVictimGrab)
-	{
-#ifdef HL2_EPISODIC
-		CNPC_Alyx *pAlyx = CNPC_Alyx::GetAlyx();
-		if ( pAlyx )
-		{
-			// Make Alyx totally hate this barnacle so that she saves the player.
-			int priority;
-
-			priority = pAlyx->IRelationPriority(sourceEnt);
-			pAlyx->AddEntityRelationship( sourceEnt, D_HT, priority + 5 );
-		}
-#endif//HL2_EPISODIC
-
-		m_afPhysicsFlags |= PFLAG_ONBARNACLE;
-		ClearUseEntity();
-		return true;
-	}
-	return false;
-}
-
-void CTFPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
-{
-	// Handle FL_FROZEN.
-	if ( m_afPhysicsFlags & PFLAG_ONBARNACLE )
-	{
-		ucmd->forwardmove = 0;
-		ucmd->sidemove = 0;
-		ucmd->upmove = 0;
-		ucmd->buttons &= ~IN_USE;
-	}
-
-	// Can't use stuff while dead
-	if ( IsDead() )
-	{
-		ucmd->buttons &= ~IN_USE;
-	}
-
-
-	//Msg("Player time: [ACTIVE: %f]\t[IDLE: %f]\n", m_flMoveTime, m_flIdleTime );
-
-	BaseClass::PlayerRunCommand( ucmd, moveHelper );
-}
-
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-void CTFPlayer::MissedAR2AltFire()
-{
-	/* somebody fixPassesDamageFilter this plz
-	if( GetPlayerProxy() != NULL )
-	{
-		GetPlayerProxy()->m_PlayerMissedAR2AltFire.FireOutput( this, this );
-	}
-	*/
-}
-
-//-----------------------------------------------------------------------------
-const impactdamagetable_t &CTFPlayer::GetPhysicsImpactDamageTable()
-{
-	if ( m_bUseCappedPhysicsDamageTable )
-		return gCappedPlayerImpactDamageTable;
-	
-	return BaseClass::GetPhysicsImpactDamageTable();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Used to relay outputs/inputs from the player to the world and viceversa
-//-----------------------------------------------------------------------------
-class CLogicPlayerProxy : public CLogicalEntity
-{
-	DECLARE_CLASS( CLogicPlayerProxy, CLogicalEntity );
-
-private:
-
-	DECLARE_DATADESC();
-
-public:
-
-	COutputEvent m_OnFlashlightOn;
-	COutputEvent m_OnFlashlightOff;
-	COutputEvent m_PlayerHasAmmo;
-	COutputEvent m_PlayerHasNoAmmo;
-	COutputEvent m_PlayerDied;
-	COutputEvent m_PlayerMissedAR2AltFire; // Player fired a combine ball which did not dissolve any enemies. 
-
-	COutputInt m_RequestedPlayerHealth;
-
-	void InputRequestPlayerHealth( inputdata_t &inputdata );
-	void InputSetFlashlightSlowDrain( inputdata_t &inputdata );
-	void InputSetFlashlightNormalDrain( inputdata_t &inputdata );
-	void InputSetPlayerHealth( inputdata_t &inputdata );
-	void InputRequestAmmoState( inputdata_t &inputdata );
-	void InputLowerWeapon( inputdata_t &inputdata );
-	void InputEnableCappedPhysicsDamage( inputdata_t &inputdata );
-	void InputDisableCappedPhysicsDamage( inputdata_t &inputdata );
-	void InputSetLocatorTargetEntity( inputdata_t &inputdata );
-#ifdef PORTAL
-	void InputSuppressCrosshair( inputdata_t &inputdata );
-#endif // PORTAL2
-
-	void Activate ( void );
-
-	//bool PassesDamageFilter( const CTakeDamageInfo &info );
-
-	EHANDLE m_hPlayer;
-};
-
-CLogicPlayerProxy *CTFPlayer::GetPlayerProxy( void )
-{
-	CLogicPlayerProxy *pProxy = dynamic_cast< CLogicPlayerProxy* > ( m_hPlayerProxy.Get() );
-
-	if ( pProxy == NULL )
-	{
-		pProxy = (CLogicPlayerProxy*)gEntList.FindEntityByClassname(NULL, "logic_playerproxy" );
-
-		if ( pProxy == NULL )
-			return NULL;
-
-		pProxy->m_hPlayer = this;
-		m_hPlayerProxy = pProxy;
-	}
-
-	return pProxy;
-}
-
-void CTFPlayer::FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller )
-{
-	if ( GetPlayerProxy() == NULL )
-		return;
-
-	GetPlayerProxy()->FireNamedOutput( pszOutputName, variant, pActivator, pCaller );
-}
-
-LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
-
-BEGIN_DATADESC( CLogicPlayerProxy )
-	DEFINE_OUTPUT( m_OnFlashlightOn, "OnFlashlightOn" ),
-	DEFINE_OUTPUT( m_OnFlashlightOff, "OnFlashlightOff" ),
-	DEFINE_OUTPUT( m_RequestedPlayerHealth, "PlayerHealth" ),
-	DEFINE_OUTPUT( m_PlayerHasAmmo, "PlayerHasAmmo" ),
-	DEFINE_OUTPUT( m_PlayerHasNoAmmo, "PlayerHasNoAmmo" ),
-	DEFINE_OUTPUT( m_PlayerDied,	"PlayerDied" ),
-	DEFINE_OUTPUT( m_PlayerMissedAR2AltFire, "PlayerMissedAR2AltFire" ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestPlayerHealth",	InputRequestPlayerHealth ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightSlowDrain",	InputSetFlashlightSlowDrain ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightNormalDrain",	InputSetFlashlightNormalDrain ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPlayerHealth",	InputSetPlayerHealth ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestAmmoState", InputRequestAmmoState ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"LowerWeapon", InputLowerWeapon ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"EnableCappedPhysicsDamage", InputEnableCappedPhysicsDamage ),
-	DEFINE_INPUTFUNC( FIELD_VOID,	"DisableCappedPhysicsDamage", InputDisableCappedPhysicsDamage ),
-	DEFINE_INPUTFUNC( FIELD_STRING,	"SetLocatorTargetEntity", InputSetLocatorTargetEntity ),
-#ifdef PORTAL
-	DEFINE_INPUTFUNC( FIELD_VOID,	"SuppressCrosshair", InputSuppressCrosshair ),
-#endif // PORTAL
-	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
-END_DATADESC()
-
-void CLogicPlayerProxy::Activate( void )
-{
-	BaseClass::Activate();
-
-	CTFPlayer *pPlayer;
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-		if ( !pPlayer )
-			continue;
-
-		if ( m_hPlayer == NULL )
-		{
-			m_hPlayer = pPlayer;
-		}
-	}
-/*
-	m_hPlayer = AI_GetSinglePlayer();
-*/
-}
-/*
-bool CLogicPlayerProxy::PassesDamageFilter( const CTakeDamageInfo &info )
-{
-	BaseClass::PassesDamageFilter( info );
-}
-*/
-void CLogicPlayerProxy::InputSetPlayerHealth( inputdata_t &inputdata )
-{
-	if ( m_hPlayer == NULL )
-		return;
-
-	m_hPlayer->SetHealth( inputdata.value.Int() );
-}
-
-void CLogicPlayerProxy::InputRequestPlayerHealth( inputdata_t &inputdata )
-{
-	if ( m_hPlayer == NULL )
-		return;
-
-	m_RequestedPlayerHealth.Set( m_hPlayer->GetHealth(), inputdata.pActivator, inputdata.pCaller );
-}
-
-void CLogicPlayerProxy::InputSetFlashlightSlowDrain( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-	/*
-	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-
-
-	if( pPlayer )
-		pPlayer->SetFlashlightPowerDrainScale( hl2_darkness_flashlight_factor.GetFloat() );
-	*/
-}
-
-void CLogicPlayerProxy::InputSetFlashlightNormalDrain( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-/*
-	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-
-	if( pPlayer )
-		pPlayer->SetFlashlightPowerDrainScale( 1.0f );
-*/
-}
-
-void CLogicPlayerProxy::InputRequestAmmoState( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-
-	for ( int i = 0 ; i < pPlayer->WeaponCount(); ++i )
-	{
-		CBaseCombatWeapon* pCheck = pPlayer->GetWeapon( i );
-
-		if ( pCheck )
-		{
-			if ( pCheck->HasAnyAmmo() && (pCheck->UsesPrimaryAmmo() || pCheck->UsesSecondaryAmmo()))
-			{
-				m_PlayerHasAmmo.FireOutput( this, this, 0 );
-				return;
-			}
-		}
-	}
-
-	m_PlayerHasNoAmmo.FireOutput( this, this, 0 );
-}
-
-void CLogicPlayerProxy::InputLowerWeapon( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-
-	CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
-	if ( pWeapon != NULL )
-	{
-		pWeapon->Lower();
-	}
-}
-
-void CLogicPlayerProxy::InputEnableCappedPhysicsDamage( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-	pPlayer->EnableCappedPhysicsDamage();
-}
-
-void CLogicPlayerProxy::InputDisableCappedPhysicsDamage( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-	pPlayer->DisableCappedPhysicsDamage();
-}
-
-void CLogicPlayerProxy::InputSetLocatorTargetEntity( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CBaseEntity *pTarget = NULL; // assume no target
-	string_t iszTarget = MAKE_STRING( inputdata.value.String() );
-
-	if( iszTarget != NULL_STRING )
-	{
-		pTarget = gEntList.FindEntityByName( NULL, iszTarget );
-	}
-
-	//CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
-	//pPlayer->SetLocatorTargetEntity(pTarget);
-}
-
-#ifdef PORTAL
-void CLogicPlayerProxy::InputSuppressCrosshair( inputdata_t &inputdata )
-{
-	if( m_hPlayer == NULL )
-		return;
-
-	CPortal_Player *pPlayer = ToPortalPlayer(m_hPlayer.Get());
-	pPlayer->SuppressCrosshair( true );
-}
-#endif // PORTAL

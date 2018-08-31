@@ -120,74 +120,40 @@ private:
 
 BEGIN_DATADESC( CFilterTFClass )
 
-DEFINE_KEYFIELD( m_iAllowedClass, FIELD_INTEGER, "tfclass" ),
+DEFINE_KEYFIELD( m_iAllowedClass, FIELD_INTEGER, "classfilter" ),
 
 END_DATADESC()
 
 
-LINK_ENTITY_TO_CLASS( filter_tf_class, CFilterTFClass );
+LINK_ENTITY_TO_CLASS( filter_activator_tfclass, CFilterTFClass );
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 bool CFilterTFClass::PassesFilterImpl(CBaseEntity *pCaller, CBaseEntity *pEntity)
 {
-	CTFPlayer *pPlayer = dynamic_cast< CTFPlayer * >( pEntity );
+	CTFPlayer *pPlayer = dynamic_cast< CTFPlayer * >(pEntity);
 
-	if ( !pPlayer )
+	if (!pPlayer)
 		return false;
 
-	if ( m_bNegated )
+	// is the entity we're asking about on the winning 
+	// team during the bonus time? (winners pass all filters)
+
+	if (  TFGameRules() &&
+		( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && 
+		(TFGameRules()->GetWinningTeam() == pPlayer->GetTeamNumber()))
 	{
-		return ( !pPlayer->IsPlayerClass( m_iAllowedClass ));
+		// this should open all doors for the winners
+		if ( m_bNegated )
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
 	}
 
-	return ( pPlayer->IsPlayerClass( m_iAllowedClass ) );
-}
-
-//=============================================================================
-//
-// Condition filter
-//
-
-class CFilterTFCondition : public CBaseFilter
-{
-	DECLARE_CLASS( CFilterTFCondition, CBaseFilter );
-
-public:
-
-	inline bool PassesFilterImpl( CBaseEntity *pCaller, CBaseEntity *pEntity );
-
-private:
-
-	int	m_iCond;
-
-	DECLARE_DATADESC();
-};
-
-BEGIN_DATADESC( CFilterTFCondition )
-
-DEFINE_KEYFIELD( m_iCond, FIELD_INTEGER, "condition" ),
-
-END_DATADESC()
-
-
-LINK_ENTITY_TO_CLASS( filter_tf_condition, CFilterTFCondition );
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CFilterTFCondition::PassesFilterImpl(CBaseEntity *pCaller, CBaseEntity *pEntity)
-{
-	CTFPlayer *pPlayer = dynamic_cast< CTFPlayer * >( pEntity );
-
-	if ( !pPlayer )
-		return false;
-
-	if ( m_bNegated )
-	{
-		return ( !pPlayer->m_Shared.InCond( m_iCond ));
-	}
-
-	return ( pPlayer->m_Shared.InCond( m_iCond ) );
+	return (pPlayer->GetTeamNumber() == GetTeamNumber() && pPlayer->IsPlayerClass(m_iAllowedClass));
 }

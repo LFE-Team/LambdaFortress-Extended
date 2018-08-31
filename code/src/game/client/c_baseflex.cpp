@@ -120,7 +120,7 @@ bool GetHWMExpressionFileName( const char *pFilename, char *pHWMFilename )
 C_BaseFlex::C_BaseFlex() : 
 	m_iv_viewtarget( "C_BaseFlex::m_iv_viewtarget" ), 
 	m_iv_flexWeight("C_BaseFlex:m_iv_flexWeight" ),
-#if defined (HL2_CLIENT_DLL) || defined (TF_CLASSIC_CLIENT)
+#ifdef HL2_CLIENT_DLL
 	m_iv_vecLean("C_BaseFlex:m_iv_vecLean" ),
 	m_iv_vecShift("C_BaseFlex:m_iv_vecShift" ),
 #endif
@@ -142,7 +142,7 @@ C_BaseFlex::C_BaseFlex() :
 	/// Make sure size is correct
 	Assert( PHONEME_CLASS_STRONG + 1 == NUM_PHONEME_CLASSES );
 
-#if defined (HL2_CLIENT_DLL) || defined (TF_CLASSIC_CLIENT)
+#ifdef HL2_CLIENT_DLL
 	// Get general lean vector
 	AddVar( &m_vecLean, &m_iv_vecLean, LATCH_ANIMATION_VAR );
 	AddVar( &m_vecShift, &m_iv_vecShift, LATCH_ANIMATION_VAR );
@@ -228,7 +228,7 @@ void C_BaseFlex::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternio
 {
 	BaseClass::StandardBlendingRules( hdr, pos, q, currentTime, boneMask );
 
-#if defined (HL2_CLIENT_DLL) || defined (TF_CLASSIC_CLIENT)
+#ifdef HL2_CLIENT_DLL
 	// shift pelvis, rotate body
 	if (hdr->GetNumIKChains() != 0 && (m_vecShift.x != 0.0 || m_vecShift.y != 0.0))
 	{
@@ -346,7 +346,7 @@ bool CFlexSceneFileManager::Init()
 	FindSceneFile( NULL, "phonemes_weak", true );
 	FindSceneFile(NULL,  "phonemes_strong", true );
 
-#if defined (HL2_CLIENT_DLL) || defined (TF_CLASSIC_CLIENT)
+#if defined( HL2_CLIENT_DLL )
 	FindSceneFile( NULL, "random", true );
 	FindSceneFile( NULL, "randomAlert", true );
 #endif
@@ -1149,7 +1149,7 @@ void C_BaseFlex::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightC
 {
 	// hack in an initialization
 	LinkToGlobalFlexControllers( GetModelPtr() );
-	m_iBlink = AddGlobalFlexController( "blink" );
+	m_iBlink = AddGlobalFlexController( "UH" );
 
 	if ( SetupGlobalWeights( pBoneToWorld, nFlexWeightCount, pFlexWeights, pFlexDelayedWeights ) )
 	{

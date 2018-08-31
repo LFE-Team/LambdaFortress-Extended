@@ -66,7 +66,7 @@
 #include "viewpostprocess.h"
 #include "viewdebug.h"
 
-#if defined ( USES_ECON_ITEMS ) || defined( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
 #endif
 
@@ -75,7 +75,7 @@
 #endif // USE_MONITORS
 
 // Projective textures
-#include "c_env_projected_texture.h"
+#include "C_Env_Projected_Texture.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -767,7 +767,7 @@ static void SetClearColorToFogColor()
 // Precache of necessary materials
 //-----------------------------------------------------------------------------
 
-#if defined( HL2_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+#if defined HL2_CLIENT_DLL || TF_CLASSIC_CLIENT
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheViewRender )
 	CLIENTEFFECT_MATERIAL( "scripted/intro_screenspaceeffect" )
 CLIENTEFFECT_REGISTER_END()
@@ -795,7 +795,7 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/motion_blur" )
 	CLIENTEFFECT_MATERIAL( "dev/upscale" )
 
-#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 	CLIENTEFFECT_MATERIAL( "dev/pyro_blur_filter_y" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_blur_filter_x" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_dof" )
@@ -961,19 +961,10 @@ bool CViewRender::ShouldDrawViewModel( bool bDrawViewmodel )
 
 	if ( !r_drawviewmodel.GetBool() )
 		return false;
-#ifndef TF_CLASSIC_CLIENT
-	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
-		return false;
-#else
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( pPlayer->IsInAVehicle() )
-	{
-		return false;
-	}
 
 	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
 		return false;
-#endif
+
 	if ( !ShouldDrawEntities() )
 		return false;
 
@@ -5348,7 +5339,7 @@ void MaybeInvalidateLocalPlayerAnimation()
 			pWeapon->InvalidateBoneCache();
 		}
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 		// ...and all the things you're wearing/holding/etc
 		int NumWearables = pPlayer->GetNumWearables();
 		for ( int i = 0; i < NumWearables; ++i )

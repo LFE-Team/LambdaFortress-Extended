@@ -15,16 +15,16 @@
 
 using namespace vgui;
 
-DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CExButton, CExButton );
-DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CExLabel, CExLabel );
-DECLARE_BUILD_FACTORY( CExRichText );
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CTFButton, CTFButton );
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CTFLabel, CTFLabel );
+DECLARE_BUILD_FACTORY( CTFRichText );
 DECLARE_BUILD_FACTORY( CTFFooter );
 
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CExButton::CExButton(Panel *parent, const char *name, const char *text) : Button(parent, name, text)
+CTFButton::CTFButton( Panel *parent, const char *name, const char *text ) : Button( parent, name, text )
 {
 	m_szFont[0] = '\0';
 	m_szColor[0] = '\0';
@@ -33,7 +33,7 @@ CExButton::CExButton(Panel *parent, const char *name, const char *text) : Button
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CExButton::CExButton(Panel *parent, const char *name, const wchar_t *wszText) : Button(parent, name, wszText)
+CTFButton::CTFButton( Panel *parent, const char *name, const wchar_t *wszText ) : Button( parent, name, wszText )
 {
 	m_szFont[0] = '\0';
 	m_szColor[0] = '\0';
@@ -42,7 +42,7 @@ CExButton::CExButton(Panel *parent, const char *name, const wchar_t *wszText) : 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExButton::ApplySettings(KeyValues *inResourceData)
+void CTFButton::ApplySettings( KeyValues *inResourceData )
 {
 	BaseClass::ApplySettings( inResourceData );
 
@@ -55,7 +55,7 @@ void CExButton::ApplySettings(KeyValues *inResourceData)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExButton::ApplySchemeSettings(IScheme *pScheme)
+void CTFButton::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
@@ -66,7 +66,7 @@ void CExButton::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CExLabel::CExLabel(Panel *parent, const char *name, const char *text) : Label(parent, name, text)
+CTFLabel::CTFLabel( Panel *parent, const char *name, const char *text ) : Label( parent, name, text )
 {
 	m_szColor[0] = '\0';
 }
@@ -74,7 +74,7 @@ CExLabel::CExLabel(Panel *parent, const char *name, const char *text) : Label(pa
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CExLabel::CExLabel(Panel *parent, const char *name, const wchar_t *wszText) : Label(parent, name, wszText)
+CTFLabel::CTFLabel( Panel *parent, const char *name, const wchar_t *wszText ) : Label( parent, name, wszText )
 {
 	m_szColor[0] = '\0';
 }
@@ -82,7 +82,7 @@ CExLabel::CExLabel(Panel *parent, const char *name, const wchar_t *wszText) : La
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExLabel::ApplySettings(KeyValues *inResourceData)
+void CTFLabel::ApplySettings( KeyValues *inResourceData )
 {
 	BaseClass::ApplySettings( inResourceData );
 
@@ -94,7 +94,7 @@ void CExLabel::ApplySettings(KeyValues *inResourceData)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExLabel::ApplySchemeSettings(IScheme *pScheme)
+void CTFLabel::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
@@ -104,54 +104,46 @@ void CExLabel::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CExRichText::CExRichText(Panel *parent, const char *name) : RichText(parent, name)
+CTFRichText::CTFRichText( Panel *parent, const char *name ) : RichText( parent, name )
 {
 	m_szFont[0] = '\0';
 	m_szColor[0] = '\0';
 
 	SetCursor(dc_arrow);
 
-	Q_strncpy( pDefaultScrollUpImage, "chalkboard_scroll_up", sizeof( pDefaultScrollUpImage ) );
-
 	m_pUpArrow = new CTFImagePanel( this, "UpArrow" );
 	if ( m_pUpArrow )
 	{
-		//m_pUpArrow->SetShouldScaleImage( true );
-		m_pUpArrow->SetImage( pDefaultScrollUpImage );
+		m_pUpArrow->SetShouldScaleImage( true );
+		m_pUpArrow->SetImage( "chalkboard_scroll_up" );
 		m_pUpArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
 		m_pUpArrow->SetAlpha( 255 );
 		m_pUpArrow->SetVisible( false );
 	}
 
-	Q_strncpy( pDefaultScrollLineImage, "chalkboard_scroll_line", sizeof( pDefaultScrollLineImage ) );
-
 	m_pLine = new ImagePanel( this, "Line" );
 	if ( m_pLine )
 	{
 		m_pLine->SetShouldScaleImage( true );
-		m_pLine->SetImage( pDefaultScrollLineImage );
+		m_pLine->SetImage( "chalkboard_scroll_line" );
 		m_pLine->SetVisible( false );
 	}
-
-	Q_strncpy( pDefaultScrollDownImage, "chalkboard_scroll_down", sizeof( pDefaultScrollDownImage ) );
 
 	m_pDownArrow = new CTFImagePanel( this, "DownArrow" );
 	if ( m_pDownArrow )
 	{
-		//m_pDownArrow->SetShouldScaleImage( true );
-		m_pDownArrow->SetImage( pDefaultScrollDownImage );
+		m_pDownArrow->SetShouldScaleImage( true );
+		m_pDownArrow->SetImage( "chalkboard_scroll_down" );
 		m_pDownArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
 		m_pDownArrow->SetAlpha( 255 );
 		m_pDownArrow->SetVisible( false );
 	}
 
-	Q_strncpy( pDefaultScrollImage, "chalkboard_scroll_box", sizeof(pDefaultScrollImage) );
-
 	m_pBox = new ImagePanel( this, "Box" );
 	if ( m_pBox )
 	{
 		m_pBox->SetShouldScaleImage( true );
-		m_pBox->SetImage( pDefaultScrollImage );
+		m_pBox->SetImage( "chalkboard_scroll_box" );
 		m_pBox->SetVisible( false );
 	}
 
@@ -161,16 +153,12 @@ CExRichText::CExRichText(Panel *parent, const char *name) : RichText(parent, nam
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::ApplySettings( KeyValues *inResourceData )
+void CTFRichText::ApplySettings( KeyValues *inResourceData )
 {
 	BaseClass::ApplySettings( inResourceData );
 
 	Q_strncpy( m_szFont, inResourceData->GetString( "font", "Default" ), sizeof( m_szFont ) );
 	Q_strncpy( m_szColor, inResourceData->GetString( "fgcolor", "RichText.TextColor" ), sizeof( m_szColor ) );
-	Q_strncpy( pDefaultScrollImage, inResourceData->GetString( "scroll_box_image", "chalkboard_scroll_box" ), sizeof( pDefaultScrollImage ));
-	Q_strncpy( pDefaultScrollUpImage, inResourceData->GetString( "scroll_up_image", "chalkboard_scroll_up" ), sizeof( pDefaultScrollUpImage ));
-	Q_strncpy( pDefaultScrollLineImage, inResourceData->GetString( "scroll_line_image", "chalkboard_scroll_line" ), sizeof( pDefaultScrollLineImage ));
-	Q_strncpy( pDefaultScrollDownImage, inResourceData->GetString( "scroll_down_image", "chalkboard_scroll_down" ), sizeof( pDefaultScrollDownImage ));
 
 	InvalidateLayout( false, true ); // force ApplySchemeSettings to run
 }
@@ -178,7 +166,7 @@ void CExRichText::ApplySettings( KeyValues *inResourceData )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::ApplySchemeSettings(IScheme *pScheme)
+void CTFRichText::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
@@ -207,7 +195,7 @@ void CExRichText::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::PerformLayout()
+void CTFRichText::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
@@ -249,7 +237,7 @@ void CExRichText::PerformLayout()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::SetText(const wchar_t *text)
+void CTFRichText::SetText( const wchar_t *text )
 {
 	wchar_t buffer[2048];
 	Q_wcsncpy( buffer, text, sizeof( buffer ) );
@@ -269,7 +257,7 @@ void CExRichText::SetText(const wchar_t *text)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::SetText(const char *text)
+void CTFRichText::SetText( const char *text )
 {
 	char buffer[2048];
 	Q_strncpy( buffer, text, sizeof( buffer ) );
@@ -289,7 +277,7 @@ void CExRichText::SetText(const char *text)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::SetScrollBarImagesVisible(bool visible)
+void CTFRichText::SetScrollBarImagesVisible( bool visible )
 {
 	if ( m_pDownArrow && m_pDownArrow->IsVisible() != visible )
 	{
@@ -315,7 +303,7 @@ void CExRichText::SetScrollBarImagesVisible(bool visible)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CExRichText::OnTick()
+void CTFRichText::OnTick()
 {
 	if ( !IsVisible() )
 		return;

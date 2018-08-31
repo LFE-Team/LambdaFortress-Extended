@@ -75,9 +75,10 @@ public:
 	// Tells whether or not we're using client-side animation. Used for controlling
 	// the transmission of animtime.
 	bool	IsUsingClientSideAnimation()	{ return m_bClientSideAnimation; }
-
+	
 	//SecobMod__Information: Set to match DutchMegas' Collaborate mod code.
 	void SetClientSideAnimation( bool bNewValue ) { m_bClientSideAnimation = bNewValue; };
+
 
 	// Basic NPC Animation functions
 	virtual float	GetIdealSpeed( ) const;
@@ -334,16 +335,6 @@ public:
 
 	bool PrefetchSequence( int iSequence );
 
-#ifdef GLOWS_ENABLE
-	// Glows
-	void				AddGlowEffect( void );
-	void				RemoveGlowEffect( void );
-	bool				IsGlowEffectActive( void );
-	void				SetGlowEffectColor( byte r, byte g, byte b, byte a );
-	void				InputSetGlowColor( inputdata_t &inputdata );
-	void				InputStartGlowing( inputdata_t &inputdata );
-	void				InputStopGlowing( inputdata_t &inputdata );
-#endif // GLOWS_ENABLE
 private:
 	void LockStudioHdr();
 	void UnlockStudioHdr();
@@ -385,10 +376,6 @@ protected:
   	CIKContext			*m_pIk;
 	int					m_iIKCounter;
 
-#ifdef GLOWS_ENABLE
-	CNetworkVar( bool, m_bGlowEnabled );
-	CNetworkVector( m_vGlowColor );
-#endif // GLOWS_ENABLE
 public:
 	Vector	GetStepOrigin( void ) const;
 	QAngle	GetStepAngles( void ) const;
@@ -542,7 +529,7 @@ EXTERN_SEND_TABLE(DT_BaseAnimating);
 #define ANIMATION_SKIN_BITS				10	// 1024 body skin selections FIXME: this seems way high
 #define ANIMATION_BODY_BITS				32	// body combinations
 #define ANIMATION_HITBOXSET_BITS		2	// hit box sets 
-#if defined( TF_DLL ) || defined( TF_CLASSIC )
+#if defined (TF_DLL) || defined (TF_CLASSIC)
 #define ANIMATION_POSEPARAMETER_BITS	8	// pose parameter resolution
 #else
 #define ANIMATION_POSEPARAMETER_BITS	11	// pose parameter resolution

@@ -46,7 +46,7 @@ extern ConVar tf_flag_caps_per_round;
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CTFArrowPanel::CTFArrowPanel( Panel *parent, const char *name ) : vgui::Panel( parent, name )
+CTFArrowPanel::CTFArrowPanel( Panel *parent, const char *name ) : CTFImagePanel( parent, name )
 {
 	m_RedMaterial.Init( "hud/objectives_flagpanel_compass_red", TEXTURE_GROUP_VGUI ); 
 	m_BlueMaterial.Init( "hud/objectives_flagpanel_compass_blue", TEXTURE_GROUP_VGUI ); 
@@ -314,30 +314,13 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	KeyValues *pConditions = NULL;
-
-	if ( TFGameRules() && TFGameRules()->IsInHybridCTF_CPMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_hybrid" );
-	}
-	else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_mvm" );
-	}
-	else if ( TFGameRules() && TFGameRules()->IsInSpecialDeliveryMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_specialdelivery" );
-	}
-
 	// load control settings...
-	LoadControlSettings( "resource/UI/HudObjectiveFlagPanel.res", NULL, NULL, pConditions );
+	LoadControlSettings( "resource/UI/HudObjectiveFlagPanel.res" );
 
 	m_pCarriedImage = dynamic_cast<CTFImagePanel *>( FindChildByName( "CarriedImage" ) );
-	m_pPlayingTo = dynamic_cast<CExLabel *>( FindChildByName( "PlayingTo" ) );
+	m_pPlayingTo = dynamic_cast<CTFLabel *>( FindChildByName( "PlayingTo" ) );
 	m_pPlayingToBG = dynamic_cast<CTFImagePanel *>( FindChildByName( "PlayingToBG" ) );
+
 	m_pRedFlag = dynamic_cast<CTFFlagStatus *>( FindChildByName( "RedFlag" ) );
 	m_pBlueFlag = dynamic_cast<CTFFlagStatus *>( FindChildByName( "BlueFlag" ) );
 
@@ -351,13 +334,6 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 	{
 		pOutline->SetAlpha( 0 );
 	}
-
-	if ( pConditions )
-	{
-		pConditions->deleteThis();
-	}
-
-	UpdateStatus();
 }
 
 //-----------------------------------------------------------------------------
@@ -419,15 +395,15 @@ void CTFHudFlagObjectives::OnTick()
 
 		if ( pFlag )
 		{
-			if (!pFlag->IsDisabled())
+			if ( !pFlag->IsDisabled() )
 			{
-				if (m_pRedFlag && pFlag->GetTeamNumber() == TF_TEAM_RED)
+				if ( m_pRedFlag && pFlag->GetTeamNumber() == TF_TEAM_RED )
 				{
-					m_pRedFlag->SetEntity(pFlag);
+					m_pRedFlag->SetEntity( pFlag );
 				}
-				else if (m_pBlueFlag && pFlag->GetTeamNumber() == TF_TEAM_BLUE)
+				else if ( m_pBlueFlag && pFlag->GetTeamNumber() == TF_TEAM_BLUE )
 				{
-					m_pBlueFlag->SetEntity(pFlag);
+					m_pBlueFlag->SetEntity( pFlag );
 				}
 			}
 		}
@@ -486,19 +462,18 @@ void CTFHudFlagObjectives::OnTick()
 			if ( pTarget->HasTheFlag() )
 			{
 				bSpecCarriedImage = true;
-
-				CCaptureFlag *pPlayerFlag = dynamic_cast<CCaptureFlag*>(pTarget->GetItem());
-
-				if (m_pSpecCarriedImage)
+				if ( pTarget->GetTeamNumber() == TF_TEAM_RED )
 				{
-					switch (pPlayerFlag->GetTeamNumber())
+					if ( m_pSpecCarriedImage )
 					{
-						case TF_TEAM_RED:
-							m_pSpecCarriedImage->SetImage(("%s_red", STRING(pPlayerFlag->m_szHudIcon)));
-							break;
-						case TF_TEAM_BLUE:
-							m_pSpecCarriedImage->SetImage(("%s_blue", STRING(pPlayerFlag->m_szHudIcon)));
-							break;
+						m_pSpecCarriedImage->SetImage( "../hud/objectives_flagpanel_carried_blue" );
+					}
+				}
+				else
+				{
+					if ( m_pSpecCarriedImage )
+					{
+						m_pSpecCarriedImage->SetImage( "../hud/objectives_flagpanel_carried_red" );
 					}
 				}
 			}
@@ -545,25 +520,14 @@ void CTFHudFlagObjectives::UpdateStatus( void )
 		{
 			m_bFlagAnimationPlayed = true;
 
-			// Set the correct flag image depending on the flag we're holding
-			switch (pPlayerFlag->GetTeamNumber())
-			{
-				case TF_TEAM_RED:
-					m_pCarriedImage->SetImage("../hud/objectives_flagpanel_carried_red");
-					break;	
-				case TF_TEAM_BLUE:
-					m_pCarriedImage->SetImage("../hud/objectives_flagpanel_carried_blue");
-					break;
-			}
-
-			if (m_pRedFlag && m_pRedFlag->IsVisible())
-			{
-				m_pRedFlag->SetVisible(false);
-			}
-
 			if ( m_pBlueFlag && m_pBlueFlag->IsVisible() )
 			{
 				m_pBlueFlag->SetVisible( false );
+			}
+
+			if ( m_pRedFlag && m_pRedFlag->IsVisible() )
+			{
+				m_pRedFlag->SetVisible( false );
 			}
 
 			if ( !m_pCarriedImage->IsVisible() )

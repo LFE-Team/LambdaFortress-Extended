@@ -103,14 +103,6 @@ char* C_TFTeam::Get_Name( void )
 	{
 		return "RED";
 	}
-	else if (Q_stricmp(m_szTeamname, "green") == 0)
-	{
-		return "GRN";
-	}
-	else if (Q_stricmp(m_szTeamname, "yellow") == 0)
-	{
-		return "YLW";
-	}
 
 	return m_szTeamname;
 }
@@ -128,7 +120,6 @@ C_TFTeam *GetGlobalTFTeam( int iTeamNumber )
 
 	return NULL;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -161,6 +152,7 @@ CBaseObject *C_TFTeam::GetObject( int num )
 	Assert( num >= 0 && num < m_aObjects.Count() );
 	return m_aObjects[ num ];
 }
+
 
 //-----------------------------------------------------------------------------
 // Gets the ith NPC on the team (may return NULL) 

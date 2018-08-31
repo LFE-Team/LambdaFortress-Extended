@@ -34,10 +34,6 @@ const char *g_aClassNames[] =
 	"TF_CLASS_SPY",
 	"TF_CLASS_ENGINEER",
 	"TF_CLASS_CIVILIAN",
-	"TF_CLASS_REBEL,"
-	"TF_CLASS_METROPOLICE,"
-	"TF_CLASS_COMBINE_SOLDIER,"
-	"TF_CLASS_APETURE_SUBJECT,"
 };
 
 //-----------------------------------------------------------------------------
@@ -361,10 +357,8 @@ void CTFGameStats::Event_PlayerSpawned( CTFPlayer *pPlayer )
 	if ( !map )
 		return;
 
-	int iTeamCount = 3;
-
 	// calculate peak player count on each team
-	for ( iTeam = FIRST_GAME_TEAM; iTeam <= iTeamCount; iTeam++ )
+	for ( iTeam = FIRST_GAME_TEAM; iTeam < TF_TEAM_COUNT; iTeam++ )
 	{
 		int iPlayerCount = GetGlobalTeam( iTeam )->GetNumPlayers();
 		if ( iPlayerCount > map->m_iPeakPlayerCount[iTeam] )
@@ -373,7 +367,7 @@ void CTFGameStats::Event_PlayerSpawned( CTFPlayer *pPlayer )
 		}
 	}
 
-	if ( iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_CLASS_COUNT )
+	if ( iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_LAST_NORMAL_CLASS )
 	{
 		SendStatsToPlayer( pPlayer, STATMSG_PLAYERSPAWN );
 	}
@@ -476,14 +470,6 @@ void CTFGameStats::Event_PlayerCreatedBuilding( CTFPlayer *pPlayer, CBaseObject 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerKilledNPC( CTFPlayer *pPlayer, CAI_BaseNPC *pNPC )
-{
-	IncrementStat( pPlayer, TFSTAT_KILLS, 1 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameStats::Event_PlayerDestroyedBuilding( CTFPlayer *pPlayer, CBaseObject *pBuilding )
 {
 	// sappers are buildings from the code's point of view but not from the player's, don't count them
@@ -579,12 +565,6 @@ void CTFGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDama
 			return;
 
 		pAttacker = pSentry->GetOwner();
-		if ( !pAttacker )
-		{
-			// Sentry with no builder? Must be a pre-placed sentry.
-			// It's easier to just cut off here and don't count damage.
-			return;
-		}
 	}
 	// don't count damage to yourself
 	if ( pTarget == pAttacker )
@@ -734,16 +714,6 @@ void CTFGameStats::Event_PlayerKilledOther( CBasePlayer *pAttacker, CBaseEntity 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerSuicide( CBasePlayer *pPlayer )
-{
-	CTFPlayer *pTFVictim = static_cast<CTFPlayer *>( pPlayer );
-
-	IncrementStat( pTFVictim, TFSTAT_SUICIDES, 1 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameStats::Event_RoundEnd( int iWinningTeam, bool bFullRound, float flRoundTime, bool bWasSuddenDeathWin )
 {
 	TF_Gamestats_LevelStats_t *map = m_reportedStats.m_pCurrentGame;
@@ -885,9 +855,6 @@ void CTFGameStats::Event_PlayerKilled( CBasePlayer *pPlayer, const CTakeDamageIn
 		{
 			death.iAttackClass = TF_CLASS_UNDEFINED;
 			killerOrg = org;
-
-			// Environmental death.
-			IncrementStat( pTFPlayer, TFSTAT_ENV_DEATHS, 1 );
 		}
 	}
 
@@ -914,28 +881,6 @@ void CTFGameStats::Event_PlayerKilled( CBasePlayer *pPlayer, const CTakeDamageIn
 			m_reportedStats.m_pCurrentGame->m_aClassStats[iClass].iTotalTime += (int) ( gpGlobals->curtime - pTFPlayer->GetSpawnTime() );
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerAwardBonusPoints( CTFPlayer *pPlayer, CBaseEntity *pAwarder, int iAmount )
-{
-	IncrementStat( pPlayer, TFSTAT_BONUS, iAmount );
-
-#if 0
-	if ( pAwarder )
-	{
-		CSingleUserRecipientFilter filter( pPlayer );
-		filter.MakeReliable();
-
-		UserMessageBegin( filter, "PlayerBonusPoints" );
-			WRITE_BYTE( iAmount );
-			WRITE_BYTE( pPlayer->entindex() );
-			WRITE_BYTE( pAwarder->entindex() );
-		MessageEnd();
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1007,8 +952,6 @@ bool CTFGameStats::ShouldSendToClient( TFStatType_t statType )
 	case TFSTAT_SHOTS_HIT:
 	case TFSTAT_SHOTS_FIRED:
 	case TFSTAT_DEATHS:
-	case TFSTAT_SUICIDES:
-	case TFSTAT_ENV_DEATHS:
 		return false;
 	default:
 		return true;

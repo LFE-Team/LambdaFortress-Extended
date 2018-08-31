@@ -40,10 +40,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED( TFPipebombLauncher, DT_WeaponPipebombLauncher )
 BEGIN_NETWORK_TABLE_NOBASE( CTFPipebombLauncher, DT_PipebombLauncherLocalData )
 #ifdef CLIENT_DLL
 	RecvPropInt( RECVINFO( m_iPipebombCount ) ),
-	RecvPropTime( RECVINFO( m_flChargeBeginTime ) ),
 #else
 	SendPropInt( SENDINFO( m_iPipebombCount ), 5, SPROP_UNSIGNED ),
-	SendPropTime( SENDINFO( m_flChargeBeginTime ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -58,7 +56,7 @@ END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CTFPipebombLauncher )
-	DEFINE_PRED_FIELD( m_flChargeBeginTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_FIELD(  m_flChargeBeginTime, FIELD_FLOAT )
 END_PREDICTION_DATA()
 #endif
 
@@ -97,16 +95,6 @@ CTFPipebombLauncher::~CTFPipebombLauncher()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPipebombLauncher::Precache( void )
-{
-	PrecacheScriptSound( GetChargeSound() );
-
-	BaseClass::Precache();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPipebombLauncher::Spawn( void )
 {
 	m_iAltFireHint = HINT_ALTFIRE_PIPEBOMBLAUNCHER;
@@ -119,6 +107,7 @@ void CTFPipebombLauncher::Spawn( void )
 bool CTFPipebombLauncher::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	m_flChargeBeginTime = 0;
+	StopSound( "Weapon_StickyBombLauncher.ChargeUp" );
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -152,6 +141,14 @@ void CTFPipebombLauncher::WeaponReset( void )
 //-----------------------------------------------------------------------------
 void CTFPipebombLauncher::PrimaryAttack( void )
 {
+	// Check for ammunition.
+	if ( m_iClip1 <= 0 && m_iClip1 != WEAPON_NOCLIP )
+		return;
+
+	// Are we capable of firing again?
+	if ( m_flNextPrimaryAttack > gpGlobals->curtime )
+		return;
+
 	if ( !CanAttack() )
 	{
 		m_flChargeBeginTime = 0;
@@ -184,7 +181,7 @@ void CTFPipebombLauncher::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 void CTFPipebombLauncher::WeaponIdle( void )
 {
-	if ( m_flChargeBeginTime > 0 )
+	if ( m_flChargeBeginTime > 0 && m_iClip1 > 0 )
 	{
 		LaunchGrenade();
 	}
@@ -199,11 +196,12 @@ void CTFPipebombLauncher::WeaponIdle( void )
 //-----------------------------------------------------------------------------
 void CTFPipebombLauncher::LaunchGrenade( void )
 {
-	// Deliberately skipping to base class since our function starts charging the shot.
+	StopSound( "Weapon_StickyBombLauncher.ChargeUp" );
+
 	BaseClass::PrimaryAttack();
 
 	m_flLastDenySoundTime = gpGlobals->curtime;
-	m_flChargeBeginTime = 0.0f;
+	m_flChargeBeginTime = 0;
 }
 
 float CTFPipebombLauncher::GetProjectileSpeed( void )
@@ -217,7 +215,7 @@ float CTFPipebombLauncher::GetProjectileSpeed( void )
 	return flForwardSpeed;
 }
 
-void CTFPipebombLauncher::AddPipeBomb( CTFGrenadeStickybombProjectile *pBomb )
+void CTFPipebombLauncher::AddPipeBomb( CTFGrenadePipebombProjectile *pBomb )
 {
 	PipebombHandle hHandle;
 	hHandle = pBomb;
@@ -233,13 +231,10 @@ CBaseEntity *CTFPipebombLauncher::FireProjectile( CTFPlayer *pPlayer )
 	if ( pProjectile )
 	{
 #ifdef GAME_DLL
-		int nMaxPipebombs = TF_WEAPON_PIPEBOMB_COUNT;
-		CALL_ATTRIB_HOOK_INT( nMaxPipebombs, add_max_pipebombs );
-
 		// If we've gone over the max pipebomb count, detonate the oldest
-		if ( m_Pipebombs.Count() >= nMaxPipebombs )
+		if ( m_Pipebombs.Count() >= TF_WEAPON_PIPEBOMB_COUNT )
 		{
-			CTFGrenadeStickybombProjectile *pTemp = m_Pipebombs[0];
+			CTFGrenadePipebombProjectile *pTemp = m_Pipebombs[0];
 			if ( pTemp )
 			{
 				pTemp->SetTimer( gpGlobals->curtime ); // explode NOW
@@ -248,7 +243,7 @@ CBaseEntity *CTFPipebombLauncher::FireProjectile( CTFPlayer *pPlayer )
 			m_Pipebombs.Remove( 0 );
 		}
 
-		CTFGrenadeStickybombProjectile *pPipebomb = (CTFGrenadeStickybombProjectile*)pProjectile;
+		CTFGrenadePipebombProjectile *pPipebomb = (CTFGrenadePipebombProjectile*)pProjectile;
 
 		PipebombHandle hHandle;
 		hHandle = pPipebomb;
@@ -259,24 +254,6 @@ CBaseEntity *CTFPipebombLauncher::FireProjectile( CTFPlayer *pPlayer )
 	}
 
 	return pProjectile;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPipebombLauncher::ItemPostFrame( void )
-{
-	BaseClass::ItemPostFrame();
-
-	// Allow player to fire and detonate at the same time.
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner && !( pOwner->m_nButtons & IN_ATTACK ) )
-	{
-		if ( m_flChargeBeginTime > 0 )
-		{
-			LaunchGrenade();
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -357,10 +334,10 @@ void CTFPipebombLauncher::UpdateOnRemove( void )
 //-----------------------------------------------------------------------------
 void CTFPipebombLauncher::DeathNotice( CBaseEntity *pVictim )
 {
-	Assert( dynamic_cast<CTFGrenadeStickybombProjectile*>( pVictim ) );
+	Assert( dynamic_cast<CTFGrenadePipebombProjectile*>( pVictim ) );
 
 	PipebombHandle hHandle;
-	hHandle = (CTFGrenadeStickybombProjectile*)pVictim;
+	hHandle = (CTFGrenadePipebombProjectile*)pVictim;
 	m_Pipebombs.FindAndRemove( hHandle );
 
 	m_iPipebombCount = m_Pipebombs.Count();
@@ -378,7 +355,7 @@ bool CTFPipebombLauncher::DetonateRemotePipebombs( bool bFizzle )
 
 	for ( int i = 0; i < count; i++ )
 	{
-		CTFGrenadeStickybombProjectile *pTemp = m_Pipebombs[i];
+		CTFGrenadePipebombProjectile *pTemp = m_Pipebombs[i];
 		if ( pTemp )
 		{
 			//This guy will die soon enough.
@@ -393,7 +370,7 @@ bool CTFPipebombLauncher::DetonateRemotePipebombs( bool bFizzle )
 
 			if ( bFizzle == false )
 			{
-				if ( ( gpGlobals->curtime - pTemp->GetCreationTime() ) < tf_grenadelauncher_livetime.GetFloat() )
+				if ( ( gpGlobals->curtime - pTemp->m_flCreationTime ) < tf_grenadelauncher_livetime.GetFloat() )
 				{
 					bFailedToDetonate = true;
 					continue;

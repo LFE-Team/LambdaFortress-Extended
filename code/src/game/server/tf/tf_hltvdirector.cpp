@@ -209,8 +209,6 @@ const char** CTFHLTVDirector::GetModEvents()
 		"teamplay_win_panel",
 		"tf_game_over",
 		"object_destroyed",
-		"npc_death",
-		"npc_hurt",
 			
 		NULL
 	};

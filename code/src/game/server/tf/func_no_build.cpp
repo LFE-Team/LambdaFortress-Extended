@@ -44,20 +44,11 @@ public:
 
 private:
 	bool	m_bActive;
-	bool	m_bAllowSentry;
-	bool	m_bAllowDispenser;
-	bool	m_bAllowTeleporters;
-
 };
 
 LINK_ENTITY_TO_CLASS( func_nobuild, CFuncNoBuild);
 
 BEGIN_DATADESC( CFuncNoBuild )
-
-	// Keyfields.
-	DEFINE_KEYFIELD( m_bAllowSentry, FIELD_BOOLEAN, "AllowSentry" ),
-	DEFINE_KEYFIELD( m_bAllowDispenser, FIELD_BOOLEAN, "AllowDispenser" ),
-	DEFINE_KEYFIELD( m_bAllowTeleporters, FIELD_BOOLEAN, "AllowTeleporters" ),
 
 	// inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "SetActive", InputSetActive ),
@@ -165,30 +156,9 @@ bool CFuncNoBuild::PointIsWithin( const Vector &vecPoint )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CFuncNoBuild::PreventsBuildOf( int iObjectType )
-{
-	switch ( iObjectType )
-	{
-		case OBJ_DISPENSER:
-			return m_bAllowDispenser;
-
-		case OBJ_TELEPORTER:
-			return m_bAllowTeleporters;
-
-		case OBJ_SENTRYGUN:
-			return m_bAllowSentry;
-
-		default:
-			return false;
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Does a nobuild zone prevent us from building?
 //-----------------------------------------------------------------------------
-bool PointInNoBuild( const Vector &vecBuildOrigin, const CBaseObject *pObj )
+bool PointInNoBuild( const Vector &vecBuildOrigin )
 {
 	// Find out whether we're in a resource zone or not
 	CBaseEntity *pEntity = NULL;
@@ -199,10 +169,7 @@ bool PointInNoBuild( const Vector &vecBuildOrigin, const CBaseObject *pObj )
 		// Are we within this no build?
 		if ( pNoBuild->GetActive() && pNoBuild->PointIsWithin( vecBuildOrigin ) )
 		{
-			if ( pNoBuild->PreventsBuildOf( pObj->ObjectType() ) )
-				return false;
-
-			return true;
+			return true;	// prevent building.
 		}
 	}
 

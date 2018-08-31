@@ -71,93 +71,6 @@ struct AI_Waypoint_t;
 class AI_Response;
 class CBaseFilter;
 
-#ifdef TF_CLASSIC
-//=============================================================================
-// Damage storage for crit multiplier calculation
-class CTFNPCDamageEvent
-{
-	DECLARE_SERVERCLASS_NOBASE();
-public:
-	float flDamage;
-	float flTime;
-	bool bKill;
-};
-#endif
-
-#define MAX_LAYER_RECORDS (CBaseAnimatingOverlay::MAX_OVERLAYS)
-
-struct LayerRecordNPC
-{
-	int m_sequence;
-	float m_cycle;
-	float m_weight;
-	int m_order;
-
-	LayerRecordNPC()
-	{
-		m_sequence = 0;
-		m_cycle = 0;
-		m_weight = 0;
-		m_order = 0;
-	}
-
-	LayerRecordNPC( const LayerRecordNPC& src )
-	{
-		m_sequence = src.m_sequence;
-		m_cycle = src.m_cycle;
-		m_weight = src.m_weight;
-		m_order = src.m_order;
-	}
-};
-
-struct LagRecordNPC
-{
-public:
-	LagRecordNPC()
-	{
-		m_fFlags = 0;
-		m_vecOrigin.Init();
-		m_vecAngles.Init();
-		m_vecMins.Init();
-		m_vecMaxs.Init();
-		m_flSimulationTime = -1;
-		m_masterSequence = 0;
-		m_masterCycle = 0;
-	}
-
-	LagRecordNPC( const LagRecordNPC& src )
-	{
-		m_fFlags = src.m_fFlags;
-		m_vecOrigin = src.m_vecOrigin;
-		m_vecAngles = src.m_vecAngles;
-		m_vecMins = src.m_vecMins;
-		m_vecMaxs = src.m_vecMaxs;
-		m_flSimulationTime = src.m_flSimulationTime;
-		for( int layerIndex = 0; layerIndex < MAX_LAYER_RECORDS; ++layerIndex )
-		{
-			m_layerRecords[layerIndex] = src.m_layerRecords[layerIndex];
-		}
-		m_masterSequence = src.m_masterSequence;
-		m_masterCycle = src.m_masterCycle;
-	}
-
-	// Did player die this frame
-	int						m_fFlags;
-
-	// Player position, orientation and bbox
-	Vector					m_vecOrigin;
-	QAngle					m_vecAngles;
-	Vector					m_vecMins;
-	Vector					m_vecMaxs;
-
-	float					m_flSimulationTime;	
-	
-	// Player animation details, so we can get the legs in the right spot.
-	LayerRecordNPC			m_layerRecords[MAX_LAYER_RECORDS];
-	int						m_masterSequence;
-	float					m_masterCycle;
-};
-
 typedef CBitVec<MAX_CONDITIONS> CAI_ScheduleBits;
 
 // Used to control optimizations mostly dealing with pathfinding for NPCs
@@ -602,7 +515,7 @@ public:
 
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;	
-	virtual bool		IsDeflectable() { return ( m_nTFFlags & TFFL_NODEFLECT ) == 0; }
+	virtual bool		IsDeflectable() { return true; }
 
 	//---------------------------------
 	
@@ -1886,9 +1799,6 @@ public:
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dying( const CTakeDamageInfo &info );
 	virtual int			OnTakeDamage_Dead( const CTakeDamageInfo &info );
-#ifdef TF_CLASSIC
-	void				ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir );
-#endif
 
 	virtual void		NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity );
 	virtual void		OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttacker );
@@ -2244,17 +2154,13 @@ public:
 	//void	ConditionThink( void );
 	float	GetConditionDuration( int nCond );
 
-	bool	IsCritBoosted( void );
-	bool	IsMiniCritBoosted( void );
-	bool	IsInvulnerable( void );
-	bool	IsStealthed( void );
-
-	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
-
 	// TF2 healer and burning handling
 	void	ConditionGameRulesThink( void );
 	void	Heal( CTFPlayer *pPlayer, float flAmount, bool bDispenserHeal = false );
 	void	StopHealing( CTFPlayer *pPlayer );
+	void	RecalculateInvuln( bool bInstantRemove = false );
+	bool	IsProvidingInvuln( CTFPlayer *pPlayer );
+	void	SetInvulnerable( bool bState, bool bInstant = false );
 	int		FindHealerIndex( CTFPlayer *pPlayer );
 	EHANDLE	GetFirstHealer();
 	int		GetNumHealers( void ) { return m_nNumHealers; }
@@ -2268,61 +2174,18 @@ public:
 	void	OnAddBurning( void );
 	void	OnRemoveBurning( void );
 
-	void	OnAddInvulnerable( void );
-	void	OnRemoveInvulnerable( void );
-	void	OnAddSlowed( void );
-	void	OnRemoveSlowed( void );
-	void	OnAddCritboosted( void );
-	void	OnRemoveCritboosted( void );
-	void	OnAddMiniCritboosted( void );
-	void	OnRemoveMiniCritboosted( void );
-	void	OnAddUrine( void );
-	void	OnRemoveUrine( void );
-
 	// Damager history, used for TF2 assists.
 	void				AddDamagerToHistory( EHANDLE hDamager );
 	void				ClearDamagerHistory();
 	DamagerHistory_t	&GetDamagerHistory( int i ) { return m_DamagerHistory[i]; }
-	void				SetAirblastState( bool bAirblastState );
-	void				ClearAirblastState( void );
 
 	bool	AllowBackstab( void ) { return ( m_nTFFlags & TFFL_NOBACKSTAB ) == 0; }
 	bool	IsMech( void ) { return ( m_nTFFlags & TFFL_MECH ) != 0; }
 	bool	CanBeHealed( void ) { return ( m_nTFFlags & TFFL_NOHEALING ) == 0; }
-	bool	AllowJar( void ) { return ( m_nTFFlags & TFFL_NOJAR ) == 0; }
-	bool	AllowDeathNotice( void ) { return ( m_nTFFlags & TFFL_NODEATHNOTICE ) == 0; }
-	bool	NoReward( void ) { return ( m_nTFFlags & TFFL_NOREWARD ) == 0; }
 
-	float GetCritMult( void );
-
-	void  UpdateCritMult( void );
-	void  RecordDamageEvent( const CTakeDamageInfo &info, bool bKill );
-	void  ClearDamageEvents( void ) { m_DamageEvents.Purge(); }
-	int	  GetNumKillsInTime( float flTime );
-
-	// Invulnerable.
-	void	TestAndExpireChargeEffect( medigun_charge_types chargeType );
-	void	RecalculateChargeEffects( bool bInstantRemove = false );
-	medigun_charge_types	GetChargeEffectBeingProvided( CTFPlayer *pPlayer );
-	void	SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider );
-
-	CTFTeam *GetTFTeam( void );
-
-	// Jarate Player
-	EHANDLE	m_hUrineAttacker;
-
-	bool	m_bAirblasted;
-
-	float	m_flNextCritUpdate;
-	CUtlVector<CTFNPCDamageEvent> m_DamageEvents;
-
-	int	m_iCritMult;
-
-	void InputSetPlaybackRate( inputdata_t &inputdata );
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;
-	CHandle<CTFWeaponBase>	m_hBurnWeapon;
 	//CNetworkVar( int,		m_nNumFlames );
 	float					m_flFlameBurnTime;
 	float					m_flFlameRemoveTime;
@@ -2333,43 +2196,23 @@ protected:
 
 private:
 	CNetworkVar( int, m_nPlayerCond );
-	CNetworkVar( int, m_nPlayerCondEx );
-	CNetworkVar( int, m_nPlayerCondEx2 );
-	CNetworkVar( int, m_nPlayerCondEx3 );
-	CNetworkArray( float, m_flCondExpireTimeLeft, TF_COND_LAST ); // Time until each condition expires
+	float m_flCondExpireTimeLeft[TF_COND_LAST];		// Time until each condition expires
 
 	struct healers_t
 	{
 		EHANDLE	pPlayer;
 		float	flAmount;
 		bool	bDispenserHeal;
-		float	iRecentAmount;
-		float	flNextNofityTime;
 	};
 	CUtlVector< healers_t >	m_aHealers;	
 	float					m_flHealFraction;	// Store fractional health amounts
 
-	float		m_flChargeOffTime[TF_CHARGE_COUNT];
-	bool		m_bChargeSounds[TF_CHARGE_COUNT];
+	float m_flInvulnerableOffTime;
 
 	CNetworkVar( int, m_nNumHealers );
 
 	DamagerHistory_t m_DamagerHistory[MAX_DAMAGER_HISTORY];	// history of who has damaged this NPC
 #endif
-public:
-	CUtlFixedLinkedList<LagRecordNPC>* GetLagTrack() { return m_LagTrack; }
-	LagRecordNPC*	GetLagRestoreData() { if ( m_RestoreData != NULL ) return m_RestoreData; else return new LagRecordNPC(); }
-	LagRecordNPC*	GetLagChangeData() { if ( m_ChangeData != NULL ) return m_ChangeData; else return new LagRecordNPC(); }
-	void		SetLagRestoreData(LagRecordNPC* l) { if ( m_RestoreData != NULL ) delete m_RestoreData; m_RestoreData = l; }
-	void		SetLagChangeData(LagRecordNPC* l) { if ( m_ChangeData != NULL ) delete m_ChangeData; m_ChangeData = l; }
-	void		FlagForLagCompensation( bool tempValue ) { m_bFlaggedForLagCompensation = tempValue; }
-	bool		IsLagFlagged() { return m_bFlaggedForLagCompensation; }
-
-private:
-	CUtlFixedLinkedList<LagRecordNPC>* m_LagTrack;
-	LagRecordNPC*	m_RestoreData;
-	LagRecordNPC*	m_ChangeData;
-	bool		m_bFlaggedForLagCompensation;
 };
 
 

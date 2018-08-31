@@ -27,13 +27,13 @@
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CExButton : public vgui::Button
+class CTFButton : public vgui::Button
 {
 public:
-	DECLARE_CLASS_SIMPLE( CExButton, vgui::Button );
+	DECLARE_CLASS_SIMPLE( CTFButton, vgui::Button );
 
-	CExButton(vgui::Panel *parent, const char *name, const char *text);
-	CExButton(vgui::Panel *parent, const char *name, const wchar_t *wszText);
+	CTFButton( vgui::Panel *parent, const char *name, const char *text );
+	CTFButton( vgui::Panel *parent, const char *name, const wchar_t *wszText );
 
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
@@ -46,13 +46,13 @@ private:
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CExLabel : public vgui::Label
+class CTFLabel : public vgui::Label
 {
 public:
-	DECLARE_CLASS_SIMPLE( CExLabel, vgui::Label );
+	DECLARE_CLASS_SIMPLE( CTFLabel, vgui::Label );
 
-	CExLabel(vgui::Panel *parent, const char *panelName, const char *text);
-	CExLabel(vgui::Panel *parent, const char *panelName, const wchar_t *wszText);
+	CTFLabel( vgui::Panel *parent, const char *panelName, const char *text );
+	CTFLabel( vgui::Panel *parent, const char *panelName, const wchar_t *wszText );
 
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
@@ -61,15 +61,17 @@ private:
 	char		m_szColor[64];
 };
 
+typedef CTFLabel CExLabel;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CExRichText : public vgui::RichText
+class CTFRichText : public vgui::RichText
 {
 public:
-	DECLARE_CLASS_SIMPLE( CExRichText, vgui::RichText );
+	DECLARE_CLASS_SIMPLE( CTFRichText, vgui::RichText );
 
-	CExRichText(vgui::Panel *parent, const char *panelName);
+	CTFRichText( vgui::Panel *parent, const char *panelName );
 
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
@@ -88,11 +90,6 @@ private:
 	vgui::ImagePanel	*m_pLine;
 	CTFImagePanel		*m_pDownArrow;
 	vgui::ImagePanel	*m_pBox;
-protected:
-	char			pDefaultScrollImage[64];
-	char			pDefaultScrollUpImage[64];
-	char			pDefaultScrollLineImage[64];
-	char			pDefaultScrollDownImage[64];
 };
 
 //-----------------------------------------------------------------------------

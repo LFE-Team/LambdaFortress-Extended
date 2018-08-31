@@ -50,7 +50,6 @@ public:
 	~CTFMinigun();
 
 	virtual void	Precache( void );
-	virtual void	Spawn(void);
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_MINIGUN; }
 	virtual void	PrimaryAttack();
 	virtual void	SecondaryAttack();
@@ -89,7 +88,6 @@ private:
 	// Barrel spinning
 	virtual CStudioHdr *OnNewModel( void );
 	virtual void		StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask );
-	virtual void		ViewModelAttachmentBlending( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask );
 	
 	virtual void		UpdateOnRemove( void );
 
@@ -97,7 +95,7 @@ private:
 
 	void				OnDataChanged( DataUpdateType_t type );
 		
-	virtual void		ItemPreFrame( void );
+	virtual void	ItemPreFrame( void );
 	
 	// Firing sound
 	void				WeaponSoundUpdate( void );
@@ -128,7 +126,6 @@ private:
 	void StopBrassEffect();
 	void HandleBrassEffect();
 
-	EHANDLE				m_hBrassEffectHost;
 	CNewParticleEffect *m_pEjectBrassEffect;
 	int					m_iEjectBrassAttachment;
 
@@ -136,7 +133,6 @@ private:
 	void StopMuzzleEffect();
 	void HandleMuzzleEffect();
 
-	EHANDLE				m_hMuzzleEffectHost;
 	CNewParticleEffect *m_pMuzzleEffect;
 	int					m_iMuzzleAttachment;
 #endif

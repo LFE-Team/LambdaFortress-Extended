@@ -1,1 +1,1 @@
-devtools\bin\vpc.exe /tf_coop_extended /2013 +everything /mksln everything.sln
+devtools\bin\vpc.exe /tf_coop /2013 +everything /mksln everything.sln

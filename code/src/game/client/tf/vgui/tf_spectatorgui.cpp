@@ -99,7 +99,7 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( !pPlayer || pPlayer->IsHLTV() ||
-		(pPlayer->GetTeamNumber() != TF_TEAM_RED && pPlayer->GetTeamNumber() != TF_TEAM_BLUE ) ||
+		( pPlayer->GetTeamNumber() != TF_TEAM_RED && pPlayer->GetTeamNumber() != TF_TEAM_BLUE ) ||
 		( pPlayer->m_Shared.GetState() != TF_STATE_OBSERVER ) && ( pPlayer->m_Shared.GetState() != TF_STATE_DYING ) ||
 		( pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM ) )
 	{
@@ -421,12 +421,4 @@ void CTFSpectatorGUI::ShowPanel(bool bShow)
 	}
 
 	BaseClass::ShowPanel( bShow );
-}
-
-const char *CTFSpectatorGUI::GetResFilename(void)
-{
-	if ( TFGameRules() && TFGameRules()->IsInTournamentMode() )
-		return "Resource/UI/SpectatorTournament.res";
-
-	return "Resource/UI/Spectator.res";
 }

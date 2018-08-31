@@ -39,7 +39,7 @@ void TFBloodSprayCallback( Vector vecOrigin, Vector vecNormal, ClientEntityHandl
 		bUnderwater = true;
 	}
 	 
-	if ( !bUnderwater && TFGameRules() && ( TFGameRules()->IsBirthday() || TFGameRules()->IsLFBirthday() ) && RandomFloat(0,1) < 0.2 )
+	if ( !bUnderwater && TFGameRules() && TFGameRules()->IsBirthday() && RandomFloat(0,1) < 0.2 )
 	{
 		DispatchParticleEffect( "bday_blood", vecOrigin, vecAngles, pPlayer );
 	}

@@ -12,31 +12,39 @@
 #include "tf_weapon_parse.h"
 #include "c_basetempentity.h"
 #include "tier0/vprof.h"
-#include "econ_item_system.h"
-#include "tf_gamerules.h"
-#include "c_tf_playerresource.h"
-
-#include "dlight.h"
-#include "iefx.h"
-extern ConVar lfe_muzzlelight; 
 
 //--------------------------------------------------------------------------------------------------------------
-extern CTFWeaponInfo *GetTFWeaponInfo( int iWeapon );
+CTFWeaponInfo *GetTFWeaponInfo( int iWeapon )
+{
+	// Get the weapon information.
+	const char *pszWeaponAlias = WeaponIdToAlias( iWeapon );
+	if ( !pszWeaponAlias )
+	{
+		return NULL;
+	}
+
+	WEAPON_FILE_INFO_HANDLE	hWpnInfo = LookupWeaponInfoSlot( pszWeaponAlias );
+	if ( hWpnInfo == GetInvalidWeaponInfoHandle() )
+	{
+		return NULL;
+	}
+
+	CTFWeaponInfo *pWeaponInfo = static_cast<CTFWeaponInfo*>( GetFileWeaponInfoFromHandle( hWpnInfo ) );
+	return pWeaponInfo;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int iWeaponID, ClientEntityHandle_t hEntity, int iPlayerIndex, int iTeam, bool bCrit, int iItemID )
+void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int iWeaponID, ClientEntityHandle_t hEntity )
 {
 	// Get the weapon information.
 	CTFWeaponInfo *pWeaponInfo = NULL;
-	switch ( iWeaponID )
+	switch( iWeaponID )
 	{
 	case TF_WEAPON_GRENADE_PIPEBOMB:
 	case TF_WEAPON_GRENADE_DEMOMAN:
 		pWeaponInfo = GetTFWeaponInfo( TF_WEAPON_PIPEBOMBLAUNCHER );
-		break;
-	case TF_WEAPON_GRENADE_MIRVBOMB:
-		pWeaponInfo = GetTFWeaponInfo( TF_WEAPON_GRENADE_MIRV );
 		break;
 	default:
 		pWeaponInfo = GetTFWeaponInfo( iWeaponID );
@@ -71,114 +79,46 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 	}
 
 	// Base explosion effect and sound.
-	const char *pszFormat = "";
-	const char *pszSound = "BaseExplosionEffect.Sound";
-	bool bColored = pWeaponInfo->m_bHasTeamColoredExplosions;
+	char *pszEffect = "explosion";
+	char *pszSound = "BaseExplosionEffect.Sound";
 
 	if ( pWeaponInfo )
 	{
 		// Explosions.
 		if ( bIsWater )
 		{
-			if ( bCrit && pWeaponInfo->m_szExplosionWaterEffect_Crit[0] )
+			if ( Q_strlen( pWeaponInfo->m_szExplosionWaterEffect ) > 0 )
 			{
-				pszFormat = pWeaponInfo->m_szExplosionEffect_Crit;
-				bColored = true;
-			}
-			else if ( pWeaponInfo->m_szExplosionWaterEffect[0] )
-			{
-				pszFormat = pWeaponInfo->m_szExplosionWaterEffect;
+				pszEffect = pWeaponInfo->m_szExplosionWaterEffect;
 			}
 		}
 		else
 		{
 			if ( bIsPlayer || bInAir )
 			{
-				if ( bCrit && pWeaponInfo->m_szExplosionPlayerEffect_Crit[0] )
+				if ( Q_strlen( pWeaponInfo->m_szExplosionPlayerEffect ) > 0 )
 				{
-					pszFormat = pWeaponInfo->m_szExplosionPlayerEffect_Crit;
-					bColored = true;
-				}
-				else if ( pWeaponInfo->m_szExplosionPlayerEffect[0] )
-				{
-					pszFormat = pWeaponInfo->m_szExplosionPlayerEffect;
+					pszEffect = pWeaponInfo->m_szExplosionPlayerEffect;
 				}
 			}
 			else
 			{
-				if ( bCrit && pWeaponInfo->m_szExplosionEffect_Crit[0] )
+				if ( Q_strlen( pWeaponInfo->m_szExplosionEffect ) > 0 )
 				{
-					pszFormat = pWeaponInfo->m_szExplosionEffect_Crit;
-					bColored = true;
-				}
-				else if ( pWeaponInfo->m_szExplosionEffect[0] )
-				{
-					pszFormat = pWeaponInfo->m_szExplosionEffect;
+					pszEffect = pWeaponInfo->m_szExplosionEffect;
 				}
 			}
 		}
 
 		// Sound.
-		if ( pWeaponInfo->m_szExplosionSound[0] != '\0' )
+		if ( Q_strlen( pWeaponInfo->m_szExplosionSound ) > 0 )
 		{
 			pszSound = pWeaponInfo->m_szExplosionSound;
 		}
 	}
-
-
-	// Allow schema to override explosion sound.
-	if ( iItemID >= 0 )
-	{
-		CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iItemID );
-		if ( pItemDef && pItemDef->GetVisuals()->aWeaponSounds[SPECIAL1][0] != '\0' )
-		{
-			pszSound = pItemDef->GetVisuals()->aWeaponSounds[SPECIAL1];
-		}
-	}
-
+	
 	CLocalPlayerFilter filter;
 	C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, pszSound, &vecOrigin );
-
-	const char *pszEffect = NULL;
-
-	if ( bColored )
-	{
-		// Assuming it's a formatted string.
-		pszEffect = ConstructTeamParticle( pszFormat, iTeam, true );
-	}
-	else
-	{
-		// Just take the name as it is.
-		pszEffect = pszFormat;
-	}
-
-	//C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
-
-	if ( lfe_muzzlelight.GetBool() )
-	{
-		if ( bCrit )
-		{
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
-			dl->origin = vecOrigin;
-			dl->color.r = 255;
-			dl->color.g = 250;
-			dl->color.b = 140;
-			dl->decay	= 200;
-			dl->radius	= 512.f;
-			dl->die		= gpGlobals->curtime + 0.1f;
-		}
-		else
-		{
-			dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC );
-			dl->origin = vecOrigin;
-			dl->color.r = 255;
-			dl->color.g = 220;
-			dl->color.b = 128;
-			dl->decay	= 200;
-			dl->radius	= 340.f;
-			dl->die		= gpGlobals->curtime + 0.1f;
-		}
-	}
 
 	DispatchParticleEffect( pszEffect, vecOrigin, angExplosion );
 }
@@ -199,13 +139,9 @@ public:
 
 public:
 
-	Vector			m_vecOrigin;
-	Vector			m_vecNormal;
-	int				m_iWeaponID;
-	int				m_iItemID;
-	int				m_iPlayerIndex;
-	int				m_iTeamNum;
-	bool			m_bCritical;
+	Vector		m_vecOrigin;
+	Vector		m_vecNormal;
+	int			m_iWeaponID;
 	ClientEntityHandle_t m_hEntity;
 };
 
@@ -217,10 +153,6 @@ C_TETFExplosion::C_TETFExplosion( void )
 	m_vecOrigin.Init();
 	m_vecNormal.Init();
 	m_iWeaponID = TF_WEAPON_NONE;
-	m_iItemID = -1;
-	m_iPlayerIndex = 0;
-	m_iTeamNum = TEAM_UNASSIGNED;
-	m_bCritical = false;
 	m_hEntity = INVALID_EHANDLE_INDEX;
 }
 
@@ -231,7 +163,7 @@ void C_TETFExplosion::PostDataUpdate( DataUpdateType_t updateType )
 {
 	VPROF( "C_TETFExplosion::PostDataUpdate" );
 
-	TFExplosionCallback( m_vecOrigin, m_vecNormal, m_iWeaponID, m_hEntity, m_iPlayerIndex, m_iTeamNum, m_bCritical, m_iItemID );
+	TFExplosionCallback( m_vecOrigin, m_vecNormal, m_iWeaponID, m_hEntity );
 }
 
 static void RecvProxy_ExplosionEntIndex( const CRecvProxyData *pData, void *pStruct, void *pOut )
@@ -246,10 +178,6 @@ IMPLEMENT_CLIENTCLASS_EVENT_DT( C_TETFExplosion, DT_TETFExplosion, CTETFExplosio
 	RecvPropFloat( RECVINFO( m_vecOrigin[2] ) ),
 	RecvPropVector( RECVINFO( m_vecNormal ) ),
 	RecvPropInt( RECVINFO( m_iWeaponID ) ),
-	RecvPropInt( RECVINFO( m_iItemID ) ),
-	RecvPropInt( RECVINFO( m_iPlayerIndex ) ),
-	RecvPropInt( RECVINFO( m_iTeamNum ) ),
-	RecvPropBool( RECVINFO( m_bCritical ) ),
 	RecvPropInt( "entindex", 0, SIZEOF_IGNORE, 0, RecvProxy_ExplosionEntIndex ),
 END_RECV_TABLE()
 

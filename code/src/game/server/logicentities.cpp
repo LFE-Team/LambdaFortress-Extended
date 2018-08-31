@@ -910,8 +910,21 @@ LINK_ENTITY_TO_CLASS( env_global, CEnvGlobal );
 //-----------------------------------------------------------------------------
 void CEnvGlobal::Spawn( void )
 {
-	variant_t sVariant;
-	if ( !m_globalstate )
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	if( !Q_strnicmp( szMapName, "ep1_c17_00", 10 ) )
+	{
+		UTIL_Remove( this );
+		return;
+	}
+	else if( !Q_strnicmp( szMapName, "ep1_c17_00a", 11 ) )
+	{
+		UTIL_Remove( this );
+		return;
+	}
+	else if ( !m_globalstate )
 	{
 		UTIL_Remove( this );
 		return;
@@ -936,11 +949,6 @@ void CEnvGlobal::Spawn( void )
 		{
 			GlobalEntity_SetCounter( m_globalstate, m_counter );
 		}
-	}
-	if ( ( m_globalstate != NULL_STRING) && (stricmp(STRING(m_globalstate), "ep_alyx_darknessmode") == 0))
-	{
-		this->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
-		UTIL_Remove(this);
 	}
 }
 

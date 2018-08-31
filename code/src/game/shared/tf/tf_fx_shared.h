@@ -21,7 +21,6 @@ void FX_WeaponSound ( int iPlayer, WeaponSound_t soundType, const Vector &vecOri
 void StartGroupingSounds( void );
 void EndGroupingSounds( void );
 
-void FX_TFTracer( const char *pszTracerEffectName, const Vector &vecStart, const Vector &vecEnd, int iEntIndex, bool bWhiz );
 
 // This runs on both the client and the server.
 // On the server, it only does the damage calculations.

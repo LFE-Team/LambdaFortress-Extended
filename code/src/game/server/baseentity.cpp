@@ -63,7 +63,7 @@
 #include "tier1/utlstring.h"
 #include "utlhashtable.h"
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#if defined (TF_DLL) || defined (TF_CLASSIC)
 #include "tf_gamerules.h"
 #endif
 
@@ -303,7 +303,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CBaseEntity, DT_BaseEntity )
 	SendPropInt		(SENDINFO(m_bAnimatedEveryTick),		1, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bAlternateSorting )),
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	SendPropArray3( SENDINFO_ARRAY3(m_nModelIndexOverrides), SendPropInt( SENDINFO_ARRAY(m_nModelIndexOverrides), SP_MODEL_INDEX_BITS, 0 ) ),
 #endif
 
@@ -655,7 +655,7 @@ void CBaseEntity::SetModelIndex( int index )
 
 void CBaseEntity::ClearModelIndexOverrides( void )
 {
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	for ( int index = 0 ; index < MAX_VISION_MODES ; index++ )
 	{
 		m_nModelIndexOverrides.Set( index, 0 );
@@ -665,7 +665,7 @@ void CBaseEntity::ClearModelIndexOverrides( void )
 
 void CBaseEntity::SetModelIndexOverride( int index, int nValue )
 {
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	if ( ( index >= VISION_MODE_NONE ) && ( index < MAX_VISION_MODES ) )
 	{
 		if ( nValue != m_nModelIndexOverrides[index] )
@@ -1353,25 +1353,20 @@ void CBaseEntity::Activate( void )
 int CBaseEntity::TakeHealth( float flHealth, int bitsDamageType )
 {
 	if ( !edict() || m_takedamage < DAMAGE_YES )
-	{
 		return 0;
-	}
 
 	int iMax = GetMaxHealth();
 
 // heal
-	if ( m_iHealth >= iMax && flHealth >= 0.0f )
+	if ( m_iHealth >= iMax )
 		return 0;
 
 	const int oldHealth = m_iHealth;
 
 	m_iHealth += flHealth;
 
-	// if we're losing health don't clamp to the max health
-	if ( flHealth >= 0.0f && m_iHealth > iMax )
-	{
+	if (m_iHealth > iMax)
 		m_iHealth = iMax;
-	}
 
 	return m_iHealth - oldHealth;
 }
@@ -1568,7 +1563,7 @@ int CBaseEntity::VPhysicsTakeDamage( const CTakeDamageInfo &info )
 		// setup the damage force & position inside the CTakeDamageInfo (Utility functions for this are in
 		// takedamageinfo.cpp. If you think the damage shouldn't cause force (unlikely!) then you can set the 
 		// damage type to DMG_GENERIC, or | DMG_CRUSH if you need to preserve the damage type for purposes of HUD display.
-#if !defined( TF_DLL ) && !defined( TF_CLASSIC )
+#if !defined( TF_DLL )
 		Assert( force != vec3_origin && offset != vec3_origin );
 #else
 		// this was spamming the console for Payload maps in TF (trigger_hurt entity on the front of the cart)
@@ -1962,9 +1957,6 @@ BEGIN_DATADESC_NO_BASE( CBaseEntity )
 	DEFINE_ARRAY( m_nModelIndexOverrides, FIELD_INTEGER, MAX_VISION_MODES ),
 #endif
 
-#ifdef TF_CLASSIC
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetMoveType", InputSetMoveType ),
-#endif
 END_DATADESC()
 
 // For code error checking
@@ -2027,13 +2019,13 @@ void CBaseEntity::UpdateOnRemove( void )
 	// Don't do this in TF2 and CS since round restart mechanics mess things up
 	// causing entity to get deleted upon new round start. (Nicknine)
 #ifndef TF_CLASSIC
- 	if ( m_iGlobalname != NULL_STRING )
- 	{
- 		// NOTE: During level shutdown the global list will suppress this
- 		// it assumes your changing levels or the game will end
- 		// causing the whole list to be flushed
- 		GlobalEntity_SetState( m_iGlobalname, GLOBAL_DEAD );
- 	}
+	if ( m_iGlobalname != NULL_STRING )
+	{
+		// NOTE: During level shutdown the global list will suppress this
+		// it assumes your changing levels or the game will end
+		// causing the whole list to be flushed
+		GlobalEntity_SetState( m_iGlobalname, GLOBAL_DEAD );
+	}
 #endif
 
 	VPhysicsDestroyObject();
@@ -4170,16 +4162,6 @@ void CBaseEntity::InputSetParent( inputdata_t &inputdata )
 	SetParent( inputdata.value.StringID(), inputdata.pActivator );
 }
 
-#ifdef TF_CLASSIC
-//------------------------------------------------------------------------------
-// Purpose: Input handler for changing this entity's movement parent.
-//------------------------------------------------------------------------------
-void CBaseEntity::InputSetMoveType( inputdata_t &inputdata )
-{
-	SetMoveType( (MoveType_t)inputdata.value.Int() );
-}
-#endif
-
 //------------------------------------------------------------------------------
 // Purpose: 
 //------------------------------------------------------------------------------
@@ -5343,10 +5325,6 @@ void CC_Ent_FireTarget( const CCommand& args )
 }
 static ConCommand firetarget("firetarget", CC_Ent_FireTarget, 0, FCVAR_CHEAT);
 
-#ifdef TF_CLASSIC
-ConVar sv_allow_ent_fire("sv_allow_ent_fire", "0", FCVAR_CHEAT, "Allows clients to use ent_fire");
-#endif
-
 class CEntFireAutoCompletionFunctor : public ICommandCallback, public ICommandCompletionCallback
 {
 public:
@@ -5381,26 +5359,19 @@ public:
 			//	  ent_create point_servercommand; ent_setname mine; ent_fire mine command "rcon_password mynewpassword"
 			// So, I'm removing the ability for anyone to execute ent_fires on dedicated servers (we can't check to see if
 			// this command is going to connect with a point_servercommand entity here, because they could delay the event and create it later).
-#ifdef TF_CLASSIC
-			if ( !sv_allow_ent_fire.GetBool() )
+			if ( engine->IsDedicatedServer() )
 			{
-#endif
-				if ( engine->IsDedicatedServer() )
-				{
-					// We allow people with disabled autokick to do it, because they already have rcon.
-					if ( pPlayer->IsAutoKickDisabled() == false )
-						return;
-				}
-				else if ( gpGlobals->maxClients > 1 )
-				{
-					// On listen servers with more than 1 player, only allow the host to issue ent_fires.
-					CBasePlayer *pHostPlayer = UTIL_GetListenServerHost();
-					if ( pPlayer != pHostPlayer )
-						return;
-				}
-#ifdef TF_CLASSIC
+				// We allow people with disabled autokick to do it, because they already have rcon.
+				if ( pPlayer->IsAutoKickDisabled() == false )
+					return;
 			}
-#endif
+			else if ( gpGlobals->maxClients > 1 )
+			{
+				// On listen servers with more than 1 player, only allow the host to issue ent_fires.
+				CBasePlayer *pHostPlayer = UTIL_GetListenServerHost();
+				if ( pPlayer != pHostPlayer )
+					return;
+			}
 
 			if ( command.ArgC() >= 3 )
 			{

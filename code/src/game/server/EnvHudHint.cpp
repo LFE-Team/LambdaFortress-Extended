@@ -89,11 +89,7 @@ void CEnvHudHint::InputShowHudHint( inputdata_t &inputdata )
 		}
 		else
 		{
-		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-		#else
 			pPlayer = UTIL_GetLocalPlayer();
-		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		}
 
 		if ( !pPlayer || !pPlayer->IsNetClient() )
@@ -130,11 +126,7 @@ void CEnvHudHint::InputHideHudHint( inputdata_t &inputdata )
 		}
 		else
 		{
-		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-		#else
 			pPlayer = UTIL_GetLocalPlayer();
-		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		}
 
 		if ( !pPlayer || !pPlayer->IsNetClient() )

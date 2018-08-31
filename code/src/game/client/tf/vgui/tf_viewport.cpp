@@ -48,10 +48,7 @@
 #include "tf_mapinfomenu.h"
 #include "tf_roundinfo.h"
 
-#include "tf_overview.h"
-#include "tf_coopscoreboard.h"
-
-#include "tf_gamerules.h"
+//#include "tf_overview.h"
 
 /*
 CON_COMMAND( spec_help, "Show spectator help screen")
@@ -98,7 +95,6 @@ CON_COMMAND( showmapinfo, "Show map info panel" )
 			gViewPortInterface->ShowPanel( PANEL_CLASS_BLUE, false );
 			gViewPortInterface->ShowPanel( PANEL_INTRO, false );
 			gViewPortInterface->ShowPanel( PANEL_ROUNDINFO, false );
-			gViewPortInterface->ShowPanel( PANEL_ARENATEAMSELECT, false );
 
 			gViewPortInterface->ShowPanel( PANEL_MAPINFO, true );
 		}
@@ -115,10 +111,7 @@ CON_COMMAND( changeteam, "Choose a new team" )
 	// don't let the player open the team menu themselves until they're on a team
 	if ( pPlayer && ( pPlayer->GetTeamNumber() != TEAM_UNASSIGNED ) )
 	{
-		if ( !TFGameRules()->IsAnyCoOp() || !TFGameRules()->IsZombieSurvival() )
-		{
-			gViewPortInterface->ShowPanel( PANEL_TEAM, true );
-		}
+		gViewPortInterface->ShowPanel( PANEL_TEAM, true );
 	}
 }
 
@@ -258,14 +251,6 @@ IViewPortPanel* TFViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTFIntroMenu( this );
 	}
-	else if (Q_strcmp(PANEL_COOPSCOREBOARD, szPanelName) == 0)
-	{
-		newpanel = new CTFCoOpScoreBoardDialog(this);
-	}
-	else if (Q_strcmp(PANEL_ARENATEAMSELECT, szPanelName) == 0)
-	{
-		newpanel = new CTFArenaTeamMenu(this);
-	}
 	else
 	{
 		// create a generic base panel, don't add twice
@@ -283,8 +268,6 @@ void TFViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_CLASS_BLUE ), "PANEL_CLASS_BLUE" );
 	AddNewPanel( CreatePanelByName( PANEL_INTRO ), "PANEL_INTRO" );
 	AddNewPanel( CreatePanelByName( PANEL_ROUNDINFO ), "PANEL_ROUNDINFO" );
-	AddNewPanel( CreatePanelByName( PANEL_COOPSCOREBOARD ), "PANEL_COOPSCOREBOARD" );
-	AddNewPanel( CreatePanelByName( PANEL_ARENATEAMSELECT ), "PANEL_ARENATEAMSELECT" );
 
 	BaseClass::CreateDefaultPanels();
 }

@@ -28,8 +28,6 @@
 
 DECLARE_HUDELEMENT_DEPTH( CTFFreezePanel, 1 );
 
-vgui::IImage* GetDefaultAvatarImage( C_BasePlayer *pPlayer );
-
 #define CALLOUT_WIDE		(XRES(100))
 #define CALLOUT_TALL		(XRES(50))
 
@@ -124,6 +122,7 @@ void CTFFreezePanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 	if ( m_pBasePanel )
 	{
 		m_pFreezeLabel = dynamic_cast<Label *>( m_pBasePanel->FindChildByName("FreezeLabel") );
+		m_pFreezeLabelKiller = dynamic_cast<Label *>( m_pBasePanel->FindChildByName("FreezeLabelKiller") );
 		m_pAvatar = dynamic_cast<CAvatarImagePanel *>( m_pBasePanel->FindChildByName("AvatarImage") );
 		m_pFreezePanelBG = dynamic_cast<CTFImagePanel *>( m_pBasePanel->FindChildByName( "FreezePanelBG" ) );
 		m_pNemesisSubPanel = dynamic_cast<EditablePanel *>( m_pBasePanel->FindChildByName( "NemesisSubPanel" ) );
@@ -140,6 +139,11 @@ void CTFFreezePanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	int w, h;
 	m_pBasePanel->GetBounds( m_iBasePanelOriginalX, m_iBasePanelOriginalY, w, h );
+
+	if ( m_pAvatar )
+	{
+		m_pAvatar->SetShouldDrawFriendIcon( false );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -186,7 +190,7 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 	}
 	else if ( Q_strcmp( "show_freezepanel", pEventName ) == 0 )
 	{
-		C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
+		C_TF_PlayerResource *tf_PR = dynamic_cast<C_TF_PlayerResource *>(g_PR);
 		if ( !tf_PR )
 		{
 			m_pNemesisSubPanel->SetDialogVariable( "nemesisname", NULL );
@@ -218,6 +222,8 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 			SetPos( xp, m_iYBase );
 		}
 
+		C_BasePlayer *pAvatarPlayer = NULL;
+
 		if ( pKiller )
 		{
 			CTFPlayer *pPlayer = ToTFPlayer ( pKiller );
@@ -241,7 +247,7 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 				CTFPlayer *pTFKiller = ToTFPlayer( pKiller );
 
 				// Set the BG according to the team they're on
-				m_pFreezePanelBG->SetBGImage( pTFKiller->GetTeamNumber() );
+				SetColorForTargetTeam( pTFKiller->GetTeamNumber() );
 
 				//If this was just a regular kill but this guy is our nemesis then just show it.
 				if ( pVictim && pTFKiller && pTFKiller->m_Shared.IsPlayerDominated( pVictim->entindex() ) )
@@ -269,13 +275,7 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 
 				m_pBasePanel->SetDialogVariable( "killername", g_PR->GetPlayerName( m_iKillerIndex ) );
 
-				if ( m_pAvatar )
-				{
-					m_pAvatar->SetDefaultAvatar( GetDefaultAvatarImage( (C_BasePlayer*)pKiller ) );
-
-					m_pAvatar->SetPlayer( (C_BasePlayer*)pKiller );
-					m_pAvatar->SetShouldDrawFriendIcon( false );
-				}
+				pAvatarPlayer = pTFKiller;
 			}
 			else if ( pKiller->IsBaseObject() )
 			{
@@ -283,9 +283,9 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 				C_TFPlayer *pOwner = pObj->GetOwner();
 
 				Assert( pOwner && "Why does this object not have an owner?" );
-				
+
 				// Set the BG according to the team it's on
-				m_pFreezePanelBG->SetBGImage( pObj->GetTeamNumber() );
+				SetColorForTargetTeam( pObj->GetTeamNumber() );
 
 				if ( pOwner )
 				{
@@ -293,13 +293,7 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 
 					m_pBasePanel->SetDialogVariable( "killername", g_PR->GetPlayerName( m_iKillerIndex ) );
 
-					if ( m_pAvatar )
-					{
-						m_pAvatar->SetDefaultAvatar( GetDefaultAvatarImage( pOwner ) );
-
-						m_pAvatar->SetPlayer( pOwner );
-						m_pAvatar->SetShouldDrawFriendIcon( false );
-					}
+					pAvatarPlayer = pOwner;
 
 					pKiller = pOwner;
 				}
@@ -329,12 +323,12 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 			}
 			else if ( pKiller->IsNPC() )
 			{
-				C_AI_BaseNPC *pNPC = dynamic_cast<C_AI_BaseNPC *>( pKiller );
+				C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pKiller );
 
-				// Set the BG according to the team it's on
-				m_pFreezePanelBG->SetBGImage( pNPC->GetTeamNumber() );
+				// Set the BG according to the team they're on
+				SetColorForTargetTeam( pNPC->GetTeamNumber() );
 
-				if ( !pNPC->IsAlive() )
+				if ( !pKiller->IsAlive() )
 				{
 					m_pFreezeLabel->SetText( "#FreezePanel_Killer_Dead" );
 				}
@@ -366,6 +360,23 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 					m_pFreezeLabel->SetText( "#FreezePanel_Killer" );
 				}
 			}
+		}
+
+		// NPCs don't have avatars so push the text to the left.
+		if ( pAvatarPlayer && !g_PR->IsFakePlayer( pAvatarPlayer->entindex() ) && m_pAvatar )
+		{
+			m_pAvatar->SetPlayer( pAvatarPlayer );
+
+			if ( m_pFreezeLabelKiller )
+				m_pFreezeLabelKiller->SetTextInset( m_iAvatarOffset, 0 );
+		}
+		else
+		{
+			if ( m_pAvatar )
+				m_pAvatar->SetPlayer( NULL );
+
+			if ( m_pFreezeLabelKiller )
+				m_pFreezeLabelKiller->SetTextInset( 0, 0 );
 		}
 		
 		// see if we should show nemesis panel
@@ -787,6 +798,28 @@ void CTFFreezePanel::ShowNemesisPanel( bool bShow )
 		}
 	}
 #endif
+}
+
+void CTFFreezePanel::SetColorForTargetTeam( int iTeamNumber )
+{
+	switch ( iTeamNumber )
+	{
+	case TF_TEAM_RED:
+		m_pFreezePanelBG->SetImage("../hud/freezecam_red_bg");
+		break;
+	case TF_TEAM_BLUE:
+		m_pFreezePanelBG->SetImage("../hud/freezecam_blue_bg");
+		break;
+	case TF_TEAM_GREEN:
+		m_pFreezePanelBG->SetImage("../hud/freezecam_green_bg");
+		break;
+	case TF_TEAM_YELLOW:
+		m_pFreezePanelBG->SetImage("../hud/freezecam_yellow_bg");
+		break;
+	default:
+		m_pFreezePanelBG->SetImage("../hud/freezecam_black_bg");
+		break;
+	}
 }
 
 //-----------------------------------------------------------------------------

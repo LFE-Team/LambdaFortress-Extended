@@ -17,7 +17,6 @@
 #include "soundenvelope.h"
 #include "engine/IEngineSound.h"
 #include "ammodef.h"
-#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -97,7 +96,6 @@ public:
 
 	void SetZombieModel( void );
 	void MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize );
-	void SpeedModThink(void);
 	bool ShouldBecomeTorso( const CTakeDamageInfo &info, float flDamageThreshold );
 	bool CanBecomeLiveTorso() { return !m_fIsHeadless; }
 
@@ -105,9 +103,6 @@ public:
 
 	int SelectFailSchedule( int failedSchedule, int failedTask, AI_TaskFailureCode_t taskFailCode );
 	int TranslateSchedule( int scheduleType );
-	//float flCustomSpeed;
-	int iHeadcrabDisabled;
-	float flCustomModel;
 
 #ifndef HL2_EPISODIC
 	void CheckFlinches() {} // Zombie has custom flinch code
@@ -151,7 +146,6 @@ public:
 	void AttackMissSound( void );
 	void FootstepSound( bool fRightFoot );
 	void FootscuffSound( bool fRightFoot );
-	void Event_Killed(const CTakeDamageInfo &info);
 
 	const char *GetMoanSound( int nSound );
 	
@@ -174,7 +168,6 @@ private:
 
 LINK_ENTITY_TO_CLASS( npc_zombie, CZombie );
 LINK_ENTITY_TO_CLASS( npc_zombie_torso, CZombie );
-LINK_ENTITY_TO_CLASS(npc_zombie_custom, CZombie);
 
 //---------------------------------------------------------
 //---------------------------------------------------------
@@ -223,16 +216,13 @@ enum
 int ACT_ZOMBIE_TANTRUM;
 int ACT_ZOMBIE_WALLPOUND;
 
-BEGIN_DATADESC(CZombie)
+BEGIN_DATADESC( CZombie )
 
-	DEFINE_FIELD(m_hBlockingDoor, FIELD_EHANDLE),
-	DEFINE_FIELD(m_flDoorBashYaw, FIELD_FLOAT),
-	DEFINE_EMBEDDED(m_DurationDoorBash),
-	DEFINE_EMBEDDED(m_NextTimeToStartDoorBash),
-	DEFINE_FIELD(m_vPositionCharged, FIELD_POSITION_VECTOR),
-	//DEFINE_KEYFIELD(flCustomSpeed, FIELD_FLOAT, "customspeedboost"),
-	DEFINE_KEYFIELD(iHeadcrabDisabled, FIELD_INTEGER, "disableheadcrab"),
-	//DEFINE_KEYFIELD(flCustomModel, FIELD_FLOAT, "custom_model"),
+	DEFINE_FIELD( m_hBlockingDoor, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_flDoorBashYaw, FIELD_FLOAT ),
+	DEFINE_EMBEDDED( m_DurationDoorBash ),
+	DEFINE_EMBEDDED( m_NextTimeToStartDoorBash ),
+	DEFINE_FIELD( m_vPositionCharged, FIELD_POSITION_VECTOR ),
 
 END_DATADESC()
 
@@ -243,18 +233,10 @@ END_DATADESC()
 void CZombie::Precache( void )
 {
 	BaseClass::Precache();
-	if (FClassnameIs(this, "npc_zombie_custom"))
-	{
-		PrecacheModel(STRING(GetModelName()));
-	}
 
 	PrecacheModel( "models/zombie/classic.mdl" );
-	PrecacheModel("models/weapons/shell.mdl");
 	PrecacheModel( "models/zombie/classic_torso.mdl" );
 	PrecacheModel( "models/zombie/classic_legs.mdl" );
-	PrecacheModel("models/mapper/zombie_custom1.mdl");
-	PrecacheModel("models/mapper/zombie_custom2.mdl");
-	PrecacheModel("models/mapper/zombie_custom3.mdl");
 
 	PrecacheScriptSound( "Zombie.FootstepRight" );
 	PrecacheScriptSound( "Zombie.FootstepLeft" );
@@ -281,29 +263,40 @@ void CZombie::Spawn( void )
 {
 	Precache();
 
-	if( FClassnameIs( this, "npc_zombie" ) || FClassnameIs(this, "npc_zombie_custom") )
+	if( FClassnameIs( this, "npc_zombie" ) )
 	{
 		m_fIsTorso = false;
 	}
 	else
 	{
-	// This was placed as an npc_zombie_torso
+		// This was placed as an npc_zombie_torso
 		m_fIsTorso = true;
 	}
 
 	m_fIsHeadless = false;
 
 #ifdef HL2_EPISODIC
+/*
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	if( !Q_strnicmp( szMapName, "ep1_c17_00", 10 ) )
+	{
+		SetBloodColor( DONT_BLEED );
+	}
+	else if ( !Q_strnicmp( szMapName, "ep1_c17_00a", 11 ) )
+	{
+		SetBloodColor( DONT_BLEED );
+	}
+*/
+		
 	SetBloodColor( BLOOD_COLOR_ZOMBIE );
 #else
 	SetBloodColor( BLOOD_COLOR_GREEN );
 #endif // HL2_EPISODIC
 
 	m_iHealth			= sk_zombie_health.GetFloat();
-	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
-	{
-		m_iHealth = sk_zombie_health.GetFloat() * 1.5;
-	}
 	m_flFieldOfView		= 0.2;
 
 	CapabilitiesClear();
@@ -313,28 +306,8 @@ void CZombie::Spawn( void )
 	BaseClass::Spawn();
 
 	m_flNextMoanSound = gpGlobals->curtime + random->RandomFloat( 1.0, 4.0 );
-	//SpeedModThink();
 }
 
-
-void CZombie::Event_Killed(const CTakeDamageInfo &info)
-{
-	BaseClass::Event_Killed(info);
-	if (iHeadcrabDisabled == 1)
-	{
-		SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, 0);
-	}
-}
-void CZombie::SpeedModThink(void)
-{
-	/*
-	if (flCustomSpeed > 0)
-	{
-		m_flGroundSpeed = m_flGroundSpeed + flCustomSpeed;
-	}
-	SetContextThink(&CZombie::SpeedModThink, gpGlobals->curtime + 0.01, "ThinkContextSpeed");
-	*/
-}
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CZombie::PrescheduleThink( void )
@@ -490,28 +463,14 @@ void CZombie::AttackSound( void )
 //-----------------------------------------------------------------------------
 const char *CZombie::GetHeadcrabClassname( void )
 {
-	if (iHeadcrabDisabled == 0)
-	{
-		return "npc_headcrab";
-	}
-	else
-	{
-		return "none";
-	}
+	return "npc_headcrab";
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 const char *CZombie::GetHeadcrabModel( void )
 {
-	if (iHeadcrabDisabled == 0)
-	{
-		return "models/headcrabclassic.mdl";
-	}
-	else
-	{
-		return "models/weapons/shell.mdl";
-	}
+	return "models/headcrabclassic.mdl";
 }
 
 //-----------------------------------------------------------------------------
@@ -534,100 +493,33 @@ const char *CZombie::GetTorsoModel( void )
 //---------------------------------------------------------
 void CZombie::SetZombieModel( void )
 {
-	if (FClassnameIs(this, "npc_zombie_custom"))
+	Hull_t lastHull = GetHullType();
+
+	if ( m_fIsTorso )
 	{
-		Hull_t lastHull = GetHullType();
-
-		if (m_fIsTorso)
-		{
-			SetModel("models/zombie/classic_torso.mdl");
-			SetHullType(HULL_TINY);
-		}
-		else
-		{
-			SetModel(STRING(GetModelName()));
-			SetHullType(HULL_HUMAN);
-		}
-
-		if (iHeadcrabDisabled == 0)
-		{
-			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless);
-		}
-		else
-		{
-			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless);
-		}
-
-		SetHullSizeNormal(true);
-		SetDefaultEyeOffset();
-		SetActivity(ACT_IDLE);
-
-		// hull changed size, notify vphysics
-		// UNDONE: Solve this generally, systematically so other
-		// NPCs can change size
-		if (lastHull != GetHullType())
-		{
-			if (VPhysicsGetObject())
-			{
-				SetupVPhysicsHull();
-			}
-		}
+		SetModel( "models/zombie/classic_torso.mdl" );
+		SetHullType( HULL_TINY );
 	}
 	else
 	{
-		Hull_t lastHull = GetHullType();
+		SetModel( "models/zombie/classic.mdl" );
+		SetHullType( HULL_HUMAN );
+	}
 
-		if (m_fIsTorso)
-		{
-			SetModel("models/zombie/classic_torso.mdl");
-			SetHullType(HULL_TINY);
-		}
-		else
-		{
-			if (flCustomModel == 1)
-			{
-				//KeyValue("model", "models/mapper/zombie_custom1.mdl");
-				SetModel("models/mapper/zombie_custom1.mdl");
-			}
-			else if (flCustomModel == 2)
-			{
-				//KeyValue("model", "models/mapper/zombie_custom2.mdl");
-				SetModel("models/mapper/zombie_custom2.mdl");
-			}
-			else if (flCustomModel == 3)
-			{
-				//KeyValue("model", "models/mapper/zombie_custom3.mdl");
-				SetModel("models/mapper/zombie_custom3.mdl");
-			}
-			else
-			{
-				SetModel("models/zombie/classic.mdl");
-			}
-			SetHullType(HULL_HUMAN);
-		}
+	SetBodygroup( ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless );
 
-		if (iHeadcrabDisabled == 0)
-		{
-			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, !m_fIsHeadless);
-		}
-		else
-		{
-			SetBodygroup(ZOMBIE_BODYGROUP_HEADCRAB, m_fIsHeadless);
-		}
+	SetHullSizeNormal( true );
+	SetDefaultEyeOffset();
+	SetActivity( ACT_IDLE );
 
-		SetHullSizeNormal(true);
-		SetDefaultEyeOffset();
-		SetActivity(ACT_IDLE);
-
-		// hull changed size, notify vphysics
-		// UNDONE: Solve this generally, systematically so other
-		// NPCs can change size
-		if (lastHull != GetHullType())
+	// hull changed size, notify vphysics
+	// UNDONE: Solve this generally, systematically so other
+	// NPCs can change size
+	if ( lastHull != GetHullType() )
+	{
+		if ( VPhysicsGetObject() )
 		{
-			if (VPhysicsGetObject())
-			{
-				SetupVPhysicsHull();
-			}
+			SetupVPhysicsHull();
 		}
 	}
 }

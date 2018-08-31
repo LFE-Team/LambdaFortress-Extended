@@ -1,6 +1,0 @@
-"SpriteCard"
-{
-	"$basetexture" "particle\alien_text"
-	$translucent	1
-	$blendframes	0
-}

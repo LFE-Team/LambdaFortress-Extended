@@ -14,9 +14,6 @@
 #include "ai_networkmanager.h"
 #include "ndebugoverlay.h"
 #include "datacache/imdlcache.h"
-#ifdef TF_CLASSIC
-#include "client.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -396,147 +393,6 @@ ConVar npc_create_equipment("npc_create_equipment", "");
 //------------------------------------------------------------------------------
 // Purpose: Create an NPC of the given type
 //------------------------------------------------------------------------------
-#ifdef TF_CLASSIC
-// Add class name prefixes to show in the "give" command autocomplete here
-static ClassNamePrefix_t s_pNPCEntityPrefixes[] =
-{
-	ClassNamePrefix_t( "npc_", true ),
-	ClassNamePrefix_t( "monster_", true ),
-};
-
-int CreateNPCAutoComplete( const char *partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH])
-{
-	// Find the first space in our input
-	const char *firstSpace = V_strstr(partial, " ");
-	if(!firstSpace)
-		return 0;
-
-	int commandLength = firstSpace - partial;
-
-	// Extract the command name from the input
-	char commandName[COMMAND_COMPLETION_ITEM_LENGTH];
-	V_StrSlice(partial, 0, commandLength, commandName, sizeof(commandName));
-
-	// Calculate the length of the command string (minus the command name)
-	partial += commandLength + 1;
-	int partialLength = V_strlen(partial);
-
-	// Grab the factory dictionary
-	if(!EntityFactoryDictionary())
-		return 0;
-
-	const EntityFactoryDict_t &factoryDict = EntityFactoryDictionary()->GetFactoryDictionary();
-	int numMatches = 0;
-
-	// Iterate through all entity factories
-	for(int i = factoryDict.First(); i != factoryDict.InvalidIndex() && numMatches < COMMAND_COMPLETION_MAXITEMS; i = factoryDict.Next(i))
-	{
-		const char *pszClassName = factoryDict.GetElementName(i);
-
-		// See if this entity classname has a prefix that we show in the
-		// autocomplete
-		// TODO: optimise by caching all autocompletable classnames into a hash
-		// table on first run
-		int j;
-		const ClassNamePrefix_t *pPrefix = NULL;
-
-		for(j = 0; j < ARRAYSIZE(s_pNPCEntityPrefixes); ++j)
-		{
-			pPrefix = &s_pNPCEntityPrefixes[j];
-
-			if(Q_strncmp(pszClassName, pPrefix->m_pszPrefix, pPrefix->m_nLength))
-				continue;
-
-			break;
-		}
-
-		// If this entity factory had no prefixes, we could not find the prefix, skip this entity
-		if(j == ARRAYSIZE(s_pNPCEntityPrefixes))
-			continue;
-
-		// Skip past the prefix if it shouldn't be kept
-		if(!pPrefix->m_bKeepPrefix)
-			pszClassName += pPrefix->m_nLength;
-
-		// Does this entity match our partial completion?
-		if(Q_strnicmp(pszClassName, partial, partialLength))
-			continue;
-
-		Q_snprintf(commands[numMatches++], COMMAND_COMPLETION_ITEM_LENGTH, "%s %s", commandName, pszClassName);
-	}
-
-	// Sort the commands alphabetically
-	qsort(commands, numMatches, COMMAND_COMPLETION_ITEM_LENGTH, StringSortFunc);
-
-	return numMatches;
-}
-CON_COMMAND_F_COMPLETION( npc_create, "Creates an NPC of the given type where the player is looking (if the given NPC can actually stand at that location).  Note that this only works for npc classes that are already in the world.  You can not create an entity that doesn't have an instance in the level.\n\tArguments:	{npc_class_name} {targetname} {health}", FCVAR_CHEAT, CreateNPCAutoComplete )
-{
-	MDLCACHE_CRITICAL_SECTION();
-
-	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
-	CBaseEntity::SetAllowPrecache( true );
-
-	// Try to create entity
-	CAI_BaseNPC *baseNPC = dynamic_cast< CAI_BaseNPC * >( CreateEntityByName(args[1]) );
-	if ( baseNPC )
-	{
-		baseNPC->KeyValue( "additionalequipment", npc_create_equipment.GetString() );
-		baseNPC->Precache();
-
-		if ( args.ArgC() == 3 )
-		{
-			baseNPC->SetName( AllocPooledString( args[2] ) );
-		}
-
-		if ( args.ArgC() == 4 )
-		{
-			baseNPC->SetHealth( atof( args[3] ) );
-		}
-
-		DispatchSpawn( baseNPC );
-		// Now attempt to drop into the world
-		CBasePlayer* pPlayer = UTIL_GetCommandClient();
-		trace_t tr;
-		Vector forward;
-		pPlayer->EyeVectors( &forward );
-		AI_TraceLine(pPlayer->EyePosition(),
-			pPlayer->EyePosition() + forward * MAX_TRACE_LENGTH,MASK_NPCSOLID, 
-			pPlayer, COLLISION_GROUP_NONE, &tr );
-		if ( tr.fraction != 1.0)
-		{
-			if (baseNPC->CapabilitiesGet() & bits_CAP_MOVE_FLY)
-			{
-				Vector pos = tr.endpos - forward * 36;
-				baseNPC->Teleport( &pos, NULL, NULL );
-			}
-			else
-			{
-				// Raise the end position a little up off the floor, place the npc and drop him down
-				tr.endpos.z += 12;
-				baseNPC->Teleport( &tr.endpos, NULL, NULL );
-				UTIL_DropToFloor( baseNPC, MASK_NPCSOLID );
-			}
-
-			// Now check that this is a valid location for the new npc to be
-			Vector	vUpBit = baseNPC->GetAbsOrigin();
-			vUpBit.z += 1;
-
-			AI_TraceHull( baseNPC->GetAbsOrigin(), vUpBit, baseNPC->GetHullMins(), baseNPC->GetHullMaxs(), 
-				MASK_NPCSOLID, baseNPC, COLLISION_GROUP_NONE, &tr );
-			if ( tr.startsolid || (tr.fraction < 1.0) )
-			{
-				baseNPC->SUB_Remove();
-				Msg("Can't create %s.  Bad Position!\n",args[1]);
-				NDebugOverlay::Box(baseNPC->GetAbsOrigin(), baseNPC->GetHullMins(), baseNPC->GetHullMaxs(), 255, 0, 0, 0, 0);
-			}
-		}
-
-		baseNPC->Activate();
-	}
-	CBaseEntity::SetAllowPrecache( allowPrecache );
-}
-#else
 void CC_NPC_Create( const CCommand &args )
 {
 	MDLCACHE_CRITICAL_SECTION();
@@ -598,7 +454,9 @@ void CC_NPC_Create( const CCommand &args )
 	}
 	CBaseEntity::SetAllowPrecache( allowPrecache );
 }
-#endif
+static ConCommand npc_create("npc_create", CC_NPC_Create, "Creates an NPC of the given type where the player is looking (if the given NPC can actually stand at that location).  Note that this only works for npc classes that are already in the world.  You can not create an entity that doesn't have an instance in the level.\n\tArguments:	{npc_class_name}", FCVAR_CHEAT);
+
+
 //------------------------------------------------------------------------------
 // Purpose: Create an NPC of the given type
 //------------------------------------------------------------------------------

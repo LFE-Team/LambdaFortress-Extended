@@ -130,7 +130,6 @@ public:
 	void StopSprint(void);
 
 	void DropGrenade(Vector vDir);
-	virtual void Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
 
 	bool IsSprinting(void) { return m_flSprintTime > gpGlobals->curtime; }
 	bool HasGrenade(void) { return m_hGrenade != NULL; }
@@ -205,16 +204,26 @@ void CNPC_Zombine::Spawn(void)
 	m_fIsHeadless = false;
 
 #ifdef HL2_EPISODIC
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	/*
+	if( !Q_strnicmp( szMapName, "ep1_c17_00", 10 ) )
+	{
+		SetBloodColor( DONT_BLEED );
+	}
+	else if( !Q_strnicmp( szMapName, "ep1_c17_00a", 11 ) )
+	{
+		SetBloodColor( DONT_BLEED );
+	}
+	*/		
 	SetBloodColor(BLOOD_COLOR_ZOMBIE);
 #else
 	SetBloodColor(BLOOD_COLOR_GREEN);
 #endif // HL2_EPISODIC
 
 	m_iHealth = sk_zombie_soldier_health.GetFloat();
-	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
-	{
-		m_iHealth = sk_zombie_soldier_health.GetFloat() * 1.5;
-	}
 	SetMaxHealth(m_iHealth);
 
 	m_flFieldOfView = 0.2;
@@ -416,7 +425,7 @@ void CNPC_Zombine::GatherGrenadeConditions(void)
 	if (m_ActBusyBehavior.IsActive())
 		return;
 
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
 
 	if (pPlayer && pPlayer->FVisible(this))
 	{
@@ -615,7 +624,7 @@ bool CNPC_Zombine::AllowedToSprint(void)
 
 	int iChance = SPRINT_CHANCE_VALUE;
 
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+	CHL2_Player *pPlayer = dynamic_cast <CHL2_Player*> (AI_GetSinglePlayer());
 
 	if (pPlayer)
 	{
@@ -990,11 +999,6 @@ CBaseEntity *CNPC_Zombine::OnFailedPhysGunPickup(Vector vPhysgunPos)
 	CBaseEntity *pGrenade = m_hGrenade;
 	ReleaseGrenade(vPhysgunPos);
 	return pGrenade;
-}
-
-void CNPC_Zombine::Deflected(CBaseEntity *pDeflectedBy, Vector &vecDir)
-{
-	return DropGrenade(vecDir);
 }
 
 //-----------------------------------------------------------------------------

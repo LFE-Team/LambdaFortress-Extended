@@ -164,19 +164,13 @@ void CHudTeamSwitch::SetupSwitchPanel( int iNewTeam )
 			}
 			else if ( iRole == 0 )
 			{
-				switch (iNewTeam)
+				if ( iNewTeam == TF_TEAM_RED )
 				{
-					case TF_TEAM_RED:
-						m_pBalanceLabel->SetText(g_pVGuiLocalize->Find("#TF_teamswitch_red"));
-						break;
-
-					case TF_TEAM_BLUE:
-						m_pBalanceLabel->SetText(g_pVGuiLocalize->Find("#TF_teamswitch_blue"));
-						break;
-
-					default:
-						m_pBalanceLabel->SetText(g_pVGuiLocalize->Find("#TF_teamswitch_blue"));
-						break;
+					m_pBalanceLabel->SetText( g_pVGuiLocalize->Find( "#TF_teamswitch_red" ) );
+				}
+				else
+				{
+					m_pBalanceLabel->SetText( g_pVGuiLocalize->Find( "#TF_teamswitch_blue" ) );
 				}
 			}
 		}

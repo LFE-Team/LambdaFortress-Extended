@@ -51,11 +51,9 @@ public:
 
 	void ErrorSound( void );
 
+	int MapIndexToObjectID( int index );
+
 	virtual int GetRenderGroupPriority() { return 50; }
-
-private:
-
-	void GetBuildingIDAndModeFromSlot( int iSlot, int &iBuildingID, int &iObjectMode );
 
 private:
 	CEngyDestroyMenuItem *m_pActiveItems[4];

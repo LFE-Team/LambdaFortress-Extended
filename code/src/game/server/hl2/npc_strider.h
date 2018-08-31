@@ -55,6 +55,7 @@ public:
 	virtual void OnMinigunStartShooting( CBaseEntity *pTarget ) = 0;
 	virtual void OnMinigunStopShooting( CBaseEntity *pTarget ) = 0;
 	virtual CAI_BaseNPC *GetEntity() = 0;
+	virtual bool		IsDeflectable() { return false; }
 };
 
 abstract_class IStriderMinigunHost : public IMinigunHost

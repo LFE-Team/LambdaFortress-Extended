@@ -125,7 +125,6 @@ public:
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsDeathmatch( void );
 	virtual bool IsCoOp( void );
-	virtual bool IsBluCoOp(void);
 
 // Client connection/disconnection
 	// If ClientConnected returns FALSE, the connection is rejected and the user is provided the reason specified in

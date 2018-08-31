@@ -13,8 +13,6 @@
 #include "collisionutils.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "engine/IEngineSound.h"
-#include "c_tf_player.h"
-#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -86,9 +84,8 @@ void FX_TFTracerSound( const Vector &start, const Vector &end, int iTracerType )
 
 		CLocalPlayerFilter filter;
 
-		// not sure if this fix is correct
 		enginesound->EmitSound(	filter, SOUND_FROM_WORLD, CHAN_STATIC, params.soundname, 
-			params.volume, SNDLVL_TO_ATTN(params.soundlevel), 0, params.pitch, 0, &start, &shotDir, nullptr, false);
+			params.volume, SNDLVL_TO_ATTN(params.soundlevel), 0, params.pitch, 0, &start, &shotDir, false);
 	}
 
 	// Don't play another bullet whiz for this client until this time has run out
@@ -127,60 +124,3 @@ void BrightTracerCallback( const CEffectData &data )
 }
 
 DECLARE_CLIENT_EFFECT( "BrightTracer", BrightTracerCallback );
-
-extern ConVar r_drawtracers;
-extern ConVar r_drawtracers_firstperson;
-
-//-----------------------------------------------------------------------------
-// Purpose: This is largely a copy of ParticleTracer except it colors tracers in DM.
-//-----------------------------------------------------------------------------
-void TFParticleTracerCallback( const CEffectData &data )
-{
-	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pLocalPlayer )
-		return;
-
-	if ( !r_drawtracers.GetBool() )
-		return;
-
-	C_TFPlayer *pPlayer = ToTFPlayer( data.GetEntity() );
-
-	if ( !r_drawtracers_firstperson.GetBool() )
-	{
-		if ( pPlayer && !pPlayer->ShouldDrawThisPlayer() )
-			return;
-	}
-
-	// Grab the data
-	Vector vecStart = data.m_vStart;
-	Vector vecEnd = data.m_vOrigin;
-
-	// Adjust view model tracers
-	C_BaseEntity *pEntity = data.GetEntity();
-	if ( data.entindex() && data.entindex() == pLocalPlayer->entindex() )
-	{
-		QAngle	vangles;
-		Vector	vforward, vright, vup;
-
-		engine->GetViewAngles( vangles );
-		AngleVectors( vangles, &vforward, &vright, &vup );
-
-		VectorMA( data.m_vStart, 4, vright, vecStart );
-		vecStart[2] -= 0.5f;
-	}
-
-	// Create the particle effect
-	QAngle vecAngles;
-	Vector vecToEnd = vecEnd - vecStart;
-	VectorNormalize( vecToEnd );
-	VectorAngles( vecToEnd, vecAngles );
-
-	DispatchParticleEffect( data.m_nHitBox, vecStart, vecEnd, vecAngles, pEntity );
-
-	if ( data.m_fFlags & TRACER_FLAG_WHIZ )
-	{
-		FX_TracerSound( vecStart, vecEnd, TRACER_TYPE_DEFAULT );
-	}
-}
-
-DECLARE_CLIENT_EFFECT( "TFParticleTracer", TFParticleTracerCallback );

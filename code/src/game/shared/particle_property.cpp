@@ -561,10 +561,10 @@ void CParticleProperty::UpdateControlPoint( ParticleEffectList_t *pEffect, int i
 	float flOffset = 0.0f;
 	bool bUsingHeadOrigin = false;
 
-#if defined ( TF_CLIENT_DLL ) || defined ( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 
 	CBaseEntity *pWearable = (CBaseEntity*) pPoint->hEntity.Get();
-	if ( pWearable /*&& GetAttribInterface( pWearable )*/ && !pWearable->IsPlayer() )
+	if ( pWearable && GetAttribInterface( pWearable ) && !pWearable->IsPlayer() )
 	{
 		C_BaseAnimating *pAnimating = pPoint->hEntity->GetBaseAnimating();
 		if ( pAnimating )

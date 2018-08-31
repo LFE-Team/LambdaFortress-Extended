@@ -41,8 +41,6 @@ END_DATADESC()
 
 CGrenadeSpit::CGrenadeSpit( void ) : m_bPlaySound( true ), m_pHissSound( NULL )
 {
-	m_iDeflected = 0;
-	m_hDeflectOwner = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -50,13 +48,13 @@ CGrenadeSpit::CGrenadeSpit( void ) : m_bPlaySound( true ), m_pHissSound( NULL )
 //-----------------------------------------------------------------------------
 void CGrenadeSpit::Spawn( void )
 {
-	Precache();
+	Precache( );
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 	SetSolidFlags( FSOLID_NOT_STANDABLE );
 
 	SetModel( "models/spitball_large.mdl" );
-	UTIL_SetSize( this, Vector( -2.0f, -2.0f, -2.0f ), Vector( 2.0f, 2.0f, 2.0f ) );
+	UTIL_SetSize( this, vec3_origin, vec3_origin );
 
 	SetUse( &CBaseGrenade::DetonateUse );
 	SetTouch( &CGrenadeSpit::GrenadeSpitTouch );
@@ -77,8 +75,6 @@ void CGrenadeSpit::Spawn( void )
 	// We're self-illuminating, so we don't take or give shadows
 	AddEffects( EF_NOSHADOW|EF_NORECEIVESHADOW );
 
-	VPhysicsInitNormal( SOLID_BBOX, 0, false );
-
 	// Create the dust effect in place
 	m_hSpitEffect = (CParticleSystem *) CreateEntityByName( "info_particle_system" );
 	if ( m_hSpitEffect != NULL )
@@ -92,8 +88,6 @@ void CGrenadeSpit::Spawn( void )
 		if ( gpGlobals->curtime > 0.5f )
 			m_hSpitEffect->Activate();
 	}
-
-	m_flDetonateTime = gpGlobals->curtime + 1.5f;
 }
 
 
@@ -188,16 +182,11 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 
 	QAngle vecAngles;
 	VectorAngles( tracePlaneNormal, vecAngles );
-
-	if ( pOther->IsPlayer() || pOther->IsBaseObject() || pOther->IsNPC() || bHitWater )
+	
+	if ( pOther->IsPlayer() || bHitWater )
 	{
 		// Do a lighter-weight effect if we just hit a player
 		DispatchParticleEffect( "antlion_spit_player", GetAbsOrigin(), vecAngles );
-	}
-	else if ( pOther->IsWorld() )
-	{
-		Detonate();
-		DispatchParticleEffect( "antlion_spit", GetAbsOrigin(), vecAngles );
 	}
 	else
 	{
@@ -207,7 +196,7 @@ void CGrenadeSpit::GrenadeSpitTouch( CBaseEntity *pOther )
 	Detonate();
 }
 
-void CGrenadeSpit::Detonate( void )
+void CGrenadeSpit::Detonate(void)
 {
 	m_takedamage = DAMAGE_NO;
 
@@ -249,11 +238,7 @@ void CGrenadeSpit::Think( void )
 		return;
 	
 	// Add a doppler effect to the balls as they travel
-#ifdef TF_CLASSIC
-	CBaseEntity *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
-#else
 	CBaseEntity *pPlayer = AI_GetSinglePlayer();
-#endif
 	if ( pPlayer != NULL )
 	{
 		Vector dir;
@@ -280,12 +265,6 @@ void CGrenadeSpit::Think( void )
 		CSoundEnvelopeController::GetController().SoundChangePitch( m_pHissSound, iPitch, 0.1f );
 	}
 
-	if ( gpGlobals->curtime > m_flDetonateTime )
-	{
-		Detonate();
-		return;
-	}
-
 	// Set us up to think again shortly
 	SetNextThink( gpGlobals->curtime + 0.05f );
 }
@@ -302,43 +281,4 @@ void CGrenadeSpit::Precache( void )
 
 	PrecacheParticleSystem( "antlion_spit_player" );
 	PrecacheParticleSystem( "antlion_spit" );
-	PrecacheParticleSystem( "antlion_spit_trail" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CGrenadeSpit::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
-{
-	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
-	if ( pPhysicsObject )
-	{
-		Vector vecOldVelocity, vecVelocity;
-
-		pPhysicsObject->GetVelocity( &vecOldVelocity, NULL );
-
-		float flSpeed = vecOldVelocity.Length();
-
-		vecVelocity = vecDir;
-		vecVelocity *= flSpeed;
-		AngularImpulse angVelocity( ( 600, random->RandomInt( -1200, 1200 ), 0 ) );
-
-		// Now change grenade's direction.
-		pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
-	}
-
-	CBaseCombatCharacter *pBCC = pDeflectedBy->MyCombatCharacterPointer();
-
-	IncremenentDeflected();
-	m_hDeflectOwner = pDeflectedBy;
-	SetThrower( pBCC );
-	ChangeTeam( pDeflectedBy->GetTeamNumber() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Increment deflects counter
-//-----------------------------------------------------------------------------
-void CGrenadeSpit::IncremenentDeflected( void )
-{
-	m_iDeflected++;
 }

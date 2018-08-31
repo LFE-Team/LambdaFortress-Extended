@@ -39,8 +39,7 @@ public:
 	virtual int GetRenderGroupPriority() { return 50; }
 
 private:
-
-	void GetBuildingIDAndModeFromSlot( int iSlot, int &iBuildingID, int &iObjectMode );
+	int GetBuildingIDFromSlot( int iSlot );
 
 	void SendBuildMessage( int iSlot );
 	bool SendDestroyMessage( int iSlot );
@@ -59,11 +58,11 @@ private:
 
 	int m_iSelectedItem;
 
-	CExLabel *m_pBuildLabelBright;
-	CExLabel *m_pBuildLabelDim;
+	CTFLabel *m_pBuildLabelBright;
+	CTFLabel *m_pBuildLabelDim;
 
-	CExLabel *m_pDestroyLabelBright;
-	CExLabel *m_pDestroyLabelDim;
+	CTFLabel *m_pDestroyLabelBright;
+	CTFLabel *m_pDestroyLabelDim;
 
 	bool m_bInConsoleMode;
 };

@@ -28,29 +28,19 @@ public:
 	DECLARE_PREDICTABLE();
 
 	CTFKnife();
-
-	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_KNIFE; }
-
-	virtual bool		Deploy( void );
-	virtual void		ItemPostFrame( void );
 	virtual void		PrimaryAttack( void );
+	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_KNIFE; }
 
 	virtual float		GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage );
 
 	virtual void		SendPlayerAnimEvent( CTFPlayer *pPlayer );
 
-	bool				IsBehindAndFacingTarget( CBaseEntity *pTarget );
+	bool				IsBehindTarget( CBaseEntity *pTarget );
 
 	virtual bool		CalcIsAttackCriticalHelper( void );
 
-	virtual void		DoViewModelAnimation( void );
-	virtual bool		SendWeaponAnim( int iActivity );
-
-	void				BackstabVMThink( void );
-
 private:
 	EHANDLE				m_hBackstabVictim;
-	CNetworkVar( bool, m_bReadyToBackstab );
 
 	CTFKnife( const CTFKnife & ) {}
 };

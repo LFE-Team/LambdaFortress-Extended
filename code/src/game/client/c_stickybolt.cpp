@@ -27,9 +27,6 @@
 #include "c_te_legacytempents.h"
 #include "engine/ivdebugoverlay.h"
 #include "c_te_effect_dispatch.h"
-#ifdef TF_CLASSIC_CLIENT
-#include "c_tf_player.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -107,14 +104,16 @@ public:
 			physenv->CreateBallsocketConstraint( pReference, pPhysicsObject, NULL, ballsocket );
 
 			//Play a sound
-			/*CPASAttenuationFilter filter( pEnt );
+			CPASAttenuationFilter filter( pEnt );
+
 			EmitSound_t ep;
 			ep.m_nChannel = CHAN_VOICE;
 			ep.m_pSoundName =  "Weapon_Crossbow.BoltSkewer";
 			ep.m_flVolume = 1.0f;
 			ep.m_SoundLevel = SNDLVL_NORM;
 			ep.m_pOrigin = &pEnt->GetAbsOrigin();
-			C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, ep );*/
+
+			C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, ep );
 	
 			return ITERATION_STOP;
 		}
@@ -129,24 +128,20 @@ private:
 
 void CreateCrossbowBolt( const Vector &vecOrigin, const Vector &vecDirection )
 {
-	#ifdef TF_CLASSIC_CLIENT
-		model_t *pModel = (model_t *)engine->LoadModel( "models/weapons/w_models/w_arrow.mdl" );
-	#else
-		model_t *pModel = (model_t *)engine->LoadModel( "models/crossbow_bolt.mdl" );
-	#endif
+	model_t *pModel = (model_t *)engine->LoadModel( "models/crossbow_bolt.mdl" );
 
 	QAngle vAngles;
 
 	VectorAngles( vecDirection, vAngles );
 	
-	//if ( gpGlobals->maxClients > 1 )
-	//{
-		tempents->SpawnTempModel( pModel, vecOrigin - vecDirection * 8, vAngles, Vector( 0, 0, 0 ), 30.0f, FTENT_NONE );
-	//}
-	//else
-	//{
-	//	tempents->SpawnTempModel( pModel, vecOrigin - vecDirection * 8, vAngles, Vector( 0, 0, 0 ), 1, FTENT_NEVERDIE );
-	//}
+	if ( gpGlobals->maxClients > 1 )
+	{
+		tempents->SpawnTempModel( pModel, vecOrigin - vecDirection * 8, vAngles, Vector(0, 0, 0 ), 30.0f, FTENT_NONE );
+	}
+	else
+	{
+		tempents->SpawnTempModel( pModel, vecOrigin - vecDirection * 8, vAngles, Vector(0, 0, 0 ), 1, FTENT_NEVERDIE );
+	}
 }
 
 void StickRagdollNow( const Vector &vecOrigin, const Vector &vecDirection )
@@ -179,71 +174,3 @@ void StickyBoltCallback( const CEffectData &data )
 }
 
 DECLARE_CLIENT_EFFECT( "BoltImpact", StickyBoltCallback );
-
-
-void SpawnGib( const CEffectData &data, const char *pszModelName )
-{
-	Vector vForward, vRight, vUp;
-
-	AngleVectors( data.m_vAngles, &vForward, &vRight, &vUp );
-	 
-	QAngle vecArrowAngles;
-	VectorAngles( -vUp, vecArrowAngles );
-	
-	Vector vecVelocity = random->RandomFloat( -240, -200 ) * vForward +
-						 random->RandomFloat( -30, 30 ) * vRight +
-						 random->RandomFloat( -30, 30 ) * vUp;
-
-	float flLifeTime = 10.0f;
-
-	model_t *pModel = (model_t *)engine->LoadModel( pszModelName );
-	if ( !pModel )
-		return;
-	
-	int flags = FTENT_FADEOUT | FTENT_GRAVITY | FTENT_COLLIDEALL | FTENT_ROTATE | FTENT_HITSOUND | FTENT_ROTATE;
-
-	Assert( pModel );	
-
-	
-	C_LocalTempEntity *pTemp = tempents->SpawnTempModel( pModel, data.m_vOrigin, vecArrowAngles, vecVelocity, flLifeTime, FTENT_NEVERDIE );
-	if ( pTemp == NULL )
-		return;
-
-	pTemp->m_vecTempEntAngVelocity[0] = random->RandomFloat(-512,511);
-	pTemp->m_vecTempEntAngVelocity[1] = random->RandomFloat(-255,255);
-	pTemp->m_vecTempEntAngVelocity[2] = random->RandomFloat(-255,255);
-
-	pTemp->SetGravity( 0.4 );
-
-	pTemp->m_flSpriteScale = 10;
-
-	pTemp->flags = flags;
-
-	// don't collide with owner
-	pTemp->clientIndex = data.entindex();
-	if ( pTemp->clientIndex < 0 )
-	{
-		pTemp->clientIndex = 0;
-	}
-
-	// ::ShouldCollide decides what this collides with
-	pTemp->flags |= FTENT_COLLISIONGROUP;
-	pTemp->SetCollisionGroup( COLLISION_GROUP_PLAYER );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : &data - 
-//-----------------------------------------------------------------------------
-void ArrowBreakCallback( const CEffectData &data )
-{
-	SpawnGib( data , "models/weapons/w_models/w_arrow_gib1.mdl" );
-	SpawnGib( data , "models/weapons/w_models/w_arrow_gib2.mdl" );
-}
-
-DECLARE_CLIENT_EFFECT( "ArrowBreak", ArrowBreakCallback );
-
-
-void AttachArrowToBone( const CEffectData &data )
-{
-}

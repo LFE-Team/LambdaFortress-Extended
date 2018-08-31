@@ -77,11 +77,6 @@ void CNPC_Headcrab::Spawn( void )
 	SetRenderColor( 255, 255, 255, 255 );
 
 	SetModel( "models/hl1hcrab.mdl" );
-	if ( sv_hl1_hd.GetFloat() == 1 )
-	{
-		PrecacheModel( "models/headcrab_hd.mdl" );
-		SetModel( "models/headcrab_hd.mdl" );
-	}
 	m_iHealth = sk_headcrabhl1_health.GetFloat();
 
 	SetHullType(HULL_TINY);

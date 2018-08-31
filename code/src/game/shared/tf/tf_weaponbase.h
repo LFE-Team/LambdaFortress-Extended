@@ -28,22 +28,15 @@
 #include "tf_playeranimstate.h"
 #include "tf_weapon_parse.h"
 #include "npcevent.h"
-#include "econ_item_system.h"
 
 // Client specific.
 #if defined( CLIENT_DLL )
 #define CTFWeaponBase C_TFWeaponBase
 #define CTFWeaponBaseGrenadeProj C_TFWeaponBaseGrenadeProj
-#define CTFViewModel C_TFViewModel
 #include "tf_fx_muzzleflash.h"
-#include "c_tf_viewmodeladdon.h"
 #endif
 
 #define MAX_TRACER_NAME		128
-#define WEAPON_PARTICLE_MODIFY_STRING_SIZE		128
-
-CTFWeaponInfo *GetTFWeaponInfo(int iWeapon);
-CTFWeaponInfo *GetTFWeaponInfoForItem( CEconItemView *pItem, int iClass );
 
 class CTFPlayer;
 class CBaseObject;
@@ -83,13 +76,6 @@ struct BobState_t
 	float m_flLateralBob;
 };
 
-typedef struct
-{
-	Activity actBaseAct;
-	Activity actTargetAct;
-	int		iWeaponRole;
-} viewmodel_acttable_t;
-
 #ifdef CLIENT_DLL
 float CalcViewModelBobHelper( CBasePlayer *player, BobState_t *pBobState );
 void AddViewModelBobHelper( Vector &origin, QAngle &angles, BobState_t *pBobState );
@@ -100,8 +86,8 @@ class ITFChargeUpWeapon
 {
 public:
 	virtual float GetChargeBeginTime( void ) = 0;
+
 	virtual float GetChargeMaxTime( void ) = 0;
-	virtual const char *GetChargeSound( void ) = 0;
 };
 
 //=============================================================================
@@ -134,33 +120,11 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual int GetCustomDamageType() const { return TF_DMG_CUSTOM_NONE; }
 
 	// View model.
-	virtual int TranslateViewmodelHandActivity( int iActivity );
-	virtual void SetViewModel();
 	virtual const char *GetViewModel( int iViewModel = 0 ) const;
-	virtual const char *DetermineViewModelType(const char *vModel) const;
-
-	// World model.
-	virtual const char *GetWorldModel( void ) const;
-
-#ifdef CLIENT_DLL
-	virtual void UpdateViewModel( void );
-
-	C_ViewmodelAttachmentModel *GetViewmodelAddon( void );
-#endif
 
 	virtual void Drop( const Vector &vecVelocity );
-	virtual bool CanHolster( void ) const;
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	virtual bool Deploy( void );
-	virtual void Equip( CBaseCombatCharacter *pOwner );
-#ifdef GAME_DLL
-	virtual void UnEquip( CBaseCombatCharacter *pOwner );
-#endif
-	bool IsViewModelFlipped( void );
-
-	virtual void ReapplyProvision( void );
-	virtual void OnActiveStateChanged( int iOldState );
-	virtual void UpdateOnRemove( void );
 
 	// Attacks.
 	virtual void PrimaryAttack();
@@ -168,58 +132,30 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	void CalcIsAttackCritical( void );
 	virtual bool CalcIsAttackCriticalHelper();
 	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
-	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }
-
-	// Ammo.
-	virtual int	GetMaxClip1( void ) const;
-	virtual int	GetDefaultClip1( void ) const;
-	virtual int GetMaxAmmo( void );
-	virtual int GetInitialAmmo( void );
 
 	// Reloads.
 	virtual bool Reload( void );
 	virtual void AbortReload( void );
 	virtual bool DefaultReload( int iClipSize1, int iClipSize2, int iActivity );
 	void SendReloadEvents();
-	virtual bool CanAutoReload( void ) { return true; }
-	virtual bool ReloadOrSwitchWeapons( void );
 
 	virtual bool CanDrop( void ) { return false; }
 
-	// Accessor for reload bodygroup switching
- 	virtual void SwitchBodyGroups( void ) {}
-	virtual void UpdatePlayerBodygroups( void );
-#if defined( CLIENT_DLL )
-	virtual void UpdateExtraWearables( void );
-	CHandle<C_TFWeaponAttachmentModel> m_hAttachmentModel;
-#endif
-
 	// Sound.
 	bool PlayEmptySound();
-	void PlayReloadSound( void );
-	virtual const char *GetShootSound( int iIndex ) const;
 
 	// Activities.
 	virtual void ItemBusyFrame( void );
 	virtual void ItemPostFrame( void );
-	virtual void ItemHolsterFrame( void );
 
 	virtual void SetWeaponVisible( bool visible );
 
-	virtual int GetActivityWeaponRole( void );
-
 	virtual acttable_t *ActivityList( int &iActivityCount );
-	static acttable_t s_acttablePrimary[];
-	static acttable_t s_acttableSecondary[];
-	static acttable_t s_acttableMelee[];
-	static acttable_t s_acttableBuilding[];
-	static acttable_t s_acttablePDA[];
-	static acttable_t s_acttableItem1[];
-	static acttable_t s_acttableItem2[];
-	static acttable_t s_acttableMeleeAllClass[];
-	static acttable_t s_acttableSecondary2[];
-	static acttable_t s_acttablePrimary2[];
-	static viewmodel_acttable_t s_viewmodelacttable[];
+	static acttable_t m_acttablePrimary[];
+	static acttable_t m_acttableSecondary[];
+	static acttable_t m_acttableMelee[];
+	static acttable_t m_acttableBuilding[];
+	static acttable_t m_acttablePDA[];
 
 #ifdef GAME_DLL
 	virtual void	AddAssociatedObject( CBaseObject *pObject ) { }
@@ -231,8 +167,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	CTFPlayer *GetTFPlayerOwner() const;
 
 #ifdef CLIENT_DLL
-	bool			UsingViewModel( void );
-	C_BaseEntity	*GetWeaponForEffect();
+	C_BaseEntity *GetWeaponForEffect();
 #endif
 
 	bool CanAttack( void );
@@ -240,20 +175,17 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	// Raising & Lowering for grenade throws
 	bool			WeaponShouldBeLowered( void );
 	virtual bool	Ready( void );
-	virtual bool	ReadyIgnoreSequence( void );
 	virtual bool	Lower( void );
 
 	virtual void	WeaponIdle( void );
 
 	virtual void	WeaponReset( void );
-	virtual void	WeaponRegenerate() {}
 
 	// Muzzleflashes
 	virtual const char *GetMuzzleFlashEffectName_3rd( void ) { return NULL; }
 	virtual const char *GetMuzzleFlashEffectName_1st( void ) { return NULL; }
 	virtual const char *GetMuzzleFlashModel( void );
-	virtual float		GetMuzzleFlashModelLifetime( void );
-	virtual float		GetMuzzleFlashModelScale( void );
+	virtual float	GetMuzzleFlashModelLifetime( void );
 	virtual const char *GetMuzzleFlashParticleEffect( void );
 
 	virtual const char	*GetTracerType( void );
@@ -262,19 +194,6 @@ class CTFWeaponBase : public CBaseCombatWeapon
 
 	virtual bool CanFireCriticalShot( bool bIsHeadshot = false ){ return true; }
 
-	float				GetLastFireTime( void ) { return m_flLastFireTime; }
-
-	virtual bool		HasChargeBar( void ) { return false; }
-	void				StartEffectBarRegen( void );
-	void				EffectBarRegenFinished( void );
-	void				CheckEffectBarRegen( void );
-	virtual float		GetEffectBarProgress( void );
-	virtual const char	*GetEffectLabelText( void ) { return ""; }
-	void				ReduceEffectBarRegenTime( float flTime ) { m_flEffectBarRegenTime -= flTime; }
-
-	void				OnControlStunned( void );
-
-	void		SetParticle( const char* name );
 // Server specific.
 #if !defined( CLIENT_DLL )
 
@@ -291,15 +210,11 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	// Ammo.
 	virtual const Vector& GetBulletSpread();
 
-	// On hit effects.
-	void ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
-
 // Client specific.
 #else
 
 	virtual void	ProcessMuzzleFlashEvent( void );
 	virtual int		InternalDrawModel( int flags );
-	virtual bool	ShouldDraw( void );
 
 	virtual bool	ShouldPredict();
 	virtual void	OnDataChanged( DataUpdateType_t type );
@@ -315,8 +230,6 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	BobState_t		*GetBobState();
 
 	bool OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options );
-
-	virtual C_BaseEntity *GetItemTintColorOwner( void ) { return GetOwner(); }
 
 	// Model muzzleflashes
 	CHandle<C_MuzzleFlashModel>		m_hMuzzleFlashModel[2];
@@ -334,19 +247,16 @@ protected:
 	bool ReloadSingly( void );
 	void ReloadSinglyPostFrame( void );
 
-	virtual float InternalGetEffectBarRechargeTime( void ) { return 0.0f; }
-
 protected:
 
 	int				m_iWeaponMode;
-	CNetworkVar( int, m_iReloadMode );
+	CNetworkVar(	int,	m_iReloadMode );
 	CTFWeaponInfo	*m_pWeaponInfo;
 	bool			m_bInAttack;
 	bool			m_bInAttack2;
 	bool			m_bCurrentAttackIsCrit;
-	bool			m_bCurrentAttackIsMiniCrit;
 
-	CNetworkVar( bool, m_bLowered );
+	CNetworkVar(	bool,	m_bLowered );
 
 	int				m_iAltFireHint;
 
@@ -359,47 +269,17 @@ protected:
 
 	char			m_szTracerName[MAX_TRACER_NAME];
 
-	CNetworkVar( bool, m_bResetParity );
+	CNetworkVar(	bool, m_bResetParity );
 
 #ifdef CLIENT_DLL
 	bool m_bOldResetParity;
-
-	friend class C_ViewmodelAttachmentModel;
-
-	int m_iMuzzleAttachment;
-	int m_iBrassAttachment;
 #endif
 
-	CNetworkVar( bool, m_bReloadedThroughAnimEvent );
-	CNetworkVar( float, m_flLastFireTime );
-	CNetworkVar( float, m_flEffectBarRegenTime );
-
+	CNetworkVar(	bool,	m_bReloadedThroughAnimEvent );
 private:
 	CTFWeaponBase( const CTFWeaponBase & );
-
-	CUtlVector< int > m_iHiddenBodygroups;
-
-#ifdef GAME_DLL
-	CNetworkString( m_ParticleName, WEAPON_PARTICLE_MODIFY_STRING_SIZE );
-#else
-	char m_ParticleName[WEAPON_PARTICLE_MODIFY_STRING_SIZE];
-	CNewParticleEffect *m_pUnusualParticle;
-#endif
 };
 
 #define WEAPON_RANDOM_RANGE 10000
 
-
-#define CREATE_SIMPLE_WEAPON_TABLE( WpnName, entityname )			\
-																	\
-	IMPLEMENT_NETWORKCLASS_ALIASED( WpnName, DT_##WpnName )	\
-															\
-	BEGIN_NETWORK_TABLE( C##WpnName, DT_##WpnName )			\
-	END_NETWORK_TABLE()										\
-															\
-	BEGIN_PREDICTION_DATA( C##WpnName )						\
-	END_PREDICTION_DATA()									\
-															\
-	LINK_ENTITY_TO_CLASS( entityname, C##WpnName );			\
-	PRECACHE_WEAPON_REGISTER( entityname );
 #endif // TF_WEAPONBASE_H

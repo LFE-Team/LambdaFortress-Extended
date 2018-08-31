@@ -89,6 +89,8 @@
 #include "datacache/imdlcache.h"
 #include "vstdlib/jobthread.h"
 
+#include "tf_gamerules.h"
+
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
 #endif
@@ -101,16 +103,7 @@
 #include "collisionutils.h"
 
 extern ConVar sk_healthkit;
-
-#ifdef TF_CLASSIC
 extern ConVar tf_boost_drain_time;
-extern ConVar tf_invuln_time;
-extern ConVar tf_damage_disablespread;
-extern ConVar tf_damage_range;
-extern ConVar tf_damage_lineardist;
-extern ConVar tf_damage_events_track_for;
-extern ConVar lfe_debug_director_print;
-#endif
 
 // dvs: for opening doors -- these should probably not be here
 #include "ai_route.h"
@@ -124,10 +117,9 @@ extern ConVar lfe_debug_director_print;
 #include "tf_team.h"
 #include "tf_obj.h"
 #include "tf_gamerules.h"
+#include "tf_team.h"
 #include "tf_weapon_medigun.h"
 #include "triggers.h"
-#include "tf_gamestats.h"
-#include "tf_shareddefs.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -149,12 +141,6 @@ bool RagdollManager_SaveImportant( CAI_BaseNPC *pNPC );
 #define	MAX_GLASS_PENETRATION_DEPTH	16.0f
 
 #define FINDNAMEDENTITY_MAX_ENTITIES	32		// max number of entities to be considered for random entity selection in FindNamedEntity
-
-#ifdef TF_CLASSIC
-#define NPC_DAMAGE_FORCE_SCALE_SELF				9
-#define MAX_NPC_DAMAGE_EVENTS		128
-extern ConVar tf_damageforcescale_other;
-#endif
 
 extern bool			g_fDrawLines;
 extern short		g_sModelIndexLaser;		// holds the index for the laser beam
@@ -621,7 +607,7 @@ void CAI_BaseNPC::CleanupOnDeath( CBaseEntity *pCulprit, bool bFireDeathOutput )
 		RemoveAllCond();
 
 		// Remove from team
-		CTFTeam *pTFTeam = ( CTFTeam * )GetTeam();
+		CTFTeam *pTFTeam = dynamic_cast<CTFTeam *>( GetTeam() );
 		if ( pTFTeam )
 		{
 			pTFTeam->RemoveNPC( this );
@@ -661,13 +647,6 @@ void CAI_BaseNPC::SelectDeathPose( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 {
-	if (FClassnameIs(this, "npc_turret_floor"))
-	{
-	}
-	else if (info.GetAttacker()->GetTeamNumber() == TF_TEAM_RED && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && sv_dynamicnpcs.GetFloat() == 1 && (GetTeamNumber() == TF_TEAM_BLUE || GetTeamNumber() == TF_TEAM_YELLOW || GetTeamNumber() == TF_TEAM_GREEN))
-	{
-		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger + 2;
-	}
 	if (IsCurSchedule(SCHED_NPC_FREEZE))
 	{
 		// We're frozen; don't die.
@@ -677,72 +656,6 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	Wake( false );
 
 #ifdef TF_CLASSIC
-	int killer_index = 0;
-
-	// Find the killer & the scorer
-	CAI_BaseNPC *pVictim = this;
-	CBaseEntity *pInflictor = info.GetInflictor();
-	CBaseEntity *pKiller = info.GetAttacker();
-	//CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
-	CTFPlayer *pScorer = ToTFPlayer( TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim ) );
-	CBaseEntity *pAssister = TFGameRules()->GetAssister( pVictim, pKiller, pInflictor );
-	int iWeaponID = TF_WEAPON_NONE;
-	// Work out what killed the player, and send a message to all clients about it
-	const char *killer_weapon_name = TFGameRules()->GetKillingWeaponName( info, NULL, iWeaponID );
-	const char *killer_weapon_log_name = NULL;
-
-	if ( iWeaponID && pScorer )
-	{
-		CTFWeaponBase *pWeapon = pScorer->Weapon_OwnsThisID( iWeaponID );
-		if ( pWeapon )
-		{
-			CEconItemDefinition *pItemDef = pWeapon->GetItem()->GetStaticData();
-			if ( pItemDef )
-			{
-				if ( pItemDef->item_iconname[0] )
-					killer_weapon_name = pItemDef->item_iconname;
-
-				if ( pItemDef->item_logname[0] )
-					killer_weapon_log_name = pItemDef->item_logname;
-			}
-		}
-	}
-
-	if ( pScorer )	// Is the killer a client?
-	{
-		killer_index = pScorer->entindex();
-	}
-	else if ( pKiller && pKiller->IsNPC() )
-	{
-		killer_index = pKiller->entindex();
-	}
-
-	// are we allowed to make deathnotice on THIS npc?
-	if ( AllowDeathNotice() )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "npc_death" );
-
-		if ( event )
-		{
-			event->SetInt( "victim_index", pVictim->entindex() );
-			event->SetString( "victim_name", pVictim->GetClassname() );
-			event->SetInt( "victim_team", pVictim->GetTeamNumber() );
-			event->SetInt( "attacker_index", killer_index );
-			event->SetString( "attacker_name", pKiller ? pKiller->GetClassname() : NULL );
-			event->SetInt( "attacker_team", pKiller ? pKiller->GetTeamNumber() : 0 );
-			event->SetInt( "assister_index", pAssister ? pAssister->entindex() : -1 );
-			event->SetString( "assister_name", pAssister ? pAssister->GetClassname() : NULL );
-			event->SetInt( "assister_team", pAssister ? pAssister->GetTeamNumber() : 0 );
-			event->SetString( "weapon", killer_weapon_name );
-			event->SetString( "weapon_logclassname", killer_weapon_log_name );
-			event->SetInt( "damagebits", info.GetDamageType() );
-			event->SetInt( "customkill", info.GetDamageCustom() );
-			event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
-
-			gameeventmanager->FireEvent( event );
-		}
-	}
-
 	// Ragdoll should burn if NPC burned to death.
 	m_bBurningDeath = IsOnFire() || ( info.GetDamageType() & (DMG_BURN | DMG_IGNITE) );
 
@@ -750,64 +663,6 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 
 	if ( TFGameRules() )
 		TFGameRules()->NPCKilled( this, info );
-
-	CTFPlayer *pPlayerScorer = ToTFPlayer( pScorer );
-	if ( pPlayerScorer )
-	{
-		// can we reward score point?
-		if ( NoReward() )
-		{
-			CTF_GameStats.Event_PlayerKilledNPC( pPlayerScorer, this );
-		}
-		pPlayerScorer->Event_KilledOther(this, info);
-	}
-
-	CTakeDamageInfo info_modified = info;
-
-	if ( info_modified.GetDamageCustom() == TF_DMG_CUSTOM_SUICIDE )
-	{
-		// if this was suicide, recalculate attacker to see if we want to award the kill to a recent damager
-		info_modified.SetAttacker( TFGameRules()->GetDeathScorer( info.GetAttacker(), pInflictor, this ) );
-	}
-	else if ( !pKiller || pKiller == this || pKiller->IsBSPModel() )
-	{
-		// Recalculate attacker if player killed himself or this was environmental death.
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
-		if ( pDamager )
-		{
-			info_modified.SetAttacker( pDamager );
-			info_modified.SetInflictor( NULL );
-			info_modified.SetWeapon( NULL );
-			info_modified.SetDamageType( DMG_GENERIC );
-			info_modified.SetDamageCustom( TF_DMG_CUSTOM_SUICIDE );
-		}
-	}
-
-	if ( pKiller && pKiller == pInflictor && pKiller->IsBSPModel() )
-	{
-		CBaseEntity *pDamager = TFGameRules()->GetRecentDamager( this, 0, TF_TIME_ENV_DEATH_KILL_CREDIT );
-		CTFPlayer *pTFDamager = ToTFPlayer( pDamager );
-
-		if ( pTFDamager )
-		{
-			if ( AllowDeathNotice() )
-			{
-				IGameEvent *event = gameeventmanager->CreateEvent( "npc_environmental_death" );
-
-				if ( event )
-				{
-					event->SetInt( "killer", pTFDamager->GetUserID() );
-					event->SetInt( "victim", entindex() );
-					event->SetInt( "priority", 9 ); // HLTV event priority, not transmitted
-				
-					gameeventmanager->FireEvent( event );
-				}
-			}
-		}
-	}
-
-	// fixed jarate death
-	SetRenderColor( 255, 255, 255 );
 #endif
 	
 	//Adrian: Select a death pose to extrapolate the ragdoll's velocity.
@@ -876,10 +731,9 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 
 	if ( !IsOnFire() )
 	{
-		CTakeDamageInfo info;
-		CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
 		// Start burning
-		Burn( pTFAttacker );
+		AddCond( TF_COND_BURNING );
+		m_flFlameBurnTime = gpGlobals->curtime;	//asap
 	}
 	
 	m_flFlameRemoveTime = gpGlobals->curtime + flFlameLifetime;
@@ -889,8 +743,8 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 #endif
 
-/*#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
+#ifdef HL2_EPISODIC
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
 	if ( pPlayer->IRelationType( this ) != D_LI )
 	{
 		CNPC_Alyx *alyx = CNPC_Alyx::GetAlyx();
@@ -900,7 +754,7 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 			alyx->EnemyIgnited( this );
 		}
 	}
-#endif*/
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -929,7 +783,7 @@ bool CAI_BaseNPC::PassesDamageFilter( const CTakeDamageInfo &info )
 		{
 			m_fNoDamageDecal = true;
 
-			if ( npcEnemy && npcEnemy->IsPlayer() && !InSameTeam(npcEnemy) )
+			if ( npcEnemy && npcEnemy->IsPlayer() )
 			{
 				m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
 				// This also counts as being harmed by player's squad.
@@ -958,30 +812,17 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	CTakeDamageInfo info = inputInfo;
 
 #ifdef TF_CLASSIC
-	CBaseEntity *pAttacker = info.GetAttacker();
-	//CBaseEntity *pInflictor = info.GetInflictor();
-	CTFWeaponBase *pWeapon = NULL;
+	AddDamagerToHistory( info.GetAttacker() );
 
-	if ( inputInfo.GetWeapon() )
-	{
-		pWeapon = dynamic_cast<CTFWeaponBase *>( inputInfo.GetWeapon() );
-	}
-	else if ( pAttacker && pAttacker->IsPlayer() )
-	{
-		// Assume that player used his currently active weapon.
-		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
-	}
-
-	AddDamagerToHistory( pAttacker );
-
-	int bitsDamage = inputInfo.GetDamageType();
+	int bitsDamage = info.GetDamageType();
 
 	// If we're invulnerable, force ourselves to only take damage events only, so we still get pushed
-	if ( IsInvulnerable() || InCond( TF_COND_PHASE ) )
+	if ( InCond( TF_COND_INVULNERABLE ) )
 	{
 		bool bAllowDamage = false;
 
 		// check to see if our attacker is a trigger_hurt entity (and allow it to kill us even if we're invuln)
+		CBaseEntity *pAttacker = info.GetAttacker();
 		if ( pAttacker && pAttacker->IsSolidFlagSet( FSOLID_TRIGGER ) )
 		{
 			CTriggerHurt *pTrigger = dynamic_cast<CTriggerHurt *>( pAttacker );
@@ -991,8 +832,8 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 
-		// Ubercharge does not save from telefrags.
-		if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
+		// Allow inputs and such to damage us.
+		if ( bitsDamage == DMG_GENERIC )
 		{
 			bAllowDamage = true;
 		}
@@ -1001,233 +842,43 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		{
 			int iOldTakeDamage = m_takedamage;
 			m_takedamage = DAMAGE_EVENTS_ONLY;
-			// NOTE: Deliberately skip base player OnTakeDamage, because we don't want all the stuff it does re: suit voice
-			CBaseCombatCharacter::OnTakeDamage( info );
+			BaseClass::OnTakeDamage( info );
 			m_takedamage = iOldTakeDamage;
-
-			if( InCond( TF_COND_PHASE ) )
-			{
-				CEffectData	data;
-				data.m_nHitBox = GetParticleSystemIndex( "miss_text" );
-				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-				data.m_vAngles = vec3_angle;
-				data.m_nEntIndex = 0;
-
-				CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
-				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-			}
 			return 0;
 		}
 	}
 
-	if ( InCond( TF_COND_URINE ) )
-	{
-		// Jarated npcs take mini-crits
-		bitsDamage |= DMG_MINICRITICAL;
-		info.AddDamageType( DMG_MINICRITICAL );
-	}
-
-	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
-	/*
-	if ( pTFAttacker->m_Shared.IsMiniCritBoosted() )
-	{
-		bitsDamage |= DMG_MINICRITICAL;
-		info.AddDamageType( DMG_MINICRITICAL );
-	}
-	*/
-	// Handle on-hit effects.
-	if ( pWeapon && pAttacker != this )
-	{
-		int nCritOnCond = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritOnCond, or_crit_vs_playercond );
-
-		if ( nCritOnCond )
-		{
-			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
-			{
-				int nCond = condition_to_attribute_translation[i];
-				int nFlag = ( 1 << i );
-				if ( ( nCritOnCond & nFlag ) && InCond( nCond ) )
-				{
-					bitsDamage |= DMG_CRITICAL;
-					info.AddDamageType( DMG_CRITICAL );
-					break;
-				}
-			}
-		}
-
-		int nMiniCritOnCond = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritOnCond, or_minicrit_vs_playercond_burning );
-
-		if ( nMiniCritOnCond )
-		{
-			for ( int i = 0; condition_to_attribute_translation[i] != TF_COND_LAST; i++ )
-			{
-				int nCond = condition_to_attribute_translation[i];
-				int nFlag = ( 1 << i );
-				if ( ( nMiniCritOnCond & nFlag ) && InCond( nCond ) )
-				{
-					bitsDamage |= DMG_MINICRITICAL;
-					info.AddDamageType( DMG_MINICRITICAL );
-					break;
-				}
-			}
-		}
-
-		int nCritWhileAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
-
-		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
-		{
-			bitsDamage |= DMG_CRITICAL;
-			info.AddDamageType( DMG_CRITICAL );
-		}
-
-		int nMiniCritWhileAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritWhileAirborne, crit_while_airborne );
-
-		if ( nMiniCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
-		{
-			bitsDamage |= DMG_MINICRITICAL;
-			info.AddDamageType( DMG_MINICRITICAL );
-		}
-
-		// Notify the damaging weapon.
-		pWeapon->ApplyOnHitAttributes( this, info );
-	}
-
-	// If we're not damaging ourselves, apply randomness
-	if ( pAttacker != this && !( bitsDamage & ( DMG_DROWN | DMG_FALL ) ) ) 
+	// Crit modifier
+	if ( info.GetAttacker() != this && !(bitsDamage & (DMG_DROWN | DMG_FALL)) ) 
 	{
 		float flDamage = info.GetDamage();
 		if ( bitsDamage & DMG_CRITICAL )
 		{
-			if ( IsAlive() )
+			flDamage = info.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
+
+			// Show the attacker
+			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
 			{
-				flDamage = info.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
+				data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
 
-				// Show the attacker
-				if ( pAttacker && pAttacker->IsPlayer() )
-				{
-					CEffectData	data;
-					data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
-					data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-					data.m_vAngles = vec3_angle;
-					data.m_nEntIndex = 0;
+				CSingleUserRecipientFilter filter( (CBasePlayer*)info.GetAttacker() );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
 
-					CSingleUserRecipientFilter filter( (CBasePlayer*) pAttacker );
-					te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-					EmitSound_t params;
-					params.m_flSoundTime = 0;
-					params.m_pSoundName = "TFPlayer.CritHit";
-					EmitSound( filter, pAttacker->entindex(), params );
-				}
+				EmitSound_t params;
+				params.m_flSoundTime = 0;
+				params.m_pSoundName = "TFPlayer.CritHit";
+				EmitSound( filter, info.GetAttacker()->entindex(), params );
 			}
 		}
-		else if ( bitsDamage & DMG_MINICRITICAL )
-		{
-			if ( IsAlive() )
-			{
-				flDamage = info.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
 
-				// Show the attacker, unless the target is a disguised spy
-				if ( pAttacker && pAttacker->IsPlayer() && !InCond( TF_COND_DISGUISED ) )
-				{
-					CEffectData	data;
-					data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
-					data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
-					data.m_vAngles = vec3_angle;
-					data.m_nEntIndex = 0;
-
-					CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
-					te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-
-					EmitSound_t params;
-					params.m_flSoundTime = 0;
-					params.m_pSoundName = "TFPlayer.CritHitMini";
-					EmitSound( filter, pAttacker->entindex(), params );
-				}
-			}
-		}
-		else
-		{
-			float flRandomDamage = info.GetDamage() * tf_damage_range.GetFloat();
-			if ( tf_damage_lineardist.GetBool() )
-			{
-				float flBaseDamage = info.GetDamage() - flRandomDamage;
-				flDamage = flBaseDamage + RandomFloat( 0, flRandomDamage * 2 );
-			}
-			else
-			{
-				float flMin = 0.4;
-				float flMax = 0.6;
-				float flCenter = 0.5;
-
-				if ( bitsDamage & DMG_USEDISTANCEMOD )
-				{
-					float flDistance = max( 1.0, ( WorldSpaceCenter() - pAttacker->WorldSpaceCenter() ).Length() );
-					float flOptimalDistance = 512.0;
-
-					flCenter = RemapValClamped( flDistance / flOptimalDistance, 0.0, 2.0, 1.0, 0.0 );
-					if ( bitsDamage & DMG_NOCLOSEDISTANCEMOD )
-					{
-						if ( flCenter > 0.5 )
-						{
-							// Reduce the damage bonus at close range
-							flCenter = RemapVal( flCenter, 0.5, 1.0, 0.5, 0.65 );
-						}
-					}
-					flMin = max( 0.0, flCenter - 0.1 );
-					flMax = min( 1.0, flCenter + 0.1 );
-				}
-
-				//Msg("Range: %.2f - %.2f\n", flMin, flMax );
-				float flRandomVal;
-
-				if ( tf_damage_disablespread.GetBool() )
-				{
-					flRandomVal = flCenter;
-				}
-				else
-				{
-					flRandomVal = RandomFloat( flMin, flMax );
-				}
-
-				if ( flRandomVal > 0.5 )
-				{
-					// Rocket launcher, Sticky launcher and Scattergun have different short range bonuses
-					if ( pWeapon )
-					{
-						switch ( pWeapon->GetWeaponID() )
-						{
-						case TF_WEAPON_ROCKETLAUNCHER:
-						case TF_WEAPON_PIPEBOMBLAUNCHER:
-							// Rocket launcher and sticky launcher only have half the bonus of the other weapons at short range
-							flRandomDamage *= 0.5;
-							break;
-						case TF_WEAPON_SCATTERGUN:
-							// Scattergun gets 50% bonus of other weapons at short range
-							flRandomDamage *= 1.5;
-							break;
-
-						case TF_WEAPON_SHOTGUN_PRIMARY:
-						case TF_WEAPON_SHOTGUN_SOLDIER:
-						case TF_WEAPON_SHOTGUN_HWG:
-						case TF_WEAPON_SHOTGUN_PYRO:
-							// Shotguns gets 30% bonus of other weapons at short range
-							flRandomDamage *= 1.0;
-							break;
-						}
-					}
-				}
-
-				float flOut = SimpleSplineRemapValClamped( flRandomVal, 0, 1, -flRandomDamage, flRandomDamage );
-				flDamage = info.GetDamage() + flOut;
-			}
-		}
 		info.SetDamage( flDamage );
 	}
+	
+	int iOldHealth = m_iHealth;
 
 #endif
 	
@@ -1236,6 +887,22 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 #ifdef TF_CLASSIC
 	if ( !ret )
 		return 0;
+
+	IGameEvent * event = gameeventmanager->CreateEvent( "npc_hurt" );
+	if ( event )
+	{
+		event->SetInt( "victim_index", entindex() );
+		event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
+
+		event->SetInt( "health", max( 0, m_iHealth ) );
+		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
+		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+
+		// HLTV event priority, not transmitted
+		event->SetInt( "priority", 5 );
+
+		gameeventmanager->FireEvent( event );
+	}
 
 	return ret;
 #endif
@@ -1248,7 +915,6 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 //-----------------------------------------------------------------------------
 int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
-#ifdef HL2_DLL
 	Forget( bits_MEMORY_INCOVER );
 
 	if ( !BaseClass::OnTakeDamage_Alive( info ) )
@@ -1307,10 +973,10 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// only fire once per frame
 		m_OnDamaged.FireOutput( info.GetAttacker(), this);
 
-		if( info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
+		if( info.GetAttacker()->IsPlayer() )
 		{
 			m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
-
+			
 			// This also counts as being harmed by player's squad.
 			m_OnDamagedByPlayerSquad.FireOutput( info.GetAttacker(), this );
 		}
@@ -1318,9 +984,15 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		{
 			// See if the person that injured me is an NPC.
 			CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
+#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 			CBasePlayer *pPlayer = AI_GetSinglePlayer();
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+			if( pAttacker && pAttacker->IsAlive() && UTIL_GetNearestPlayer( GetAbsOrigin() ) ) 
+#else
 			if( pAttacker && pAttacker->IsAlive() && pPlayer )
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 			{
 				if( pAttacker->GetSquad() != NULL && pAttacker->IsInPlayerSquad() )
 				{
@@ -1435,322 +1107,17 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// ---------------------------------------------------------------
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 1024, 0.5, this, SOUNDENT_CHANNEL_INJURY );
 
-#elif TF_CLASSIC
-
-	CBaseEntity *pAttacker = info.GetAttacker();
-	CBaseEntity *pInflictor = info.GetInflictor();
-	CBaseEntity *pWeapon = info.GetWeapon();
-	float flDamage = info.GetDamage();
-
-	CTFWeaponBase *pTFWeapon = dynamic_cast<CTFWeaponBase *>( pWeapon );
-
-	Vector vecDir = vec3_origin;
-	if ( pInflictor )
-	{
-		// Huntsman should not do too much knockback
-		if ( pTFWeapon && pTFWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
-		{
-			vecDir = -info.GetDamageForce();
-		}
-		else
-		{
-			vecDir = pInflictor->WorldSpaceCenter() - Vector( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
-		}
-		VectorNormalize( vecDir );
-	}
-	g_vecAttackDir = vecDir;
-
-	Forget( bits_MEMORY_INCOVER );
-
-	if ( !BaseClass::OnTakeDamage_Alive( info ) )
-		return 0;
-
-	if ( GetSleepState() == AISS_WAITING_FOR_THREAT )
-		Wake();
-
-	// NOTE: This must happen after the base class is called; we need to reduce
-	// health before the pain sound, since some NPCs use the final health
-	// level as a modifier to determine which pain sound to use.
-
-	// REVISIT: Combine soldiers shoot each other a lot and then talk about it
-	// this improves that case a bunch, but it seems kind of harsh.
-	if ( !m_pSquad || !m_pSquad->SquadIsMember( pAttacker ) )
-	{
-		PainSound( info );// "Ouch!"
-	}
-
-	// See if we're running a dynamic interaction that should break when I am damaged.
-	if ( IsActiveDynamicInteraction() )
-	{
-		ScriptedNPCInteraction_t *pInteraction = GetRunningDynamicInteraction();
-		if ( pInteraction->iLoopBreakTriggerMethod & SNPCINT_LOOPBREAK_ON_DAMAGE )
-		{
-			// Can only break when we're in the action anim
-			if ( m_hCine->IsPlayingAction() )
-			{
-				m_hCine->StopActionLoop( true );
-			}
-		}
-	}
-
-	// If we're not allowed to die, refuse to die
-	// Allow my interaction partner to kill me though
-	if ( m_iHealth <= 0 && HasInteractionCantDie() && pAttacker != m_hInteractionPartner )
-	{
-		m_iHealth = 1;
-	}
-
-	// -----------------------------------
-	//  Fire outputs
- 	// -----------------------------------
-	if ( m_flLastDamageTime != gpGlobals->curtime )
-	{
-		// only fire once per frame
-		m_OnDamaged.FireOutput( pAttacker, this);
-
-		if( pAttacker->IsPlayer() || pAttacker->IsBaseObject() )
-		{
-			m_OnDamagedByPlayer.FireOutput( pAttacker, this );
-
-			// This also counts as being harmed by player's squad.
-			m_OnDamagedByPlayerSquad.FireOutput( pAttacker, this );
-		}
-		else
-		{
-			// See if the person that injured me is an NPC.
-			CAI_BaseNPC *pNPCAttacker = dynamic_cast<CAI_BaseNPC *>( pAttacker );
-
-			if( pNPCAttacker && pNPCAttacker->IsAlive() && UTIL_GetNearestPlayer( GetAbsOrigin() ) ) 
-			{
-				if( pNPCAttacker->GetSquad() != NULL && pNPCAttacker->IsInPlayerSquad() )
-				{
-					m_OnDamagedByPlayerSquad.FireOutput( pAttacker, this );
-				}
-			}
-		}
-	}
-
-	if( (info.GetDamageType() & DMG_CRUSH) && !(info.GetDamageType() & DMG_PHYSGUN) && flDamage >= MIN_PHYSICS_FLINCH_DAMAGE )
-	{
-		SetCondition( COND_PHYSICS_DAMAGE );
-	}
-
-	if ( m_iHealth <= ( m_iMaxHealth / 2 ) )
-	{
-		m_OnHalfHealth.FireOutput( pAttacker, this );
-	}
-
-	// react to the damage (get mad)
-	if ( ( (GetFlags() & FL_NPC) == 0 ) || !pAttacker )
-		return 1;
-
-	// If the attacker was an NPC or client update my position memory
-	if ( pAttacker->GetFlags() & (FL_NPC | FL_CLIENT) )
-	{
-		// ------------------------------------------------------------------
-		//				DO NOT CHANGE THIS CODE W/O CONSULTING
-		// Only update information about my attacker I don't see my attacker
-		// ------------------------------------------------------------------
-		if ( !FInViewCone( pAttacker ) || !FVisible( pAttacker ) )
-		{
-			// -------------------------------------------------------------
-			//  If I have an inflictor (enemy / grenade) update memory with
-			//  position of inflictor, otherwise update with an position
-			//  estimate for where the attack came from
-			// ------------------------------------------------------
-			Vector vAttackPos;
-			if ( pInflictor )
-			{
-				vAttackPos = pInflictor->GetAbsOrigin();
-			}
-			else
-			{
-				vAttackPos = (GetAbsOrigin() + ( g_vecAttackDir * 64 ));
-			}
-
-
-			// ----------------------------------------------------------------
-			//  If I already have an enemy, assume that the attack
-			//  came from the enemy and update my enemy's position
-			//  unless I already know about the attacker or I can see my enemy
-			// ----------------------------------------------------------------
-			if ( GetEnemy() != NULL							&&
-				!GetEnemies()->HasMemory( pAttacker )			&&
-				!HasCondition(COND_SEE_ENEMY)	)
-			{
-				UpdateEnemyMemory(GetEnemy(), vAttackPos, GetEnemy());
-			}
-			// ----------------------------------------------------------------
-			//  If I already know about this enemy, update his position
-			// ----------------------------------------------------------------
-			else if (GetEnemies()->HasMemory( pAttacker ))
-			{
-				UpdateEnemyMemory( pAttacker, vAttackPos );
-			}
-			// -----------------------------------------------------------------
-			//  Otherwise just note the position, but don't add enemy to my list
-			// -----------------------------------------------------------------
-			else
-			{
-				UpdateEnemyMemory(NULL, vAttackPos);
-			}
-		}
-
-		// add pain to the conditions
-		if ( IsLightDamage( info ) )
-		{
-			SetCondition( COND_LIGHT_DAMAGE );
-		}
-		if ( IsHeavyDamage( info ) )
-		{
-			SetCondition( COND_HEAVY_DAMAGE );
-		}
-
-		ForceGatherConditions();
-
-		// Keep track of how much consecutive damage I have recieved
-		if ((gpGlobals->curtime - m_flLastDamageTime) < 1.0)
-		{
-			m_flSumDamage += flDamage;
-		}
-		else
-		{
-			m_flSumDamage = flDamage;
-		}
-		m_flLastDamageTime = gpGlobals->curtime;
-		if ( pAttacker && pAttacker->IsPlayer() )
-			m_flLastPlayerDamageTime = gpGlobals->curtime;
-		GetEnemies()->OnTookDamageFrom( pAttacker );
-
-		if (m_flSumDamage > m_iMaxHealth*0.3)
-		{
-			SetCondition(COND_REPEATED_DAMAGE);
-		}
-	
-		NotifyFriendsOfDamage( pAttacker );
-	}
-
-	// ---------------------------------------------------------------
-	//  Insert a combat sound so that nearby NPCs know I've been hit
-	// ---------------------------------------------------------------
-	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 1024, 0.5, this, SOUNDENT_CHANNEL_INJURY );
-
-	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
 	if ( pTFAttacker )
 	{
 		pTFAttacker->RecordDamageEvent( info, (m_iHealth <= 0) );
-	}
-
-	int iOldHealth = m_iHealth;
-	bool bIgniting = false;
-
-	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
-	{
-		// Start burning if we took ignition damage
-		bIgniting = ( ( info.GetDamageType() & DMG_IGNITE ) && ( GetWaterLevel() < WL_Waist ) );
-
-		if ( !bIgniting )
-		{
-			int iIgniting = 0;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iIgniting, set_dmgtype_ignite );
-			bIgniting = ( iIgniting != 0 );
-		}
-
-		// Take damage - round to the nearest integer.
-		m_iHealth -= ( flDamage + 0.5f );
-	}
-
-	m_flLastDamageTime = gpGlobals->curtime;
-
-	// Apply a damage force.
-	if ( !pAttacker )
-		return 0;
-
-	ApplyPushFromDamage( info, vecDir );
-
-	if ( bIgniting )
-	{
-		Burn( ToTFPlayer( pAttacker ), pTFWeapon );
-	}
-
-	IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
-	if ( event )
-	{
-		event->SetInt( "victim_index", entindex() );
-		event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
-
-		event->SetInt( "health", max( 0, m_iHealth ) );
-		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
-		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
-		event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
-
-		CBasePlayer *pPlayer = ToBasePlayer( pAttacker );
-		event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );
-
-		// HLTV event priority, not transmitted
-		event->SetInt( "priority", 5 );
-
-		gameeventmanager->FireEvent( event );
 	}
 #endif
 
 	return 1;
 }
 
-static float NPCDamageForce( const Vector &size, float damage, float scale )
-{ 
-	float force;
-
-	force = damage * ((32 * 32 * 72.0) / (size.x * size.y * size.z)) * scale;
-	//force = damage * ((48 * 48 * 82.0) / (size.x * size.y * size.z)) * scale;
-	
-	if ( force > 1000.0) 
-	{
-		force = 1000.0;
-	}
-
-	return force;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir )
-{
-	CBaseEntity *pAttacker = info.GetAttacker();
-	CBaseEntity *pInflictor = info.GetInflictor();
-
-	if ( info.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE )
-		return;
-
-	if( !pInflictor ||
-		( GetMoveType() != MOVETYPE_WALK ) ||
-		( pAttacker->IsSolidFlagSet( FSOLID_TRIGGER ) ) ||
-		( InCond( TF_COND_DISGUISED ) ) )
-		return;
-
-	Vector vecForce;
-	vecForce.Init();
-	if ( pAttacker == this )
-	{
-		vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), NPC_DAMAGE_FORCE_SCALE_SELF );
-
-	}
-	else
-	{
-		// Sentryguns push a lot harder
-		if ( ( info.GetDamageType() & DMG_BULLET ) && pInflictor->IsBaseObject() )
-		{
-			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), 16 );
-		}
-		else
-		{
-			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), tf_damageforcescale_other.GetFloat() );
-		}
-	}
-
-	ApplyAbsVelocityImpulse( vecForce );
-}
 
 //=========================================================
 // OnTakeDamage_Dying - takedamage function called when a npc's
@@ -1987,10 +1354,6 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	SetLastHitGroup( ptr->hitgroup );
 	m_nForceBone = ptr->physicsbone;		// save this bone for physics forces
 
-#ifdef TF_CLASSIC
-	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
-#endif
-
 	Assert( m_nForceBone > -255 && m_nForceBone < 256 );
 
 	bool bDebug = showhitlocation.GetBool();
@@ -2010,14 +1373,13 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 
 	case HITGROUP_HEAD:
 #ifdef TF_CLASSIC
-		// If we're attacked by a TF2 player then only the sniper and spy can do headshot damage.
+		// If we're attacked by a TF2 player then only the sniper can do headshot damage.
 		if ( info.GetAttacker()->IsPlayer() )
 		{
+			CTFPlayer *pAttacker = ToTFPlayer( info.GetAttacker() );
 			if ( subInfo.GetDamageType() & DMG_USE_HITLOCATIONS )
 			{
-				CTFWeaponBase *pWpn = pTFAttacker->GetActiveTFWeapon();
-
-				float flDamage = subInfo.GetDamage();
+				CTFWeaponBase *pWpn = pAttacker->GetActiveTFWeapon();
 				bool bCritical = true;
 
 				if ( pWpn && !pWpn->CanFireCriticalShot( true ) )
@@ -2033,13 +1395,9 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 					// play the critical shot sound to the shooter	
 					if ( pWpn )
 					{
-						if ( pWpn->IsWeapon( TF_WEAPON_SNIPERRIFLE ) || pWpn->IsWeapon( TF_WEAPON_REVOLVER ) )
-							pWpn->WeaponSound( BURST );
-
-						CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flDamage, headshot_damage_modify );
+						pWpn->WeaponSound( BURST );
 					}
 				}
-				subInfo.SetDamage( flDamage );
 			}
 		}
 		else
@@ -2080,7 +1438,7 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	}
 
 #ifdef TF_CLASSIC
-	if ( IsInvulnerable() )
+	if ( InCond( TF_COND_INVULNERABLE ) )
 	{ 
 		// Make bullet impacts
 		g_pEffects->Ricochet( ptr->endpos - (vecDir * 8), -vecDir );
@@ -2124,20 +1482,6 @@ void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir
 	{
 		subInfo.SetInflictor( info.GetAttacker() );
 	}
-
-#ifdef TF_CLASSIC
-	/*
-	if ( pTFAttacker && pTFAttacker->GetActiveTFWeapon() && pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_HAMMERFISTS )
-	{
-		Burn( pTFAttacker, pTFAttacker->GetActiveTFWeapon() );
-	}
-	*/
-	if ( IsCritBoosted() )
-	{
-		subInfo.AddDamageType( DMG_CRITICAL );
-	}
-
-#endif
 
 	AddMultiDamage( subInfo, this );
 }
@@ -2917,7 +2261,7 @@ void CAI_BaseNPC::OnLooked( int iDistance )
 
 	while( pSightEnt )
 	{
-		if ( pSightEnt->IsPlayer() || pSightEnt->IsBaseObject() && !InSameTeam(pSightEnt) )
+		if ( pSightEnt->IsPlayer() )
 		{
 			// if we see a client, remember that (mostly for scripted AI)
 			SetCondition(COND_SEE_PLAYER);
@@ -3934,17 +3278,6 @@ void CAI_BaseNPC::RunAnimation( void )
 		}
 	}
 
-#ifdef TF_CLASSIC
-	if ( InCond( TF_COND_SLOWED ) )
-	{
-		SetPlaybackRate( 0.6f );
-	}
-	else
-	{
-		SetPlaybackRate( 1.0f );
-	}
-#endif
-
 	DispatchAnimEvents( this );
 }
 
@@ -4743,7 +4076,7 @@ public:
 		if ( m_pIgnore == pEntity )
 			return false;
 
-		if ( pEntity->IsPlayer() || pEntity->IsBaseObject() )
+		if ( pEntity->IsPlayer() )
 			return true;
 
 		return false;
@@ -5508,7 +4841,6 @@ void CAI_BaseNPC::CheckOnGround( void )
 		if ( bScriptedWait || GetMoveParent() != NULL || (GetFlags() & FL_ONGROUND ) || GetNavType() != NAV_GROUND )
 		{
 			ClearCondition( COND_FLOATING_OFF_GROUND );
-			ClearAirblastState();
 		}
 	}
 
@@ -6513,11 +5845,11 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 			SetCondition( COND_ENEMY_OCCLUDED );
 			ClearCondition( COND_SEE_ENEMY );
 
-			if ( HasMemory( bits_MEMORY_HAD_LOS ) )
+			if (HasMemory( bits_MEMORY_HAD_LOS ))
 			{
 				AI_PROFILE_SCOPE(CAI_BaseNPC_GatherEnemyConditions_Outputs);
 				// Send output event
-				if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && !InSameTeam(pEnemy) )
+				if (GetEnemy()->IsPlayer())
 				{
 					m_OnLostPlayerLOS.FireOutput( GetEnemy(), this );
 				}
@@ -6547,7 +5879,7 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 				EHANDLE hEnemy;
 				hEnemy.Set( GetEnemy() );
 
-				if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && !InSameTeam( hEnemy ) )
+				if (GetEnemy()->IsPlayer())
 				{
 					m_OnFoundPlayer.Set(hEnemy, this, this);
 					m_OnFoundEnemy.Set(hEnemy, this, this);
@@ -6707,7 +6039,7 @@ float CAI_BaseNPC::GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t typ
 		
 	if ( !pGoalEnt->IsPlayer() )
 		result *= 1.20;
-
+		
 	return result;
 }
 
@@ -8613,9 +7945,6 @@ bool CAI_BaseNPC::IsValidEnemy( CBaseEntity *pEnemy )
 #ifdef TF_CLASSIC
 	CTFPlayer *pEnemyTFPlayer = ToTFPlayer( pEnemy );
 
-	if ( pEnemyTFPlayer && !pEnemyTFPlayer->InSameTeam( pEnemy ) )
-		return true;
-
 	if ( pEnemyTFPlayer && pEnemyTFPlayer->m_Shared.GetPercentInvisible() > 0.5 )
 		return false;
 
@@ -8623,65 +7952,18 @@ bool CAI_BaseNPC::IsValidEnemy( CBaseEntity *pEnemy )
 	if ( pEnemyTFPlayer && pEnemyTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pEnemyTFPlayer->m_Shared.GetDisguiseTeam() == GetTeamNumber() && pEnemyTFPlayer != GetEnemy() )
 		return false;
 
-	if ( pEnemy->IsBaseObject() && !InSameTeam(pEnemy) )
+	if ( pEnemy->IsBaseObject() )
 	{
 		CBaseObject *pEnemyObject = assert_cast<CBaseObject *>( pEnemy );
 
-		// Ignore objects being placed, they are not real objects yet. actually don't ignore them or hell will happen.
-		//if ( pEnemyObject->IsPlacing() )
-		//	return false;
+		// Ignore objects being placed, they are not real objects yet.
+		if ( pEnemyObject->IsPlacing() )
+			return false;
 
 		// Ignore sappers.
-		if ( pEnemyObject->IsDisabled() )
+		if ( pEnemyObject->MustBeBuiltOnAttachmentPoint() )
 			return false;
 	}
-/*
-	CUtlVector<CTFTeam *> pTeamList;
-	CTFTeam *pTeam = this->GetTFTeam();
-
-	if ( pTeam )
-		pTeam->GetOpposingTFTeamList( &pTeamList );
-	else
-		return false;
-
-	for (int i = 0; i < pTeamList.Size(); i++)
-	{
-		int nTeamCount = pTeamList[i]->GetNumPlayers();
-		for (int iPlayer = 0; iPlayer < nTeamCount; ++iPlayer)
-		{
-			CTFPlayer *pEnemyTFPlayer = static_cast<CTFPlayer*>(pTeamList[i]->GetPlayer(iPlayer));
-			if (pEnemyTFPlayer == NULL)
-				continue;
-
-			// Make sure the player is alive.
-			if (!pEnemyTFPlayer->IsAlive())
-				continue;
-
-			if (pEnemyTFPlayer->GetFlags() & FL_NOTARGET)
-				continue;
-			
-			// ignore cloak.
-			if ( pEnemyTFPlayer && pEnemyTFPlayer->m_Shared.GetPercentInvisible() > 0.5 )
-				return false;
-		}
-
-		// If we already have a target, don't check objects.
-		if (pEnemy == NULL)
-		{
-			int nTeamObjectCount = pTeamList[i]->GetNumObjects();
-			for ( int iObject = 0; iObject < nTeamObjectCount; ++iObject )
-			{
-				CBaseObject *pEnemyObject = pTeamList[i]->GetObject( iObject );
-				if ( !pEnemyObject )
-					continue;
-				
-				// Ignore sappers.
-				if ( pEnemyObject->IsDisabled() )
-					return false;
-			}
-		}
-	}
-*/
 #endif
 
 	return true;
@@ -9900,7 +9182,7 @@ void CAI_BaseNPC::DrawDebugGeometryOverlays(void)
 					NDebugOverlay::Text( drawPos, debugText, false, 0.0 );
 
 					// If has a line on the player draw cross slightly in front so player can see
-					if ( npcEnemy->IsPlayer() &&
+					if (npcEnemy->IsPlayer() &&
 						(eMemory->vLastKnownLocation - npcEnemy->GetAbsOrigin()).Length()<10 )
 					{
 						Vector vEnemyFacing = npcEnemy->BodyDirection2D( );
@@ -10540,7 +9822,7 @@ Vector CAI_BaseNPC::GetShootEnemyDir( const Vector &shootOrigin, bool bNoisy )
 void CAI_BaseNPC::CollectShotStats( const Vector &vecShootOrigin, const Vector &vecShootDir )
 {
 #if defined (HL2_DLL) || defined (TF_CLASSIC)
-	if( ai_shot_stats.GetBool() != 0 && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
+	if( ai_shot_stats.GetBool() != 0 && GetEnemy()->IsPlayer() )
 	{
 		int iterations = ai_shot_stats_term.GetInt();
 		int iHits = 0;
@@ -10711,7 +9993,7 @@ Vector CAI_BaseNPC::GetActualShootTrajectory( const Vector &shootOrigin )
 
 	// If we're above water shooting at a player underwater, bias some of the shots forward of
 	// the player so that they see the cool bubble trails in the water ahead of them.
-	if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && (GetWaterLevel() != 3) && (GetEnemy()->GetWaterLevel() == 3) )
+	if (GetEnemy()->IsPlayer() && (GetWaterLevel() != 3) && (GetEnemy()->GetWaterLevel() == 3))
 	{
 #if 1
 		if (random->RandomInt(0, 4) < 3)
@@ -11238,8 +10520,9 @@ bool CAI_BaseNPC::ShouldChooseNewEnemy()
 bool CAI_BaseNPC::ShouldCollide(int collisionGroup, int contentsMask) const
 {
 	if (((collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT) && tf_avoidteammates.GetBool()) ||
-		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
+		collisionGroup == TFCOLLISION_GROUP_ROCKETS)
 	{
+
 		switch (GetTeamNumber())
 		{
 		case TF_TEAM_RED:
@@ -11393,7 +10676,7 @@ bool CAI_BaseNPC::ChooseEnemy( void )
 		}
 		else
 		{
-			Remember( ( pChosenEnemy->IsPlayer() || pChosenEnemy->IsBaseObject() ) ? bits_MEMORY_HAD_PLAYER : bits_MEMORY_HAD_ENEMY );
+			Remember( ( pChosenEnemy->IsPlayer() ) ? bits_MEMORY_HAD_PLAYER : bits_MEMORY_HAD_ENEMY );
 		}
 	}
 
@@ -11827,10 +11110,6 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_INPUTFUNC( FIELD_STRING,	"ForceInteractionWithNPC", InputForceInteractionWithNPC ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "UpdateEnemyMemory", InputUpdateEnemyMemory ),
 
-	#ifdef TF_CLASSIC
-	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetPlaybackRate",	InputSetPlaybackRate ),
-	#endif
-
 	// Function pointers
 	DEFINE_USEFUNC( NPCUse ),
 	DEFINE_THINKFUNC( CallNPCThink ),
@@ -11869,14 +11148,10 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropString( SENDINFO( m_szClassname ) ),
 
 #ifdef TF_CLASSIC
-	SendPropInt( SENDINFO( m_nPlayerCond ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
-	SendPropInt( SENDINFO( m_nPlayerCondEx ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
-	SendPropInt( SENDINFO( m_nPlayerCondEx2 ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
-	SendPropInt( SENDINFO( m_nPlayerCondEx3 ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
+	SendPropInt( SENDINFO( m_nPlayerCond ), TF_COND_LAST, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropInt( SENDINFO( m_nNumHealers ), 5, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropBool( SENDINFO( m_bBurningDeath ) ),
-	SendPropInt( SENDINFO( m_nTFFlags ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_flCondExpireTimeLeft ), SendPropFloat( SENDINFO_ARRAY( m_flCondExpireTimeLeft ) ) )
+	SendPropInt( SENDINFO( m_nTFFlags ) )
 #endif
 END_SEND_TABLE()
 
@@ -12480,12 +11755,6 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_nPlayerCond = 0;
 	m_bBurningDeath = false;
 	m_nTFFlags = 0;
-	memset( m_flChargeOffTime, 0, sizeof( m_flChargeOffTime ) );
-	memset( m_bChargeSounds, 0, sizeof( m_bChargeSounds ) );
-
-	m_bAirblasted = false;
-
-	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
 #endif
 }
 
@@ -12496,9 +11765,6 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 //-----------------------------------------------------------------------------
 CAI_BaseNPC::~CAI_BaseNPC(void)
 {
-	m_LagTrack->Purge();
-	delete m_LagTrack;
-
 	g_AI_Manager.RemoveAI( this );
 
 	delete m_pLockedBestSound;
@@ -12662,27 +11928,14 @@ void CAI_BaseNPC::InputSetEnemyFilter( inputdata_t &inputdata )
 void CAI_BaseNPC::InputSetHealth( inputdata_t &inputdata )
 {
 	int iNewHealth = inputdata.value.Int();
-
-	if ( iNewHealth != m_iHealth )
+	int iDelta = abs(GetHealth() - iNewHealth);
+	if ( iNewHealth > GetHealth() )
 	{
-		m_iHealth = iNewHealth;
-
-		if ( m_iMaxHealth == 0 )
-		{
-			Assert( false );
-			m_iMaxHealth = 1;
-		}
-
-		// Output the new health as a percentage of max health [0..1]
-		//float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0.f, 1.f );
-		//m_OnHealthChanged.Set( flRatio, pActivator, this );
-
-		if ( m_iHealth <= 0 )
-		{
-			//CTakeDamageInfo info;
-			//info.SetAttacker( this );
-			TakeDamage( CTakeDamageInfo( this, this, iNewHealth, DMG_GENERIC ) );
-		}
+		TakeHealth( iDelta, DMG_GENERIC );
+	}
+	else if ( iNewHealth < GetHealth() )
+	{
+		TakeDamage( CTakeDamageInfo( this, this, iDelta, DMG_GENERIC ) );
 	}
 }
 
@@ -13653,15 +12906,11 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 	if ( pPlayer == NULL )
 	{
 #ifdef TF_CLASSIC
-
-		for (int i = 0; i <= gpGlobals->maxClients; i++ )
-		{
-			pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-		
-			if ( !InSameTeam( pPlayer ) )
-				return false;
-		}
-#else
+		// Difficult to handle in TF2C since players can join different teams
+		// to ally themselves with different factions. For now, just check if they are on RED.
+		if ( GetTeamNumber() == TF_TEAM_RED )
+			return true;
+#endif
 		// in multiplayer mode we need a valid pPlayer 
 		// or override this virtual function
 		if ( !AI_IsSinglePlayer() )
@@ -13669,7 +12918,6 @@ bool CAI_BaseNPC::IsPlayerAlly( CBasePlayer *pPlayer )
 
 		// NULL means single player mode
 		pPlayer = UTIL_GetLocalPlayer();
-#endif
 	}
 
 	return ( !pPlayer || IRelationType( pPlayer ) == D_LI ); 
@@ -15306,10 +14554,29 @@ void CAI_BaseNPC::ChangeTeam( int iTeamNum )
 		return;
 	}
 
-	// Already on this team
-	if ( GetTeamNumber() == iTeamNum )
+	// if this is our current team, just abort
+	if ( iTeamNum == GetTeamNumber() )
+	{
 		return;
+	}
+#if 0
+	// Immediately tell all clients that he's changing team. This has to be done
+	// first, so that all user messages that follow as a result of the team change
+	// come after this one, allowing the client to be prepared for them.
+	IGameEvent * event = gameeventmanager->CreateEvent( "player_team" );
+	if ( event )
+	{
+		event->SetInt("userid", GetUserID() );
+		event->SetInt("team", iTeamNum );
+		event->SetInt("oldteam", GetTeamNumber() );
+		event->SetInt("disconnect", IsDisconnecting());
+		event->SetInt("autoteam", bAutoTeam );
+		event->SetInt("silent", bSilent );
+		event->SetString("name", GetPlayerName() );
 
+		gameeventmanager->FireEvent( event );
+	}
+#endif
 	// Remove him from his current team
 	if ( pExisting )
 	{
@@ -15333,7 +14600,7 @@ void CAI_BaseNPC::DeathNotice( const CTakeDamageInfo &info )
 	// Bullseyes shouldn't send death notices.
 	if ( Classify() == CLASS_BULLSEYE )
 		return;
-/* // moved to Event_Killed.
+
 	int killer_index = 0;
 
 	// Find the killer & the scorer
@@ -15375,20 +14642,17 @@ void CAI_BaseNPC::DeathNotice( const CTakeDamageInfo &info )
 
 		gameeventmanager->FireEvent( event );
 	}
-*/ // moved to Event_Killed.
 }
 
 int CAI_BaseNPC::TakeHealth( float flHealth, int bitsDamageType )
 {
-	int iResult = false;
+	int bResult = false;
 
 	// If the bit's set, add over the max health
 	if ( bitsDamageType & DMG_IGNORE_MAXHEALTH )
 	{
-		//int iTimeBasedDamage = g_pGameRules->Damage_GetTimeBased();
-		//m_bitsDamageType &= ~(bitsDamageType & ~iTimeBasedDamage);
 		m_iHealth += flHealth;
-		iResult = (int)flHealth;
+		bResult = true;
 	}
 	else
 	{
@@ -15403,15 +14667,15 @@ int CAI_BaseNPC::TakeHealth( float flHealth, int bitsDamageType )
 
 		if ( flHealthToAdd <= 0 )
 		{
-			iResult = 0;
+			bResult = false;
 		}
 		else
 		{
-			iResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
+			bResult = BaseClass::TakeHealth( flHealthToAdd, bitsDamageType );
 		}
 	}
 
-	return iResult;
+	return bResult;
 }
 
 //-----------------------------------------------------------------------------
@@ -15426,13 +14690,11 @@ void CAI_BaseNPC::Heal( CTFPlayer *pPlayer, float flAmount, bool bDispenserHeal 
 	newHealer.pPlayer = pPlayer;
 	newHealer.flAmount = flAmount;
 	newHealer.bDispenserHeal = bDispenserHeal;
-	newHealer.iRecentAmount = 0;
-	newHealer.flNextNofityTime = gpGlobals->curtime + 1.0f;
 	m_aHealers.AddToTail( newHealer );
 
-	AddCond( TF_COND_HEALTH_BUFF, PERMANENT_CONDITION );
+	AddCond( TF_COND_HEALTH_BUFF );
 
-	RecalculateChargeEffects();
+	RecalculateInvuln();
 
 	m_nNumHealers = m_aHealers.Count();
 }
@@ -15453,7 +14715,7 @@ void CAI_BaseNPC::StopHealing( CTFPlayer *pPlayer )
 		RemoveCond( TF_COND_HEALTH_BUFF );
 	}
 
-	RecalculateChargeEffects();
+	RecalculateInvuln();
 
 	m_nNumHealers = m_aHealers.Count();
 }
@@ -15461,124 +14723,99 @@ void CAI_BaseNPC::StopHealing( CTFPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-medigun_charge_types CAI_BaseNPC::GetChargeEffectBeingProvided( CTFPlayer *pPlayer )
+bool CAI_BaseNPC::IsProvidingInvuln( CTFPlayer *pPlayer )
 {
-	if ( !pPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
-		return TF_CHARGE_NONE;
+	if ( !pPlayer->IsPlayerClass(TF_CLASS_MEDIC) )
+		return false;
 
 	CTFWeaponBase *pWpn = pPlayer->GetActiveTFWeapon();
 	if ( !pWpn )
-		return TF_CHARGE_NONE;
+		return false;
 
-	CWeaponMedigun *pMedigun = dynamic_cast <CWeaponMedigun*>( pWpn );
+	CWeaponMedigun *pMedigun = dynamic_cast<CWeaponMedigun*>(pWpn);
 	if ( pMedigun && pMedigun->IsReleasingCharge() )
-		return pMedigun->GetChargeType();
+		return true;
 
-	return TF_CHARGE_NONE;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::RecalculateChargeEffects( bool bInstantRemove )
+void CAI_BaseNPC::RecalculateInvuln( bool bInstantRemove )
 {
-	bool bShouldCharge[TF_CHARGE_COUNT] = { };
-	CTFPlayer *pProviders[TF_CHARGE_COUNT] = { };
+	bool bShouldBeInvuln = false;
 
-		// Check players healing us.
-		for ( int i = 0; i < m_aHealers.Count(); i++ )
+	for ( int i = 0; i < m_aHealers.Count(); i++ )
+	{
+		if ( !m_aHealers[i].pPlayer )
+			continue;
+
+		CTFPlayer *pPlayer = ToTFPlayer( m_aHealers[i].pPlayer );
+		if ( !pPlayer )
+			continue;
+
+		if ( IsProvidingInvuln( pPlayer ) )
 		{
-			CTFPlayer *pPlayer = ToTFPlayer( m_aHealers[i].pPlayer );
-			if ( !pPlayer )
-				continue;
-
-			medigun_charge_types chargeType = GetChargeEffectBeingProvided( pPlayer );
-
-			if ( chargeType != TF_CHARGE_NONE )
-			{
-				bShouldCharge[chargeType] = true;
-				pProviders[chargeType] = pPlayer;
-			}
+			bShouldBeInvuln = true;
+			break;
 		}
-
-
-	for ( int i = 0; i < TF_CHARGE_COUNT; i++ )
-	{
-		float flRemoveTime = ( i == TF_CHARGE_INVULNERABLE ) ? tf_invuln_time.GetFloat() : 0.0f;
-		SetChargeEffect( (medigun_charge_types)i, bShouldCharge[i], bInstantRemove, g_MedigunEffects[i], flRemoveTime, pProviders[i] );
 	}
+
+	SetInvulnerable( bShouldBeInvuln, bInstantRemove );
 }
+
+extern ConVar tf_invuln_time;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider )
+void CAI_BaseNPC::SetInvulnerable( bool bState, bool bInstant )
 {
-	if ( InCond( chargeEffect.condition_enable ) == bShouldCharge )
+	bool bCurrentState = InCond( TF_COND_INVULNERABLE );
+	if ( bCurrentState == bState )
 	{
-		if ( bShouldCharge && m_flChargeOffTime[chargeType] != 0.0f )
+		if ( bState && m_flInvulnerableOffTime )
 		{
-			m_flChargeOffTime[chargeType] = 0.0f;
-
-			if ( chargeEffect.condition_disable != TF_COND_LAST )
-				RemoveCond( chargeEffect.condition_disable );
+			m_flInvulnerableOffTime = 0;
+			RemoveCond( TF_COND_INVULNERABLE_WEARINGOFF );
 		}
 		return;
 	}
 
-	if ( bShouldCharge )
+	if ( bState )
 	{
-		Assert( chargeType != TF_CHARGE_INVULNERABLE );
-
-		if ( m_flChargeOffTime[chargeType] != 0.0f )
+		if ( m_flInvulnerableOffTime )
 		{
-			StopSound( chargeEffect.sound_disable );
-
-			m_flChargeOffTime[chargeType] = 0.0f;
-
-			if ( chargeEffect.condition_disable != TF_COND_LAST )
-				RemoveCond( chargeEffect.condition_disable );
+			m_flInvulnerableOffTime = 0;
+			RemoveCond( TF_COND_INVULNERABLE_WEARINGOFF );
 		}
 
-		// Charge on.
-		AddCond( chargeEffect.condition_enable );
+		// Invulnerable turning on
+		AddCond( TF_COND_INVULNERABLE );
 
-		CSingleUserRecipientFilter filter( pProvider );
-		EmitSound( filter, entindex(), chargeEffect.sound_enable );
-		m_bChargeSounds[chargeType] = true;
+		// remove any persistent damaging conditions
+		if ( InCond( TF_COND_BURNING ) )
+		{
+			RemoveCond( TF_COND_BURNING );
+		}
 	}
 	else
 	{
-		if ( m_bChargeSounds[chargeType] )
+		if ( bInstant )
 		{
-			StopSound( chargeEffect.sound_enable );
-			m_bChargeSounds[chargeType] = false;
-		}
-
-		if ( m_flChargeOffTime[chargeType] == 0.0f )
-		{
-			CSingleUserRecipientFilter filter( pProvider );
-			EmitSound( filter, entindex(), chargeEffect.sound_disable );
-		}
-
-		if ( bInstantRemove )
-		{
-			m_flChargeOffTime[chargeType] = 0.0f;
-			RemoveCond( chargeEffect.condition_enable );
-
-			if ( chargeEffect.condition_disable != TF_COND_LAST )
-				RemoveCond( chargeEffect.condition_disable );
+			m_flInvulnerableOffTime = 0;
+			RemoveCond( TF_COND_INVULNERABLE );
+			RemoveCond( TF_COND_INVULNERABLE_WEARINGOFF );
 		}
 		else
 		{
-			// Already turning it off?
-			if ( m_flChargeOffTime[chargeType] != 0.0f )
+			// We're already in the process of turning it off
+			if ( m_flInvulnerableOffTime )
 				return;
 
-			if ( chargeEffect.condition_disable != TF_COND_LAST )
-				AddCond( chargeEffect.condition_disable );
-
-			m_flChargeOffTime[chargeType] = gpGlobals->curtime + flRemoveTime;
+			AddCond( TF_COND_INVULNERABLE_WEARINGOFF );
+			m_flInvulnerableOffTime = gpGlobals->curtime + tf_invuln_time.GetFloat();
 		}
 	}
 }
@@ -15611,29 +14848,22 @@ EHANDLE CAI_BaseNPC::GetFirstHealer()
 
 void CAI_BaseNPC::ConditionGameRulesThink( void )
 {
-	int i;
-	for ( i = 0; i < TF_COND_LAST; i++ )
+	for ( int i=0;i<TF_COND_LAST;i++ )
 	{
-		if ( InCond( i ) )
+		if ( m_nPlayerCond & (1<<i) )
 		{
 			// Ignore permanent conditions
 			if ( m_flCondExpireTimeLeft[i] != PERMANENT_CONDITION )
 			{
 				float flReduction = gpGlobals->frametime;
 
-				if ( ConditionExpiresFast( i ) )
+				// If we're being healed, we reduce bad conditions faster
+				if ( i > TF_COND_HEALTH_BUFF && m_aHealers.Count() > 0 )
 				{
-					// If we're being healed, we reduce bad conditions faster
-					if ( m_aHealers.Count() > 0 )
-					{
-						if ( i == TF_COND_URINE )
-							flReduction *= m_aHealers.Count() + 1;
-						else
-							flReduction += ( m_aHealers.Count() * flReduction * 4 );
-					}
+					flReduction += (m_aHealers.Count() * flReduction * 4);
 				}
 
-				m_flCondExpireTimeLeft.Set( i, max( m_flCondExpireTimeLeft[i] - flReduction, 0 ) );
+				m_flCondExpireTimeLeft[i] = max( m_flCondExpireTimeLeft[i] - flReduction, 0 );
 
 				if ( m_flCondExpireTimeLeft[i] == 0 )
 				{
@@ -15691,50 +14921,30 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 
 			int iBoostMax = GetMaxBuffedHealth();
 
-			// Cap it to the max we'll boost a npc's health
+			// Cap it to the max we'll boost a player's health
 			nHealthToAdd = clamp( nHealthToAdd, 0, iBoostMax - GetHealth() );
 
+			
 			TakeHealth( nHealthToAdd, DMG_IGNORE_MAXHEALTH );
-
+#if 0
 			// split up total healing based on the amount each healer contributes
 			for ( int i = 0; i < m_aHealers.Count(); i++ )
 			{
-				if ( m_aHealers[i].pPlayer.IsValid() )
+				Assert( m_aHealers[i].pPlayer );
+				if ( m_aHealers[i].pPlayer.IsValid () )
 				{
 					CTFPlayer *pPlayer = static_cast<CTFPlayer *>( static_cast<CBaseEntity *>( m_aHealers[i].pPlayer ) );
-					float flAmount = 0.0f;
-
-					if ( InSameTeam( pPlayer ) )
+					if ( IsAlly( pPlayer ) )
 					{
-						flAmount = (float)nHealthToAdd * ( m_aHealers[i].flAmount / fTotalHealAmount );
-						CTF_GameStats.Event_PlayerHealedOther( pPlayer, flAmount );
+						CTF_GameStats.Event_PlayerHealedOther( pPlayer, nHealthToAdd * ( m_aHealers[i].flAmount / fTotalHealAmount ) );
 					}
-
-					// Store off how much this guy healed.
-					m_aHealers[i].iRecentAmount += nHealthToAdd;
-
-					// Show how much this player healed every second.
-					if ( gpGlobals->curtime >= m_aHealers[i].flNextNofityTime )
+					else
 					{
-						if ( m_aHealers[i].iRecentAmount > 0 )
-						{
-							IGameEvent *event = gameeventmanager->CreateEvent( "npc_healed" );
-							if ( event )
-							{
-								event->SetInt( "priority", 1 );
-								event->SetInt( "patient", entindex() );
-								event->SetInt( "healer", pPlayer->GetUserID() );
-								event->SetInt( "amount", m_aHealers[i].iRecentAmount );
-
-								gameeventmanager->FireEvent( event );
-							}
-						}
-
-						m_aHealers[i].iRecentAmount = 0;
-						m_aHealers[i].flNextNofityTime = gpGlobals->curtime + 1.0f;
+						CTF_GameStats.Event_PlayerLeachedHealth( m_pOuter, m_aHealers[i].bDispenserHeal, nHealthToAdd * ( m_aHealers[i].flAmount / fTotalHealAmount ) );
 					}
 				}
 			}
+#endif
 		}
 
 		if ( InCond( TF_COND_BURNING ) )
@@ -15745,13 +14955,38 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 		}
 	}
 
+	if ( InCond( TF_COND_INVULNERABLE )  )
+	{
+		bool bRemoveInvul = false;
+
+		if ( ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && ( TFGameRules()->GetWinningTeam() != GetTeamNumber() ) )
+		{
+			bRemoveInvul = true;
+		}
+		
+		if ( m_flInvulnerableOffTime )
+		{
+			if ( gpGlobals->curtime > m_flInvulnerableOffTime )
+			{
+				bRemoveInvul = true;
+			}
+		}
+
+		if ( bRemoveInvul == true )
+		{
+			m_flInvulnerableOffTime = 0;
+			RemoveCond( TF_COND_INVULNERABLE_WEARINGOFF );
+			RemoveCond( TF_COND_INVULNERABLE );
+		}
+	}
+
 	if ( bDecayHealth )
 	{
 		// If we're not being buffed, our health drains back to our max
 		if ( GetHealth() > GetMaxHealth() )
 		{
 			float flBoostMaxAmount = GetMaxBuffedHealth() - GetMaxHealth();
-			m_flHealFraction += ( gpGlobals->frametime * ( flBoostMaxAmount / tf_boost_drain_time.GetFloat() ) );
+			m_flHealFraction += (gpGlobals->frametime * (flBoostMaxAmount / tf_boost_drain_time.GetFloat()));
 
 			int nHealthToDrain = (int)m_flHealFraction;
 			if ( nHealthToDrain > 0 )
@@ -15764,63 +14999,29 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 		}
 	}
 
-	if ( GetHealth() > GetMaxHealth() )
-	{
-		if ( !InCond( TF_COND_HEALTH_OVERHEALED ) )
-		{
-			AddCond( TF_COND_HEALTH_OVERHEALED );
-		}
-	}
-	else
-	{
-		if ( InCond( TF_COND_HEALTH_OVERHEALED ) )
-		{
-			RemoveCond( TF_COND_HEALTH_OVERHEALED );
-		}
-	}
-
 	if ( InCond( TF_COND_BURNING ) )
 	{
 		// If we're underwater, put the fire out
 		if ( gpGlobals->curtime > m_flFlameRemoveTime || GetWaterLevel() >= WL_Waist )
 		{
-			RemoveCond( TF_COND_BURNING );
+			// Calling Extinguish since some NPCs use that.
+			Extinguish();
 		}
 		else if ( ( gpGlobals->curtime >= m_flFlameBurnTime ) )
 		{
-			float flBurnDamage = TF_BURNING_DMG;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hBurnWeapon, flBurnDamage, mult_wpn_burndmg );
-
-			// Burn the player (if not pyro, who does not take persistent burning damage)
-			CTakeDamageInfo info( m_hBurnAttacker, m_hBurnAttacker, m_hBurnWeapon, flBurnDamage, DMG_BURN | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BURNING );
+			// Burn the NPC
+			CTakeDamageInfo info( m_hBurnAttacker, m_hBurnAttacker, TF_BURNING_DMG, DMG_BURN | DMG_PREVENT_PHYSICS_FORCE | DMG_DIRECT, TF_DMG_CUSTOM_BURNING );
 			TakeDamage( info );
 			m_flFlameBurnTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
 		}
+#if 0
+		if ( m_flNextBurningSound < gpGlobals->curtime )
+		{
+			m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_ONFIRE );
+			m_flNextBurningSound = gpGlobals->curtime + 2.5;
+		}
+#endif
 	}
-
-	TestAndExpireChargeEffect( TF_CHARGE_INVULNERABLE );
-	TestAndExpireChargeEffect( TF_CHARGE_CRITBOOSTED );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: no mini-crits for reserve shooter
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::SetAirblastState( bool bAirblastState )
-{
-	bAirblastState = m_bAirblasted;
-	bAirblastState = true;
-
-	AddCond( TF_COND_KNOCKED_INTO_AIR );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::ClearAirblastState( void )
-{
-	m_bAirblasted = false;
-
-	RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 }
 
 //-----------------------------------------------------------------------------
@@ -15830,7 +15031,7 @@ void CAI_BaseNPC::AddDamagerToHistory( EHANDLE hDamager )
 {
 	// sanity check: ignore damager if it is on our team.  (Catch-all for 
 	// damaging self in rocket jumps, etc.)
-	if ( !hDamager || ( !hDamager->IsPlayer() && !hDamager->IsNPC() ) || hDamager->GetTeam() == GetTeam() )
+	if ( !hDamager || ( !hDamager->IsPlayer() && !hDamager->IsNPC() ) || hDamager->GetTeamNumber() == GetTeamNumber() )
 		return;
 
 	// If this damager is different from the most recent damager, shift the
@@ -15858,170 +15059,5 @@ void CAI_BaseNPC::ClearDamagerHistory()
 	{
 		m_DamagerHistory[i].Reset();
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::TestAndExpireChargeEffect( medigun_charge_types chargeType )
-{
-	if ( InCond( g_MedigunEffects[chargeType].condition_enable ) )
-	{
-		bool bRemoveCharge = false;
-
-		if ( ( TFGameRules()->State_Get() == GR_STATE_TEAM_WIN ) && ( TFGameRules()->GetWinningTeam() != GetTeamNumber() ) )
-		{
-			bRemoveCharge = true;
-		}
-
-		if ( m_flChargeOffTime[chargeType] != 0.0f )
-		{
-			if ( gpGlobals->curtime > m_flChargeOffTime[chargeType] )
-			{
-				bRemoveCharge = true;
-			}
-		}
-
-		if ( bRemoveCharge == true )
-		{
-			m_flChargeOffTime[chargeType] = 0.0f;
-
-			if ( g_MedigunEffects[chargeType].condition_disable != TF_COND_LAST )
-			{
-				RemoveCond( g_MedigunEffects[chargeType].condition_disable );
-			}
-
-			RemoveCond( g_MedigunEffects[chargeType].condition_enable );
-		}
-	}
-	else if ( m_bChargeSounds[chargeType] )
-	{
-		// If we're still playing charge sound but not actually charged, stop the sound.
-		// This can happen if player respawns while crit boosted.
-		StopSound( g_MedigunEffects[chargeType].sound_enable );
-		m_bChargeSounds[chargeType] = false;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CTFTeam *CAI_BaseNPC::GetTFTeam( void )
-{
-	CTFTeam *pTeam = dynamic_cast<CTFTeam *>( GetTeam() );
-	Assert( pTeam );
-	return pTeam;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CAI_BaseNPC::GetCritMult( void )
-{
-	float flRemapCritMul = RemapValClamped( m_iCritMult, 0, 255, 1.0, TF_DAMAGE_CRITMOD_MAXMULT );
-
-	return flRemapCritMul;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::UpdateCritMult( void )
-{
-	const float flMinMult = 1.0;
-	const float flMaxMult = TF_DAMAGE_CRITMOD_MAXMULT;
-
-	if ( m_DamageEvents.Count() == 0 )
-	{
-		m_iCritMult = RemapValClamped( flMinMult, flMinMult, flMaxMult, 0, 255 );
-		return;
-	}
-
-	// Go through the damage multipliers and remove expired ones, while summing damage of the others
-	float flTotalDamage = 0;
-	for ( int i = m_DamageEvents.Count() - 1; i >= 0; i-- )
-	{
-		float flDelta = gpGlobals->curtime - m_DamageEvents[i].flTime;
-		if ( flDelta > tf_damage_events_track_for.GetFloat() )
-		{
-			//Msg( "      Discarded (%d: time %.2f, now %.2f)\n", i, m_DamageEvents[i].flTime, gpGlobals->curtime );
-			m_DamageEvents.Remove( i );
-			continue;
-		}
-
-		// Ignore damage we've just done. We do this so that we have time to get those damage events
-		// to the client in time for using them in prediction in this code.
-		if ( flDelta < TF_DAMAGE_CRITMOD_MINTIME )
-		{
-			continue;
-		}
-
-		if ( flDelta > TF_DAMAGE_CRITMOD_MAXTIME )
-			continue;
-
-		flTotalDamage += m_DamageEvents[i].flDamage;
-	}
-
-	float flMult = RemapValClamped( flTotalDamage, 0, TF_DAMAGE_CRITMOD_DAMAGE, flMinMult, flMaxMult );
-
-	m_iCritMult = (int)RemapValClamped( flMult, flMinMult, flMaxMult, 0, 255 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill )
-{
-	if ( m_DamageEvents.Count() >= MAX_NPC_DAMAGE_EVENTS )
-	{
-		// Remove the oldest event
-		m_DamageEvents.Remove( m_DamageEvents.Count() - 1 );
-	}
-
-	int iIndex = m_DamageEvents.AddToTail();
-	m_DamageEvents[iIndex].flDamage = info.GetDamage();
-	m_DamageEvents[iIndex].flTime = gpGlobals->curtime;
-	m_DamageEvents[iIndex].bKill = bKill;
-
-	// Don't count critical damage
-	if ( info.GetDamageType() & DMG_CRITICAL )
-	{
-		m_DamageEvents[iIndex].flDamage /= TF_DAMAGE_CRIT_MULTIPLIER;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int	CAI_BaseNPC::GetNumKillsInTime( float flTime )
-{
-	if ( tf_damage_events_track_for.GetFloat() < flTime )
-	{
-		Warning( "NPC asking for damage events for time %.0f, but tf_damage_events_track_for is only tracking events for %.0f\n", flTime, tf_damage_events_track_for.GetFloat() );
-	}
-
-	int iKills = 0;
-	for ( int i = m_DamageEvents.Count() - 1; i >= 0; i-- )
-	{
-		float flDelta = gpGlobals->curtime - m_DamageEvents[i].flTime;
-		if ( flDelta < flTime )
-		{
-			if ( m_DamageEvents[i].bKill )
-			{
-				iKills++;
-			}
-		}
-	}
-
-	return iKills;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::InputSetPlaybackRate( inputdata_t &inputdata )
-{
-	SetPlaybackRate( inputdata.value.Float() );
-	RunAnimation();
 }
 #endif

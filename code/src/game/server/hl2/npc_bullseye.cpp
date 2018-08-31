@@ -438,12 +438,6 @@ int CNPC_Bullseye::OnTakeDamage( const CTakeDamageInfo &info )
 		if ( pInstigator->GetEnemy() != this )
 			return 0;
 	}
-
-	if ( info.GetAttacker()->IsPlayer() )
-	{
-		m_takedamage = DAMAGE_NO;
-		return 0;
-	}
 	
 	//If we're a pain proxy, send the damage through
 	if ( m_hPainPartner != NULL )

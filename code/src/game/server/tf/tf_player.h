@@ -1,4 +1,4 @@
-//========= Copyright ï¿½ 1996-2005, Valve LLC, All rights reserved. ============
+//========= Copyright © 1996-2005, Valve LLC, All rights reserved. ============
 //
 //=============================================================================
 #ifndef TF_PLAYER_H
@@ -12,9 +12,6 @@
 #include "tf_player_shared.h"
 #include "tf_playerclass.h"
 #include "entity_tfstart.h"
-#include "tf_inventory.h"
-#include "tf_weapon_medigun.h"
-#include "ihasattributes.h"
 #include "hl_movedata.h"
 #include "hl2_player.h"
 
@@ -27,7 +24,7 @@ class CTFWeaponBuilder;
 class CBaseObject;
 class CTFWeaponBase;
 class CIntroViewpoint;
-class CLogicPlayerProxy;
+
 //=============================================================================
 //
 // Player State Information
@@ -67,7 +64,7 @@ struct DamagerHistory_t
 //
 // TF Player
 //
-class CTFPlayer : public CBaseMultiplayerPlayer, public IHasAttributes
+class CTFPlayer : public CBaseMultiplayerPlayer
 {
 public:
 	DECLARE_CLASS( CTFPlayer, CBaseMultiplayerPlayer );
@@ -82,7 +79,6 @@ public:
 	static CTFPlayer	*Instance( int iEnt );
 
 	virtual void		Spawn();
-	virtual int			ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual void		ForceRespawn();
 	virtual CBaseEntity	*EntSelectSpawnPoint( void );
 	virtual void		InitialSpawn();
@@ -90,38 +86,26 @@ public:
 	virtual bool		IsReadyToPlay( void );
 	virtual bool		IsReadyToSpawn( void );
 	virtual bool		ShouldGainInstantSpawn( void );
+	virtual bool		IsDeflectable() { return true; }
 	virtual void		ResetScores( void );
-	virtual void		PlayerUse( void );
-	void CheckTeam(void);
 
 	void				CreateViewModel( int iViewModel = 0 );
 	CBaseViewModel		*GetOffHandViewModel();
 	void				SendOffHandViewModelActivity( Activity activity );
 
 	virtual void		CheatImpulseCommands( int iImpulse );
-	virtual void		PlayerRunCommand( CUserCmd *ucmd, IMoveHelper *moveHelper);
 
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
-
-	virtual void		LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 
 	// Combats
 	virtual void		TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
 	virtual int			TakeHealth( float flHealth, int bitsDamageType );
 	virtual	void		Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
-	virtual bool		Event_Gibbed( const CTakeDamageInfo &info );
-	virtual bool		BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector );
 	virtual void		PlayerDeathThink( void );
 
 	virtual int			OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	void				ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir );
-	void				SetBlastJumpState( int iJumpType, bool bPlaySound );
-	void				ClearBlastJumpState( void );
-	int					GetBlastJumpFlags( void ) { return m_nBlastJumpFlags; }
-	void				SetAirblastState( bool bAirblastState );
-	void				ClearAirblastState( void );
 	void				AddDamagerToHistory( EHANDLE hDamager );
 	void				ClearDamagerHistory();
 	DamagerHistory_t	&GetDamagerHistory( int i ) { return m_DamagerHistory[i]; }
@@ -131,13 +115,6 @@ public:
 	void				SetHealthBuffTime( float flTime )		{ m_flHealthBuffTime = flTime; }
 
 	CTFWeaponBase		*GetActiveTFWeapon( void ) const;
-	bool				IsActiveTFWeapon(int iWeaponID);
-
-	CEconItemView		*GetLoadoutItem( int iClass, int iSlot );
-	void				HandleCommand_WeaponPreset(int iSlotNum, int iPresetNum);
-	void				HandleCommand_WeaponPreset(int iClass, int iSlotNum, int iPresetNum);
-
-	CBaseEntity			*GiveNamedItem( const char *pszName, int iSubType = 0, CEconItemView* pItem = NULL );
 
 	void				SaveMe( void );
 
@@ -153,14 +130,10 @@ public:
 	float				GetNextRegenTime( void ){ return m_flNextRegenerateTime; }
 	void				SetNextRegenTime( float flTime ){ m_flNextRegenerateTime = flTime; }
 
-	float				GetNextChangeClassTime(void){ return m_flNextChangeClassTime; }
-	void				SetNextChangeClassTime(float flTime){ m_flNextChangeClassTime = flTime; }
-
-	float				GetNextChangeTeamTime(void){ return m_flNextChangeTeamTime; }
-	void				SetNextChangeTeamTime(float flTime){ m_flNextChangeTeamTime = flTime; }
+	float				GetNextChangeClassTime( void ){ return m_flNextChangeClassTime; }
+	void				SetNextChangeClassTime( float flTime ){ m_flNextChangeClassTime = flTime; }
 
 	virtual	void		RemoveAllItems( bool removeSuit );
-	virtual void		RemoveAllWeapons( void );
 
 	bool				DropCurrentWeapon( void );
 	void				DropFlag( void );
@@ -189,7 +162,6 @@ public:
 	// Think.
 	virtual void		PreThink();
 	virtual void		PostThink();
-	virtual bool		HandleInteraction(int interactionType, void *data, CBaseCombatCharacter* sourceEnt);
 
 	virtual void		ItemPostFrame();
 	virtual void		Weapon_FrameUpdate( void );
@@ -200,12 +172,11 @@ public:
 	virtual void		SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalking );
 
 	// Utility.
+	void				RemoveOwnedEnt( char *pEntName, bool bGrenade = false );
 	void				UpdateModel( void );
 	void				UpdateSkin( int iTeam );
 
 	virtual int			GiveAmmo( int iCount, int iAmmoIndex, bool bSuppressSound = false );
-	virtual int			GiveAmmo( int iCount, int iAmmoIndex, bool bSuppressSound, EAmmoSource ammosource );
-	int					GetMaxAmmo( int iAmmoIndex, int iClassNumber = -1 );
 
 	bool				CanAttack( void );
 
@@ -215,9 +186,6 @@ public:
 	virtual bool		ClientCommand( const CCommand &args );
 	void				ClientHearVox( const char *pSentence );
 	void				DisplayLocalItemStatus( CTFGoal *pGoal );
-
-	bool				CanPickupBuilding( CBaseObject *pObject );
-	bool				TryToPickupBuilding( void );
 
 	int					BuildObservableEntityList( void );
 	virtual int			GetNextObserverSearchStartPoint( bool bReverse ); // Where we should start looping the player list in a FindNextObserverTarget call
@@ -236,8 +204,9 @@ public:
 	EHANDLE TeamFortress_GetDisguiseTarget( int nTeam, int nClass );
 
 	void TeamFortress_ClientDisconnected();
-	void RemoveAllOwnedEntitiesFromWorld( bool bSilent = true );
-	void RemoveOwnedProjectiles( void );
+	void TeamFortress_RemoveEverythingFromWorld();
+	void TeamFortress_RemoveRockets();
+	void TeamFortress_RemovePipebombs();
 
 	CTFTeamSpawn *GetSpawnPoint( void ){ return m_pSpawnPoint; }
 		
@@ -254,7 +223,7 @@ public:
 	// TF doesn't want the explosion ringing sound
 	virtual void			OnDamagedByExplosion( const CTakeDamageInfo &info ) { return; }
 
-	void	OnBurnOther( CBaseEntity *pTFPlayerVictim );
+	void	OnBurnOther( CTFPlayer *pTFPlayerVictim );
 
 	// Buildables
 	void SetWeaponBuilder( CTFWeaponBuilder *pBuilder );
@@ -265,11 +234,11 @@ public:
 	void AddBuildResources( int iAmount );
 
 	bool IsBuilding( void );
-	int CanBuild( int iObjectType, int iObjectMode );
+	int CanBuild( int iObjectType );
 
 	CBaseObject	*GetObject( int index );
 	int	GetObjectCount( void );
-	int GetNumObjects( int iObjectType, int iObjectMode );
+	int GetNumObjects( int iObjectType );
 	void RemoveAllObjects( bool bSilent );
 	void StopPlacement( void );
 	int	StartedBuildingObject( int iObjectType );
@@ -279,35 +248,32 @@ public:
 	void OwnedObjectDestroyed( CBaseObject *pObject );
 	void RemoveObject( CBaseObject *pObject );
 	bool PlayerOwnsObject( CBaseObject *pObject );
-	void DetonateOwnedObjectsOfType( int iType, int iMode );
-	void StartBuildingObjectOfType( int iType, int iMode );
+	void DetonateOwnedObjectsOfType( int iType );
+	void StartBuildingObjectOfType( int iType );
 
 	CTFTeam *GetTFTeam( void );
 	CTFTeam *GetOpposingTFTeam( void );
 
 	void TeleportEffect( void );
 	void RemoveTeleportEffect( void );
-	bool IsAllowedToPickUpFlag( void );
 	bool HasTheFlag( void );
 
 	// Death & Ragdolls.
 	virtual void CreateRagdollEntity( void );
-	void CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, float flInvisLevel, int iDamageCustom );
+	void CreateRagdollEntity( bool bGib, bool bBurning );
 	void DestroyRagdoll( void );
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 	virtual bool ShouldGib( const CTakeDamageInfo &info );
 
 	// Dropping Ammo
 	void DropAmmoPack( void );
-	void DropWeapon( CTFWeaponBase *pWeapon, bool bKilled = false );
-	void DropFakeWeapon( CTFWeaponBase *pWeapon );
-	void DropPowerups( void );
 
 	bool CanDisguise( void );
 	bool CanGoInvisible( void );
 	void RemoveInvisibility( void );
 
 	void RemoveDisguise( void );
+	void PrintTargetWeaponInfo( void );
 
 	bool DoClassSpecialSkill( void );
 
@@ -328,22 +294,14 @@ public:
 	bool ShouldAutoRezoom( void ) { return m_bAutoRezoom; }
 	void SetAutoRezoom( bool bAutoRezoom ) { m_bAutoRezoom = bAutoRezoom; }
 
-	bool ShouldAutoReload( void ) { return m_bAutoReload; }
-	void SetAutoReload( bool bAutoReload ) { m_bAutoReload = bAutoReload; }
-
-	bool ShouldFlipViewModel( void ) { return m_bFlipViewModel; }
-	void SetFlipViewModel( bool bFlip ) { m_bFlipViewModel = bFlip; }
-
 	virtual void	ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet );
 
 	virtual bool CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 
-	Vector 	GetClassEyeHeight( void );
+	const Vector& 	GetClassEyeHeight( void );
 
 	void	UpdateExpression( void );
 	void	ClearExpression( void );
-
-	void	AddPhaseEffects( void );
 
 	virtual IResponseSystem *GetResponseSystem();
 	virtual bool			SpeakConceptIfAllowed( int iConcept, const char *modifiers = NULL, char *pszOutResponseChosen = NULL, size_t bufsize = 0, IRecipientFilter *filter = NULL );
@@ -363,21 +321,13 @@ public:
 
 	bool ShouldAnnouceAchievement( void );
 
-	virtual void		PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
-	virtual bool		IsDeflectable( void ) { return true; }
+	virtual void ResetPerRoundStats( void );
 
-	virtual CAttributeManager *GetAttributeManager( void ) { return &m_AttributeManager; }
-	virtual CAttributeContainer *GetAttributeContainer( void ) { return NULL; }
-	virtual CBaseEntity *GetAttributeOwner( void ) { return NULL; }
-	virtual void ReapplyProvision( void ) { /*Do nothing*/ };
+	virtual void UpdatePlayerSound( void );
 
-	void UpdatePlayerColor( void );
+	bool IsOnStoryTeam( void ) { return ( GetTeamNumber() == TF_STORY_TEAM ); }
 
-	// Entity inputs
-	void	InputIgnitePlayer( inputdata_t &inputdata );
-	void	InputExtinguishPlayer( inputdata_t &inputdata );
-	void	InputSpeakResponseConcept( inputdata_t &inputdata );
-	void	InputSetForcedTauntCam( inputdata_t &inputdata );
+	char GetPrevTextureType( void ) { return m_chPreviousTextureType; }
 
 	// HL2 ladder related methods
 	LadderMove_t		*GetLadderMove() { return &m_LadderMove; }
@@ -419,32 +369,7 @@ public:
 	void	SaveForTransition( void );
 	void	DeleteForTransition( void );
 
-	virtual void ResetPerRoundStats( void );
-	virtual void UpdatePlayerSound( void );
-
-	bool IsOnStoryTeam( void ) { return ( GetTeamNumber() == TF_STORY_TEAM ); }
-	bool IsOnCombineTeam(void) { return (GetTeamNumber() == TF_COMBINE_TEAM); }
-
-	char GetPrevTextureType( void ) { return m_chPreviousTextureType; }
-
-	Class_T				Classify ( void );
-
-	void FirePlayerProxyOutput( const char *pszOutputName, variant_t variant, CBaseEntity *pActivator, CBaseEntity *pCaller );
-
-	CLogicPlayerProxy	*GetPlayerProxy( void );
-
-	void MissedAR2AltFire();
-
-	inline void EnableCappedPhysicsDamage();
-	inline void DisableCappedPhysicsDamage();
-
-	CSoundPatch *m_sndLeeches;
-	CSoundPatch *m_sndWaterSplashes;
-
-	const impactdamagetable_t &GetPhysicsImpactDamageTable();
 public:
-
-	CNetworkVector( m_vecPlayerColor );
 
 	CTFPlayerShared m_Shared;
 
@@ -465,18 +390,12 @@ public:
 	int		no_dispenser_message;
 	
 	CNetworkVar( bool, m_bSaveMeParity );
-	CNetworkVar(bool, m_bHasLongJump);
 
 	// teleporter variables
 	int		no_entry_teleporter_message;
 	int		no_exit_teleporter_message;
 
 	float	m_flNextNameChangeTime;
-
-	bool	m_bBlastLaunched;
-	bool	m_bAirblasted;
-
-	bool	m_bIsPlayerADev;
 
 	int					StateGet( void ) const;
 
@@ -488,17 +407,9 @@ public:
 	virtual bool Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );
 	virtual void Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget , const Vector *pVelocity );
 
-	bool				ItemsMatch( CEconItemView *pItem1, CEconItemView *pItem2, CTFWeaponBase *pWeapon );
-	void				ValidateWeapons( bool bRegenerate );
-	void				ValidateWearables( void );
 	void				ManageRegularWeapons( TFPlayerClassData_t *pData );
-	void				ManageRegularWeaponsLegacy( TFPlayerClassData_t *pData );
-	void				ManageRandomWeapons( TFPlayerClassData_t *pData );
 	void				ManageBuilderWeapons( TFPlayerClassData_t *pData );
 	void				ManageTeamWeapons( TFPlayerClassData_t *pData );
-	void				ManageGrenades(TFPlayerClassData_t *pData);
-
-	void				PostInventoryApplication( void );
 
 	// Taunts.
 	void				Taunt( void );
@@ -522,19 +433,10 @@ public:
 	void				StopRandomExpressions( void ) { m_flNextRandomExpressionTime = -1; }
 	void				StartRandomExpressions( void ) { m_flNextRandomExpressionTime = gpGlobals->curtime; }
 
-	virtual bool			WantsLagCompensationOnEntity( const CBaseEntity	*pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
+	virtual bool		WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 
-	float				MedicGetChargeLevel( void );
-
-	CWeaponMedigun		*GetMedigun( void );
 	CTFWeaponBase		*Weapon_OwnsThisID( int iWeaponID );
 	CTFWeaponBase		*Weapon_GetWeaponByType( int iType );
-	CEconEntity			*GetEntityForLoadoutSlot( int iSlot );
-	CEconWearable		*GetWearableForLoadoutSlot( int iSlot );
-
-	bool CalculateAmmoPackPositionAndAngles( CTFWeaponBase *pWeapon, Vector &vecOrigin, QAngle &vecAngles );
-
-	bool				SelectFurthestSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot, bool bTelefrag = true );
 
 private:
 
@@ -551,7 +453,7 @@ private:
 
 	// Think.
 	void				TFPlayerThink();
-	void				RegenThink();
+	void				MedicRegenThink();
 	void				UpdateTimers( void );
 
 	// Taunt.
@@ -562,7 +464,6 @@ private:
 	void				HandleCommand_JoinTeam( const char *pTeamName );
 	void				HandleCommand_JoinClass( const char *pClassName );
 	void				HandleCommand_JoinTeam_NoMenus( const char *pTeamName );
-	void				HandleCommand_JoinTeam_NoKill( const char *pTeamName );
 
 	// Bots.
 	friend void			Bot_Think( CTFPlayer *pBot );
@@ -572,8 +473,8 @@ private:
 	void				PhysObjectWake();
 
 	// Ammo pack.
+	bool CalculateAmmoPackPositionAndAngles( CTFWeaponBase *pWeapon, Vector &vecOrigin, QAngle &vecAngles );
 	void AmmoPackCleanUp( void );
-	void DroppedWeaponCleanUp( void );
 
 	// State.
 	CPlayerStateInfo	*StateLookupInfo( int nState );
@@ -599,6 +500,7 @@ private:
 	bool				GetResponseSceneFromConcept( int iConcept, char *chSceneBuffer, int numSceneBufferBytes );
 
 	bool				CommanderExecuteOne( CAI_BaseNPC *pNpc, const commandgoal_t &goal, CAI_BaseNPC **Allies, int numAllies );
+
 private:
 	// Map introductions
 	int					m_iIntroStep;
@@ -620,8 +522,6 @@ private:
 
 	float					m_flNextRegenerateTime;
 	float					m_flNextChangeClassTime;
-	float					m_flNextChangeTeamTime;
-	float					m_flNextHealthRegen;
 
 	// Ragdolls.
 	Vector					m_vecTotalBulletForce;
@@ -636,14 +536,10 @@ private:
 	CNetworkQAngle( m_angEyeAngles );					// Copied from EyeAngles() so we can send it to the client.
 
 	CTFPlayerClass		m_PlayerClass;
-	int					m_WeaponPreset[TF_CLASS_COUNT_ALL][TF_LOADOUT_SLOT_COUNT];
-
 	CTFPlayerAnimState	*m_PlayerAnimState;
 	int					m_iLastWeaponFireUsercmd;				// Firing a weapon.  Last usercmd we shot a bullet on.
 	int					m_iLastSkin;
-
-	CNetworkVar( float, m_flLastDamageTime );
-
+	float				m_flLastDamageTime;
 	float				m_flNextPainSoundTime;
 	int					m_LastDamageType;
 	int					m_iDeathFlags;				// TF_DEATH_* flags with additional death info
@@ -668,6 +564,8 @@ private:
 	DamagerHistory_t m_DamagerHistory[MAX_DAMAGER_HISTORY];	// history of who has damaged this player
 	CUtlVector<float>	m_aBurnOtherTimes;					// vector of times this player has burned others
 
+	bool m_bHudClassAutoKill;
+
 	// Background expressions
 	string_t			m_iszExpressionScene;
 	EHANDLE				m_hExpressionSceneEnt;
@@ -676,30 +574,18 @@ private:
 
 	bool				m_bSpeakingConceptAsDisguisedSpy;
 
-	bool				m_bHudClassAutoKill;
 	bool 				m_bMedigunAutoHeal;
 	bool				m_bAutoRezoom;	// does the player want to re-zoom after each shot for sniper rifles
-	bool				m_bAutoReload;
-	bool				m_bFlipViewModel;
 
 	float				m_flTauntAttackTime;
 	int					m_iTauntAttack;
 
-	float				m_flNextCarryTalkTime;
-
 	EHANDLE				m_hTempSpawnSpot;
 	CNetworkVar( bool, m_bSearchingSpawn )
 
-	int					m_nBlastJumpFlags;
-	bool				m_bJumpEffect;
-
-	CNetworkVar( int, m_nForceTauntCam );
-	CNetworkVar( bool, m_bTyping );
-
-	CNetworkVarEmbedded( CAttributeManager, m_AttributeManager );
-
 	COutputEvent		m_OnDeath;
 
+private:
 	// HL2 squad stuff
 	CAI_Squad *			m_pPlayerAISquad;
 	CSimpleSimTimer		m_CommanderUpdateTimer;
@@ -710,44 +596,19 @@ private:
 	CNetworkVar( int,	m_iSquadMedicCount );
 	CNetworkVar( bool,	m_fSquadInFollowMode );
 
-	// Suit power fields
-	float				m_flSuitPowerLoad;	// net suit power drain (total of all device's drainrates)
-	float				m_flAdmireGlovesAnimTime;
-
-	float				m_flNextFlashlightCheckTime;
-	float				m_flFlashlightPowerDrainScale;
-
-	EHANDLE				m_hPlayerProxy;
-
-	bool				m_bFlashlightDisabled;
-	bool				m_bUseCappedPhysicsDamageTable;
 public:
-	bool				SetPowerplayEnabled( bool bOn );
-	bool				PlayerHasPowerplay( void );
-	bool				PlayerIsDevTrain( void );
-	void				PowerplayThink( void );
-	float				m_flPowerPlayTime;
-	
 	// HL2 Ladder related data
 	CNetworkVar( EHANDLE, m_hLadder );
 	LadderMove_t			m_LadderMove;
+
 	bool				m_bTransition;
+
+public:
+	bool				SetPowerplayEnabled( bool bOn );
+	bool				PlayerHasPowerplay( void );
+	void				PowerplayThink( void );
+	float				m_flPowerPlayTime;
 };
-
-//-----------------------------------------------------------------------------
-// FIXME: find a better way to do this
-// Switches us to a physics damage table that caps the max damage.
-//-----------------------------------------------------------------------------
-void CTFPlayer::EnableCappedPhysicsDamage()
-{
-	m_bUseCappedPhysicsDamageTable = true;
-}
-
-
-void CTFPlayer::DisableCappedPhysicsDamage()
-{
-	m_bUseCappedPhysicsDamageTable = false;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Utility function to convert an entity into a tf player.

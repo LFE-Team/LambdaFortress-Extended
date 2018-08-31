@@ -425,13 +425,13 @@ CTFRoundInfo::CTFRoundInfo( IViewPort *pViewPort ) : Frame( NULL, PANEL_ROUNDINF
 	SetKeyBoardInputEnabled( true );
 	SetMouseInputEnabled( true );
 
-	m_pTitle = new CExLabel(this, "RoundTitle", " ");
+	m_pTitle = new CTFLabel( this, "RoundTitle", " " );
 	m_pMapImage = new ImagePanel( this, "MapImage" );
 
 #ifdef _X360
 	m_pFooter = new CTFFooter( this, "Footer" );
 #else
-	m_pContinue = new CExButton( this, "RoundContinue", "#TF_Continue" );
+	m_pContinue = new CTFButton( this, "RoundContinue", "#TF_Continue" );
 #endif
 
 	m_pOverlay = new RoundInfoOverlay( this, "Overlay" );

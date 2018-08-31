@@ -50,7 +50,7 @@
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
 #endif
 
@@ -296,7 +296,7 @@ END_RECV_TABLE()
 
 		RecvPropString( RECVINFO(m_szLastPlaceName) ),
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 		RecvPropUtlVector( RECVINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER,	RecvPropEHandle(NULL, 0, 0) ),
 #endif
 
@@ -2850,7 +2850,7 @@ bool C_BasePlayer::GetSteamID( CSteamID *pID )
 	return false;
 }
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 //-----------------------------------------------------------------------------
 // Purpose: Update the visibility of our worn items.
 //-----------------------------------------------------------------------------
@@ -2864,7 +2864,6 @@ void C_BasePlayer::UpdateWearables( void )
 			pItem->ValidateModelIndex();
 			pItem->UpdateVisibility();
 			pItem->CreateShadow();
-			pItem->UpdatePlayerBodygroups();
 		}
 	}
 }
@@ -3027,14 +3026,3 @@ void CC_DumpClientSoundscapeData( const CCommand& args )
 	Msg("End dump.\n");
 }
 static ConCommand soundscape_dumpclient("soundscape_dumpclient", CC_DumpClientSoundscapeData, "Dumps the client's soundscape data.\n", FCVAR_CHEAT);
-
-	//SecobMod__Information: Tony Sergi has said on the hl2coders list that third person models need to invalidate their bone cache, so we do that here.
-	const Vector &C_BasePlayer::GetRenderOrigin( void )
-	{
-		if (IsInAVehicle())
-		{
-			InvalidateBoneCache();
-		}
-
-		return BaseClass::GetRenderOrigin();
-	}

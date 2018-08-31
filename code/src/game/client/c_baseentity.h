@@ -1334,7 +1334,7 @@ public:
 	// Object model index
 	short							m_nModelIndex;
 
-#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 	int								m_nModelIndexOverrides[MAX_VISION_MODES];
 #endif
 
@@ -1703,12 +1703,6 @@ protected:
 	bool m_bWasDeemedInvalid;
 	RenderMode_t m_PreviousRenderMode;
 	color32 m_PreviousRenderColor;
-#endif
-
-#ifdef TF_CLASSIC_CLIENT
-public:
-	virtual const Vector	&GetItemTintColor( void ) { return vec3_origin; }
-	virtual C_BaseEntity	*GetItemTintColorOwner( void ) { return GetOwnerEntity(); }
 #endif
 };
 
@@ -2156,7 +2150,6 @@ inline bool	C_BaseEntity::IsInterpolationEnabled()
 {
 	return s_bInterpolate;
 }
-
 
 //-----------------------------------------------------------------------------
 // Should we be interpolating during this frame? (was EF_NOINTERP)

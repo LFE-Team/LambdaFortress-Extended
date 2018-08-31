@@ -35,12 +35,13 @@ using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+
 DECLARE_HUDELEMENT( CTFHudWeaponAmmo );
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CTFHudWeaponAmmo::CTFHudWeaponAmmo( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudWeaponAmmo" )
+CTFHudWeaponAmmo::CTFHudWeaponAmmo( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudWeaponAmmo" ) 
 {
 	Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
@@ -60,9 +61,8 @@ CTFHudWeaponAmmo::CTFHudWeaponAmmo( const char *pElementName ) : CHudElement( pE
 	m_pNoClipShadow = NULL;
 
 	m_pWeaponBucket = NULL;
-	m_bShowWeaponIcon = false;
 
-	m_nAmmo = -1;
+	m_nAmmo	= -1;
 	m_nAmmo2 = -1;
 	m_hCurrentActiveWeapon = NULL;
 	m_flNextThink = 0.0f;
@@ -76,7 +76,7 @@ void CTFHudWeaponAmmo::Reset()
 	m_flNextThink = gpGlobals->curtime + 0.05f;
 }
 
-ConVar tf2c_ammobucket( "lfe_ammobucket", "0", FCVAR_ARCHIVE, "Shows weapon bucket in the ammo section. 1 = ON, 0 = OFF." );
+ConVar lf_ammobucket( "lf_ammobucket", "0", FCVAR_ARCHIVE, "Shows weapon bucket in the ammo section. 1 = ON, 0 = OFF." );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -88,18 +88,18 @@ void CTFHudWeaponAmmo::ApplySchemeSettings( IScheme *pScheme )
 	// load control settings...
 	LoadControlSettings( "resource/UI/HudAmmoWeapons.res" );
 
-	m_pInClip = dynamic_cast<CExLabel *>( FindChildByName( "AmmoInClip" ) );
-	m_pInClipShadow = dynamic_cast<CExLabel *>( FindChildByName( "AmmoInClipShadow" ) );
+	m_pInClip = dynamic_cast<CTFLabel *>(FindChildByName("AmmoInClip"));
+	m_pInClipShadow = dynamic_cast<CTFLabel *>(FindChildByName("AmmoInClipShadow"));
 
-	m_pInReserve = dynamic_cast<CExLabel *>( FindChildByName( "AmmoInReserve" ) );
-	m_pInReserveShadow = dynamic_cast<CExLabel *>( FindChildByName( "AmmoInReserveShadow" ) );
+	m_pInReserve = dynamic_cast<CTFLabel *>(FindChildByName("AmmoInReserve"));
+	m_pInReserveShadow = dynamic_cast<CTFLabel *>(FindChildByName("AmmoInReserveShadow"));
 
-	m_pNoClip = dynamic_cast<CExLabel *>( FindChildByName( "AmmoNoClip" ) );
-	m_pNoClipShadow = dynamic_cast<CExLabel *>( FindChildByName( "AmmoNoClipShadow" ) );
+	m_pNoClip = dynamic_cast<CTFLabel *>(FindChildByName("AmmoNoClip"));
+	m_pNoClipShadow = dynamic_cast<CTFLabel *>(FindChildByName("AmmoNoClipShadow"));
 
-	m_pWeaponBucket = dynamic_cast<ImagePanel *>( FindChildByName( "WeaponBucket" ) );
+	m_pWeaponBucket = dynamic_cast<CTFImagePanel *>(FindChildByName("WeaponBucket"));
 
-	m_nAmmo = -1;
+	m_nAmmo	= -1;
 	m_nAmmo2 = -1;
 	m_hCurrentActiveWeapon = NULL;
 	m_flNextThink = 0.0f;
@@ -120,21 +120,14 @@ bool CTFHudWeaponAmmo::ShouldDraw( void )
 		return false;
 	}
 
-	C_TFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
+	CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
 
 	if ( !pWeapon )
 	{
 		return false;
 	}
 
-	if ( !pWeapon->UsesPrimaryAmmo() && !tf2c_ammobucket.GetBool() )
-	{
-		return false;
-	}
-
-	CHudElement *pMedicCharge = GET_NAMED_HUDELEMENT( CHudElement, CHudMedicChargeMeter );
-
-	if ( pMedicCharge && pMedicCharge->IsActive() )
+	if ( pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN )
 	{
 		return false;
 	}
@@ -189,39 +182,35 @@ void CTFHudWeaponAmmo::OnThink()
 
 	if ( m_flNextThink < gpGlobals->curtime )
 	{
-		if ( m_pWeaponBucket )
+		bool bShowIcon = false;
+
+		if ( lf_ammobucket.GetBool() && pWeapon )
 		{
-			if ( pWeapon != m_hCurrentActiveWeapon.Get() )
+			const CHudTexture *pTexture = pWeapon->GetSpriteInactive(); // red team
+			if ( pPlayer )
 			{
-				// Weapon changed, update the icon.
-				m_bShowWeaponIcon = false;
-
-				if ( pWeapon )
+				if ( pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
 				{
-					CEconItemDefinition *pItemDef = pWeapon->GetItem()->GetStaticData();
-
-					if ( pItemDef && pItemDef->image_inventory[0] != '\0' )
-					{
-						char szImage[128];
-						Q_snprintf( szImage, sizeof( szImage ), "../%s_large", pItemDef->image_inventory );
-						m_pWeaponBucket->SetImage( szImage );
-						m_bShowWeaponIcon = true;
-					}
+					pTexture = pWeapon->GetSpriteActive();
 				}
 			}
 
-			bool bShow = m_bShowWeaponIcon && tf2c_ammobucket.GetBool();
-
-			if ( m_pWeaponBucket->IsVisible() != bShow )
+			if ( pTexture )
 			{
-				m_pWeaponBucket->SetVisible( bShow );
+				char szImage[64];
+				Q_snprintf( szImage, sizeof( szImage ), "../%s", pTexture->szTextureFile );
+				m_pWeaponBucket->SetImage( szImage );
+				bShowIcon = true;
 			}
 		}
+
+		if ( m_pWeaponBucket )
+			m_pWeaponBucket->SetVisible( bShowIcon );
 
 		hudlcd->SetGlobalStat( "(weapon_print_name)", pWeapon ? pWeapon->GetPrintName() : " " );
 		hudlcd->SetGlobalStat( "(weapon_name)", pWeapon ? pWeapon->GetName() : " " );
 
-		if ( !pWeapon || !pWeapon->UsesPrimaryAmmo() )
+		if ( !pPlayer || !pWeapon || !pWeapon->UsesPrimaryAmmo() )
 		{
 			hudlcd->SetGlobalStat( "(ammo_primary)", "n/a" );
 			hudlcd->SetGlobalStat( "(ammo_secondary)", "n/a" );
@@ -231,8 +220,6 @@ void CTFHudWeaponAmmo::OnThink()
 
 			m_nAmmo = -1;
 			m_nAmmo2 = -1;
-
-			m_hCurrentActiveWeapon = pWeapon;
 		}
 		else
 		{
@@ -249,7 +236,7 @@ void CTFHudWeaponAmmo::OnThink()
 			{
 				nAmmo2 = pPlayer->GetAmmoCount( pWeapon->GetPrimaryAmmoType() );
 			}
-
+			
 			hudlcd->SetGlobalStat( "(ammo_primary)", VarArgs( "%d", nAmmo1 ) );
 			hudlcd->SetGlobalStat( "(ammo_secondary)", VarArgs( "%d", nAmmo2 ) );
 

@@ -14,7 +14,6 @@
 #include "c_tf_player.h"
 // Server specific.
 #else
-#include "ilagcompensationmanager.h"
 #include "tf_player.h"
 #include "tf_gamestats.h"
 #endif
@@ -23,20 +22,12 @@
 //
 // Weapon Knife tables.
 //
-IMPLEMENT_NETWORKCLASS_ALIASED( TFKnife, DT_TFWeaponKnife );
+IMPLEMENT_NETWORKCLASS_ALIASED( TFKnife, DT_TFWeaponKnife )
 
 BEGIN_NETWORK_TABLE( CTFKnife, DT_TFWeaponKnife )
-#ifdef CLIENT_DLL
-	RecvPropBool( RECVINFO( m_bReadyToBackstab ) ),
-#else
-	SendPropBool( SENDINFO( m_bReadyToBackstab ) ),
-#endif
 END_NETWORK_TABLE()
 
 BEGIN_PREDICTION_DATA( CTFKnife )
-#ifdef CLIENT_DLL
-	DEFINE_PRED_FIELD( m_bReadyToBackstab, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-#endif
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( tf_weapon_knife, CTFKnife );
@@ -55,29 +46,6 @@ CTFKnife::CTFKnife()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Change idle anim to raised if we're ready to backstab.
-//-----------------------------------------------------------------------------
-bool CTFKnife::Deploy( void )
-{
-	if ( BaseClass::Deploy() )
-	{
-		m_bReadyToBackstab = false;
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFKnife::ItemPostFrame( void )
-{
-	BackstabVMThink();
-	BaseClass::ItemPostFrame();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Set stealth attack bool
 //-----------------------------------------------------------------------------
 void CTFKnife::PrimaryAttack( void )
@@ -90,23 +58,19 @@ void CTFKnife::PrimaryAttack( void )
 	// Set the weapon usage mode - primary, secondary.
 	m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
 
-#if !defined (CLIENT_DLL)
-	// Move other players back to history positions based on local player's lag
-	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
-#endif
-
 	trace_t trace;
 	if ( DoSwingTrace( trace ) == true )
 	{
 		// we will hit something with the attack
-		if( trace.m_pEnt && ( trace.m_pEnt->IsPlayer() || trace.m_pEnt->IsNPC() ) )
+		if( trace.m_pEnt && (trace.m_pEnt->IsPlayer() || trace.m_pEnt->IsNPC()) )
 		{
+			//CTFPlayer *pTarget = ToTFPlayer( trace.m_pEnt );
 			CBaseCombatCharacter *pTarget = trace.m_pEnt->MyCombatCharacterPointer();
 
 			if ( pTarget && pTarget->GetTeamNumber() != pPlayer->GetTeamNumber() )
 			{
 				// Deal extra damage to players when stabbing them from behind
-				if ( IsBehindAndFacingTarget( trace.m_pEnt ) )
+				if ( IsBehindTarget( trace.m_pEnt ) )
 				{
 					// this will be a backstab, do the strong anim
 					m_iWeaponMode = TF_WEAPON_SECONDARY_MODE;
@@ -123,19 +87,8 @@ void CTFKnife::PrimaryAttack( void )
 	pPlayer->RemoveDisguise();
 #endif
 
-#if !defined (CLIENT_DLL)
-	lagcompensation->FinishLagCompensation( pPlayer );
-#endif
-
-	// Reset "backstab ready" state after each attack.
-	m_bReadyToBackstab = false;
-
 	// Swing the weapon.
 	Swing( pPlayer );
-	
-	// And hit instantly.
-	Smack();
-	m_flSmackTime = 0.0f;
 
 #if !defined( CLIENT_DLL ) 
 	pPlayer->SpeakWeaponFire();
@@ -150,12 +103,13 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 {
 	float flBaseDamage = BaseClass::GetMeleeDamage( pTarget, iCustomDamage );
 
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-
-	if ( pOwner && pTarget->IsPlayer() || pTarget->IsNPC() )
+	if ( pTarget->IsPlayer() || pTarget->IsNPC() )
 	{
-		// Since Swing and Smack are done in the same frame now we don't need to run additional checks anymore.
-		if ( m_iWeaponMode == TF_WEAPON_SECONDARY_MODE && m_hBackstabVictim.Get() == pTarget )
+		// This counts as a backstab if:
+		// a ) we are behind the target player
+		// or b) we were behind this target player when we started the stab
+		if ( IsBehindTarget( pTarget ) ||
+			( m_iWeaponMode == TF_WEAPON_SECONDARY_MODE && m_hBackstabVictim.Get() == pTarget ) )
 		{
 			// this will be a backstab, do the strong anim.
 			// Do twice the target's health so that random modification will still kill him.
@@ -163,6 +117,10 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 
 			// Declare a backstab.
 			iCustomDamage = TF_DMG_CUSTOM_BACKSTAB;
+		}
+		else
+		{
+			m_bCurrentAttackIsCrit = false;	// don't do a crit if we failed the above checks.
 		}
 	}
 
@@ -173,7 +131,7 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-bool CTFKnife::IsBehindAndFacingTarget( CBaseEntity *pTarget )
+bool CTFKnife::IsBehindTarget( CBaseEntity *pTarget )
 {
 	Assert( pTarget );
 
@@ -184,10 +142,10 @@ bool CTFKnife::IsBehindAndFacingTarget( CBaseEntity *pTarget )
 		if ( !pNPC->AllowBackstab() )
 			return false;
 	}
-
+	
 	// Get the forward view vector of the target, ignore Z
 	Vector vecVictimForward;
-	AngleVectors( pTarget->EyeAngles(), &vecVictimForward );
+	AngleVectors( pTarget->EyeAngles(), &vecVictimForward, NULL, NULL );
 	vecVictimForward.z = 0.0f;
 	vecVictimForward.NormalizeInPlace();
 
@@ -197,21 +155,9 @@ bool CTFKnife::IsBehindAndFacingTarget( CBaseEntity *pTarget )
 	vecToTarget.z = 0.0f;
 	vecToTarget.NormalizeInPlace();
 
-	// Get a forward vector of the attacker.
-	Vector vecOwnerForward;
-	AngleVectors( GetOwner()->EyeAngles(), &vecOwnerForward );
-	vecOwnerForward.z = 0.0f;
-	vecOwnerForward.NormalizeInPlace();
+	float flDot = DotProduct( vecVictimForward, vecToTarget );
 
-	float flDotOwner = DotProduct( vecOwnerForward, vecToTarget );
-	float flDotVictim = DotProduct( vecVictimForward, vecToTarget );
-
-	// Make sure they're actually facing the target.
-	// This needs to be done because lag compensation can place target slightly behind the attacker.
-	if ( flDotOwner > 0.5 )
-		return ( flDotVictim > -0.1 );
-
-	return false;
+	return ( flDot > -0.1 );
 }
 
 //-----------------------------------------------------------------------------
@@ -236,86 +182,5 @@ void CTFKnife::SendPlayerAnimEvent( CTFPlayer *pPlayer )
 	else
 	{
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFKnife::DoViewModelAnimation( void )
-{
-	// Overriding so it doesn't do backstab animation on crit.
-	Activity act = ( m_iWeaponMode == TF_WEAPON_PRIMARY_MODE ) ? ACT_VM_HITCENTER : ACT_VM_SWINGHARD;
-
-	SendWeaponAnim( act );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Change idle anim to raised if we're ready to backstab.
-//-----------------------------------------------------------------------------
-bool CTFKnife::SendWeaponAnim( int iActivity )
-{
-	switch( iActivity )
-	{
-	case ACT_VM_IDLE:
-	case ACT_MELEE_VM_IDLE:
-	case ACT_ITEM1_VM_IDLE:
-	case ACT_ITEM2_VM_IDLE:
-		if ( m_bReadyToBackstab )
-			iActivity = ACT_BACKSTAB_VM_IDLE;
-
-		break;
-	case ACT_BACKSTAB_VM_UP:
-	case ACT_ITEM1_BACKSTAB_VM_UP:
-	case ACT_ITEM2_BACKSTAB_VM_UP:
-		m_bReadyToBackstab = true;
-		break;
-	case ACT_BACKSTAB_VM_DOWN:
-	case ACT_ITEM1_BACKSTAB_VM_DOWN:
-	case ACT_ITEM2_BACKSTAB_VM_DOWN:
-	default:
-		m_bReadyToBackstab = false;
-		break;
-	}
-
-	return BaseClass::SendWeaponAnim( iActivity );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Check for knife raise conditions.
-//-----------------------------------------------------------------------------
-void CTFKnife::BackstabVMThink( void )
-{
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
-		return;
-
-	if ( GetActivity() == ACT_VM_IDLE ||
-		GetActivity() == ACT_MELEE_VM_IDLE ||
-		GetActivity() == ACT_BACKSTAB_VM_IDLE ||
-		GetActivity() == ACT_ITEM1_VM_IDLE  ||
-		GetActivity() == ACT_ITEM1_BACKSTAB_VM_IDLE ||
-		GetActivity() == ACT_ITEM2_VM_IDLE  ||
-		GetActivity() == ACT_ITEM2_BACKSTAB_VM_IDLE )
-	{
-		trace_t tr;
-		if ( CanAttack() && DoSwingTrace( tr ) &&
-			( tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC() ) && tr.m_pEnt->GetTeamNumber() != pOwner->GetTeamNumber() &&
-			IsBehindAndFacingTarget( tr.m_pEnt ) )
-		{
-			if ( !m_bReadyToBackstab )
-			{
-				m_bReadyToBackstab = true;
-				SendWeaponAnim( ACT_BACKSTAB_VM_UP );
-			}
-		}
-		else
-		{
-			if ( m_bReadyToBackstab )
-			{
-				m_bReadyToBackstab = false;
-				SendWeaponAnim( ACT_BACKSTAB_VM_DOWN );
-			}
-		}
 	}
 }

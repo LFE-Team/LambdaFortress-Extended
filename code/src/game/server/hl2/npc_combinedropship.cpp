@@ -174,6 +174,7 @@ public:
 	virtual bool OverridePropdata( void );
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
+	virtual bool		IsDeflectable() { return false; }
 
 private:
 	enum

@@ -32,7 +32,6 @@
 #include "achievementmgr.h"
 #include "tf_hud_freezepanel.h"
 #include "tf_gamestats_shared.h"
-#include "tf_mainmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -76,7 +75,7 @@ TFStatType_t g_statPriority[] = { TFSTAT_HEADSHOTS, TFSTAT_BACKSTABS, TFSTAT_MAX
 	TFSTAT_DAMAGE, TFSTAT_DOMINATIONS, TFSTAT_INVULNS, TFSTAT_BUILDINGSDESTROYED, TFSTAT_CAPTURES, TFSTAT_DEFENSES, TFSTAT_REVENGE, TFSTAT_TELEPORTS, TFSTAT_BUILDINGSBUILT, 
 	TFSTAT_HEALTHLEACHED, TFSTAT_POINTSSCORED, TFSTAT_PLAYTIME };
 // stat types that we don't display records for, kept in this list just so we can assert all stats appear in one list or the other
-TFStatType_t g_statUnused[] = { TFSTAT_DEATHS, TFSTAT_UNDEFINED, TFSTAT_SHOTS_FIRED, TFSTAT_SHOTS_HIT, TFSTAT_SUICIDES, TFSTAT_ENV_DEATHS, TFSTAT_BONUS };
+TFStatType_t g_statUnused[] = { TFSTAT_DEATHS, TFSTAT_UNDEFINED, TFSTAT_SHOTS_FIRED, TFSTAT_SHOTS_HIT };
 
 // localization keys for stat panel text, must be in same order as TFStatType_t
 const char *g_szLocalizedRecordText[] =
@@ -103,9 +102,6 @@ const char *g_szLocalizedRecordText[] =
 	"#StatPanel_BuildingsBuilt",
 	"#StatPanel_SentryKills",		
 	"#StatPanel_Teleports"
-	"[environmental deaths]",
-	"[suicides]",
-	"[bonus]"
 };
 
 
@@ -373,7 +369,7 @@ void CTFStatPanel::WriteStats( void )
 		const ClassStats_t &stat = m_aClassStats[ i ];
 
 		// strip out any garbage class data
-		if ( ( stat.iPlayerClass > TF_CLASS_COUNT ) || ( stat.iPlayerClass < TF_FIRST_NORMAL_CLASS ) )
+		if ( ( stat.iPlayerClass > TF_LAST_NORMAL_CLASS ) || ( stat.iPlayerClass < TF_FIRST_NORMAL_CLASS ) )
 			continue;
 
 		CDmxElement *pClass = CreateDmxElement( "ClassStats_t" );
@@ -522,7 +518,7 @@ int CTFStatPanel::CalcCRC( int iSteamID )
 	// make a CRC of stat data
 	CRC32_ProcessBuffer( &crc, &iSteamID, sizeof( iSteamID ) );
 
-	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass <= TF_CLASS_ENGINEER; iClass++ )
+	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass <= TF_LAST_NORMAL_CLASS; iClass++ )
 	{
 		// add each class' data to the CRC
 		ClassStats_t &classStats = GetClassStats( iClass );
@@ -588,7 +584,7 @@ void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFSt
 	pLabel->GetText( szOriginalSummary, sizeof( szOriginalSummary ) );
 	const wchar_t *pszPlayerClass = L"undefined";
 
-	if ( ( iClass >= TF_FIRST_NORMAL_CLASS ) && ( iClass <= TF_CLASS_COUNT ) )
+	if ( ( iClass >= TF_FIRST_NORMAL_CLASS ) && ( iClass <= TF_LAST_NORMAL_CLASS ) )
 	{
 		pszPlayerClass = g_pVGuiLocalize->Find( g_aPlayerClassNames[ iClass ] );
 	}
@@ -614,7 +610,7 @@ void CTFStatPanel::FireGameEvent( IGameEvent * event )
 
 	if ( Q_strcmp( "player_spawn", pEventName ) == 0 )
 	{
-		//Msg( "got player_spawn event\n" );
+		Msg( "got player_spawn event\n" );
 		int iUserID = event->GetInt( "userid" );
 		if ( !C_TFPlayer::GetLocalTFPlayer() || ( C_TFPlayer::GetLocalTFPlayer()->GetUserID() != iUserID ) )
 			return;
@@ -741,7 +737,7 @@ ClassStats_t &CTFStatPanel::GetClassStats( int iClass )
 {
 	Assert( statPanel );
 	Assert( iClass >= TF_FIRST_NORMAL_CLASS );
-	Assert( iClass <= TF_CLASS_COUNT );
+	Assert( iClass <= TF_LAST_NORMAL_CLASS );
 	int i;
 	for( i = 0; i < statPanel->m_aClassStats.Count(); i++ )
 	{
@@ -761,11 +757,6 @@ ClassStats_t &CTFStatPanel::GetClassStats( int iClass )
 void CTFStatPanel::UpdateStatSummaryPanel()
 {
 	GStatsSummaryPanel()->SetStats( m_aClassStats );
-}
-
-void CTFStatPanel::UpdateMainMenuDialog()
-{
-	MAINMENU_ROOT->SetStats(m_aClassStats);
 }
 
 //-----------------------------------------------------------------------------
@@ -817,8 +808,8 @@ void CTFStatPanel::MsgFunc_PlayerStatsUpdate( bf_read &msg )
 		Assert( false );
 	}
 
-	Assert( iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_CLASS_COUNT );
-	if ( iClass < TF_FIRST_NORMAL_CLASS || iClass > TF_CLASS_COUNT )
+	Assert( iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_LAST_NORMAL_CLASS );
+	if ( iClass < TF_FIRST_NORMAL_CLASS || iClass > TF_LAST_NORMAL_CLASS )
 		return;
 	
 	m_iClassCurrentLife = iClass;

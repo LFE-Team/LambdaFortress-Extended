@@ -150,19 +150,6 @@ void C_PropJeep::DampenEyePosition( Vector &vecVehicleEyePos, QAngle &vecVehicle
 
 	// Blend up/down motion.
 	DampenUpMotion( vecVehicleEyePos, vecVehicleEyeAngles, flFrameTime );
-#elif TF_CLASSIC_CLIENT
-	// Get the frametime. (Check to see if enough time has passed to warrent dampening).
-	float flFrameTime = gpGlobals->frametime;
-
-	if ( flFrameTime < JEEP_FRAMETIME_MIN )
-	{
-		vecVehicleEyePos = m_vecLastEyePos;
-		DampenUpMotion( vecVehicleEyePos, vecVehicleEyeAngles, 0.0f );
-		return;
-	}
-
-	// Blend up/down motion.
-	DampenUpMotion( vecVehicleEyePos, vecVehicleEyeAngles, flFrameTime );
 #endif
 }
 

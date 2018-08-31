@@ -83,8 +83,6 @@ public:
 	virtual void	SharedSpawn(); // Shared between client and server.
 	virtual bool	GetSteamID( CSteamID *pID );
 
-	virtual const Vector &GetRenderOrigin();
-
 	// IClientEntity overrides.
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
@@ -118,7 +116,7 @@ public:
 	// Handle view smoothing when going up stairs
 	void				SmoothViewOnStairs( Vector& eyeOrigin );
 	virtual float		CalcRoll (const QAngle& angles, const Vector& velocity, float rollangle, float rollspeed);
-	virtual void CalcViewRoll(QAngle& eyeAngles);
+	void				CalcViewRoll( QAngle& eyeAngles );
 	void				CreateWaterEffects( void );
 
 	virtual void			SetPlayerUnderwater( bool state );
@@ -388,7 +386,7 @@ public:
 	bool					ShouldAnnounceAchievement( void ){ return m_flNextAchievementAnnounceTime < gpGlobals->curtime; }
 	void					SetNextAchievementAnnounceTime( float flTime ){ m_flNextAchievementAnnounceTime = flTime; }
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 	// Wearables
 	virtual void			UpdateWearables();
 	C_EconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
@@ -446,8 +444,10 @@ public:
 	float			m_flConstraintSpeedFactor;
 
 protected:
-	virtual void CalcPlayerView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
-	virtual void CalcVehicleView(IClientVehicle* pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,float& zNear, float& zFar, float& fov);
+
+	void				CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	void				CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,
+							float& zNear, float& zFar, float& fov );
 	virtual void		CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
 	void				CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
@@ -488,8 +488,6 @@ protected:
 	float			m_flStepSoundTime;
 	bool			m_IsFootprintOnLeft;
 
-	// Player flashlight dynamic light pointers
-	CFlashlightEffect *m_pFlashlight;
 private:
 	// Make sure no one calls this...
 	C_BasePlayer& operator=( const C_BasePlayer& src );
@@ -526,6 +524,10 @@ private:
 	EHANDLE			m_pCurrentVguiScreen;
 
 	bool			m_bFiredWeapon;
+
+
+	// Player flashlight dynamic light pointers
+	CFlashlightEffect *m_pFlashlight;
 
 	typedef CHandle<C_BaseCombatWeapon> CBaseCombatWeaponHandle;
 	CNetworkVar( CBaseCombatWeaponHandle, m_hLastWeapon );
@@ -611,7 +613,7 @@ protected:
 	int				m_nForceVisionFilterFlags; // Force our vision filter to a specific setting
 	int				m_nLocalPlayerVisionFlags;
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 	// Wearables
 	CUtlVector<CHandle<C_EconWearable > >	m_hMyWearables;
 #endif

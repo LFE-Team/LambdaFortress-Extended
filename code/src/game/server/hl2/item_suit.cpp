@@ -17,10 +17,6 @@
 #include "gamerules.h"
 #include "items.h"
 
-#ifdef TF_CLASSIC
-#include "tf_gamerules.h"
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -34,35 +30,28 @@ public:
 	void Spawn( void )
 	{ 
 		Precache( );
-		#ifdef TF_CLASSIC
-		if ( TFGameRules()->IsInHL1Map())
-			SetModel( "models/w_suit.mdl" );	//If we're in HL1
-		else if (CBaseEntity::GetModelName() == NULL_STRING)
-			SetModel( "models/items/hevsuit.mdl" );
-		else
-			SetModel( "models/items/hevsuit.mdl" );
-		#else
 		SetModel( "models/items/hevsuit.mdl" );
-		#endif
+		char szMapName[256];
+		Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+		Q_strlower(szMapName);
 
+		if( !Q_strnicmp( szMapName, "c1a0d", 5 ) )
+		{
+			PrecacheModel( "models/w_suit_hl1.mdl" );
+			SetModel( "models/w_suit_hl1.mdl" );
+		}
+		else if( !Q_strnicmp( szMapName, "t0a0", 4 ) )
+		{
+			PrecacheModel( "models/w_suit_hl1.mdl" );
+			SetModel( "models/w_suit_hl1.mdl" );
+		}
 		BaseClass::Spawn( );
 		
 		CollisionProp()->UseTriggerBounds( false, 0 );
 	}
 	void Precache( void )
 	{
-		#ifdef TF_CLASSIC
-		if ( TFGameRules()->IsInHL1Map())
-			SetModelName(AllocPooledString("models/w_suit.mdl"));	//If we're in HL1
-		else if (CBaseEntity::GetModelName() == NULL_STRING)
-			SetModelName( AllocPooledString("models/items/hevsuit.mdl") );
-		else
-			SetModelName( CBaseEntity::GetModelName() );
-
-		PrecacheModel( STRING( GetModelName( )) );
-		#else
 		PrecacheModel ("models/items/hevsuit.mdl");
-		#endif
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{

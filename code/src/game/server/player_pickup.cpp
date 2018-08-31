@@ -24,11 +24,7 @@ void Pickup_ForcePlayerToDropThisObject( CBaseEntity *pTarget )
 
 	if ( pPhysics->GetGameFlags() & FVPHYSICS_PLAYER_HELD )
 	{
-#ifdef TF_CLASSIC
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer( pTarget->GetAbsOrigin() );
-#else
 		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif
 		pPlayer->ForceDropOfCarriedPhysObjects( pTarget );
 	}
 }
@@ -121,7 +117,7 @@ AngularImpulse Pickup_PhysGunLaunchAngularImpulse( CBaseEntity *pObject, PhysGun
 
 Vector Pickup_DefaultPhysGunLaunchVelocity( const Vector &vecForward, float flMass )
 {
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	// Calculate the velocity based on physcannon rules
 	float flForceMax = physcannon_maxforce.GetFloat();
 	float flForce = flForceMax;

@@ -52,8 +52,6 @@ public:
 		ListenForGameEvent( "teamplay_round_stalemate" );
 		ListenForGameEvent( "teamplay_round_win" );
 		ListenForGameEvent( "teamplay_game_over" );
-		ListenForGameEvent( "npc_death" );
-		ListenForGameEvent( "npc_hurt" );
 
 		return true;
 	}
@@ -166,9 +164,9 @@ protected:
 			}
  
  			// Assist kill
-			int assistid = event->GetInt( "assister" );
-			CBasePlayer *pAssister = UTIL_PlayerByUserId( assistid );
-
+ 			int assistid = event->GetInt( "assister" );
+ 			CBasePlayer *pAssister = UTIL_PlayerByUserId( assistid );
+ 
  			if ( pAssister )
  			{
  				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kill assist\" against \"%s<%i><%s><%s>\" (assister_position \"%d %d %d\") (attacker_position \"%d %d %d\") (victim_position \"%d %d %d\")\n",    

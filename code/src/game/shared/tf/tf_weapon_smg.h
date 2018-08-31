@@ -13,7 +13,6 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFSMG C_TFSMG
-#define CTFSMG_Primary C_TFSMG_Primary
 #endif
 
 //=============================================================================
@@ -25,13 +24,18 @@ class CTFSMG : public CTFWeaponBaseGun
 public:
 
 	DECLARE_CLASS( CTFSMG, CTFWeaponBaseGun );
-	DECLARE_NETWORKCLASS();
+	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
+
+// Server specific.
+#ifdef GAME_DLL
+	DECLARE_DATADESC();
+#endif
 
 	CTFSMG() {}
 	~CTFSMG() {}
 
-	virtual int		GetWeaponID( void ) const { return TF_WEAPON_SMG; }
+	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_SMG; }
 
 private:
 

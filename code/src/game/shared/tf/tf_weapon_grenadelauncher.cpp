@@ -5,27 +5,58 @@
 //=============================================================================
 #include "cbase.h"
 #include "tf_weapon_grenadelauncher.h"
+#include "tf_fx_shared.h"
+
+// Client specific.
+#ifdef CLIENT_DLL
+#include "c_tf_player.h"
+// Server specific.
+#else
+#include "tf_player.h"
+#include "tf_gamestats.h"
+#endif
 
 //=============================================================================
 //
 // Weapon Grenade Launcher tables.
 //
-CREATE_SIMPLE_WEAPON_TABLE( TFGrenadeLauncher, tf_weapon_grenadelauncher )
+IMPLEMENT_NETWORKCLASS_ALIASED( TFGrenadeLauncher, DT_WeaponGrenadeLauncher )
 
-//=============================================================================
+BEGIN_NETWORK_TABLE( CTFGrenadeLauncher, DT_WeaponGrenadeLauncher )
+END_NETWORK_TABLE()
 
-#define TF_GRENADE_LAUNCER_VEL 1200
+BEGIN_PREDICTION_DATA( CTFGrenadeLauncher )
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( tf_weapon_grenadelauncher, CTFGrenadeLauncher );
+PRECACHE_WEAPON_REGISTER( tf_weapon_grenadelauncher );
+
+// Server specific.
+#ifndef CLIENT_DLL
+BEGIN_DATADESC( CTFGrenadeLauncher )
+END_DATADESC()
+#endif
+
+#define TF_GRENADE_LAUNCER_MIN_VEL 1200
 
 //=============================================================================
 //
 // Weapon Grenade Launcher functions.
 //
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+//-----------------------------------------------------------------------------
 CTFGrenadeLauncher::CTFGrenadeLauncher()
 {
 	m_bReloadsSingly = true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+//-----------------------------------------------------------------------------
 CTFGrenadeLauncher::~CTFGrenadeLauncher()
 {
 }
@@ -41,7 +72,5 @@ void CTFGrenadeLauncher::Spawn( void )
 
 float CTFGrenadeLauncher::GetProjectileSpeed( void )
 {
-	float flVelocity = TF_GRENADE_LAUNCER_VEL;
-	CALL_ATTRIB_HOOK_FLOAT( flVelocity, mult_projectile_speed );
-	return flVelocity;
+	return TF_GRENADE_LAUNCER_MIN_VEL;
 }

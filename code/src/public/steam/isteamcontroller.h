@@ -109,7 +109,7 @@ public:
 	virtual void SetOverrideMode( const char *pchMode ) = 0;
 };
 
-#define STEAMCONTROLLER_INTERFACE_VERSION "SteamController005"
+#define STEAMCONTROLLER_INTERFACE_VERSION "STEAMCONTROLLER_INTERFACE_VERSION"
 
 // callbacks
 #if defined( VALVE_CALLBACK_PACK_SMALL )

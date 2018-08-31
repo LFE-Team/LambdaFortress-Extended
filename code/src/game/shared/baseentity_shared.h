@@ -49,10 +49,10 @@ extern ConVar hl2_episodic;
 //-----------------------------------------------------------------------------
 enum InvalidatePhysicsBits_t
 {
-	POSITION_CHANGED	= 0x1,
-	ANGLES_CHANGED		= 0x2,
-	VELOCITY_CHANGED	= 0x4,
-	ANIMATION_CHANGED	= 0x8,
+	POSITION_CHANGED = 0x1,
+	ANGLES_CHANGED = 0x2,
+	VELOCITY_CHANGED = 0x4,
+	ANIMATION_CHANGED = 0x8,
 };
 
 
@@ -63,19 +63,19 @@ enum InvalidatePhysicsBits_t
 #include "baseentity.h"
 
 #ifdef HL2_EPISODIC
-	#include "info_darknessmode_lightsource.h"
+#include "info_darknessmode_lightsource.h"
 #endif // HL2_EPISODIC
 
 #endif
 
 #if !defined( NO_ENTITY_PREDICTION )
 // CBaseEntity inlines
-inline bool CBaseEntity::IsPlayerSimulated( void ) const
+inline bool CBaseEntity::IsPlayerSimulated(void) const
 {
 	return m_bIsPlayerSimulated;
 }
 
-inline CBasePlayer *CBaseEntity::GetSimulatingPlayer( void )
+inline CBasePlayer *CBaseEntity::GetSimulatingPlayer(void)
 {
 	return m_hPlayerSimulationOwner;
 }
@@ -99,14 +99,14 @@ inline int CBaseEntity::GetCollisionGroup() const
 	return m_CollisionGroup;
 }
 
-inline int	CBaseEntity::GetFlags( void ) const
+inline int	CBaseEntity::GetFlags(void) const
 {
 	return m_fFlags;
 }
 
-inline bool CBaseEntity::IsAlive( void )
+inline bool CBaseEntity::IsAlive(void)
 {
-	return m_lifeState == LIFE_ALIVE; 
+	return m_lifeState == LIFE_ALIVE;
 }
 
 inline CBaseEntity	*CBaseEntity::GetOwnerEntity() const
@@ -119,7 +119,7 @@ inline CBaseEntity	*CBaseEntity::GetEffectEntity() const
 	return m_hEffectEntity.Get();
 }
 
-inline int CBaseEntity::GetPredictionRandomSeed( bool bUseUnSyncedServerPlatTime )
+inline int CBaseEntity::GetPredictionRandomSeed(bool bUseUnSyncedServerPlatTime)
 {
 #ifdef GAME_DLL
 	return bUseUnSyncedServerPlatTime ? m_nPredictionRandomSeedServer : m_nPredictionRandomSeed;
@@ -128,12 +128,12 @@ inline int CBaseEntity::GetPredictionRandomSeed( bool bUseUnSyncedServerPlatTime
 #endif
 }
 
-inline CBasePlayer *CBaseEntity::GetPredictionPlayer( void )
+inline CBasePlayer *CBaseEntity::GetPredictionPlayer(void)
 {
 	return m_pPredictionPlayer;
 }
 
-inline void CBaseEntity::SetPredictionPlayer( CBasePlayer *player )
+inline void CBaseEntity::SetPredictionPlayer(CBasePlayer *player)
 {
 	m_pPredictionPlayer = player;
 }
@@ -149,24 +149,24 @@ inline bool CBaseEntity::IsAnimatedEveryTick() const
 	return m_bAnimatedEveryTick;
 }
 
-inline void CBaseEntity::SetSimulatedEveryTick( bool sim )
+inline void CBaseEntity::SetSimulatedEveryTick(bool sim)
 {
-	if ( m_bSimulatedEveryTick != sim )
+	if (m_bSimulatedEveryTick != sim)
 	{
 		m_bSimulatedEveryTick = sim;
 #ifdef CLIENT_DLL
-		Interp_UpdateInterpolationAmounts( GetVarMapping() );
+		Interp_UpdateInterpolationAmounts(GetVarMapping());
 #endif
 	}
 }
 
-inline void CBaseEntity::SetAnimatedEveryTick( bool anim )
+inline void CBaseEntity::SetAnimatedEveryTick(bool anim)
 {
-	if ( m_bAnimatedEveryTick != anim )
+	if (m_bAnimatedEveryTick != anim)
 	{
 		m_bAnimatedEveryTick = anim;
 #ifdef CLIENT_DLL
-		Interp_UpdateInterpolationAmounts( GetVarMapping() );
+		Interp_UpdateInterpolationAmounts(GetVarMapping());
 #endif
 	}
 }
@@ -181,38 +181,38 @@ inline float CBaseEntity::GetSimulationTime() const
 	return m_flSimulationTime;
 }
 
-inline void CBaseEntity::SetAnimTime( float at )
+inline void CBaseEntity::SetAnimTime(float at)
 {
 	m_flAnimTime = at;
 }
 
-inline void CBaseEntity::SetSimulationTime( float st )
+inline void CBaseEntity::SetSimulationTime(float st)
 {
 	m_flSimulationTime = st;
 }
 
-inline int CBaseEntity::GetEffects( void ) const
-{ 
-	return m_fEffects; 
+inline int CBaseEntity::GetEffects(void) const
+{
+	return m_fEffects;
 }
 
-inline void CBaseEntity::RemoveEffects( int nEffects ) 
-{ 
+inline void CBaseEntity::RemoveEffects(int nEffects)
+{
 #if !defined( CLIENT_DLL )
 #ifdef HL2_EPISODIC
-	if ( nEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT) )
+	if (nEffects & (EF_BRIGHTLIGHT | EF_DIMLIGHT))
 	{
 		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
+		if (!IsPlayer())
 		{
-			RemoveEntityFromDarknessCheck( this );
+			RemoveEntityFromDarknessCheck(this);
 		}
 	}
 #endif // HL2_EPISODIC
 #endif // !CLIENT_DLL
 
 	m_fEffects &= ~nEffects;
-	if ( nEffects & EF_NODRAW )
+	if (nEffects & EF_NODRAW)
 	{
 #ifndef CLIENT_DLL
 		NetworkProp()->MarkPVSInformationDirty();
@@ -223,16 +223,16 @@ inline void CBaseEntity::RemoveEffects( int nEffects )
 	}
 }
 
-inline void CBaseEntity::ClearEffects( void ) 
-{ 
+inline void CBaseEntity::ClearEffects(void)
+{
 #if !defined( CLIENT_DLL )
 #ifdef HL2_EPISODIC
-	if ( m_fEffects & (EF_BRIGHTLIGHT|EF_DIMLIGHT) )
+	if (m_fEffects & (EF_BRIGHTLIGHT | EF_DIMLIGHT))
 	{
 		// Hack for now, to avoid player emitting radius with his flashlight
-		if ( !IsPlayer() )
+		if (!IsPlayer())
 		{
-			RemoveEntityFromDarknessCheck( this );
+			RemoveEntityFromDarknessCheck(this);
 		}
 	}
 #endif // HL2_EPISODIC
@@ -240,15 +240,15 @@ inline void CBaseEntity::ClearEffects( void )
 
 	m_fEffects = 0;
 #ifndef CLIENT_DLL
-		DispatchUpdateTransmitState();
+	DispatchUpdateTransmitState();
 #else
-		UpdateVisibility();
+	UpdateVisibility();
 #endif
 }
 
-inline bool CBaseEntity::IsEffectActive( int nEffects ) const
-{ 
-	return (m_fEffects & nEffects) != 0; 
+inline bool CBaseEntity::IsEffectActive(int nEffects) const
+{
+	return (m_fEffects & nEffects) != 0;
 }
 
 // Shared EntityMessage between game and client .dlls
@@ -259,13 +259,13 @@ extern float k_flMaxEntityEulerAngle;
 extern float k_flMaxEntitySpeed;
 extern float k_flMaxEntitySpinRate;
 
-inline bool IsEntityCoordinateReasonable ( const vec_t c )
+inline bool IsEntityCoordinateReasonable(const vec_t c)
 {
 	float r = k_flMaxEntityPosCoord;
 	return c > -r && c < r;
 }
 
-inline bool IsEntityPositionReasonable( const Vector &v )
+inline bool IsEntityPositionReasonable(const Vector &v)
 {
 	float r = k_flMaxEntityPosCoord;
 	return
@@ -278,9 +278,9 @@ inline bool IsEntityPositionReasonable( const Vector &v )
 //   -1 - velocity is really, REALLY bad and probably should be rejected.
 //   0  - velocity was suspicious and clamped.
 //   1  - velocity was OK and not modified
-extern int CheckEntityVelocity( Vector &v );
+extern int CheckEntityVelocity(Vector &v);
 
-inline bool IsEntityQAngleReasonable( const QAngle &q )
+inline bool IsEntityQAngleReasonable(const QAngle &q)
 {
 	float r = k_flMaxEntityEulerAngle;
 	return
@@ -290,7 +290,7 @@ inline bool IsEntityQAngleReasonable( const QAngle &q )
 }
 
 // Angular velocity in exponential map form
-inline bool IsEntityAngularVelocityReasonable( const Vector &q )
+inline bool IsEntityAngularVelocityReasonable(const Vector &q)
 {
 	float r = k_flMaxEntitySpinRate;
 	return
@@ -300,7 +300,7 @@ inline bool IsEntityAngularVelocityReasonable( const Vector &q )
 }
 
 // Angular velocity of each Euler angle.
-inline bool IsEntityQAngleVelReasonable( const QAngle &q )
+inline bool IsEntityQAngleVelReasonable(const QAngle &q)
 {
 	float r = k_flMaxEntitySpinRate;
 	return

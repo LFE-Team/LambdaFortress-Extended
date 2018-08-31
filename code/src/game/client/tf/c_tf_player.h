@@ -21,29 +21,18 @@
 #include "hintsystem.h"
 #include "c_playerattachedmodel.h"
 #include "iinput.h"
-#include "tf_weapon_medigun.h"
-#include "ihasattributes.h"
-#include "c_tf_spymask.h"
 #include "hl_movedata.h"
-#include "beamdraw.h"
 
 class C_MuzzleFlashModel;
 class C_BaseObject;
 
 extern ConVar tf_medigun_autoheal;
 extern ConVar cl_autorezoom;
-extern ConVar cl_autoreload;
-extern ConVar cl_flipviewmodels;
-
-extern ConVar tf2c_setmerccolor_r;
-extern ConVar tf2c_setmerccolor_g;
-extern ConVar tf2c_setmerccolor_b;
-extern ConVar tf2c_setmercparticle;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class C_TFPlayer : public C_BasePlayer, public IHasAttributes
+class C_TFPlayer : public C_BasePlayer
 {
 public:
 
@@ -66,17 +55,11 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual void ProcessMuzzleFlashEvent();
 	virtual void ValidateModelIndex( void );
-	virtual void NotifyShouldTransmit( ShouldTransmitState_t state );
 
 	virtual Vector GetObserverCamOrigin( void );
 	virtual int DrawModel( int flags );
-	virtual void AddEntity( void );
+
 	virtual bool CreateMove( float flInputSampleTime, CUserCmd *pCmd );
-
-	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles; }
-
-	// Called when not in tactical mode. Allows view to be overriden for things like driving a tank.
-	virtual void				OverrideView( CViewSetup *pSetup );
 
 	virtual bool IsAllowedToSwitchWeapons( void );
 
@@ -86,14 +69,9 @@ public:
 	virtual void GetToolRecordingState( KeyValues *msg );
 
 	CTFWeaponBase *GetActiveTFWeapon( void ) const;
-	bool		 IsActiveTFWeapon(int iWeaponID);
 
 	virtual void Simulate( void );
 	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options );
-	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
-
-	void LoadInventory(void);
-	void EditInventory(int iSlot, int iWeapon);
 
 	void FireBullet( const FireBulletsInfo_t &info, bool bDoEffects, int nDamageType, int nCustomDamageType = TF_DMG_CUSTOM_NONE );
 
@@ -138,23 +116,18 @@ public:
 	bool			StartGestureSceneEvent( CSceneEventInfo *info, CChoreoScene *scene, CChoreoEvent *event, CChoreoActor *actor, CBaseEntity *pTarget );
 	void			TurnOnTauntCam( void );
 	void			TurnOffTauntCam( void );
-	void			TauntCamInterpolation( void );
-	bool			InTauntCam( void ) { return m_bWasTaunting; }
-	virtual void	ThirdPersonSwitch( bool bThirdperson );
 
 	virtual void	InitPhonemeMappings();
 
-	virtual void	GetGlowEffectColor( byte *r, byte *g, byte *b, byte *a );
-
 	// Gibs.
 	void InitPlayerGibs( void );
-	void CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVelocity, float flImpactScale, bool bBurning = false );
+	void CreatePlayerGibs( const Vector &vecOrigin, const Vector &vecVelocity, float flImpactScale );
 	void DropPartyHat( breakablepropparams_t &breakParams, Vector &vecBreakVelocity );
 
 	int	GetObjectCount( void );
 	C_BaseObject *GetObject( int index );
-	C_BaseObject *GetObjectOfType( int iObjectType, int iObjectMode );
-	int GetNumObjects( int iObjectType, int iObjectMode );
+	C_BaseObject *GetObjectOfType( int iObjectType );
+	int GetNumObjects( int iObjectType );
 
 	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 
@@ -165,7 +138,7 @@ public:
 		const Vector& decalCenter, int hitbox, int decalIndex, bool doTrace, trace_t& tr, int maxLODToDecal = ADDDECAL_TO_ALL_LODS );
 
 	virtual void CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
-	virtual void CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	virtual void CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual Vector GetChaseCamViewOffset( CBaseEntity *target );
 
 	void ClientPlayerRespawn( void );
@@ -182,7 +155,8 @@ public:
 
 	void			StartBurningSound( void );
 	void			StopBurningSound( void );
-	void			UpdateRecentlyTeleportedEffect( void );
+	void			OnAddTeleported( void );
+	void			OnRemoveTeleported( void );
 
 	bool			CanShowClassMenu( void );
 
@@ -194,14 +168,12 @@ public:
 
 	CUtlVector<EHANDLE>		*GetSpawnedGibs( void ) { return &m_hSpawnedGibs; }
 
-	Vector 			GetClassEyeHeight( void );
+	const Vector& 	GetClassEyeHeight( void );
 
 	void			ForceUpdateObjectHudState( void );
 
 	bool			GetMedigunAutoHeal( void ){ return tf_medigun_autoheal.GetBool(); }
 	bool			ShouldAutoRezoom( void ){ return cl_autorezoom.GetBool(); }
-	bool			ShouldAutoReload( void ){ return cl_autoreload.GetBool(); }
-	bool			ShouldFlipViewModel( void ) { return cl_flipviewmodels.GetBool(); }
 
 	bool			IsSearchingSpawn( void ) { return m_bSearchingSpawn; }
 
@@ -209,21 +181,12 @@ public:
 	LadderMove_t		*GetLadderMove() { return &m_LadderMove; }
 	virtual void		ExitLadder();
 
-	// Flashlight
-	void	Flashlight( void );
-	void	UpdateFlashlight( void );
-
-	void ReleaseFlashlight( void );
-	Beam_t	*m_pFlashlightBeam;
-
-	virtual bool ShouldReceiveProjectedTextures( int flags );
 public:
 	// Shared functions
 	void			TeamFortress_SetSpeed();
 	bool			HasItem( void );					// Currently can have only one item at a time.
 	void			SetItem( C_TFItem *pItem );
 	C_TFItem		*GetItem( void );
-	bool			IsAllowedToPickUpFlag( void );
 	bool			HasTheFlag( void );
 	float			GetCritMult( void ) { return m_Shared.GetCritMult(); }
 
@@ -237,28 +200,14 @@ public:
 	virtual bool		Weapon_ShouldSetLast( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon );
 	virtual	bool		Weapon_Switch( C_BaseCombatWeapon *pWeapon, int viewmodelindex = 0 );
 
-	CWeaponMedigun		*GetMedigun( void );
 	CTFWeaponBase		*Weapon_OwnsThisID( int iWeaponID );
 	CTFWeaponBase		*Weapon_GetWeaponByType( int iType );
-	virtual bool		Weapon_SlotOccupied( CBaseCombatWeapon *pWeapon );
-	virtual CBaseCombatWeapon *Weapon_GetSlot( int slot ) const;
-	C_EconEntity		*GetEntityForLoadoutSlot( int iSlot );
-	C_EconWearable		*GetWearableForLoadoutSlot( int iSlot );
 
 	virtual void		GetStepSoundVelocities( float *velwalk, float *velrun );
 	virtual void		SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalking );
 
 	bool	DoClassSpecialSkill( void );
 	bool	CanGoInvisible( void );
-
-	int		GetMaxAmmo( int iAmmoIndex, int iClassNumber = -1 );
-
-	bool	CanPickupBuilding( C_BaseObject *pObject );
-
-	virtual CAttributeManager *GetAttributeManager( void ) { return &m_AttributeManager; }
-	virtual CAttributeContainer *GetAttributeContainer( void ) { return NULL; }
-	virtual CBaseEntity *GetAttributeOwner( void ) { return NULL; }
-	virtual void ReapplyProvision( void ) { /*Do nothing*/ };
 
 public:
 	// Ragdolls.
@@ -268,7 +217,7 @@ public:
 	Vector m_vecRagdollVelocity;
 
 	// Objects
-	int CanBuild( int iObjectType, int iObjectMode );
+	int CanBuild( int iObjectType );
 	CUtlVector< CHandle<C_BaseObject> > m_aObjects;
 
 	virtual CStudioHdr *OnNewModel( void );
@@ -287,15 +236,6 @@ public:
 
 	virtual	IMaterial *GetHeadLabelMaterial( void );
 
-	virtual void FireGameEvent( IGameEvent *event );
-
-	void UpdateSpyMask( void );
-
-	void UpdateTypingBubble( void );
-	void UpdateOverhealEffect( void );
-
-	virtual const Vector &GetItemTintColor( void ) { return m_vecPlayerColor; }
-
 protected:
 
 	void ResetFlexWeights( CStudioHdr *pStudioHdr );
@@ -307,20 +247,13 @@ private:
 	void OnPlayerClassChange( void );
 	void UpdatePartyHat( void );
 
-	bool CanLightCigarette( void );
-
 	void InitInvulnerableMaterial( void );
 
 	bool				m_bWasTaunting;
-	float				m_flTauntOffTime;
 	CameraThirdData_t	m_TauntCameraData;
 
 	QAngle				m_angTauntPredViewAngles;
 	QAngle				m_angTauntEngViewAngles;
-
-public:
-	QAngle		m_vecUseAngles;
-	Vector				m_vecPlayerColor;
 
 private:
 
@@ -418,8 +351,6 @@ public:
 	bool			m_bDisguised;
 	int				m_iPreviousMetal;
 
-	EHANDLE			m_hOldActiveWeapon;
-
 	int GetNumActivePipebombs( void );
 
 	int				m_iSpyMaskBodygroup;
@@ -427,21 +358,7 @@ public:
 	bool			m_bUpdatePartyHat;
 	CHandle<C_PlayerAttachedModel>	m_hPartyHat;
 
-	int				m_nForceTauntCam;
-	float			m_flLastDamageTime;
-
 	bool			m_bSearchingSpawn;
-
-	CHandle<C_TFSpyMask> m_hSpyMask;
-	CHandle<C_PlayerAttachedModel> m_hPowerupShield;
-
-	bool			m_bTyping;
-	bool			m_bHasLongJump;
-	CNewParticleEffect	*m_pTypingEffect;
-
-	CNewParticleEffect *m_pOverhealEffect;
-
-	CAttributeManager m_AttributeManager;
 
 	// HL2 Ladder related data
 	EHANDLE			m_hLadder;

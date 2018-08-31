@@ -36,14 +36,13 @@
 #include "basemultiplayerplayer.h"
 #include "voice_gamemgr.h"
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#if defined (TF_DLL) || defined (TF_CLASSIC)
 #include "tf_player.h"
 #include "tf_gamerules.h"
-
 #endif
 
-#ifdef TF_CLASSIC
-#include "tf_weapon_physcannon.h"
+#ifdef HL2_DLL
+#include "weapon_physcannon.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -64,7 +63,7 @@ enum eAllowPointServerCommand {
 	eAllowAlways
 };
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 // The default value here should match the default of the convar
 eAllowPointServerCommand sAllowPointServerCommand = eAllowOfficial;
 #else
@@ -84,7 +83,7 @@ void sv_allow_point_servercommand_changed( IConVar *pConVar, const char *pOldStr
 	{
 		sAllowPointServerCommand = eAllowAlways;
 	}
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	else if ( V_strcasecmp ( pNewValue, "official" ) == 0 )
 	{
 		sAllowPointServerCommand = eAllowOfficial;
@@ -97,7 +96,7 @@ void sv_allow_point_servercommand_changed( IConVar *pConVar, const char *pOldStr
 }
 
 ConVar sv_allow_point_servercommand ( "sv_allow_point_servercommand",
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
                                       // The default value here should match the default of the convar
                                       "official",
 #else
@@ -107,7 +106,7 @@ ConVar sv_allow_point_servercommand ( "sv_allow_point_servercommand",
                                       FCVAR_NONE,
                                       "Allow use of point_servercommand entities in map. Potentially dangerous for untrusted maps.\n"
                                       "  disallow : Always disallow\n"
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
                                       "  official : Allowed for valve maps only\n"
 #endif // TF_DLL
                                       "  always   : Allow for all maps", sv_allow_point_servercommand_changed );
@@ -625,7 +624,7 @@ void CPointServerCommand::InputCommand( inputdata_t& inputdata )
 		return;
 
 	bool bAllowed = ( sAllowPointServerCommand == eAllowAlways );
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	if ( sAllowPointServerCommand == eAllowOfficial )
 	{
 		bAllowed = TFGameRules() && TFGameRules()->IsValveMap();
@@ -854,121 +853,7 @@ CON_COMMAND( say_team, "Display player message to team" )
 	}
 }
 
-#ifdef TF_CLASSIC
-// Add class name prefixes to show in the "give" command autocomplete here
-static ClassNamePrefix_t s_pEntityPrefixes[] =
-{
-	ClassNamePrefix_t( "item_", true ),
-	ClassNamePrefix_t( "weapon_", true ),
-};
 
-int GiveAutoComplete( const char *partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH])
-{
-	// Find the first space in our input
-	const char *firstSpace = V_strstr(partial, " ");
-	if(!firstSpace)
-		return 0;
-
-	int commandLength = firstSpace - partial;
-
-	// Extract the command name from the input
-	char commandName[COMMAND_COMPLETION_ITEM_LENGTH];
-	V_StrSlice(partial, 0, commandLength, commandName, sizeof(commandName));
-
-	// Calculate the length of the command string (minus the command name)
-	partial += commandLength + 1;
-	int partialLength = V_strlen(partial);
-
-	// Grab the factory dictionary
-	if(!EntityFactoryDictionary())
-		return 0;
-
-	const EntityFactoryDict_t &factoryDict = EntityFactoryDictionary()->GetFactoryDictionary();
-	int numMatches = 0;
-
-	// Iterate through all entity factories
-	for(int i = factoryDict.First(); i != factoryDict.InvalidIndex() && numMatches < COMMAND_COMPLETION_MAXITEMS; i = factoryDict.Next(i))
-	{
-		const char *pszClassName = factoryDict.GetElementName(i);
-
-		// See if this entity classname has a prefix that we show in the
-		// autocomplete
-		// TODO: optimise by caching all autocompletable classnames into a hash
-		// table on first run
-		int j;
-		const ClassNamePrefix_t *pPrefix = NULL;
-
-		for(j = 0; j < ARRAYSIZE(s_pEntityPrefixes); ++j)
-		{
-			pPrefix = &s_pEntityPrefixes[j];
-
-			if(Q_strncmp(pszClassName, pPrefix->m_pszPrefix, pPrefix->m_nLength))
-				continue;
-
-			break;
-		}
-
-		// If this entity factory had no prefixes, we could not find the prefix, skip this entity
-		if(j == ARRAYSIZE(s_pEntityPrefixes))
-			continue;
-
-		// Skip past the prefix if it shouldn't be kept
-		if(!pPrefix->m_bKeepPrefix)
-			pszClassName += pPrefix->m_nLength;
-
-		// Does this entity match our partial completion?
-		if(Q_strnicmp(pszClassName, partial, partialLength))
-			continue;
-
-		Q_snprintf(commands[numMatches++], COMMAND_COMPLETION_ITEM_LENGTH, "%s %s", commandName, pszClassName);
-	}
-
-	// Sort the commands alphabetically
-	qsort(commands, numMatches, COMMAND_COMPLETION_ITEM_LENGTH, StringSortFunc);
-
-	return numMatches;
-}
-
-CON_COMMAND_F_COMPLETION( give, "Give item to player. Syntax: <item name>", FCVAR_CHEAT, GiveAutoComplete )
-{
-	CBasePlayer *pPlayer = UTIL_GetCommandClient();
-	if(!pPlayer)
-		return;
-
-	if(args.ArgC() != 2)
-		return;
-
-	char pszClassName[64];
-	Q_strncpy(pszClassName, args.Arg(1), sizeof(pszClassName));
-
-	for(int i = 0; i < ARRAYSIZE(s_pEntityPrefixes) && !CanCreateEntityClass(pszClassName); ++i)
-	{
-		// If we keep the prefix in the autocomplete, there's no point
-		// checking this prefix
-		if(s_pEntityPrefixes[i].m_bKeepPrefix)
-			continue;
-
-		Q_snprintf(pszClassName, sizeof(pszClassName), "%s%s", s_pEntityPrefixes[i].m_pszPrefix, args.Arg(1));
-	}
-
-	// If this is class name does not have an entity factory, complain to the
-	// client
-	if(!CanCreateEntityClass(pszClassName))
-	{
-		ClientPrint(pPlayer, HUD_PRINTCONSOLE, UTIL_VarArgs("give: Unknown entity \"%s\"\n", args.Arg(1)));
-		return;
-	}
-
-	// Dirty hack to avoid suit playing its pickup sound
-	if(FStrEq(pszClassName, "item_suit"))
-	{
-		pPlayer->EquipSuit(false);
-		return;
-	}
-
-	pPlayer->GiveNamedItem(pszClassName);
-}
-#else
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
@@ -1011,7 +896,7 @@ CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
 		pPlayer->GiveNamedItem( STRING(iszItem) );
 	}
 }
-#endif
+
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -1129,6 +1014,7 @@ void CC_Player_TestDispatchEffect( const CCommand &args )
 
 static ConCommand test_dispatcheffect("test_dispatcheffect", CC_Player_TestDispatchEffect, "Test a clientside dispatch effect.\n\tUsage: test_dispatcheffect <effect name> <distance away> <flags> <magnitude> <scale>\n\tDefaults are: <distance 1024> <flags 0> <magnitude 0> <scale 0>\n", FCVAR_CHEAT);
 
+#ifdef HL2_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Quickly switch to the physics cannon, or back to previous item
 //-----------------------------------------------------------------------------
@@ -1147,19 +1033,20 @@ void CC_Player_PhysSwap( void )
 
 			const char *strWeaponName = pWeapon->GetName();
 
-			if ( !Q_stricmp( strWeaponName, "tf_weapon_physcannon" ) )
+			if ( !Q_stricmp( strWeaponName, "weapon_physcannon" ) )
 			{
 				PhysCannonForceDrop( pWeapon, NULL );
 				pPlayer->SelectLastItem();
 			}
 			else
 			{
-				pPlayer->SelectItem( "tf_weapon_physcannon" );
+				pPlayer->SelectItem( "weapon_physcannon" );
 			}
 		}
 	}
 }
 static ConCommand physswap("phys_swap", CC_Player_PhysSwap, "Automatically swaps the current weapon for the physcannon and back again." );
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Quickly switch to the bug bait, or back to previous item
@@ -1320,7 +1207,7 @@ void CC_God_f (void)
 	if ( !pPlayer )
 		return;
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
    if ( TFGameRules() && ( TFGameRules()->IsPVEModeActive() == false ) )
    {
 	   if ( gpGlobals->deathmatch )
@@ -1478,7 +1365,7 @@ CON_COMMAND_F( setang_exact, "Snap player eyes and orientation to specified pitc
 	pPlayer->Teleport( NULL, &newang, NULL );
 	pPlayer->SnapEyeAngles( newang );
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#if defined (TF_DLL) || defined (TF_CLASSIC)
 	static_cast<CTFPlayer*>( pPlayer )->DoAnimationEvent( PLAYERANIMEVENT_SNAP_YAW );
 #endif
 }

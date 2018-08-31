@@ -19,42 +19,92 @@
 //
 // Weapon Pistol tables.
 //
-CREATE_SIMPLE_WEAPON_TABLE( TFPistol, tf_weapon_pistol )
+IMPLEMENT_NETWORKCLASS_ALIASED( TFPistol, DT_TFPistol )
+
+BEGIN_NETWORK_TABLE_NOBASE( CTFPistol, DT_PistolLocalData )
+#if !defined( CLIENT_DLL )
+	SendPropTime( SENDINFO( m_flSoonestPrimaryAttack ) ),
+#else
+	RecvPropTime( RECVINFO( m_flSoonestPrimaryAttack ) ),
+#endif
+END_NETWORK_TABLE()
+
+BEGIN_NETWORK_TABLE( CTFPistol, DT_TFPistol )
+#if !defined( CLIENT_DLL )
+	SendPropDataTable( "PistolLocalData", 0, &REFERENCE_SEND_TABLE( DT_PistolLocalData ), SendProxy_SendLocalWeaponDataTable ),
+#else
+	RecvPropDataTable( "PistolLocalData", 0, 0, &REFERENCE_RECV_TABLE( DT_PistolLocalData ) ),
+#endif
+END_NETWORK_TABLE()
+
+BEGIN_PREDICTION_DATA( CTFPistol )
+#ifdef CLIENT_DLL
+	DEFINE_PRED_FIELD( m_flSoonestPrimaryAttack, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+#endif
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( tf_weapon_pistol, CTFPistol );
+PRECACHE_WEAPON_REGISTER( tf_weapon_pistol );
+
+// Server specific.
+#ifndef CLIENT_DLL
+BEGIN_DATADESC( CTFPistol )
+END_DATADESC()
+#endif
 
 //============================
 
-CREATE_SIMPLE_WEAPON_TABLE( TFPistol_Scout, tf_weapon_pistol_scout )
+IMPLEMENT_NETWORKCLASS_ALIASED( TFPistol_Scout, DT_TFPistol_Scout )
 
-CREATE_SIMPLE_WEAPON_TABLE( TFPistol_ScoutSecondary, tf_weapon_handgun_scout_secondary )
-CREATE_SIMPLE_WEAPON_TABLE( TFPistol_ScoutPrimary, tf_weapon_handgun_scout_primary )
+BEGIN_NETWORK_TABLE( CTFPistol_Scout, DT_TFPistol_Scout )
+END_NETWORK_TABLE()
+
+BEGIN_PREDICTION_DATA( CTFPistol_Scout )
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( tf_weapon_pistol_scout, CTFPistol_Scout );
+PRECACHE_WEAPON_REGISTER( tf_weapon_pistol_scout );
 
 //=============================================================================
 //
 // Weapon Pistol functions.
 //
-/*
-acttable_t CTFPistol::m_acttable[] =
-{
-	{ ACT_MP_STAND_IDLE, ACT_MP_STAND_SECONDARY2, false },
-	{ ACT_MP_CROUCH_IDLE, ACT_MP_CROUCH_SECONDARY2, false },
-	{ ACT_MP_RUN, ACT_MP_RUN_SECONDARY2, false },
-	{ ACT_MP_AIRWALK, ACT_MP_AIRWALK_SECONDARY2, false },
-	{ ACT_MP_CROUCHWALK, ACT_MP_CROUCHWALK_SECONDARY2, false },
-	{ ACT_MP_JUMP_START, ACT_MP_JUMP_START_SECONDARY2, false },
-	{ ACT_MP_JUMP_FLOAT, ACT_MP_JUMP_FLOAT_SECONDARY2, false },
-	{ ACT_MP_JUMP_LAND, ACT_MP_JUMP_LAND_SECONDARY2, false },
-	{ ACT_MP_SWIM, ACT_MP_SWIM_SECONDARY2, false },
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE, ACT_MP_ATTACK_STAND_SECONDARY2, false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_MP_ATTACK_CROUCH_SECONDARY2, false },
-};
 
-IMPLEMENT_ACTTABLE( CTFPistol );
-*/
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CTFPistol::CTFPistol( void )
+{
+	m_flSoonestPrimaryAttack = gpGlobals->curtime;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Allows firing as fast as button is pressed
+//-----------------------------------------------------------------------------
+void CTFPistol::ItemPostFrame( void )
+{
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	if ( pOwner == NULL )
+		return;
+
+	BaseClass::ItemPostFrame();
+
+	if ( m_bInReload )
+		return;
+
+	//Allow a refire as fast as the player can click
+	if ( ( ( pOwner->m_nButtons & IN_ATTACK ) == false ) && ( m_flSoonestPrimaryAttack < gpGlobals->curtime ) )
+	{
+		m_flNextPrimaryAttack = gpGlobals->curtime - 0.1f;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 void CTFPistol::PrimaryAttack( void )
 {
+	m_flSoonestPrimaryAttack = gpGlobals->curtime + PISTOL_FASTEST_REFIRE_TIME;
 #if 0
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 

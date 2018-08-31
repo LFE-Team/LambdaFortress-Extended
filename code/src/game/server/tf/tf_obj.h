@@ -23,7 +23,6 @@ class CTFTeam;
 class CRopeKeyframe;
 class CVGuiScreen;
 class KeyValues;
-class CTFWrench;
 struct animevent_t;
 
 #define OBJECT_REPAIR_RATE		10			// Health healed per second while repairing
@@ -35,7 +34,6 @@ struct animevent_t;
 
 extern ConVar object_verbose;
 extern ConVar obj_child_range_factor;
-extern ConVar tf2c_building_upgrades;
 
 #if defined( _DEBUG )
 #define TRACE_OBJECT( str )										\
@@ -46,8 +44,6 @@ if ( object_verbose.GetInt() )									\
 #else
 #define TRACE_OBJECT( string )
 #endif
-
-#define SF_OBJ_INVULNERABLE			0x0002
 
 // ------------------------------------------------------------------------ //
 // Resupply object that's built by the player
@@ -82,37 +78,23 @@ public:
 
 	virtual int		BloodColor( void ) { return BLOOD_COLOR_MECH; }
 
-	virtual int	GetObjectMode( void ) { return m_iObjectMode; }
-
-	bool			IsBeingCarried( void ) { return m_bCarried; }
-	bool			IsRedeploying( void ) { return m_bCarryDeploy; }
-
-	// Override this method per object to set your local stuff up.
-	virtual void	SetObjectMode( int iObjectMode )
-	{
-		m_iObjectMode = iObjectMode;
-	}
-
 	// Building
 	virtual float	GetTotalTime( void );
-	virtual int		GetMaxHealthForCurrentLevel( void );
 	virtual void	StartPlacement( CTFPlayer *pPlayer );
 	void			StopPlacement( void );
-	bool			FindNearestBuildPoint( CBaseEntity *pEntity, CBasePlayer *pBuilder, float &flNearestPoint, Vector &vecNearestBuildPoint, bool bIgnoreLOS = false );
+	bool			FindNearestBuildPoint( CBaseEntity *pEntity, CBasePlayer *pBuilder, float &flNearestPoint, Vector &vecNearestBuildPoint );
 	bool			VerifyCorner( const Vector &vBottomCenter, float xOffset, float yOffset );
 	virtual float	GetNearbyObjectCheckRadius( void ) { return 30.0; }
 	bool			UpdatePlacement( void );
-	bool			UpdateAttachmentPlacement( CBaseObject *pObject = NULL );
+	bool			UpdateAttachmentPlacement( void );
 	bool			IsValidPlacement( void ) const;
 	bool			EstimateValidBuildPos( void );
 
 	bool			CalculatePlacementPos( void );
 	virtual bool	IsPlacementPosValid( void );
-	bool			FindSnapToBuildPos( CBaseObject *pObject = NULL );
+	bool			FindSnapToBuildPos( void );
 
 	void			ReattachChildren( void );
-
-	virtual void	InitializeMapPlacedObject( void );
 	
 	// I've finished building the specified object on the specified build point
 	virtual int		FindObjectOnBuildPoint( CBaseObject *pObject );
@@ -141,8 +123,8 @@ public:
 	bool			PassDamageOntoChildren( const CTakeDamageInfo &info, float *flDamageLeftOver );
 	virtual bool	Repair( float flHealth );
 
-	void			OnConstructionHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vector vecHitPos );
-	virtual float			GetConstructionMultiplier( void );
+	void			OnRepairHit( CTFPlayer *pPlayer );
+	float			GetRepairMultiplier( void );
 
 	// Destruction
 	virtual void	DetonateObject( void );
@@ -164,23 +146,15 @@ public:
 	virtual bool	IsHostileUpgrade( void )	{ return false; }	// Attaches to enemy buildings
 
 	// Inputs
-	void			InputShow( inputdata_t &inputdata );
-	void			InputHide( inputdata_t &inputdata );
-	void			InputEnable( inputdata_t &inputdata );
-	void			InputDisable( inputdata_t &inputdata );
 	void			InputSetHealth( inputdata_t &inputdata );
 	void			InputAddHealth( inputdata_t &inputdata );
 	void			InputRemoveHealth( inputdata_t &inputdata );
 	void			InputSetSolidToPlayer( inputdata_t &inputdata );
 
 	// Wrench hits
-	virtual bool	InputWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vector vecHitPos );
-	virtual bool	OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vector vecHitPos );
+	bool			InputWrenchHit( CTFPlayer *pPlayer );
+	virtual bool	OnWrenchHit( CTFPlayer *pPlayer );
 	virtual bool	Command_Repair( CTFPlayer *pActivator );
-
-	virtual void	DoWrenchHitEffect( Vector vecHitPos, bool bRepair, bool bUpgrade );
-
-	virtual bool	CheckUpgradeOnHit( CTFPlayer *pPlayer );
 
 	virtual void	ChangeTeam( int iTeamNum );			// Assign this entity to a team.
 
@@ -227,37 +201,13 @@ public:
 	virtual bool	ShouldPlayersAvoid( void );
 
 	void			IncrementKills( void ) { m_iKills++; }
-	void			IncrementAssists( void ) { m_iAssists++; }
 	int				GetKills() { return m_iKills; }
-	int				GetAssists() { return m_iAssists; }
 
 	void			CreateObjectGibs( void );
 	virtual void	SetModel( const char *pModel );
 
 	const char		*GetResponseRulesModifier( void );
 
-	// Upgrades
-	int				GetUpgradeLevel(void) { return m_iUpgradeLevel; }
-
-	// If the players hit us with a wrench, should we upgrade
-	virtual bool	CanBeUpgraded( CTFPlayer *pPlayer );
-	virtual void	StartUpgrading( void );
-	virtual void	FinishUpgrading( void );
-	virtual void	UpgradeThink( void );
-	virtual int		GetMaxUpgradeLevel( void ) { return 1; }
-
-	virtual char	*GetPlacementModel( void ) { return ""; }
-
-	virtual void	MakeCarriedObject( CTFPlayer *pPlayer );
-	virtual void	DropCarriedObject( CTFPlayer *pPlayer );
-
-	virtual int		GetBaseHealth( void ) { return 0; }
-
-	void	FallThink( void );
-	float  m_flNextResetCheckTime;
-
-	/*virtual*/ void	MakeMiniBuilding( void );
-	bool			IsMiniBuilding( void ) { return m_bMiniBuilding; }
 public:		
 
 	virtual bool TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
@@ -344,18 +294,7 @@ protected:
 	CNetworkHandle( CBaseEntity, m_hBuiltOnEntity );
 	int				m_iBuiltOnPoint;
 
-	// Upgrade specific
-	// Upgrade Level ( 1, 2, 3 )
-	CNetworkVar( int, m_iUpgradeLevel );
-	CNetworkVar( int, m_iHighestUpgradeLevel );
-	CNetworkVar( int, m_iUpgradeMetal );
-	int		m_iGoalUpgradeLevel;		// Used when re-deploying
-	int		m_iDefaultUpgrade;			// Used for map-placed buildings
-
 	bool	m_bDying;
-
-	// Time when the upgrade animation will complete
-	float m_flUpgradeCompleteTime;
 
 	// Outputs
 	COutputEvent m_OnDestroyed;
@@ -371,15 +310,6 @@ protected:
 	typedef CHandle<CVGuiScreen>	ScreenHandle_t;
 	CUtlVector<ScreenHandle_t>	m_hScreens;
 
-	// Upgrades.
-	CNetworkVar( int, m_iUpgradeMetalRequired );
-	CNetworkVar( bool, m_bCarried );		
-	CNetworkVar( bool, m_bCarryDeploy );
-	CNetworkVar( bool, m_bMiniBuilding );
-
-	CNetworkVar( bool, m_bDisposableBuilding );
-	CNetworkVar( bool, m_bWasMapPlaced );
-
 private:
 	// Make sure we pick up changes to these.
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_iHealth );
@@ -388,7 +318,6 @@ private:
 	Activity	m_Activity;
 
 	CNetworkVar( int, m_iObjectType );
-	CNetworkVar( int, m_iObjectMode );
 
 
 	// True if players shouldn't do collision avoidance, but should just collide exactly with the object.
@@ -399,15 +328,14 @@ private:
 	CNetworkVar( bool, m_bDisabled );
 
 	// Building
+	CNetworkVar( bool, m_bPlacing );					// True while the object's being placed
 	CNetworkVar( bool, m_bBuilding );				// True while the object's still constructing itself
-	CNetworkVar( bool, m_bPlacing );				// True while the object's being placed
 	float	m_flConstructionTimeLeft;	// Current time left in construction
 	float	m_flTotalConstructionTime;	// Total construction time (the value of GetTotalTime() at the time construction 
 										// started, ie, incase you teleport out of a construction yard)
 
 	CNetworkVar( float, m_flPercentageConstructed );	// Used to send to client
 	float	m_flHealth;					// Health during construction. Needed a float due to small increases in health.
-	int		m_iGoalHealth;				// Used when re-deploying
 
 	// Sapper on me
 	CNetworkVar( bool, m_bHasSapper );
@@ -422,7 +350,6 @@ private:
 	bool		m_bPlacementOK;				// last placement state
 
 	CNetworkVar( int, m_iKills );
-	CNetworkVar( int, m_iAssists );
 
 	CNetworkVar( int, m_iDesiredBuildRotations );		// Number of times we've rotated, used to calc final rotation
 	float m_flCurrentBuildRotation;
@@ -431,22 +358,8 @@ private:
 	CUtlVector<breakmodel_t>	m_aGibs;
 
 	CNetworkVar( bool, m_bServerOverridePlacement );
-
 };
 
 extern short g_sModelIndexFireball;		// holds the index for the fireball
-
-//-----------------------------------------------------------------------------
-// Purpose: Utility function to convert an entity into a base object.
-//   Input: pEntity - the entity to convert into a player
-//-----------------------------------------------------------------------------
-inline CBaseObject *ToBaseObject( CBaseEntity *pEntity )
-{
-	if ( !pEntity || !pEntity->IsBaseObject() )
-		return NULL;
-
-	Assert( dynamic_cast<CBaseObject*>( pEntity ) != 0 );
-	return static_cast< CBaseObject* >( pEntity );
-}
 
 #endif // TF_OBJ_H

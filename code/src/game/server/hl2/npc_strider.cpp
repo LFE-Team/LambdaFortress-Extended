@@ -722,14 +722,6 @@ void CNPC_Strider::Activate()
 		VectorITransform( position, pStrider->EntityToWorldTransform(), gm_vLocalRelativePositionMinigun );
 		UTIL_Remove( pStrider );
 	}
-
-#ifdef TF_CLASSIC
-	IGameEvent *event = gameeventmanager->CreateEvent( "strider_spawned" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-#endif
 }
 
 //---------------------------------------------------------
@@ -3082,7 +3074,7 @@ int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 #ifdef TF_CLASSIC
 	// Bullet damage reduces alternative health counter.
 	// Once alt health reaches 0 explosion is spawned and alt health is reset.
-	if ( ( info.GetDamageType() & DMG_BULLET || info.GetDamageType() & DMG_IGNITE) && m_takedamage != DAMAGE_EVENTS_ONLY )
+	if ( (info.GetDamageType() & DMG_BULLET) && m_takedamage != DAMAGE_EVENTS_ONLY )
 	{
 		m_iHealthAlt -= info.GetDamage();
 		if ( m_iHealthAlt <= 0 )
@@ -3160,11 +3152,7 @@ int CNPC_Strider::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 			{
 				// See if the person that injured me is an NPC.
 				CAI_BaseNPC *pAttacker = dynamic_cast<CAI_BaseNPC *>( info.GetAttacker() );
-#ifdef TF_CLASSIC
-				CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 				CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 
 				if( pAttacker && pAttacker->IsAlive() && pPlayer )
 				{
@@ -3296,14 +3284,6 @@ void CNPC_Strider::Event_Killed( const CTakeDamageInfo &info )
 	EntityMessageBegin( this, true );
 		WRITE_BYTE( STRIDER_MSG_DEAD );
 	MessageEnd();
-
-#ifdef TF_CLASSIC
-	IGameEvent *event = gameeventmanager->CreateEvent( "strider_killed" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-#endif
 }
 
 //---------------------------------------------------------
@@ -4828,7 +4808,7 @@ void CNPC_Strider::StriderBusterAttached( CBaseEntity *pAttached )
 	m_PlayerFreePass.Revoke();
 
 	variant_t target;
-	target.SetString( AllocPooledString( "player" ) );
+	target.SetString( AllocPooledString( "!player" ) );
 	g_EventQueue.AddEvent( this, "UpdateEnemyMemory", target, 1.0, this, this );
 }
 

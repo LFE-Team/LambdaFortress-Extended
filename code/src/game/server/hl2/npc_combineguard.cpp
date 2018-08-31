@@ -40,7 +40,6 @@
 #include "engine/IEngineSound.h"
 #include "te_effect_dispatch.h"
 #include "te_particlesystem.h"
-#include "tf_gamerules.h"
 
 #define CGUARD_GIB_COUNT			5   //Obsolete, but leaving it here anyway for no reason
 
@@ -76,6 +75,7 @@ public:
 	int	TranslateSchedule( int type );
 	int	MeleeAttack1Conditions( float flDot, float flDist );
 	int	RangeAttack1Conditions( float flDot, float flDist );
+	virtual bool		IsDeflectable() { return false; }
 	void Gib(void);
 
 	void Precache( void );
@@ -216,7 +216,7 @@ void CNPC_CombineGuard::Precache( void )
 
 void CNPC_CombineGuard::Spawn( void )
 {
-	if ( sv_hl2_beta.GetFloat() == 1 || TFGameRules()->iDirectorAnger == 100 && sv_dynamicnpcs.GetFloat() == 1 )
+	if ( sv_hl2_beta.GetFloat() == 1 )
 	{
 		Precache();
 

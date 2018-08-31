@@ -217,6 +217,7 @@ public:
 	virtual void Precache( );
 	virtual void Spawn( );
 	virtual void UpdateOnRemove();
+	virtual bool		IsDeflectable() { return false; }
 	virtual void OnEntityEvent( EntityEvent_t event, void *pEventData );
 	virtual void PhysicsSimulate( void );
 	virtual float GetShakeAmplitude( void ) { return 25.0; }
@@ -1328,14 +1329,6 @@ void CNPC_AttackHelicopter::Activate( void )
 	{
 		SetShadowCastDistance( 2048 );
 	}
-
-#ifdef TF_CLASSIC
-	IGameEvent *event = gameeventmanager->CreateEvent( "helicopter_spawned" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-#endif
 }
 
 	
@@ -3781,14 +3774,6 @@ void CNPC_AttackHelicopter::Event_Killed( const CTakeDamageInfo &info )
 	m_takedamage = DAMAGE_NO;
 
 	m_OnDeath.FireOutput( info.GetAttacker(), this );
-
-#ifdef TF_CLASSIC
-	IGameEvent *event = gameeventmanager->CreateEvent( "helicopter_destoryed" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -5589,11 +5574,7 @@ void CGrenadeHelicopter::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t
 bool CGrenadeHelicopter::IsThrownByPlayer()
 {
 	// if player is the owner and we're set to explode on contact, then the player threw this grenade.
-#ifdef TF_CLASSIC
-	return ( ( GetOwnerEntity() == UTIL_GetNearestPlayer( GetAbsOrigin() ) ) && m_bExplodeOnContact );
-#else
 	return ( ( GetOwnerEntity() == UTIL_GetLocalPlayer() ) && m_bExplodeOnContact );
-#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -1297,11 +1297,8 @@ void CNPC_BaseScanner::DiveBombSoundThink()
 	pPhysicsObject->GetPosition( &vecPosition, NULL );
 	pPhysicsObject->GetVelocity( &vecVelocity, NULL );
 
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif	if ( pPlayer )
+	if ( pPlayer )
 	{
 		Vector vecDelta;
 		VectorSubtract( pPlayer->GetAbsOrigin(), vecPosition, vecDelta );

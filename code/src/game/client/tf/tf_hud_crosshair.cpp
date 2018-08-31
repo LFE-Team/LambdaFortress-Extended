@@ -1,4 +1,4 @@
-//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -34,7 +34,7 @@ using namespace vgui;
 DECLARE_HUDELEMENT(CHudTFCrosshair);
 
 CHudTFCrosshair::CHudTFCrosshair(const char *pElementName) :
-	CHudCrosshair("CHudCrosshair")
+	CHudCrosshair("HudTFCrosshair")
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent(pParent);
@@ -82,12 +82,6 @@ void CHudTFCrosshair::Init()
 	m_iCrosshairTextureID = vgui::surface()->CreateNewTextureID();
 }
 
-void CHudTFCrosshair::SetCrosshair(CHudTexture *texture, Color& clr)
-{
-	m_pCrosshair = texture;
-	m_clrCrosshair = clr;
-}
-
 bool CHudTFCrosshair::ShouldDraw()
 {
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
@@ -100,9 +94,6 @@ bool CHudTFCrosshair::ShouldDraw()
 	if ( !pWeapon )
 		return false;
 
-	if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) || pPlayer->m_Shared.IsLoser() )
-		return false;
-
 	return pWeapon->ShouldDrawCrosshair();
 }
 
@@ -110,111 +101,124 @@ void CHudTFCrosshair::Paint()
 {
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 
-	if ( !pPlayer )
+	if( !pPlayer )
 		return;
 
 	const char *crosshairfile = cl_crosshair_file.GetString();
 
-	if ( crosshairfile[0] == '\0' )
-	{
-		CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
-
-		if ( !pWeapon )
-			return;
-
-		m_pCrosshair = pWeapon->GetWpnData().iconCrosshair;
-		BaseClass::Paint();
+	if (!crosshairfile)
 		return;
-	}
-	else
+
+	if (Q_stricmp(cl_crosshair_file.GetString(), ""))
 	{
-		if ( Q_stricmp( m_szPreviousCrosshair, crosshairfile ) != 0 )
+		if (Q_stricmp(m_szPreviousCrosshair, crosshairfile) != 0)
 		{
 			char buf[256];
-			Q_snprintf( buf, sizeof( buf ), "vgui/crosshairs/%s", crosshairfile );
+			Q_snprintf(buf, sizeof(buf), "vgui/crosshairs/%s", crosshairfile);
 
-			vgui::surface()->DrawSetTextureFile( m_iCrosshairTextureID, buf, true, false );
+			vgui::surface()->DrawSetTextureFile(m_iCrosshairTextureID, buf, true, false);
 
-			if ( m_pCrosshairOverride )
+			if (m_pCrosshairOverride)
 			{
 				delete m_pCrosshairOverride;
 			}
 
-			m_pCrosshairOverride = vgui::surface()->DrawGetTextureMatInfoFactory( m_iCrosshairTextureID );
+			m_pCrosshairOverride = vgui::surface()->DrawGetTextureMatInfoFactory(m_iCrosshairTextureID);
 
-			if ( !m_pCrosshairOverride )
+			if (!m_pCrosshair)
 				return;
 
-			if ( m_pFrameVar )
+			if (m_pFrameVar)
 			{
 				delete m_pFrameVar;
 			}
 
 			bool bFound = false;
-			m_pFrameVar = m_pCrosshairOverride->FindVarFactory( "$frame", &bFound );
-			Assert( bFound );
+			m_pFrameVar = m_pCrosshairOverride->FindVarFactory("$frame", &bFound);
+			Assert(bFound);
 
 			m_nNumFrames = m_pCrosshairOverride->GetNumAnimationFrames();
 
 			// save the name to compare with the cvar in the future
-			Q_strncpy( m_szPreviousCrosshair, crosshairfile, sizeof( m_szPreviousCrosshair ) );
+			Q_strncpy(m_szPreviousCrosshair, crosshairfile, sizeof(m_szPreviousCrosshair));
 		}
 
-		Color clr( cl_crosshair_red.GetInt(), cl_crosshair_green.GetInt(), cl_crosshair_blue.GetInt(), 255 );
+		if (m_pFrameVar)
+		{
+			if (cl_dynamic_crosshair.GetBool() == false)
+			{
+				m_pFrameVar->SetIntValue(0);
+			}
+			else
+			{
+				CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
 
-		float x, y;
-		bool bBehindCamera;
-		GetDrawPosition( &x, &y, &bBehindCamera, m_vecCrossHairOffsetAngle );
+				if (!pWeapon)
+					return;
 
-		if ( bBehindCamera )
-			return;
+				float accuracy = /*pWeapon->GetWeaponAccuracy( pPlayer->GetAbsVelocity().Length2D() )*/ 5.0F;
+
+				float flMin = 0.02;
+
+				float flMax = 0.125;
+
+				accuracy = clamp(accuracy, flMin, flMax);
+
+				// approach this accuracy from our current accuracy
+				m_flAccuracy = Approach(accuracy, m_flAccuracy, cl_crosshair_approach_speed.GetFloat());
+
+				float flFrame = RemapVal(m_flAccuracy, flMin, flMax, 0, m_nNumFrames - 1);
+
+				m_pFrameVar->SetIntValue((int)flFrame);
+			}
+		}
+
+		Color clr(cl_crosshair_red.GetInt(), cl_crosshair_green.GetInt(), cl_crosshair_blue.GetInt(), 255);
 
 		int screenWide, screenTall;
-		GetHudSize( screenWide, screenTall );
+		GetHudSize(screenWide, screenTall);
+
+		int iX = screenWide / 2;
+		int iY = screenTall / 2;
 
 		int iWidth, iHeight;
 
 		iWidth = iHeight = cl_crosshair_scale.GetInt();
-		int iX = (int)( x + 0.5f );
-		int iY = (int)( y + 0.5f );
 
-		vgui::surface()->DrawSetColor( clr );
-		vgui::surface()->DrawSetTexture( m_iCrosshairTextureID );
-		vgui::surface()->DrawTexturedRect( iX - iWidth, iY - iHeight, iX + iWidth, iY + iHeight );
-		vgui::surface()->DrawSetTexture( 0 );
+		vgui::surface()->DrawSetColor(clr);
+		vgui::surface()->DrawSetTexture(m_iCrosshairTextureID);
+		vgui::surface()->DrawTexturedRect(iX - iWidth, iY - iHeight, iX + iWidth, iY + iHeight);
+		vgui::surface()->DrawSetTexture(0);
 	}
+	else
+	{
+		//BaseClass::Paint();
+		return;
+	}
+
+
+
+	//BaseClass::Paint();
 
 	/*
-	if (m_pFrameVar)
-	{
-		if (cl_dynamic_crosshair.GetBool() == false)
-		{
-			m_pFrameVar->SetIntValue(0);
-		}
-		else
-		{
-			CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
 
-			if (!pWeapon)
-				return;
+	Color clr( cl_crosshair_red.GetInt(), cl_crosshair_green.GetInt(), cl_crosshair_blue.GetInt(), 255 );
 
-			float accuracy = 5;//pWeapon->GetWeaponAccuracy(pPlayer->GetAbsVelocity().Length2D());
+	int screenWide, screenTall;
+	GetHudSize(screenWide, screenTall);
 
-			float flMin = 0.02;
+	int iX = screenWide / 2;
+	int iY = screenTall / 2;
 
-			float flMax = 0.125;
+	int iWidth, iHeight;
 
-			accuracy = clamp(accuracy, flMin, flMax);
+	iWidth = iHeight = cl_crosshair_scale.GetInt();
 
-			// approach this accuracy from our current accuracy
-			m_flAccuracy = Approach(accuracy, m_flAccuracy, cl_crosshair_approach_speed.GetFloat());
+	vgui::surface()->DrawSetColor( clr );
+	vgui::surface()->DrawSetTexture( m_iCrosshairTextureID );
+	vgui::surface()->DrawTexturedRect( iX-iWidth, iY-iHeight, iX+iWidth, iY+iHeight );
+	vgui::surface()->DrawSetTexture(0);
 
-			float flFrame = RemapVal(m_flAccuracy, flMin, flMax, 0, m_nNumFrames - 1);
-
-			m_pFrameVar->SetIntValue((int)flFrame);
-		}
-	}
-
-*/
+	*/
 }
 

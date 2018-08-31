@@ -26,10 +26,6 @@
 #include "c_portal_player.h"
 #endif // PORTAL
 
-#ifdef TF_CLASSIC_CLIENT
-#include "cam_thirdperson.h"
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -40,7 +36,7 @@ using namespace vgui;
 
 int ScreenTransform( const Vector& point, Vector& screen );
 
-#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 // If running TF, we use CHudTFCrosshair instead (which is derived from CHudCrosshair)
 #else
 DECLARE_HUDELEMENT( CHudCrosshair );
@@ -137,7 +133,7 @@ bool CHudCrosshair::ShouldDraw( void )
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }
 
-#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 extern ConVar cl_crosshair_red;
 extern ConVar cl_crosshair_green;
 extern ConVar cl_crosshair_blue;
@@ -191,17 +187,6 @@ void CHudCrosshair::GetDrawPosition ( float *pX, float *pY, bool *pbBehindCamera
 			AngleVectors( CurrentViewAngles() - g_pSixenseInput->GetViewAngleOffset(), &aimVector );
 			// calculate where the bullet would go so we can draw the cross appropriately
 			vecEnd = vecStart + aimVector * MAX_TRACE_LENGTH;
-			bUseOffset = true;
-		}
-#endif
-
-#ifdef TF_CLASSIC_CLIENT
-		if ( g_ThirdPersonManager.WantToUseGameThirdPerson() )
-		{
-			vecStart = pPlayer->Weapon_ShootPosition();
-			Vector vecDir;
-			pPlayer->EyeVectors( &vecDir );
-			vecEnd = vecStart + vecDir * MAX_TRACE_LENGTH;
 			bUseOffset = true;
 		}
 #endif
@@ -274,7 +259,7 @@ void CHudCrosshair::Paint( void )
 	}
 
 	float flPlayerScale = 1.0f;
-#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 	Color clr( cl_crosshair_red.GetInt(), cl_crosshair_green.GetInt(), cl_crosshair_blue.GetInt(), 255 );
 	flPlayerScale = cl_crosshair_scale.GetFloat() / 32.0f;  // the player can change the scale in the options/multiplayer tab
 #else

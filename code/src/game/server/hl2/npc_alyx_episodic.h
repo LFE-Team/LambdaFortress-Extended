@@ -33,7 +33,6 @@ public:
 	void	Spawn(void);
 	void	Activate(void);
 	void	StopLoopingSounds(void);
-	void	InputHackFinishedMine(inputdata_t &inputdata);
 	void	SelectModel();
 	void	Precache(void);
 	void	SetupAlyxWithoutParent(void);

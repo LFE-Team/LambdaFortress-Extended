@@ -19,8 +19,7 @@
 //-----------------------------------------------------------------------------
 // Purpose: Visualizes a respawn room to the enemy team
 //-----------------------------------------------------------------------------
-DECLARE_AUTO_LIST(IFuncRespawnRoomVisualizerAutoList);
-class CFuncRespawnRoomVisualizer : public CFuncBrush, public IFuncRespawnRoomVisualizerAutoList
+class CFuncRespawnRoomVisualizer : public CFuncBrush
 {
 	DECLARE_CLASS( CFuncRespawnRoomVisualizer, CFuncBrush );
 public:
@@ -43,8 +42,6 @@ protected:
 	CHandle<CFuncRespawnRoom>	m_hRespawnRoom;
 };
 
-IMPLEMENT_AUTO_LIST(IFuncRespawnRoomVisualizerAutoList);
-
 LINK_ENTITY_TO_CLASS( func_respawnroom, CFuncRespawnRoom);
 
 BEGIN_DATADESC( CFuncRespawnRoom )
@@ -60,31 +57,6 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CFuncRespawnRoom, DT_FuncRespawnRoom )
 END_SEND_TABLE()
 
-//-----------------------------------------------------------------------------
-// Purpose: Check whether the line between two vectors crosses an respawn room visualizer
-//-----------------------------------------------------------------------------
-bool PointsCrossRespawnRoomVisualizer( const Vector &vecStart, const Vector &vecEnd, int iTeam )
-{
-	Ray_t ray;
-	ray.Init(vecStart, vecEnd);
-
-	for (int i = 0; i < IFuncRespawnRoomVisualizerAutoList::AutoList().Count(); ++i)
-	{
-		CFuncRespawnRoomVisualizer *pVisualizer = static_cast<CFuncRespawnRoomVisualizer *>( IFuncRespawnRoomVisualizerAutoList::AutoList()[i] );
-		
-		if (pVisualizer->GetTeamNumber() != iTeam || !iTeam)
-		{
-			trace_t tr;
-
-			enginetrace->ClipRayToEntity(ray, MASK_ALL, pVisualizer, &tr);
-
-			if (tr.fraction < 1.f)
-				return true;
-		}
-	}
-
-	return false;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -440,16 +412,6 @@ bool CFuncRespawnRoomVisualizer::ShouldCollide( int collisionGroup, int contents
 
 		case TF_TEAM_RED:
 			if ( !(contentsMask & CONTENTS_REDTEAM) )
-				return false;
-			break;
-
-		case TF_TEAM_GREEN:
-			if ( !(contentsMask & CONTENTS_GREENTEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_YELLOW:
-			if ( !(contentsMask & CONTENTS_YELLOWTEAM ) )
 				return false;
 			break;
 		}

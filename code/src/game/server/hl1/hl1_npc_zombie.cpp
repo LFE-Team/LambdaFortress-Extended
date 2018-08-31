@@ -39,11 +39,6 @@ void CNPC_Zombie::Spawn()
 	Precache( );
 
 	SetModel( "models/zombie.mdl" );
-	if ( sv_hl1_hd.GetFloat() == 1 )
-	{
-		PrecacheModel( "models/zombie_hd.mdl" );
-		SetModel( "models/zombie_hd.mdl" );
-	}
 	
 	SetRenderColor( 255, 255, 255, 255 );
 	

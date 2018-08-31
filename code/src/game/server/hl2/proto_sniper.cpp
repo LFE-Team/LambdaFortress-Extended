@@ -38,13 +38,6 @@
 #include "te_effect_dispatch.h"
 
 #include "collisionutils.h"
-#include "util.h"
-
-#ifdef TF_CLASSIC
-#include "tf_obj.h"
-#include "tf_obj_sentrygun.h"
-#include "tf_player.h"
-#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -848,11 +841,7 @@ void CProtoSniper::PaintTarget( const Vector &vecTarget, float flPaintTime )
 //-----------------------------------------------------------------------------
 bool CProtoSniper::IsPlayerAllySniper()
 {
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
+	CBaseEntity *pPlayer = AI_GetSinglePlayer();
 
 	return IRelationType( pPlayer ) == D_LI;
 }
@@ -1301,13 +1290,13 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( info.GetDamageType() == DMG_BULLET && info.GetInflictor() == this )
 		return CAI_BaseNPC::OnTakeDamage_Alive( newInfo );
 
-	if( !(info.GetDamageType() & (DMG_BULLET|DMG_USE_HITLOCATIONS|DMG_BLAST) ) )
+	if( !(info.GetDamageType() & (DMG_BULLET|DMG_BLAST) ) )
 	{
 		// Only blasts and burning hurt
 		return 10;
 	}
 
-	if( (info.GetDamageType() & DMG_BULLET|DMG_USE_HITLOCATIONS|DMG_BLAST) && info.GetDamage() < m_iHealth )
+	if( (info.GetDamageType() & DMG_BULLET|DMG_BLAST) && info.GetDamage() < m_iHealth )
 	{
 		// Only blasts powerful enough to kill hurt
 		return 10;
@@ -1323,7 +1312,7 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		return 10;
 	}
 
-	if( info.GetDamageType() & DMG_BULLET|DMG_USE_HITLOCATIONS|DMG_BLAST )
+	if( info.GetDamageType() & DMG_BULLET|DMG_BLAST )
 	{
 		newInfo.SetDamage( m_iHealth );
 	}
@@ -1383,9 +1372,7 @@ void CProtoSniper::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInf
 {
 	if( pVictim && pVictim->IsPlayer() )
 	{
-#ifndef TF_CLASSIC
 		m_bKilledPlayer = true;
-#endif
 	}
 }
 
@@ -1412,7 +1399,7 @@ int CProtoSniper::SelectSchedule ( void )
 		return SCHED_RELOAD;
 	}
 	//SecobMod__Information: The condition area below when used in mp caused the sniper to fail terribly. Removing it from working with the AI enabled really improves snipers.
-#ifndef TF_CLASSIC
+#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 	if( !AI_GetSinglePlayer()->IsAlive() && m_bKilledPlayer )
 	{
 		if( HasCondition(COND_IN_PVS) )
@@ -1420,7 +1407,7 @@ int CProtoSniper::SelectSchedule ( void )
 			return SCHED_PSNIPER_PLAYER_DEAD;
 		}
 	}
-#endif //TF_CLASSIC
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	if( HasCondition( COND_HEAR_DANGER ) )
 	{
@@ -1979,11 +1966,7 @@ void CProtoSniper::StartTask( const Task_t *pTask )
 	{
 	case TASK_SNIPER_PLAYER_DEAD:
 		{
-#ifdef TF_CLASSIC
-			m_hSweepTarget = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 			m_hSweepTarget = AI_GetSinglePlayer();
-#endif
 			SetWait( 4.0f );
 			LaserOn( m_hSweepTarget->GetAbsOrigin(), vec3_origin );
 		}
@@ -2049,6 +2032,9 @@ void CProtoSniper::StartTask( const Task_t *pTask )
 			if( GetEnemy()->IsPlayer() )
 			{
 				float delay = 0;
+#ifdef _XBOX
+				delay += sniper_xbox_delay.GetFloat();
+#endif
 
 				if( gpGlobals->curtime - m_flTimeLastAttackedPlayer <= SNIPER_FASTER_ATTACK_PERIOD )
 				{
@@ -2625,7 +2611,7 @@ Vector CProtoSniper::LeadTarget( CBaseEntity *pTarget )
 CBaseEntity *CProtoSniper::PickDeadPlayerTarget()
 {
 	const int iSearchSize = 32;
-#ifdef TF_CLASSIC
+#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 	CBaseEntity *pTarget = UTIL_GetNearestVisiblePlayer(this); 
 	CBaseEntity *pEntities[ iSearchSize ];
 
@@ -2636,7 +2622,7 @@ CBaseEntity *CProtoSniper::PickDeadPlayerTarget()
 
 	int iNumEntities = UTIL_EntitiesInSphere( pEntities, iSearchSize, AI_GetSinglePlayer()->GetAbsOrigin(), 180.0f, 0 );
 
-#endif //TF_CLASSIC
+#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	// Not very robust, but doesn't need to be. Randomly select a nearby object in the list that isn't an NPC.
 	if( iNumEntities > 0 )
@@ -3269,29 +3255,7 @@ void CSniperBullet::BulletThink( void )
 	if( tr.fraction != 1.0 )
 	{
 		// This slice of bullet will hit something.
-
-		CTakeDamageInfo info_modified;
-
-		//float flDamage = sk_dmg_sniper_penetrate_npc.GetInt();
-		//float flPLDamage = sk_dmg_sniper_penetrate_plr.GetInt();
-		float flDamage = info_modified.GetDamage();
-		float flPLDamage = info_modified.GetDamage();
-
-		info_modified.AddDamageType( DMG_CRITICAL );
-		info_modified.SetDamageCustom( TF_DMG_CUSTOM_HEADSHOT );
-
-		FireBulletsInfo_t info;
-		info.m_vecSrc = vecStart;
-		info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-		info.m_flDistance = flDist;
-		info.m_iAmmoType = m_AmmoType;
-		info.m_iTracerFreq = 1;
-		info.m_vecDirShooting = m_vecDir;
-		info.m_nFlags = FIRE_BULLETS_TEMPORARY_DANGER_SOUND;
-		info.m_flDamage = flDamage;
-		info.m_iPlayerDamage = flPLDamage;
-		GetOwnerEntity()->FireBullets( info );
-		//GetOwnerEntity()->FireBullets( 1, vecStart, m_vecDir, vec3_origin, flDist, m_AmmoType, 0 );
+		GetOwnerEntity()->FireBullets( 1, vecStart, m_vecDir, vec3_origin, flDist, m_AmmoType, 0 );
 		m_iImpacts++;
 
 #ifdef HL2_EPISODIC

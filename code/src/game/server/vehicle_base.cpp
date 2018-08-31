@@ -1122,15 +1122,12 @@ CFourWheelServerVehicle::CFourWheelServerVehicle( void )
 	m_ViewSmoothing.flRollCurveZero		= ROLL_CURVE_ZERO;
 	m_ViewSmoothing.flRollCurveLinear	= ROLL_CURVE_LINEAR;
 }
-/*
+
 #ifdef HL2_EPISODIC
 ConVar r_JeepFOV( "r_JeepFOV", "82", FCVAR_CHEAT | FCVAR_REPLICATED );
 #else
 ConVar r_JeepFOV( "r_JeepFOV", "90", FCVAR_CHEAT | FCVAR_REPLICATED );
 #endif // HL2_EPISODIC
-*/
-
-ConVar r_JeepFOV( "r_JeepFOV", "90", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 //-----------------------------------------------------------------------------
 // Purpose: Setup our view smoothing information
@@ -1361,25 +1358,4 @@ bool CFourWheelServerVehicle::GetWheelContactPoint( int nWheelIndex, Vector &vec
 		}
 	}
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFourWheelServerVehicle::ItemPostFrame( CBasePlayer *player )
-{
-	Assert( player == GetDriver() );
-
-	GetDrivableVehicle()->ItemPostFrame( player );
-
-	if ( player->m_nButtons & IN_USE )
-	{
-		if ( GetDrivableVehicle()->CanExitVehicle(player) )
-		{
-			if ( !HandlePassengerExit( player ) && ( player != NULL ) )
-			{
-				player->PlayUseDenySound();
-			}
-		}
-	}
 }

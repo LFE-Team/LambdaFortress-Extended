@@ -42,7 +42,6 @@ public:
 
 	int GetTimesUsed( void );
 
-	void StartBuildingEffects( void );
 	void StartChargedEffects( void );
 	void StopChargedEffects( void );
 
@@ -54,7 +53,6 @@ public:
 private:
 	int m_iState;
 	int m_iOldState;
-	int m_iOldLevel;
 	float m_flRechargeTime;
 	int m_iTimesUsed;
 	float m_flYawToExit;

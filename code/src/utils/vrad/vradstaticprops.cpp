@@ -483,30 +483,15 @@ bool LoadStudioModel( char const* pModelName, CUtlBuffer& buf )
 
 	if (pHdr->version != STUDIO_VERSION)
 	{
-		if (g_bIgnoreModelVersions)
-		{
-			Warning("Warning! Unexpected model version \"%s\"\n", pModelName);
-		}
-		else
-		{
-			Warning("Error! Invalid model version \"%s\"\n", pModelName);
-			return false;
-		}
+		Warning("Error! Invalid model version \"%s\"\n", pModelName );
+		return false;
 	}
 
 	if (!IsStaticProp(pHdr))
 	{
-		if (!g_bAllowDynamicPropsAsStatic)
-		{
-			Warning("Error! To use model \"%s\"\n"
-				"      as a static prop, it must be compiled with $staticprop!\n", pModelName);
-			return false;
-		}
-		else
-		{
-			Warning("Warning! Using dynamic model \"%s\"\n"
-				"      as a static prop\n", pModelName);
-		}
+		Warning("Error! To use model \"%s\"\n"
+			"      as a static prop, it must be compiled with $staticprop!\n", pModelName );
+		return false;
 	}
 
 	// ensure reset
@@ -542,12 +527,7 @@ bool LoadVTXFile( char const* pModelName, const studiohdr_t *pStudioHdr, CUtlBuf
 
 	// construct filename
 	Q_StripExtension( pModelName, filename, sizeof( filename ) );
-	strcat( filename, ".dx90.vtx" );
-
-	if (!LoadFile(filename, buf) && g_bAllowDX90VTX)
-	{
-		strcat(filename, ".dx80.vtx");
-	}
+	strcat( filename, ".dx80.vtx" );
 
 	if ( !LoadFile( filename, buf ) )
 	{
@@ -560,16 +540,8 @@ bool LoadVTXFile( char const* pModelName, const studiohdr_t *pStudioHdr, CUtlBuf
 	// Check that it's valid
 	if ( pVtxHdr->version != OPTIMIZED_MODEL_FILE_VERSION )
 	{
-		if (g_bIgnoreModelVersions)
-		{
-			Warning("Warning! Unepected VTX file version: %d, expected %d \"%s\"\n", pVtxHdr->version, OPTIMIZED_MODEL_FILE_VERSION, filename);
-		}
-		else
-		{
-			Warning("Error! Invalid VTX file version: %d, expected %d \"%s\"\n", pVtxHdr->version, OPTIMIZED_MODEL_FILE_VERSION, filename);
-			return false;
-		}
-
+		Warning( "Error! Invalid VTX file version: %d, expected %d \"%s\"\n", pVtxHdr->version, OPTIMIZED_MODEL_FILE_VERSION, filename );
+		return false;
 	}
 	if ( pVtxHdr->checkSum != pStudioHdr->checksum )
 	{

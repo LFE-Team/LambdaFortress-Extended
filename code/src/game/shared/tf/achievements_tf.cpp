@@ -17,8 +17,6 @@
 
 CAchievementMgr g_AchievementMgrTF;	// global achievement mgr for TF
 
-
-
 bool CheckWinNoEnemyCaps( IGameEvent *event, int iRole );
 
 // Grace period that we allow a player to start after level init and still consider them to be participating for the full round.  This is fairly generous
@@ -26,8 +24,6 @@ bool CheckWinNoEnemyCaps( IGameEvent *event, int iRole );
 #define TF_FULL_ROUND_GRACE_PERIOD	( 4 * 60.0f )
 
 bool IsLocalTFPlayerClass( int iClass );
-
-#if 0
 
 // helper class for achievements that check that the player was playing on a game team for the full round
 class CTFAchievementFullRound : public CBaseAchievement
@@ -69,6 +65,41 @@ public:
 
 };
 
+class CAchievementTFPlayGameEveryClass : public CTFAchievementFullRound
+{
+	DECLARE_CLASS( CAchievementTFPlayGameEveryClass, CTFAchievementFullRound );
+	void Init() 
+	{
+		SetFlags( ACH_SAVE_GLOBAL | ACH_HAS_COMPONENTS | ACH_FILTER_FULL_ROUND_ONLY );
+		SetGoal( TF_LAST_NORMAL_CLASS - TF_FIRST_NORMAL_CLASS + 1 );
+		BaseClass::Init();
+	}
+
+	virtual void Event_OnRoundComplete( float flRoundTime, IGameEvent *event )
+	{
+		float flLastClassChangeTime = m_pAchievementMgr->GetLastClassChangeTime();
+		if ( flLastClassChangeTime > 0 ) 
+		{					
+			// has the player been present and not changed class since the start of this round (minus a grace period)?
+			if ( flLastClassChangeTime < ( gpGlobals->curtime - flRoundTime ) + TF_FULL_ROUND_GRACE_PERIOD )
+			{
+				C_TFPlayer *pTFPlayer = C_TFPlayer::GetLocalTFPlayer();
+				if ( pTFPlayer )
+				{
+					int iClass = pTFPlayer->GetPlayerClass()->GetClassIndex();
+					if ( iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_LAST_NORMAL_CLASS )
+					{
+						// yes, the achievement is satisfied for this class, set the corresponding bit
+						int iBitNumber =( iClass - TF_FIRST_NORMAL_CLASS );
+						EnsureComponentBitSetAndEvaluate( iBitNumber );
+					}							
+				}
+			}
+		}
+	}
+};
+DECLARE_ACHIEVEMENT( CAchievementTFPlayGameEveryClass, ACHIEVEMENT_TF_PLAY_GAME_EVERYCLASS, "TF_PLAY_GAME_EVERYCLASS", 5 );
+
 class CAchievementTFPlayGameEveryMap : public CTFAchievementFullRound
 {
 	DECLARE_CLASS( CAchievementTFPlayGameEveryMap, CTFAchievementFullRound );
@@ -105,6 +136,92 @@ class CAchievementTFPlayGameEveryMap : public CTFAchievementFullRound
 	}
 };
 DECLARE_ACHIEVEMENT( CAchievementTFPlayGameEveryMap, ACHIEVEMENT_TF_PLAY_GAME_EVERYMAP, "TF_PLAY_GAME_EVERYMAP", 5 );
+
+class CAchievementTFGetHealPoints : public CBaseAchievement
+{
+	void Init() 
+	{
+		SetFlags( ACH_SAVE_GLOBAL );
+		SetGoal( 25000 );		
+	}
+
+	void OnPlayerStatsUpdate()
+	{
+		ClassStats_t &classStats = CTFStatPanel::GetClassStats( TF_CLASS_MEDIC );
+		int iOldCount = m_iCount;
+		m_iCount = classStats.accumulated.m_iStat[TFSTAT_HEALING];
+		if ( m_iCount != iOldCount )
+		{
+			m_pAchievementMgr->SetDirty( true );
+		}
+
+		if ( IsLocalTFPlayerClass( TF_CLASS_MEDIC ) )
+		{
+			EvaluateNewAchievement();
+		}
+	}
+};
+DECLARE_ACHIEVEMENT( CAchievementTFGetHealPoints, ACHIEVEMENT_TF_GET_HEALPOINTS, "TF_GET_HEALPOINTS", 5 );
+
+class CAchievementTFBurnPlayersInMinimumTime : public CBaseAchievement
+{
+	void Init() 
+	{
+		SetFlags( ACH_SAVE_GLOBAL );
+		SetGoal( 1 );
+	}
+	// server fires an event for this achievement, no other code within achievement necessary
+};
+DECLARE_ACHIEVEMENT( CAchievementTFBurnPlayersInMinimumTime, ACHIEVEMENT_TF_BURN_PLAYERSINMINIMIMTIME, "TF_BURN_PLAYERSINMINIMUMTIME", 5 );
+
+class CAchievementTFGetTurretKills : public CBaseAchievement
+{
+	void Init() 
+	{
+		SetFlags( ACH_SAVE_GLOBAL );
+		SetGoal( 1 );		
+	}
+	// server fires an event for this achievement, no other code within achievement necessary
+};
+DECLARE_ACHIEVEMENT( CAchievementTFGetTurretKills, ACHIEVEMENT_TF_GET_TURRETKILLS, "TF_GET_TURRETKILLS", 5 );
+
+class CAchievementTFGetHeadshots: public CBaseAchievement
+{
+	void Init() 
+	{
+		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
+		SetGoal( 25 );		
+	}
+
+	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event ) 
+	{
+		// was this a headshot by this player?
+		if ( ( pAttacker == C_TFPlayer::GetLocalTFPlayer() ) && ( event->GetInt( "customkill" ) == TF_DMG_CUSTOM_HEADSHOT ) )
+		{
+			// Increment count.  Count will also get slammed whenever we get a stats update from server.  They should generally agree,
+			// but server is authoritative.
+			IncrementCount();
+		}
+	}
+
+	void OnPlayerStatsUpdate()
+	{
+		// when stats are updated by server, use most recent stat value
+		ClassStats_t &classStats = CTFStatPanel::GetClassStats( TF_CLASS_SNIPER );
+		int iOldCount = m_iCount;
+		m_iCount = classStats.accumulated.m_iStat[TFSTAT_HEADSHOTS];
+		if ( m_iCount != iOldCount )
+		{
+			m_pAchievementMgr->SetDirty( true );
+		}
+
+		if ( IsLocalTFPlayerClass( TF_CLASS_SNIPER ) )
+		{
+			EvaluateNewAchievement();
+		}
+	}
+};
+DECLARE_ACHIEVEMENT( CAchievementTFGetHeadshots, ACHIEVEMENT_TF_GET_HEADSHOTS, "TF_GET_HEADSHOTS", 5 );
 
 class CAchievementTFKillNemesis : public CBaseAchievement
 {
@@ -231,6 +348,39 @@ class CAchievementTFWinMultipleGames : public CTFAchievementFullRound
 	}
 };
 DECLARE_ACHIEVEMENT( CAchievementTFWinMultipleGames, ACHIEVEMENT_TF_WIN_MULTIPLEGAMES, "TF_WIN_MULTIPLEGAMES", 10 );
+
+class CAchievementTFGetMultipleKills : public CBaseAchievement
+{
+	void Init() 
+	{
+		// listen for player kill enemy events, base class will increment count each time that happens
+		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
+		SetGoal( 1000 );
+	}
+
+	void OnPlayerStatsUpdate()
+	{
+		// when stats are updated by server, use most recent stat values
+
+		int iKills = 0;
+		// get sum of kills per class across all classes to get total kills
+		for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass <= TF_LAST_NORMAL_CLASS; iClass++ )
+		{
+			ClassStats_t &classStats = CTFStatPanel::GetClassStats( iClass );
+			iKills += classStats.accumulated.m_iStat[TFSTAT_KILLS];
+		}
+
+		int iOldCount = m_iCount;
+		m_iCount = iKills;
+		if ( m_iCount != iOldCount )
+		{
+			m_pAchievementMgr->SetDirty( true );
+		}
+
+		EvaluateNewAchievement();
+	}
+};
+DECLARE_ACHIEVEMENT( CAchievementTFGetMultipleKills, ACHIEVEMENT_TF_GET_MULTIPLEKILLS, "TF_GET_MULTIPLEKILLS", 15 );
 
 class CAchievementTFWin2FortNoEnemyCaps : public CBaseAchievement
 {
@@ -374,7 +524,6 @@ class CAchievementTFWinGravelPitNoEnemyCaps : public CBaseAchievement
 	}
 };
 DECLARE_ACHIEVEMENT( CAchievementTFWinGravelPitNoEnemyCaps, ACHIEVEMENT_TF_WIN_GRAVELPIT_NOENEMYCAPS, "TF_WIN_GRAVELPIT_NOENEMYCAPS", 30 );
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: see if a round win was a win for the local player with no enemy caps
@@ -411,122 +560,5 @@ bool IsLocalTFPlayerClass( int iClass )
 	return( pLocalPlayer && pLocalPlayer->IsPlayerClass( iClass ) );
 }
 
-class CAchievementTFGetHealPoints : public CBaseAchievement
-{
-	void Init() 
-	{
-		SetFlags( ACH_SAVE_GLOBAL );
-		SetGoal( 25000 );		
-	}
-
-	void OnPlayerStatsUpdate()
-	{
-		ClassStats_t &classStats = CTFStatPanel::GetClassStats( TF_CLASS_MEDIC );
-		int iOldCount = m_iCount;
-		m_iCount = classStats.accumulated.m_iStat[TFSTAT_HEALING];
-		if ( m_iCount != iOldCount )
-		{
-			m_pAchievementMgr->SetDirty( true );
-		}
-
-		if ( IsLocalTFPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			EvaluateNewAchievement();
-		}
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTFGetHealPoints, ACHIEVEMENT_TF_GET_HEALPOINTS, "TF_GET_HEALPOINTS", 5 );
-
-class CAchievementTFGetTurretKills : public CBaseAchievement
-{
-	void Init() 
-	{
-		SetFlags( ACH_SAVE_GLOBAL );
-		SetGoal( 1 );		
-	}
-	// server fires an event for this achievement, no other code within achievement necessary
-};
-DECLARE_ACHIEVEMENT( CAchievementTFGetTurretKills, ACHIEVEMENT_TF_GET_TURRETKILLS, "TF_GET_TURRETKILLS", 5 );
-
-class CAchievementTFGetHeadshots: public CBaseAchievement
-{
-	void Init() 
-	{
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
-		SetGoal( 25 );		
-	}
-
-	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event ) 
-	{
-		// was this a headshot by this player?
-		if ( ( pAttacker == C_TFPlayer::GetLocalTFPlayer() ) && ( event->GetInt( "customkill" ) == TF_DMG_CUSTOM_HEADSHOT ) )
-		{
-			// Increment count.  Count will also get slammed whenever we get a stats update from server.  They should generally agree,
-			// but server is authoritative.
-			IncrementCount();
-		}
-	}
-
-	void OnPlayerStatsUpdate()
-	{
-		// when stats are updated by server, use most recent stat value
-		ClassStats_t &classStats = CTFStatPanel::GetClassStats( TF_CLASS_SNIPER );
-		int iOldCount = m_iCount;
-		m_iCount = classStats.accumulated.m_iStat[TFSTAT_HEADSHOTS];
-		if ( m_iCount != iOldCount )
-		{
-			m_pAchievementMgr->SetDirty( true );
-		}
-
-		if ( IsLocalTFPlayerClass( TF_CLASS_SNIPER ) )
-		{
-			EvaluateNewAchievement();
-		}
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTFGetHeadshots, ACHIEVEMENT_TF_GET_HEADSHOTS, "TF_GET_HEADSHOTS", 5 );
-
-class CAchievementTFGetMultipleKills : public CBaseAchievement
-{
-	void Init() 
-	{
-		// listen for player kill enemy events, base class will increment count each time that happens
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
-		SetGoal( 1000 );
-	}
-
-	void OnPlayerStatsUpdate()
-	{
-		// when stats are updated by server, use most recent stat values
-
-		int iKills = 0;
-		// get sum of kills per class across all classes to get total kills
-		for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass <= TF_LAST_NORMAL_CLASS; iClass++ )
-		{
-			ClassStats_t &classStats = CTFStatPanel::GetClassStats( iClass );
-			iKills += classStats.accumulated.m_iStat[TFSTAT_KILLS];
-		}
-
-		int iOldCount = m_iCount;
-		m_iCount = iKills;
-		if ( m_iCount != iOldCount )
-		{
-			m_pAchievementMgr->SetDirty( true );
-		}
-
-		EvaluateNewAchievement();
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTFGetMultipleKills, ACHIEVEMENT_TF_GET_MULTIPLEKILLS, "TF_GET_MULTIPLEKILLS", 15 );
-
-class CAchievementTFKillGunships : public CBaseAchievement
-{
-	void Init() 
-	{
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_WITH_GAME );
-		SetVictimFilter( "npc_combinegunship" );
-		SetGoal( 6 );	// note: goal is really six, although #define is "THREEGUNSHIPS"
-	}
-};
 
 #endif // CLIENT_DLL

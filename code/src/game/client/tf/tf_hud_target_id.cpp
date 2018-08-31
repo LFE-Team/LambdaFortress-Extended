@@ -13,7 +13,6 @@
 #include "c_team.h"
 #include "tf_gamerules.h"
 #include "tf_hud_statpanel.h"
-#include "vgui_avatarimage.h"
 #include "c_ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -24,13 +23,6 @@ DECLARE_HUDELEMENT( CSpectatorTargetID );
 DECLARE_HUDELEMENT( CSecondaryTargetID );
 
 using namespace vgui;
-
-extern vgui::IImage* GetDefaultAvatarImage( C_BasePlayer *pPlayer );
-
-ConVar tf_hud_target_id_alpha( "tf_hud_target_id_alpha", "100", FCVAR_ARCHIVE , "Alpha value of target id background, default 100" );
-
-ConVar tf_hud_target_id_show_avatars( "tf_hud_target_id_show_avatars", "0", FCVAR_ARCHIVE, "Show avatars on player target ids" );
-ConVar tf_hud_target_id_show_building_avatars( "tf_hud_target_id_show_building_avatars", "0", FCVAR_ARCHIVE, "If tf_hud_target_id_show_avatars is enabled, show avatars on building target ids" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -49,7 +41,6 @@ CTargetID::CTargetID( const char *pElementName ) :
 
 	m_pTargetNameLabel = NULL;
 	m_pTargetDataLabel = NULL;
-	m_pAvatar = NULL;
 	m_pBGPanel = NULL;
 	m_pTargetHealth = new CTFSpectatorGUIHealth( this, "SpectatorGUIHealth" );
 	m_bLayoutOnUpdate = false;
@@ -79,7 +70,6 @@ void CTargetID::ApplySchemeSettings( vgui::IScheme *scheme )
 
 	m_pTargetNameLabel = dynamic_cast<Label *>(FindChildByName("TargetNameLabel"));
 	m_pTargetDataLabel = dynamic_cast<Label *>(FindChildByName("TargetDataLabel"));
-	m_pAvatar = dynamic_cast<CAvatarImagePanel *>(FindChildByName("AvatarImage"));
 	m_pBGPanel = dynamic_cast<CTFImagePanel*>(FindChildByName("TargetIDBG"));
 	m_cBlueColor = scheme->GetColor( "TeamBlue", Color( 255, 64, 64, 255 ) );
 	m_cRedColor = scheme->GetColor( "TeamRed", Color( 255, 64, 64, 255 ) );
@@ -166,14 +156,15 @@ bool CTargetID::ShouldDraw( void )
 				bool bDisguisedEnemy = false;
 				if ( pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && // they're disguised
 					!pPlayer->m_Shared.InCond( TF_COND_DISGUISING ) && // they're not in the process of disguising
-					!pPlayer->m_Shared.IsStealthed() ) // they're not cloaked
+					!pPlayer->m_Shared.InCond( TF_COND_STEALTHED ) ) // they're not cloaked
 				{
-					bDisguisedEnemy = ( ToTFPlayer( pPlayer->m_Shared.GetDisguiseTarget() ) != NULL );
+					bDisguisedEnemy = (ToTFPlayer( pPlayer->m_Shared.GetDisguiseTarget() ) != NULL);
 				}
 
-				bReturn = ( !pPlayer->IsEnemyPlayer() ||
-					( bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber() ) ||
-					( pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && !pPlayer->m_Shared.IsStealthed() ) );
+				bReturn = (pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || 
+					pLocalTFPlayer->InSameTeam(pEnt) || 
+					(bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber()) || 
+					(pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && !pPlayer->m_Shared.InCond( TF_COND_STEALTHED )) );
 			}
 			else if ( pEnt->IsBaseObject() && (pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) || pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR) )
 			{
@@ -223,11 +214,59 @@ void CTargetID::PerformLayout( void )
 
 	if ( m_pBGPanel )
 	{
-		m_pBGPanel->SetSize( iWidth, GetTall() * 0.8 );
-		m_pBGPanel->SetPos( 0, 9 );
-		m_pBGPanel->SetAlpha( tf_hud_target_id_alpha.GetFloat() );
+		m_pBGPanel->SetSize( iWidth, GetTall() );
 	}
 };
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTargetID::SetColorForTargetTeam( int iTeamNumber )
+{
+#if 0
+	switch( iTeamNumber )
+	{
+	case TF_TEAM_BLUE:
+		return m_cBlueColor;
+		break;
+
+	case TF_TEAM_RED:
+		return m_cRedColor;
+		break;
+
+	case TF_TEAM_GREEN:
+		return m_cGreenColor;
+		break;
+
+	case TF_TEAM_YELLOW:
+		return m_cYellowColor;
+		break;
+
+	default:
+		return m_cSpecColor;
+		break;
+	}
+#else
+	switch ( iTeamNumber )
+	{
+	case TF_TEAM_RED:
+		m_pBGPanel->SetImage("../hud/freezecam_red_bg");
+		break;
+	case TF_TEAM_BLUE:
+		m_pBGPanel->SetImage("../hud/freezecam_blue_bg");
+		break;
+	case TF_TEAM_GREEN:
+		m_pBGPanel->SetImage("../hud/freezecam_green_bg");
+		break;
+	case TF_TEAM_YELLOW:
+		m_pBGPanel->SetImage("../hud/freezecam_yellow_bg");
+		break;
+	default:
+		m_pBGPanel->SetImage("../hud/freezecam_black_bg");
+		break;
+	}
+#endif
+} 
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -273,7 +312,6 @@ void CTargetID::UpdateID( void )
 		float flMaxHealth = 1;
 		int iMaxBuffedHealth = 0;
 		int iColorNum = TEAM_UNASSIGNED;
-		C_TFPlayer *pAvatarPlayer = NULL;
 
 		// Some entities we always want to check, cause the text may change
 		// even while we're looking at it
@@ -295,27 +333,13 @@ void CTargetID::UpdateID( void )
 			// determine if the target is a disguised spy (either friendly or enemy)
 			if ( pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && // they're disguised
 				//!pPlayer->m_Shared.InCond( TF_COND_DISGUISING ) && // they're not in the process of disguising
-				!pPlayer->m_Shared.IsStealthed() ) // they're not cloaked
+				!pPlayer->m_Shared.InCond( TF_COND_STEALTHED ) ) // they're not cloaked
 			{
 				bDisguisedTarget = true;
 				pDisguiseTarget = ToTFPlayer( pPlayer->m_Shared.GetDisguiseTarget() );
 			}
 
-			// get the avatar
-			pAvatarPlayer = pPlayer;
-			// get team color
 			iColorNum = pPlayer->GetTeamNumber();
-
-			// offset the name if avatars are enabled
-			if ( tf_hud_target_id_show_avatars.GetBool() && !g_PR->IsFakePlayer( m_iTargetEntIndex ) )
-			{
-				m_pTargetNameLabel->SetTextInset( 32, 0 );
-			}
-			else
-			{
-				// don't show avatars on undisguised bots
-				m_pTargetNameLabel->SetTextInset( 0, 0 );
-			}
 
 			if ( bDisguisedTarget )
 			{
@@ -325,23 +349,20 @@ void CTargetID::UpdateID( void )
 					if ( pDisguiseTarget )
 					{
 						bDisguisedEnemy = true;
-						// Change the name.
+						// change the player name
 						g_pVGuiLocalize->ConvertANSIToUnicode( pDisguiseTarget->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
 						// Show their disguise team color.
 						iColorNum = pPlayer->m_Shared.GetDisguiseTeam();
-						// Change the avatar.
-						pAvatarPlayer = pDisguiseTarget;
 					}
 				}
-				
-				if ( !pPlayer->IsEnemyPlayer() || pPlayer->m_Shared.GetDisguiseClass() == TF_CLASS_SPY )
+				else
 				{
-					// The target is a disguised friendly spy or enemy spy disguised as a spy.
-					// Add the disguise team & class to the target ID element.
+					// The target is a disguised friendly spy.  They appear to the player with no disguise.  Add the disguise
+					// team & class to the target ID element.
 					bool bDisguisedAsEnemy = ( pPlayer->m_Shared.GetDisguiseTeam() != pPlayer->GetTeamNumber() );
-					const wchar_t *wszAlignment = g_pVGuiLocalize->Find( bDisguisedAsEnemy || bDisguisedEnemy ? "#TF_enemy" : "#TF_friendly" );
+					const wchar_t *wszAlignment = g_pVGuiLocalize->Find( bDisguisedAsEnemy ? "#TF_enemy" : "#TF_friendly" );
 					
-					int classindex = bDisguisedEnemy ? pPlayer->m_Shared.GetMaskClass() : pPlayer->m_Shared.GetDisguiseClass();
+					int classindex = pPlayer->m_Shared.GetDisguiseClass();
 					const wchar_t *wszClassName = g_pVGuiLocalize->Find( g_aPlayerClassNames[classindex] );
 
 					// build a string with disguise information
@@ -350,21 +371,20 @@ void CTargetID::UpdateID( void )
 				}
 			}
 
-			if ( pPlayer->IsPlayerClass( TF_CLASS_MEDIC ) || ( bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseClass() == TF_CLASS_MEDIC ) )
+			if ( pPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
 			{
-				wchar_t wszChargeLevel[10];
-				_snwprintf( wszChargeLevel, ARRAYSIZE( wszChargeLevel ) - 1, L"%.0f", pPlayer->MedicGetChargeLevel() * 100 );
-				wszChargeLevel[ARRAYSIZE( wszChargeLevel ) - 1] = '\0';
-				g_pVGuiLocalize->ConstructString( sDataString, sizeof( sDataString ), g_pVGuiLocalize->Find( "#TF_playerid_mediccharge" ), 1, wszChargeLevel );
+				wchar_t wszChargeLevel[ 10 ];
+				_snwprintf( wszChargeLevel, ARRAYSIZE(wszChargeLevel) - 1, L"%.0f", pPlayer->MedicGetChargeLevel() * 100 );
+				wszChargeLevel[ ARRAYSIZE(wszChargeLevel)-1 ] = '\0';
+				g_pVGuiLocalize->ConstructString( sDataString, sizeof(sDataString), g_pVGuiLocalize->Find( "#TF_playerid_mediccharge" ), 1, wszChargeLevel );
 			}
 			
-			if ( !pPlayer->IsEnemyPlayer() ||
-				( bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber() ) )
+			if (pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || pPlayer->InSameTeam(pLocalTFPlayer) || (bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber()))
 			{
 				printFormatString = "#TF_playerid_sameteam";
 				bShowHealth = true;
 			}
-			else if ( pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && !pPlayer->m_Shared.IsStealthed() )
+			else if ( pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && !pPlayer->m_Shared.InCond( TF_COND_STEALTHED ) )
 			{
 				// Spy can see enemy's health.
 				printFormatString = "#TF_playerid_diffteam";
@@ -373,21 +393,20 @@ void CTargetID::UpdateID( void )
 
 			if ( bShowHealth )
 			{
-				C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
+				C_TF_PlayerResource *tf_PR = dynamic_cast<C_TF_PlayerResource *>(g_PR);
 
 				if ( tf_PR )
 				{
+					flMaxHealth = tf_PR->GetMaxHealth( m_iTargetEntIndex );
+					iMaxBuffedHealth = pPlayer->m_Shared.GetMaxBuffedHealth();
+
 					if ( bDisguisedEnemy )
 					{
 						flHealth = (float)pPlayer->m_Shared.GetDisguiseHealth();
-						flMaxHealth = pPlayer->m_Shared.GetDisguiseMaxHealth();
-						iMaxBuffedHealth = pPlayer->m_Shared.GetDisguiseMaxBuffedHealth();
 					}
 					else
 					{
 						flHealth = (float)pPlayer->GetHealth();
-						flMaxHealth = tf_PR->GetMaxHealth( m_iTargetEntIndex );
-						iMaxBuffedHealth = pPlayer->m_Shared.GetMaxBuffedHealth();
 					}
 				}
 				else
@@ -420,16 +439,11 @@ void CTargetID::UpdateID( void )
 				flMaxHealth = pObj->GetMaxHealth();
 				C_TFPlayer *pBuilder = pObj->GetBuilder();
 				iColorNum = pBuilder ? pBuilder->GetTeamNumber() : pObj->GetTeamNumber();
-				
-				// Are building avatars allowed?
-				if ( tf_hud_target_id_show_avatars.GetBool() && tf_hud_target_id_show_building_avatars.GetBool() && pBuilder )
-				{
-					pAvatarPlayer = pBuilder;
-				}
 			}
 			else if ( pEnt->IsNPC() )
 			{
 				C_AI_BaseNPC *pNPC = assert_cast<C_AI_BaseNPC *>( pEnt );
+
 				pNPC->GetTargetIDString( sIDString, sizeof(sIDString) );
 				pNPC->GetTargetIDDataString( sDataString, sizeof(sDataString) );
 				bShowHealth = true;
@@ -446,33 +460,10 @@ void CTargetID::UpdateID( void )
 			flHealth = 0;	// fixup for health being 1 when dead
 		}
 
+		SetColorForTargetTeam( iColorNum );
+
 		m_pTargetHealth->SetHealth( flHealth, flMaxHealth, iMaxBuffedHealth );
 		m_pTargetHealth->SetVisible( bShowHealth );
-
-		m_pBGPanel->SetBGImage( iColorNum );
-
-		// Setup avatar
-		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer && m_pAvatar )
-		{
-			if ( !m_pAvatar->IsVisible() )
-				m_pAvatar->SetVisible( true );
-
-			m_pAvatar->SetDefaultAvatar( GetDefaultAvatarImage( pAvatarPlayer ) );
-			m_pAvatar->SetPlayer( pAvatarPlayer );
-			m_pAvatar->SetShouldDrawFriendIcon( false );
-
-			m_pTargetNameLabel->SetTextInset( m_iAvatarOffset, 0 );
-		}
-		else
-		{
-			// Avatars are off, wipe it.
-			if ( m_pAvatar && m_pAvatar->IsVisible() )
-			{
-				m_pAvatar->SetVisible( false );
-			}
-
-			m_pTargetNameLabel->SetTextInset( 0, 0 );
-		}
 
 		int iNameW, iDataW, iIgnored;
 		m_pTargetNameLabel->GetContentSize( iNameW, iIgnored );

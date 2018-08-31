@@ -713,7 +713,7 @@ bool CNPC_Combine_Cannon::VerifyShot( CBaseEntity *pTarget )
 
 	if( tr.fraction != 1.0 )
 	{
-		if( pTarget->IsPlayer() || pTarget->IsBaseObject() )
+		if( pTarget->IsPlayer() )
 		{
 			// if the target is the player, do another trace to see if we can shoot his eyeposition. This should help 
 			// improve sniper responsiveness in cases where the player is hiding his chest from the sniper with his 
@@ -875,7 +875,7 @@ void CNPC_Combine_Cannon::StartTask( const Task_t *pTask )
 
 	case TASK_CANNON_PAINT_ENEMY:
 		{
-			if ( GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
+			if ( GetEnemy()->IsPlayer() )
 			{
 				float delay = random->RandomFloat( 0.0f, 0.3f );
 			
@@ -933,7 +933,7 @@ void CNPC_Combine_Cannon::RunTask( const Task_t *pTask )
 			// Fire at enemy
 			if ( FireBullet( vecTarget, true ) )
 			{
-				bool bPlayerIsEnemy = ( m_hBarrageTarget && m_hBarrageTarget->IsPlayer() || m_hBarrageTarget->IsBaseObject() );
+				bool bPlayerIsEnemy = ( m_hBarrageTarget && m_hBarrageTarget->IsPlayer() );
 				bool bBarrageFinished = m_flBarrageDuration < gpGlobals->curtime;
 				bool bNoShot = ( QuerySeeEntity( m_hBarrageTarget ) == false );	// FIXME: Store this info off better
 				bool bSeePlayer = HasCondition( COND_SEE_PLAYER	);
@@ -1146,7 +1146,7 @@ void CNPC_Combine_Cannon::InputDisableSniper( inputdata_t &inputdata )
 bool CNPC_Combine_Cannon::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **ppBlocker )
 {
 	// NPC
-	if ( pEntity->IsPlayer() == false || pEntity->IsBaseObject() == false )
+	if ( pEntity->IsPlayer() == false )
 		return BaseClass::FVisible( pEntity, traceMask, ppBlocker );
 
 	if ( pEntity->GetFlags() & FL_NOTARGET )

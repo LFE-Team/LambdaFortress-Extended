@@ -48,7 +48,7 @@ Color g_ColorDarkGreen( 64, 255, 64, 255 );
 Color g_ColorYellow( 255, 178, 0, 255 );
 Color g_ColorGrey( 204, 204, 204, 255 );
 
-#ifndef TF_CLASSIC_CLIENT
+
 // removes all color markup characters, so Msg can deal with the string properly
 // returns a pointer to str
 char* RemoveColorMarkup( char *str )
@@ -83,7 +83,7 @@ char* RemoveColorMarkup( char *str )
 
 	return str;
 }
-#endif
+
 // converts all '\r' characters to '\n', so that the engine can deal with the properly
 // returns a pointer to str
 char* ConvertCRtoNL( char *str )
@@ -835,9 +835,9 @@ void CBaseHudChat::MsgFunc_SayText2( bf_read &msg )
 
 		// print raw chat text
 		ChatPrintf( client, iFilter, "%s", ansiString );
-#ifndef TF_CLASSIC_CLIENT
+
 		Msg( "%s\n", RemoveColorMarkup(ansiString) );
-#endif
+
 		CLocalPlayerFilter filter;
 		C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, "HudChat.Message" );
 	}
@@ -1396,11 +1396,7 @@ void CBaseHudChatLine::InsertAndColorizeText( wchar_t *buf, int clientIndex )
 	wchar_t *txt = m_text;
 	int lineLen = wcslen( m_text );
 	Color colCustom;
-	#ifndef TF_CLASSIC_CLIENT
 	if ( m_text[0] == COLOR_PLAYERNAME || m_text[0] == COLOR_LOCATION || m_text[0] == COLOR_NORMAL || m_text[0] == COLOR_ACHIEVEMENT || m_text[0] == COLOR_CUSTOM || m_text[0] == COLOR_HEXCODE || m_text[0] == COLOR_HEXCODE_ALPHA )
-	#else
-	if ( m_text[0] <= COLOR_MAX && m_text[0] != COLOR_USEOLDCOLORS )
-	#endif
 	{
 		while ( txt && *txt )
 		{
@@ -1572,8 +1568,6 @@ void CBaseHudChatLine::Colorize( int alpha )
 
 		}
 	}
-
-	Msg("\n");
 
 	InvalidateLayout( true );
 }

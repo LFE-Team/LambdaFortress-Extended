@@ -219,7 +219,6 @@ BEGIN_DATADESC( CNPC_BaseZombie )
 	DEFINE_FIELD( m_iMoanSound, FIELD_INTEGER ),
 	DEFINE_FIELD( m_hObstructor, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bIsSlumped, FIELD_BOOLEAN ),
-	DEFINE_KEYFIELD( m_bNoHeadcrab, FIELD_BOOLEAN, "noheadcrab" ),
 
 END_DATADESC()
 
@@ -719,14 +718,6 @@ bool CNPC_BaseZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDa
 	if ( info.GetDamageType() & DMG_REMOVENORAGDOLL )
 		return false;
 
-#ifdef TF_CLASSIC
-	if ( info.GetDamageType() & DMG_BULLET )
-		return false;
-
-	if ( info.GetDamageType() & DMG_CLUB )
-		return false;
-#endif
-
 	if ( m_fIsTorso )
 	{
 		// Already split.
@@ -772,8 +763,6 @@ bool CNPC_BaseZombie::ShouldBecomeTorso( const CTakeDamageInfo &info, float flDa
 //-----------------------------------------------------------------------------
 HeadcrabRelease_t CNPC_BaseZombie::ShouldReleaseHeadcrab( const CTakeDamageInfo &info, float flDamageThreshold )
 {
-	//CTakeDamageInfo info_modified = info;
-
 	if ( m_iHealth <= 0 )
 	{
 		if ( info.GetDamageType() & DMG_REMOVENORAGDOLL )
@@ -785,11 +774,10 @@ HeadcrabRelease_t CNPC_BaseZombie::ShouldReleaseHeadcrab( const CTakeDamageInfo 
 		// If I was killed by a bullet...
 		if ( info.GetDamageType() & DMG_BULLET )
 		{
-			if ( m_bHeadShot || m_bNoHeadcrab )
+			if( m_bHeadShot ) 
 			{
-				if ( flDamageThreshold > 0.25 || m_bNoHeadcrab )
+				if( flDamageThreshold > 0.25 )
 				{
-					//info_modified.AddDamageType( DMG_CRITICAL );
 					// Enough force to kill the crab.
 					return RELEASE_RAGDOLL;
 				}
@@ -1366,20 +1354,9 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 
 		if ( pPlayer != NULL && !(pPlayer->GetFlags() & FL_GODMODE ) )
 		{
-			#ifdef TF_CLASSIC
-			// only push player if they're on the ground
-			if ( !( GetFlags() & FL_ONGROUND ) )
-			{
-				pPlayer->ViewPunch( qaViewPunch );
-			}
-			else
-			{
-				pPlayer->VelocityPunch( vecVelocityPunch );
-			}
-			#else
 			pPlayer->ViewPunch( qaViewPunch );
+
 			pPlayer->VelocityPunch( vecVelocityPunch );
-			#endif
 		}
 		else if( !pPlayer && UTIL_ShouldShowBlood(pHurt->BloodColor()) )
 		{
@@ -1707,7 +1684,6 @@ void CNPC_BaseZombie::Spawn( void )
 {
 	SetSolid( SOLID_BBOX );
 	SetMoveType( MOVETYPE_STEP );
-	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
 #ifdef _XBOX
 	// Always fade the corpse

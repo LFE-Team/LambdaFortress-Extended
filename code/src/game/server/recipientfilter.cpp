@@ -372,12 +372,10 @@ void CPASAttenuationFilter::Filter( const Vector& origin, float attenuation /*= 
 	AddAllPlayers();
 	return;
 #else
- 	// Don't crop for attenuation in single player
- 	if ( gpGlobals->maxClients == 1 )
- 		return;
-
+	// Don't crop for attenuation in single player
+	if ( gpGlobals->maxClients == 1 )
+		return;
 #endif
-
 	// CPASFilter adds them by pure PVS in constructor
 	if ( attenuation <= 0 )
 		return;

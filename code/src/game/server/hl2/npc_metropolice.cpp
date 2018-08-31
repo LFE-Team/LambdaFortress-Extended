@@ -652,14 +652,6 @@ void CNPC_MetroPolice::Spawn( void )
 	{
 		m_iHealth = sk_metropolice_simple_health.GetFloat();
 	}
-	if (TFGameRules()->iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
-	{
-		m_iHealth = sk_metropolice_health.GetFloat() * 1.5;
-	}
-	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
-	{
-		KeyValue("additionalequipment", "weapon_smg1");
-	}
 
 	m_flFieldOfView		= -0.2;// indicates the width of this NPC's forward view cone ( as a dotproduct result )
 	m_NPCState			= NPC_STATE_NONE;
@@ -742,20 +734,12 @@ void CNPC_MetroPolice::Spawn( void )
 	{
 		SetBodygroup( METROPOLICE_BODYGROUP_MANHACK, true );
 	}
-	SpeedThink();
 }
 
 
 //-----------------------------------------------------------------------------
 // Update weapon ranges
 //-----------------------------------------------------------------------------
-void CNPC_MetroPolice::SpeedThink(void)
-{
-	if (sv_dynamicnpcs.GetFloat() == 1 && TFGameRules()->iDirectorAnger > 49)
-	{
-		SetPlaybackRate(1.5f);
-	}
-}
 void CNPC_MetroPolice::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
 	BaseClass::Weapon_Equip( pWeapon );

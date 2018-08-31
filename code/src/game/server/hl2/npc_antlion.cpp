@@ -1131,34 +1131,23 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 					DispatchSpawn( pGrenade );
 					pGrenade->SetThrower( this );
 					pGrenade->SetOwnerEntity( this );
-					pGrenade->ChangeTeam( GetTeamNumber() );
-
-					// Setup the initial velocity.
-					Vector vecForward, vecRight, vecUp;
-					QAngle vecAngles;
-					AngleVectors( vecAngles, &vecForward, &vecRight, &vecUp );
-					Vector vecVelocity = vecToss * flVelocity;
-					
+										
 					if ( i == 0 )
 					{
 						pGrenade->SetSpitSize( SPIT_LARGE );
-						pGrenade->ApplyAbsVelocityImpulse( vecVelocity );
+						pGrenade->SetAbsVelocity( vecToss * flVelocity );
 					}
 					else
 					{
-						pGrenade->ApplyAbsVelocityImpulse( ( vecToss + RandomVector( -0.035f, 0.035f ) ) * flVelocity );
+						pGrenade->SetAbsVelocity( ( vecToss + RandomVector( -0.035f, 0.035f ) ) * flVelocity );
 						pGrenade->SetSpitSize( random->RandomInt( SPIT_SMALL, SPIT_MEDIUM ) );
 					}
 
-					// Setup the initial angles.
-					QAngle angles( random->RandomFloat( -250, -500 ),
-								random->RandomFloat( -250, -500 ),
-								random->RandomFloat( -250, -500 ) );
-		
-					VectorAngles( vecVelocity, angles );
 					// Tumble through the air
-					//pGrenade->ApplyLocalAngularVelocityImpulse( angles );
-					pGrenade->SetLocalAngularVelocity( angles );
+					pGrenade->SetLocalAngularVelocity(
+						QAngle( random->RandomFloat( -250, -500 ),
+								random->RandomFloat( -250, -500 ),
+								random->RandomFloat( -250, -500 ) ) );
 				}
 
 				for ( int i = 0; i < 8; i++ )
@@ -5128,8 +5117,3 @@ float AntlionWorkerBurstRadius( void )
 	return sk_antlion_worker_burst_radius.GetFloat();
 }
 #endif // HL2_EPISODIC
-
-void CNPC_Antlion::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
-{
-	return Flip();
-}

@@ -58,7 +58,7 @@ ConVar advisor_throw_rate( "advisor_throw_rate", "4" );					// Throw an object e
 ConVar advisor_throw_warn_time( "advisor_throw_warn_time", "1.0" );		// Warn players one second before throwing an object.
 ConVar advisor_throw_lead_prefetch_time ( "advisor_throw_lead_prefetch_time", "0.66", FCVAR_NONE, "Save off the player's velocity this many seconds before throwing.");
 ConVar advisor_throw_stage_distance("advisor_throw_stage_distance","180.0",FCVAR_NONE,"Advisor will try to hold an object this far in front of him just before throwing it at you. Small values will clobber the shield and be very bad.");
-ConVar advisor_staging_num("advisor_staging_num","1",FCVAR_NONE,"Advisor will queue up this many objects to throw at Gordon.");
+//ConVar advisor_staging_num("advisor_staging_num","1",FCVAR_NONE,"Advisor will queue up this many objects to throw at Gordon.");
 ConVar advisor_throw_clearout_vel("advisor_throw_clearout_vel","200",FCVAR_NONE,"TEMP: velocity with which advisor clears things out of a throwable's way");
 // ConVar advisor_staging_duration("
 
@@ -408,7 +408,7 @@ void CNPC_Advisor::Spawn()
 	SetMoveType( MOVETYPE_FLY );
 
 	m_flFieldOfView = 0.2; //VIEW_FIELD_FULL
-	SetViewOffset(Vector(0, 0, 80)); // Position of the eyes relative to NPC's origin.
+	SetViewOffset( Vector( 0, 0, 80 ) );		// Position of the eyes relative to NPC's origin.
 
 	SetBloodColor( BLOOD_COLOR_GREEN );
 	m_NPCState = NPC_STATE_NONE;
@@ -819,7 +819,7 @@ void CNPC_Advisor::StartTask( const Task_t *pTask )
 void CNPC_Advisor::RunTask( const Task_t *pTask )
 {
 	//Needed for the npc face constantly at player
-	GetMotor()->SetIdealYawToTarget(GetEnemyLKP(), AI_KEEP_YAW_SPEED);
+	GetMotor()->SetIdealYawToTargetAndUpdate(GetEnemyLKP(), AI_KEEP_YAW_SPEED);
 
 	switch ( pTask->iTask )
 	{
@@ -1520,28 +1520,35 @@ void CNPC_Advisor::PullObjectToStaging( CBaseEntity *pEnt, const Vector &staging
 
 int	CNPC_Advisor::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	// Clip our max 
-	CTakeDamageInfo newInfo = info;
-	if ( newInfo.GetDamage() > 20.0f )
+	if ( info.GetAttacker()->GetTeamNumber() == TF_TEAM_BLUE )
 	{
-		newInfo.SetDamage( 20.0f );
+		return 0;
 	}
-
-	// Hack to make him constantly flinch
-	m_flNextFlinchTime = gpGlobals->curtime;
-
-	const float oldLastDamageTime = m_flLastDamageTime;
-	int retval = BaseClass::OnTakeDamage(newInfo);
-
-	// we have a special reporting output 
-	if ( oldLastDamageTime != gpGlobals->curtime )
+	else
 	{
-		// only fire once per frame
+		// Clip our max 
+		CTakeDamageInfo newInfo = info;
+		if ( newInfo.GetDamage() > 20.0f )
+		{
+			newInfo.SetDamage( 20.0f );
+		}
 
-		m_OnHealthIsNow.Set( GetHealth(), newInfo.GetAttacker(), this);
+		// Hack to make him constantly flinch
+		m_flNextFlinchTime = gpGlobals->curtime;
+
+		const float oldLastDamageTime = m_flLastDamageTime;
+		int retval = BaseClass::OnTakeDamage(newInfo);
+
+		// we have a special reporting output 
+		if ( oldLastDamageTime != gpGlobals->curtime )
+		{
+			// only fire once per frame
+
+			m_OnHealthIsNow.Set( GetHealth(), newInfo.GetAttacker(), this);
+		}
+
+		return retval;
 	}
-
-	return retval;
 }
 
 
@@ -1708,7 +1715,6 @@ void CNPC_Advisor::Precache()
 	PrecacheScriptSound( "NPC_Advisor.ObjectChargeUp" );
 	PrecacheParticleSystem( "Advisor_Psychic_Beam" );
 	PrecacheParticleSystem( "advisor_object_charge" );
-	PrecacheParticleSystem( "warp_shield_impact" );
 	PrecacheModel("sprites/greenglow1.vmt");
 
 	PrecacheScriptSound("NPC_Stalker.Hit");

@@ -16,11 +16,6 @@
 #include "voice_common.h"
 #include "vgui_avatarimage.h"
 
-#if defined (TF_CLASSIC_CLIENT)
-#include "tf_gamerules.h"
-#include "c_tf_playerresource.h"
-#endif
-
 ConVar *sv_alltalk = NULL;
 
 //=============================================================================
@@ -256,7 +251,7 @@ void CHudVoiceStatus::OnThink( void )
 					if ( steamapicontext != NULL && steamapicontext->SteamUtils() != NULL )
 					{
 						CSteamID steamIDForPlayer( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
-						activeSpeaker.pAvatar->SetAvatarSteamID(steamIDForPlayer, k_EAvatarSize64x64);
+						activeSpeaker.pAvatar->SetAvatarSteamID(steamIDForPlayer, k_EAvatarSize32x32);
 					}
 				}
 
@@ -360,13 +355,7 @@ void CHudVoiceStatus::Paint()
 		float oldAlphaMultiplier = surface()->DrawGetAlphaMultiplier();
 		surface()->DrawSetAlphaMultiplier(oldAlphaMultiplier * m_SpeakingList[i].fAlpha);
 
-#if defined(TF_CLASSIC_CLIENT)
-		Color c;
-
-		c = g_PR->GetTeamColor( g_PR ? g_PR->GetTeam( playerId ) : TEAM_UNASSIGNED );
-#else
 		Color c = g_PR->GetTeamColor( g_PR ? g_PR->GetTeam(playerId) : TEAM_UNASSIGNED );
-#endif
 
 		c[3] = 128;
 

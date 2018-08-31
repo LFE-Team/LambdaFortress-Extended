@@ -87,7 +87,7 @@ BEGIN_DATADESC( CBaseFlex )
 	//						m_bUpdateLayerPriorities
 	DEFINE_FIELD( m_flLastFlexAnimationTime, FIELD_TIME ),
 
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	//DEFINE_FIELD( m_vecPrevOrigin, FIELD_POSITION_VECTOR ),
 	//DEFINE_FIELD( m_vecPrevVelocity, FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecLean, FIELD_VECTOR ),
@@ -961,7 +961,7 @@ public:
 		FindSceneFile( NULL, "phonemes", true );
 		FindSceneFile( NULL, "phonemes_weak", true );
 		FindSceneFile( NULL, "phonemes_strong", true );
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#if defined( HL2_DLL )
 		FindSceneFile( NULL, "random", true );
 		FindSceneFile( NULL, "randomAlert", true );
 #endif
@@ -1198,11 +1198,7 @@ bool CBaseFlex::ProcessFlexAnimationSceneEvent( CSceneEventInfo *info, CChoreoSc
 					// only check occasionally
 					else if (info->m_flNext <= gpGlobals->curtime)
 					{
-#ifdef TF_CLASSIC
-						CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer( this );
-#else
 						CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif
 
 						// if not in view, disable
 						info->m_bHasArrived = (pPlayer && !pPlayer->FInViewCone( this ) );
@@ -2102,7 +2098,7 @@ bool CBaseFlex::IsSuppressedFlexAnimation( CSceneEventInfo *info )
 void CBaseFlex::Teleport( const Vector *newPosition, const QAngle *newAngles, const Vector *newVelocity )
 {
 	BaseClass::Teleport( newPosition, newAngles, newVelocity );
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 
 	// clear out Body Lean
 	m_vecPrevOrigin = vec3_origin;
@@ -2116,7 +2112,7 @@ void CBaseFlex::Teleport( const Vector *newPosition, const QAngle *newAngles, co
 
 void CBaseFlex::DoBodyLean( void )
 {
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	CAI_BaseNPC *myNpc = MyNPCPointer( );
 
 	if (myNpc)
@@ -2717,11 +2713,7 @@ void CFlexCycler::Think( void )
 	Vector forward, right, up;
 	GetVectors( &forward, &right, &up );
 
-#ifdef TF_CLASSIC
-	CBaseEntity *pPlayer = (CBaseEntity *)UTIL_GetNearestPlayer(GetAbsOrigin());
-#else
 	CBaseEntity *pPlayer = (CBaseEntity *)UTIL_GetLocalPlayer();
-#endif
 	if (pPlayer)
 	{
 		if (pPlayer->GetSmoothedVelocity().Length() != 0 && DotProduct( forward, pPlayer->EyePosition() - EyePosition()) > 0.5)

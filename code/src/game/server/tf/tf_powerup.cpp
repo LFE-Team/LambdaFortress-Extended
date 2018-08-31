@@ -15,11 +15,9 @@
 //=============================================================================
 float PackRatios[POWERUP_SIZES] =
 {
-	0.1,	// TF2C TINY
 	0.2,	// SMALL
 	0.5,	// MEDIUM
 	1.0,	// FULL
-	2.0,	// TF2C MEGA
 };
 
 //=============================================================================
@@ -136,12 +134,6 @@ bool CTFPowerup::ValidTouch( CBasePlayer *pPlayer )
 		return false;
 	}
 
-	// Don't collide with the owner for the first portion of our life if we're a lunchbox item
-	if ( m_flNextCollideTime > gpGlobals->curtime && pPlayer == GetOwnerEntity() )
-	{
-		return false;
-	}
-
 	return true;
 }
 
@@ -151,26 +143,6 @@ bool CTFPowerup::ValidTouch( CBasePlayer *pPlayer )
 bool CTFPowerup::MyTouch( CBasePlayer *pPlayer )
 {
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPowerup::DropSingleInstance( const Vector &vecVelocity, CBaseCombatCharacter *pOwner, float flUnknown, float flRestTime )
-{
-	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE );
-	SetAbsVelocity( vecVelocity );
-	SetSolid( SOLID_BBOX );
-
-	if ( flRestTime != 0.0f )
-		ActivateWhenAtRest( flRestTime );
-
-	AddSpawnFlags( SF_NORESPAWN );
-	
-	SetOwnerEntity( pOwner );
-
-	// Remove after 30 seconds.
-	SetContextThink( &CBaseEntity::SUB_Remove, gpGlobals->curtime + 30.0f, "PowerupRemoveThink" );
 }
 
 //-----------------------------------------------------------------------------

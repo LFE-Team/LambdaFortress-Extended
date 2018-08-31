@@ -250,6 +250,20 @@ void CBaseHeadcrab::Spawn( void )
 
 	SetViewOffset( Vector(6, 0, 11) ) ;		// Position of the eyes relative to NPC's origin.
 
+	char szMapName[256];
+	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
+	Q_strlower(szMapName);
+
+	/*
+	if( !Q_strnicmp( szMapName, "ep1_c17_00", 10 ) )
+	{
+		SetBloodColor( DONT_BLEED );
+	}
+	else if( !Q_strnicmp( szMapName, "ep1_c17_00a", 11 ) )
+	{
+		SetBloodColor( DONT_BLEED );
+	}
+	*/
 	SetBloodColor( BLOOD_COLOR_GREEN );
 	m_flFieldOfView		= 0.5;
 	m_NPCState			= NPC_STATE_NONE;
@@ -1321,11 +1335,7 @@ void CBaseHeadcrab::DropFromCeiling( void )
 				{
 					SetSchedule( SCHED_HEADCRAB_CEILING_DROP );
 
-#ifdef TF_CLASSIC
-					CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
-					CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
+					CBaseEntity *pPlayer = AI_GetSinglePlayer();
 
 					if ( pPlayer )
 					{

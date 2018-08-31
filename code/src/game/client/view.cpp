@@ -51,7 +51,7 @@
 #include "replay/ienginereplay.h"
 #endif
 
-#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL ) || defined(TF_CLASSIC_CLIENT)
+#if defined( HL2_CLIENT_DLL ) || defined( CSTRIKE_DLL )
 #define USE_MONITORS
 #endif
 
@@ -107,7 +107,7 @@ extern ConVar cl_forwardspeed;
 static ConVar v_centermove( "v_centermove", "0.15");
 static ConVar v_centerspeed( "v_centerspeed","500" );
 
-#if defined( TF_CLIENT_DLL ) || defined ( TF_CLASSIC_CLIENT )
+#if defined(TF_CLIENT_DLL) || defined(TF_CLASSIC_CLIENT)
 // 54 degrees approximates a 35mm camera - we determined that this makes the viewmodels
 // and motions look the most natural.
 ConVar v_viewmodel_fov( "viewmodel_fov", "54", FCVAR_ARCHIVE, "Sets the field-of-view for the viewmodel.", true, 0.1, true, 179.9 );
@@ -1354,59 +1354,3 @@ CON_COMMAND( getpos, "dump position and angles to the console" )
 	Warning( "%s %f %f %f\n", pCommand2, angles.x, angles.y, angles.z );
 }
 
-#ifdef SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
-void CViewRender::MP_PostSimulate()
-{
-    C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
-    if ( !pLocal )
-        return;
-
-    //Tony; if the local player is in a vehicle, then we need to kill the bone cache, and re-calculate the view.
-    if ( !pLocal->IsInAVehicle() && !pLocal->GetVehicle())
-        return;
-
-    IClientVehicle *pVehicle = pLocal->GetVehicle();
-    Assert( pVehicle );
-    CBaseAnimating *pVehicleEntity =
-(CBaseAnimating*)pVehicle->GetVehicleEnt();
-    Assert( pVehicleEntity );
-
-    int nRole = pVehicle->GetPassengerRole( pLocal );
-
-    //Tony; we have to invalidate the bone cache in order for the attachment lookups to be correct!
-    pVehicleEntity->InvalidateBoneCache();
-    pVehicle->GetVehicleViewPosition( nRole, &m_View.origin, &m_View.angles,
-&m_View.fov );
-
-    //Tony; everything below is from SetupView - the things that should be recalculated.. are recalculated!
-    pLocal->CalcViewModelView( m_View.origin, m_View.angles );
-
-    // Compute the world->main camera transform
-    ComputeCameraVariables( m_View.origin, m_View.angles,
-        &g_vecVForward, &g_vecVRight, &g_vecVUp, &g_matCamInverse );
-
-    // set up the hearing origin...
-    AudioState_t audioState;
-    audioState.m_Origin = m_View.origin;
-    audioState.m_Angles = m_View.angles;
-    audioState.m_bIsUnderwater = pLocal && pLocal->AudioStateIsUnderwater(m_View.origin );
-
-    ToolFramework_SetupAudioState( audioState );
-
-    m_View.origin = audioState.m_Origin;
-    m_View.angles = audioState.m_Angles;
-
-    engine->SetAudioState( audioState );
-
-    g_vecPrevRenderOrigin = g_vecRenderOrigin;
-    g_vecPrevRenderAngles = g_vecRenderAngles;
-    g_vecRenderOrigin = m_View.origin;
-    g_vecRenderAngles = m_View.angles;
-
-#ifdef _DEBUG
-    s_DbgSetupOrigin = m_View.origin;
-    s_DbgSetupAngles = m_View.angles;
-#endif
-
-}
-#endif //SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER

@@ -23,7 +23,7 @@ public:
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual int		DrawModel( int flags );
-	CNetworkVar( int, m_iDeflected );
+
 protected:
 
 	void	DrawMotionBlur( void );

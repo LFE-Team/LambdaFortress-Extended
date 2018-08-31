@@ -16,6 +16,8 @@
 #define CTFGrenadeLauncher C_TFGrenadeLauncher
 #endif
 
+#define TF_GRENADE_LAUNCHER_XBOX_CLIP 4
+
 //=============================================================================
 //
 // TF Weapon Grenade Launcher.
@@ -28,14 +30,24 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
+	// Server specific.
+#ifdef GAME_DLL
+	DECLARE_DATADESC();
+#endif
+
 	CTFGrenadeLauncher();
 	~CTFGrenadeLauncher();
 
+	virtual int		GetWeaponID( void ) const { return TF_WEAPON_GRENADELAUNCHER; }
 	virtual void	Spawn( void );
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_GRENADELAUNCHER; }
 	virtual float	GetProjectileSpeed( void );
 
+public:
+
+	void LaunchGrenade( void );
+
 private:
+
 	CTFGrenadeLauncher( const CTFGrenadeLauncher & ) {}
 };
 

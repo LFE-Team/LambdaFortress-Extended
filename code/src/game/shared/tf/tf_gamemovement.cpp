@@ -28,29 +28,27 @@
 #else
 	#include "tf_player.h"
 	#include "team.h"
+	#include "env_player_surface_trigger.h"
 #endif
 
 ConVar	tf_maxspeed( "tf_maxspeed", "400", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_CHEAT  | FCVAR_DEVELOPMENTONLY);
 ConVar	tf_showspeed( "tf_showspeed", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_avoidteammates( "tf_avoidteammates", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar	tf_avoidteammates_pushaway( "tf_avoidteammates_pushaway", "1", FCVAR_REPLICATED, "Whether or not teammates push each other away when occupying the same space" );
 ConVar  tf_solidobjects( "tf_solidobjects", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_clamp_back_speed( "tf_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar  tf_clamp_back_speed_min( "tf_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-ConVar	tf_clamp_airducks( "tf_clamp_airducks", "1", FCVAR_REPLICATED );
 
-ConVar	lfe_bunnyjump_max_speed_factor("lfe_bunnyjump_max_speed_factor", "1.2", FCVAR_REPLICATED);
-ConVar  lfe_autojump( "lfe_autojump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Automatically jump while holding the jump button down" );
-ConVar  lfe_duckjump( "lfe_duckjump", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Toggles jumping while ducked" );
-ConVar  lfe_groundspeed_cap("lfe_groundspeed_cap", "1", FCVAR_REPLICATED, "Toggles the max speed cap imposed when a player is standing on the ground");
+ConVar	lf_bunnyjump_max_speed_factor("lf_bunnyjump_max_speed_factor", "1.2", FCVAR_REPLICATED);
+ConVar  lf_autojump("lf_autojump", "0", FCVAR_REPLICATED, "Automatically jump while holding the jump button down");
+ConVar  lf_duckjump("lf_duckjump", "0", FCVAR_REPLICATED, "Toggles jumping while ducked");
+ConVar  lf_groundspeed_cap("lf_groundspeed_cap", "1", FCVAR_REPLICATED, "Toggles the max speed cap imposed when a player is standing on the ground");
 
 ConVar sv_autoladderdismount( "sv_autoladderdismount", "1", FCVAR_REPLICATED, "Automatically dismount from ladders when you reach the end (don't have to +USE)." );
 ConVar sv_ladderautomountdot( "sv_ladderautomountdot", "0.4", FCVAR_REPLICATED, "When auto-mounting a ladder by looking up its axis, this is the tolerance for looking now directly along the ladder axis." );
 
 ConVar sv_ladder_useonly( "sv_ladder_useonly", "0", FCVAR_REPLICATED, "If set, ladders can only be mounted by pressing +USE" );
 
-#define TF_MAX_SPEED   520
-#define PLAYER_LONGJUMP_SPEED 350 // how fast we longjump
+#define TF_MAX_SPEED   400
 
 #define TF_WATERJUMP_FORWARD  30
 #define TF_WATERJUMP_UP       300
@@ -67,8 +65,6 @@ struct NearbyDismount_t
 	CInfoLadderDismount		*dismount;
 	float					distSqr;
 };
-
-#define TF_MAX_AIR_DUCKS 2
 
 class CTFGameMovement : public CGameMovement
 {
@@ -88,11 +84,9 @@ public:
 	virtual void WalkMove( void );
 	virtual void AirMove( void );
 	virtual void FullTossMove( void );
-	virtual void StunMove( void );
 	virtual void CategorizePosition( void );
 	virtual void CheckFalling( void );
 	virtual void Duck( void );
-	virtual void HandleDuckingSpeedCrop();
 	virtual Vector GetPlayerViewOffset( bool ducked ) const;
 
 	virtual void	TracePlayerBBox( const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm );
@@ -111,11 +105,6 @@ private:
 	bool		CheckWaterJumpButton( void );
 	void		AirDash( void );
 	void		PreventBunnyJumping();
-
-private:
-
-	Vector		m_vecWaterPoint;
-	CTFPlayer  *m_pTFPlayer;
 
 public:
 	// HL2 ladders
@@ -146,7 +135,7 @@ private:
 	// Given a list of nearby ladders, find the best ladder and the "mount" origin
 	void		Findladder( float maxdist, CFuncLadder **ppLadder, Vector& ladderOrigin, const CFuncLadder *skipLadder );
 
-	// Debounce the USE key
+	// Debounce the +USE key
 	void		SwallowUseKey();
 
 	// Returns true if the player will auto-exit the ladder via a dismount node
@@ -158,6 +147,11 @@ private:
 
 	void		SetLadder( CFuncLadder *ladder );
 	CFuncLadder *GetLadder();
+
+private:
+
+	Vector		m_vecWaterPoint;
+	CTFPlayer  *m_pTFPlayer;
 };
 
 //-----------------------------------------------------------------------------
@@ -273,7 +267,7 @@ void CTFGameMovement::PlayerMove()
 
 Vector CTFGameMovement::GetPlayerViewOffset( bool ducked ) const
 {
-	return ducked ? VEC_DUCK_VIEW_SCALED( m_pTFPlayer ) : ( m_pTFPlayer->GetClassEyeHeight() );
+	return ducked ? VEC_DUCK_VIEW : ( m_pTFPlayer->GetClassEyeHeight() );
 }
 
 //-----------------------------------------------------------------------------
@@ -288,19 +282,11 @@ unsigned int CTFGameMovement::PlayerSolidMask( bool brushOnly )
 		switch( m_pTFPlayer->GetTeamNumber() )
 		{
 		case TF_TEAM_RED:
-			uMask = CONTENTS_BLUETEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+			uMask = CONTENTS_BLUETEAM;
 			break;
 
 		case TF_TEAM_BLUE:
-			uMask = CONTENTS_REDTEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
-			break;
-
-		case TF_TEAM_GREEN:
-			uMask = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_YELLOWTEAM;
-			break;
-
-		case TF_TEAM_YELLOW:
-			uMask = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_GREENTEAM;
+			uMask = CONTENTS_REDTEAM;
 			break;
 		}
 	}
@@ -336,14 +322,8 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 	mv->m_flMaxSpeed = TF_MAX_SPEED; /*tf_maxspeed.GetFloat();*/
 
 	// Run the command.
-	StunMove();
 	PlayerMove();
 	FinishMove();
-
-#ifdef GAME_DLL
-	m_pTFPlayer->m_bBlastLaunched = false;
-	m_pTFPlayer->m_bAirblasted = false;
-#endif
 }
 
 
@@ -452,8 +432,7 @@ void CTFGameMovement::AirDash( void )
 void CTFGameMovement::PreventBunnyJumping()
 {
 	// Speed at which bunny jumping is limited
-	float maxscaledspeed = lfe_bunnyjump_max_speed_factor.GetFloat() * player->m_flMaxspeed;
-
+	float maxscaledspeed = lf_bunnyjump_max_speed_factor.GetFloat() * player->m_flMaxspeed;
 	if ( maxscaledspeed <= 0.0f )
 		return;
 
@@ -488,30 +467,23 @@ bool CTFGameMovement::CheckJumpButton()
 	bool bAirDash = false;
 	bool bOnGround = ( player->GetGroundEntity() != NULL );
 
-	// Cannot jump while ducked.
+	// Cannot jump will ducked.
 	if ( player->GetFlags() & FL_DUCKING )
 	{
 		// Let a scout do it.
-		bool bAllow = (bScout && !bOnGround) || lfe_duckjump.GetBool();
+		bool bAllow = ( bScout && !bOnGround ) || lf_duckjump.GetBool();
 
 		if ( !bAllow )
 			return false;
 	}
 
 	// Cannot jump while in the unduck transition.
-	if ( ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) ) || ( player->m_Local.m_flDuckJumpTime > 0.0f ) && !lfe_duckjump.GetBool() )
+	if ( ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) ) || ( player->m_Local.m_flDuckJumpTime > 0.0f ) && !lf_duckjump.GetBool() )
 		return false;
 
 	// Cannot jump again until the jump button has been released.
-	// Unless we're in deathmatch or we have lfe_autojump enabled
-	if ( mv->m_nOldButtons & IN_JUMP )
-	{
-		if ( !bOnGround )
-			return false;
-
-		if ( !lfe_autojump.GetBool())
-			return false;
-	}
+	if ( mv->m_nOldButtons & IN_JUMP && ( !lf_autojump.GetBool() || !bOnGround ) )
+		return false;
 
 	// In air, so ignore jumps (unless you are a scout).
 	if ( !bOnGround )
@@ -573,21 +545,6 @@ bool CTFGameMovement::CheckJumpButton()
 	else
 	{
 		mv->m_vecVelocity[2] += flMul;  // 2 * gravity * jump_height * ground_factor
-	}
-	//if (m_pTFPlayer->m_bHasLongJump &&
-	if (TFGameRules()->LongJumpActive() == true &&
-		(mv->m_nButtons & IN_DUCK) &&
-		(m_pTFPlayer->m_Local.m_flDucktime > 0) &&
-		mv->m_vecVelocity.Length() > 50)
-	{
-		m_pTFPlayer->m_Local.m_vecPunchAngle.Set(PITCH, -5);
-
-		mv->m_vecVelocity = m_vecForward * PLAYER_LONGJUMP_SPEED * 1.6;
-		mv->m_vecVelocity.z = sqrt(2 * 800 * 56.0);
-	}
-	else
-	{
-		mv->m_vecVelocity[2] = flGroundFactor * sqrt(2 * 800 * 45.0);  // 2 * gravity * height
 	}
 
 	// Apply gravity.
@@ -882,7 +839,7 @@ void CTFGameMovement::WalkMove( void )
 	Assert( mv->m_vecVelocity.z == 0.0f );
 
 	// Clamp the players speed in x,y.
-	if ( lfe_groundspeed_cap.GetBool() )
+	if ( lf_groundspeed_cap.GetBool() )
 	{
 		float flNewSpeed = VectorLength(mv->m_vecVelocity);
 		if (flNewSpeed > mv->m_flMaxSpeed)
@@ -1150,12 +1107,6 @@ void CTFGameMovement::CategorizePosition( void )
 	if ( mv->m_vecVelocity.z > 250.0f )
 	{
 		SetGroundEntity( NULL );
-
-#ifdef GAME_DLL
-		if ( m_pTFPlayer->m_bBlastLaunched )
-			m_pTFPlayer->SetBlastJumpState( TF_JUMP_OTHER, false );
-#endif
-
 		return;
 	}
 
@@ -1217,6 +1168,30 @@ void CTFGameMovement::CategorizePosition( void )
 		}
 		SetGroundEntity( &trace );
 	}
+
+#ifndef CLIENT_DLL
+
+	//Adrian: vehicle code handles for us.
+	if ( player->IsInAVehicle() == false && player->GetTeamNumber() == TF_STORY_TEAM )
+	{
+		// If our gamematerial has changed, tell any player surface triggers that are watching
+		IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
+		surfacedata_t *pSurfaceProp = physprops->GetSurfaceData( trace.surface.surfaceProps );
+		char cCurrGameMaterial = pSurfaceProp->game.material;
+		if ( !player->GetGroundEntity() )
+		{
+			cCurrGameMaterial = 0;
+		}
+
+		// Changed?
+		if ( player->m_chPreviousTextureType != cCurrGameMaterial )
+		{
+			CEnvPlayerSurfaceTrigger::SetPlayerSurface( player, cCurrGameMaterial );
+		}
+
+		player->m_chPreviousTextureType = cCurrGameMaterial;
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1341,175 +1316,8 @@ void CTFGameMovement::Duck( void )
 		mv->m_nButtons &= ~IN_DUCK;
 	}
 
-	int buttonsChanged = ( mv->m_nOldButtons ^ mv->m_nButtons );	// These buttons have changed this frame
-	int buttonsPressed = buttonsChanged & mv->m_nButtons;			// The changed ones still down are "pressed"
-	int buttonsReleased = buttonsChanged & mv->m_nOldButtons;		// The changed ones which were previously down are "released"
-
-	// Check to see if we are in the air.
-	bool bInAir = ( player->GetGroundEntity() == NULL );
-	bool bInDuck = ( player->GetFlags() & FL_DUCKING ) ? true : false;
-
-	// If player is over air ducks limit he can't air duck again until he lands.
-	bool bCanAirDuck = !tf_clamp_airducks.GetBool() || m_pTFPlayer->m_Shared.GetAirDucks() < TF_MAX_AIR_DUCKS;
-
-	if ( mv->m_nButtons & IN_DUCK )
-	{
-		mv->m_nOldButtons |= IN_DUCK;
-	}
-	else
-	{
-		mv->m_nOldButtons &= ~IN_DUCK;
-	}
-
-	// Handle death.
-	if ( IsDead() )
-		return;
-
-	// Slow down ducked players.
-	HandleDuckingSpeedCrop();
-
-	// If the player is holding down the duck button, the player is in duck transition, ducking, or duck-jumping.
-	if ( ( mv->m_nButtons & IN_DUCK ) || player->m_Local.m_bDucking || bInDuck )
-	{
-		// DUCK
-		if ( ( mv->m_nButtons & IN_DUCK ) )
-		{
-			// Have the duck button pressed, but the player currently isn't in the duck position.
-			if ( ( buttonsPressed & IN_DUCK ) && !bInDuck && ( !bInAir || bCanAirDuck ) )
-			{
-				player->m_Local.m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
-				player->m_Local.m_bDucking = true;
-			}
-
-			// The player is in duck transition and not duck-jumping.
-			if ( player->m_Local.m_bDucking )
-			{
-				float flDuckMilliseconds = MAX( 0.0f, GAMEMOVEMENT_DUCK_TIME - (float)player->m_Local.m_flDucktime );
-				float flDuckSeconds = flDuckMilliseconds * 0.001f;
-
-				// Finish in duck transition when transition time is over, in "duck", in air.
-				if ( ( flDuckSeconds > TIME_TO_DUCK ) || bInDuck || bInAir )
-				{
-					FinishDuck();
-
-					if ( bInAir && m_pTFPlayer->m_Shared.GetAirDucks() < TF_MAX_AIR_DUCKS )
-					{
-						// Ducked in mid-air, increment air ducks count.
-						m_pTFPlayer->m_Shared.IncrementAirDucks();
-					}
-				}
-				else
-				{
-					// Calc parametric time
-					float flDuckFraction = SimpleSpline( flDuckSeconds / TIME_TO_DUCK );
-					SetDuckedEyeOffset( flDuckFraction );
-				}
-			}
-		}
-		// UNDUCK (or attempt to...)
-		else
-		{
-			// Try to unduck unless automovement is not allowed
-			// NOTE: When not onground, you can always unduck
-			if ( player->m_Local.m_bAllowAutoMovement || bInAir || player->m_Local.m_bDucking )
-			{
-				// We released the duck button, we aren't in "duck" and we are not in the air - start unduck transition.
-				if ( ( buttonsReleased & IN_DUCK ) )
-				{
-					if ( bInDuck )
-					{
-						player->m_Local.m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
-					}
-					else if ( player->m_Local.m_bDucking && !player->m_Local.m_bDucked )
-					{
-						// Invert time if release before fully ducked!!!
-						float unduckMilliseconds = 1000.0f * TIME_TO_UNDUCK;
-						float duckMilliseconds = 1000.0f * TIME_TO_DUCK;
-						float elapsedMilliseconds = GAMEMOVEMENT_DUCK_TIME - player->m_Local.m_flDucktime;
-
-						float fracDucked = elapsedMilliseconds / duckMilliseconds;
-						float remainingUnduckMilliseconds = fracDucked * unduckMilliseconds;
-
-						player->m_Local.m_flDucktime = GAMEMOVEMENT_DUCK_TIME - unduckMilliseconds + remainingUnduckMilliseconds;
-					}
-				}
-
-
-				// Check to see if we are capable of unducking.
-				if ( CanUnduck() )
-				{
-					// or unducking
-					if ( ( player->m_Local.m_bDucking || player->m_Local.m_bDucked ) )
-					{
-						float flDuckMilliseconds = MAX( 0.0f, GAMEMOVEMENT_DUCK_TIME - (float)player->m_Local.m_flDucktime );
-						float flDuckSeconds = flDuckMilliseconds * 0.001f;
-
-						// Finish ducking immediately if duck time is over or not on ground
-						if ( flDuckSeconds > TIME_TO_UNDUCK || bInAir )
-						{
-							FinishUnDuck();
-						}
-						else
-						{
-							// Calc parametric time
-							float flDuckFraction = SimpleSpline( 1.0f - ( flDuckSeconds / TIME_TO_UNDUCK ) );
-							SetDuckedEyeOffset( flDuckFraction );
-							player->m_Local.m_bDucking = true;
-						}
-					}
-				}
-				else
-				{
-					// Still under something where we can't unduck, so make sure we reset this timer so
-					//  that we'll unduck once we exit the tunnel, etc.
-					if ( player->m_Local.m_flDucktime != GAMEMOVEMENT_DUCK_TIME )
-					{
-						SetDuckedEyeOffset( 1.0f );
-						player->m_Local.m_flDucktime = GAMEMOVEMENT_DUCK_TIME;
-						player->m_Local.m_bDucked = true;
-						player->m_Local.m_bDucking = false;
-						player->AddFlag( FL_DUCKING );
-					}
-				}
-			}
-		}
-	}
-	// HACK: (jimd 5/25/2006) we have a reoccuring bug (#50063 in Tracker) where the player's
-	// view height gets left at the ducked height while the player is standing, but we haven't
-	// been  able to repro it to find the cause.  It may be fixed now due to a change I'm
-	// also making in UpdateDuckJumpEyeOffset but just in case, this code will sense the 
-	// problem and restore the eye to the proper position.  It doesn't smooth the transition,
-	// but it is preferable to leaving the player's view too low.
-	//
-	// If the player is still alive and not an observer, check to make sure that
-	// his view height is at the standing height.
-	else if ( !IsDead() && !player->IsObserver() && !player->IsInAVehicle() )
-	{
-		if ( ( player->m_Local.m_flDuckJumpTime == 0.0f ) && ( fabs( player->GetViewOffset().z - GetPlayerViewOffset( false ).z ) > 0.1 ) )
-		{
-			// we should rarely ever get here, so assert so a coder knows when it happens
-			Assert( 0 );
-			DevMsg( 1, "Restoring player view height\n" );
-
-			// set the eye height to the non-ducked height
-			SetDuckedEyeOffset( 0.0f );
-		}
-	}
+	BaseClass::Duck();
 }
-
-void CTFGameMovement::HandleDuckingSpeedCrop( void )
-{
-	BaseClass::HandleDuckingSpeedCrop();
-
-	// Prevent moving while crouched in loser state.
-	if ( m_pTFPlayer->m_Shared.IsLoser() && m_iSpeedCropped & SPEED_CROPPED_DUCK )
-	{
-		mv->m_flForwardMove = 0.0f;
-		mv->m_flSideMove = 0.0f;
-		mv->m_flUpMove = 0.0f;
-	}
-}
-
 void CTFGameMovement::FullWalkMoveUnderwater()
 {
 	if ( player->GetWaterLevel() == WL_Waist )
@@ -1719,20 +1527,6 @@ void CTFGameMovement::FullTossMove( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFGameMovement::StunMove( void )
-{
-	// Can't move while stunned
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_STUNNED ) )
-	{
-		mv->m_flForwardMove = 0.0f;
-		mv->m_flSideMove = 0.0f;
-		mv->m_flUpMove = 0.0f;
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Does the basic move attempting to climb up step heights.  It uses
 //          the mv->GetAbsOrigin() and mv->m_vecVelocity.  It returns a new
 //          new mv->GetAbsOrigin(), mv->m_vecVelocity, and mv->m_outStepHeight.
@@ -1844,27 +1638,10 @@ bool CTFGameMovement::GameHasLadders() const
 void CTFGameMovement::SetGroundEntity( trace_t *pm )
 {
 	BaseClass::SetGroundEntity( pm );
-
-	CBaseEntity *pNewGround = pm ? pm->m_pEnt : NULL;
-
-	if ( pNewGround )
+	if ( pm && pm->m_pEnt )
 	{
 		m_pTFPlayer->m_Shared.SetAirDash( false );
-		m_pTFPlayer->m_Shared.ResetAirDucks();
 	}
-
-#ifdef GAME_DLL
-	// Clear blast jumping state if we landed on the ground or in the water.
-	if ( pNewGround != NULL || m_pTFPlayer->GetWaterLevel() > WL_NotInWater )
-	{
-		if ( m_pTFPlayer->GetBlastJumpFlags() != 0 )
-		{
-			m_pTFPlayer->ClearBlastJumpState();
-		}
-
-		m_pTFPlayer->ClearAirblastState();
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1883,6 +1660,7 @@ void CTFGameMovement::PlayerRoughLandingEffects( float fvol )
 
 	BaseClass::PlayerRoughLandingEffects( fvol );
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 

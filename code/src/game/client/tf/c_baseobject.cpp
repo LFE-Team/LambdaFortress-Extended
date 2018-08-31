@@ -1,4 +1,4 @@
-//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Clients CBaseObject
 //
@@ -37,32 +37,22 @@ void ToolFramework_RecordMaterialParams( IMaterial *pMaterial );
 // Remove aliasing of name due to shared code
 #undef CBaseObject
 
-IMPLEMENT_CLIENTCLASS_DT( C_BaseObject, DT_BaseObject, CBaseObject )
-	RecvPropInt( RECVINFO( m_iHealth ) ),
-	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
-	RecvPropBool( RECVINFO( m_bHasSapper ) ),
-	RecvPropInt( RECVINFO( m_iObjectType ) ),
-	RecvPropBool( RECVINFO( m_bBuilding ) ),
-	RecvPropBool( RECVINFO( m_bPlacing ) ),
-	RecvPropBool( RECVINFO( m_bCarried ) ),
-	RecvPropBool( RECVINFO( m_bCarryDeploy ) ),
-	RecvPropBool( RECVINFO( m_bMiniBuilding ) ),
-	RecvPropFloat( RECVINFO( m_flPercentageConstructed ) ),
-	RecvPropInt( RECVINFO( m_fObjectFlags ) ),
-	RecvPropEHandle( RECVINFO( m_hBuiltOnEntity ) ),
-	RecvPropBool( RECVINFO( m_bDisabled ) ),
+IMPLEMENT_CLIENTCLASS_DT(C_BaseObject, DT_BaseObject, CBaseObject)
+	RecvPropInt(RECVINFO(m_iHealth)),
+	RecvPropInt(RECVINFO(m_iMaxHealth)),
+	RecvPropInt(RECVINFO(m_bHasSapper)),
+	RecvPropInt(RECVINFO(m_iObjectType)),
+	RecvPropInt(RECVINFO(m_bBuilding)),
+	RecvPropInt(RECVINFO(m_bPlacing)),
+	RecvPropFloat(RECVINFO(m_flPercentageConstructed)),
+	RecvPropInt(RECVINFO(m_fObjectFlags)),
+	RecvPropEHandle(RECVINFO(m_hBuiltOnEntity)),
+	RecvPropInt( RECVINFO( m_bDisabled ) ),
 	RecvPropEHandle( RECVINFO( m_hBuilder ) ),
 	RecvPropVector( RECVINFO( m_vecBuildMaxs ) ),
 	RecvPropVector( RECVINFO( m_vecBuildMins ) ),
 	RecvPropInt( RECVINFO( m_iDesiredBuildRotations ) ),
-	RecvPropBool( RECVINFO( m_bServerOverridePlacement ) ),
-	RecvPropInt( RECVINFO( m_iUpgradeLevel ) ),
-	RecvPropInt( RECVINFO( m_iUpgradeMetal ) ),
-	RecvPropInt( RECVINFO( m_iUpgradeMetalRequired ) ),
-	RecvPropInt( RECVINFO( m_iHighestUpgradeLevel ) ),
-	RecvPropInt( RECVINFO( m_iObjectMode ) ),
-	RecvPropBool( RECVINFO( m_bDisposableBuilding ) ),
-	RecvPropBool( RECVINFO( m_bWasMapPlaced ) ),
+	RecvPropInt( RECVINFO( m_bServerOverridePlacement ) ),
 END_RECV_TABLE()
 
 ConVar cl_obj_test_building_damage( "cl_obj_test_building_damage", "-1", FCVAR_CHEAT, "debug building damage", true, -1, true, BUILDING_DAMAGE_LEVEL_CRITICAL );
@@ -75,8 +65,6 @@ C_BaseObject::C_BaseObject(  )
 	m_YawPreviewState = YAW_PREVIEW_OFF;
 	m_bBuilding = false;
 	m_bPlacing = false;
-	m_bCarried = false;
-	m_bCarryDeploy = false;
 	m_flPercentageConstructed = 0;
 	m_fObjectFlags = 0;
 
@@ -85,9 +73,6 @@ C_BaseObject::C_BaseObject(  )
 	m_damageLevel = BUILDING_DAMAGE_LEVEL_NONE;
 
 	m_iLastPlacementPosValid = -1;
-	m_iOldUpgradeLevel = 0;
-
-	m_pMiniSirenEffect = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -130,7 +115,6 @@ void C_BaseObject::PreDataUpdate( DataUpdateType_t updateType )
 	m_bWasBuilding = m_bBuilding;
 	m_bOldDisabled = m_bDisabled;
 	m_bWasPlacing = m_bPlacing;
-	m_bWasCarried = m_bCarried;
 
 	m_nObjectOldSequence = GetSequence();
 }
@@ -151,40 +135,6 @@ void C_BaseObject::OnDataChanged( DataUpdateType_t updateType )
 	if ( m_bWasBuilding && !m_bBuilding )
 	{
 		FinishedBuilding();
-
-		const char *pszEffect = "";
-		switch( GetTeamNumber() )
-		{
-		case TF_TEAM_RED:
-			pszEffect = "cart_flashinglight_red";
-			break;
-		case TF_TEAM_BLUE:
-			pszEffect = "cart_flashinglight";
-			break;
-
-		default:
-			pszEffect = "cart_flashinglight";
-			break;
-		}
-
-		if ( IsMiniBuilding() && GetType() == OBJ_SENTRYGUN )
-		{
-			if ( !m_pMiniSirenEffect )
-			{
-				if ( pszEffect )
-				{
-					m_pMiniSirenEffect = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, "siren" );
-				}
-			}
-		}
-		else
-		{
-			if ( m_pMiniSirenEffect )
-			{
-				ParticleProp()->StopEmission( m_pMiniSirenEffect );
-				m_pMiniSirenEffect = NULL;
-			}
-		}
 	}
 
 	// Did we just go active?
@@ -210,7 +160,7 @@ void C_BaseObject::OnDataChanged( DataUpdateType_t updateType )
 		}
 	}
 
-	if ( ( !IsBuilding() && m_iHealth != m_iOldHealth ) )
+	if ( !IsBuilding() && m_iHealth != m_iOldHealth )
 	{
 		// recalc our damage particle state
 		BuildingDamageLevel_t damageLevel = CalculateDamageLevel();
@@ -221,20 +171,6 @@ void C_BaseObject::OnDataChanged( DataUpdateType_t updateType )
 
 			m_damageLevel = damageLevel;
 		}
-	}
-
-	if ( m_bWasBuilding && !m_bBuilding )
-	{
-		// Force update damage effect when finishing construction.
-		BuildingDamageLevel_t damageLevel = CalculateDamageLevel();
-		UpdateDamageEffects( damageLevel );
-		m_damageLevel = damageLevel;
-	}
-
-	// Kill all particles when getting picked up.
-	if ( !m_bWasCarried && m_bCarried )
-	{
-		ParticleProp()->StopParticlesInvolving( this );
 	}
 
 	if ( m_iHealth > m_iOldHealth && m_iHealth == m_iMaxHealth )
@@ -249,7 +185,6 @@ void C_BaseObject::OnDataChanged( DataUpdateType_t updateType )
 		if ( event )
 		{
 			event->SetInt( "building_type", GetType() );
-			event->SetInt( "object_mode", GetObjectMode() );
 			gameeventmanager->FireEventClientSide( event );
 		}
 	}
@@ -266,11 +201,6 @@ void C_BaseObject::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void C_BaseObject::SetDormant( bool bDormant )
 {
-	if ( !IsDormant() && bDormant )
-	{
-		// Going dormant so kill damage effects.
-		UpdateDamageEffects( BUILDING_DAMAGE_LEVEL_NONE );
-	}
 	BaseClass::SetDormant( bDormant );
 	//ENTITY_PANEL_ACTIVATE( "analyzed_object", !bDormant );
 }
@@ -846,38 +776,12 @@ void C_BaseObject::GetTargetIDString( wchar_t *sIDString, int iMaxLenInBytes )
 		}
 
 		// building or live, show health
-		const char *printFormatString;
-		
-		if ( GetObjectInfo(GetType())->m_AltModes.Count() > 0 )
-		{
-			printFormatString = "#TF_playerid_object_mode";
+		const char *printFormatString = "#TF_playerid_object";
 
-			pszStatusName = GetObjectInfo( GetType() )->m_AltModes.Element( m_iObjectMode * 3 + 1 );
-			wchar_t *wszObjectModeName = g_pVGuiLocalize->Find( pszStatusName );
-
-			if ( !wszObjectModeName )
-			{
-				wszObjectModeName = L"";
-			}
-
-			g_pVGuiLocalize->ConstructString( sIDString, iMaxLenInBytes, g_pVGuiLocalize->Find(printFormatString),
-				4,
-				wszObjectName,
-				wszBuilderName,
-				wszObjectModeName);
-		}
-		else
-		{
-			if ( m_bMiniBuilding )
-				printFormatString = "#TF_playerid_object_mini";
-			else
-				printFormatString = "#TF_playerid_object";
-
-			g_pVGuiLocalize->ConstructString( sIDString, iMaxLenInBytes, g_pVGuiLocalize->Find( printFormatString ),
-				3,
-				wszObjectName,
-				wszBuilderName );
-		}
+		g_pVGuiLocalize->ConstructString( sIDString, iMaxLenInBytes, g_pVGuiLocalize->Find(printFormatString),
+			3,
+			wszObjectName,
+			wszBuilderName );
 	}
 }
 
@@ -887,59 +791,6 @@ void C_BaseObject::GetTargetIDString( wchar_t *sIDString, int iMaxLenInBytes )
 void C_BaseObject::GetTargetIDDataString( wchar_t *sDataString, int iMaxLenInBytes )
 {
 	sDataString[0] = '\0';
-
-	// Don't show anything if the building cannot be upgraded at all.
-	if ( m_iHighestUpgradeLevel <= 1 )
-		return;
-
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalPlayer )
-		return;
-
-	wchar_t wszBuilderName[ MAX_PLAYER_NAME_LENGTH ];
-	wchar_t wszObjectName[ 32 ];
-	wchar_t wszUpgradeProgress[ 32 ];
-	wchar_t wszLevel[ 5 ];
-
-	_snwprintf(wszLevel, ARRAYSIZE(wszLevel) - 1, L"%d", m_iUpgradeLevel);
-
-	g_pVGuiLocalize->ConvertANSIToUnicode( GetStatusName(), wszObjectName, sizeof(wszObjectName) );
-
-	C_BasePlayer *pBuilder = GetOwner();
-
-	if ( pBuilder )
-	{
-		g_pVGuiLocalize->ConvertANSIToUnicode( pBuilder->GetPlayerName(), wszBuilderName, sizeof(wszBuilderName) );
-	}
-	else
-	{
-		wszBuilderName[0] = '\0';
-	}
-
-	if (m_iUpgradeLevel >= m_iHighestUpgradeLevel)
-	{
-		const char *printFormatString = "#TF_playerid_object_level";
-
-		g_pVGuiLocalize->ConstructString(sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find(printFormatString),
-			1,
-			wszLevel);
-	}
-	else
-	{
-		// level 1 and 2 show upgrade progress
-		_snwprintf(wszUpgradeProgress, ARRAYSIZE(wszUpgradeProgress) - 1, L"%d / %d", m_iUpgradeMetal, m_iUpgradeMetalRequired);
-		wszUpgradeProgress[ARRAYSIZE(wszUpgradeProgress) - 1] = '\0';
-
-		const char *printFormatString = "#TF_playerid_object_upgrading_level";		
-
-		g_pVGuiLocalize->ConstructString(sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find(printFormatString),
-			2,
-			wszLevel,
-			wszUpgradeProgress);
-	}
-
-
-
 }
 
 //-----------------------------------------------------------------------------

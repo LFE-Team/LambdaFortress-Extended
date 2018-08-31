@@ -88,7 +88,7 @@ class CNavArea;
 class CHintSystem;
 class CAI_Expresser;
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 class CEconWearable;
 #endif // USES_ECON_ITEMS
 
@@ -178,6 +178,7 @@ enum PlayerConnectedState
 extern bool gInitHUD;
 extern ConVar *sv_cheats;
 extern ConVar sv_hl2_beta;
+//extern void	FireNPCPrimaryAttack(CBaseCombatCharacter *pOperator, bool bUseWeaponAngles);
 
 class CBasePlayer;
 class CPlayerInfo : public IBotController, public IPlayerInfo
@@ -283,7 +284,7 @@ public:
 	// Returns true if this player wants pPlayer to be moved back in time when this player runs usercmds.
 	// Saves a lot of overhead on the server if we can cull out entities that don't need to lag compensate
 	// (like team members, entities out of our PVS, etc).
-	virtual bool			WantsLagCompensationOnEntity( const CBaseEntity	*pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
+	virtual bool			WantsLagCompensationOnEntity( const CBasePlayer	*pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 
 	virtual void			Spawn( void );
 	virtual void			Activate( void );
@@ -441,7 +442,7 @@ public:
 	virtual void			FlashlightTurnOff( void ) { };
 	virtual bool			IsIlluminatedByFlashlight( CBaseEntity *pEntity, float *flReturnDot ) {return false; }
 	
-	virtual void					UpdatePlayerSound ( void );
+	void					UpdatePlayerSound ( void );
 	virtual void			UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity );
 	virtual void			PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 	virtual const char	   *GetOverrideStepSound( const char *pszBaseStepSoundName ) { return pszBaseStepSoundName; }
@@ -615,11 +616,11 @@ public:
 
 	virtual bool			ShouldAnnounceAchievement( void );
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 	// Wearables
 	virtual void			EquipWearable( CEconWearable *pItem );
 	virtual void			RemoveWearable( CEconWearable *pItem );
-	//void					PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback ); Commented until we get wearableanimplayback_t -danielmm8888
+	void					PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback );
 #endif
 
 public:
@@ -892,7 +893,7 @@ public:
 
 	void		AdjustDrownDmg( int nAmount );
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 	CEconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
 	const CEconWearable		*GetWearable( int i ) const { return m_hMyWearables[i]; }
 	int						GetNumWearables( void ) const { return m_hMyWearables.Count(); }
@@ -1069,7 +1070,7 @@ protected:
 
 	bool					m_bAllowInstantSpawn;
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 	// Wearables
 	CUtlVector<CHandle<CEconWearable > >	m_hMyWearables;
 #endif

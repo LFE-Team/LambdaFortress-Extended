@@ -43,8 +43,6 @@ public:
 
 //	virtual int		KeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
 
-	virtual bool	DoPostScreenSpaceEffects( const CViewSetup *pSetup );
-
 	virtual float	GetViewModelFOV( void );
 	virtual bool	ShouldDrawViewModel();
 

@@ -24,30 +24,18 @@ public:
 	virtual ~C_TF_PlayerResource();
 
 	int	GetTotalScore( int iIndex ) { return GetArrayValue( iIndex, m_iTotalScore, 0 ); }
-	int GetMaxHealth( int iIndex ) { return GetArrayValue( iIndex, m_iMaxHealth, TF_HEALTH_UNDEFINED ); }
+	int GetMaxHealth( int iIndex )   { return GetArrayValue( iIndex, m_iMaxHealth, TF_HEALTH_UNDEFINED ); }
 	int GetPlayerClass( int iIndex ) { return GetArrayValue( iIndex, m_iPlayerClass, TF_CLASS_UNDEFINED ); }
-	const Vector &GetPlayerColorVector( int iIndex );
-	Color GetPlayerColor( int iIndex );
-	int GetKillstreak( int iIndex ) { return GetArrayValue( iIndex, m_iKillstreak, 0 ); }
 
 	int GetCountForPlayerClass( int iTeam, int iClass, bool bExcludeLocalPlayer = false );
-
+	
 protected:
 	int GetArrayValue( int iIndex, int *pArray, int defaultVal );
 
-	int		m_iTotalScore[MAX_PLAYERS + 1];
-	int		m_iMaxHealth[MAX_PLAYERS + 1];
-	int		m_iPlayerClass[MAX_PLAYERS + 1];
-	int		m_iKillstreak[MAX_PLAYERS + 1];
-	Vector	m_vecColors[MAX_PLAYERS + 1];
+	int		m_iTotalScore[MAX_PLAYERS+1];
+	int		m_iMaxHealth[MAX_PLAYERS+1];
+	int		m_iPlayerClass[MAX_PLAYERS+1];
 };
 
-inline C_TF_PlayerResource *GetTFPlayerResource( void )
-{
-	if ( !g_PR )
-		return NULL;
-
-	return assert_cast<C_TF_PlayerResource *>( g_PR );
-}
 
 #endif // C_TF_PLAYERRESOURCE_H

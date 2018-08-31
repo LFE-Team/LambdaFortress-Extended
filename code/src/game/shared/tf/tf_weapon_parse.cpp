@@ -8,8 +8,6 @@
 #include "tf_weapon_parse.h"
 #include "tf_shareddefs.h"
 #include "tf_playerclass_shared.h"
-#include "activitylist.h"
-#include "tf_gamerules.h"
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -38,7 +36,6 @@ CTFWeaponInfo::CTFWeaponInfo()
 
 	m_szMuzzleFlashModel[0] = '\0';
 	m_flMuzzleFlashModelDuration = 0;
-	m_flMuzzleFlashModelScale = 0;
 	m_szMuzzleFlashParticleEffect[0] = '\0';
 
 	m_szTracerEffect[0] = '\0';
@@ -50,15 +47,10 @@ CTFWeaponInfo::CTFWeaponInfo()
 	m_szExplosionEffect[0] = '\0';
 	m_szExplosionPlayerEffect[0] = '\0';
 	m_szExplosionWaterEffect[0] = '\0';
-	m_szExplosionEffect_Crit[0] = '\0';
-	m_szExplosionPlayerEffect_Crit[0] = '\0';
-	m_szExplosionWaterEffect_Crit[0] = '\0';
-	m_bHasTeamColoredExplosions = false;
 
 	m_iWeaponType = TF_WPN_TYPE_PRIMARY;
 
-	m_iMaxAmmo = 0;
-	m_iSpawnAmmo = 0;
+	m_bUseHands = false;
 }
 
 CTFWeaponInfo::~CTFWeaponInfo()
@@ -70,6 +62,7 @@ CTFWeaponInfo::~CTFWeaponInfo()
 //-----------------------------------------------------------------------------
 void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 {
+	int i;
 
 	BaseClass::Parse( pKeyValuesData, szWeaponName );
 
@@ -77,13 +70,11 @@ void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_nDamage				= pKeyValuesData->GetInt( "Damage", 0 );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flRange				= pKeyValuesData->GetFloat( "Range", 8192.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_nBulletsPerShot		= pKeyValuesData->GetInt( "BulletsPerShot", 0 );
-	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_nBurstSize			= pKeyValuesData->GetInt( "BurstSize", 0 );
-	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flBurstDelay			= pKeyValuesData->GetFloat( "BurstDelay", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flSpread				= pKeyValuesData->GetFloat( "Spread", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flPunchAngle			= pKeyValuesData->GetFloat( "PunchAngle", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flTimeFireDelay		= pKeyValuesData->GetFloat( "TimeFireDelay", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flTimeIdle			= pKeyValuesData->GetFloat( "TimeIdle", 0.0f );
-	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flTimeIdleEmpty		= pKeyValuesData->GetFloat( "TimeIdleEmpty", 0.0f );
+	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flTimeIdleEmpty		= pKeyValuesData->GetFloat( "TimeIdleEmpy", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flTimeReloadStart	= pKeyValuesData->GetFloat( "TimeReloadStart", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_flTimeReload			= pKeyValuesData->GetFloat( "TimeReload", 0.0f );
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_bDrawCrosshair		= pKeyValuesData->GetInt( "DrawCrosshair", 1 ) > 0;
@@ -93,7 +84,7 @@ void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_iProjectile = TF_PROJECTILE_NONE;
 	const char *pszProjectileType = pKeyValuesData->GetString( "ProjectileType", "projectile_none" );
 
-	for ( int i = 0; i < TF_NUM_PROJECTILES; i++ )
+	for ( i=0;i<TF_NUM_PROJECTILES;i++ )
 	{
 		if ( FStrEq( pszProjectileType, g_szProjectileNames[i] ) )
 		{
@@ -133,7 +124,7 @@ void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_WeaponData[TF_WEAPON_SECONDARY_MODE].m_iProjectile = m_WeaponData[TF_WEAPON_PRIMARY_MODE].m_iProjectile;
 	pszProjectileType = pKeyValuesData->GetString( "Secondary_ProjectileType", "projectile_none" );
 
-	for ( int i = 0; i < TF_NUM_PROJECTILES; i++ )
+	for ( i=0;i<TF_NUM_PROJECTILES;i++ )
 	{
 		if ( FStrEq( pszProjectileType, g_szProjectileNames[i] ) )
 		{
@@ -144,11 +135,29 @@ void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 
 	const char *pszWeaponType = pKeyValuesData->GetString( "WeaponType" );
 
-	int iType = UTIL_StringFieldToInt( pszWeaponType, g_AnimSlots, TF_WPN_TYPE_COUNT );
-
-	if ( iType >= 0 )
+	if ( !Q_strcmp( pszWeaponType, "primary" ) )
 	{
-		m_iWeaponType = iType;
+		m_iWeaponType = TF_WPN_TYPE_PRIMARY;
+	}
+	else if ( !Q_strcmp( pszWeaponType, "secondary" ) )
+	{
+		m_iWeaponType = TF_WPN_TYPE_SECONDARY;
+	}
+	else if ( !Q_strcmp( pszWeaponType, "melee" ) )
+	{
+		m_iWeaponType = TF_WPN_TYPE_MELEE;
+	}
+	else if ( !Q_strcmp( pszWeaponType, "grenade" ) )
+	{
+		m_iWeaponType = TF_WPN_TYPE_GRENADE;
+	}
+	else if ( !Q_strcmp( pszWeaponType, "building" ) )
+	{
+		m_iWeaponType = TF_WPN_TYPE_BUILDING;
+	}
+	else if ( !Q_strcmp( pszWeaponType, "pda" ) )
+	{
+		m_iWeaponType = TF_WPN_TYPE_PDA;
 	}
 
 	// Grenade data.
@@ -161,18 +170,15 @@ void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_bHasTeamSkins_Viewmodel	= ( pKeyValuesData->GetInt( "HasTeamSkins_Viewmodel", 0 ) != 0 );
 	m_bHasTeamSkins_Worldmodel	= ( pKeyValuesData->GetInt( "HasTeamSkins_Worldmodel", 0 ) != 0 );
 
-	
 	// Model muzzleflash
-	/*const char *pszMuzzleFlashModel = pKeyValuesData->GetString( "MuzzleFlashModel", NULL );
+	const char *pszMuzzleFlashModel = pKeyValuesData->GetString( "MuzzleFlashModel", NULL );
 
 	if ( pszMuzzleFlashModel )
 	{
 		Q_strncpy( m_szMuzzleFlashModel, pszMuzzleFlashModel, sizeof( m_szMuzzleFlashModel ) );
-	}*/
+	}
 
 	m_flMuzzleFlashModelDuration = pKeyValuesData->GetFloat( "MuzzleFlashModelDuration", 0.2 );
-
-	m_flMuzzleFlashModelScale = pKeyValuesData->GetFloat("MuzzleFlashModelScale", 1.0);
 
 	const char *pszMuzzleFlashParticleEffect = pKeyValuesData->GetString( "MuzzleFlashParticleEffect", NULL );
 
@@ -215,28 +221,7 @@ void CTFWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 		Q_strncpy( m_szExplosionWaterEffect, pszEffect, sizeof( m_szExplosionWaterEffect ) );
 	}
 
-	pszEffect = pKeyValuesData->GetString( "ExplosionEffect_Crit", NULL );
-	if ( pszEffect )
-	{
-		Q_strncpy( m_szExplosionEffect_Crit, pszEffect, sizeof( m_szExplosionEffect_Crit ) );
-	}
-
-	pszEffect = pKeyValuesData->GetString( "ExplosionPlayerEffect_Crit", NULL );
-	if ( pszEffect )
-	{
-		Q_strncpy( m_szExplosionPlayerEffect_Crit, pszEffect, sizeof( m_szExplosionPlayerEffect_Crit ) );
-	}
-
-	pszEffect = pKeyValuesData->GetString( "ExplosionWaterEffect_Crit", NULL );
-	if ( pszEffect )
-	{
-		Q_strncpy( m_szExplosionWaterEffect_Crit, pszEffect, sizeof( m_szExplosionWaterEffect_Crit ) );
-	}
-
-	m_bHasTeamColoredExplosions = pKeyValuesData->GetBool( "HasTeamColoredExplosions" );
-
 	m_bDontDrop = ( pKeyValuesData->GetInt( "DontDrop", 0 ) > 0 );
 
-	m_iMaxAmmo = pKeyValuesData->GetInt( "MaxAmmo", 0 );
-	m_iSpawnAmmo = pKeyValuesData->GetInt( "SpawnAmmo", 0 );
+	m_bUseHands = ( pKeyValuesData->GetInt( "UseHands" ) > 0 );
 }

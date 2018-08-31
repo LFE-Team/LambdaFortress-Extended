@@ -43,7 +43,6 @@ public:
 	virtual void	Spawn();
 	virtual void	PrimaryAttack();
 	virtual void	SecondaryAttack();
-	virtual bool	CanHolster( void ) const;
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual int		GetWeaponID( void ) const						{ return TF_WEAPON_NONE; }
 	virtual bool	ShouldDrawCrosshair( void )						{ return true; }
@@ -57,10 +56,6 @@ public:
 	virtual void	Smack( void );
 
 	virtual float	GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage );
-	virtual int		GetDamageCustom( void ) { return TF_DMG_CUSTOM_NONE; }
-#ifdef GAME_DLL
-	virtual float	GetForceScale( void );
-#endif
 
 	// Call when we hit an entity. Use for special weapon effects on hit.
 	virtual void	OnEntityHit( CBaseEntity *pEntity );
@@ -68,7 +63,6 @@ public:
 	virtual void	SendPlayerAnimEvent( CTFPlayer *pPlayer );
 
 	bool			IsCurrentAttackACritical( void ) { return m_bCurrentAttackIsCrit; }
-	bool			IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }
 	bool			ConnectedHit( void ) { return m_bConnected; }
 
 public:	

@@ -15,7 +15,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include "player_pickup.h"	// for combine ball inheritance
-#include "iscorer.h"
+
 //-----------------------------------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------------------------------
@@ -25,21 +25,12 @@ class CSpriteTrail;
 //-----------------------------------------------------------------------------
 // Looks for enemies, bounces a max # of times before it breaks
 //-----------------------------------------------------------------------------
-class CPropCombineBall : public CBaseAnimating, public CDefaultPlayerPickupVPhysics, public IScorer
+class CPropCombineBall : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
 {
 public:
 	DECLARE_CLASS( CPropCombineBall, CBaseAnimating );
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
-
-	CNetworkVar( int, m_iDeflected );
-
-
-	// IScorer interface
-	virtual CBaseEntity *GetScorer(void);
-	virtual CBaseEntity *GetAssistant(void) { return NULL; }
-
-	void			SetScorer( CBaseEntity *pScorer );
 
 	virtual void Precache();
 	virtual void Spawn();
@@ -124,11 +115,6 @@ public:
 	void SetOriginalOwner( CBaseEntity *pEntity ) { m_hOriginalOwner = pEntity; }
 	CBaseEntity *GetOriginalOwner() { return m_hOriginalOwner; }
 
-	virtual bool	IsDeflectable() { return true; }
-	virtual void	Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
-	virtual void	IncremenentDeflected( void );
-protected:
-	EHANDLE					m_hScorer;
 private:
 
 	void SetPlayerLaunched( CBasePlayer *pOwner );

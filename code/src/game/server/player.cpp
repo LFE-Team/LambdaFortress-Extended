@@ -70,7 +70,7 @@
 #include "vote_controller.h"
 #include "ai_speech.h"
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
 #endif
 
@@ -88,7 +88,7 @@
 
 ConVar autoaim_max_dist( "autoaim_max_dist", "2160" ); // 2160 = 180 feet
 ConVar autoaim_max_deflect( "autoaim_max_deflect", "0.99" );
-ConVar sv_hl2_beta("sv_hl2_beta", "0");
+ConVar sv_hl2_beta( "sv_hl2_beta", "0" );
 
 #ifdef CSTRIKE_DLL
 ConVar	spec_freeze_time( "spec_freeze_time", "5.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
@@ -111,17 +111,7 @@ static ConVar physicsshadowupdate_render( "physicsshadowupdate_render", "0" );
 bool IsInCommentaryMode( void );
 bool IsListeningToCommentary( void );
 
-#if defined( TF_CLASSIC )
-// These values are below TF2 max speed of 520.
-// Live TF2 somehow ignores these values entirely when computing keyboard movement
-// yet you can still do precise movement with mouse and gamepad.
-// I'm changing cvar values until I can figure out a proper way. (Nicknine)
-// Mirrored on client in in_main.cpp
-ConVar cl_sidespeed( "cl_sidespeed", "600", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_forwardspeed( "cl_forwardspeed", "600", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar cl_backspeed( "cl_backspeed", "600", FCVAR_REPLICATED | FCVAR_CHEAT );
-#elif !defined( CSTRIKE_DLL )
+#if !defined( CSTRIKE_DLL )
 ConVar cl_sidespeed( "cl_sidespeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar cl_forwardspeed( "cl_forwardspeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
@@ -599,7 +589,6 @@ CBasePlayer::CBasePlayer( )
 
 	m_bForceOrigin = false;
 	m_hVehicle = NULL;
-	m_hUseEntity = NULL;
 	m_pCurrentCommand = NULL;
 	m_iLockViewanglesTickNumber = 0;
 	m_qangLockViewangles.Init();
@@ -745,29 +734,22 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 }
 
 
-bool CBasePlayer::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
+bool CBasePlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
 {
 	// Team members shouldn't be adjusted unless friendly fire is on.
-	if ( !friendlyfire.GetInt() && pEntity->GetTeamNumber() == GetTeamNumber() )
+	if ( !friendlyfire.GetInt() && pPlayer->GetTeamNumber() == GetTeamNumber() )
 		return false;
 
 	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
-	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pEntity->entindex() ) )
+	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
 		return false;
 
 	const Vector &vMyOrigin = GetAbsOrigin();
-	const Vector &vHisOrigin = pEntity->GetAbsOrigin();
+	const Vector &vHisOrigin = pPlayer->GetAbsOrigin();
 
 	// get max distance player could have moved within max lag compensation time, 
 	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
-	//float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
-	float maxspeed;
-	CBasePlayer *pPlayer = ToBasePlayer( (CBaseEntity*)pEntity );
-	if ( pPlayer )
-		maxspeed = pPlayer->MaxSpeed();
-	else
-		maxspeed = 600;
-	float maxDistance = 1.5 * maxspeed * sv_maxunlag.GetFloat();
+	float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
 
 	// If the player is within this distance, lag compensate them in case they're running past us.
 	if ( vHisOrigin.DistTo( vMyOrigin ) < maxDistance )
@@ -5058,7 +5040,7 @@ void CBasePlayer::Spawn( void )
 	m_vecSmoothedVelocity = vec3_origin;
 	InitVCollision( GetAbsOrigin(), GetAbsVelocity() );
 
-#if !( defined( TF_DLL ) || defined( TF_CLASSIC ) )
+#if !(defined( TF_DLL ) || defined( TF_CLASSIC ))
 	IGameEvent *event = gameeventmanager->CreateEvent( "player_spawn" );
 	
 	if ( event )
@@ -5113,7 +5095,7 @@ void CBasePlayer::Precache( void )
 	enginesound->PrecacheSentenceGroup( "HEV" );
 
 	// These are always needed
-#if !defined (TF_DLL)
+#ifndef TF_DLL
 	PrecacheParticleSystem( "slime_splash_01" );
 	PrecacheParticleSystem( "slime_splash_02" );
 	PrecacheParticleSystem( "slime_splash_03" );
@@ -5454,31 +5436,21 @@ bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
 	// Try to stow weapons
 	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
 	{
-#ifndef TF_CLASSIC
 		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
 		if ( pWeapon != NULL )
 		{
-			pWeapon->SetWeaponVisible( false );
+			pWeapon->Holster( NULL );
 		}
-#else
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( pWeapon != NULL )
-		{
-			pWeapon->Lower();
-			//pWeapon->SetWeaponVisible( false );
-		}
-#endif
+
 #ifndef HL2_DLL
 		m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 #endif
 		m_Local.m_iHideHUD |= HIDEHUD_INVEHICLE;
 	}
 
-	if ( !pVehicle->IsPassengerVisible(nRole ))
+	if ( !pVehicle->IsPassengerVisible( nRole ) )
 	{
-#ifndef TF_CLASSIC
-		AddEffects(EF_NODRAW); // IT'S MULTIPLAYER DO NOT NODRAW THE BOIS
-#endif
+		AddEffects( EF_NODRAW );
 	}
 
 	// Put us in the vehicle
@@ -5596,15 +5568,10 @@ void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExi
 	// Re-deploy our weapon
 	if ( IsAlive() )
 	{
-		if ( GetActiveWeapon() )
+		if ( GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false )
 		{
 			GetActiveWeapon()->Deploy();
-			GetActiveWeapon()->Ready();
 			ShowCrosshair( true );
-			#ifdef TF_CLASSIC
-			//GetActiveWeapon()->SetWeaponVisible( true );
-			//GetActiveWeapon()->SwitchToNextBestWeapon( NULL );
-			#endif
 		}
 	}
 
@@ -6029,6 +5996,8 @@ void CBasePlayer::ImpulseCommands( )
 	m_nImpulse = 0;
 }
 
+#ifdef HL2_EPISODIC
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -6063,6 +6032,8 @@ void CC_CH_CreateJalopy( void )
 }
 
 static ConCommand ch_createjalopy("ch_createjalopy", CC_CH_CreateJalopy, "Spawn jalopy in front of the player.", FCVAR_CHEAT);
+
+#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -6125,6 +6096,7 @@ static void CreateAirboat( CBasePlayer *pPlayer )
 	}
 }
 
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -6139,6 +6111,7 @@ void CC_CH_CreateAirboat( void )
 }
 
 static ConCommand ch_createairboat( "ch_createairboat", CC_CH_CreateAirboat, "Spawn airboat in front of the player.", FCVAR_CHEAT );
+
 
 //=========================================================
 //=========================================================
@@ -7418,7 +7391,7 @@ CBaseEntity *CBasePlayer::HasNamedPlayerItem( const char *pszItemName )
 	return NULL;
 }
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 //-----------------------------------------------------------------------------
 // Purpose: Add this wearable to the players' equipment list.
 //-----------------------------------------------------------------------------
@@ -7483,7 +7456,7 @@ void CBasePlayer::RemoveWearable( CEconWearable *pItem )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-/*void CBasePlayer::PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback )
+void CBasePlayer::PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback )
 {
 	// Tell all our wearables to play their animations
 	FOR_EACH_VEC( m_hMyWearables, i )
@@ -7493,7 +7466,7 @@ void CBasePlayer::RemoveWearable( CEconWearable *pItem )
 			m_hMyWearables[i]->PlayAnimForPlaybackEvent( iPlayback );
 		}
 	}
-}*/ //Commented until we get wearableanimplayback_t -danielmm8888
+}
 #endif // USES_ECON_ITEMS
 
 //================================================================================
@@ -7764,14 +7737,7 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 #ifdef TF_CLASSIC
 	if ( TFGameRules()->IsCoOpGameRunning() )
 	{
-		if (TFGameRules()->IsInHL2EP2Map())
-		{
-			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT);
-		}
-		else 
-		{
-			TFGameRules()->SetWinningTeam(TF_COMBINE_TEAM, WINREASON_HL2_OBJECT);
-		}
+		TFGameRules()->SetWinningTeam( TF_COMBINE_TEAM, WINREASON_NONE );
 	}
 #else
 	UTIL_ScreenFadeAll( m_clrRender, Duration(), HoldTime(), FFADE_OUT );
@@ -8061,7 +8027,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 		SendPropUtlVector( SENDINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER, SendPropEHandle( NULL, 0 ) ),
 #endif // USES_ECON_ITEMS
 

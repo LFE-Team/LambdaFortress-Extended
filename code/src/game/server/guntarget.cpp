@@ -32,10 +32,10 @@ public:
 
 	virtual int BloodColor( void ) { return DONT_BLEED; }
 
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#if defined( HL2_DLL )
 	virtual Class_T Classify( void ) { return CLASS_MILITARY; }
 #elif defined( HL1_DLL )
-	virtual Class_T Classify( void ) { return CLASS_MACHINE; }
+	virtual Class_T Classify( void ) { return CLASS_MACHINE_HL1; }
 #else
 	virtual Class_T Classify( void ) { return CLASS_NONE; }
 #endif

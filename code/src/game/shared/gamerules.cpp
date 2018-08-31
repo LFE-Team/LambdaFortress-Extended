@@ -791,11 +791,11 @@ float CGameRules::GetAmmoDamage( CBaseEntity *pAttacker, CBaseEntity *pVictim, i
 	CAmmoDef *pAmmoDef = GetAmmoDef();
 
 #ifdef SecobMod__Enable_Fixed_Multiplayer_AI
- 	if ( pAttacker && pAttacker->IsPlayer() )
- #else
- 	if ( pAttacker->IsPlayer() )
+	if ( pAttacker && pAttacker->IsPlayer() )
+#else
+	if ( pAttacker->IsPlayer() )
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI
- 	{
+	{
 		flDamage = pAmmoDef->PlrDamage( nAmmoType );
 	}
 	else

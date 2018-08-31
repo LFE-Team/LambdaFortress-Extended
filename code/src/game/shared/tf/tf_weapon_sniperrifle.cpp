@@ -1,4 +1,4 @@
-﻿//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
 //
 // Purpose: TF Sniper Rifle
 //
@@ -21,14 +21,8 @@
 #include "toolframework_client.h"
 #include "input.h"
 
-// For TFGameRules() and Player resources
-#include "tf_gamerules.h"
-#include "c_tf_playerresource.h"
-
 // forward declarations
 void ToolFramework_RecordMaterialParams( IMaterial *pMaterial );
-
-ConVar tf_sniper_fullcharge_bell( "tf_sniper_fullcharge_bell", "0", FCVAR_ARCHIVE );
 #endif
 
 #define TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC	50.0
@@ -42,7 +36,6 @@ ConVar tf_sniper_fullcharge_bell( "tf_sniper_fullcharge_bell", "0", FCVAR_ARCHIV
 
 #define SNIPER_DOT_SPRITE_RED		"effects/sniperdot_red.vmt"
 #define SNIPER_DOT_SPRITE_BLUE		"effects/sniperdot_blue.vmt"
-#define SNIPER_DOT_SPRITE_CLEAR		"effects/sniperdot_clear.vmt"
 
 //=============================================================================
 //
@@ -174,8 +167,6 @@ bool CTFSniperRifle::Holster( CBaseCombatWeapon *pSwitchingTo )
 #ifdef GAME_DLL
 	// Destroy the sniper dot.
 	DestroySniperDot();
-#else
-	m_bDinged = false;
 #endif
 
 	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
@@ -205,11 +196,6 @@ void CTFSniperRifle::HandleZooms( void )
 	// Get the owning player.
 	CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );
 	if ( !pPlayer )
-		return;
-
-	int bBlockZoom = 0;
-	CALL_ATTRIB_HOOK_INT( bBlockZoom, unimplemented_mod_sniper_no_charge );
-	if ( bBlockZoom > 0 )
 		return;
 
 	// Handle the zoom when taunting.
@@ -315,18 +301,6 @@ void CTFSniperRifle::ItemPostFrame( void )
 		if ( pPlayer->m_Shared.InCond( TF_COND_AIMING ) && !m_bRezoomAfterShot )
 		{
 			m_flChargedDamage = min( m_flChargedDamage + gpGlobals->frametime * TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC, TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX );
-
-#ifdef CLIENT_DLL
-			if ( m_flChargedDamage >= TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX && !m_bDinged )
-			{
-				m_bDinged = true;
-				if ( tf_sniper_fullcharge_bell.GetBool() )
-				{
-					CSingleUserRecipientFilter filter( pPlayer );
-					C_BaseEntity::EmitSound( filter, pPlayer->entindex(), "TFPlayer.Recharged" );
-				}
-			}
-#endif
 		}
 		else
 		{
@@ -465,8 +439,6 @@ void CTFSniperRifle::ZoomOut( void )
 	// Destroy the sniper dot.
 	DestroySniperDot();
 	pPlayer->ClearExpression();
-#else
-	m_bDinged = false;
 #endif
 
 	// if we are thinking about zooming, cancel it
@@ -899,7 +871,7 @@ int CSniperDot::DrawModel( int flags )
 
 	float flLifeTime = gpGlobals->curtime - m_flChargeStartTime;
 	float flStrength = RemapValClamped( flLifeTime, 0.0, TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX / TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC, 0.1, 1.0 );
-	
+
 	color32 innercolor = { 255, 255, 255, 255 };
 	color32 outercolor = { 255, 255, 255, 128 };
 
@@ -918,11 +890,9 @@ bool CSniperDot::ShouldDraw( void )
 	if ( IsEffectActive( EF_NODRAW ) )
 		return false;
 
-#if 0
 	// Don't draw the sniper dot when in thirdperson.
 	if ( ::input->CAM_IsThirdPerson() )
 		return false;
-#endif
 
 	return true;
 }
@@ -934,15 +904,14 @@ void CSniperDot::OnDataChanged( DataUpdateType_t updateType )
 {
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
-			switch (GetTeamNumber())
-			{
-			case TF_TEAM_RED:
-				m_hSpriteMaterial.Init(SNIPER_DOT_SPRITE_RED, TEXTURE_GROUP_CLIENT_EFFECTS);
-				break;
-			case TF_TEAM_BLUE:
-				m_hSpriteMaterial.Init(SNIPER_DOT_SPRITE_BLUE, TEXTURE_GROUP_CLIENT_EFFECTS);
-				break;
-			}
+		if ( GetTeamNumber() == TF_TEAM_BLUE )
+		{
+			m_hSpriteMaterial.Init( SNIPER_DOT_SPRITE_BLUE, TEXTURE_GROUP_CLIENT_EFFECTS );
+		}
+		else
+		{
+			m_hSpriteMaterial.Init( SNIPER_DOT_SPRITE_RED, TEXTURE_GROUP_CLIENT_EFFECTS );
+		}
 	}
 }
 

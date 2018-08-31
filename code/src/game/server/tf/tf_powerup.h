@@ -14,11 +14,9 @@
 
 enum powerupsize_t
 {
-	POWERUP_TINY,
 	POWERUP_SMALL,
 	POWERUP_MEDIUM,
 	POWERUP_FULL,
-	POWERUP_MEGA,
 
 	POWERUP_SIZES,
 };
@@ -35,13 +33,11 @@ class CTFPowerup : public CItem
 public:
 	DECLARE_CLASS( CTFPowerup, CItem );
 
-	DECLARE_DATADESC();
-
 	CTFPowerup();
 
 	void			Spawn( void );
 	CBaseEntity*	Respawn( void );
-	virtual void	Materialize( void );
+	void			Materialize( void );
 	virtual bool	ValidTouch( CBasePlayer *pPlayer );
 	virtual bool	MyTouch( CBasePlayer *pPlayer );
 
@@ -50,8 +46,6 @@ public:
 
 	virtual float	GetRespawnDelay( void ) { return g_pGameRules->FlItemRespawnTime( this ); }
 
-	void			DropSingleInstance( const Vector &vecVelocity, CBaseCombatCharacter *pOwner, float flUnknown, float flRestTime );
-
 	// Input handlers
 	void			InputEnable( inputdata_t &inputdata );
 	void			InputDisable( inputdata_t &inputdata );
@@ -59,10 +53,11 @@ public:
 
 	virtual powerupsize_t	GetPowerupSize( void ) { return POWERUP_FULL; }
 
-public:
-	CNetworkVarForDerived( bool, m_bDisabled );
-	CNetworkVarForDerived( bool, m_bRespawning );
-	float m_flNextCollideTime;
+private:
+	bool			m_bDisabled;
+	bool			m_bRespawning;
+
+	DECLARE_DATADESC();
 };
 
 #endif // TF_POWERUP_H

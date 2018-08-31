@@ -38,11 +38,6 @@
 #include "mapentities.h"
 #include "RagdollBoogie.h"
 #include "physics_collisionevent.h"
-#include "tf_team.h"
-
-#ifdef TF_CLASSIC
-#include "tf_gamerules.h"
-#endif
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -304,8 +299,6 @@ public:
 
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 
-	virtual bool			CanBecomeServerRagdoll(void) { return false; } // we need this or the game will fucc up
-
 	void		SetRollerSkin( void );
 
 	COutputEvent m_OnPhysGunDrop;
@@ -561,7 +554,7 @@ void CNPC_RollerMine::Spawn( void )
 
 	BaseClass::Spawn();
 
-	AddEFlags( EFL_NO_DISSOLVE | EFL_NO_MEGAPHYSCANNON_RAGDOLL );
+	AddEFlags( EFL_NO_DISSOLVE );
 
 	CapabilitiesClear();
 	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_SQUAD );
@@ -952,7 +945,7 @@ int CNPC_RollerMine::GetHackedIdleSchedule( void )
 		return SCHED_NONE;
 
 	// Are we near the player?
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+	CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
 	if ( !pPlayer )
 		return SCHED_NONE;
 
@@ -1576,7 +1569,7 @@ void CNPC_RollerMine::RunTask( const Task_t *pTask )
 				return;
 			}
 
-			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+			CBaseEntity *pPlayer = gEntList.FindEntityByName( NULL, "!player" );
 			if ( !pPlayer || m_bHeld || m_hVehicleStuckTo )
 			{
 				TaskFail( FAIL_NO_TARGET );
@@ -1724,12 +1717,10 @@ void CNPC_RollerMine::SetRollerSkin( void )
 	else if ( m_bHackedByAlyx == true )
 	{
 		m_nSkin = (int)ROLLER_SKIN_FRIENDLY;
-		ChangeTeam( TF_STORY_TEAM );
 	}
 	else
 	{
 		m_nSkin = (int)ROLLER_SKIN_REGULAR;
-		ChangeTeam( TF_COMBINE_TEAM );
 	}
 }
 
@@ -1887,11 +1878,7 @@ float CNPC_RollerMine::GetAttackDamageScale( CBaseEntity *pVictim )
 		if ( pVictim->MyNPCPointer() )
 		{
 			// If we don't hate the player, we're immune
-#ifdef TF_CLASSIC
-			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
-#endif //SecobMod
+			CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
 			if ( pPlayer && pVictim->MyNPCPointer()->IRelationType( pPlayer ) != D_HT )
 				return 0.0;
 		}
@@ -2415,21 +2402,8 @@ void CNPC_RollerMine::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_
 	// Are we just being punted?
 	if ( reason == PUNTED_BY_CANNON )
 	{
-		#ifndef TF_CLASSIC
 		// Be stunned
 		m_flActiveTime = gpGlobals->curtime + GetStunDelay();
-		#else
-		if ( TFGameRules()->MegaPhyscannonActive() == true )
-		{
-			SetThink( &CNPC_RollerMine::PreDetonate );
-			SetNextThink(gpGlobals->curtime + random->RandomFloat( 0.1f, 0.5f ));
-		}
-		else
-		{
-			// Be stunned
-			m_flActiveTime = gpGlobals->curtime + GetStunDelay();
-		}
-		#endif
 		return;
 	}
 

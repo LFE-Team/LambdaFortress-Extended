@@ -49,23 +49,12 @@ IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
 	RecvPropString( RECVINFO( m_szClassname ) ),
 #ifdef TF_CLASSIC_CLIENT
 	RecvPropInt( RECVINFO( m_nPlayerCond ) ),
-	RecvPropInt( RECVINFO( m_nPlayerCondEx ) ),
-	RecvPropInt( RECVINFO( m_nPlayerCondEx2 ) ),
-	RecvPropInt( RECVINFO( m_nPlayerCondEx3 ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_flCondExpireTimeLeft ), RecvPropFloat( RECVINFO( m_flCondExpireTimeLeft[0] ) ) ),
 	RecvPropInt( RECVINFO( m_nNumHealers ) ),
 	RecvPropBool( RECVINFO( m_bBurningDeath ) ),
 	RecvPropInt( RECVINFO( m_nTFFlags ) )
 #endif
 END_RECV_TABLE()
-#ifdef TF_CLASSIC_CLIENT
-BEGIN_PREDICTION_DATA_NO_BASE( C_AI_BaseNPC )
-	DEFINE_PRED_FIELD( m_nPlayerCond, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx2, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerCondEx3, FIELD_INTEGER, FTYPEDESC_INSENDTABLE )
-END_PREDICTION_DATA()
-#endif
+
 extern ConVar cl_npc_speedmod_intime;
 
 bool NPC_IsImportantNPC( C_BaseAnimating *pAnimating )
@@ -86,8 +75,6 @@ C_AI_BaseNPC::C_AI_BaseNPC()
 	m_flBurnEffectStartTime = 0;
 	m_flBurnEffectEndTime = 0;
 	m_hRagdoll.Set( NULL );
-	m_pCritSound = NULL;
-	m_pCritEffect = NULL;
 #endif
 }
 
@@ -192,11 +179,6 @@ void C_AI_BaseNPC::OnPreDataChanged( DataUpdateType_t updateType )
 #ifdef TF_CLASSIC_CLIENT
 	m_iOldTeam = GetTeamNumber();
 	m_nOldConditions = m_nPlayerCond;
-	m_nOldConditionsEx = m_nPlayerCondEx;
-	m_nOldConditionsEx2 = m_nPlayerCondEx2;
-	m_nOldConditionsEx3 = m_nPlayerCondEx3;
-	m_bWasCritBoosted = IsCritBoosted();
-	m_bWasMiniCritBoosted = IsMiniCritBoosted();
 #endif
 }
 
@@ -210,90 +192,33 @@ void C_AI_BaseNPC::OnDataChanged( DataUpdateType_t type )
 	}
 
 #ifdef TF_CLASSIC_CLIENT
+
 	if ( type == DATA_UPDATE_CREATED )
 	{
-		SetNextClientThink( CLIENT_THINK_ALWAYS );
-
 		InitInvulnerableMaterial();
 	}
-
-	// Update conditions from last network change
-	SyncConditions( m_nPlayerCond, m_nOldConditions, 0, 0 );
-	SyncConditions( m_nPlayerCondEx, m_nOldConditionsEx, 0, 32 );
-	SyncConditions( m_nPlayerCondEx2, m_nOldConditionsEx2, 0, 64 );
-	SyncConditions( m_nPlayerCondEx3, m_nOldConditionsEx3, 0, 96 );
-
-	m_nOldConditions = m_nPlayerCond;
-	m_nOldConditionsEx = m_nPlayerCondEx;
-	m_nOldConditionsEx2 = m_nPlayerCondEx2;
-	m_nOldConditionsEx3 = m_nPlayerCondEx3;
-
-	C_BaseCombatWeapon *pActiveWpn = this->GetActiveWeapon();
-	if ( pActiveWpn )
+	else
 	{
-		UpdateCritBoostEffect();
+		if ( m_iOldTeam != GetTeamNumber() )
+		{
+			InitInvulnerableMaterial();
+		}
 	}
 
 	if ( InCond( TF_COND_BURNING ) && !m_pBurningSound )
 	{
 		StartBurningSound();
 	}
-/*
-	int nNewWaterLevel = GetWaterLevel();
 
-	if ( nNewWaterLevel != m_nOldWaterLevel )
+	// Update conditions from last network change
+	if ( m_nOldConditions != m_nPlayerCond )
 	{
-		if ( ( m_nOldWaterLevel == WL_NotInWater ) && ( nNewWaterLevel > WL_NotInWater ) )
-		{
-			// Set when we do a transition to/from partially in water to completely out
-			m_flWaterEntryTime = gpGlobals->curtime;
-		}
+		UpdateConditions();
 
-		// If player is now up to his eyes in water and has entered the water very recently (not just bobbing eyes in and out), play a bubble effect.
-		if ( ( nNewWaterLevel == WL_Eyes ) && ( gpGlobals->curtime - m_flWaterEntryTime ) < 0.5f ) 
-		{
-			CNewParticleEffect *pEffect = ParticleProp()->Create( "water_playerdive", PATTACH_ABSORIGIN_FOLLOW );
-			ParticleProp()->AddControlPoint( pEffect, 1, NULL, PATTACH_WORLDORIGIN, NULL, WorldSpaceCenter() );
-		}
-		// If player was up to his eyes in water and is now out to waist level or less, play a water drip effect
-		else if ( m_nOldWaterLevel == WL_Eyes && ( nNewWaterLevel < WL_Eyes ) && !bJustSpawned )
-		{
-			CNewParticleEffect *pWaterExitEffect = ParticleProp()->Create( "water_playeremerge", PATTACH_ABSORIGIN_FOLLOW );
-			ParticleProp()->AddControlPoint( pWaterExitEffect, 1, this, PATTACH_ABSORIGIN_FOLLOW );
-			m_bWaterExitEffectActive = true;
-		}
+		m_nOldConditions = m_nPlayerCond;
 	}
-*/
 #endif
 }
-
-#ifdef TF_CLASSIC_CLIENT
-//-----------------------------------------------------------------------------
-// Purpose: check the newly networked conditions for changes
-//-----------------------------------------------------------------------------
-void C_AI_BaseNPC::SyncConditions( int nCond, int nOldCond, int nUnused, int iOffset )
-{
-	if ( nCond == nOldCond )
-		return;
-
-	int nCondChanged = nCond ^ nOldCond;
-	int nCondAdded = nCondChanged & nCond;
-	int nCondRemoved = nCondChanged & nOldCond;
-
-	int i;
-	for ( i = 0; i < 32; i++ )
-	{
-		if ( nCondAdded & (1<<i) )
-		{
-			OnConditionAdded( i + iOffset );
-		}
-		else if ( nCondRemoved & (1<<i) )
-		{
-			OnConditionRemoved( i + iOffset );
-		}
-	}
-}
-#endif
 
 void C_AI_BaseNPC::UpdateOnRemove( void )
 {
@@ -340,7 +265,7 @@ bool C_AI_BaseNPC::GetRagdollInitBoneArrays( matrix3x4_t *pDeltaBones0, matrix3x
 //-----------------------------------------------------------------------------
 int	C_AI_BaseNPC::InternalDrawModel( int flags )
 {
-	bool bUseInvulnMaterial = IsInvulnerable();
+	bool bUseInvulnMaterial = InCond( TF_COND_INVULNERABLE );
 	if ( bUseInvulnMaterial )
 	{
 		modelrender->ForcedMaterialOverride( *GetInvulnMaterialRef() );
@@ -367,7 +292,7 @@ void C_AI_BaseNPC::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		return;
 	}
 
-	if ( IsInvulnerable() )
+	if ( InCond( TF_COND_INVULNERABLE ) )
 	{ 
 		Vector vecDir = rayEnd - rayStart;
 		VectorNormalize(vecDir);
@@ -429,6 +354,29 @@ Vector C_AI_BaseNPC::GetObserverCamOrigin( void )
 	}
 
 	return BaseClass::GetObserverCamOrigin();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: check the newly networked conditions for changes
+//-----------------------------------------------------------------------------
+void C_AI_BaseNPC::UpdateConditions( void )
+{
+	int nCondChanged = m_nPlayerCond ^ m_nOldConditions;
+	int nCondAdded = nCondChanged & m_nPlayerCond;
+	int nCondRemoved = nCondChanged & m_nOldConditions;
+
+	int i;
+	for ( i=0;i<TF_COND_LAST;i++ )
+	{
+		if ( nCondAdded & (1<<i) )
+		{
+			OnConditionAdded( i );
+		}
+		else if ( nCondRemoved & (1<<i) )
+		{
+			OnConditionRemoved( i );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -525,20 +473,14 @@ void C_AI_BaseNPC::InitInvulnerableMaterial( void )
 
 	switch ( iTeam )
 	{
-		case TF_TEAM_RED:
-			pszMaterial = "models/effects/invulnfx_red.vmt";
-			break;
-		case TF_TEAM_BLUE:
-			pszMaterial = "models/effects/invulnfx_blue.vmt";
-			break;
-		case TF_TEAM_GREEN:
-			pszMaterial = "models/effects/invulnfx_green.vmt";
-			break;
-		case TF_TEAM_YELLOW:
-			pszMaterial = "models/effects/invulnfx_yellow.vmt";
-			break;
-		default:
-			break;
+	case TF_TEAM_BLUE:	
+		pszMaterial = "models/effects/invulnfx_blue.vmt";
+		break;
+	case TF_TEAM_RED:	
+		pszMaterial = "models/effects/invulnfx_red.vmt";
+		break;
+	default:
+		break;
 	}
 
 	if ( pszMaterial )
@@ -549,117 +491,5 @@ void C_AI_BaseNPC::InitInvulnerableMaterial( void )
 	{
 		m_InvulnerableMaterial.Shutdown();
 	}
-}
-
-void C_AI_BaseNPC::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
-{
-	bool bShouldShow = !bForceHide;
-
-	if ( bShouldShow )
-	{
-		if ( !IsCritBoosted() )
-		{
-			bShouldShow = false;
-		}
-		else if ( IsStealthed() )
-		{
-			bShouldShow = false;
-		}
-	}
-
-	if ( bShouldShow )
-	{
-		// Update crit effect model.
-		if ( m_pCritEffect )
-		{
-			if ( m_hCritEffectHost.Get() )
-				m_hCritEffectHost->ParticleProp()->StopEmission( m_pCritEffect );
-
-			m_pCritEffect = NULL;
-		}
-
-			C_BaseCombatWeapon *pWeapon = this->GetActiveWeapon();
-
-		// Don't add crit effect to weapons without a model.
-		if ( pWeapon && pWeapon->GetWorldModelIndex() != 0 )
-		{
-			m_hCritEffectHost = pWeapon;
-		}
-		else
-		{
-			m_hCritEffectHost = this;
-		}
-
-		if ( m_hCritEffectHost.Get() )
-		{
-			const char *pszEffect = ConstructTeamParticle( "critgun_weaponmodel_%s", this->GetTeamNumber(), true, g_aTeamNamesShort );
-			m_pCritEffect = m_hCritEffectHost->ParticleProp()->Create( pszEffect, PATTACH_ABSORIGIN_FOLLOW );
-		}
-
-		if ( !m_pCritSound )
-		{
-			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-			CLocalPlayerFilter filter;
-			m_pCritSound = controller.SoundCreate( filter, this->entindex(), "Weapon_General.CritPower" );
-			controller.Play( m_pCritSound, 1.0, 100 );
-		}
-	}
-	else
-	{
-		if ( m_pCritEffect )
-		{
-			if ( m_hCritEffectHost.Get() )
-				m_hCritEffectHost->ParticleProp()->StopEmission( m_pCritEffect );
-
-			m_pCritEffect = NULL;
-		}
-
-		m_hCritEffectHost = NULL;
-
-		if ( m_pCritSound )
-		{
-			CSoundEnvelopeController::GetController().SoundDestroy( m_pCritSound );
-			m_pCritSound = NULL;
-		}
-	}
-}
-
-extern ConVar	tf_avoidteammates;
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : collisionGroup - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool C_AI_BaseNPC::ShouldCollide( int collisionGroup, int contentsMask ) const
-{
-	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
-		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
-	{
-
-		switch( GetTeamNumber() )
-		{
-		case TF_TEAM_RED:
-			if ( !( contentsMask & CONTENTS_REDTEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_BLUE:
-			if ( !( contentsMask & CONTENTS_BLUETEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_GREEN:
-			if ( !(contentsMask & CONTENTS_GREENTEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_YELLOW:
-			if ( !(contentsMask & CONTENTS_YELLOWTEAM ) )
-				return false;
-			break;
-		}
-	}
-	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
 #endif

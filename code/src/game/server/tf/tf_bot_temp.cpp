@@ -34,7 +34,7 @@ ConVar bot_forceattackon( "bot_forceattackon", "1", 0, "When firing, don't tap f
 ConVar bot_flipout( "bot_flipout", "0", 0, "When on, all bots fire their guns." );
 ConVar bot_defend( "bot_defend", "0", 0, "Set to a team number, and that team will all keep their combat shields raised." );
 ConVar bot_changeclass( "bot_changeclass", "0", 0, "Force all bots to change to the specified class." );
-ConVar bot_dontmove( "bot_dontmove", "1" );
+ConVar bot_dontmove( "bot_dontmove", "0", FCVAR_CHEAT );
 ConVar bot_saveme( "bot_saveme", "0", FCVAR_CHEAT );
 static ConVar bot_mimic( "bot_mimic", "0", 0, "Bot uses usercmd of player by index." );
 static ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", 0, "Offsets the bot yaw." );
@@ -74,7 +74,7 @@ static botdata_t g_BotData[ MAX_PLAYERS ];
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.
 //-----------------------------------------------------------------------------
-CBasePlayer *BotPutInServer( bool bFrozen, int iTeam, int iClass, const char *pszCustomName, const Vector &vecColor = vec3_origin, int iRespawnParticle = 1 )
+CBasePlayer *BotPutInServer( bool bFrozen, int iTeam, int iClass, const char *pszCustomName )
 {
 	g_iNextBotTeam = iTeam;
 	g_iNextBotClass = iClass;
@@ -117,9 +117,6 @@ CBasePlayer *BotPutInServer( bool bFrozen, int iTeam, int iClass, const char *ps
 	if ( bFrozen )
 		pPlayer->AddEFlags( EFL_BOT_FROZEN );
 
-	pPlayer->m_vecPlayerColor = vecColor;
-	pPlayer->m_Shared.SetRespawnParticleID( iRespawnParticle );
-
 	BotNumber++;
 
 	botdata_t *pBot = &g_BotData[ pPlayer->entindex() - 1 ];
@@ -149,7 +146,7 @@ CON_COMMAND_F( bot, "Add a bot.", FCVAR_CHEAT )
 	int count = args.FindArgInt( "-count", 1 );
 	count = clamp( count, 1, 16 );
 
-	if ( args.FindArg( "-all" ) )
+	if (args.FindArg( "-all" ))
 		count = 9;
 
 	// Look at -frozen.
@@ -159,48 +156,39 @@ CON_COMMAND_F( bot, "Add a bot.", FCVAR_CHEAT )
 	while ( --count >= 0 )
 	{
 		// What class do they want?
-		int iClass = RandomInt( TF_FIRST_NORMAL_CLASS, TF_LAST_NORMAL_CLASS );
+		int iClass = RandomInt( 1, TF_CLASS_COUNT-1 );
 		char const *pVal = args.FindArg( "-class" );
 		if ( pVal )
 		{
-			for ( int i = TF_FIRST_NORMAL_CLASS; i < TF_CLASS_COUNT_ALL; i++ )
+			for ( int i=1; i < TF_CLASS_COUNT_ALL; i++ )
 			{
-				if ( V_stricmp( pVal, g_aPlayerClassNames_NonLocalized[i] ) == 0 )
+				if ( stricmp( GetPlayerClassData( i )->m_szClassName, pVal ) == 0 )
 				{
 					iClass = i;
 					break;
 				}
 			}
 		}
-		if ( args.FindArg( "-all" ) )
-			iClass = 9 - count;
+		if (args.FindArg( "-all" ))
+			iClass = 9 - count ;
 
-		int iTeam = TEAM_UNASSIGNED;
+		int iTeam = TF_TEAM_BLUE;
 		pVal = args.FindArg( "-team" );
 		if ( pVal )
 		{
 			if ( stricmp( pVal, "red" ) == 0 )
 				iTeam = TF_TEAM_RED;
-			else if ( stricmp( pVal, "blue" ) == 0 )
-				iTeam = TF_TEAM_BLUE;
 			else if ( stricmp( pVal, "spectator" ) == 0 )
 				iTeam = TEAM_SPECTATOR;
 			else if ( stricmp( pVal, "random" ) == 0 )
-			{
 				iTeam = RandomInt( 0, 100 ) < 50 ? TF_TEAM_BLUE : TF_TEAM_RED;
-			}
 			else
-				iTeam = TEAM_UNASSIGNED;
+				iTeam = TF_TEAM_BLUE;
 		}
 
 		char const *pName = args.FindArg( "-name" );
 
-		// Pick a random color if one is not specified.
-		Vector vecColor = vec3_origin;
-		int iRespawnParticle = 1;
-
-
-		BotPutInServer( bFrozen, iTeam, iClass, pName, vecColor, iRespawnParticle );
+		BotPutInServer( bFrozen, iTeam, iClass, pName );
 	}
 }
 
@@ -281,14 +269,12 @@ static void RunPlayerMove( CTFPlayer *fakeclient, const QAngle& viewangles, floa
 		cmd.random_seed = random->RandomInt( 0, 0x7fffffff );
 	}
 
-	/*
 	if ( bot_dontmove.GetBool() )
 	{
 		cmd.forwardmove = 0;
 		cmd.sidemove = 0;
 		cmd.upmove = 0;
 	}
-	*/
 
 	MoveHelperServer()->SetHost( fakeclient );
 	fakeclient->PlayerRunCommand( &cmd, MoveHelperServer() );
@@ -342,12 +328,12 @@ void Bot_Think( CTFPlayer *pBot )
 			pszTeam = "spectator";
 			break;
 		default:
-			pszTeam = "auto";
+			Assert( false );
 			break;
 		}
 		pBot->HandleCommand_JoinTeam( pszTeam );
 	}
-	else if ( pBot->GetTeamNumber() != TEAM_UNASSIGNED && pBot->IsPlayerClass( TF_CLASS_UNDEFINED ) )
+	else if ( pBot->GetTeamNumber() != TEAM_UNASSIGNED && pBot->GetPlayerClass()->IsClass( TF_CLASS_UNDEFINED ) )
 	{
 		// If they're on a team but haven't picked a class, choose a random class..
 		pBot->HandleCommand_JoinClass( GetPlayerClassData( botdata->m_WantedClass )->m_szClassName );
@@ -364,9 +350,10 @@ void Bot_Think( CTFPlayer *pBot )
 			bot_saveme.SetValue( bot_saveme.GetInt() - 1 );
 		}
 
+		// Stop when shot
 		if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) )
 		{
-			if ( !bot_dontmove.GetBool() )
+			if ( pBot->m_iHealth == 100 )
 			{
 				forwardmove = 600 * ( botdata->backwards ? -1 : 1 );
 				if ( botdata->sidemove != 0.0f )
@@ -385,7 +372,8 @@ void Bot_Think( CTFPlayer *pBot )
 			}
 		}
 
-		if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) && !bot_dontmove.GetBool() )
+		// Only turn if I haven't been hurt
+		if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) && pBot->m_iHealth == 100 )
 		{
 			Vector vecEnd;
 			Vector forward;
@@ -596,7 +584,7 @@ void Bot_Think( CTFPlayer *pBot )
 		//sidemove = cos( gpGlobals->curtime * 2.3 + pBot->entindex() ) * speed;
 		sidemove = cos( gpGlobals->curtime + pBot->entindex() ) * speed;
 
-		
+		/*
 		if (sin(gpGlobals->curtime ) < -0.5)
 		{
 			buttons |= IN_DUCK;
@@ -605,7 +593,7 @@ void Bot_Think( CTFPlayer *pBot )
 		{
 			buttons |= IN_WALK;
 		}
-		
+		*/
 
 		pBot->SetLocalAngles( botdata->lastAngles );
 		vecViewAngles = botdata->lastAngles;
@@ -686,16 +674,12 @@ CON_COMMAND_F( bot_changeteams, "Make all bots change teams", FCVAR_CHEAT )
 
 		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) )
 		{
-			int iTeam = pPlayer->GetTeamNumber();
-				if ( TF_TEAM_BLUE == iTeam || TF_TEAM_RED == iTeam )
-				{
-					// toggle team between red & blue
-					pPlayer->ChangeTeam( TF_TEAM_BLUE + TF_TEAM_RED - iTeam );
-				}
-				else if (iTeam == TEAM_UNASSIGNED || iTeam == TEAM_SPECTATOR)
-				{
-					pPlayer->ChangeTeam( RandomInt(TF_TEAM_BLUE, TF_TEAM_RED) );
-				}
+			int iTeam = pPlayer->GetTeamNumber();			
+			if ( TF_TEAM_BLUE == iTeam || TF_TEAM_RED == iTeam )
+			{
+				// toggle team between red & blue
+				pPlayer->ChangeTeam( TF_TEAM_BLUE + TF_TEAM_RED - iTeam );
+			}			
 		}
 	}
 }

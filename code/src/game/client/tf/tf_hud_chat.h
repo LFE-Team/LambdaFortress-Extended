@@ -58,7 +58,6 @@ public:
 
 	virtual Color	GetTextColorForClient( TextColor colorNum, int clientIndex );
 	virtual Color	GetClientColor( int clientIndex );
-	virtual Color	GetTeamColor( int iTeam );
 
 	virtual int		GetFilterForString( const char *pString );
 
@@ -70,7 +69,5 @@ public:
 	virtual int		GetRenderGroupPriority( void ) { return 35; }	// less than statpanel
 #endif
 };
-
-CHudChat *GetTFChatHud( void );
 
 #endif	//CS_HUD_CHAT_H

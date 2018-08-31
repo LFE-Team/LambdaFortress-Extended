@@ -76,11 +76,7 @@ C_PropVehicleDriveable::C_PropVehicleDriveable() :
 
 	m_ViewSmoothingData.pVehicle = this;
 	m_ViewSmoothingData.bClampEyeAngles = true;
-#ifdef TF_CLASSIC_CLIENT
-	m_ViewSmoothingData.bDampenEyePosition = false;
-#else
 	m_ViewSmoothingData.bDampenEyePosition = true;
-#endif
 
 	m_ViewSmoothingData.flPitchCurveZero = PITCH_CURVE_ZERO;
 	m_ViewSmoothingData.flPitchCurveLinear = PITCH_CURVE_LINEAR;

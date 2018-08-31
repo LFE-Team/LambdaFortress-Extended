@@ -50,7 +50,7 @@ protected:
 	virtual void OnCommand( const char *command );
 
 private:
-	CExRichText		*m_pTFTextMessage;
+	CTFRichText		*m_pTFTextMessage;
 };
 
 

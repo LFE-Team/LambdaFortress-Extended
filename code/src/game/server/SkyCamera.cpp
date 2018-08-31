@@ -122,7 +122,7 @@ void CSkyCamera::Activate( )
 		m_skyboxData.fog.dirPrimary.GetForModify() *= -1.0f; 
 	}
 
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	// NOTE! This is a hack. There was a bug in the skybox fog computation
 	// on the client DLL that caused it to use the average of the primary and
 	// secondary fog color when blending was enabled. The bug is fixed, but to make

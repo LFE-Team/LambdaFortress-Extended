@@ -28,6 +28,10 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
+#if !defined( CLIENT_DLL ) 
+	DECLARE_DATADESC();
+#endif
+
 	CTFWeaponPDA();
 
 	virtual void	Spawn();
@@ -114,8 +118,6 @@ public:
 #ifdef CLIENT_DLL
 	virtual bool Deploy( void );
 #endif
-	// Reload does nothing since reload key is used for switching disguises.
-	virtual bool Reload( void ) { return false; }
 };
 
 #endif // TF_WEAPON_PDA_H

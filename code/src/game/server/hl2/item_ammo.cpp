@@ -15,8 +15,6 @@
 #ifdef TF_CLASSIC
 #include "entity_ammopack.h"
 #include "tf_player.h"
-#include "tf_powerup.h"
-#include "tf_weaponbase.h"
 
 #define TF_AMMOPACK_PICKUP_SOUND	"AmmoPack.Touch"
 #endif
@@ -25,19 +23,19 @@
 #include "tier0/memdbgon.h"
 
 #ifdef TF_CLASSIC
-bool ITEM_GiveTFAmmo(CBasePlayer *pPlayer, float flCount, bool bSuppressSound = true)
+bool ITEM_GiveTFAmmo( CBasePlayer *pPlayer, float flCount, bool bSuppressSound = true)
 {
 	bool bSuccess = false;
 
-	CTFPlayer *pTFPlayer = ToTFPlayer(pPlayer);
-	if (!pTFPlayer)
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+	if ( !pTFPlayer )
 		return false;
 
-	for (int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++)
+	for ( int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++ )
 	{
 		int iMaxAmmo = pTFPlayer->GetPlayerClass()->GetData()->m_aAmmoMax[i];
 
-		if (pTFPlayer->GiveAmmo(ceil(iMaxAmmo * flCount), i, true))
+		if ( pTFPlayer->GiveAmmo( ceil( iMaxAmmo * flCount ), i, true ) )
 		{
 			bSuccess = true;
 		}
@@ -49,7 +47,7 @@ bool ITEM_GiveTFAmmo(CBasePlayer *pPlayer, float flCount, bool bSuppressSound = 
 class CLFItem : public CItem
 {
 public:
-	DECLARE_CLASS( CLFItem, CItem);
+	DECLARE_CLASS( CLFItem, CItem );
 
 	virtual powerupsize_t GetPowerupSize( void ) { return POWERUP_FULL; }
 	virtual const char *GetPowerupModel( void ) { return "models/items/boxsrounds.mdl"; }
@@ -70,19 +68,18 @@ public:
 		BaseClass::Precache();
 	}
 
-	bool MyTouch(CBasePlayer *pPlayer)
+	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		if (ITEM_GiveTFAmmo(pPlayer, PackRatios[GetPowerupSize()]))
+		if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()] ) )
 		{
-			CSingleUserRecipientFilter filter(pPlayer);
-			EmitSound(filter, entindex(), TF_AMMOPACK_PICKUP_SOUND);
+			CSingleUserRecipientFilter filter( pPlayer );
+			EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
 			return true;
 		}
 
 		return false;
 	}
 };
-
 LINK_ENTITY_TO_CLASS( lf_item, CLFItem );
 
 #define LF_ITEM_CLASS( entityName, className, powerupSize, powerupModel )	\

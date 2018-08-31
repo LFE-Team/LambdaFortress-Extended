@@ -109,11 +109,6 @@ void CNPC_Houndeye::Spawn()
 	SetRenderColor( 255, 255, 255, 255 );
 
 	SetModel( "models/houndeye.mdl" );
-	if ( sv_hl1_hd.GetFloat() == 1 )
-	{
-		PrecacheModel( "models/houndeye_hd.mdl" );
-		SetModel( "models/houndeye_hd.mdl" );
-	}
 	
 	SetHullType(HULL_TINY);
 	SetHullSizeNormal();

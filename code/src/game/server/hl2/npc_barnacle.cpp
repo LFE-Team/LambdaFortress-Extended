@@ -676,7 +676,7 @@ bool CNPC_Barnacle::CanPickup( CBaseCombatCharacter *pBCC )
 
 		// Don't pick up a player held by another barnacle
 		if( pPlayer->HasPhysicsFlag(PFLAG_ONBARNACLE) )
-			return true;
+			return false;
 	}
 	else if ( pBCC->IsInAVehicle() )
 	{

@@ -1,6 +1,0 @@
-"unlitGeneric"
-{
-	"$baseTexture" "backpack/player/items/all_class/all_pan"
-	"$translucent" 1
-	"$vertexcolor" 1
-}

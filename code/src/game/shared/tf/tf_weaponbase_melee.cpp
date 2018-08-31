@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//====== Copyright ? 1996-2005, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -37,7 +37,7 @@ LINK_ENTITY_TO_CLASS( tf_weaponbase_melee, CTFWeaponBaseMelee );
 // Server specific.
 #if !defined( CLIENT_DLL ) 
 BEGIN_DATADESC( CTFWeaponBaseMelee )
-	DEFINE_THINKFUNC( Smack )
+DEFINE_FUNCTION( Smack )
 END_DATADESC()
 #endif
 
@@ -45,9 +45,8 @@ END_DATADESC()
 ConVar tf_meleeattackforcescale( "tf_meleeattackforcescale", "80.0", FCVAR_CHEAT | FCVAR_GAMEDLL | FCVAR_DEVELOPMENTONLY );
 #endif
 
-ConVar tf_weapon_criticals_melee( "tf_weapon_criticals_melee", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Controls random crits for melee weapons.\n0 - Melee weapons do not randomly crit. \n1 - Melee weapons can randomly crit only if tf_weapon_criticals is also enabled. \n2 - Melee weapons can always randomly crit regardless of the tf_weapon_criticals setting.", true, 0, true, 2 );
+ConVar tf_weapon_criticals_melee("tf_weapon_criticals_melee", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Controls random crits for melee weapons.\n0 - Melee weapons do not randomly crit. \n1 - Melee weapons can randomly crit only if tf_weapon_criticals is also enabled. \n2 - Melee weapons can always randomly crit regardless of the tf_weapon_criticals setting.", true, 0, true, 2 );
 extern ConVar tf_weapon_criticals;
-extern ConVar tf_debug_criticals;
 
 //=============================================================================
 //
@@ -106,18 +105,6 @@ void CTFWeaponBaseMelee::Spawn()
 // -----------------------------------------------------------------------------
 // Purpose:
 // -----------------------------------------------------------------------------
-bool CTFWeaponBaseMelee::CanHolster( void ) const
-{
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( pOwner && pOwner->m_Shared.InCond( TF_COND_CANNOT_SWITCH_FROM_MELEE ) )
-		return false;
-
-	return BaseClass::CanHolster();
-}
-
-// -----------------------------------------------------------------------------
-// Purpose:
-// -----------------------------------------------------------------------------
 bool CTFWeaponBaseMelee::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	m_flSmackTime = -1.0f;
@@ -125,7 +112,6 @@ bool CTFWeaponBaseMelee::Holster( CBaseCombatWeapon *pSwitchingTo )
 	{
 		GetPlayerOwner()->m_flNextAttack = gpGlobals->curtime + 0.5;
 	}
-		
 	return BaseClass::Holster( pSwitchingTo );
 }
 
@@ -150,9 +136,6 @@ void CTFWeaponBaseMelee::PrimaryAttack()
 	Swing( pPlayer );
 
 #if !defined( CLIENT_DLL ) 
-	pPlayer->RemoveInvisibility();
-	pPlayer->RemoveDisguise();
-
 	pPlayer->SpeakWeaponFire();
 	CTF_GameStats.Event_PlayerFiredWeapon( pPlayer, IsCurrentAttackACritical() );
 #endif
@@ -193,10 +176,7 @@ void CTFWeaponBaseMelee::Swing( CTFPlayer *pPlayer )
 	DoViewModelAnimation();
 
 	// Set next attack times.
-	float flFireDelay = m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_flTimeFireDelay;
-	CALL_ATTRIB_HOOK_FLOAT( flFireDelay, mult_postfiredelay );
-
-	m_flNextPrimaryAttack = gpGlobals->curtime + flFireDelay;
+	m_flNextPrimaryAttack = gpGlobals->curtime + m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_flTimeFireDelay;
 
 	SetWeaponIdleTime( m_flNextPrimaryAttack + m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_flTimeIdleEmpty );
 	
@@ -218,13 +198,6 @@ void CTFWeaponBaseMelee::Swing( CTFPlayer *pPlayer )
 void CTFWeaponBaseMelee::DoViewModelAnimation( void )
 {
 	Activity act = ( m_iWeaponMode == TF_WEAPON_PRIMARY_MODE ) ? ACT_VM_HITCENTER : ACT_VM_SWINGHARD;
-
-	if ( IsCurrentAttackACritical() )
-		act = ACT_VM_SWINGHARD;
-
-	if ( IsCurrentAttackAMiniCrit() )
-		act = ACT_VM_SWINGHARD;
-
 	SendWeaponAnim( act );
 }
 
@@ -316,7 +289,9 @@ void CTFWeaponBaseMelee::Smack( void )
 	if ( DoSwingTrace( trace ) )
 	{
 		// Hit sound - immediate.
-		if( trace.m_pEnt->IsPlayer() || ( trace.m_pEnt->IsNPC() && !trace.m_pEnt->MyNPCPointer()->IsMech() ) )
+		CAI_BaseNPC *pNPC = trace.m_pEnt->MyNPCPointer();
+
+		if( trace.m_pEnt->IsPlayer() || ( pNPC && !pNPC->IsMech() ) )
 		{
 			WeaponSound( MELEE_HIT );
 		}
@@ -337,7 +312,7 @@ void CTFWeaponBaseMelee::Smack( void )
 
 #ifndef CLIENT_DLL
 		// Do Damage.
-		int iCustomDamage = GetDamageCustom();
+		int iCustomDamage = TF_DMG_CUSTOM_NONE;
 		float flDamage = GetMeleeDamage( trace.m_pEnt, iCustomDamage );
 		int iDmgType = DMG_NEVERGIB | DMG_CLUB;
 		if ( IsCurrentAttackACrit() )
@@ -345,21 +320,9 @@ void CTFWeaponBaseMelee::Smack( void )
 			// TODO: Not removing the old critical path yet, but the new custom damage is marking criticals as well for melee now.
 			iDmgType |= DMG_CRITICAL;
 		}
-
-		CTakeDamageInfo info( pPlayer, pPlayer, this, flDamage, iDmgType, iCustomDamage );
-		CalculateMeleeDamageForce( &info, vecForward, vecSwingEnd, 1.0f / flDamage * GetForceScale() );
-
-		int iCleaveAttack = 0;
-		CALL_ATTRIB_HOOK_INT( iCleaveAttack, melee_cleave_attack );
-		if ( iCleaveAttack == 1 )
-		{
-			pPlayer->CheckTraceHullAttack( vecSwingStart, vecSwingEnd, Vector(-16,-16,-16), Vector(36,36,36), flDamage, iDmgType, 0.75f ); 
-		}
-		else
-		{
-			trace.m_pEnt->DispatchTraceAttack( info, vecForward, &trace ); 
-		}
-
+		CTakeDamageInfo info( pPlayer, pPlayer, flDamage, iDmgType, iCustomDamage );
+		CalculateMeleeDamageForce( &info, vecForward, vecSwingEnd, 1.0f / flDamage * tf_meleeattackforcescale.GetFloat() );
+		trace.m_pEnt->DispatchTraceAttack( info, vecForward, &trace ); 
 		ApplyMultiDamage();
 
 		OnEntityHit( trace.m_pEnt );
@@ -386,11 +349,7 @@ void CTFWeaponBaseMelee::Smack( void )
 //-----------------------------------------------------------------------------
 float CTFWeaponBaseMelee::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 {
-	float flDamage = (float)m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_nDamage;
-
-	CALL_ATTRIB_HOOK_FLOAT( flDamage, mult_dmg );
-
-	return flDamage;
+	return static_cast<float>( m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_nDamage );
 }
 
 void CTFWeaponBaseMelee::OnEntityHit( CBaseEntity *pEntity )
@@ -407,48 +366,15 @@ bool CTFWeaponBaseMelee::CalcIsAttackCriticalHelper( void )
 	if ( !pPlayer )
 		return false;
 
-	int nCvarValue = tf_weapon_criticals_melee.GetInt();
+	int iShouldCrit = tf_weapon_criticals_melee.GetInt();
 
-	if ( nCvarValue == 0 )
+	if ( iShouldCrit == 0 )
 		return false;
 
-	if ( nCvarValue == 1 && !tf_weapon_criticals.GetBool() )
+	if ( iShouldCrit == 1 && !tf_weapon_criticals.GetBool() )
 		return false;
 
 	float flPlayerCritMult = pPlayer->GetCritMult();
 
-	float flCritChance = TF_DAMAGE_CRIT_CHANCE_MELEE * flPlayerCritMult;
-	CALL_ATTRIB_HOOK_FLOAT( flCritChance, mult_crit_chance );
-
-	// If the chance is 0, just bail.
-	if ( flCritChance == 0.0f )
-		return false;
-
-#ifdef GAME_DLL
-	if ( tf_debug_criticals.GetBool() )
-	{
-		Msg( "Rolling crit: %.02f%% chance... ", flCritChance * 100.0f );
-	}
-#endif
-
-	bool bSuccess = ( RandomInt( 0, WEAPON_RANDOM_RANGE - 1 ) <= flCritChance * WEAPON_RANDOM_RANGE );
-
-#ifdef GAME_DLL
-	if ( tf_debug_criticals.GetBool() )
-	{
-		Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
-	}
-#endif
-
-	return bSuccess;
+	return ( RandomInt( 0, WEAPON_RANDOM_RANGE-1 ) <= ( TF_DAMAGE_CRIT_CHANCE_MELEE * flPlayerCritMult ) * WEAPON_RANDOM_RANGE );
 }
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFWeaponBaseMelee::GetForceScale( void )
-{
-	return tf_meleeattackforcescale.GetFloat();
-}
-#endif

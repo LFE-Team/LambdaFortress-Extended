@@ -1,7 +1,7 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
-// With Joshua-Ashton's fixes
+//
 //===========================================================================//
 
 #include "cbase.h"
@@ -51,7 +51,6 @@ static ConVar r_flashlightladderdist( "r_flashlightladderdist", "40.0", FCVAR_CH
 static ConVar mat_slopescaledepthbias_shadowmap( "mat_slopescaledepthbias_shadowmap", "16", FCVAR_CHEAT );
 static ConVar mat_depthbias_shadowmap(	"mat_depthbias_shadowmap", "0.0005", FCVAR_CHEAT  );
 
-ClientShadowHandle_t g_hFlashlightHandle[MAX_PLAYERS + 1] = { CLIENTSHADOW_INVALID_HANDLE };
 
 void r_newflashlightCallback_f( IConVar *pConVar, const char *pOldString, float flOldValue )
 {
@@ -73,7 +72,6 @@ CFlashlightEffect::CFlashlightEffect(int nEntIndex)
 	m_nEntIndex = nEntIndex;
 
 	m_bIsOn = false;
-	g_hFlashlightHandle[nEntIndex] = CLIENTSHADOW_INVALID_HANDLE;
 	m_pPointLight = NULL;
 	if( engine->GetDXSupportLevel() < 70 )
 	{
@@ -137,7 +135,7 @@ public:
 			return true;
 
 		if ( ( dynamic_cast<C_BaseViewModel *>( pEntity ) != NULL ) ||
-			  pEntity->IsPlayer() ||
+			 ( dynamic_cast<C_BasePlayer *>( pEntity ) != NULL ) ||
 			 pEntity->GetCollisionGroup() == COLLISION_GROUP_DEBRIS ||
 			 pEntity->GetCollisionGroup() == COLLISION_GROUP_INTERACTIVE_DEBRIS )
 		{
@@ -157,10 +155,8 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 
 	FlashlightState_t state;
 
-	C_BasePlayer* pl = UTIL_PlayerByIndex( m_nEntIndex );
-
 	// We will lock some of the flashlight params if player is on a ladder, to prevent oscillations due to the trace-rays
-	bool bPlayerOnLadder = pl && pl->GetMoveType() == MOVETYPE_LADDER;
+	bool bPlayerOnLadder = ( C_BasePlayer::GetLocalPlayer()->GetMoveType() == MOVETYPE_LADDER );
 
 	const float flEpsilon = 0.1f;			// Offset flashlight position along vecUp
 	const float flDistCutoff = 128.0f;
@@ -269,8 +265,7 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 
 	bool bFlicker = false;
 
-#ifndef TF_CLASSIC_CLIENT
-#ifdef HL2_EPISODIC
+#ifdef NONE
 	C_BaseHLPlayer *pPlayer = (C_BaseHLPlayer *)C_BasePlayer::GetLocalPlayer();
 	if ( pPlayer )
 	{
@@ -316,8 +311,8 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 			bFlicker = true;
 		}
 	}
-#endif // HL2_EPISODIC
-#endif
+#endif // NONE
+
 	if ( bFlicker == false )
 	{
 		state.m_fLinearAtten = r_flashlightlinear.GetFloat();
@@ -355,9 +350,7 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 	}
 	
 	g_pClientShadowMgr->UpdateProjectedTexture( m_FlashlightHandle, true );
-
-	g_hFlashlightHandle[m_nEntIndex] = m_FlashlightHandle;
-
+	
 	// Kill the old flashlight method if we have one.
 	LightOffOld();
 
@@ -467,8 +460,6 @@ void CFlashlightEffect::LightOffNew()
 		g_pClientShadowMgr->DestroyFlashlight( m_FlashlightHandle );
 		m_FlashlightHandle = CLIENTSHADOW_INVALID_HANDLE;
 	}
-
-	g_hFlashlightHandle[m_nEntIndex] = CLIENTSHADOW_INVALID_HANDLE;
 }
 
 //-----------------------------------------------------------------------------

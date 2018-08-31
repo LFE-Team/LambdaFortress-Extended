@@ -9,9 +9,6 @@
 
 #include "hl2_player_shared.h"
 
-#include "tf_gamerules.h"
-#include "ai_basenpc_shared.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -27,11 +24,6 @@ BEGIN_NETWORK_TABLE( CBaseHLCombatWeapon , DT_BaseHLCombatWeapon )
 #endif
 END_NETWORK_TABLE()
 
-ConVar lfe_hl2_weapon_criticals( "lfe_hl2_weapon_criticals", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled on hl2 weapons." );
-
-#ifdef GAME_DLL
-extern ConVar tf_debug_criticals;
-#endif
 
 #if !defined( CLIENT_DLL )
 
@@ -56,21 +48,6 @@ BEGIN_PREDICTION_DATA( CBaseHLCombatWeapon )
 END_PREDICTION_DATA()
 
 ConVar sk_auto_reload_time( "sk_auto_reload_time", "3", FCVAR_REPLICATED );
-
-#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
-// -----------------------------------------------------------------------------
-// Purpose: Constructor.
-// -----------------------------------------------------------------------------
-CBaseHLCombatWeapon::CBaseHLCombatWeapon()
-{
-	m_flCritTime = 0;
-	m_flLastCritCheckTime = 0;
-	m_iLastCritCheckFrame = 0;
-	m_bCurrentAttackIsCrit = false;
-	m_iCurrentSeed = -1;
-	m_flLastFireTime = 0.0f;
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -454,139 +431,4 @@ const WeaponProficiencyInfo_t *CBaseHLCombatWeapon::GetDefaultProficiencyValues(
 	return g_BaseWeaponProficiencyTable;
 }
 
-#endif
-
-#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
-//-----------------------------------------------------------------------------
-// Purpose: Most calls use the prediction seed
-//-----------------------------------------------------------------------------
-void CBaseHLCombatWeapon::CalcIsAttackCritical( void )
-{
-	CBaseCombatCharacter *pOwner = GetOwner();
-	CAI_BaseNPC *pNPC = pOwner->MyNPCPointer();
-	if ( !pNPC )
-		return;
-
-	if ( gpGlobals->framecount == m_iLastCritCheckFrame )
-		return;
-
-	m_iLastCritCheckFrame = gpGlobals->framecount;
-
-	// if base entity seed has changed since last calculation, reseed with new seed
-	int iSeed = CBaseEntity::GetPredictionRandomSeed();
-	if ( iSeed != m_iCurrentSeed )
-	{
-		m_iCurrentSeed = iSeed;
-		RandomSeed( m_iCurrentSeed );
-	}
-
-	if ( pNPC->IsCritBoosted() )
-	{
-		m_bCurrentAttackIsCrit = true;
-	}
-	else if ( pNPC->IsMiniCritBoosted() )
-	{
-		m_bCurrentAttackIsMiniCrit = true;
-	}
-	else
-	{
-		// call the weapon-specific helper method
-		m_bCurrentAttackIsCrit = CalcIsAttackCriticalHelper();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Weapon-specific helper method to calculate if attack is crit
-//-----------------------------------------------------------------------------
-bool CBaseHLCombatWeapon::CalcIsAttackCriticalHelper()
-{
-	CBaseCombatCharacter *pOwner = GetOwner();
-	CAI_BaseNPC *pNPC = pOwner->MyNPCPointer();
-	if ( !pNPC )
-		return false;
-
-	// Don't bother checking if random crits are off.
-	if ( !lfe_hl2_weapon_criticals.GetBool() )
-		return false;
-
-	float flPlayerCritMult = pNPC->GetCritMult();
-	/*
-	if ( m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_bUseRapidFireCrits )
-	{
-		if ( m_flCritTime > gpGlobals->curtime )
-			return true;
-		// only perform one crit check per second for rapid fire weapons
-		if ( gpGlobals->curtime < m_flLastCritCheckTime + 1.0f )
-			return false;
-		m_flLastCritCheckTime = gpGlobals->curtime;
-
-		// get the total crit chance (ratio of total shots fired we want to be crits)
-		float flTotalCritChance = TF_DAMAGE_CRIT_CHANCE_RAPID * flPlayerCritMult;
-		CALL_ATTRIB_HOOK_FLOAT( flTotalCritChance, mult_crit_chance );
-
-		// If the chance is 0, just bail.
-		if ( flTotalCritChance == 0.0f )
-			return false;
-
-		flTotalCritChance = clamp( flTotalCritChance, 0.01f, 0.99f );
-		// get the fixed amount of time that we start firing crit shots for	
-		float flCritDuration = TF_DAMAGE_CRIT_DURATION_RAPID;
-		// calculate the amount of time, on average, that we want to NOT fire crit shots for in order to achive the total crit chance we want
-		float flNonCritDuration = ( flCritDuration / flTotalCritChance ) - flCritDuration;
-		// calculate the chance per second of non-crit fire that we should transition into critting such that on average we achieve the total crit chance we want
-		float flStartCritChance = 1 / flNonCritDuration;
-
-#ifdef GAME_DLL
-		if ( tf_debug_criticals.GetBool() )
-		{
-			Msg( "Rolling crit: %.02f%% chance... ", flTotalCritChance * 100.0f );
-		}
-#endif
-
-		// see if we should start firing crit shots
-		bool bSuccess = RandomInt( 0, WEAPON_RANDOM_RANGE - 1 ) <= ( flStartCritChance * WEAPON_RANDOM_RANGE );
-
-		if ( bSuccess )
-		{
-			m_flCritTime = gpGlobals->curtime + TF_DAMAGE_CRIT_DURATION_RAPID;
-		}
-
-#ifdef GAME_DLL
-		if ( tf_debug_criticals.GetBool() )
-		{
-			Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
-		}
-#endif
-
-		return false;
-	}
-	else
-	{*/
-		// single-shot weapon, just use random pct per shot
-		float flCritChance = TF_DAMAGE_CRIT_CHANCE * flPlayerCritMult;
-		//CALL_ATTRIB_HOOK_FLOAT( flCritChance, mult_crit_chance );
-
-		// If the chance is 0, just bail.
-		if ( flCritChance == 0.0f )
-			return false;
-
-#ifdef GAME_DLL
-		if ( tf_debug_criticals.GetBool() )
-		{
-			Msg( "Rolling crit: %.02f%% chance... ", flCritChance * 100.0f );
-		}
-#endif
-
-		bool bSuccess = ( RandomInt( 0.0, WEAPON_RANDOM_RANGE - 1 ) < flCritChance * WEAPON_RANDOM_RANGE );
-
-#ifdef GAME_DLL
-		if ( tf_debug_criticals.GetBool() )
-		{
-			Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
-		}
-#endif
-
-		return bSuccess;
-	//}
-}
 #endif

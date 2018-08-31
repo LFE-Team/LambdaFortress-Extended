@@ -17,10 +17,10 @@
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CTFTeamButton : public CExButton
+class CTFTeamButton : public CTFButton
 {
 private:
-	DECLARE_CLASS_SIMPLE( CTFTeamButton, CExButton );
+	DECLARE_CLASS_SIMPLE( CTFTeamButton, CTFButton );
 
 public:
 	CTFTeamButton( vgui::Panel *parent, const char *panelName );
@@ -77,8 +77,6 @@ protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void OnKeyCodePressed( vgui::KeyCode code );
 
-	virtual void SetHighlanderTeamsFullPanels( bool bEnabled );
-
 	// command callbacks
 	virtual void OnCommand( const char *command );
 
@@ -92,64 +90,16 @@ private:
 	CTFTeamButton	*m_pRedTeamButton;
 	CTFTeamButton	*m_pAutoTeamButton;
 	CTFTeamButton	*m_pSpecTeamButton;
-	CExLabel		*m_pSpecLabel;
-
-	CExLabel		*m_pHighlanderLabel;
-	CExLabel		*m_pHighlanderLabelShadow;
-	CExLabel		*m_pTeamFullLabel;
-	CExLabel		*m_pTeamFullLabelShadow;
-	CTFImagePanel	*m_pTeamsFullArrow;
-
+	CTFLabel		*m_pSpecLabel;
 
 #ifdef _X360
 	CTFFooter		*m_pFooter;
 #else
-	CExButton		*m_pCancelButton;
+	CTFButton		*m_pCancelButton;
 #endif
 
 	bool m_bRedDisabled;
 	bool m_bBlueDisabled;
-
-
-private:
-	enum { NUM_TEAMS = 3 };
-
-	ButtonCode_t m_iTeamMenuKey;
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: Displays the arena team menu
-//-----------------------------------------------------------------------------
-class CTFArenaTeamMenu : public CTeamMenu
-{
-private:
-	DECLARE_CLASS_SIMPLE(CTFArenaTeamMenu, CTeamMenu);
-
-public:
-	CTFArenaTeamMenu(IViewPort *pViewPort);
-	~CTFArenaTeamMenu();
-
-	virtual const char *GetName(void) { return PANEL_ARENATEAMSELECT; }
-	void Update();
-	void ShowPanel(bool bShow);
-
-protected:
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	virtual void OnKeyCodePressed(vgui::KeyCode code);
-
-	// command callbacks
-	virtual void OnCommand(const char *command);
-
-	virtual void LoadMapPage(const char *mapName);
-
-	virtual void OnTick(void);
-
-private:
-
-	CTFTeamButton	*m_pAutoTeamButton;
-	CTFTeamButton	*m_pSpecTeamButton;
-	CExLabel		*m_pSpecLabel;
-	CExButton		*m_pCancelButton;
 
 
 private:

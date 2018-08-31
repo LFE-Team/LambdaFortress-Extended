@@ -26,7 +26,7 @@ enum EFriendRelationship
 	k_EFriendRelationshipRequestInitiator = 4,
 	k_EFriendRelationshipIgnored = 5,			// this is stored; the user has explicit blocked this other user from comments/chat/etc
 	k_EFriendRelationshipIgnoredFriend = 6,
-	k_EFriendRelationshipSuggested_DEPRECATED = 7,		// was used by the original implementation of the facebook linking feature, but now unused.
+	k_EFriendRelationshipSuggested = 7,
 
 	// keep this updated
 	k_EFriendRelationshipMax = 8,
@@ -80,8 +80,7 @@ enum EFriendFlags
 	k_EFriendFlagRequestingInfo = 0x100,
 	k_EFriendFlagIgnored		= 0x200,
 	k_EFriendFlagIgnoredFriend	= 0x400,
-	// k_EFriendFlagSuggested		= 0x800,	// not used
-	k_EFriendFlagChatMember		= 0x1000,
+	k_EFriendFlagSuggested		= 0x800,
 	k_EFriendFlagAll			= 0xFFFF,
 };
 

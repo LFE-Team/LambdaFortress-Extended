@@ -66,8 +66,7 @@ public:
 
 	Vector			GetVisualMuzzlePos();
 	Vector			GetFlameOriginPos();
-
-	bool			IsBehindAndFacingTarget( CBaseEntity *pTarget );
+	
 	// Client specific.
 #if defined( CLIENT_DLL )
 	virtual bool	Deploy( void );
@@ -85,11 +84,11 @@ public:
 	// constant pilot light sound
 	void 			StartPilotLight();
 	void 			StopPilotLight();
-
+	
 	// Server specific.
 #else
-	virtual void	DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir );
-	virtual void	DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, Vector &vecDir );
+	virtual void	DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir );	// TF2Classic Port
+	virtual void	DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, Vector &vecDir );		// TF2Classic Port
 	virtual void	DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Vector &vecDir );		// blast npcs
 	virtual void	DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir ); // end of the gravity gun primary function
 
@@ -119,7 +118,7 @@ private:
 	EHANDLE		m_hFlameEffectHost;
 
 	CSoundPatch *m_pPilotLightSound;
-
+	
 	bool m_bOldHitTarget;
 	CSoundPatch *m_pHitTargetSound;
 #else

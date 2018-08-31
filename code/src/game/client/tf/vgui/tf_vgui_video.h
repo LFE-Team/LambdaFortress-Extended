@@ -30,8 +30,6 @@ public:
 	float GetStartDelay(){ return m_flStartAnimDelay; }
 	float GetEndDelay(){ return m_flEndAnimDelay; }
 
-	bool BeginPlaybackNoAudio( const char *pFilename );
-
 protected:
 	virtual void ReleaseVideo();
 	virtual void OnVideoOver();

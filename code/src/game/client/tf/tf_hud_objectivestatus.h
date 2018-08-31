@@ -14,11 +14,8 @@
 #include "tf_controls.h"
 #include "tf_imagepanel.h"
 #include "tf_hud_flagstatus.h"
-#include "tf_hud_deathmatchstatus.h"
-#include "tf_hud_escort.h"
 #include "hud_controlpointicons.h"
 #include "GameEventListener.h"
-#include "c_tf_player.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -31,8 +28,7 @@ public:
 	CTFProgressBar( vgui::Panel *parent, const char *name );
 
 	virtual void Paint();
-	void SetPercentage( float flPercentage ){ m_flPercent = flPercentage; }	
-	void SetIcon( const char* szIcon );
+	void SetPercentage( float flPercentage ){ m_flPercent = flPercentage; }
 
 private:
 
@@ -80,21 +76,15 @@ public:
 	
 	virtual void FireGameEvent( IGameEvent *event );
 
-	void SetExtraTimePanels();
-
 protected:
 
 	virtual void OnThink();
 
 private:
 
+	void SetExtraTimePanels();
 	void SetTimeAdded( int iIndex, int nSeconds );
-	void CheckClockLabelLength( CExLabel *pLabel, CTFImagePanel *pBG );
-	void SetTeamBackground();
-
-public:
-
-	int					m_iTeamIndex;
+	void CheckClockLabelLength( CTFLabel *pLabel, CTFImagePanel *pBG );
 
 private:
 
@@ -103,23 +93,21 @@ private:
 	bool				m_bSuddenDeath;
 	bool				m_bOvertime;
 
-	CExLabel			*m_pTimeValue;
+	CTFLabel			*m_pTimeValue;
 	CTFProgressBar		*m_pProgressBar;
 
-	CExLabel			*m_pWaitingForPlayersLabel;
+	CTFLabel			*m_pWaitingForPlayersLabel;
 	CTFImagePanel		*m_pWaitingForPlayersBG;
 
-	CExLabel			*m_pOvertimeLabel;
+	CTFLabel			*m_pOvertimeLabel;
 	CTFImagePanel		*m_pOvertimeBG;
 
-	CExLabel			*m_pSetupLabel;
+	CTFLabel			*m_pSetupLabel;
 	CTFImagePanel		*m_pSetupBG;
 
 	// we'll have a second label/bg set for the SuddenDeath panel in case we want to change the look from the Overtime label
-	CExLabel			*m_pSuddenDeathLabel;
+	CTFLabel			*m_pSuddenDeathLabel;
 	CTFImagePanel		*m_pSuddenDeathBG;
-
-	ScalableImagePanel  *m_pTimePanelBG;
 
 	// delta stuff
 	int m_iTimerDeltaHead;
@@ -135,36 +123,6 @@ private:
 	CPanelAnimationVar( float, m_flDeltaLifetime, "delta_lifetime", "2.0" );
 
 	CPanelAnimationVar( vgui::HFont, m_hDeltaItemFont, "delta_item_font", "Default" );
-};
-
-//-----------------------------------------------------------------------------
-// Purpose:  Parent panel for the various objective displays
-//-----------------------------------------------------------------------------
-class CTFHudKothTimeStatus : public CHudElement, public vgui::EditablePanel
-{
-	DECLARE_CLASS_SIMPLE( CTFHudKothTimeStatus, vgui::EditablePanel );
-
-public:
-	CTFHudKothTimeStatus( const char *pElementName );
-	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-	virtual bool ShouldDraw( void );
-	virtual void Reset( void );
-	virtual void Think( void );
-	virtual void UpdateActiveTeam( void );
-
-	virtual int GetRenderGroupPriority( void ) { return 60; }	// higher than build menus
-
-private:
-
-	CPanelAnimationVarAliasType( int, m_nBlueActiveXPos, "blue_active_xpos", "0", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_nRedActiveXPos, "red_active_xpos", "0", "proportional_int" );
-
-
-	CTFHudTimeStatus		*m_pBlueKothTimer;
-	CTFHudTimeStatus		*m_pRedKothTimer;
-	vgui::ImagePanel		*m_pActiveTimerBG;
-	CTFHudTimeStatus		*m_pActiveKothTimerPanel;
-	int						m_nOriginalActiveTimerBGYPos;
 };
 
 //-----------------------------------------------------------------------------
@@ -189,7 +147,6 @@ public:
 private:
 
 	void	SetVisiblePanels( void );
-	void	TurnOffPanels( void );
 
 private:
 
@@ -197,12 +154,8 @@ private:
 
 	CTFHudFlagObjectives	*m_pFlagPanel;
 	CTFHudTimeStatus		*m_pTimePanel;
-//	CTFHudKothTimeStatus	*m_pKothTimePanel;
-	CTFHudDeathMatchObjectives *m_pDMPanel;
 	CHudControlPointIcons	*m_pControlPointIconsPanel;
 	CControlPointProgressBar *m_pControlPointProgressBar;
-	CTFHudEscort			*m_pEscortPanel;
-	CTFHudMultipleEscort	*m_pEscortRacePanel;
 };
 
 #endif	// TF_HUD_OBJECTIVESTATUS_H

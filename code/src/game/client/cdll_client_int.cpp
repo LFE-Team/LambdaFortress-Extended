@@ -148,10 +148,6 @@
 #include "fbxsystem/fbxsystem.h"
 #endif
 
-#if defined( TF_CLASSIC_CLIENT )
-#include "tf_presence.h"
-#endif
-
 extern vgui::IInputInternal *g_InputInternal;
 
 //=============================================================================
@@ -853,6 +849,7 @@ CHLClient::CHLClient()
 
 extern IGameSystem *ViewportClientSystem();
 
+
 //-----------------------------------------------------------------------------
 ISourceVirtualReality *g_pSourceVR = NULL;
 
@@ -1092,9 +1089,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	HookHapticMessages(); // Always hook the messages
 #endif
 
-#ifdef TF_CLASSIC_CLIENT
-	g_discordrpc.Init();
-#endif
 	return true;
 }
 
@@ -1219,11 +1213,7 @@ void CHLClient::Shutdown( void )
 	DisconnectDataModel();
 	ShutdownFbx();
 #endif
-
-#ifdef TF_CLASSIC_CLIENT
-	g_discordrpc.Shutdown();
-#endif
-
+	
 	// This call disconnects the VGui libraries which we rely on later in the shutdown path, so don't do it
 //	DisconnectTier3Libraries( );
 	DisconnectTier2Libraries( );
@@ -1295,9 +1285,6 @@ void CHLClient::HudUpdate( bool bActive )
 	// I can check into this further.
 	C_BaseTempEntity::CheckDynamicTempEnts();
 
-#ifdef TF_CLASSIC_CLIENT
-	g_discordrpc.RunFrame();
-#endif
 #ifdef SIXENSE
 	// If we're not connected, update sixense so we can move the mouse cursor when in the menus
 	if( !engine->IsConnected() || engine->IsPaused() )
@@ -1644,17 +1631,12 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 	gHUD.LevelInit();
 
-#ifdef TF_CLASSIC_CLIENT
-	g_discordrpc.Reset();
-#endif
-
 #if defined( REPLAY_ENABLED )
 	// Initialize replay ragdoll recorder
-	if (!engine->IsPlayingDemo())
+	if ( !engine->IsPlayingDemo() )
 	{
 		CReplayRagdollRecorder::Instance().Init();
 	}
-	
 #endif
 }
 
@@ -1739,11 +1721,7 @@ void CHLClient::LevelShutdown( void )
 
 	messagechars->Clear();
 
-#ifdef TF_CLASSIC_CLIENT
-	g_discordrpc.Reset();
-#endif
-
-#if !( defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT ) )
+#ifndef TF_CLIENT_DLL
 	// don't want to do this for TF2 because we have particle systems in our
 	// character loadout screen that can be viewed when we're not connected to a server
 	g_pParticleSystemMgr->UncacheAllParticleSystems();
@@ -2194,12 +2172,6 @@ void OnRenderStart()
 	PhysicsSimulate();
 
 	C_BaseAnimating::ThreadedBoneSetup();
-
-	#ifdef SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
-		 //Tony; in multiplayer do some extra stuff. like re-calc the view if in a vehicle!
-    	if ( engine->GetMaxClients() > 1 )
-    	view->MP_PostSimulate();
-	#endif //SecobMod__FIX_VEHICLE_PLAYER_CAMERA_JUDDER
 
 	{
 		VPROF_("Client TempEnts", 0, VPROF_BUDGETGROUP_CLIENT_SIM, false, BUDGETFLAG_CLIENT);

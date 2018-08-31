@@ -7,13 +7,6 @@
 #include "cbase.h"
 #include "mp_shareddefs.h"
 #include "teamplayroundbased_gamerules.h"
-#ifdef GAME_DLL
-#include "globalstate.h"
-#include "npc_metropolice.h"
-//#include "logicentities.h"
-#endif
-//#include "tf_weapon_physcannon.h"
-#include "tf_gamerules.h"
 
 #ifdef CLIENT_DLL
 	#include "iclientmode.h"
@@ -40,10 +33,6 @@
 #endif // REPLAY_ENABLED
 #endif
 
-#if defined( TF_CLASSIC_CLIENT ) || defined( TF_CLASSIC )
-#include "tf_gamerules.h"
-#endif
-
 #if defined(TF_CLIENT_DLL) || defined(TF_DLL)
 	#include "tf_gamerules.h"
 	#include "tf_lobby.h"
@@ -55,6 +44,10 @@
 		#include "../client/tf/tf_gc_client.h"
 		#include "../client/tf/c_tf_objective_resource.h"
 	#endif // GAME_DLL
+#endif
+
+#if defined(TF_CLASSIC_CLIENT) || defined(TF_CLASSIC)
+	#include "tf_gamerules.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -185,7 +178,7 @@ ConVar mp_respawnwavetime( "mp_respawnwavetime", "10.0", FCVAR_NOTIFY | FCVAR_RE
 ConVar mp_capdeteriorate_time( "mp_capdeteriorate_time", "90.0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Time it takes for a full capture point to deteriorate." );
 ConVar mp_tournament( "mp_tournament", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
 
-#if defined( TF_CLIENT_DLL ) || defined( TF_DLL ) || defined ( TF_CLASSIC_CLIENT ) || defined ( TF_CLASSIC )
+#if defined( TF_CLIENT_DLL ) || defined( TF_DLL )
 ConVar mp_highlander( "mp_highlander", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Allow only 1 of each player class type." );
 #endif
 
@@ -195,7 +188,7 @@ ConVar tf_arena_round_time( "tf_arena_round_time", "0", FCVAR_NOTIFY | FCVAR_REP
 ConVar tf_arena_max_streak( "tf_arena_max_streak", "3", FCVAR_NOTIFY | FCVAR_REPLICATED, "Teams will be scrambled if one team reaches this streak" );
 ConVar tf_arena_use_queue( "tf_arena_use_queue", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Enables the spectator queue system for Arena." );
 
-ConVar mp_teams_unbalance_limit( "mp_teams_unbalance_limit", "1", FCVAR_REPLICATED,
+ConVar mp_teams_unbalance_limit( "mp_teams_unbalance_limit", "0", FCVAR_REPLICATED,
 					 "Teams are unbalanced when one team has this many more players than the other team. (0 disables check)",
 					 true, 0,	// min value
 					 true, 30	// max value
@@ -387,22 +380,6 @@ CTeamplayRoundBasedRules::CTeamplayRoundBasedRules( void )
 	m_flStopWatchTotalTime = -1.0f;
 	m_bMultipleTrains = false;
 	m_bAllowBetweenRounds = true;
-#ifdef GAME_DLL
-	GlobalEntity_SetState(GlobalEntity_GetIndex("gordon_precriminal"), GLOBAL_OFF);
-	GlobalEntity_SetState(GlobalEntity_GetIndex("ep_alyx_darknessmode"), GLOBAL_OFF);
-	GlobalEntity_SetState(GlobalEntity_GetIndex("antlion_allied"), GLOBAL_OFF);
-	GlobalEntity_SetState(GlobalEntity_GetIndex("super_phys_gun"), GLOBAL_OFF);
-	//TFGameRules()->m_bMegaPhysgun = false;
-	/*
-	CBaseEntity *pGlobals = gEntList.FindEntityByClassname(NULL, "env_global");
-	if (pGlobals)
-	{
-		//pGlobals->Respawn();
-		variant_t sVariant;
-		pGlobals->AcceptInput("TurnOn", NULL, NULL, sVariant, NULL);
-	}
-	*/
-#endif
 
 #ifdef GAME_DLL
 	ListenForGameEvent( "server_changelevel_failed" );
@@ -416,8 +393,6 @@ CTeamplayRoundBasedRules::CTeamplayRoundBasedRules( void )
 	InitTeams();
 	ResetMapTime();
 	ResetScores();
-	//TFGameRules()->IsAlyxInDarknessMode = false;
-	
 	SetForceMapReset( true );
 	SetRoundToPlayNext( NULL_STRING );
 	m_bInWaitingForPlayers  = false;
@@ -803,14 +778,6 @@ void CTeamplayRoundBasedRules::SetInWaitingForPlayers( bool bWaitingForPlayers  
 		return;
 	}
 
-#if defined ( TF_DLL ) || defined ( TF_CLASSIC )
-	if ( TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus() )
-	{
-		m_bInWaitingForPlayers = false;
-		return;
-	}
-#endif
-
 	if( m_bInWaitingForPlayers == bWaitingForPlayers  )
 		return;
 
@@ -888,7 +855,7 @@ void CTeamplayRoundBasedRules::SetSetup( bool bSetup )
 void CTeamplayRoundBasedRules::CheckWaitingForPlayers( void )
 {
 	// never waiting for players when loading a bug report, or training
-	if ( IsLoadingBugBaitReport() || gpGlobals->eLoadType == MapLoad_Background || !AllowWaitingForPlayers() || TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus() )
+	if ( IsLoadingBugBaitReport() || gpGlobals->eLoadType == MapLoad_Background || !AllowWaitingForPlayers() )
 		return;
 
 	if( mp_waitingforplayers_restart.GetBool() )
@@ -1092,7 +1059,7 @@ void CTeamplayRoundBasedRules::CheckRestartRound( void )
 				{
 					pFormat = ( iRestartDelay > 1 ) ? "#game_scramble_in_secs" : "#game_scramble_in_sec";
 
-#if defined ( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 					IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_alert" );
 					if ( event )
 					{
@@ -1156,13 +1123,6 @@ bool CTeamplayRoundBasedRules::CheckTimeLimit( bool bAllowEnd /*= true*/ )
 		{
 			bSwitchDueToTime = false;
 		}
-
-#ifdef TF_CLASSIC
-		if ( IsDeathmatch() == true )
-		{
-			bSwitchDueToTime = false;
-		}
-#endif
 
 		if ( GetTimeLeft() <= 0 || m_bChangelevelAfterStalemate || bSwitchDueToTime )
 		{
@@ -1793,7 +1753,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 #ifdef TF_CLASSIC
 	// In co-op RED loses if all players die at the same time.
-	if ( TFGameRules()->IsCoOpGameRunning() || TFGameRules()->IsVersus() || TFGameRules()->IsZombieSurvival() )
+	if ( TFGameRules()->IsCoOpGameRunning() )
 	{
 		CTeam *pTeam = GetGlobalTeam( TF_STORY_TEAM );
 		Assert( pTeam );
@@ -1814,7 +1774,6 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 		if ( !bFoundLiveOne )
 		{
-			TFGameRules()->iDirectorAnger = 0;
 			// The live team has won. 
 			bool bMasterHandled = false;
 			if ( !m_bForceMapReset )
@@ -1834,69 +1793,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 			if ( !bMasterHandled )
 			{
-				if (TFGameRules()->IsInHL2EP2Map()) // til that episodic changed some gameover
-				{
-					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_OBJECT, m_bForceMapReset );
-					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2EP_ALL_DEATH, m_bForceMapReset );
-				}
-				else 
-				{
-					//SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_OBJECT, m_bForceMapReset );
-					SetWinningTeam( TF_COMBINE_TEAM, WINREASON_HL2_ALL_DEATH, m_bForceMapReset );
-				}
-			}
-
-			return;
-		}
-	}
-	else if( TFGameRules()->IsBluCoOpGameRunning() )
-	{
-		CTeam *pTeam = GetGlobalTeam( TF_COMBINE_TEAM );
-		Assert( pTeam );
-
-		bool bFoundLiveOne = false;
-		int iPlayers = pTeam->GetNumPlayers();
-		if ( iPlayers )
-		{
-			for ( int player = 0; player < iPlayers; player++ )
-			{
-				if (pTeam->GetPlayer( player ) && pTeam->GetPlayer( player )->IsAlive())
-				{
-					bFoundLiveOne = true;
-					break;
-				}
-			}
-		}
-
-		if ( !bFoundLiveOne )
-		{
-			// The live team has won. 
-			bool bMasterHandled = false;
-			if ( !m_bForceMapReset )
-			{
-				// We're not resetting the map, so give the winners control
-				// of all the points that were in play this round.
-				// Find the control point master.
-				CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
-				if ( pMaster )
-				{
-					variant_t sVariant;
-					sVariant.SetInt(TF_STORY_TEAM);
-					pMaster->AcceptInput( "SetWinnerAndForceCaps", NULL, NULL, sVariant, 0 );
-					bMasterHandled = true;
-				}
-			}
-
-			if ( !bMasterHandled )
-			{
-				if ( hl2_episodic.GetInt() == 1  )
-				{
-					SetWinningTeam( TF_STORY_TEAM, WINREASON_BLUCOOP_ALL_DEATH, m_bForceMapReset );
-				}
-				else if ( hl2_episodic.GetInt() == 0 )
-				{
-					SetWinningTeam( TF_STORY_TEAM, WINREASON_BLUCOOP_ALL_DEATH, m_bForceMapReset );
-				}
+				SetWinningTeam( TF_COMBINE_TEAM, WINREASON_OPPONENTS_DEAD, m_bForceMapReset );
 			}
 
 			return;
@@ -1990,7 +1887,7 @@ void CTeamplayRoundBasedRules::State_Think_TEAM_WIN( void )
 {
 	if ( gpGlobals->curtime > m_flStateTransitionTime )
 	{
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 		IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_update" );
 		if ( event )
 		{
@@ -2279,81 +2176,6 @@ void CTeamplayRoundBasedRules::State_Think_STALEMATE( void )
 		return;
 	}
 
-#if defined ( TF_CLASSIC )
-	// If a game has more than 2 active teams, the old function won't work.
-	// Which is why we had to replace it with this one.
-	CUtlVector< CTeam* > pAliveTeams;
-
-	// If a team is fully killed, the other team has won
-	for ( int i = LAST_SHARED_TEAM+1; i < GetNumberOfTeams(); i++ )
-	{
-		CTeam *pTeam = GetGlobalTeam(i);
-		Assert( pTeam );
-
-		int iPlayers = pTeam->GetNumPlayers();
-		if ( iPlayers )
-		{
-			bool bFoundLiveOne = false;
-			for ( int player = 0; player < iPlayers; player++ )
-			{
-				if ( pTeam->GetPlayer(player) && pTeam->GetPlayer(player)->IsAlive() )
-				{
-					bFoundLiveOne = true;
-					break;
-				}
-			}
-
-			if ( bFoundLiveOne && pTeam )
-			{
-				pAliveTeams.AddToTail( pTeam );
-			}
-		}
-	}
-
-	if ( pAliveTeams.Count() == 1 )
-	{
-		// The live team has won. 
-		int iAliveTeam = pAliveTeams[0]->GetTeamNumber();
-		bool bMasterHandled = false;
-		if ( !m_bForceMapReset )
-		{
-			// We're not resetting the map, so give the winners control
-			// of all the points that were in play this round.
-			// Find the control point master.
-			CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
-			if ( pMaster )
-			{
-				variant_t sVariant;
-				sVariant.SetInt( iAliveTeam );
-				pMaster->AcceptInput( "SetWinnerAndForceCaps", NULL, NULL, sVariant, 0 );
-				bMasterHandled = true;
-			}
-		}
-
-		if ( !bMasterHandled )
-		{
-			SetWinningTeam( iAliveTeam, WINREASON_OPPONENTS_DEAD, m_bForceMapReset );
-		}
-	}
-	else if ( pAliveTeams.IsEmpty() ||
-			  ( m_hStalemateTimer && TimerMayExpire() && m_hStalemateTimer->GetTimeRemaining() <= 0 ) )
-	{
-		bool bFullReset = true;
-
-		CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
-
-		if ( pMaster && pMaster->PlayingMiniRounds() )
-		{
-			// we don't need to do a full map reset for maps with mini-rounds
-			bFullReset = false;
-		}
-
-		// Both teams are dead. Pure stalemate.
-		SetWinningTeam( TEAM_UNASSIGNED, WINREASON_STALEMATE, bFullReset, false );
-	}
-
-
-#else
 	int iDeadTeam = TEAM_UNASSIGNED;
 	int iAliveTeam = TEAM_UNASSIGNED;
 
@@ -2431,7 +2253,6 @@ void CTeamplayRoundBasedRules::State_Think_STALEMATE( void )
 		// Both teams are dead. Pure stalemate.
 		SetWinningTeam( TEAM_UNASSIGNED, WINREASON_STALEMATE, bFullReset, false );
 	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2641,7 +2462,7 @@ void CTeamplayRoundBasedRules::SetWinningTeam( int team, int iWinReason, bool bF
 		if ( nWinDelta >= mp_scrambleteams_auto_windifference.GetInt() )
 		{
 			// Let the server know we're going to scramble on round restart
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 			IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_alert" );
 			if ( event )
 			{
@@ -2901,7 +2722,6 @@ void CTeamplayRoundBasedRules::HandleTimeLimitChange( void )
 //-----------------------------------------------------------------------------
 void CTeamplayRoundBasedRules::ResetPlayerAndTeamReadyState( void )
 {
-
 	for ( int i = 0; i < MAX_TEAMS; i++ )
 	{
 		m_bTeamReady.Set( i, false );
@@ -3171,16 +2991,6 @@ void CTeamplayRoundBasedRules::CleanUpMap()
 	// DO NOT CALL SPAWN ON info_node ENTITIES!
 
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), &filter, true );
-#ifdef GAME_DLL
-	CBaseEntity *pGlobals = gEntList.FindEntityByClassname(NULL, "env_global");
-	if (pGlobals)
-	{
-		//pGlobals->Respawn();
-		variant_t sVariant;
-		pGlobals->AcceptInput("TurnOff", NULL, NULL, sVariant, NULL);
-		pGlobals->AcceptInput("TurnOn", NULL, NULL, sVariant, NULL);
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -3239,14 +3049,6 @@ void CTeamplayRoundBasedRules::CheckRespawnWaves( void )
 //-----------------------------------------------------------------------------
 void CTeamplayRoundBasedRules::BalanceTeams( bool bRequireSwitcheesToBeDead )
 {
-#ifdef TF_CLASSIC
-	// No team balancing in DM since everybody should be on RED.
-	if ( IsDeathmatch() )
-	{
-		return;
-	}
-#endif
-
 	if ( mp_autoteambalance.GetBool() == false || ( IsInArenaMode() == true && tf_arena_use_queue.GetBool() == true ) )
 	{
 		return;
@@ -3316,7 +3118,7 @@ void CTeamplayRoundBasedRules::BalanceTeams( bool bRequireSwitcheesToBeDead )
 
 	if ( TFGameRules()->IsCoOp() )
 	{
-		iNumSwitchesRequired = lfe_coop_min_red_players.GetInt() - pLightTeam->GetNumPlayers();
+		iNumSwitchesRequired = lf_coop_min_red_players.GetInt() - pLightTeam->GetNumPlayers();
 	}
 	else
 	{
@@ -3470,7 +3272,7 @@ void CTeamplayRoundBasedRules::ResetScores( void )
 	m_bResetRoundsPlayed = true;
 	//m_flStopWatchTime = -1.0f;
 
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_reset" );
 	if ( event )
 	{
@@ -3638,7 +3440,7 @@ string_t CTeamplayRoundBasedRules::GetLastPlayedRound( void )
 //-----------------------------------------------------------------------------
 CTeamRoundTimer *CTeamplayRoundBasedRules::GetActiveRoundTimer( void )
 {
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	int iTimerEntIndex = ObjectiveResource()->GetTimerInHUD();
 	return ( dynamic_cast<CTeamRoundTimer *>( UTIL_EntityByIndex( iTimerEntIndex ) ) );
 #else
@@ -3687,7 +3489,7 @@ bool CTeamplayRoundBasedRules::IsInTournamentMode( void )
 //-----------------------------------------------------------------------------
 bool CTeamplayRoundBasedRules::IsInHighlanderMode( void )
 {
-#if defined( TF_CLIENT_DLL ) || defined( TF_DLL ) || defined ( TF_CLASSIC_CLIENT ) || defined ( TF_CLASSIC )
+#if defined( TF_CLIENT_DLL ) || defined( TF_DLL )
 	// can't use highlander mode and the queue system
 	if ( IsInArenaMode() == true && tf_arena_use_queue.GetBool() == true )
 		return false;
@@ -3737,6 +3539,19 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 	if( iNewTeam == iCurrentTeam )
 		return false;
 
+#if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
+	//if ( TFGameRules()->IsCoOp() && !TFGameRules()->IsVersus() )
+
+	if ( TFGameRules()->IsCoOp() && !gEntList.FindEntityByClassname( NULL, "lfe_logic_versus" ) )
+	{
+		// Don't allow joining BLU.
+		return ( iNewTeam == TF_COMBINE_TEAM );
+	}
+
+//DO NOT COMPILE THIS FUNCTION WITH CLIENT
+#endif
+
+
 	// if mp_teams_unbalance_limit is 0, don't check
 	if ( ShouldBalanceTeams() == false )
 		return false;
@@ -3759,44 +3574,36 @@ bool CTeamplayRoundBasedRules::WouldChangeUnbalanceTeams( int iNewTeam, int iCur
 	}
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
-	// In Co-Op we only allow players to join red team.
-	if ( TFGameRules()->IsCoOp() || TFGameRules()->IsZombieSurvival() )
+	// In Versus don't allow joining BLU unless there's min amount of players on RED.
+	if ( TFGameRules()->IsCoOp() )
 	{
-		// Don't allow joining BLU.
-		if ( iNewTeam == TF_STORY_TEAM )
-		{
-			return false;
-		}
-	}
-	else if ( TFGameRules()->IsBluCoOp() )
-	{
-		// Don't allow joining RED.
 		if ( iNewTeam == TF_COMBINE_TEAM )
 		{
-			return false;
+			if ( TFGameRules()->IsVersus() )
+			{
+				CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
+				Assert( pRebels );
+
+				int iRebelPlayers = pRebels->GetNumPlayers();
+
+				if ( iCurrentTeam == TF_STORY_TEAM )
+				{
+					iRebelPlayers -= 1;
+				}
+
+				if ( iRebelPlayers < lf_coop_min_red_players.GetInt() )
+					return true;
+			}
+			else
+			{
+				// Don't allow joining Combine outside of Versus mode.
+				return true;
+			}
 		}
+
+		// Always allow joining Rebels.
+		return false;
 	}
-/*
-	// In Versus don't allow joining BLU unless there's min amount of players on RED.
-	if ( TFGameRules()->IsVersus() )
-	{
-		CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
-		Assert( pRebels );
-
-		int iRebelPlayers = pRebels->GetNumPlayers();
-
-		if ( iCurrentTeam == TF_STORY_TEAM )
-		{
-			iRebelPlayers -= 1;
-		}
-
-		if ( iRebelPlayers < lfe_coop_min_red_players.GetInt() )
-			return true;
-
-		// Allow joining Combine in Versus mode.
-		return true;
-	}
-*/
 #endif
 
 	// add one because we're joining this team
@@ -3847,27 +3654,24 @@ bool CTeamplayRoundBasedRules::AreTeamsUnbalanced( int &iHeaviestTeam, int &iLig
 #endif
 
 #if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
-	// Don't balance teams in Co-op.
-	if ( TFGameRules()->IsAnyCoOp() || TFGameRules()->IsZombieSurvival() )
-	{
-		if ( ShouldBalanceTeams() == false )
-		{
-			return false;
-		}
-	}
-
 	// In Versus there must be min amount of players on RED.
-	if ( TFGameRules()->IsVersus() )
+	if ( TFGameRules()->IsCoOp() )
 	{
-		CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
-		CTeam *pCombine = GetGlobalTeam( TF_COMBINE_TEAM );
-
-		if ( pRebels->GetNumPlayers() < lfe_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
+		if ( TFGameRules()->IsVersus() )
 		{
-			iHeaviestTeam = TF_COMBINE_TEAM;
-			iLightestTeam = TF_STORY_TEAM;
-			return true;
+			CTeam *pRebels = GetGlobalTeam( TF_STORY_TEAM );
+			CTeam *pCombine = GetGlobalTeam( TF_COMBINE_TEAM );
+
+			if ( pRebels->GetNumPlayers() < lf_coop_min_red_players.GetInt() && pCombine->GetNumPlayers() > 0 )
+			{
+				iHeaviestTeam = TF_COMBINE_TEAM;
+				iLightestTeam = TF_STORY_TEAM;
+				return true;
+			}
 		}
+		
+		// Don't balance teams in Co-op.
+		return false;
 	}
 #endif
 

@@ -69,25 +69,27 @@ void C_ObjectTeleporter::GetStatusText( wchar_t *pStatus, int iMaxStatusLen )
 	wchar_t wszHealthPercent[32];
 	_snwprintf(wszHealthPercent, sizeof(wszHealthPercent)/sizeof(wchar_t) - 1, L"%d%%", (int)( flHealthPercent * 100 ) );
 
-	if ( IsBuilding() )
+	if ( GetType() == OBJ_TELEPORTER_ENTRANCE )
 	{
-		wchar_t *pszState = g_pVGuiLocalize->Find( "#TF_ObjStatus_Teleporter_Building" );
-
-		if ( pszState )
+		if ( IsBuilding() )
 		{
-			g_pVGuiLocalize->ConstructString( pStatus, iMaxStatusLen, pszState,
-				1,
-				wszHealthPercent );
+			wchar_t *pszState = g_pVGuiLocalize->Find( "#TF_ObjStatus_Teleporter_Entrance_Building" );
+
+			if ( pszState )
+			{
+				g_pVGuiLocalize->ConstructString( pStatus, iMaxStatusLen, pszState,
+					1,
+					wszHealthPercent );
+			}
 		}
-	}
-	else
-	{
-		wchar_t *pszState = NULL;
-
-		switch( m_iState )
+		else
 		{
+			wchar_t *pszState = NULL;
+
+			switch( m_iState )
+			{
 			case TELEPORTER_STATE_IDLE:
-				pszState = g_pVGuiLocalize->Find( "#TF_Obj_Teleporter_State_Idle" );
+				pszState = g_pVGuiLocalize->Find( "#TF_Obj_Teleporter_State_Entrance_Idle" );
 				break;
 
 			case TELEPORTER_STATE_READY:
@@ -103,22 +105,72 @@ void C_ObjectTeleporter::GetStatusText( wchar_t *pStatus, int iMaxStatusLen )
 			case TELEPORTER_STATE_BUILDING:
 				pszState = L"unknown";
 				break;
-		}
+			}
 
-		if ( pszState )
-		{
-			wchar_t *pszTemplate = g_pVGuiLocalize->Find( "#TF_ObjStatus_Teleporter" );
-
-			if ( pszTemplate )
+			if ( pszState )
 			{
-				g_pVGuiLocalize->ConstructString( pStatus, iMaxStatusLen, pszTemplate,
-					3,
-					m_iUpgradeLevel,
-					wszHealthPercent,
-					pszState );
+				wchar_t *pszTemplate = g_pVGuiLocalize->Find( "#TF_ObjStatus_Teleporter_Entrance" );
+
+				if ( pszTemplate )
+				{
+					g_pVGuiLocalize->ConstructString( pStatus, iMaxStatusLen, pszTemplate,
+						2,
+						wszHealthPercent,
+						pszState );
+				}
 			}
 		}
 	}
+	else
+	{
+		if ( IsBuilding() )
+		{
+			wchar_t *pszState = g_pVGuiLocalize->Find( "#TF_ObjStatus_Teleporter_Exit_Building" );
+
+			if ( pszState )
+			{
+				g_pVGuiLocalize->ConstructString( pStatus, iMaxStatusLen, pszState,
+					1,
+					wszHealthPercent );
+			}
+		}
+		else
+		{
+			wchar_t *pszState = NULL;
+
+			switch( m_iState )
+			{
+			case TELEPORTER_STATE_IDLE:
+				pszState = g_pVGuiLocalize->Find( "#TF_Obj_Teleporter_State_Exit_Idle" );
+				break;
+
+			case TELEPORTER_STATE_READY:
+			case TELEPORTER_STATE_RECEIVING:
+			case TELEPORTER_STATE_RECEIVING_RELEASE:
+			case TELEPORTER_STATE_RECHARGING:
+				pszState = g_pVGuiLocalize->Find( "#TF_Obj_Teleporter_State_Ready" );
+				break;
+
+			default:
+			case TELEPORTER_STATE_BUILDING:
+				pszState = L"unknown";
+				break;
+			}
+
+			if ( pszState )
+			{
+				wchar_t *pszTemplate = g_pVGuiLocalize->Find( "#TF_ObjStatus_Teleporter_Exit" );
+
+				if ( pszTemplate )
+				{
+					g_pVGuiLocalize->ConstructString( pStatus, iMaxStatusLen, pszTemplate,
+						2,
+						wszHealthPercent,
+						pszState );
+				}
+			}
+		}
+	}	
 }
 
 
@@ -132,39 +184,34 @@ void C_ObjectTeleporter::OnPreDataChanged( DataUpdateType_t updateType )
 	m_iOldState = m_iState;
 }
 
-void C_ObjectTeleporter::StartBuildingEffects()
-{
-
-
-}
-
 void C_ObjectTeleporter::StartChargedEffects()
 {
-	char szEffect[ 128 ];
+	if ( GetType() == OBJ_TELEPORTER_ENTRANCE )
+	{
+		char szEffect[128];
 
-	string_t teamname = MAKE_STRING( GetTeamParticleName( GetTeamNumber() ) );
+		Q_snprintf( szEffect, sizeof(szEffect), "teleporter_%s_charged", 
+			( GetTeamNumber() == TF_TEAM_RED ) ? "red" : "blue" );
 
-	Q_snprintf( szEffect, sizeof( szEffect), "teleporter_%s_charged_level%d", teamname, m_iUpgradeLevel );
-
-	Assert( m_pChargedEffect == NULL );
-	m_pChargedEffect = ParticleProp()->Create( szEffect, PATTACH_ABSORIGIN );
+		Assert( m_pChargedEffect == NULL );
+		m_pChargedEffect = ParticleProp()->Create( szEffect, PATTACH_ABSORIGIN );
+	}
 }
 
 void C_ObjectTeleporter::StartActiveEffects()
 {
-	char szEffect[ 128 ];
+	char szEffect[128];
 
-	string_t teamname = MAKE_STRING( GetTeamParticleName( GetTeamNumber() ) );
-
-	Q_snprintf( szEffect, sizeof(szEffect), "teleporter_%s_%s_level%d", teamname,
-		( GetObjectMode() == TELEPORTER_TYPE_ENTRANCE ) ? "entrance" : "exit", 
-		m_iUpgradeLevel );
+	Q_snprintf( szEffect, sizeof(szEffect), "teleporter_%s_%s", 
+		( GetTeamNumber() == TF_TEAM_RED ) ? "red" : "blue",
+		( GetType() == OBJ_TELEPORTER_ENTRANCE ) ? "entrance" : "exit" );
 
 	Assert( m_pDirectionEffect == NULL );
 	m_pDirectionEffect = ParticleProp()->Create( szEffect, PATTACH_ABSORIGIN );
 
 	// arm glow effects
-	Q_snprintf( szEffect, sizeof(szEffect), "teleporter_arms_circle_%s", teamname );
+	Q_snprintf( szEffect, sizeof(szEffect), "teleporter_arms_circle_%s",
+		( GetTeamNumber() == TF_TEAM_RED ) ? "red" : "blue" );
 
 	Assert( m_pChargedLeftArmEffect == NULL );
 	m_pChargedLeftArmEffect = ParticleProp()->Create( szEffect, PATTACH_POINT_FOLLOW, 1 );
@@ -176,10 +223,9 @@ void C_ObjectTeleporter::StartActiveEffects()
 	{
 		// init the spin sound
 		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		char szShootSound[128];
-		Q_snprintf(szShootSound, sizeof(szShootSound), "Building_Teleporter.SpinLevel%d", m_iUpgradeLevel);
+		const char *shootsound = "Building_Teleporter.Spin";
 		CLocalPlayerFilter filter;
-		m_pSpinSound = controller.SoundCreate( filter, entindex(), szShootSound );
+		m_pSpinSound = controller.SoundCreate( filter, entindex(), shootsound );
 		controller.Play( m_pSpinSound, 1.0, 100 );
 	}
 }
@@ -212,12 +258,6 @@ void C_ObjectTeleporter::StopActiveEffects()
 		ParticleProp()->StopEmission( m_pChargedRightArmEffect );
 		m_pChargedRightArmEffect = NULL;
 	}
-
-	if ( m_pSpinSound )
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy( m_pSpinSound );
-		m_pSpinSound = NULL;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -238,11 +278,11 @@ void C_ObjectTeleporter::OnDataChanged( DataUpdateType_t updateType )
 			StopChargedEffects();
 		}
 
-		if ( m_iState > TELEPORTER_STATE_IDLE && ( m_iOldState <= TELEPORTER_STATE_IDLE || m_iOldState == TELEPORTER_STATE_UPGRADING ) )
+		if ( m_iState > TELEPORTER_STATE_IDLE && m_iOldState <= TELEPORTER_STATE_IDLE )
 		{
 			StartActiveEffects();
 		}
-		else if ( ( m_iState <= TELEPORTER_STATE_IDLE && m_iOldState > TELEPORTER_STATE_IDLE ) || m_iState == TELEPORTER_STATE_UPGRADING )
+		else if ( m_iState <= TELEPORTER_STATE_IDLE && m_iOldState > TELEPORTER_STATE_IDLE )
 		{
 			StopActiveEffects();
 		}
@@ -289,7 +329,7 @@ CStudioHdr *C_ObjectTeleporter::OnNewModel( void )
 
 	m_iDirectionArrowPoseParam = LookupPoseParameter( "direction" );
 
-	if ( GetObjectMode() == TELEPORTER_TYPE_ENTRANCE )
+	if ( GetType() == OBJ_TELEPORTER_ENTRANCE )
 	{
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
 	}
@@ -302,7 +342,7 @@ CStudioHdr *C_ObjectTeleporter::OnNewModel( void )
 //-----------------------------------------------------------------------------
 void C_ObjectTeleporter::ClientThink( void )
 {
-	if ( GetObjectMode() == TELEPORTER_TYPE_ENTRANCE && m_iState >= TELEPORTER_STATE_READY )
+	if ( GetType() == OBJ_TELEPORTER_ENTRANCE && m_iState >= TELEPORTER_STATE_READY )
 	{
 		SetPoseParameter( m_iDirectionArrowPoseParam, m_flYawToExit);
 	}
@@ -315,31 +355,31 @@ void C_ObjectTeleporter::GetTargetIDDataString( wchar_t *sDataString, int iMaxLe
 {
 	sDataString[0] = '\0';
 
-	wchar_t wszIDString[ 128 ];
-
-	BaseClass::GetTargetIDDataString( wszIDString, iMaxLenInBytes );
-
-	if ( m_iState == TELEPORTER_STATE_IDLE )
+	if ( m_iState == TELEPORTER_STATE_RECHARGING && gpGlobals->curtime < m_flRechargeTime )
 	{
-		g_pVGuiLocalize->ConstructString( sDataString, MAX_ID_STRING, g_pVGuiLocalize->Find("#TF_playerid_teleporter_entrance_nomatch" ), 0 );
-	}
-	else if ( m_iState == TELEPORTER_STATE_RECHARGING && gpGlobals->curtime < m_flRechargeTime )
-	{
-		float flPercent = clamp( ( m_flRechargeTime - gpGlobals->curtime ) / g_flTeleporterRechargeTimes[ GetUpgradeLevel() - 1 ], 0.0f, 1.0f );
+		float flPercent = clamp( ( m_flRechargeTime - gpGlobals->curtime ) / TELEPORTER_RECHARGE_TIME, 0.0f, 1.0f );
 
 		wchar_t wszRecharging[ 32 ];
 		_snwprintf( wszRecharging, ARRAYSIZE(wszRecharging) - 1, L"%.0f", 100 - (flPercent * 100) );
 		wszRecharging[ ARRAYSIZE(wszRecharging)-1 ] = '\0';
 
-		g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_object_recharging" ),
+		const char *printFormatString = "#TF_playerid_object_recharging";
+
+		g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find(printFormatString),
 			1,
-			wszRecharging
-			);
+			wszRecharging );
+	}	
+	else if ( m_iState == TELEPORTER_STATE_IDLE )
+	{
+		if ( GetType() == OBJ_TELEPORTER_ENTRANCE )
+		{
+			g_pVGuiLocalize->ConstructString( sDataString, MAX_ID_STRING, g_pVGuiLocalize->Find("#TF_playerid_teleporter_entrance_noexit" ), 0 );
+		}
+		else
+		{
+			g_pVGuiLocalize->ConstructString( sDataString, MAX_ID_STRING, g_pVGuiLocalize->Find("#TF_playerid_teleporter_exit_noentrance" ), 0 );
+		}
 	}
-
-	V_wcsncat( sDataString, L" ", iMaxLenInBytes >> 2 );
-
-	V_wcsncat( sDataString, wszIDString, iMaxLenInBytes >> 2 );
 }
 
 //-----------------------------------------------------------------------------
@@ -349,12 +389,9 @@ void C_ObjectTeleporter::UpdateDamageEffects( BuildingDamageLevel_t damageLevel 
 {
 	if ( m_pDamageEffects )
 	{
-		ParticleProp()->StopEmission( m_pDamageEffects );
+		m_pDamageEffects->StopEmission( false, false );
 		m_pDamageEffects = NULL;
 	}
-
-	if ( IsPlacing() )
-		return;
 
 	const char *pszEffect = "";
 

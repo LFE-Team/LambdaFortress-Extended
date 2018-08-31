@@ -14,10 +14,6 @@
 // Server specific.
 #else
 #include "tf_player.h"
-#include "tf_fx.h"
-#include "takedamageinfo.h"
-#include "tf_gamerules.h"
-#include "soundent.h"
 #endif
 
 //=============================================================================

@@ -16,7 +16,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-vgui::HScheme g_hVGuiCombineScheme = 0;
 
 //-----------------------------------------------------------------------------
 // Amount of time before breen teleports away

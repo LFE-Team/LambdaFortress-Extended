@@ -93,14 +93,12 @@ ConVar hud_combattext_batching( "hud_combattext_batching", "0", FCVAR_ARCHIVE, "
 ConVar hud_combattext_batching_window( "hud_combattext_batching_window", "0.2", FCVAR_ARCHIVE, "Maximum delay between damage events in order to batch numbers." );
 
 ConVar tf_dingalingaling( "tf_dingalingaling", "0", FCVAR_ARCHIVE, "If set to 1, play a sound everytime you injure an enemy. The sound can be customized by replacing the 'tf/sound/ui/hitsound.wav' file." );
-ConVar tf_dingalingaling_effect( "tf_dingalingaling_effect", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Which Dingalingaling sound is used" );
 ConVar tf_dingaling_volume( "tf_dingaling_volume", "0.75", FCVAR_ARCHIVE, "Desired volume of the hit sound.", true, 0.0, true, 1.0 );
 ConVar tf_dingaling_pitchmindmg( "tf_dingaling_pitchmindmg", "100", FCVAR_ARCHIVE, "Desired pitch of the hit sound when a minimal damage hit (<= 10 health) is done.", true, 1, true, 255 );
 ConVar tf_dingaling_pitchmaxdmg( "tf_dingaling_pitchmaxdmg", "100", FCVAR_ARCHIVE, "Desired pitch of the hit sound when a maximum damage hit (>= 150 health) is done.", true, 1, true, 255 );
 ConVar tf_dingalingaling_repeat_delay( "tf_dingalingaling_repeat_delay", "0", FCVAR_ARCHIVE, "Desired repeat delay of the hit sound. Set to 0 to play a sound for every instance of damage dealt." );
 
 ConVar tf_dingalingaling_lasthit( "tf_dingalingaling_lasthit", "0", FCVAR_ARCHIVE, "If set to 1, play a sound whenever one of your attacks kills an enemy. The sound can be customized by replacing the 'tf/sound/ui/killsound.wav' file." );
-ConVar tf_dingalingaling_last_effect( "tf_dingalingaling_last_effect", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Which final hit sound to play when the target expires." );
 ConVar tf_dingaling_lasthit_volume( "tf_dingaling_lasthit_volume", "0.75", FCVAR_ARCHIVE, "Desired volume of the last hit sound.", true, 0.0, true, 1.0 );
 ConVar tf_dingaling_lasthit_pitchmindmg( "tf_dingaling_lasthit_pitchmindmg", "100", FCVAR_ARCHIVE, "Desired pitch of the last hit sound when a minimal damage hit (<= 10 health) is done.", true, 1, true, 255 );
 ConVar tf_dingaling_lasthit_pitchmaxdmg( "tf_dingaling_lasthit_pitchmaxdmg", "100", FCVAR_ARCHIVE, "Desired pitch of the last hit sound when a maximum damage hit (>= 150 health) is done.", true, 1, true, 255 );
@@ -127,7 +125,6 @@ CDamageAccountPanel::CDamageAccountPanel( const char *pElementName ) : CHudEleme
 	ListenForGameEvent( "player_hurt" );
 	ListenForGameEvent( "player_healed" );
 	ListenForGameEvent( "npc_hurt" );
-	ListenForGameEvent( "npc_healed" );
 }
 
 //-----------------------------------------------------------------------------
@@ -135,13 +132,14 @@ CDamageAccountPanel::CDamageAccountPanel( const char *pElementName ) : CHudEleme
 //-----------------------------------------------------------------------------
 void CDamageAccountPanel::FireGameEvent( IGameEvent *event )
 {
+	// For future reference, live TF2 apparently uses player_healed for green medic numbers.
 	const char * type = event->GetName();
 
 	if ( V_strcmp( type, "player_hurt" ) == 0 || V_strcmp( type, "npc_hurt" ) == 0 )
 	{
 		OnDamaged( event );
 	}
-	else if ( V_strcmp( type, "player_healed" ) == 0 || V_strcmp( type, "npc_healed" ) == 0 )
+	else if ( V_strcmp( type, "player_healed" ) == 0 )
 	{
 		OnHealed( event );
 	}
@@ -174,8 +172,6 @@ void CDamageAccountPanel::LevelInit( void )
 		m_AccountDeltaItems[i].m_flDieTime = 0.0f;
 	}
 
-	m_flLastHitSound = 0.0f;
-
 	CHudElement::LevelInit();
 }
 
@@ -206,23 +202,23 @@ void CDamageAccountPanel::OnDamaged( IGameEvent *event )
 	bool bIsPlayer = V_strcmp( event->GetName(), "npc_hurt" ) != 0;
 
 	int iAttacker = event->GetInt( "attacker_index" );
-    int iVictim = event->GetInt( "victim_index" );
+	int iVictim = event->GetInt( "victim_index" );
 	int iDmgAmount = event->GetInt( "damageamount" );
 	int iHealth = event->GetInt( "health" );
 
 	// Did we shoot the guy?
 	if ( iAttacker != pPlayer->entindex() )
-        return;
+		return;
 
 	// No self-damage notifications.
-	if ( iAttacker == iVictim )
+	if ( bIsPlayer && iAttacker == iVictim )
 		return;
 
 	// Don't show anything if no damage was done.
 	if ( iDmgAmount == 0 )
 		return;
 
-	C_BaseEntity *pVictim = bIsPlayer ? UTIL_PlayerByUserId( iVictim ) : ClientEntityList().GetBaseEntity( iVictim );
+	C_BaseEntity *pVictim = ClientEntityList().GetBaseEntity( iVictim );
 
 	if ( !pVictim )
 		return;
@@ -268,15 +264,7 @@ void CDamageAccountPanel::OnDamaged( IGameEvent *event )
 	if ( tr.fraction != 1.0f )
 		return;
 
-	Vector vecTextPos;
-	if ( pVictim->IsBaseObject() )
-	{
-		vecTextPos = pVictim->GetAbsOrigin() + Vector( 0, 0, pVictim->WorldAlignMaxs().z );
-	}
-	else
-	{
-		vecTextPos = pVictim->WorldSpaceCenter() +  Vector( 0, 0, pVictim->WorldAlignMaxs().z );;
-	}
+	Vector vecTextPos = pVictim->EyePosition();
 
 	bool bBatch = false;
 	dmg_account_delta_t *pDelta = NULL;
@@ -326,14 +314,11 @@ void CDamageAccountPanel::OnHealed( IGameEvent *event )
 	if ( !hud_combattext.GetBool() )
 		return;
 
-	bool bIsPlayer = V_strcmp( event->GetName(), "npc_healed" ) != 0;
-
 	int iPatient = event->GetInt( "patient" );
 	int iHealer = event->GetInt( "healer" );
 	int iAmount = event->GetInt( "amount" );
 
 	// Did we heal this guy?
-	//if ( iHealer != pPlayer->GetUserID() )
 	if ( pPlayer->GetUserID() != iHealer )
 		return;
 
@@ -341,18 +326,9 @@ void CDamageAccountPanel::OnHealed( IGameEvent *event )
 	if ( iAmount == 0 )
 		return;
 
-	//C_BasePlayer *pPatient = UTIL_PlayerByUserId( iPatient );
-	C_BaseEntity *pPatient = bIsPlayer ? UTIL_PlayerByUserId( iPatient ) : ClientEntityList().GetBaseEntity( iPatient );
+	C_BasePlayer *pPatient = UTIL_PlayerByUserId( iPatient );
 	if ( !pPatient )
 		return;
-
-	if ( bIsPlayer )
-	{
-		C_TFPlayer *pTFPatient = ToTFPlayer( pPatient );
-
-		if ( !pTFPatient )
-			return;
-	}
 
 	// Don't show the numbers if we can't see the patient.
 	trace_t tr;

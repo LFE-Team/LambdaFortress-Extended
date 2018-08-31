@@ -67,8 +67,6 @@ public:
 // Functions to verify the single/multiplayer status of a game
 	virtual bool IsDeathmatch( void );
 	virtual bool IsCoOp( void );
-	virtual bool IsBluCoOp( void );
-	//virtual bool IsBluCoOp(void);
 
 // Client connection/disconnection
 	virtual bool ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen );

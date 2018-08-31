@@ -35,15 +35,12 @@ public:
 	virtual void		WeaponReset( void );
 	virtual bool		DefaultDeploy( char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt );
 
-	virtual void		SwitchBodyGroups( void );
-
-protected:
-
-	CNetworkVar( bool,	m_bBroken  );
+	void				SwitchBodyGroups( void );
 
 private:
 
 	CTFBottle( const CTFBottle & ) {}
+	CNetworkVar( bool,	m_bBroken  );
 };
 
 #endif // TF_WEAPON_BOTTLE_H

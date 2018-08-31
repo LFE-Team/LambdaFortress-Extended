@@ -22,7 +22,6 @@
 #include "c_tf_player.h"
 #include "tf_shareddefs.h"
 #include "tf_hud_playerstatus.h"
-#include "tf_hud_target_id.h"
 
 using namespace vgui;
 
@@ -66,15 +65,8 @@ static char *g_szRedClassImages[] =
 CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : EditablePanel( parent, name )
 {
 	m_pClassImage = new CTFClassImage( this, "PlayerStatusClassImage" );
-	//m_pClassImageBG = new CTFClassImage(this, "PlayerStatusClassImageBG");
 	m_pSpyImage = new CTFImagePanel( this, "PlayerStatusSpyImage" );
 	m_pSpyOutlineImage = new CTFImagePanel( this, "PlayerStatusSpyOutlineImage" );
-
-	// This is used by retail TF2 to display the characters as models instead of images
-	//m_pClassModelPanel = new CTFPlayerModelPanel(this, "classmodelpanel");
-	//m_pClassModelPanelBG = new CTFImagePanel(this, "classmodelpanelBG");
-	// It's activated using cl_hud_playerclass_use_playermodel. The description for it is
-	// "Use player model in player class HUD."
 
 	m_nTeam = TEAM_UNASSIGNED;
 	m_nClass = TF_CLASS_UNDEFINED;
@@ -231,7 +223,7 @@ void CTFHudPlayerClass::FireGameEvent( IGameEvent * event )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CTFHealthPanel::CTFHealthPanel( Panel *parent, const char *name ) : vgui::Panel( parent, name )
+CTFHealthPanel::CTFHealthPanel( Panel *parent, const char *name ) : CTFImagePanel( parent, name )
 {
 	m_flHealth = 1.0f;
 
@@ -308,9 +300,7 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 {
 	m_pHealthImage = new CTFHealthPanel( this, "PlayerStatusHealthImage" );	
 	m_pHealthImageBG = new ImagePanel( this, "PlayerStatusHealthImageBG" );
-	m_pHealthBonusImage = new ImagePanel( this, "PlayerStatusHealthBonusImage" );
-
-	m_pHealthImageBuildingBG = new ImagePanel( this, "BuildingStatusHealthImageBG" );	
+	m_pHealthBonusImage = new CTFImagePanel( this, "PlayerStatusHealthBonusImage" );
 
 	m_flNextThink = 0.0f;
 }
@@ -365,13 +355,6 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 		{
 			m_pHealthImageBG->SetVisible( false );
 		}
-
-
-		if ( m_pHealthImageBuildingBG->IsVisible() )
-		{
-			m_pHealthImageBuildingBG->SetVisible( false );
-		}
-
 		HideHealthBonusImage();
 	}
 	else
@@ -379,15 +362,6 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 		if ( !m_pHealthImageBG->IsVisible() )
 		{
 			m_pHealthImageBG->SetVisible( true );
-		}
-
-		CTargetID *pTargetID = dynamic_cast<CTargetID *>( this->GetParent() );
-		if ( NULL != pTargetID )
-		{
-			if ( cl_entitylist->GetEnt( pTargetID->GetTargetIndex() )->IsBaseObject() )
-				m_pHealthImageBuildingBG->SetVisible( true );
-			else
-				m_pHealthImageBuildingBG->SetVisible( false );
 		}
 
 		// are we getting a health bonus?
@@ -401,11 +375,11 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 					g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "HudHealthBonusPulse" );
 				}
 
-				m_pHealthBonusImage->SetDrawColor( Color( 255, 255, 255, 255 ) );
+				m_pHealthBonusImage->SetFgColor( Color( 255, 255, 255, 255 ) );
 
 				// scale the flashing image based on how much health bonus we currently have
 				float flBoostMaxAmount = ( iMaxBuffedHealth ) - m_nMaxHealth;
-				float flPercent = min( 1.0 , ( m_nHealth - m_nMaxHealth ) / flBoostMaxAmount ); // clamped to 1 to not cut off for values above 150%
+				float flPercent = ( m_nHealth - m_nMaxHealth ) / flBoostMaxAmount;
 
 				int nPosAdj = RoundFloatToInt( flPercent * m_nHealthBonusPosAdj );
 				int nSizeAdj = 2 * nPosAdj;
@@ -427,7 +401,7 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 					g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "HudHealthDyingPulse" );
 				}
 
-				m_pHealthBonusImage->SetDrawColor( m_clrHealthDeathWarningColor );
+				m_pHealthBonusImage->SetFgColor( m_clrHealthDeathWarningColor );
 
 				// scale the flashing image based on how much health bonus we currently have
 				float flBoostMaxAmount = m_nMaxHealth * m_flHealthDeathWarning;
@@ -557,14 +531,13 @@ void CTFClassImage::SetClass( int iTeam, int iClass, int iCloakstate )
 	char szImage[128];
 	szImage[0] = '\0';
 
-	switch (iTeam)
+	if ( iTeam == TF_TEAM_BLUE )
 	{
-		case TF_TEAM_RED:
-			Q_strncpy(szImage, g_szRedClassImages[iClass], sizeof(szImage));
-			break;
-		case TF_TEAM_BLUE:
-			Q_strncpy(szImage, g_szBlueClassImages[iClass], sizeof(szImage));
-			break;
+		Q_strncpy( szImage, g_szBlueClassImages[ iClass ], sizeof(szImage) );
+	}
+	else
+	{
+		Q_strncpy( szImage, g_szRedClassImages[ iClass ], sizeof(szImage) );
 	}
 
 	switch( iCloakstate )

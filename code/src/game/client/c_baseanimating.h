@@ -27,10 +27,6 @@
 #include "tier0/threadtools.h"
 #include "datacache/idatacache.h"
 
-#ifdef GLOWS_ENABLE
-#include "glow_outline_effect.h"
-#endif // GLOWS_ENABLE
-
 #define LIPSYNC_POSEPARAM_NAME "mouth"
 #define NUM_HITBOX_FIRES	10
 
@@ -451,12 +447,6 @@ public:
 	virtual bool					IsViewModel() const;
 	virtual void					UpdateOnRemove( void );
 
-#ifdef GLOWS_ENABLE
-	CGlowObject			*GetGlowObject( void ){ return m_pGlowEffect; }
-
-	void				SetClientSideGlowEnabled( bool bEnabled ){ m_bClientSideGlowEnabled = bEnabled; UpdateGlowEffect(); }
-	bool				IsClientSideGlowEnabled( void ){ return m_bClientSideGlowEnabled; }
-#endif // GLOWS_ENABLE
 protected:
 	// View models scale their attachment positions to account for FOV. To get the unmodified
 	// attachment position (like if you're rendering something else during the view model's DrawModel call),
@@ -475,10 +465,6 @@ protected:
 
 	virtual bool					CalcAttachments();
 
-#ifdef GLOWS_ENABLE	
-	virtual void		UpdateGlowEffect( void );
-	virtual void		DestroyGlowEffect( void );
-#endif // GLOWS_ENABLE
 private:
 	// This method should return true if the bones have changed + SetupBones needs to be called
 	virtual float					LastBoneChangedTime() { return FLT_MAX; }
@@ -494,13 +480,6 @@ private:
 	void							AddBaseAnimatingInterpolatedVars();
 	void							RemoveBaseAnimatingInterpolatedVars();
 
-#ifdef GLOWS_ENABLE
-	bool				m_bClientSideGlowEnabled;	// client-side only value used for spectator
-	bool				m_bGlowEnabled;				// networked value
-	Vector				m_vGlowColor;
-	bool				m_bOldGlowEnabled;
-	CGlowObject			*m_pGlowEffect;
-#endif // GLOWS_ENABLE
 public:
 	CRagdoll						*m_pRagdoll;
 
@@ -558,14 +537,12 @@ protected:
 	float							m_fadeMaxDist;
 	float							m_flFadeScale;
 
-public:
+private:
 
 	float							m_flGroundSpeed;	// computed linear movement rate for current sequence
 	float							m_flLastEventCheck;	// cycle index of when events were last checked
 	bool							m_bSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
 	bool							m_bSequenceLoops;	// true if the sequence loops
-
-private:
 
 	// Mouth lipsync/envelope following values
 	CMouthInfo						m_mouth;

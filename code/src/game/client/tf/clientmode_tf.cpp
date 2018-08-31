@@ -19,9 +19,10 @@
 #include "GameUI/IGameUI.h"
 #include <vgui_controls/AnimationController.h>
 #include "ivmodemanager.h"
-#include "buymenu.h"
+#include "buymenu.h" 
 #include "filesystem.h"
 #include "vgui/IVGui.h"
+#include "hud_chat.h"
 #include "view_shared.h"
 #include "view.h"
 #include "ivrenderview.h"
@@ -42,33 +43,23 @@
 #include "tf_hud_menu_spy_disguise.h"
 #include "tf_statsummary.h"
 #include "tf_hud_freezepanel.h"
-#include "clienteffectprecachesystem.h"
-#include "glow_outline_effect.h"
 #include "cam_thirdperson.h"
-#include "tf_gamerules.h"
-#include "tf_hud_chat.h"
-#include "c_tf_team.h"
-#include "c_tf_playerresource.h"
-
-#include "vgui/lf_loadingprogress.h"
-#include "tf_presence.h"
 
 #if defined( _X360 )
 #include "tf_clientscoreboard.h"
 #endif
 
 ConVar default_fov( "default_fov", "75", FCVAR_CHEAT );
-ConVar fov_desired( "fov_desired", "90", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 75.0, true, 130.0 );
+ConVar fov_desired( "fov_desired", "75", FCVAR_ARCHIVE | FCVAR_USERINFO, "Sets the base field-of-view.", true, 75.0, true, 90.0 );
 
 void HUDMinModeChangedCallBack( IConVar *var, const char *pOldString, float flOldValue )
 {
 	engine->ExecuteClientCmd( "hud_reloadscheme" );
 }
-
 ConVar cl_hud_minmode( "cl_hud_minmode", "0", FCVAR_ARCHIVE, "Set to 1 to turn on the advanced minimalist HUD mode.", HUDMinModeChangedCallBack );
-ConVar tf2c_coloredhud("lfe_coloredhud", "0", FCVAR_ARCHIVE, "Set to 1 to turn on panel coloring.", HUDMinModeChangedCallBack);
 
 IClientMode *g_pClientMode = NULL;
+
 // --------------------------------------------------------------------------------- //
 // CTFModeManager.
 // --------------------------------------------------------------------------------- //
@@ -86,13 +77,6 @@ public:
 static CTFModeManager g_ModeManager;
 IVModeManager *modemanager = ( IVModeManager * )&g_ModeManager;
 
-CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffectsGlow )
-	CLIENTEFFECT_MATERIAL( "dev/glow_blur_x" )
-	CLIENTEFFECT_MATERIAL( "dev/glow_blur_y" )
-	CLIENTEFFECT_MATERIAL( "dev/glow_color" )
-	CLIENTEFFECT_MATERIAL( "dev/glow_downsample" )
-	CLIENTEFFECT_MATERIAL( "dev/halo_add_to_screen" )
-CLIENTEFFECT_REGISTER_END_CONDITIONAL(	engine->GetDXSupportLevel() >= 90 )
 
 // --------------------------------------------------------------------------------- //
 // CTFModeManager implementation.
@@ -122,10 +106,6 @@ void CTFModeManager::LevelInit( const char *newmap )
 	{
 		voice_steal.SetValue( 1 );
 	}
-
-	g_ThirdPersonManager.Init();
-
-	g_discordrpc.LevelInit( newmap );
 }
 
 void CTFModeManager::LevelShutdown( void )
@@ -184,7 +164,7 @@ void ClientModeTFNormal::Init()
 		if ( NULL != m_pGameUI )
 		{
 			// insert stats summary panel as the loading background dialog
-			CTFLoadingProgress *pPanel = GLoadingProgress();
+			CTFStatsSummaryPanel *pPanel = GStatsSummaryPanel();
 			pPanel->InvalidateLayout( false, true );
 			pPanel->SetVisible( false );
 			pPanel->MakePopup( false );
@@ -317,29 +297,11 @@ bool ClientModeTFNormal::ShouldDrawViewModel()
 	return true;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool ClientModeTFNormal::DoPostScreenSpaceEffects( const CViewSetup *pSetup )
-{
-	if ( !IsInFreezeCam() )
-		g_GlowObjectManager.RenderGlowEffects( pSetup, 0 );
-
-	return BaseClass::DoPostScreenSpaceEffects( pSetup );
-}
-
 int ClientModeTFNormal::GetDeathMessageStartHeight( void )
 {
 	return m_pViewport->GetDeathMessageStartHeight();
 }
 
-
-bool IsInCommentaryMode( void );
-bool PlayerNameNotSetYet( const char *pszName );
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 {
 	const char *eventname = event->GetName();
@@ -347,81 +309,9 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	if ( !eventname || !eventname[0] )
 		return;
 
-	if ( V_strcmp( "player_changename", eventname ) == 0 )
+	if ( Q_strcmp( "player_changename", eventname ) == 0 )
 	{
 		return; // server sends a colorized text string for this
-	}
-
-	if ( V_strcmp( "player_team", eventname ) == 0 )
-	{
-		// Using our own strings here.
-		int iPlayerIndex = engine->GetPlayerForUserID( event->GetInt( "userid" ) );
-
-		CHudChat *pChat = GetTFChatHud();
-		if ( !pChat )
-			return;
-
-		bool bDisconnected = event->GetBool( "disconnect" );
-
-		if ( bDisconnected )
-			return;
-
-		int iTeam = event->GetInt( "team" );
-		bool bAutoTeamed = event->GetBool( "autoteam" );
-		bool bSilent = event->GetBool( "silent" );
-
-		const char *pszName = event->GetString( "name" );
-		if ( PlayerNameNotSetYet( pszName ) )
-			return;
-
-		if ( !bSilent )
-		{
-			wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-			g_pVGuiLocalize->ConvertANSIToUnicode( pszName, wszPlayerName, sizeof( wszPlayerName ) );
-
-			wchar_t wszTeam[64];
-			C_Team *pTeam = GetGlobalTeam( iTeam );
-			if ( pTeam )
-			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->Get_Name(), wszTeam, sizeof( wszTeam ) );
-			}
-			else
-			{
-				_snwprintf( wszTeam, sizeof( wszTeam ) / sizeof( wchar_t ), L"%d", iTeam );
-			}
-
-			if ( !IsInCommentaryMode() )
-			{
-				// Client isn't going to catch up on team change so we have to set the color manually here.
-				Color col = pChat->GetTeamColor( iTeam );
-
-				wchar_t wszLocalized[100];
-				if ( bAutoTeamed )
-				{
-					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_AutoTeam" ), 2, wszPlayerName, wszTeam );
-				}
-				else
-				{
-					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#TF_Joined_Team" ), 2, wszPlayerName, wszTeam );
-				}
-
-				char szLocalized[100];
-				g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof( szLocalized ) );
-
-				pChat->SetCustomColor( col );
-				pChat->ChatPrintf( iPlayerIndex, CHAT_FILTER_TEAMCHANGE, "%s", szLocalized );
-			}
-		}
-
-		C_BasePlayer *pPlayer = UTIL_PlayerByIndex( iPlayerIndex );
-
-		if ( pPlayer && pPlayer->IsLocalPlayer() )
-		{
-			// that's me
-			pPlayer->TeamChange( iTeam );
-		}
-
-		return;
 	}
 
 	BaseClass::FireGameEvent( event );

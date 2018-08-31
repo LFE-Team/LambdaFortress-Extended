@@ -35,7 +35,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF,
 	},
 	{
 		"npc_kleiner",
@@ -95,6 +95,11 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
+		"monster_robo_grunt",
+		TF_TEAM_BLUE,
+		0,
+	},
+	{
 		"npc_combine_synth",
 		TF_TEAM_BLUE,
 		0,
@@ -110,27 +115,7 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
-		"monster_bigmomma",
-		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING,
-	},
-	{
 		"monster_human_grunt",
-		TF_TEAM_BLUE,
-		0,
-	},
-	{
-		"monster_human_grunt_red",
-		TF_TEAM_RED,
-		0,
-	},
-	{
-		"monster_human_grunt_blue",
-		TF_TEAM_BLUE,
-		0,
-	},
-	{
-		"monster_robo_grunt",
 		TF_TEAM_BLUE,
 		0,
 	},
@@ -160,11 +145,6 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
-		"monster_gonome",
-		TF_TEAM_GREEN,
-		0,
-	},
-	{
 		"monster_bullchicken",
 		TF_TEAM_YELLOW,
 		0,
@@ -177,7 +157,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_nihilanth",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR,
+		0,
 	},
 	{
 		"monster_hornet",
@@ -187,7 +167,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_snark",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING,
+		0,
 	},
 	{
 		"monster_alien_controller",
@@ -207,7 +187,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_barnacle",
 		TF_TEAM_YELLOW,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
+		0,
 	},
 	{
 		"monster_osprey",
@@ -217,17 +197,17 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_sentry",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		0,
 	},
 	{
 		"monster_tentacle",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR,
+		0,
 	},
 	{
 		"monster_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
+		0,
 	},
 	{
 		"monster_human_assassin",
@@ -255,11 +235,6 @@ TF_NPCData g_aNPCData[] =
 		TF_TEAM_BLUE,
 		0,
 	},
-	{
-		"npc_breen",
-		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
-	},
 	// Regular enemies.
 	{
 		"npc_combine_s",
@@ -285,23 +260,23 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_cscanner",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_clawscanner",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_manhack",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	// Indestructible combine mechs.
 	{
 		"npc_combine_camera",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_rollermine",
@@ -326,7 +301,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_turret_ceiling",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_turret_floor",
@@ -336,13 +311,13 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_turret_ground",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	// Combine synths.
 	{
 		"npc_combinegunship",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_hunter",
@@ -352,22 +327,22 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_strider",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_helicopter",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_combinedropship",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_combineguard",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING | TFFL_NODEFLECT,
+		TFFL_BUILDING,
 	},
 	// Misc Combine NPCs.
 	{
@@ -383,7 +358,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_sniper",
 		TF_TEAM_BLUE,
-		TFFL_NOHEALING | TFFL_NODEFLECT,
+		TFFL_NOHEALING,
 	},
 	// Headcrabs.
 	{
@@ -433,11 +408,6 @@ TF_NPCData g_aNPCData[] =
 		0,
 	},
 	{
-		"npc_zombie_custom",
-		TF_TEAM_GREEN,
-		TFFL_NODEATHNOTICE,
-	},
-	{
 		"npc_zombine",
 		TF_TEAM_GREEN,
 		0,
@@ -449,61 +419,36 @@ TF_NPCData g_aNPCData[] =
 		TFFL_NOBACKSTAB,
 	},
 	{
+		"npc_antlion_worker",
+		TF_TEAM_YELLOW,
+		TFFL_NOBACKSTAB,
+	},
+	{
 		"npc_antlionguard",
 		TF_TEAM_YELLOW,
-		TFFL_NOBACKSTAB | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB,
 	},
 	// Neutral NPCs.
 	{
 		"npc_barnacle",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING,
 	},
 	// Birds
 	{
 		"npc_crow",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB | TFFL_NOREWARD,
+		TFFL_NOBACKSTAB,
 	},
 	{
 		"npc_pigeon",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB | TFFL_NOREWARD,
+		TFFL_NOBACKSTAB,
 	},
 	{
 		"npc_seagull",
 		TEAM_UNASSIGNED,
-		TFFL_NOBACKSTAB | TFFL_NOREWARD,
-	},
-	{
-		"generic_actor",
-		TEAM_UNASSIGNED,
-		0,
-	},
-	{
-		"cyler_actor",
-		TEAM_UNASSIGNED,
-		0,
-	},
-	{
-		"monster_furniture",
-		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT | TFFL_NODEATHNOTICE | TFFL_NOREWARD,
-	},
-	{
-		"npc_furniture",
-		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT | TFFL_NODEATHNOTICE | TFFL_NOREWARD,
-	},
-	{
-		"monster_generic",
-		TEAM_UNASSIGNED,
-		0,
-	},
-	{
-		"npc_bullseye",
-		TEAM_UNASSIGNED,
-		TFFL_BUILDING | TFFL_NODEFLECT | TFFL_NODEATHNOTICE | TFFL_NOREWARD,
+		TFFL_NOBACKSTAB,
 	},
 	// End marker.
 	{
@@ -521,40 +466,9 @@ extern ConVar tf_max_health_boost;
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::AddCond( int nCond, float flDuration /* = PERMANENT_CONDITION */ )
 {
-#ifdef GAME_DLL
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
-
-	int nCondFlag = nCond;
-	int *pVar = NULL;
-	if ( nCond < 96 )
-	{
-		if ( nCond < 64 )
-		{
-			if ( nCond < 32 )
-			{
-				pVar = &m_nPlayerCond.GetForModify();
-			}
-			else
-			{
-				pVar = &m_nPlayerCondEx.GetForModify();
-				nCondFlag -= 32;
-			}
-		}
-		else
-		{
-			pVar = &m_nPlayerCondEx2.GetForModify();
-			nCondFlag -= 64;
-		}
-	}
-	else
-	{
-		pVar = &m_nPlayerCondEx3.GetForModify();
-		nCondFlag -= 96;
-	}
-
-	*pVar |= ( 1 << nCondFlag );
-	m_flCondExpireTimeLeft.Set( nCond, flDuration );
-#endif
+	m_nPlayerCond |= (1<<nCond);
+	m_flCondExpireTimeLeft[nCond] = flDuration;
 	OnConditionAdded( nCond );
 }
 
@@ -563,39 +477,11 @@ void CAI_BaseNPC::AddCond( int nCond, float flDuration /* = PERMANENT_CONDITION 
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::RemoveCond( int nCond )
 {
-#ifdef GAME_DLL
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
-	int nCondFlag = nCond;
-	int *pVar = NULL;
-	if ( nCond < 96 )
-	{
-		if ( nCond < 64 )
-		{
-			if ( nCond < 32 )
-			{
-				pVar = &m_nPlayerCond.GetForModify();
-			}
-			else
-			{
-				pVar = &m_nPlayerCondEx.GetForModify();
-				nCondFlag -= 32;
-			}
-		}
-		else
-		{
-			pVar = &m_nPlayerCondEx2.GetForModify();
-			nCondFlag -= 64;
-		}
-	}
-	else
-	{
-		pVar = &m_nPlayerCondEx3.GetForModify();
-		nCondFlag -= 96;
-	}
 
-	*pVar &= ~( 1 << nCondFlag );
-	m_flCondExpireTimeLeft.Set( nCond, 0 );
-#endif
+	m_nPlayerCond &= ~(1<<nCond);
+	m_flCondExpireTimeLeft[nCond] = 0;
+
 	OnConditionRemoved( nCond );
 }
 
@@ -605,39 +491,8 @@ void CAI_BaseNPC::RemoveCond( int nCond )
 bool CAI_BaseNPC::InCond( int nCond )
 {
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
-/*
-	int nCondFlag = nCond;
-	const int *pVar = NULL;
 
-	if ( nCond < 96 )
-	{
-		if ( nCond < 64 )
-		{
-			if ( nCond < 32 )
-			{
-				pVar = &m_nPlayerCond.Get();
-			}
-			else
-			{
-				pVar = &m_nPlayerCondEx.Get();
-				nCondFlag -= 32;
-			}
-		}
-		else
-		{
-			pVar = &m_nPlayerCondEx2.Get();
-			nCondFlag -= 64;
-		}
-	}
-	else
-	{
-		pVar = &m_nPlayerCondEx3.Get();
-		nCondFlag -= 96;
-	}
-
-	return ( ( *pVar & ( 1 << nCondFlag ) ) != 0 );
-*/
-	return ( ( m_nPlayerCond /*|| m_nPlayerCondEx || m_nPlayerCondEx2 || m_nPlayerCondEx3*/ & (1<<nCond) ) != 0 );
+	return ( ( m_nPlayerCond & (1<<nCond) ) != 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -645,14 +500,13 @@ bool CAI_BaseNPC::InCond( int nCond )
 //-----------------------------------------------------------------------------
 float CAI_BaseNPC::GetConditionDuration( int nCond )
 {
-#ifdef GAME_DLL
 	Assert( nCond >= 0 && nCond < TF_COND_LAST );
 
 	if ( InCond( nCond ) )
 	{
 		return m_flCondExpireTimeLeft[nCond];
 	}
-#endif
+	
 	return 0.0f;
 }
 
@@ -662,9 +516,9 @@ float CAI_BaseNPC::GetConditionDuration( int nCond )
 void CAI_BaseNPC::RemoveAllCond( void )
 {
 	int i;
-	for ( i = 0; i < TF_COND_LAST; i++ )
+	for ( i=0;i<TF_COND_LAST;i++ )
 	{
-		if ( InCond( i ) )
+		if ( m_nPlayerCond & (1<<i) )
 		{
 			RemoveCond( i );
 		}
@@ -672,9 +526,6 @@ void CAI_BaseNPC::RemoveAllCond( void )
 
 	// Now remove all the rest
 	m_nPlayerCond = 0;
-	m_nPlayerCondEx = 0;
-	m_nPlayerCondEx2 = 0;
-	m_nPlayerCondEx3 = 0;
 }
 
 
@@ -691,21 +542,21 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		m_flHealFraction = 0;
 #endif
 		break;
+/*
+	case TF_COND_STEALTHED:
+		OnAddStealthed();
+		break;
 
 	case TF_COND_INVULNERABLE:
 		OnAddInvulnerable();
 		break;
 
+	case TF_COND_TELEPORTED:
+		OnAddTeleported();
+		break;
+*/
 	case TF_COND_BURNING:
 		OnAddBurning();
-		break;
-
-	case TF_COND_HEALTH_OVERHEALED:
-		//UpdateOverhealEffect();
-		break;
-
-	case TF_COND_SLOWED:
-		OnAddSlowed();
 		break;
 /*
 	case TF_COND_DISGUISING:
@@ -727,28 +578,6 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		}
 		break;
 */
-	case TF_COND_CRITBOOSTED:
-	case TF_COND_CRITBOOSTED_PUMPKIN:
-	case TF_COND_CRITBOOSTED_USER_BUFF:
-	case TF_COND_CRITBOOSTED_DEMO_CHARGE:
-	case TF_COND_CRITBOOSTED_FIRST_BLOOD:
-	case TF_COND_CRITBOOSTED_BONUS_TIME:
-	case TF_COND_CRITBOOSTED_CTF_CAPTURE:
-	case TF_COND_CRITBOOSTED_ON_KILL:
-	case TF_COND_CRITBOOSTED_CARD_EFFECT:
-	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-		OnAddCritboosted();
-		break;
-
-	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
-	case TF_COND_MINICRITBOOSTED_ON_KILL:
-		OnAddMiniCritboosted();
-		break;
-
-	case TF_COND_URINE:
-		OnAddUrine();
-		break;
-
 	default:
 		break;
 	}
@@ -776,164 +605,40 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 		m_flHealFraction = 0;
 #endif
 		break;
-
-	case TF_COND_HEALTH_OVERHEALED:
-		//UpdateOverhealEffect();
+/*
+	case TF_COND_STEALTHED:
+		OnRemoveStealthed();
 		break;
 
-	case TF_COND_SLOWED:
-		OnRemoveSlowed();
+	case TF_COND_DISGUISED:
+		OnRemoveDisguised();
+		break;
+
+	case TF_COND_DISGUISING:
+		OnRemoveDisguising();
 		break;
 
 	case TF_COND_INVULNERABLE:
 		OnRemoveInvulnerable();
 		break;
 
-	case TF_COND_CRITBOOSTED:
-	case TF_COND_CRITBOOSTED_PUMPKIN:
-	case TF_COND_CRITBOOSTED_USER_BUFF:
-	case TF_COND_CRITBOOSTED_DEMO_CHARGE:
-	case TF_COND_CRITBOOSTED_FIRST_BLOOD:
-	case TF_COND_CRITBOOSTED_BONUS_TIME:
-	case TF_COND_CRITBOOSTED_CTF_CAPTURE:
-	case TF_COND_CRITBOOSTED_ON_KILL:
-	case TF_COND_CRITBOOSTED_CARD_EFFECT:
-	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-		OnRemoveCritboosted();
+	case TF_COND_TELEPORTED:
+		OnRemoveTeleported();
 		break;
-
-	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
-	case TF_COND_MINICRITBOOSTED_ON_KILL:
-		OnRemoveMiniCritboosted();
-		break;
-
-	case TF_COND_URINE:
-		OnRemoveUrine();
-		break;
-
+*/
 	default:
 		break;
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::IsCritBoosted( void )
-{
-	// Oh man...
-	if ( InCond( TF_COND_CRITBOOSTED ) ||
-		InCond( TF_COND_CRITBOOSTED_PUMPKIN ) ||
-		InCond( TF_COND_CRITBOOSTED_USER_BUFF ) ||
-		InCond( TF_COND_CRITBOOSTED_DEMO_CHARGE ) ||
-		InCond( TF_COND_CRITBOOSTED_FIRST_BLOOD ) ||
-		InCond( TF_COND_CRITBOOSTED_BONUS_TIME ) ||
-		InCond( TF_COND_CRITBOOSTED_CTF_CAPTURE ) ||
-		InCond( TF_COND_CRITBOOSTED_ON_KILL ) ||
-		InCond( TF_COND_CRITBOOSTED_CARD_EFFECT ) ||
-		InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::IsMiniCritBoosted( void )
-{
-	if ( InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
-		InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::IsInvulnerable( void )
-{
-	// Oh man again...
-	if ( InCond( TF_COND_INVULNERABLE ) ||
-		InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE ) ||
-		InCond( TF_COND_INVULNERABLE_USER_BUFF ) ||
-		InCond( TF_COND_INVULNERABLE_CARD_EFFECT ) )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::IsStealthed( void )
-{
-	if ( InCond( TF_COND_STEALTHED ) ||
-		InCond( TF_COND_STEALTHED_USER_BUFF ) )
-		return true;
-
-	return false;
-}
-
 int CAI_BaseNPC::GetMaxBuffedHealth( void )
 {
 	float flBoostMax = GetMaxHealth() * tf_max_health_boost.GetFloat();
-	CALL_ATTRIB_HOOK_FLOAT( flBoostMax, mult_medigun_overheal_amount );
+
 	int iRoundDown = floor( flBoostMax / 5 );
 	iRoundDown = iRoundDown * 5;
 
 	return iRoundDown;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flFlameDuration /*= -1.0f*/ )
-{
-#ifdef CLIENT_DLL
-
-#else
-	// Don't bother igniting players who have just been killed by the fire damage.
-	if ( !IsAlive() )
-		return;
-
-	if ( !InCond( TF_COND_BURNING ) )
-	{
-		if ( AllowedToIgnite() == true )
-		{
-			// Start burning
-			AddCond( TF_COND_BURNING );
-			m_flFlameBurnTime = gpGlobals->curtime;	//asap
-		}
-		// let the attacker know he burned me
-		if ( pAttacker  )
-		{
-			pAttacker->OnBurnOther( this );
-		}
-	}
-
-	float flFlameLife = TF_BURNING_FLAME_LIFE;
-
-	if ( flFlameDuration != -1.0f )
-		flFlameLife = flFlameDuration;
-
-	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pAttacker, flFlameLife, mult_wpn_burntime );
-
-	if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_FIREBALL ) )
-	{
-		m_flFlameRemoveTime = gpGlobals->curtime + flFlameLife;
-	}
-	else
-	{
-		// dragon's fury afterburn is 2 second
-		m_flFlameRemoveTime = gpGlobals->curtime + flFlameLife - 8.0f;
-	}
-
-	m_hBurnAttacker = pAttacker;
-	m_hBurnWeapon = pWeapon;
-
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -978,110 +683,3 @@ void CAI_BaseNPC::OnRemoveBurning( void )
 #endif
 }
 #endif
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddInvulnerable( void )
-{
-	// Stock uber removes negative conditions.
-	if ( InCond( TF_COND_BURNING ) )
-	{
-		RemoveCond( TF_COND_BURNING );
-	}
-
-	if ( InCond( TF_COND_SLOWED ) )
-	{
-		RemoveCond( TF_COND_SLOWED );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveInvulnerable( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddSlowed( void )
-{
-	SetPlaybackRate( 0.6f );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove slowdown effect
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveSlowed( void )
-{
-	SetPlaybackRate( 1.0f );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddMiniCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveMiniCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddUrine( void )
-{
-#ifdef CLIENT_DLL
-	SetRenderColor( 255, 255, 108 );
-	ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveUrine(void)
-{
-#ifdef GAME_DLL
-	if( IsAlive() )
-	{
-		m_hUrineAttacker = NULL;
-	}
-#else
-	SetRenderColor( 255, 255, 255 );
-	ParticleProp()->StopParticlesNamed( "peejar_drips" );
-#endif
-}

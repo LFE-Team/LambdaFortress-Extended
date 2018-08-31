@@ -18,74 +18,43 @@
 //
 // Weapon Revolver tables.
 //
-CREATE_SIMPLE_WEAPON_TABLE( TFRevolver, tf_weapon_revolver )
-CREATE_SIMPLE_WEAPON_TABLE( TFRevolver_Secondary, tf_weapon_revolver_secondary ) // engineer, anyone?
+IMPLEMENT_NETWORKCLASS_ALIASED( TFRevolver, DT_WeaponRevolver )
+
+BEGIN_NETWORK_TABLE( CTFRevolver, DT_WeaponRevolver )
+END_NETWORK_TABLE()
+
+BEGIN_PREDICTION_DATA( CTFRevolver )
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( tf_weapon_revolver, CTFRevolver );
+PRECACHE_WEAPON_REGISTER( tf_weapon_revolver );
+
+// Server specific.
+#ifndef CLIENT_DLL
+BEGIN_DATADESC( CTFRevolver )
+END_DATADESC()
+#endif
 
 //=============================================================================
 //
 // Weapon Revolver functions.
 //
-/*
-acttable_t CTFRevolver::m_acttable[] =
-{
-	{ ACT_MP_STAND_IDLE, ACT_MP_STAND_SECONDARY2, false },
-	{ ACT_MP_CROUCH_IDLE, ACT_MP_CROUCH_SECONDARY2, false },
-	{ ACT_MP_RUN, ACT_MP_RUN_SECONDARY2, false },
-	{ ACT_MP_AIRWALK, ACT_MP_AIRWALK_SECONDARY2, false },
-	{ ACT_MP_CROUCHWALK, ACT_MP_CROUCHWALK_SECONDARY2, false },
-	{ ACT_MP_JUMP_START, ACT_MP_JUMP_START_SECONDARY2, false },
-	{ ACT_MP_JUMP_FLOAT, ACT_MP_JUMP_FLOAT_SECONDARY2, false },
-	{ ACT_MP_JUMP_LAND, ACT_MP_JUMP_LAND_SECONDARY2, false },
-	{ ACT_MP_SWIM, ACT_MP_SWIM_SECONDARY2, false },
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE, ACT_MP_ATTACK_STAND_SECONDARY2, false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE, ACT_MP_ATTACK_CROUCH_SECONDARY2, false },
-};
 
-IMPLEMENT_ACTTABLE( CTFRevolver );
-*/
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFRevolver::CanFireCriticalShot( CBaseEntity *pEntity, bool bIsHeadshot )
+bool CTFRevolver::DefaultReload( int iClipSize1, int iClipSize2, int iActivity )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if (pEntity)
-	{
-		flDistanceToTarget = pOwner->GetAbsOrigin().DistTo(pEntity->GetAbsOrigin());
-	}
-	// can only fire a crit shot if this is a headshot
-	if ( !bIsHeadshot || !pEntity || (!pEntity->IsPlayer() && !pEntity->IsNPC()) || flDistanceToTarget > 512 )
+	// The the owning local player.
+	CTFPlayer *pPlayer = GetTFPlayerOwner();
+	if ( !pPlayer )
 		return false;
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( iType == 1 )
+	if ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) )
 	{
-		return true;
+		if ( pPlayer->m_Shared.InCond( TF_COND_STEALTHED ) )
+		{
+			return false;
+		}
 	}
 
-	return false;
-}
+	return BaseClass::DefaultReload( iClipSize1, iClipSize2, iActivity );
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int	CTFRevolver::GetDamageType( void ) const
-{
-	int iDmgType = BaseClass::GetDamageType();
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
-	if ( iType == 1 )
-	{
-		iDmgType |= DMG_USE_HITLOCATIONS;
-	}
-	else
-	{
-		iDmgType |= DMG_BULLET;	
-	}
-
-	return iDmgType;
 }

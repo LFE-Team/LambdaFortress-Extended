@@ -18,8 +18,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TF_PlayerResource, DT_TFPlayerResource, CTFPlayerRes
 	RecvPropArray3( RECVINFO_ARRAY( m_iTotalScore ), RecvPropInt( RECVINFO( m_iTotalScore[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iMaxHealth ), RecvPropInt( RECVINFO( m_iMaxHealth[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iPlayerClass ), RecvPropInt( RECVINFO( m_iPlayerClass[0] ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_vecColors ), RecvPropVector( RECVINFO( m_vecColors[0] ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_iKillstreak ), RecvPropInt( RECVINFO( m_iKillstreak[0] ) ) ),
 END_RECV_TABLE()
 
 
@@ -32,8 +30,6 @@ C_TF_PlayerResource::C_TF_PlayerResource()
 	m_Colors[TEAM_SPECTATOR] = COLOR_TF_SPECTATOR;
 	m_Colors[TF_TEAM_RED] = COLOR_RED;
 	m_Colors[TF_TEAM_BLUE] = COLOR_BLUE;
-	m_Colors[TF_TEAM_GREEN] = COLOR_GREEN;
-	m_Colors[TF_TEAM_YELLOW] = COLOR_YELLOW;
 }
 
 //-----------------------------------------------------------------------------
@@ -58,37 +54,12 @@ int C_TF_PlayerResource::GetArrayValue( int iIndex, int *pArray, int iDefaultVal
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-const Vector &C_TF_PlayerResource::GetPlayerColorVector( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-	{
-		// White color.
-		static Vector vecWhite( 1, 1, 1 );
-		return vecWhite;
-	}
-
-	return m_vecColors[iIndex];
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-Color C_TF_PlayerResource::GetPlayerColor( int iIndex )
-{
-	const Vector &vecColor = GetPlayerColorVector( iIndex );
-
-	return Color( vecColor.x * 255.0f, vecColor.y * 255.0f, vecColor.z * 255.0f, 255 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 int C_TF_PlayerResource::GetCountForPlayerClass( int iTeam, int iClass, bool bExcludeLocalPlayer /*=false*/ )
 {
 	int count = 0;
 	int iLocalPlayerIndex = GetLocalPlayerIndex();
 
-	for ( int i = 1; i <= MAX_PLAYERS; i++ )
+	for ( int i = 1 ; i <= MAX_PLAYERS ; i++ )
 	{
 		if ( bExcludeLocalPlayer && ( i == iLocalPlayerIndex ) )
 		{

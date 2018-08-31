@@ -22,7 +22,16 @@
 //
 // Weapon Wrench tables.
 //
-CREATE_SIMPLE_WEAPON_TABLE( TFWrench, tf_weapon_wrench )
+IMPLEMENT_NETWORKCLASS_ALIASED( TFWrench, DT_TFWeaponWrench )
+
+BEGIN_NETWORK_TABLE( CTFWrench, DT_TFWeaponWrench )
+END_NETWORK_TABLE()
+
+BEGIN_PREDICTION_DATA( CTFWrench )
+END_PREDICTION_DATA()
+
+LINK_ENTITY_TO_CLASS( tf_weapon_wrench, CTFWrench );
+PRECACHE_WEAPON_REGISTER( tf_weapon_wrench );
 
 //=============================================================================
 //
@@ -37,10 +46,10 @@ CTFWrench::CTFWrench()
 }
 
 #ifdef GAME_DLL
-void CTFWrench::OnFriendlyBuildingHit( CBaseObject *pObject, CTFPlayer *pPlayer, Vector vecHitPos )
+void CTFWrench::OnFriendlyBuildingHit( CBaseObject *pObject, CTFPlayer *pPlayer )
 {
 	// Did this object hit do any work? repair or upgrade?
-	bool bUsefulHit = pObject->InputWrenchHit( pPlayer, this, vecHitPos );
+	bool bUsefulHit = pObject->InputWrenchHit( pPlayer );
 
 	CDisablePredictionFiltering disabler;
 
@@ -56,6 +65,25 @@ void CTFWrench::OnFriendlyBuildingHit( CBaseObject *pObject, CTFPlayer *pPlayer,
 	}
 }
 #endif
+
+class CTraceFilterIgnorePlayers : public CTraceFilterSimple
+{
+public:
+	// It does have a base, but we'll never network anything below here..
+	DECLARE_CLASS( CTraceFilterIgnorePlayers, CTraceFilterSimple );
+
+	CTraceFilterIgnorePlayers( const IHandleEntity *passentity, int collisionGroup )
+		: CTraceFilterSimple( passentity, collisionGroup )
+	{
+	}
+
+	virtual bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
+	{
+		CBaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
+		return pEntity && !pEntity->IsPlayer();
+	}
+};
+
 
 void CTFWrench::Smack( void )
 {
@@ -98,7 +126,7 @@ void CTFWrench::Smack( void )
 		 trace.m_pEnt->GetTeamNumber() == pPlayer->GetTeamNumber() )
 	{
 #ifdef GAME_DLL
-		OnFriendlyBuildingHit( dynamic_cast< CBaseObject * >( trace.m_pEnt ), pPlayer, trace.endpos );
+		OnFriendlyBuildingHit( dynamic_cast< CBaseObject * >( trace.m_pEnt ), pPlayer );
 #endif
 	}
 	else
@@ -107,121 +135,3 @@ void CTFWrench::Smack( void )
 		BaseClass::Smack();
 	}
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFWrench::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
-{
-	float flDamage = BaseClass::GetMeleeDamage( pTarget, iCustomDamage );
-	iCustomDamage = TF_DMG_WRENCH_FIX;
-
-	return flDamage;
-}
-
-//=============================================================================
-//
-// Vintage Weapon Robot Arm tables.
-//
-IMPLEMENT_NETWORKCLASS_ALIASED( TFRobotArm, DT_TFWeaponRobotArm )
-
- BEGIN_NETWORK_TABLE( CTFRobotArm, DT_TFWeaponRobotArm )
-END_NETWORK_TABLE()
-
- BEGIN_PREDICTION_DATA( CTFRobotArm )
-END_PREDICTION_DATA()
-
- LINK_ENTITY_TO_CLASS( tf_weapon_robot_arm, CTFRobotArm );
-PRECACHE_WEAPON_REGISTER( tf_weapon_robot_arm );
- //=============================================================================
-//
-// Weapon Robot Arm functions.
-//
- //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFRobotArm::Smack( void )
-{
-	//TODO: check if this needs lag compensation
- 	trace_t tr;
- 	// Did we hit an enemy player?
-	if ( DoSwingTrace( tr ) && tr.DidHitNonWorldEntity() && tr.m_pEnt && ( tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC() ) && tr.m_pEnt->GetTeamNumber() != GetTeamNumber() )
-	{
-		m_iConsecutivePunches++;
-		m_flComboDecayTime = gpGlobals->curtime;
- 		if ( m_iConsecutivePunches > 2 )
-			m_bComboKill = true;
-	}
-	else
-	{
-		m_bComboKill = false;
-		m_iConsecutivePunches = 0;
-	}
- 	BaseClass::Smack();
-}
- //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFRobotArm::PrimaryAttack( void )
-{
-	// reset the combo if we've already hit 3 times or exceeded the decay time
-	if ( gpGlobals->curtime - m_flComboDecayTime > 1.0f || m_iConsecutivePunches > 2  )
-	{
-		m_iConsecutivePunches = 0;
-		m_bComboKill = false;
-	}
- 	BaseClass::PrimaryAttack();
-}
- //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFRobotArm::WeaponIdle( void )
-{
-	if ( m_bComboKill )
-	{
-		SendWeaponAnim( ACT_ITEM2_VM_IDLE_2 );
-		m_bComboKill = false;
-	}
- 	BaseClass::WeaponIdle();
-}
- //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CTFRobotArm::GetDamageCustom( void )
-{
-	if ( m_iConsecutivePunches == 3 )
-		return TF_DMG_CUSTOM_COMBO_PUNCH;
- 	return TF_DMG_CUSTOM_NONE;
-}
- //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFRobotArm::CalcIsAttackCriticalHelper( void )
-{
-	// punch after 2 consecutive hits always crits
-	return ( m_iConsecutivePunches == 2 );
-}
- //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFRobotArm::DoViewModelAnimation( void )
-{
-	if ( m_iConsecutivePunches == 2 )
-		SendWeaponAnim( ACT_ITEM2_VM_SWINGHARD );
-	else
-		SendWeaponAnim( ACT_ITEM2_VM_HITCENTER );
-}
- #ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFRobotArm::GetForceScale( void )
-{
-	if ( m_iConsecutivePunches == 3 )
-	{
-		return 500.0f;
-	}
-	
-	return BaseClass::GetForceScale();
-}
-#endif 

@@ -26,35 +26,27 @@ enum
 {
 	TF_TEAM_RED = LAST_SHARED_TEAM+1,
 	TF_TEAM_BLUE,
-	TF_TEAM_GREEN,
-	TF_TEAM_YELLOW,
 	TF_TEAM_COUNT
+};
+
+// Extra teams, only used as indexes, these are not real player teams.
+enum
+{
+	TF_TEAM_GREEN = TF_TEAM_COUNT,
+	TF_TEAM_YELLOW,
 };
 
 #define TF_TEAM_AUTOASSIGN (TF_TEAM_COUNT + 1 )
 
 #define TF_STORY_TEAM TF_TEAM_RED
 #define TF_COMBINE_TEAM TF_TEAM_BLUE
-#define TF_ZOMBIE_TEAM TF_TEAM_GREEN
-#define TF_ANTLION_TEAM TF_TEAM_YELLOW
-
-#define TF_TEAM_PVE_DEFENDERS TF_TEAM_RED
-#define TF_TEAM_PVE_INVADERS TF_TEAM_GREEN
 
 extern const char *g_aTeamNames[TF_TEAM_COUNT];
-extern const char *g_aTeamNamesShort[TF_TEAM_COUNT];
-extern const char *g_aTeamParticleNames[TF_TEAM_COUNT];
 extern color32 g_aTeamColors[TF_TEAM_COUNT];
 extern color32 g_aTeamSkinColors[TF_TEAM_COUNT];
 
-const char *GetTeamParticleName( int iTeam, bool bDeathmatchOverride = false, const char **pNames = g_aTeamParticleNames );
-const char *ConstructTeamParticle( const char *pszFormat, int iTeam, bool bDeathmatchOverride = false, const char **pNames = g_aTeamParticleNames );
-void PrecacheTeamParticles( const char *pszFormat, bool bDeathmatchOverride = false, const char **pNames = g_aTeamParticleNames );
-
 #define CONTENTS_REDTEAM	CONTENTS_TEAM1
 #define CONTENTS_BLUETEAM	CONTENTS_TEAM2
-#define CONTENTS_GREENTEAM	CONTENTS_UNUSED
-#define CONTENTS_YELLOWTEAM	CONTENTS_UNUSED6
 			
 // Team roles
 enum 
@@ -69,18 +61,17 @@ enum
 //-----------------------------------------------------------------------------
 // CVar replacements
 //-----------------------------------------------------------------------------
-#define TF_DAMAGE_CRIT_CHANCE				0.02f
-#define TF_DAMAGE_CRIT_CHANCE_RAPID			0.02f
+#define TF_DAMAGE_CRIT_CHANCE				0.05f
+#define TF_DAMAGE_CRIT_CHANCE_RAPID			0.05f
 #define TF_DAMAGE_CRIT_DURATION_RAPID		2.0f
-#define TF_DAMAGE_CRIT_CHANCE_MELEE			0.10f
+#define TF_DAMAGE_CRIT_CHANCE_MELEE			0.15f
 
 #define TF_DAMAGE_CRITMOD_MAXTIME			20
 #define TF_DAMAGE_CRITMOD_MINTIME			2
 #define TF_DAMAGE_CRITMOD_DAMAGE			800
-#define TF_DAMAGE_CRITMOD_MAXMULT			6
+#define TF_DAMAGE_CRITMOD_MAXMULT			4
 
 #define TF_DAMAGE_CRIT_MULTIPLIER			3.0f
-#define TF_DAMAGE_MINICRIT_MULTIPLIER		1.35f
 
 
 //-----------------------------------------------------------------------------
@@ -88,12 +79,8 @@ enum
 //-----------------------------------------------------------------------------
 #define PANEL_CLASS_BLUE		"class_blue"
 #define PANEL_CLASS_RED			"class_red"
-#define PANEL_CLASS_GREEN		"class_green"
-#define PANEL_CLASS_YELLOW		"class_yellow"
 #define PANEL_MAPINFO			"mapinfo"
 #define PANEL_ROUNDINFO			"roundinfo"
-#define PANEL_COOPSCOREBOARD "coopscoreboard"
-#define PANEL_ARENATEAMSELECT "arenateamselect"
 
 // file we'll save our list of viewed intro movies in
 #define MOVIES_FILE				"viewed.res"
@@ -121,7 +108,7 @@ enum
 #define TF_CLASS_COUNT			( TF_CLASS_COUNT_ALL - 1 )
 
 #define TF_FIRST_NORMAL_CLASS	( TF_CLASS_UNDEFINED + 1 )
-#define TF_LAST_NORMAL_CLASS	( TF_CLASS_COUNT_ALL - 1 )
+#define TF_LAST_NORMAL_CLASS	( TF_CLASS_CIVILIAN - 1 )
 
 #define	TF_CLASS_MENU_BUTTONS	( TF_CLASS_RANDOM + 1 )
 
@@ -139,7 +126,8 @@ enum
 	TF_CLASS_SPY,
 	TF_CLASS_ENGINEER,		// TF_LAST_NORMAL_CLASS
 
-	// Add any new classes after Engineer.
+	// Add any new classes after Engineer
+	TF_CLASS_CIVILIAN,		// Civilians are a special class. It is not a player class.
 	TF_CLASS_COUNT_ALL,
 
 	TF_CLASS_RANDOM
@@ -147,9 +135,6 @@ enum
 
 extern const char *g_aPlayerClassNames[];				// localized class names
 extern const char *g_aPlayerClassNames_NonLocalized[];	// non-localized class names
-
-extern const char *g_aPlayerClassEmblems[];
-extern const char *g_aPlayerClassEmblemsDead[];
 
 //-----------------------------------------------------------------------------
 // For entity_capture_flags to use when placed in the world
@@ -171,16 +156,7 @@ enum
 	TF_GAMETYPE_UNDEFINED = 0,
 	TF_GAMETYPE_CTF,
 	TF_GAMETYPE_CP,
-	TF_GAMETYPE_ESCORT,
-	TF_GAMETYPE_ARENA,
-	TF_GAMETYPE_MVM,
-	TF_GAMETYPE_RD,
-	TF_GAMETYPE_PASSTIME,
-	TF_GAMETYPE_PD,
 	TF_GAMETYPE_COOP,
-	TF_GAMETYPE_VS,
-	TF_GAMETYPE_BLUCOOP,
-	TF_GAMETYPE_ZS,
 };
 extern const char *g_aGameTypeNames[];	// localized gametype names
 
@@ -191,7 +167,8 @@ enum
 {
 	TF_BUILDING_SENTRY				= (1<<0),
 	TF_BUILDING_DISPENSER			= (1<<1),
-	TF_BUILDING_TELEPORT			= (1<<2),
+	TF_BUILDING_TELEPORT_ENTRY		= (1<<2),
+	TF_BUILDING_TELEPORT_EXIT		= (1<<3),
 };
 
 //-----------------------------------------------------------------------------
@@ -221,14 +198,6 @@ enum
 	TF_AMMO_COUNT
 };
 
-enum EAmmoSource
-{
-	TF_AMMO_SOURCE_AMMOPACK = 0, // Default, used for ammopacks
-	TF_AMMO_SOURCE_RESUPPLY, // Maybe?
-	TF_AMMO_SOURCE_DISPENSER,
-	TF_AMMO_SOURCE_COUNT
-};
-
 //-----------------------------------------------------------------------------
 // Grenade Launcher mode (for pipebombs).
 //-----------------------------------------------------------------------------
@@ -236,7 +205,6 @@ enum
 {
 	TF_GL_MODE_REGULAR = 0,
 	TF_GL_MODE_REMOTE_DETONATE,
-	TF_GL_MODE_FIZZLE,
 };
 
 //-----------------------------------------------------------------------------
@@ -250,36 +218,6 @@ enum
 	TF_WPN_TYPE_GRENADE,
 	TF_WPN_TYPE_BUILDING,
 	TF_WPN_TYPE_PDA,
-	TF_WPN_TYPE_ITEM1,
-	TF_WPN_TYPE_ITEM2,
-	//TF_WPN_TYPE_HEAD,
-	//TF_WPN_TYPE_MISC,
-	TF_WPN_TYPE_MELEE_ALLCLASS,
-	TF_WPN_TYPE_SECONDARY2,
-	TF_WPN_TYPE_PRIMARY2,
-	TF_WPN_TYPE_ITEM3,
-	TF_WPN_TYPE_ITEM4,
-	TF_WPN_TYPE_COUNT
-};
-
-extern const char *g_AnimSlots[];
-extern const char *g_LoadoutSlots[];
-
-//-----------------------------------------------------------------------------
-// Loadout slots
-//-----------------------------------------------------------------------------
-enum
-{
-	TF_LOADOUT_SLOT_PRIMARY = 0,
-	TF_LOADOUT_SLOT_SECONDARY,
-	TF_LOADOUT_SLOT_MELEE,
-	TF_LOADOUT_SLOT_PDA1,
-	TF_LOADOUT_SLOT_PDA2,
-	TF_LOADOUT_SLOT_BUILDING,
-	TF_LOADOUT_SLOT_HAT,
-	TF_LOADOUT_SLOT_MISC,
-	TF_LOADOUT_SLOT_ACTION,
-	TF_LOADOUT_SLOT_COUNT
 };
 
 extern const char *g_aAmmoNames[];
@@ -287,7 +225,7 @@ extern const char *g_aAmmoNames[];
 //-----------------------------------------------------------------------------
 // Weapons.
 //-----------------------------------------------------------------------------
-#define TF_PLAYER_WEAPON_COUNT		7
+#define TF_PLAYER_WEAPON_COUNT		5
 #define TF_PLAYER_GRENADE_COUNT		2
 #define TF_PLAYER_BUILDABLE_COUNT	4
 
@@ -368,73 +306,22 @@ enum
 	TF_WEAPON_SENTRY_ROCKET,
 	TF_WEAPON_DISPENSER,
 	TF_WEAPON_INVIS,
-	TF_WEAPON_FLAG,
-	TF_WEAPON_FLAREGUN,
-	TF_WEAPON_LUNCHBOX,
-	TF_WEAPON_LUNCHBOX_DRINK,
-	TF_WEAPON_COMPOUND_BOW,
-
-	TF_WEAPON_BAT_FISH,
-	TF_WEAPON_BAT_GIFTWARP,
-	TF_WEAPON_BAT_WOOD,
-	TF_WEAPON_BREAKABLE_SIGN,
-	TF_WEAPON_BUFF_ITEM,
-	TF_WEAPON_CANNON,
-	TF_WEAPON_CHARGED_SMG,
-	TF_WEAPON_CLEAVER,
-	TF_WEAPON_CROSSBOW,
-	TF_WEAPON_DRG_POMSON,
-	TF_WEAPON_FLAREGUN_REVENGE,
-	TF_WEAPON_GRAPPLINGHOOK,
-	TF_WEAPON_HANDGUN_SCOUT_PRIMARY,
-	TF_WEAPON_HANDGUN_SCOUT_SECONDARY,
-	TF_WEAPON_JAR,
-	TF_WEAPON_JAR_GAS,
-	TF_WEAPON_JAR_MILK,
-	TF_WEAPON_KATANA,
-	TF_WEAPON_LASER_POINTER,
-	TF_WEAPON_MECHANICAL_ARM,
-	TF_WEAPON_PARACHUTE,
-	TF_WEAPON_PARACHUTE_PRIMARY,
-	TF_WEAPON_PARACHUTE_SECONDARY,
-	TF_WEAPON_PARTICLE_CANNON,
-	TF_WEAPON_PASSTIME_GUN,
-	TF_WEAPON_PEP_BRAWLER_BLASTER,
-	TF_WEAPON_RAYGUN,
-	TF_WEAPON_ROBOT_ARM,
-	TF_WEAPON_ROCKETLAUNCHER_AIRSTRIKE,
-	TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT,
-	TF_WEAPON_ROCKETLAUNCHER_FIREBALL, //TF_WEPON_FLAME_BALL, // valve why?
-	TF_WEAPON_ROCKETPACK,
-	TF_WEAPON_SENTRY_REVENGE,
-	TF_WEAPON_SHOTGUN_BUILDING_RESCUE,
-	TF_WEAPON_SLAP,
-	TF_WEAPON_SNIPERRIFLE_CLASSIC,
-	TF_WEAPON_SNIPERRIFLE_DECAP,
-	TF_WEAPON_SODA_POPPER,
-	TF_WEAPON_SPELLBOOK,
-	TF_WEAPON_SWORD,
-	TF_WEAPON_STICKBOMB,
-	// ADD NEW WEAPONS AFTER THIS
+	// New weapons start here
 	TF_WEAPON_PHYSCANNON,
-	//TF_WEAPON_PHYSGUN,
 
 	TF_WEAPON_COUNT
 };
 
 extern const char *g_aWeaponNames[];
 extern int g_aWeaponDamageTypes[];
-extern const Vector g_vecFixedWpnSpreadPellets[];
 
 int GetWeaponId( const char *pszWeaponName );
 #ifdef GAME_DLL
 int GetWeaponFromDamage( const CTakeDamageInfo &info );
 #endif
 int GetBuildableId( const char *pszBuildableName );
-
 const char *WeaponIdToAlias( int iWeapon );
 const char *WeaponIdToClassname( int iWeapon );
-const char *TranslateWeaponEntForClass( const char *pszName, int iClass );
 
 enum
 {
@@ -444,32 +331,7 @@ enum
 	TF_PROJECTILE_PIPEBOMB,
 	TF_PROJECTILE_PIPEBOMB_REMOTE,
 	TF_PROJECTILE_SYRINGE,
-	TF_PROJECTILE_FLARE,
-	TF_PROJECTILE_JAR,
-	TF_PROJECTILE_ARROW,
-	TF_PROJECTILE_FLAME_ROCKET,
-	TF_PROJECTILE_JAR_MILK,
-	TF_PROJECTILE_HEALING_BOLT,
-	TF_PROJECTILE_ENERGY_BALL,
-	TF_PROJECTILE_ENERGY_RING,
-	TF_PROJECTILE_PIPEBOMB_REMOTE_PRACTICE,
-	TF_PROJECTILE_CLEAVER,
-	TF_PROJECTILE_STICKY_BALL,
-	TF_PROJECTILE_CANNONBALL,
-	TF_PROJECTILE_BUILDING_REPAIR_BOLT,
-	TF_PROJECTILE_FESTITIVE_ARROW,
-	TF_PROJECTILE_THROWABLE,
-	TF_PROJECTILE_SPELLFIREBALL,
-	TF_PROJECTILE_FESTITIVE_URINE,
-	TF_PROJECTILE_FESTITIVE_HEALING_BOLT,
-	TF_PROJECTILE_BREADMONSTER_JARATE,
-	TF_PROJECTILE_BREADMONSTER_MADMILK,
-	TF_PROJECTILE_GRAPPLINGHOOK,
-	TF_PROJECTILE_SENTRY_ROCKET,
-	TF_PROJECTILE_BREAD_MONSTER,
-	TF_PROJECTILE_JAR_GAS,
-	TF_PROJECTILE_BALLOFFIRE,
-	// Add new projectiles here.
+
 	TF_NUM_PROJECTILES
 };
 
@@ -491,7 +353,6 @@ extern const char *g_szProjectileNames[];
 #define TF_BURNING_DMG				3
 
 // disguising
-#define TF_TIME_TO_CHANGE_DISGUISE 0.5
 #define TF_TIME_TO_DISGUISE 2.0
 #define TF_TIME_TO_SHOW_DISGUISED_FINISHED_EFFECT 5.0
 
@@ -502,8 +363,7 @@ extern const char *g_szProjectileNames[];
 
 #define PERMANENT_CONDITION		-1
 
-// Most of these conds aren't actually implemented but putting them here for compatibility.
-enum ETF2Conditions
+enum
 {
 	TF_COND_AIMING = 0,		// Sniper aiming, Heavy minigun.
 	TF_COND_ZOOMED,
@@ -516,174 +376,16 @@ enum ETF2Conditions
 	TF_COND_INVULNERABLE_WEARINGOFF,
 	TF_COND_STEALTHED_BLINK,
 	TF_COND_SELECTED_TO_TELEPORT,
-	TF_COND_CRITBOOSTED,
-	TF_COND_TMPDAMAGEBONUS,
-	TF_COND_FEIGN_DEATH,
-	TF_COND_PHASE,
-	TF_COND_STUNNED,
-	TF_COND_OFFENSEBUFF,
-	TF_COND_SHIELD_CHARGE,
-	TF_COND_DEMO_BUFF,
-	TF_COND_ENERGY_BUFF,
-	TF_COND_RADIUSHEAL,
+
+	// The following conditions all expire faster when the player is being healed
+	// If you add a new condition that shouldn't have this behavior, add it before this section.
 	TF_COND_HEALTH_BUFF,
 	TF_COND_BURNING,
-	TF_COND_HEALTH_OVERHEALED,
-	TF_COND_URINE,
-	TF_COND_BLEEDING,
-	TF_COND_DEFENSEBUFF,
-	TF_COND_MAD_MILK,
-	TF_COND_MEGAHEAL,
-	TF_COND_REGENONDAMAGEBUFF,
-	TF_COND_MARKEDFORDEATH,
-	TF_COND_NOHEALINGDAMAGEBUFF,
-	TF_COND_SPEED_BOOST,
-	TF_COND_CRITBOOSTED_PUMPKIN,
-	TF_COND_CRITBOOSTED_USER_BUFF,
-	TF_COND_CRITBOOSTED_DEMO_CHARGE,
-	TF_COND_SODAPOPPER_HYPE,
-	TF_COND_CRITBOOSTED_FIRST_BLOOD,
-	TF_COND_CRITBOOSTED_BONUS_TIME,
-	TF_COND_CRITBOOSTED_CTF_CAPTURE,
-	TF_COND_CRITBOOSTED_ON_KILL,
-	TF_COND_CANNOT_SWITCH_FROM_MELEE,
-	TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK,
-	TF_COND_REPROGRAMMED,
-	TF_COND_CRITBOOSTED_RAGE_BUFF,
-	TF_COND_DEFENSEBUFF_HIGH,
-	TF_COND_SNIPERCHARGE_RAGE_BUFF,
-	TF_COND_DISGUISE_WEARINGOFF,
-	TF_COND_MARKEDFORDEATH_SILENT,
-	TF_COND_DISGUISED_AS_DISPENSER,
-	TF_COND_SAPPED,
-	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE,
-	TF_COND_INVULNERABLE_USER_BUFF,
-	TF_COND_HALLOWEEN_BOMB_HEAD,
-	TF_COND_HALLOWEEN_THRILLER,
-	TF_COND_RADIUSHEAL_ON_DAMAGE,
-	TF_COND_CRITBOOSTED_CARD_EFFECT,
-	TF_COND_INVULNERABLE_CARD_EFFECT,
-	TF_COND_MEDIGUN_UBER_BULLET_RESIST,
-	TF_COND_MEDIGUN_UBER_BLAST_RESIST,
-	TF_COND_MEDIGUN_UBER_FIRE_RESIST,
-	TF_COND_MEDIGUN_SMALL_BULLET_RESIST,
-	TF_COND_MEDIGUN_SMALL_BLAST_RESIST,
-	TF_COND_MEDIGUN_SMALL_FIRE_RESIST,
-	TF_COND_STEALTHED_USER_BUFF,
-	TF_COND_MEDIGUN_DEBUFF,
-	TF_COND_STEALTHED_USER_BUFF_FADING,
-	TF_COND_BULLET_IMMUNE,
-	TF_COND_BLAST_IMMUNE,
-	TF_COND_FIRE_IMMUNE,
-	TF_COND_PREVENT_DEATH,
-	TF_COND_MVM_BOT_STUN_RADIOWAVE,
-	TF_COND_HALLOWEEN_SPEED_BOOST,
-	TF_COND_HALLOWEEN_QUICK_HEAL,
-	TF_COND_HALLOWEEN_GIANT,
-	TF_COND_HALLOWEEN_TINY,
-	TF_COND_HALLOWEEN_IN_HELL,
-	TF_COND_HALLOWEEN_GHOST_MODE,
-	TF_COND_MINICRITBOOSTED_ON_KILL,
-	TF_COND_OBSCURED_SMOKE,
-	TF_COND_PARACHUTE_ACTIVE,
-	TF_COND_BLASTJUMPING,
-	TF_COND_HALLOWEEN_KART,
-	TF_COND_HALLOWEEN_KART_DASH,
-	TF_COND_BALLOON_HEAD,
-	TF_COND_MELEE_ONLY,
-	TF_COND_SWIMMING_CURSE,
-	TF_COND_FREEZE_INPUT,
-	TF_COND_HALLOWEEN_KART_CAGE,
-	TF_COND_DONOTUSE_0,
-	TF_COND_RUNE_STRENGTH,
-	TF_COND_RUNE_HASTE,
-	TF_COND_RUNE_REGEN,
-	TF_COND_RUNE_RESIST,
-	TF_COND_RUNE_VAMPIRE,
-	TF_COND_RUNE_WARLOCK,
-	TF_COND_RUNE_PRECISION,
-	TF_COND_RUNE_AGILITY,
-	TF_COND_GRAPPLINGHOOK,
-	TF_COND_GRAPPLINGHOOK_SAFEFALL,
-	TF_COND_GRAPPLINGHOOK_LATCHED,
-	TF_COND_GRAPPLINGHOOK_BLEEDING,
-	TF_COND_AFTERBURN_IMMUNE,
-	TF_COND_RUNE_KNOCKOUT,
-	TF_COND_RUNE_IMBALANCE,
-	TF_COND_CRITBOOSTED_RUNE_TEMP,
-	TF_COND_PASSTIME_INTERCEPTION,
-	TF_COND_SWIMMING_NO_EFFECTS,
-	TF_COND_PURGATORY,
-	TF_COND_RUNE_KING,
-	TF_COND_RUNE_PLAGUE,
-	TF_COND_RUNE_SUPERNOVA,
-	TF_COND_PLAGUE,
-	TF_COND_KING_BUFFED,
-	TF_COND_TEAM_GLOWS,
-	TF_COND_KNOCKED_INTO_AIR,
-	TF_COND_COMPETITIVE_WINNER,
-	TF_COND_COMPETITIVE_LOSER,
-	TF_COND_HEALING_DEBUFF,
-	TF_COND_PASSTIME_PENALTY_DEBUFF,
-	TF_COND_GRAPPLED_TO_PLAYER,
-	TF_COND_GRAPPLED_BY_PLAYER,
-	TF_COND_PARACHUTE_DEPLOYED,
-	TF_COND_GAS,
-	TF_COND_BURNING_PYRO,
-	TF_COND_ROCKETPACK,
-	TF_COND_LOST_FOOTING,
-	TF_COND_AIR_CURRENT,
 
-	// Add New conds here
-	TF_COND_SLOWED,
+	// Add new conditions that should be affected by healing here
 
 	TF_COND_LAST
 };
-
-extern int condition_to_attribute_translation[];
-extern int g_aPowerupConds[];
-
-#define TF_POWERUP_COND_COUNT ARRAYSIZE( g_aPowerupConds )
-
-bool ConditionExpiresFast( int nCond );
-
-//-----------------------------------------------------------------------------
-// Mediguns.
-//-----------------------------------------------------------------------------
-enum
-{
-	TF_MEDIGUN_STOCK = 0,
-	TF_MEDIGUN_KRITZKRIEG,
-	TF_MEDIGUN_QUICKFIX,
-	TF_MEDIGUN_VACCINATOR,
-	TF_MEDIGUN_OVERHEALER,
-	TF_MEDIGUN_COUNT
-};
-
-enum medigun_charge_types
-{
-	TF_CHARGE_NONE = -1,
-	TF_CHARGE_INVULNERABLE = 0,
-	TF_CHARGE_CRITBOOSTED,
-	// TODO:
-#if 0
-	TF_CHARGE_MEGAHEAL,
-	TF_CHARGE_BULLET_RESIST,
-	TF_CHARGE_BLAST_RESIST,
-	TF_CHARGE_FIRE_RESIST,
-#endif
-	TF_CHARGE_COUNT
-};
-
-typedef struct
-{
-	int condition_enable;
-	int condition_disable;
-	const char *sound_enable;
-	const char *sound_disable;
-} MedigunEffects_t;
-
-extern MedigunEffects_t g_MedigunEffects[];
 
 //-----------------------------------------------------------------------------
 // TF Player State.
@@ -715,14 +417,14 @@ enum {
 // Class data
 //-----------------------------------------------------------------------------
 #define TF_MEDIC_REGEN_TIME			1.0		// Number of seconds between each regen.
-#define TF_MEDIC_REGEN_AMOUNT		3 		// Amount of health regenerated each regen.
+#define TF_MEDIC_REGEN_AMOUNT		1 		// Amount of health regenerated each regen.
 
 //-----------------------------------------------------------------------------
 // Assist-damage constants
 //-----------------------------------------------------------------------------
 #define TF_TIME_ASSIST_KILL				3.0f	// Time window for a recent damager to get credit for an assist for a kill
-#define TF_TIME_ENV_DEATH_KILL_CREDIT	5.0f
 #define TF_TIME_SUICIDE_KILL_CREDIT		10.0f	// Time window for a recent damager to get credit for a kill if target suicides
+#define TF_TIME_ENV_DEATH_KILL_CREDIT	5.0f
 
 //-----------------------------------------------------------------------------
 // Domination/nemesis constants
@@ -904,13 +606,10 @@ extern const char *g_pszHintMessages[];
 #define DMG_USE_HITLOCATIONS	(DMG_AIRBOAT)
 #define DMG_HALF_FALLOFF		(DMG_RADIATION)
 #define DMG_CRITICAL			(DMG_ACID)
-#define DMG_MINICRITICAL		(DMG_NERVEGAS)
 #define DMG_RADIUS_MAX			(DMG_ENERGYBEAM)
 #define DMG_IGNITE				(DMG_PLASMA)
 #define DMG_USEDISTANCEMOD		(DMG_SLOWBURN)		// NEED TO REMOVE CALTROPS
 #define DMG_NOCLOSEDISTANCEMOD	(DMG_POISON)
-
-#define DMG_CRIT			(DMG_CRITICAL|DMG_MINICRITICAL)
 
 #define TF_DMG_SENTINEL_VALUE	0xFFFFFFFF
 
@@ -927,95 +626,11 @@ enum
 	TF_DMG_WRENCH_FIX,
 	TF_DMG_CUSTOM_MINIGUN,
 	TF_DMG_CUSTOM_SUICIDE,
-	TF_DMG_CUSTOM_TAUNTATK_HADOUKEN, // Hadouken
-	TF_DMG_CUSTOM_BURNING_FLARE,
-	TF_DMG_CUSTOM_TAUNTATK_HIGH_NOON, // POW HAHA.
-	TF_DMG_CUSTOM_TAUNTATK_GRAND_SLAM, // Homerun
-	TF_DMG_CUSTOM_PENETRATE_MY_TEAM,
-	TF_DMG_CUSTOM_PENETRATE_ALL_PLAYERS,
-	TF_DMG_CUSTOM_TAUNTATK_FENCING, // Knife Fencing
-	TF_DMG_CUSTOM_PENETRATE_NONBURNING_TEAMMATE,
-	TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB, // Stab Stab Stab
-	TF_DMG_CUSTOM_TELEFRAG,
-	TF_DMG_CUSTOM_BURNING_ARROW,
-	TF_DMG_CUSTOM_FLYINGBURN,
-	TF_DMG_CUSTOM_PUMPKIN_BOMB,
-	TF_DMG_CUSTOM_DECAPITATION, // Sword
-	TF_DMG_CUSTOM_TAUNTATK_GRENADE, // Kamikaze
-	TF_DMG_CUSTOM_BASEBALL,
-	TF_DMG_CUSTOM_CHARGE_IMPACT,
-	TF_DMG_CUSTOM_TAUNTATK_BARBARIAN_SWING, // Sword Decapitation Swing
-	TF_DMG_CUSTOM_AIR_STICKY_BURST,
-	TF_DMG_CUSTOM_DEFENSIVE_STICKY,
-	TF_DMG_CUSTOM_PICKAXE,
-	TF_DMG_CUSTOM_ROCKET_DIRECTHIT, // Crits
-	TF_DMG_CUSTOM_TAUNTATK_UBERSLICE, // I'm going to saw through your BONES
-	TF_DMG_CUSTOM_PLAYER_SENTRY,
-	TF_DMG_CUSTOM_STANDARD_STICKY,
-	TF_DMG_CUSTOM_SHOTGUN_REVENGE_CRIT, // Frontier Justice
-	TF_DMG_CUSTOM_TAUNTATK_ENGINEER_GUITAR_SMASH, // Dischord
-	TF_DMG_CUSTOM_BLEEDING,
-	TF_DMG_CUSTOM_GOLD_WRENCH, // GOLD ICON
-	TF_DMG_CUSTOM_CARRIED_BUILDING,
-	TF_DMG_CUSTOM_COMBO_PUNCH, // Gunslinger 3rd hit
-	TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL, // Organ Grinder
-	TF_DMG_CUSTOM_FISH_KILL, // FISH KILL!
-	TF_DMG_CUSTOM_TRIGGER_HURT, // ???
-	TF_DMG_CUSTOM_DECAPITATION_BOSS, // HHH's Axe
-	TF_DMG_CUSTOM_STICKBOMB_EXPLOSION,
-	TF_DMG_CUSTOM_AEGIS_ROUND, // ???
-	TF_DMG_CUSTOM_FLARE_EXPLOSION, // Detonador
-	TF_DMG_CUSTOM_BOOTS_STOMP,
-	TF_DMG_CUSTOM_PLASMA, // Cow Mangler this should also dissolve ragdoll
-	TF_DMG_CUSTOM_PLASMA_CHARGED, // Cow Mangler Secondary Attack
-	TF_DMG_CUSTOM_PLASMA_GIB, // turn gib instead of dissolve
-	TF_DMG_CUSTOM_PRACTICE_STICKY, // Sticky Jumper
-	TF_DMG_CUSTOM_EYEBALL_ROCKET,
-	TF_DMG_CUSTOM_HEADSHOT_DECAPITATION,
-	TF_DMG_CUSTOM_TAUNTATK_ARMAGEDDON, // Pyro's Rainbow Armageddon
-	TF_DMG_CUSTOM_FLARE_PELLET, // Scorch Shot
-	TF_DMG_CUSTOM_CLEAVER,
-	TF_DMG_CUSTOM_CLEAVER_CRIT,
-	TF_DMG_CUSTOM_SAPPER_RECORDER_DEATH,
-	TF_DMG_CUSTOM_MERASMUS_PLAYER_BOMB,
-	TF_DMG_CUSTOM_MERASMUS_GRENADE,
-	TF_DMG_CUSTOM_MERASMUS_ZAP,
-	TF_DMG_CUSTOM_MERASMUS_DECAPITATION,
-	TF_DMG_CUSTOM_CANNONBALL_PUSH, // Double DONK
-	TF_DMG_CUSTOM_TAUNTATK_ALLCLASS_GUITAR_RIFF, // Unused Shred Alert Damage
-	TF_DMG_CUSTOM_THROWABLE, // Unused throwable bread from expiration date.
-	TF_DMG_CUSTOM_THROWABLE_KILL, // but this one deflectable
-	TF_DMG_CUSTOM_SPELL_TELEPORT, // TELEPORT STUCK
-	TF_DMG_CUSTOM_SPELL_SKELETON,
-	TF_DMG_CUSTOM_SPELL_MIRV, // ???
-	TF_DMG_CUSTOM_SPELL_METEOR,
-	TF_DMG_CUSTOM_SPELL_LIGHTNING,
-	TF_DMG_CUSTOM_SPELL_FIREBALL,
-	TF_DMG_CUSTOM_SPELL_MONOCULUS, // RednBlu Monoculus
-	TF_DMG_CUSTOM_SPELL_BLASTJUMP, // i guess this is just for recent damager.
-	TF_DMG_CUSTOM_SPELL_BATS,
-	TF_DMG_CUSTOM_SPELL_TINY, // TINY STUCK
-	TF_DMG_CUSTOM_KART,
-	TF_DMG_CUSTOM_GIANT_HAMMER, // Necro Smasher
-	TF_DMG_CUSTOM_RUNE_REFLECT, // Reflect Powerup
-	TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE, // burning to death
-	TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING, // hitting to death
-	TF_DMG_CUSTOM_SLAP_KILL, // SLAP KILL!
-	TF_DMG_CUSTOM_CROC, // Mercenary Park Crocodiles
-	TF_DMG_CUSTOM_TAUNTATK_GASBLAST, // Fart of death
-	TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED, // smack to death
-	// put new custom dmg here.
-	LFE_DMG_CUSTOM_LEECHES, // ocean mann become skeleton mann
-	LFE_DMG_CUSTOM_JEEP,
-	LFE_DMG_CUSTOM_AIRBOAT,
-	LFE_DMG_CUSTOM_JALOPY,
+	TF_DMG_TAUNT_PYRO,
+	TF_DMG_TAUNT_HEAVY,
+	TF_DMG_TAUNT_SPY,
+	TF_DMG_TELEFRAG,
 };
-
-//  TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED
-
-#define TF_JUMP_ROCKET	( 1 << 0 )
-#define TF_JUMP_STICKY	( 1 << 1 )
-#define TF_JUMP_OTHER	( 1 << 2 )
 
 enum
 {
@@ -1036,9 +651,9 @@ enum
 #define SENTRYGUN_EYE_OFFSET_LEVEL_1	Vector( 0, 0, 32 )
 #define SENTRYGUN_EYE_OFFSET_LEVEL_2	Vector( 0, 0, 40 )
 #define SENTRYGUN_EYE_OFFSET_LEVEL_3	Vector( 0, 0, 46 )
-#define SENTRYGUN_MAX_SHELLS_1			150
-#define SENTRYGUN_MAX_SHELLS_2			200
-#define SENTRYGUN_MAX_SHELLS_3			200
+#define SENTRYGUN_MAX_SHELLS_1			100
+#define SENTRYGUN_MAX_SHELLS_2			120
+#define SENTRYGUN_MAX_SHELLS_3			144
 #define SENTRYGUN_MAX_ROCKETS			20
 
 // Dispenser's maximum carrying capability
@@ -1051,7 +666,8 @@ enum
 enum
 {
 	OBJ_DISPENSER=0,
-	OBJ_TELEPORTER,
+	OBJ_TELEPORTER_ENTRANCE,
+	OBJ_TELEPORTER_EXIT,
 	OBJ_SENTRYGUN,
 
 	// Attachment Objects
@@ -1103,7 +719,6 @@ typedef enum
 #define TF_SCORE_KILL_ASSISTS_PER_POINT			2
 #define TF_SCORE_TELEPORTS_PER_POINT			2	
 #define TF_SCORE_HEAL_HEALTHUNITS_PER_POINT		600
-#define TF_SCORE_BONUS_PER_POINT				1
 
 //-------------------------
 // Shared Teleporter State
@@ -1117,18 +732,12 @@ enum
 	TELEPORTER_STATE_RECEIVING,					
 	TELEPORTER_STATE_RECEIVING_RELEASE,
 	TELEPORTER_STATE_RECHARGING,				// Waiting for recharge
-	TELEPORTER_STATE_UPGRADING
 };
 
-#define OBJECT_MODE_NONE			0
 #define TELEPORTER_TYPE_ENTRANCE	0
 #define TELEPORTER_TYPE_EXIT		1
 
 #define TELEPORTER_RECHARGE_TIME				10		// seconds to recharge
-
-extern float g_flTeleporterRechargeTimes[];
-extern float g_flDispenserAmmoRates[];
-extern float g_flDispenserHealRates[];
 
 //-------------------------
 // Shared Sentry State
@@ -1150,9 +759,8 @@ enum
 {
 	OF_ALLOW_REPEAT_PLACEMENT				= 0x01,
 	OF_MUST_BE_BUILT_ON_ATTACHMENT			= 0x02,
-	OF_IS_CART_OBJECT						= 0x04, //I'm not sure what the exact name is, but live tf2 uses it for the payload bomb dispenser object
 
-	OF_BIT_COUNT	= 4
+	OF_BIT_COUNT	= 2
 };
 
 //--------------------------------------------------------------------------
@@ -1242,8 +850,7 @@ class CHudTexture;
 class CObjectInfo
 {
 public:
-	CObjectInfo( char *pObjectName );
-	CObjectInfo( const CObjectInfo& obj ) {}
+	CObjectInfo( char *pObjectName );	
 	~CObjectInfo();
 
 	// This is initialized by the code and matched with a section in objects.txt
@@ -1257,14 +864,12 @@ public:
 	int		m_Cost;							// Base object resource cost
 	float	m_CostMultiplierPerInstance;	// Cost multiplier
 	int		m_UpgradeCost;					// Base object resource cost for upgrading
-	float	m_flUpgradeDuration;
 	int		m_MaxUpgradeLevel;				// Max object upgrade level
 	char	*m_pBuilderWeaponName;			// Names shown for each object onscreen when using the builder weapon
 	char	*m_pBuilderPlacementString;		// String shown to player during placement of this object
 	int		m_SelectionSlot;				// Weapon selection slots for objects
 	int		m_SelectionPosition;			// Weapon selection positions for objects
 	bool	m_bSolidToPlayerMovement;
-	bool	m_bUseItemInfo;
 	char    *m_pViewModel;					// View model to show in builder weapon for this object
 	char    *m_pPlayerModel;				// World model to show attached to the player
 	int		m_iDisplayPriority;				// Priority for ordering in the hud display ( higher is closer to top )
@@ -1272,16 +877,10 @@ public:
 	char	*m_pExplodeSound;				// gamesound to play when object explodes
 	char	*m_pExplosionParticleEffect;	// particle effect to play when object explodes
 	bool	m_bAutoSwitchTo;				// should we let players switch back to the builder weapon representing this?
-	char	*m_pUpgradeSound;				// gamesound to play when upgrading
-	int		m_BuildCount;					// ???
-	bool	m_bRequiresOwnBuilder;			// ???
-
-	CUtlVector< const char * > m_AltModes;
 
 	// HUD weapon selection menu icon ( from hud_textures.txt )
 	char	*m_pIconActive;
 	char	*m_pIconInactive;
-	char	*m_pIconMenu;
 
 	// HUD building status icon
 	char	*m_pHudStatusIcon;
@@ -1317,43 +916,6 @@ enum
 
 #define TF_DEATH_ANIMATION_TIME			2.0
 
-// Taunt attack types
-enum
-{
-	TAUNTATK_NONE,
-	TAUNTATK_PYRO_HADOUKEN,
-	TAUNTATK_HEAVY_EAT, // 1st Nom
-	TAUNTATK_HEAVY_RADIAL_BUFF, // 2nd Nom gives hp
-	TAUNTATK_SCOUT_DRINK,
-	TAUNTATK_HEAVY_HIGH_NOON, // POW!
-	TAUNTATK_SCOUT_GRAND_SLAM, // BONK!
-	TAUNTATK_MEDIC_INHALE, // ????
-	TAUNTATK_SPY_FENCING_SLASH_A, // Just lay
-	TAUNTATK_SPY_FENCING_SLASH_B, // Your weapon down
-	TAUNTATK_SPY_FENCING_STAB, // And walk away.
-	TAUNTATK_RPS_KILL,
-	TAUNTATK_SNIPER_ARROW_STAB_IMPALE, // Stab stab
-	TAUNTATK_SNIPER_ARROW_STAB_KILL, // STAB
-	TAUNTATK_SOLDIER_GRENADE_KILL,
-	TAUNTATK_DEMOMAN_BARBARIAN_SWING,
-	TAUNTATK_MEDIC_UBERSLICE_IMPALE, // I'm going to saw
-	TAUNTATK_MEDIC_UBERSLICE_KILL, // THROUGH YOUR BONES!
-	TAUNTATK_FLIP_LAND_PARTICLE,
-	TAUNTATK_RPS_PARTICLE,
-	TAUNTATK_HIGHFIVE_PARTICLE,
-	TAUNTATK_ENGINEER_GUITAR_SMASH,
-	TAUNTATK_ENGINEER_ARM_IMPALE, // Grinder Start
-	TAUNTATK_ENGINEER_ARM_KILL, // Grinder Kill
-	TAUNTATK_ENGINEER_ARM_BLEND, // Grinder Stun and hurt?
-	TAUNTATK_SOLDIER_GRENADE_KILL_WORMSIGN,
-	TAUNTATK_SHOW_ITEM,
-	TAUNTATK_MEDIC_RELEASE_DOVES,
-	TAUNTATK_PYRO_ARMAGEDDON,
-	TAUNTATK_PYRO_SCORCHSHOT,
-	TAUNTATK_ALLCLASS_GUITAR_RIFF,
-	TAUNTATK_MEDIC_HEROIC_TAUNT,
-	TAUNTATK_PYRO_GASBLAST,
-};
 
 typedef enum
 {
@@ -1374,68 +936,18 @@ typedef enum
 
 	HUD_NOTIFY_SPECIAL,
 
-	HUD_NOTIFY_GOLDEN_WRENCH,
-
-	HUD_NOTIFY_RD_ROBOT_ATTACKED,
-
-	HUD_NOTIFY_HOW_TO_CONTROL_GHOST,
-	HUD_NOTIFY_HOW_TO_CONTROL_KART,
-
-	HUD_NOTIFY_PASSTIME_HOWTO,
-	HUD_NOTIFY_PASSTIME_BALL_BASKET,
-	HUD_NOTIFY_PASSTIME_BALL_ENDZONE,
-	HUD_NOTIFY_PASSTIME_SCORE,
-	HUD_NOTIFY_PASSTIME_FRIENDLY_SCORE,
-	HUD_NOTIFY_PASSTIME_ENEMY_SCORE,
-	HUD_NOTIFY_PASSTIME_NO_TELE,
-	HUD_NOTIFY_PASSTIME_NO_CARRY,
-	HUD_NOTIFY_PASSTIME_NO_INVULN,
-	HUD_NOTIFY_PASSTIME_NO_DISGUISE,
-	HUD_NOTIFY_PASSTIME_NO_CLOAK,
-	HUD_NOTIFY_PASSTIME_NO_OOB,
-	HUD_NOTIFY_PASSTIME_NO_HOLSTER,
-	HUD_NOTIFY_PASSTIME_NO_TAUNT,
-
 	NUM_STOCK_NOTIFICATIONS
 } HudNotification_t;
 
-class CTraceFilterIgnorePlayers : public CTraceFilterSimple
+// Taunt attack types
+enum
 {
-public:
-	// It does have a base, but we'll never network anything below here..
-	DECLARE_CLASS( CTraceFilterIgnorePlayers, CTraceFilterSimple );
-
-	CTraceFilterIgnorePlayers( const IHandleEntity *passentity, int collisionGroup )
-		: CTraceFilterSimple( passentity, collisionGroup )
-	{
-	}
-
-	virtual bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
-	{
-		CBaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
-		return pEntity && !pEntity->IsPlayer();
-	}
+	TF_TAUNT_NONE,
+	TF_TAUNT_PYRO,
+	TF_TAUNT_HEAVY,
+	TF_TAUNT_SPY1,
+	TF_TAUNT_SPY2,
+	TF_TAUNT_SPY3,
 };
-
-// Unused death flags
-#define TF_DEATH_FIRST_BLOOD	0x0010
-#define TF_DEATH_FEIGN_DEATH	0x0020
-#define TF_DEATH_GIB			0x0080
-#define TF_DEATH_PURGATORY		0x0100
-#define TF_DEATH_AUSTRALIUM		0x0400
-
-#define HUD_ALERT_SCRAMBLE_TEAMS 0
-
-// Third person camera settings
-#define TF_CAMERA_DIST 64
-#define TF_CAMERA_DIST_RIGHT 30
-#define TF_CAMERA_DIST_UP 0
-
-// Player attached models
-#define TF_SPY_MASK_MODEL "models/player/items/spy_mask.mdl"
-#define TF_POWERUP_SHIELD_MODEL "models/items/powerup_merc_shield.mdl"
-
-
-#define IN_TYPING ( 1 << 31 )
 
 #endif // TF_SHAREDDEFS_H

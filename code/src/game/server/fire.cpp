@@ -1031,11 +1031,7 @@ void CFire::Update( float simTime )
 
 				if (tr.fraction == 1.0 && !tr.startsolid)
 				{
-					#ifdef TF_CLASSIC
-					pOther->TakeDamage( CTakeDamageInfo( this, this, outputDamage, damageFlags, TF_DMG_CUSTOM_BURNING ) );
-					#else
 					pOther->TakeDamage( CTakeDamageInfo( this, this, outputDamage, damageFlags ) );
-					#endif
 				}
 			}
 		}

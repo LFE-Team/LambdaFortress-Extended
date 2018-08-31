@@ -10,8 +10,8 @@
 #endif
 
 #include "cbase.h"
-#include "baseprojectile.h"
 #include "tf_shareddefs.h"
+#include "baseprojectile.h"
 
 // Client specific.
 #ifdef CLIENT_DLL

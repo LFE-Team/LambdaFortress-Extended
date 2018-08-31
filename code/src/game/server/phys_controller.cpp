@@ -965,7 +965,7 @@ void CKeepUpright::Activate()
 		// force it to have perfect damping to compensate.
 		// detect it using the hack of angular limit == 150, attached to a vehicle
 		// Fixing it in the code is the simplest course of action presently
-#if defined ( HL2_DLL ) || defined ( TF_CLASSIC )
+#ifdef HL2_DLL
 		if ( m_angularLimit == 150.0f )
 		{
 			CBaseEntity *pEntity = static_cast<CBaseEntity *>(pPhys->GetGameData());

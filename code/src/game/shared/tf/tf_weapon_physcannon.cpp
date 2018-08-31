@@ -26,8 +26,6 @@
 	#include "te_effect_dispatch.h"
 	#include "util.h"
     #include "physobj.h"
-	#include "tf_gamestats.h"
-	#include "soundent.h"
 #endif
 
 #include "gamerules.h"
@@ -43,7 +41,9 @@
 #include "vphysics/friction.h"
 #include "debugoverlay_shared.h"
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 #include "tf_gamerules.h"
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN	
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -64,8 +64,10 @@ ConVar physcannon_cone( "physcannon_cone", "0.97", FCVAR_REPLICATED | FCVAR_CHEA
 ConVar physcannon_ball_cone( "physcannon_ball_cone", "0.997", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar player_throwforce( "player_throwforce", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 ConVar physcannon_mega_tracelength("physcannon_mega_tracelength", "850");
 ConVar physcannon_mega_pullforce("physcannon_mega_pullforce", "8000");
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 
 #ifndef CLIENT_DLL
@@ -77,17 +79,12 @@ extern ConVar hl2_walkspeed;
 
 	//Precahce the effects
 	CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectPhysCannon )
-	CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE )
-	CLIENTEFFECT_MATERIAL( PHYSCANNON_BEAM_SPRITE_NOZ )
+	CLIENTEFFECT_MATERIAL( "sprites/orangelight1" )
+	CLIENTEFFECT_MATERIAL( "sprites/orangelight1_noz" )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_GLOW_SPRITE )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_ENDCAP_SPRITE )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_CENTER_GLOW )
 	CLIENTEFFECT_MATERIAL( PHYSCANNON_BLAST_SPRITE )
-	CLIENTEFFECT_MATERIAL( MEGACANNON_BEAM_SPRITE )
-	CLIENTEFFECT_MATERIAL( MEGACANNON_GLOW_SPRITE )
-	CLIENTEFFECT_MATERIAL( MEGACANNON_ENDCAP_SPRITE )
-	CLIENTEFFECT_MATERIAL( MEGACANNON_CENTER_GLOW )
-	CLIENTEFFECT_MATERIAL( MEGACANNON_BLAST_SPRITE )
 	CLIENTEFFECT_REGISTER_END()
 
 #endif	// CLIENT_DLL
@@ -96,8 +93,10 @@ extern ConVar hl2_walkspeed;
 
 void PhysCannonBeginUpgrade(CBaseAnimating *pAnim)
 {
-	CWeaponPhysCannon *pWeaponPhyscannon = assert_cast<	CWeaponPhysCannon* >( pAnim );
-	pWeaponPhyscannon->BeginUpgrade();
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+		CWeaponPhysCannon *pWeaponPhyscannon = assert_cast<	CWeaponPhysCannon* >(pAnim);
+		pWeaponPhyscannon->BeginUpgrade();
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 }
 
 bool PhysCannonAccountableForObject( CBaseCombatWeapon *pPhysCannon, CBaseEntity *pObject )
@@ -692,13 +691,20 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	// Holster player's weapon
 	if ( pPlayer->GetActiveWeapon() )
 	{
-		if ( !pPlayer->GetActiveWeapon()->Lower() )
+		if ( !pPlayer->GetActiveWeapon()->Holster() )
 		{
 			Shutdown();
 			return;
 		}
 	}
 
+#ifdef HL2MP
+	CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( pPlayer );
+	if ( pOwner )
+	{
+		pOwner->EnableSprint( false );
+	}
+#endif
 	// If the target is debris, convert it to non-debris
 	if ( pObject->GetCollisionGroup() == COLLISION_GROUP_DEBRIS )
 	{
@@ -716,7 +722,7 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	
 	m_grabController.AttachEntity( pPlayer, pObject, pPhysics, false, vec3_origin, false );
 	
-	//m_pPlayer->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
+	m_pPlayer->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 	m_pPlayer->SetUseEntity( this );
 #endif
 }
@@ -739,28 +745,33 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 
 	m_grabController.DetachEntity( bClearVelocity );
 
-	CTFPlayer *pTFPlayer = ToTFPlayer( m_pPlayer );
-
 	if ( pObject != NULL )
 	{
-		Pickup_OnPhysGunDrop( pObject, pTFPlayer, bThrown ? THROWN_BY_PLAYER : DROPPED_BY_PLAYER );
+		Pickup_OnPhysGunDrop( pObject, m_pPlayer, bThrown ? THROWN_BY_PLAYER : DROPPED_BY_PLAYER );
 	}
 
-	if ( pTFPlayer )
+	if ( m_pPlayer )
 	{
-		pTFPlayer->SetUseEntity( NULL );
-		if ( pTFPlayer->GetActiveTFWeapon() )
+#ifdef HL2MP
+		CHL2MP_Player *pOwner = (CHL2MP_Player *)ToBasePlayer( m_pPlayer );
+		if ( pOwner )
 		{
-			if ( !pTFPlayer->GetActiveTFWeapon()->ReadyIgnoreSequence() )
+			pOwner->EnableSprint( true );
+		}
+#endif
+		m_pPlayer->SetUseEntity( NULL );
+		if ( m_pPlayer->GetActiveWeapon() )
+		{
+			if ( !m_pPlayer->GetActiveWeapon()->Deploy() )
 			{
 				// We tried to restore the player's weapon, but we couldn't.
 				// This usually happens when they're holding an empty weapon that doesn't
 				// autoswitch away when out of ammo. Switch to next best weapon.
-				pTFPlayer->SwitchToNextBestWeapon( NULL );
+				m_pPlayer->SwitchToNextBestWeapon( NULL );
 			}
 		}
 
-		//pTFPlayer->m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
+		m_pPlayer->m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
 	}
 	Remove();
 
@@ -958,13 +969,15 @@ enum
 	EFFECT_LAUNCH,
 };
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 //-----------------------------------------------------------------------------
 // Do we have the super-phys gun?
 //-----------------------------------------------------------------------------
 bool PlayerHasMegaPhysCannon()
 {
-	return ( TFGameRules()->MegaPhyscannonActive() == true );
+	return (TFGameRules()->MegaPhyscannonActive() == true);
 }
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN	
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -983,7 +996,10 @@ CWeaponPhysCannon::CWeaponPhysCannon( void )
 	m_bOldOpen				= false;
 #endif
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	m_bPhyscannonState = false;
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
+
 }
 
 void CWeaponPhysCannon::WeaponReset( void )
@@ -1038,30 +1054,34 @@ void CWeaponPhysCannon::Precache( void )
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
 
-	PrecacheModel( MEGACANNON_BEAM_SPRITE );
-	PrecacheModel( MEGACANNON_GLOW_SPRITE );
-	PrecacheModel( MEGACANNON_ENDCAP_SPRITE );
-	PrecacheModel( MEGACANNON_CENTER_GLOW );
-	PrecacheModel( MEGACANNON_BLAST_SPRITE );
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	PrecacheModel(MEGACANNON_BEAM_SPRITE);
+	PrecacheModel(MEGACANNON_GLOW_SPRITE);
+	PrecacheModel(MEGACANNON_ENDCAP_SPRITE);
+	PrecacheModel(MEGACANNON_CENTER_GLOW);
+	PrecacheModel(MEGACANNON_BLAST_SPRITE);
 
-	PrecacheModel( MEGACANNON_RAGDOLL_BOOGIE_SPRITE );
+	PrecacheModel(MEGACANNON_RAGDOLL_BOOGIE_SPRITE);
 
 	// Precache our alternate model
-	PrecacheModel( MEGACANNON_MODEL );
-
+	PrecacheModel(MEGACANNON_MODEL);
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	PrecacheScriptSound( "Weapon_PhysCannon.HoldSound" );
 
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.DryFire" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Launch" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Pickup" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Drop" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.HoldSound" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.ChargeZap" );
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	PrecacheScriptSound("Weapon_MegaPhysCannon.DryFire");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.Launch");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.Pickup");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.Drop");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.HoldSound");
+	PrecacheScriptSound("Weapon_MegaPhysCannon.ChargeZap");
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	BaseClass::Precache();
 }
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1074,16 +1094,15 @@ void CWeaponPhysCannon::Spawn(void)
 
 	m_bPhyscannonState = IsMegaPhysCannon();
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 	// The megacannon uses a different skin
-	if ( IsMegaPhysCannon() || iType == 1 )
+	if (IsMegaPhysCannon())
 	{
 		m_nSkin = MEGACANNON_SKIN;
 	}
 
 	m_flTimeForceView = -1;
 }
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 //-----------------------------------------------------------------------------
 // Purpose: Restore
@@ -1093,7 +1112,9 @@ void CWeaponPhysCannon::OnRestore()
 	BaseClass::OnRestore();
 	m_grabController.OnRestore();
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	m_bPhyscannonState = IsMegaPhysCannon();
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	// Tracker 8106:  Physcannon effects disappear through level transition, so
 	//  just recreate any effects here
@@ -1184,15 +1205,13 @@ bool CWeaponPhysCannon::Deploy( void )
 	bool bReturn = BaseClass::Deploy();
 
 	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime;
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	// Unbloat our bounds
-	if ( IsMegaPhysCannon() || iType == 1 )
+	if (IsMegaPhysCannon())
 	{
 		CollisionProp()->UseTriggerBounds(false);
 	}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN	
 
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
@@ -1209,9 +1228,8 @@ bool CWeaponPhysCannon::Deploy( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SetViewModel( void )
 {
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( !IsMegaPhysCannon() || iType != 1 )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if (!IsMegaPhysCannon())
 	{
 		BaseClass::SetViewModel();
 		return;
@@ -1225,8 +1243,11 @@ void CWeaponPhysCannon::SetViewModel( void )
 	if (vm == NULL)
 		return;
 
-	vm->SetWeaponModel( MEGACANNON_MODEL, this );
+	vm->SetWeaponModel(MEGACANNON_MODEL, this);
 	//BaseClass::SetViewModel();
+#else
+	BaseClass::SetViewModel();
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 }
 
 //-----------------------------------------------------------------------------
@@ -1315,50 +1336,16 @@ void CWeaponPhysCannon::DryFire( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PrimaryFireEffect( void )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
 
 	pOwner->ViewPunch( QAngle(-6, SharedRandomInt( "physcannonfire", -2,2) ,0) );
 	
-#ifdef GAME_DLL
+#ifndef CLIENT_DLL
 	color32 white = { 245, 245, 255, 32 };
-	color32 redcrit = { 237, 140, 55, 32 };
-	color32 blucrit = { 28, 168, 112, 32 };
-
-	if ( pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted() && pOwner->GetTeamNumber() == TF_STORY_TEAM )
-	{
-		UTIL_ScreenFade( pOwner, redcrit, 0.1f, 0.0f, FFADE_IN );
-	}
-	else if ( pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted() && pOwner->GetTeamNumber() == TF_COMBINE_TEAM )
-	{
-		UTIL_ScreenFade( pOwner, blucrit, 0.1f, 0.0f, FFADE_IN );
-	}
-	else
-	{
-		UTIL_ScreenFade( pOwner, white, 0.1f, 0.0f, FFADE_IN );
-	}
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( IsMegaPhysCannon() || iType == 1 ) // super charged gravity gun + full critical = ???
-	{
-		if ( pOwner->m_Shared.IsCritBoosted() )
-		{
-			UTIL_ScreenShake( GetAbsOrigin(), 20.0f, 200.0, 1.0, 512.0f, SHAKE_START );
-			CSoundEnt::InsertSound( SOUND_DANGER, GetAbsOrigin(), 512, 3.0 );
-
-			WeaponSound( BURST );
-		}
-	}
-	else
-	{
-		if ( pOwner->m_Shared.IsCritBoosted() )
-		{
-			WeaponSound( BURST );
-		}
-	}
+	UTIL_ScreenFade( pOwner, white, 0.1f, 0.0f, FFADE_IN );
 #endif
 
 	WeaponSound( SINGLE );
@@ -1374,28 +1361,13 @@ void CWeaponPhysCannon::PuntNonVPhysics( CBaseEntity *pEntity, const Vector &for
 	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
 		return;
 
-#ifdef GAME_DLL
+#ifndef CLIENT_DLL
 	CTakeDamageInfo	info;
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-
-	info.SetAttacker( pOwner );
+	
+	info.SetAttacker( GetOwner() );
 	info.SetInflictor( this );
 	info.SetDamage( 1.0f );
-
-	if ( pOwner->m_Shared.IsCritBoosted() )
-	{
-		info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN | DMG_CRITICAL );
-	}
-	else if ( pOwner->m_Shared.IsMiniCritBoosted() )
-	{
-		info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN | DMG_MINICRITICAL );
-	}
-	else
-	{
-		info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN );
-	}
-
+	info.SetDamageType( DMG_CRUSH | DMG_PHYSGUN );
 	info.SetDamageForce( forward );	// Scale?
 	info.SetDamagePosition( tr.endpos );
 
@@ -1441,7 +1413,8 @@ void CWeaponPhysCannon::Physgun_OnPhysGunPickup( CBaseEntity *pEntity, CBasePlay
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecForward, trace_t &tr )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+
 
 	if ( m_hLastPuntedObject == pEntity && gpGlobals->curtime < m_flRepuntObjectTime )
 		return;
@@ -1454,28 +1427,13 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 
 	Vector forward = vecForward;
 
-	info.SetAttacker( pOwner );
+	info.SetAttacker( GetOwner() );
 	info.SetInflictor( this );
 	info.SetDamage( 0.0f );
-
-	if ( pOwner->m_Shared.IsCritBoosted() )
-	{
-		info.SetDamageType( DMG_PHYSGUN | DMG_CRITICAL );
-	}
-	else if ( pOwner->m_Shared.IsMiniCritBoosted() )
-	{
-		info.SetDamageType( DMG_PHYSGUN | DMG_MINICRITICAL );
-	}
-	else
-	{
-		info.SetDamageType( DMG_PHYSGUN );
-	}
-
+	info.SetDamageType( DMG_PHYSGUN );
 	pEntity->DispatchTraceAttack( info, forward, &tr );
 	ApplyMultiDamage();
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 
 	if ( Pickup_OnAttemptPhysGunPickup( pEntity, pOwner, PUNTED_BY_CANNON ) )
 	{
@@ -1506,7 +1464,11 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 			forward.Init();
 		}
 
-		if ( ( iType != 1 || !IsMegaPhysCannon() ) && !Pickup_ShouldPuntUseLaunchForces( pEntity, PHYSGUN_FORCE_PUNTED ) )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+		if (!IsMegaPhysCannon() && !Pickup_ShouldPuntUseLaunchForces(pEntity, PHYSGUN_FORCE_PUNTED))
+#else
+		if (!Pickup_ShouldPuntUseLaunchForces(pEntity, PHYSGUN_FORCE_PUNTED))
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 		{
 			int i;
 
@@ -1602,8 +1564,9 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 	CRagdollProp *pRagdoll = dynamic_cast<CRagdollProp*>(pEntity);
 	if (pRagdoll == NULL)
 	{
-		// The jeep being punted needs special force overrides and has to be episodic maps
-		if ( pEntity->GetServerVehicle() && ( TFGameRules()->IsInHL2EP1Map() || TFGameRules()->IsInHL2EP2Map() ) )
+#ifdef HL2_EPISODIC
+		// The jeep being punted needs special force overrides
+		if (pEntity->GetServerVehicle())
 		{
 			// We want the point to emanate low on the vehicle to move it along the ground, not to twist it
 			Vector vecFinalPos = aVel;
@@ -1614,6 +1577,11 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 		{
 			pPhysicsObject->AddVelocity(&vVel, &aVel);
 		}
+#else
+
+		pPhysicsObject->AddVelocity(&vVel, &aVel);
+
+#endif // HL2_EPISODIC
 	}
 	else
 	{
@@ -1633,36 +1601,23 @@ void CWeaponPhysCannon::ApplyVelocityBasedForce( CBaseEntity *pEntity, const Vec
 
 }
 
-#ifdef GAME_DLL 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+#ifndef CLIENT_DLL 
 //-----------------------------------------------------------------------------
 // Punt non-physics
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForward, trace_t &tr)
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-
-	Pickup_OnPhysGunDrop( pEntity, pOwner, LAUNCHED_BY_CANNON );
+	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	Pickup_OnPhysGunDrop(pEntity, pOwner, LAUNCHED_BY_CANNON);
 
 	CTakeDamageInfo	info;
 
 	Vector forward = vecForward;
-	info.SetAttacker( pOwner );
+	info.SetAttacker(GetOwner());
 	info.SetInflictor(this);
 	info.SetDamage(0.0f);
-
-	if ( pOwner->m_Shared.IsCritBoosted() )
-	{
-		info.SetDamageType( DMG_PHYSGUN | DMG_CRITICAL );
-	}
-	else if ( pOwner->m_Shared.IsMiniCritBoosted() )
-	{
-		info.SetDamageType( DMG_PHYSGUN | DMG_MINICRITICAL );
-	}
-	else
-	{
-		info.SetDamageType( DMG_PHYSGUN );
-	}
-
+	info.SetDamageType(DMG_PHYSGUN);
 	pEntity->DispatchTraceAttack(info, forward, &tr);
 	ApplyMultiDamage();
 
@@ -1707,15 +1662,15 @@ void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForwa
 	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 }
 #endif
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 //-----------------------------------------------------------------------------
 // Trace length
 //-----------------------------------------------------------------------------
 float CWeaponPhysCannon::TraceLength()
 {
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( !IsMegaPhysCannon() || iType != 1 )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if (!IsMegaPhysCannon())
 	{
 		return physcannon_tracelength.GetFloat();
 	}
@@ -1723,8 +1678,12 @@ float CWeaponPhysCannon::TraceLength()
 	{
 		return physcannon_mega_tracelength.GetFloat();
 	}
+#else
+	return physcannon_tracelength.GetFloat();
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 }
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 #ifndef CLIENT_DLL 
 //-----------------------------------------------------------------------------
 // If there's any special rejection code you need to do per entity then do it here
@@ -1761,6 +1720,7 @@ bool CWeaponPhysCannon::EntityAllowsPunts(CBaseEntity *pEntity)
 	return true;
 }
 #endif
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1855,120 +1815,75 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 		pEntity = tr.m_pEnt;
 	}
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
 	// See if we hit something
-	if ( pEntity->GetMoveType() != MOVETYPE_VPHYSICS )
+	if (pEntity->GetMoveType() != MOVETYPE_VPHYSICS)
 	{
-		if ( pEntity->m_takedamage == DAMAGE_NO )
+		if (pEntity->m_takedamage == DAMAGE_NO)
 		{
 			DryFire();
 			return;
 		}
-#ifdef GAME_DLL 
-
-		if( pOwner->IsPlayer() && ( !IsMegaPhysCannon() || iType != 1 ) )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+#ifndef CLIENT_DLL 
+		if (GetOwner()->IsPlayer() && !IsMegaPhysCannon())
 		{
 			// Don't let the player zap any NPC's except regular antlions and headcrabs.
-			if( pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion") )
+			if (pEntity->IsNPC() && pEntity->Classify() != CLASS_HEADCRAB && !FClassnameIs(pEntity, "npc_antlion"))
 			{
 				DryFire();
 				return;
 			}
 		}
 
-		pOwner->SpeakWeaponFire();
-		CTF_GameStats.Event_PlayerFiredWeapon( pOwner, false );
-
-		if ( IsMegaPhysCannon() || iType == 1 )
+		if (IsMegaPhysCannon())
 		{
 			//SecobMod__Information: This line was modified with the classify check. This prevents the primary fire being used on the following friendly NPCs: Dog, Monk, Vortigaunt.
-			if ( pEntity->IsNPC() && !pEntity->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && 
-				pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() && !pEntity->InSameTeam( pOwner ) )
+			if (pEntity->IsNPC() && !pEntity->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly())
 			{
-				CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC );
-				CBaseEntity *pRagdoll = CreateServerRagdoll( pEntity->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
-				PhysSetEntityGameFlags( pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS );
-				pRagdoll->SetCollisionBounds( pEntity->CollisionProp()->OBBMins(), pEntity->CollisionProp()->OBBMaxs() );
+				CTakeDamageInfo info(pOwner, pOwner, 1.0f, DMG_GENERIC);
+				CBaseEntity *pRagdoll = CreateServerRagdoll(pEntity->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true);
+				PhysSetEntityGameFlags(pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS);
+				pRagdoll->SetCollisionBounds(pEntity->CollisionProp()->OBBMins(), pEntity->CollisionProp()->OBBMaxs());
 
 				// Necessary to cause it to do the appropriate death cleanup
-				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+				CTakeDamageInfo ragdollInfo(pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
+				pEntity->TakeDamage(ragdollInfo);
 
-				if ( pOwner->m_Shared.IsCritBoosted() )
-				{
-					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
-
-					CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
-					int nNPCCount = g_AI_Manager.NumAIs();
-					for ( int iNPC = 0; iNPC < nNPCCount; ++iNPC )
-					{
-						CAI_BaseNPC *pNPC = ppAIs[iNPC];
-						if ( !pNPC )
-							continue;
-			
-						if ( !pNPC->InSameTeam( pOwner ) )
-							continue;
-						
-						CTakeDamageInfo allInfo( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
-
-						// charged is already op, but what about charged + crit?
-						pNPC->TakeDamage( allInfo );
-					}
-
-				}
-				else if ( pOwner->m_Shared.IsMiniCritBoosted() )
-				{
-					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_MINICRITICAL );
-				}
-				else
-				{
-					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
-				}
-
-				pEntity->TakeDamage( ragdollInfo );
-
-				PuntRagdoll( pRagdoll, forward, tr );
+				PuntRagdoll(pRagdoll, forward, tr);
+				return;
+			}
+			if (pEntity->IsPlayer() && pEntity->GetTeam())
+			{
+				CTakeDamageInfo ragdollInfo(pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
+				pEntity->TakeDamage(ragdollInfo);
 				return;
 			}
 		}
 #endif
+#else
+		if (GetOwner()->IsPlayer())
+		{
+			// Don't let the player zap any NPC's except regular antlions and headcrabs.
+			if (pEntity->IsPlayer())
+			{
+				DryFire();
+				return;
+			}
+		}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 		PuntNonVPhysics( pEntity, forward, tr );
 	}
 	else
 	{
-#ifndef CLIENT_DLL 
-		if ( EntityAllowsPunts( pEntity) == false )
+		if ( pEntity->VPhysicsIsFlesh( ) )
 		{
 			DryFire();
 			return;
 		}
-
-		if ( !IsMegaPhysCannon() || iType != 1 )
-		{
-			if ( pEntity->VPhysicsIsFlesh( ) )
-			{
-				DryFire();
-				return;
-			}
-			PuntVPhysics( pEntity, forward, tr );
-		}
-		else
-		{
-			if ( dynamic_cast<CRagdollProp*>(pEntity) )
-			{
-				PuntRagdoll( pEntity, forward, tr );
-			}
-			else
-			{
-				PuntVPhysics( pEntity, forward, tr );
-			}
-		}
-
-		PrimaryFireEffect();
-#endif
+		PuntVPhysics( pEntity, forward, tr );
 	}
+
 #ifndef CLIENT_DLL
 	pOwner->RemoveInvisibility();
 	pOwner->RemoveDisguise();
@@ -2064,7 +1979,6 @@ void CWeaponPhysCannon::WeaponIdle( void )
 //-----------------------------------------------------------------------------
 bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosition )
 {
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
 	if ( m_bActive )
 		return false;
@@ -2075,13 +1989,11 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 	m_grabController.SetIgnorePitch( false );
 	m_grabController.SetAngleAlignment( 0 );
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	bool bKilledByGrab = false;
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
-	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
-	if ( bIsMegaPhysCannon )
+	bool bIsMegaPhysCannon = IsMegaPhysCannon();
+	if (bIsMegaPhysCannon)
 	{
 		//SecobMod__Information: This prevents the secondary fire being used to grab ragdolls out of certain NPCs: Dog, Monk, Vortigaunt.
 		if (pObject->IsNPC() && (pObject->Classify() == CLASS_PLAYER_ALLY_VITAL) || pObject->ClassMatches("npc_vortigaunt"))
@@ -2089,44 +2001,33 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 			return false;
 		}
 
-		if (pObject->IsNPC() || pObject->IsPlayer() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL))
+		if (pObject->IsNPC() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL))
 		{
 			Assert(pObject->MyNPCPointer()->CanBecomeRagdoll());
-			CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC);
+			CTakeDamageInfo info(GetOwner(), GetOwner(), 1.0f, DMG_GENERIC);
 			CBaseEntity *pRagdoll = CreateServerRagdoll(pObject->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true);
 			PhysSetEntityGameFlags(pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS);
 
 			pRagdoll->SetCollisionBounds(pObject->CollisionProp()->OBBMins(), pObject->CollisionProp()->OBBMaxs());
 
 			// Necessary to cause it to do the appropriate death cleanup
-			CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
-
-			if ( pOwner->m_Shared.IsCritBoosted() )
-			{
-				ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
-			}
-			else if ( pOwner->m_Shared.IsMiniCritBoosted() )
-			{
-				ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_MINICRITICAL );
-			}
-			else
-			{
-				ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
-			}
-
-			pObject->TakeDamage( ragdollInfo );
+			CTakeDamageInfo ragdollInfo(GetOwner(), GetOwner(), 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
+			pObject->TakeDamage(ragdollInfo);
 
 			// Now we act on the ragdoll for the remainder of the time
 			pObject = pRagdoll;
 			bKilledByGrab = true;
 		}
 	}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	IPhysicsObject *pPhysics = pObject->VPhysicsGetObject();
 
 	// Must be valid
 	if ( !pPhysics )
 		return false;
+
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
 	m_bActive = true;
 	if( pOwner )
@@ -2137,7 +2038,11 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 
 	// NOTE :This must happen after OnPhysGunPickup because that can change the mass
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	m_grabController.AttachEntity(pOwner, pObject, pPhysics, bIsMegaPhysCannon, vPosition, (!bKilledByGrab));
+#else
+	m_grabController.AttachEntity(pOwner, pObject, pPhysics, false, vPosition, false);
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	m_hAttachedObject = pObject;
 	m_attachedPositionObjectSpace = m_grabController.m_attachedPositionObjectSpace;
@@ -2224,24 +2129,25 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 			bPull = true;
 		}
 	}
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+	
 	// Find anything within a general cone in front
 	CBaseEntity *pConeEntity = NULL;
-	if ( !bIsMegaPhysCannon )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if (!IsMegaPhysCannon())
 	{
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 		if (!bAttach && !bPull)
 		{
 			pConeEntity = FindObjectInCone(start, forward, physcannon_cone.GetFloat());
 		}
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	}
 	else
 	{
 		pConeEntity = MegaPhysCannonFindObjectInCone(start, forward,
 			physcannon_cone.GetFloat(), physcannon_ball_cone.GetFloat(), bAttach || bPull);
 	}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 		
 	if ( pConeEntity )
 	{
@@ -2305,8 +2211,12 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	Vector	pullDir = start - pEntity->WorldSpaceCenter();
 	VectorNormalize( pullDir );
 
-	pullDir *= bIsMegaPhysCannon ? physcannon_mega_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
-
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	pullDir *= IsMegaPhysCannon() ? physcannon_mega_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
+#else
+	pullDir *= physcannon_pullforce.GetFloat();
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	
 	float mass = PhysGetEntityMass( pEntity );
 	if ( mass < 50.0f )
 	{
@@ -2320,6 +2230,7 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 CBaseEntity *CWeaponPhysCannon::MegaPhysCannonFindObjectInCone(const Vector &vecOrigin,
 	const Vector &vecDir, float flCone, float flCombineBallCone, bool bOnlyCombineBalls)
 {
@@ -2389,6 +2300,7 @@ CBaseEntity *CWeaponPhysCannon::MegaPhysCannonFindObjectInCone(const Vector &vec
 }
 
 //-----------------------------------------------------------------------------
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 CBaseEntity *CWeaponPhysCannon::FindObjectInCone( const Vector &vecOrigin, const Vector &vecDir, float flCone )
 {
 	// Find the nearest physics-based item in a cone in front of me.
@@ -2464,10 +2376,8 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	playerAngles.x = clamp( pitch, -75, 75 );
 	AngleVectors( playerAngles, &forward, &right, &up );
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer->GetActiveWeapon(),iType, set_weapon_mode );
-
-	if ( TFGameRules()->MegaPhyscannonActive())
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if (TFGameRules()->MegaPhyscannonActive())
 	{
 		Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
 		VectorNormalize(los);
@@ -2478,18 +2388,7 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 		if (flDot <= 0.35f)
 			return false;
 	}
-	else if ( iType == 1 )
-	{
-		Vector los = (pEntity->WorldSpaceCenter() - pPlayer->Weapon_ShootPosition());
-		VectorNormalize(los);
-
-		float flDot = DotProduct(los, forward);
-
-		//Let go of the item if we turn around too fast.
-		if (flDot <= 0.35f)
-			return false;
-	}
-	
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	// Now clamp a sphere of object radius at end to the player's bbox
 	Vector radial = physcollision->CollideGetExtent( pPhys->GetCollide(), vec3_origin, pEntity->GetAbsAngles(), -forward );
@@ -2587,16 +2486,16 @@ bool CGrabController::UpdateObject( CBasePlayer *pPlayer, float flError )
 	return true;
 }
 
-void CWeaponPhysCannon::UpdateObject( void )
+void CWeaponPhysCannon::UpdateObject(void)
 {
-	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
-	Assert( pPlayer );
+	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+	Assert(pPlayer);
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
-
-	float flError = bIsMegaPhysCannon ? 18 : 12;
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	float flError = IsMegaPhysCannon() ? 18 : 12;
+#else
+	float flError = 12;
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	if (!m_grabController.UpdateObject(pPlayer, flError))
 	{
@@ -2827,6 +2726,7 @@ void CWeaponPhysCannon::CheckForTarget( void )
 #endif
 }
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 //-----------------------------------------------------------------------------
 // Begin upgrading!
 //-----------------------------------------------------------------------------
@@ -2847,7 +2747,7 @@ void CWeaponPhysCannon::BeginUpgrade()
 
 	SetContextThink(&CWeaponPhysCannon::WaitForUpgradeThink, gpGlobals->curtime + 6.0f, s_pWaitForUpgradeContext);
 
-	EmitSound( "WeaponDissolve.Charge" );
+	EmitSound("WeaponDissolve.Charge");
 
 	// Bloat our bounds
 	CollisionProp()->UseTriggerBounds(true, 32.0f);
@@ -2900,6 +2800,7 @@ void CWeaponPhysCannon::WaitForUpgradeThink()
 
 	SetContextThink(NULL, gpGlobals->curtime, s_pWaitForUpgradeContext);
 }
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 //-----------------------------------------------------------------------------
 // Purpose: Idle effect (pulsing)
@@ -2996,15 +2897,15 @@ void CWeaponPhysCannon::ItemPostFrame()
 		WeaponIdle();
 	}
 
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( IsMegaPhysCannon() || iType == 1 )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if (IsMegaPhysCannon())
 	{
-		if ( !( pOwner->m_nButtons & IN_ATTACK ) )
+		if (!(pOwner->m_nButtons & IN_ATTACK))
 		{
 			m_flNextPrimaryAttack = gpGlobals->curtime;
 		}
 	}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 }
 
 //-----------------------------------------------------------------------------
@@ -3103,24 +3004,28 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 	{
 		return CBasePlayer::CanPickupObject( pTarget, 0, 0 );
 	}
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( !IsMegaPhysCannon() || iType != 1 )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if ( !IsMegaPhysCannon() )
 	{
 		if (pTarget->VPhysicsIsFlesh())
 			return false;
 		return CBasePlayer::CanPickupObject(pTarget, physcannon_maxmass.GetFloat(), 0);
-	}
+}
 
-	if ( pTarget->IsNPC() && pTarget->MyNPCPointer()->CanBecomeRagdoll() )
+	if (pTarget->IsNPC() && pTarget->MyNPCPointer()->CanBecomeRagdoll())
 		return true;
 
-	if ( dynamic_cast<CRagdollProp*>( pTarget ) )
+	if (dynamic_cast<CRagdollProp*>(pTarget))
 		return true;
 
 	// massLimit should be 0 since we would've already called it with physcannon_maxmass.GetFloat() above if it weren't a MegaPhysCannon
 	return CBasePlayer::CanPickupObject(pTarget, 0, 0);
+#else
+	if (pTarget->VPhysicsIsFlesh())
+		return false;
+
+	return CBasePlayer::CanPickupObject(pTarget, physcannon_maxmass.GetFloat(), 0);
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN		
 
 #else
 	return false;
@@ -3160,18 +3065,17 @@ void CWeaponPhysCannon::OpenElements( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::CloseElements( void )
 {
+
 	//TDT USE!!!!!
 	CDisablePredictionFiltering disabler;
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	// The mega cannon cannot be closed!
-	if ( IsMegaPhysCannon() || iType == 1 )
+	if (IsMegaPhysCannon())
 	{
 		OpenElements();
 		return;
 	}
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	if ( m_bOpen == false )
 		return;
@@ -3230,17 +3134,18 @@ CSoundPatch *CWeaponPhysCannon::GetMotorSound(void)
 	{
 		CPASAttenuationFilter filter(this);
 
-		int iType = 0;
-		CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
-		if ( IsMegaPhysCannon() || iType == 1 )
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN		
+		if (IsMegaPhysCannon())
 		{
-			m_sndMotor = ( CSoundEnvelopeController::GetController()).SoundCreate( filter, entindex(), CHAN_STATIC, "Weapon_MegaPhysCannon.HoldSound", ATTN_NORM );
+			m_sndMotor = (CSoundEnvelopeController::GetController()).SoundCreate(filter, entindex(), CHAN_STATIC, "Weapon_MegaPhysCannon.HoldSound", ATTN_NORM);
 		}
 		else
 		{
-			m_sndMotor = ( CSoundEnvelopeController::GetController()).SoundCreate( filter, entindex(), CHAN_STATIC, "Weapon_PhysCannon.HoldSound", ATTN_NORM );
+			m_sndMotor = (CSoundEnvelopeController::GetController()).SoundCreate(filter, entindex(), CHAN_STATIC, "Weapon_PhysCannon.HoldSound", ATTN_NORM);
 		}
+#else
+		m_sndMotor = (CSoundEnvelopeController::GetController()).SoundCreate(filter, entindex(), CHAN_STATIC, "Weapon_PhysCannon.HoldSound", ATTN_NORM);
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN		
 
 	}
 
@@ -3305,11 +3210,6 @@ void CWeaponPhysCannon::StopEffects( bool stopSound )
 void CWeaponPhysCannon::StartEffects( void )
 {
 #ifdef CLIENT_DLL
-
-	/*int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	bool bIsMegaPhysCannon = ( PlayerHasMegaPhysCannon() == true || iType == 1 );*/
-
 	// ------------------------------------------
 	// Core
 	// ------------------------------------------
@@ -3319,7 +3219,7 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[PHYSCANNON_CORE].GetScale().Init( 0.0f, 1.0f, 0.1f );
 		m_Parameters[PHYSCANNON_CORE].GetAlpha().Init( 255.0f, 255.0f, 0.1f );
 		m_Parameters[PHYSCANNON_CORE].SetAttachment( 1 );
-
+		
 		if ( m_Parameters[PHYSCANNON_CORE].SetMaterial( PHYSCANNON_CENTER_GLOW ) == false )
 		{
 			// This means the texture was not found
@@ -3337,6 +3237,7 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[PHYSCANNON_BLAST].GetAlpha().Init( 255.0f, 255.0f, 0.1f );
 		m_Parameters[PHYSCANNON_BLAST].SetAttachment( 1 );
 		m_Parameters[PHYSCANNON_BLAST].SetVisible( false );
+		
 		if ( m_Parameters[PHYSCANNON_BLAST].SetMaterial( PHYSCANNON_BLAST_SPRITE ) == false )
 		{
 			// This means the texture was not found
@@ -3387,7 +3288,7 @@ void CWeaponPhysCannon::StartEffects( void )
 			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlowThirdPerson[i-PHYSCANNON_GLOW1] ) );
 		}
 		m_Parameters[i].SetColor( Vector( 255, 128, 0 ) );
-
+		
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_GLOW_SPRITE ) == false )
 		{
 			// This means the texture was not found
@@ -3416,7 +3317,7 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[i].GetAlpha().SetAbsolute( 255.0f );
 		m_Parameters[i].SetAttachment( LookupAttachment( attachNamesEndCap[i-PHYSCANNON_ENDCAP1] ) );
 		m_Parameters[i].SetVisible( false );
-
+		
 		if ( m_Parameters[i].SetMaterial( PHYSCANNON_ENDCAP_SPRITE ) == false )
 		{
 			// This means the texture was not found
@@ -3724,6 +3625,7 @@ void CWeaponPhysCannon::DoEffect( int effectType, Vector *pos )
 //-----------------------------------------------------------------------------
 const char *CWeaponPhysCannon::GetShootSound(int iIndex) const
 {
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 #ifndef CLIENT_DLL
 	// Just do this normally if we're a normal physcannon
 	if ( PlayerHasMegaPhysCannon() == false )
@@ -3753,6 +3655,9 @@ const char *CWeaponPhysCannon::GetShootSound(int iIndex) const
 	}
 #endif
 	return BaseClass::GetShootSound( iIndex );
+#else
+	return BaseClass::GetShootSound( iIndex );
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 }
 
 #ifdef CLIENT_DLL
@@ -3965,6 +3870,7 @@ CBaseEntity *PhysCannonGetHeldEntity( CBaseCombatWeapon *pActiveWeapon )
 	return NULL;
 }
 
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 CBaseEntity *GetPlayerHeldEntity(CBasePlayer *pPlayer)
 {
 	CBaseEntity *pObject = NULL;
@@ -3977,6 +3883,7 @@ CBaseEntity *GetPlayerHeldEntity(CBasePlayer *pPlayer)
 
 	return pObject;
 }
+#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 float PlayerPickupGetHeldObjectMass( CBaseEntity *pPickupControllerEntity, IPhysicsObject *pHeldObject )
 {
@@ -4013,10 +3920,6 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 	Vector	dir = ( data.m_vOrigin - vecAttachment );
 	VectorNormalize( dir );
 
-	/*int iType = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iType, set_weapon_mode );
-	bool bIsMegaPhysCannon = ( PlayerHasMegaPhysCannon() == true || iType == 1 );*/
-
 	// Do special first-person fix-up
 	if ( pWeapon->GetOwner() == CBasePlayer::GetLocalPlayer() )
 	{
@@ -4043,9 +3946,7 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 		beamInfo.m_nEndAttachment = -1;
 		beamInfo.m_vecStart = vec3_origin;
 		beamInfo.m_vecEnd = data.m_vOrigin;
-
 		beamInfo.m_pszModelName = PHYSCANNON_BEAM_SPRITE;
-
 		beamInfo.m_flHaloScale = 0.0f;
 		beamInfo.m_flLife = 0.1f;
 		beamInfo.m_flWidth = 12.0f;
@@ -4075,74 +3976,3 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 DECLARE_CLIENT_EFFECT( "PhyscannonImpact", CallbackPhyscannonImpact );
 
 #endif
-
-//------------------------------------------------------------------------------------
-// Purpose: Default Touch function for player picking up a weapon (not AI) - OVERRIDE.
-//------------------------------------------------------------------------------------
-void CWeaponPhysCannon::DefaultTouch( CBaseEntity *pOther )
-{
-#ifdef GAME_DLL
-	// Can't pick up dissolving weapons
-	if ( IsDissolving() )
-		return;
-
-	// if it's not a player, ignore
-	CTFPlayer *pPlayer = ToTFPlayer( pOther );
-	if ( !pPlayer )
-		return;
-
-	if( HasSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP ) )
-		return;
-	
-	BaseClass::DefaultTouch( pOther );
-#endif
-}
-
-IMPLEMENT_NETWORKCLASS_ALIASED( WeaponPhysCannon_Secondary, DT_WeaponPhysCannon_Secondary )
-
-BEGIN_NETWORK_TABLE( CWeaponPhysCannon_Secondary, DT_WeaponPhysCannon_Secondary )
-END_NETWORK_TABLE()
-
-#ifdef CLIENT_DLL
-BEGIN_PREDICTION_DATA( CWeaponPhysCannon_Secondary )
-END_PREDICTION_DATA()
-#endif
-
-LINK_ENTITY_TO_CLASS( tf_weapon_physcannon_secondary, CWeaponPhysCannon_Secondary );
-PRECACHE_WEAPON_REGISTER( tf_weapon_physcannon_secondary );
-
-//-----------------------------------------------------------------------------
-// Purpose: Precache
-//-----------------------------------------------------------------------------
-void CWeaponPhysCannon_Secondary::Precache( void )
-{
-#ifndef CLIENT_DLL
-	// Set the proper classname so it loads the correct script file.
-	SetClassname( "tf_weapon_physcannon_secondary" );
-#endif
-	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
-	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
-
-	PrecacheModel( MEGACANNON_BEAM_SPRITE );
-	PrecacheModel( MEGACANNON_GLOW_SPRITE );
-	PrecacheModel( MEGACANNON_ENDCAP_SPRITE );
-	PrecacheModel( MEGACANNON_CENTER_GLOW );
-	PrecacheModel( MEGACANNON_BLAST_SPRITE );
-
-	PrecacheModel( MEGACANNON_RAGDOLL_BOOGIE_SPRITE );
-
-	// Precache our alternate model
-	PrecacheModel( MEGACANNON_MODEL );
-
-
-	PrecacheScriptSound( "Weapon_PhysCannon.HoldSound" );
-
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.DryFire" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Launch" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Pickup" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Drop" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.HoldSound" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.ChargeZap" );
-
-	BaseClass::Precache();
-}

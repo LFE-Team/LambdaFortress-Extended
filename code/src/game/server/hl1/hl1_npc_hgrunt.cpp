@@ -121,8 +121,6 @@ enum
 } HGRUNT_SENTENCE_TYPES;
 
 LINK_ENTITY_TO_CLASS(monster_human_grunt, CNPC_HGrunt);
-LINK_ENTITY_TO_CLASS(monster_human_grunt_red, CNPC_HGrunt);
-LINK_ENTITY_TO_CLASS(monster_human_grunt_blue, CNPC_HGrunt);
 
 //=========================================================
 // monster-specific schedule types
@@ -230,22 +228,6 @@ void CNPC_HGrunt::Spawn()
 	Precache();
 
 	SetModel("models/hgrunt.mdl");
-	if (sv_hl1_hd.GetFloat() == 1)
-	{
-		PrecacheModel("models/hl1port/hgruntbs.mdl");
-        SetModel("models/hl1port/hgruntbs.mdl");			
-	}
-
-	if (FClassnameIs(this, "monster_human_grunt_red"))
-	{		
-        PrecacheModel("models/hgrunt_red.mdl");
-		SetModel("models/hgrunt_red.mdl");
-	}
-	else if (FClassnameIs(this, "monster_human_grunt_blue"))
-	{		
-        PrecacheModel("models/hgrunt_blue.mdl");
-		SetModel("models/hgrunt_blue.mdl");
-	}
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
@@ -356,8 +338,6 @@ void CNPC_HGrunt::Precache()
 	PrecacheScriptSound("HGrunt.Shotgun");
 	PrecacheScriptSound("HGrunt.Pain");
 	PrecacheScriptSound("HGrunt.Die");
-	PrecacheScriptSound("HGrunt.9MM_HD");
-	PrecacheScriptSound("HGrunt.Shotgun_HD");
 
 	BaseClass::Precache();
 
@@ -458,14 +438,7 @@ void CNPC_HGrunt::PrescheduleThink(void)
 
 Class_T	CNPC_HGrunt::Classify(void)
 {
-	if (FClassnameIs(this, "monster_human_grunt_red"))
-	{
-		return CLASS_PLAYER_ALLY;
-	}
-	else (FClassnameIs(this, "monster_human_grunt_blue"));
-	{
-		return CLASS_HUMAN_MILITARY;
-	}
+	return CLASS_HUMAN_MILITARY;
 }
 
 //=========================================================
@@ -879,8 +852,7 @@ void CNPC_HGrunt::TraceAttack(const CTakeDamageInfo &inputInfo, const Vector &ve
 //=========================================================
 int CNPC_HGrunt::OnTakeDamage_Alive(const CTakeDamageInfo &inputInfo)
 {
-	//if ( inputInfo.GetAttacker()->GetTeamNumber() == 3 )
-	if (inputInfo.GetAttacker()->GetTeamNumber() == this->GetTeamNumber())
+	if ( inputInfo.GetAttacker()->GetTeamNumber() == 3 )
 	{
 		return 0;
 	}
@@ -1182,14 +1154,7 @@ void CNPC_HGrunt::HandleAnimEvent(animevent_t *pEvent)
 
 			CPASAttenuationFilter filter3(this);
 			// the first round of the three round burst plays the sound and puts a sound in the world sound list.
-			if (sv_hl1_hd.GetFloat() == 1)
-			{
-				EmitSound(filter3, entindex(), "HGrunt.9MM_HD");
-			}
-			else
-			{
-				EmitSound(filter3, entindex(), "HGrunt.9MM");
-			}
+			EmitSound(filter3, entindex(), "HGrunt.9MM");
 		}
 		else
 		{
@@ -2640,11 +2605,6 @@ void CNPC_DeadHGrunt::Spawn(void)
 {
 	PrecacheModel("models/hgrunt.mdl");
 	SetModel("models/hgrunt.mdl");
-	if (sv_hl1_hd.GetFloat() == 1)
-	{
-		PrecacheModel("models/hl1port/hgruntbs.mdl");
-	    SetModel("models/hl1port/hgruntbs.mdl");		
-	}
 
 	ClearEffects();
 	SetSequence(0);

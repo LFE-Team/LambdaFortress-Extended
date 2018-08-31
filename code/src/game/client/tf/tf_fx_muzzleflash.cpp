@@ -34,8 +34,6 @@ CLIENTEFFECT_REGISTER_END()
 
 ConVar cl_muzzleflash_dlight_1st( "cl_muzzleflash_dlight_1st", "1" );
 
-extern ConVar lfe_muzzlelight;
-
 void TE_DynamicLight( IRecipientFilter& filter, float delay,
 	const Vector* org, int r, int g, int b, int exponent, float radius, float time, float decay, int nLightIndex = LIGHT_INDEX_TE_DYNAMIC );
 
@@ -181,13 +179,6 @@ void TF_3rdPersonMuzzleFlashCallback_SentryGun( const CEffectData &data )
 		case 3:
 			pszMuzzleFlashParticleEffect = "muzzle_sentry2";
 			break;
-		}
-
-		// Muzzleflash light
-		if ( lfe_muzzlelight.GetBool() )
-		{
-			CPVSFilter filter( vec3_origin );
-			TE_DynamicLight( filter, 0.0f, &vec3_origin, 255, 192, 64, 5, 70.0f, 0.05f, 70.0f / 0.05f, LIGHT_INDEX_MUZZLEFLASH );
 		}
 
 		DispatchParticleEffect( pszMuzzleFlashParticleEffect, PATTACH_POINT_FOLLOW, pEnt, iMuzzleFlashAttachment );

@@ -10,7 +10,6 @@
 #endif
 
 #include "tf_item.h"
-#include "SpriteTrail.h"
 
 #ifdef CLIENT_DLL
 #define CCaptureFlag C_CaptureFlag
@@ -88,25 +87,6 @@
 	#define CBaseAnimating C_BaseAnimating
 #endif
 
-#ifdef CLIENT_DLL
-
-typedef struct
-{
-	float maxProgress;
-
-	float vert1x;
-	float vert1y;
-	float vert2x;
-	float vert2y;
-
-	int swipe_dir_x;
-	int swipe_dir_y;
-} progress_segment_t;
-
-extern progress_segment_t Segments[8];
-
-#endif
-
 class CCaptureFlagReturnIcon: public CBaseAnimating
 {
 public:
@@ -159,14 +139,10 @@ public:
 
 	void			FlagTouch( CBaseEntity *pOther );
 
-	const char		*GetTrailEffect( int iTeamNum, char *buf , size_t buflen );
-
 	bool			IsDisabled( void );
 	void			SetDisabled( bool bDisabled );
 
 	CBaseEntity		*GetPrevOwner( void ) { return m_hPrevOwner.Get(); }
-
-	int				GetIntelSkin( int iTeamNum, bool bPickupSkin = false );
 
 // Game DLL Functions
 #ifdef GAME_DLL
@@ -176,12 +152,10 @@ public:
 	void			InputEnable( inputdata_t &inputdata );
 	void			InputDisable( inputdata_t &inputdata );
 	void			InputRoundActivate( inputdata_t &inputdata );
-	void			InputForceReset( inputdata_t &inputdata );
 
 	void			Think( void );
 	
 	void			SetFlagStatus( int iStatus );
-	int				GetFlagStatus( void ) { return m_nFlagStatus; };
 	void			ResetFlagReturnTime( void ) { m_flResetTime = 0; }
 	void			SetFlagReturnIn( float flTime )
 	{
@@ -197,20 +171,16 @@ public:
 	}
 	bool			IsCaptured( void ){ return m_bCaptured; }
 
-	int				UpdateTransmitState( void );
-
-	void			ManageSpriteTrail( void );
-
-	void			CreateReturnIcon( void );
-	void			DestroyReturnIcon( void );
+	int				UpdateTransmitState();
 
 #else // CLIENT DLL Functions
 
-	virtual const char	*GetIDString(void) { return "entity_capture_flag"; };
+	virtual const char	*GetIDString( void ) { return "entity_capture_flag"; };
 
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 
+	CNewParticleEffect	*m_pGlowTrailEffect;
 	CNewParticleEffect	*m_pPaperTrailEffect;
 
 	void			ManageTrailEffects( void );
@@ -218,8 +188,6 @@ public:
 
 	float			GetMaxResetTime() { return m_flMaxResetTime; }
 	float			GetReturnProgress( void );
-
-	void			UpdateGlowEffect( void );
 
 #endif
 
@@ -233,24 +201,17 @@ public:
 	bool			IsHome( void );
 	bool			IsStolen( void );
 
+private:
+
 	void			Reset( void );
 	void			ResetMessage( void );
-
-	CNetworkVar( int,	m_nFlagStatus );
-
-	int					m_nUseTrailEffect;
-	bool				m_bVisibleWhenDisabled;
-	string_t			m_szHudIcon;
-	string_t			m_szModel;
-	string_t			m_szPaperEffect;
-	string_t			m_szTrailEffect;
-	CSpriteTrail		*m_pGlowTrail;
 
 private:
 
 	CNetworkVar( bool,	m_bDisabled );	// Enabled/Disabled?
 	CNetworkVar( int,	m_nGameType );	// Type of game this flag will be used for.
 
+	CNetworkVar( int,	m_nFlagStatus );
 	CNetworkVar( float,	m_flResetTime );		// Time until the flag is placed back at spawn.
 	CNetworkVar( float, m_flMaxResetTime );		// Time the flag takes to return in the current mode
 	CNetworkVar( float, m_flNeutralTime );	// Time until the flag becomes neutral (used for the invade gametype)
@@ -267,18 +228,8 @@ private:
 
 	COutputEvent	m_outputOnReturn;	// Fired when the flag is returned via timer.
 	COutputEvent	m_outputOnPickUp;	// Fired when the flag is picked up.
-	COutputEvent	m_outputOnPickUpTeam1;	
-	COutputEvent	m_outputOnPickUpTeam2;	
-	COutputEvent	m_outputOnPickUpTeam3;	
-	COutputEvent	m_outputOnPickUpTeam4;	
 	COutputEvent	m_outputOnDrop;		// Fired when the flag is dropped.
 	COutputEvent	m_outputOnCapture;	// Fired when the flag is captured.
-	COutputEvent	m_outputOnCapTeam1;	
-	COutputEvent	m_outputOnCapTeam2;
-	COutputEvent	m_outputOnCapTeam3;	
-	COutputEvent	m_outputOnCapTeam4;	
-	COutputEvent	m_outputOnTouchSameTeam;
-
 
 	bool			m_bAllowOwnerPickup;
 
@@ -290,8 +241,6 @@ private:
 	IMaterial	*m_pReturnProgressMaterial_Full;		
 
 	int			m_nOldFlagStatus;
-
-	int			m_iGlowEffectHandle;
 
 #endif
 

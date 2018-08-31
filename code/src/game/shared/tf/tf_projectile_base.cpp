@@ -37,7 +37,7 @@ END_NETWORK_TABLE()
 #ifdef GAME_DLL
 
 BEGIN_DATADESC( CTFBaseProjectile )
-	//DEFINE_FUNCTION( ProjectileTouch ),
+	DEFINE_ENTITYFUNC( ProjectileTouch ),
 	DEFINE_THINKFUNC( FlyThink ),
 END_DATADESC()
 
@@ -166,7 +166,7 @@ CTFBaseProjectile *CTFBaseProjectile::Create( const char *pszClassname, const Ve
 
 	if ( pszDispatchEffect )
 	{
-		/*/ we'd like to just send this projectile to a person in the shooter's PAS. However 
+		// we'd like to just send this projectile to a person in the shooter's PAS. However 
 		// the projectile won't be sent to a player outside of water if shot from inside water
 		// and vice-versa, so we do a trace here to figure out if the trace starts or stops in water.
 		// if it crosses contents, we'll just broadcast the projectile. Otherwise, just send to PVS
@@ -185,7 +185,7 @@ CTFBaseProjectile *CTFBaseProjectile::Create( const char *pszClassname, const Ve
 		{
 			// just the PVS of where the projectile will hit.
 			pFilter = new CPASFilter( tr.endpos );
-		}*/
+		}
 
 		CEffectData data;
 		data.m_vOrigin = vecOrigin;
@@ -283,11 +283,47 @@ C_LocalTempEntity *ClientsideProjectileCallback( const CEffectData &data, float 
 		return NULL;
 	}
 
+	Vector vecSrc = data.m_vOrigin;
+
+	// If we're seeing another player shooting the nails, move their start point to the weapon origin
+	if ( pEnt && pEnt->IsPlayer() )
+	{
+		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+		if ( pLocalPlayer != pEnt || ::input->CAM_IsThirdPerson() )
+		{
+			CTFPlayer *pTFPlayer = ToTFPlayer( pEnt );
+			if ( pTFPlayer->GetActiveWeapon() )
+			{
+				pTFPlayer->GetActiveWeapon()->GetAttachment( "muzzle", vecSrc );
+			}
+		}
+		else
+		{
+			C_BaseEntity *pViewModel = pLocalPlayer->GetViewModel();
+
+			if ( pViewModel )
+			{
+				QAngle vecAngles;
+				int iMuzzleFlashAttachment = pViewModel->LookupAttachment( "muzzle" );
+				pViewModel->GetAttachment( iMuzzleFlashAttachment, vecSrc, vecAngles );
+
+				Vector vForward;
+				AngleVectors( vecAngles, &vForward );
+
+				trace_t trace;	
+				UTIL_TraceLine( vecSrc + vForward * -50, vecSrc, MASK_SOLID, pEnt, COLLISION_GROUP_NONE, &trace );
+
+				vecSrc = trace.endpos;
+			}
+		}
+	}
+
+
 	float flGravity = ( flGravityBase * 800 );
 
 	Vector vecGravity(0,0,-flGravity);
 
-	return tempents->ClientProjectile( data.m_vOrigin, data.m_vStart, vecGravity, data.m_nMaterial, data.m_fFlags, pEnt, "Impact", pszParticleName );
+	return tempents->ClientProjectile( vecSrc, data.m_vStart, vecGravity, data.m_nMaterial, data.m_fFlags, pEnt, "Impact", pszParticleName );
 }
 
 //=============================================================================
@@ -338,26 +374,7 @@ void CTFBaseProjectile::ProjectileTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	// determine the inflictor, which is the weapon which fired this projectile
-	CBaseEntity *pInflictor = NULL;
-	CBaseEntity *pOwner = GetOwnerEntity();
-	if ( pOwner )
-	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( pOwner );
-		if ( pTFPlayer )
-		{
-			pInflictor = pTFPlayer->Weapon_OwnsThisID( GetWeaponID() );
-		}
-	}
-
-	CTakeDamageInfo info;
-	info.SetAttacker( GetOwnerEntity() );		// the player who operated the thing that emitted nails
-	info.SetInflictor( pInflictor );	// the weapon that emitted this projectile
-	info.SetWeapon( pInflictor );
-	info.SetDamage( GetDamage() );
-	info.SetDamageForce( GetDamageForce() );
-	info.SetDamagePosition( GetAbsOrigin() );
-	info.SetDamageType( GetDamageType() );
+	CTakeDamageInfo info( this, GetOwnerEntity(), GetOriginalLauncher(), GetDamageForce(), GetAbsOrigin(), GetDamage(), GetDamageType() );
 
 	Vector dir;
 	AngleVectors( GetAbsAngles(), &dir );
@@ -378,7 +395,9 @@ Vector CTFBaseProjectile::GetDamageForce( void )
 void CTFBaseProjectile::FlyThink( void )
 {
 	QAngle angles;
+
 	VectorAngles( GetAbsVelocity(), angles );
+
 	SetAbsAngles( angles );
 
 	SetNextThink( gpGlobals->curtime + 0.1f );

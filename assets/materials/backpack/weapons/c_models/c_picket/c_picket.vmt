@@ -1,6 +1,0 @@
-"UnlitGeneric"
-{
-	"$baseTexture" "backpack\weapons\c_models\c_picket\c_picket"
-	$translucent 1
-	$vertexcolor 1
-}

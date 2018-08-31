@@ -13,7 +13,6 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFRevolver C_TFRevolver
-#define CTFRevolver_Secondary C_TFRevolver_Secondary
 #endif
 
 //=============================================================================
@@ -27,28 +26,22 @@ public:
 	DECLARE_CLASS( CTFRevolver, CTFWeaponBaseGun );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
-	//DECLARE_ACTTABLE();
+
+// Server specific.
+#ifdef GAME_DLL
+	DECLARE_DATADESC();
+#endif
 
 	CTFRevolver() {}
 	~CTFRevolver() {}
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_REVOLVER; }
-	virtual int	GetDamageType() const;
-	virtual bool CanFireCriticalShot( CBaseEntity *pEntity, bool bIsHeadshot = false );
 
-	float flDistanceToTarget;
+	virtual bool DefaultReload( int iClipSize1, int iClipSize2, int iActivity );
 
 private:
 
 	CTFRevolver( const CTFRevolver & ) {}
-};
-
-class CTFRevolver_Secondary : public CTFRevolver
-{
-public:
-	DECLARE_CLASS( CTFRevolver_Secondary, CTFRevolver );
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
 };
 
 #endif // TF_WEAPON_REVOLVER_H

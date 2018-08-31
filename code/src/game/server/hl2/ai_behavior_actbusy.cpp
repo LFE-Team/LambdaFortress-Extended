@@ -502,11 +502,7 @@ CAI_Hint *CAI_ActBusyBehavior::FindCombatActBusyHintNode()
 {
 	Assert( IsCombatActBusy() );
 
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetOuter()->GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 
 	if( !pPlayer )
 		return NULL;
@@ -551,11 +547,7 @@ CAI_Hint *CAI_ActBusyBehavior::FindCombatActBusyTeleportHintNode()
 {
 	Assert( IsCombatActBusy() );
 
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetOuter()->GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 
 	if( !pPlayer )
 		return NULL;
@@ -711,7 +703,7 @@ bool CAI_ActBusyBehavior::ShouldIgnoreSound( CSound *pSound )
 //-----------------------------------------------------------------------------
 void CAI_ActBusyBehavior::OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttacker )
 {
-	if (IsCombatActBusy() && pSquadmate->IsPlayer() || pSquadmate->IsBaseObject() && IsInSafeZone(pAttacker))
+	if( IsCombatActBusy() && pSquadmate->IsPlayer() && IsInSafeZone( pAttacker ) )
 	{
 		SetCondition( COND_ACTBUSY_AWARE_OF_ENEMY_IN_SAFE_ZONE ); // Break the actbusy, if we're running it.
 		m_flDeferUntil = gpGlobals->curtime + 4.0f;	// Stop actbusying and go deal with that enemy!!
@@ -812,7 +804,7 @@ void CAI_ActBusyBehavior::GatherConditions( void )
 				SetCondition( COND_ACTBUSY_LOST_SEE_ENTITY );
 				m_hActBusyGoal->NPCLostSeeEntity( GetOuter() );
 
-				if( IsCombatActBusy() && (GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL && m_hSeeEntity->IsPlayer() || m_hSeeEntity->IsBaseObject()) )
+				if( IsCombatActBusy() && (GetOuter()->Classify() == CLASS_PLAYER_ALLY_VITAL && m_hSeeEntity->IsPlayer()) )
 				{
 					// Defer any actbusying for several seconds. This serves as a heuristic for waiting
 					// for the player to settle after moving out of the room. This helps Alyx pick a more
@@ -1176,11 +1168,7 @@ int CAI_ActBusyBehavior::SelectScheduleWhileNotBusy( int iBase )
 		{
 			if( IsCombatActBusy() )
 			{
-#ifdef TF_CLASSIC
-				if ( m_hActBusyGoal->IsCombatActBusyTeleportAllowed() && m_iNumConsecutivePathFailures >= 2 && !AI_GetNearestPlayer(GetOuter()->GetAbsOrigin())->FInViewCone(GetOuter()) ) 
-#else
 				if ( m_hActBusyGoal->IsCombatActBusyTeleportAllowed() && m_iNumConsecutivePathFailures >= 2 && !AI_GetSinglePlayer()->FInViewCone(GetOuter()) ) 
-#endif
 				{
 					// Looks like I've tried several times to find a path to a valid hint node and
 					// haven't been able to. This means I'm on a patch of node graph that simply

@@ -1,4 +1,4 @@
-﻿//======== Copyright © 1996-2005, Valve Corporation, All rights reserved. ========//
+﻿//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:			The Medic's Medikit weapon
 //					
@@ -19,9 +19,6 @@
 #include "particles_simple.h"
 #include "c_tf_player.h"
 #include "soundenvelope.h"
-#include "iefx.h"
-#include "dlight.h"
-#include "tempent.h"
 #else
 #include "ndebugoverlay.h"
 #include "tf_player.h"
@@ -34,57 +31,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-const char *g_pszMedigunHealSounds[TF_MEDIGUN_COUNT] =
-{
-	"WeaponMedigun.Healing",
-	"WeaponMedigun.Healing",
-	"Weapon_Quick_Fix.Healing",
-	"WeaponMedigun_Vaccinator.Healing",
-	"WeaponMedigun.Healing"
-};
-
-typedef struct
-{
-	const char *fullcharge;
-	const char *beam;
-	const char *beam_invlun;
-}
-MedigunParticles_t;
-
-MedigunParticles_t g_MedigunParticles[TF_MEDIGUN_COUNT] =
-{
-	// Stock
-	{
-		"medicgun_invulnstatus_fullcharge_%s",
-		"medicgun_beam_%s",
-		"medicgun_beam_%s_invun"
-	},
-	// Kritzkrieg
-	{
-		"medicgun_invulnstatus_fullcharge_%s",
-		"medicgun_beam_attrib_overheal_%s",
-		"medicgun_beam_%s_invun"
-	},
-	// Quick-Fix
-	{
-		"medicgun_invulnstatus_fullcharge_%s",
-		"medicgun_beam_%s",
-		"medicgun_beam_%s_invun"
-	},
-	// Vaccinator
-	{
-		"medicgun_invulnstatus_fullcharge_%s",
-		"medicgun_beam_%s",
-		"medicgun_beam_%s_invun"
-	},
-	// Overhealer
-	{
-		"medicgun_invulnstatus_fullcharge_%s",
-		"overhealer_%s_beam",
-		"overhealer_%s_beam"
-	},
-};
 
 // Buff ranges
 ConVar weapon_medigun_damage_modifier( "weapon_medigun_damage_modifier", "1.5", FCVAR_CHEAT | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Scales the damage a player does while being healed with the medigun." );
@@ -99,6 +45,8 @@ ConVar tf_medigun_autoheal( "tf_medigun_autoheal", "0", FCVAR_CLIENTDLL | FCVAR_
 #if !defined (CLIENT_DLL)
 ConVar tf_medigun_lagcomp(  "tf_medigun_lagcomp", "1", FCVAR_DEVELOPMENTONLY );
 #endif
+
+static const char *s_pszMedigunHealTargetThink = "MedigunHealTargetThink";
 
 #ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------
@@ -123,7 +71,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponMedigun, DT_WeaponMedigun )
 
 BEGIN_NETWORK_TABLE( CWeaponMedigun, DT_WeaponMedigun )
 #if !defined( CLIENT_DLL )
-	SendPropFloat( SENDINFO( m_flChargeLevel ), 0, SPROP_NOSCALE | SPROP_CHANGES_OFTEN ),
+	SendPropFloat( SENDINFO(m_flChargeLevel), 0, SPROP_NOSCALE | SPROP_CHANGES_OFTEN ),
 	SendPropEHandle( SENDINFO( m_hHealingTarget ) ),
 	SendPropBool( SENDINFO( m_bHealing ) ),
 	SendPropBool( SENDINFO( m_bAttacking ) ),
@@ -163,7 +111,6 @@ END_PREDICTION_DATA()
 #define NUM_MEDIGUN_PATH_POINTS		8
 
 extern ConVar tf_max_health_boost;
-extern ConVar lfe_muzzlelight;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -228,24 +175,15 @@ void CWeaponMedigun::WeaponReset( void )
 void CWeaponMedigun::Precache()
 {
 	BaseClass::Precache();
-
-	int iType = GetMedigunType();
-
-	PrecacheScriptSound( g_pszMedigunHealSounds[iType] );
-
 	PrecacheScriptSound( "WeaponMedigun.NoTarget" );
+	PrecacheScriptSound( "WeaponMedigun.Healing" );
 	PrecacheScriptSound( "WeaponMedigun.Charged" );
-
-	PrecacheTeamParticles( g_MedigunParticles[iType].fullcharge );
-	PrecacheTeamParticles( g_MedigunParticles[iType].beam );
-	PrecacheTeamParticles( g_MedigunParticles[iType].beam_invlun );
-
-	// Precache charge sounds.
-	for ( int i = 0; i < TF_CHARGE_COUNT; i++ )
-	{
-		PrecacheScriptSound( g_MedigunEffects[i].sound_enable );
-		PrecacheScriptSound( g_MedigunEffects[i].sound_disable );
-	}
+	PrecacheParticleSystem( "medicgun_invulnstatus_fullcharge_blue" );
+	PrecacheParticleSystem( "medicgun_invulnstatus_fullcharge_red" );
+	PrecacheParticleSystem( "medicgun_beam_red_invun" );
+	PrecacheParticleSystem( "medicgun_beam_red" );
+	PrecacheParticleSystem( "medicgun_beam_blue_invun" );
+	PrecacheParticleSystem( "medicgun_beam_blue" );
 }
 
 //-----------------------------------------------------------------------------
@@ -258,10 +196,10 @@ bool CWeaponMedigun::Deploy( void )
 		m_bHolstered = false;
 
 #ifdef GAME_DLL
-		CTFPlayer *pOwner = GetTFPlayerOwner();
+		CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 		if ( m_bChargeRelease && pOwner )
 		{
-			pOwner->m_Shared.RecalculateChargeEffects();
+			pOwner->m_Shared.RecalculateInvuln();
 		}
 #endif
 
@@ -289,10 +227,10 @@ bool CWeaponMedigun::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 
 #ifdef GAME_DLL
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( pOwner )
 	{
-		pOwner->m_Shared.RecalculateChargeEffects( true );
+		pOwner->m_Shared.RecalculateInvuln( true );
 	}
 #endif
 
@@ -311,16 +249,8 @@ void CWeaponMedigun::UpdateOnRemove( void )
 {
 	RemoveHealingTarget( true );
 	m_bAttacking = false;
-	m_bChargeRelease = false;
-	m_bHolstered = true;
 
-#ifndef CLIENT_DLL
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( pOwner )
-	{
-		pOwner->m_Shared.RecalculateChargeEffects( true );
-	}
-#else
+#ifdef CLIENT_DLL
 	if ( m_bPlayingSound )
 	{
 		m_bPlayingSound = false;
@@ -328,8 +258,9 @@ void CWeaponMedigun::UpdateOnRemove( void )
 	}
 
 	UpdateEffects();
-	ManageChargeEffect();
 #endif
+
+
 
 	BaseClass::UpdateOnRemove();
 }
@@ -355,47 +286,7 @@ float CWeaponMedigun::GetStickRange( void )
 //-----------------------------------------------------------------------------
 float CWeaponMedigun::GetHealRate( void )
 {
-	float flHealRate = (float)m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_nDamage;
-	CALL_ATTRIB_HOOK_FLOAT( flHealRate, mult_medigun_healrate );
-	return flHealRate;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CWeaponMedigun::GetMedigunType( void )
-{
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-
-	if ( iType >= 0 && iType < TF_MEDIGUN_COUNT )
-		return iType;
-
-	AssertMsg( 0, "Invalid medigun type!\n" );
-	return TF_MEDIGUN_STOCK;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-medigun_charge_types CWeaponMedigun::GetChargeType( void )
-{
-	int iChargeType = TF_CHARGE_INVULNERABLE;
-	CALL_ATTRIB_HOOK_INT( iChargeType, set_charge_type );
-
-	if ( iChargeType > TF_CHARGE_NONE && iChargeType < TF_CHARGE_COUNT )
-		return (medigun_charge_types)iChargeType;
-
-	AssertMsg( 0, "Invalid charge type!\n" );
-	return TF_CHARGE_NONE;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-const char *CWeaponMedigun::GetHealSound( void )
-{
-	return g_pszMedigunHealSounds[GetMedigunType()];
+	return (float)m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_nDamage;
 }
 
 //-----------------------------------------------------------------------------
@@ -414,16 +305,16 @@ bool CWeaponMedigun::HealingTarget( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return false;
 
 	CTFPlayer *pTFPlayer = ToTFPlayer( pTarget );
 	if ( pTFPlayer )
 	{
-		bool bStealthed = pTFPlayer->m_Shared.IsStealthed();
+		bool bStealthed = pTFPlayer->m_Shared.InCond( TF_COND_STEALTHED );
 		bool bDisguised = pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED );
- 
+
 		// We can heal teammates and enemies that are disguised as teammates
 		if ( !bStealthed &&
 			( pTFPlayer->InSameTeam( pOwner ) ||
@@ -432,9 +323,8 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 			return true;
 		}
 	}
-
 	else if ( pTarget->IsNPC() )	// See if this is NPC.
- 	{
+	{
 		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pTarget );
 
 		if ( !pNPC->CanBeHealed() )
@@ -445,7 +335,7 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 		{
 			return true;
 		}
- 	}
+	}
 
 	return false;
 }
@@ -455,7 +345,7 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 bool CWeaponMedigun::CouldHealTarget( CBaseEntity *pTarget )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return false;
 
@@ -470,7 +360,7 @@ bool CWeaponMedigun::CouldHealTarget( CBaseEntity *pTarget )
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::MaintainTargetInSlot()
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
 
@@ -531,7 +421,7 @@ void CWeaponMedigun::MaintainTargetInSlot()
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::FindNewTargetForSlot()
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
 
@@ -586,14 +476,14 @@ void CWeaponMedigun::HealTargetThink( void )
 		return;
 	}
 
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
 
 	float flTime = gpGlobals->curtime - pOwner->GetTimeBase();
 	if ( flTime > 5.0f || !AllowedToHealTarget(pTarget) )
 	{
-		RemoveHealingTarget( false );
+		RemoveHealingTarget( true );
 	}
 
 	SetNextThink( gpGlobals->curtime + 0.2f, s_pszMedigunHealTargetThink );
@@ -605,7 +495,7 @@ void CWeaponMedigun::HealTargetThink( void )
 //-----------------------------------------------------------------------------
 bool CWeaponMedigun::FindAndHealTargets( void )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return false;
 
@@ -636,7 +526,7 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 				pTFPlayer->m_Shared.Heal( pOwner, GetHealRate() );
 			}
 
-			pTFPlayer->m_Shared.RecalculateChargeEffects( false );
+			pTFPlayer->m_Shared.RecalculateInvuln( false );
 		}
 		else if ( pNPC )
 		{
@@ -645,7 +535,7 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 				pNPC->Heal( pOwner, GetHealRate() );
 			}
 
-			pNPC->RecalculateChargeEffects( false );
+			pNPC->RecalculateInvuln( false );
 		}
 
 		if ( m_flReleaseStartedAt && m_flReleaseStartedAt < (gpGlobals->curtime + 0.2) )
@@ -669,17 +559,10 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 				{
 					float flChargeAmount = gpGlobals->frametime / weapon_medigun_charge_rate.GetFloat();
 
-					CALL_ATTRIB_HOOK_FLOAT( flChargeAmount, mult_medigun_uberchargerate );
-
-					if ( TFGameRules() && TFGameRules()->InSetup() )
+					// Reduced charge for healing fully healed guys
+					if ( pNewTarget->GetHealth() >= iBoostMax && ( TFGameRules() && !TFGameRules()->InSetup() ) )
 					{
-						// Build charge at triple rate during setup
-						flChargeAmount *= 3.0f;
-					}
-					else if ( pNewTarget->GetHealth() >= iBoostMax )
-					{
-						// Reduced charge for healing fully healed guys
-						flChargeAmount *= 0.5f;
+						flChargeAmount *= 0.5;
 					}
 
 					int iTotalHealers = pTFPlayer->m_Shared.GetNumHealers();
@@ -742,65 +625,6 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponMedigun::AddCharge( float flAmount )
-{
-	float flChargeRate = 1.0f;
-	CALL_ATTRIB_HOOK_FLOAT( flChargeRate, mult_medigun_uberchargerate );
-	if ( !flChargeRate ) // Can't earn uber.
-		return;
-
-	float flNewLevel = min( m_flChargeLevel + flAmount, 1.0 );
-
-#ifdef GAME_DLL
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	CTFPlayer *pHealingTarget = ToTFPlayer( m_hHealingTarget );
-
-	if ( !m_bChargeRelease && flNewLevel >= 1.0 && m_flChargeLevel < 1.0 )
-	{
-		if ( pPlayer )
-		{
-			pPlayer->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_CHARGEREADY );
-		}
-
-		if ( pHealingTarget )
-		{
-			pHealingTarget->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_CHARGEREADY );
-		}
-	}
-#endif
-
-	m_flChargeLevel = flNewLevel;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CWeaponMedigun::SetCharge( float flAmount )
-{
-#ifdef GAME_DLL
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	CTFPlayer *pHealingTarget = ToTFPlayer( m_hHealingTarget );
-
-	if ( !m_bChargeRelease && m_flChargeLevel >= 1.0 && m_flChargeLevel < 1.0 )
-	{
-		if ( pPlayer )
-		{
-			pPlayer->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_CHARGEREADY );
-		}
-
-		if ( pHealingTarget )
-		{
-			pHealingTarget->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_CHARGEREADY );
-		}
-	}
-#endif
-
-	m_flChargeLevel = flAmount;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CWeaponMedigun::ItemHolsterFrame( void )
 {
 	BaseClass::ItemHolsterFrame();
@@ -816,7 +640,7 @@ void CWeaponMedigun::DrainCharge( void )
 	// If we're in charge release mode, drain our charge
 	if ( m_bChargeRelease )
 	{
-		CTFPlayer *pOwner = GetTFPlayerOwner();
+		CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 		if ( !pOwner )
 			return;
 
@@ -836,7 +660,7 @@ void CWeaponMedigun::DrainCharge( void )
 			}
 			*/
 
-			pOwner->m_Shared.RecalculateChargeEffects();
+			pOwner->m_Shared.RecalculateInvuln();
 #endif
 		}
 	}
@@ -847,7 +671,7 @@ void CWeaponMedigun::DrainCharge( void )
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::ItemPostFrame( void )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
 
@@ -937,9 +761,9 @@ bool CWeaponMedigun::Lower( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
+void CWeaponMedigun::RemoveHealingTarget( bool bStopHealingSelf )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
 
@@ -948,22 +772,20 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 	{
 		if ( m_hHealingTarget->IsPlayer() )
 		{
+			CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 			CTFPlayer *pTFPlayer = ToTFPlayer( m_hHealingTarget );
 			pTFPlayer->m_Shared.StopHealing( pOwner );
-			pTFPlayer->m_Shared.RecalculateChargeEffects( false );
+			pTFPlayer->m_Shared.RecalculateInvuln( false );
 
-			if ( !bSilent )
-			{
-				pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pTFPlayer->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
-				pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_STOPPEDHEALING );
-			}
+			pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pTFPlayer->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
+			pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_STOPPEDHEALING );
 		}
 		else if ( m_hHealingTarget->IsNPC() )
 		{
 			CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 			CAI_BaseNPC *pNPC = m_hHealingTarget->MyNPCPointer();
 			pNPC->StopHealing( pOwner );
-			pNPC->RecalculateChargeEffects( false );
+			pNPC->RecalculateInvuln( false );
 
 			pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pNPC->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
 		}
@@ -976,7 +798,7 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 	m_hHealingTarget.Set( NULL );
 
 	// Stop the welding animation
-	if ( m_bHealing && !bSilent )
+	if ( m_bHealing )
 	{
 		SendWeaponAnim( ACT_MP_ATTACK_STAND_POSTFIRE );
 		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_POST );
@@ -995,9 +817,10 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::PrimaryAttack( void )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
+
 
 	if ( !CanAttack() )
 		return;
@@ -1029,33 +852,6 @@ void CWeaponMedigun::PrimaryAttack( void )
 
 			SendWeaponAnim( ACT_MP_ATTACK_STAND_PREFIRE );
 			pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRE );
-			
-#ifdef CLIENT_DLL
-			// Handle the dynamic light
-			if (lfe_muzzlelight.GetBool())
-			{
-				dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-				dl->origin = pOwner->Weapon_ShootPosition();;
-				switch ( GetTFPlayerOwner()->GetTeamNumber() )
-				{
-				case TF_TEAM_RED:
-					dl->color.r = 255;
-					dl->color.g = 80;
-					dl->color.b = 10;
-					break;
-
-				case TF_TEAM_BLUE:
-					dl->color.r = 10;
-					dl->color.g = 80;
-					dl->color.b = 255;
-					break;
-				}
-				dl->die = gpGlobals->curtime + 0.01f;
-				dl->radius = 128.f;
-				dl->decay = 512.0f;
-				dl->style = 1;
-			}
-#endif
 		}
 
 		m_bHealing = true;
@@ -1076,7 +872,7 @@ void CWeaponMedigun::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::SecondaryAttack( void )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
 	if ( !pOwner )
 		return;
 
@@ -1113,7 +909,7 @@ void CWeaponMedigun::SecondaryAttack( void )
 
 #ifdef GAME_DLL
 	CTF_GameStats.Event_PlayerInvulnerable( pOwner );
-	pOwner->m_Shared.RecalculateChargeEffects();
+	pOwner->m_Shared.RecalculateInvuln();
 
 	pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_CHARGEDEPLOYED );
 
@@ -1122,13 +918,13 @@ void CWeaponMedigun::SecondaryAttack( void )
 		if ( m_hHealingTarget->IsPlayer() )
 		{
 			CTFPlayer *pTFPlayer = ToTFPlayer( m_hHealingTarget );
-			pTFPlayer->m_Shared.RecalculateChargeEffects();
+			pTFPlayer->m_Shared.RecalculateInvuln();
 			pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_HEALTARGET_CHARGEDEPLOYED );
 		}
 		else if ( m_hHealingTarget->IsNPC() )
 		{
 			CAI_BaseNPC *pNPC = m_hHealingTarget->MyNPCPointer();
-			pNPC->RecalculateChargeEffects();
+			pNPC->RecalculateInvuln();
 		}
 	}
 
@@ -1170,7 +966,7 @@ void CWeaponMedigun::StopHealSound( bool bStopHealingSound, bool bStopNoTargetSo
 {
 	if ( bStopHealingSound )
 	{
-		StopSound( GetHealSound() );
+		StopSound( "WeaponMedigun.Healing" );
 	}
 
 	if ( bStopNoTargetSound )
@@ -1184,6 +980,19 @@ void CWeaponMedigun::StopHealSound( bool bStopHealingSound, bool bStopNoTargetSo
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::ManageChargeEffect( void )
 {
+	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+	C_BaseEntity *pEffectOwner = this;
+
+	if ( pLocalPlayer == NULL )
+		return;
+
+	if ( pLocalPlayer == GetTFPlayerOwner() )
+	{
+		pEffectOwner = pLocalPlayer->GetViewModel();
+		if ( !pEffectOwner )
+			return;
+	}
+
 	bool bOwnerTaunting = false;
 
 	if ( GetTFPlayerOwner() && GetTFPlayerOwner()->m_Shared.InCond( TF_COND_TAUNTING ) == true )
@@ -1193,14 +1002,24 @@ void CWeaponMedigun::ManageChargeEffect( void )
 
 	if ( GetTFPlayerOwner() && bOwnerTaunting == false && m_bHolstered == false && ( m_flChargeLevel >= 1.0f || m_bChargeRelease == true ) )
 	{
-		C_BaseEntity *pEffectOwner = GetWeaponForEffect();
-
-		if ( pEffectOwner && m_pChargeEffect == NULL )
+		if ( m_pChargeEffect == NULL )
 		{
-			const char *pszEffectName = ConstructTeamParticle( g_MedigunParticles[GetMedigunType()].fullcharge, GetTFPlayerOwner()->GetTeamNumber() );
+			char *pszEffectName = NULL;
+
+			switch( GetTFPlayerOwner()->GetTeamNumber() )
+			{
+			case TF_TEAM_BLUE:
+				pszEffectName = "medicgun_invulnstatus_fullcharge_blue";
+				break;
+			case TF_TEAM_RED:
+				pszEffectName = "medicgun_invulnstatus_fullcharge_red";
+				break;
+			default:
+				pszEffectName = "";
+				break;
+			}
 
 			m_pChargeEffect = pEffectOwner->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "muzzle" );
-			m_hChargeEffectHost = pEffectOwner;
 		}
 
 		if ( m_pChargedSound == NULL )
@@ -1215,16 +1034,9 @@ void CWeaponMedigun::ManageChargeEffect( void )
 	}
 	else
 	{
-		C_BaseEntity *pEffectOwner = m_hChargeEffectHost.Get();
-
 		if ( m_pChargeEffect != NULL )
 		{
-			if ( pEffectOwner )
-			{
-				pEffectOwner->ParticleProp()->StopEmission( m_pChargeEffect );
-				m_hChargeEffectHost = NULL;
-			}
-
+			pEffectOwner->ParticleProp()->StopEmission( m_pChargeEffect );
 			m_pChargeEffect = NULL;
 		}
 
@@ -1291,7 +1103,7 @@ void CWeaponMedigun::ClientThink()
 
 	// Don't show it while the player is dead. Ideally, we'd respond to m_bHealing in OnDataChanged,
 	// but it stops sending the weapon when it's holstered, and it gets holstered when the player dies.
-	CTFPlayer *pFiringPlayer = GetTFPlayerOwner();
+	CTFPlayer *pFiringPlayer = ToTFPlayer( GetOwnerEntity() );
 	if ( !pFiringPlayer || pFiringPlayer->IsPlayerDead() || pFiringPlayer->IsDormant() )
 	{
 		ClientThinkList()->SetNextClientThink( GetClientHandle(), CLIENT_THINK_NEVER );
@@ -1313,7 +1125,7 @@ void CWeaponMedigun::ClientThink()
 		{
 			m_bPlayingSound = true;
 			CLocalPlayerFilter filter;
-			EmitSound( filter, entindex(), GetHealSound() );
+			EmitSound( filter, entindex(), "WeaponMedigun.Healing" );
 		}
 	}
 
@@ -1329,23 +1141,30 @@ void CWeaponMedigun::ClientThink()
 //-----------------------------------------------------------------------------
 void CWeaponMedigun::UpdateEffects( void )
 {
-	CTFPlayer *pFiringPlayer = GetTFPlayerOwner();
+	CTFPlayer *pFiringPlayer = ToTFPlayer( GetOwnerEntity() );
 	if ( !pFiringPlayer )
 		return;
 
-	C_BaseEntity *pEffectOwner = m_hHealingTargetEffect.hOwner.Get();
+	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+	C_BaseEntity *pEffectOwner = this;
+	if ( pLocalPlayer == pFiringPlayer )
+	{
+		pEffectOwner = pLocalPlayer->GetViewModel();
+		if ( !pEffectOwner )
+			return;
+	}
 
 	// Remove all the effects
-	if ( m_hHealingTargetEffect.pEffect && pEffectOwner )
+	if ( pEffectOwner )
 	{
 		pEffectOwner->ParticleProp()->StopEmission( m_hHealingTargetEffect.pEffect );
 	}
-
-	m_hHealingTargetEffect.hOwner = NULL;
+	else
+	{
+		m_hHealingTargetEffect.pEffect->StopEmission();
+	}
 	m_hHealingTargetEffect.pTarget = NULL;
 	m_hHealingTargetEffect.pEffect = NULL;
-
-	pEffectOwner = GetWeaponForEffect();
 
 	// Don't add targets if the medic is dead
 	if ( !pEffectOwner || pFiringPlayer->IsPlayerDead() || !pFiringPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
@@ -1358,13 +1177,33 @@ void CWeaponMedigun::UpdateEffects( void )
 		if ( m_hHealingTargetEffect.pTarget == m_hHealingTarget )
 			return;
 
-		const char *pszFormat = IsReleasingCharge() ? g_MedigunParticles[GetMedigunType()].beam_invlun : g_MedigunParticles[GetMedigunType()].beam;
-		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber() );
+		const char *pszEffectName;
+		if ( pFiringPlayer->GetTeamNumber() == TF_TEAM_RED )
+		{
+			if ( m_bChargeRelease )
+			{
+				pszEffectName = "medicgun_beam_red_invun";
+			}
+			else
+			{
+				pszEffectName = "medicgun_beam_red";
+			}
+		}
+		else
+		{
+			if ( m_bChargeRelease )
+			{
+				pszEffectName = "medicgun_beam_blue_invun";
+			}
+			else
+			{
+				pszEffectName = "medicgun_beam_blue";
+			}
+		}
 
 		CNewParticleEffect *pEffect = pEffectOwner->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "muzzle" );
 		pEffectOwner->ParticleProp()->AddControlPoint( pEffect, 1, m_hHealingTarget, PATTACH_ABSORIGIN_FOLLOW, NULL, Vector(0,0,50) );
 
-		m_hHealingTargetEffect.hOwner = pEffectOwner;
 		m_hHealingTargetEffect.pTarget = m_hHealingTarget;
 		m_hHealingTargetEffect.pEffect = pEffect;
 	}

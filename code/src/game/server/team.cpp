@@ -73,7 +73,6 @@ int GetNumberOfTeams( void )
 	return g_Teams.Size();
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Needed because this is an entity, but should never be used
 //-----------------------------------------------------------------------------

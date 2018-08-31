@@ -24,7 +24,7 @@
 #endif
 
 // Hacky
-#if defined ( TF_CLIENT_DLL ) || defined ( TF_DLL ) || defined ( TF_CLASSIC_CLIENT ) || defined ( TF_CLASSIC )
+#if defined ( TF_CLIENT_DLL ) || defined ( TF_DLL )
 #include "econ_entity.h"
 #endif // TF_CLIENT_DLL || TF_DLL
 
@@ -140,7 +140,7 @@ namespace vgui2
 // Purpose: Base weapon class, shared on client and server
 //-----------------------------------------------------------------------------
 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT ) || defined ( TF_CLASSIC )
+#if defined USES_ECON_ITEMS
 #define BASECOMBATWEAPON_DERIVED_FROM		CEconEntity
 #else 
 #define BASECOMBATWEAPON_DERIVED_FROM		CBaseAnimating
@@ -474,7 +474,7 @@ public:
 
 	virtual bool			OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin, const QAngle& angles, int event, const char *options ) 
 	{ 
-#if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
+#if defined USES_ECON_ITEMS
 		return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
 #else
 		return false; 
@@ -512,7 +512,6 @@ public:
 	virtual bool			ShouldDraw( void );
 	virtual bool			ShouldDrawPickup( void );
 	virtual void			HandleInput( void ) { return; };
-	virtual bool			OverrideViewAngles( void ) { return false; };
 	virtual void			OverrideMouseInput( float *x, float *y ) { return; };
 	virtual int				KeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding ) { return 1; }
 	virtual bool			AddLookShift( void ) { return true; };

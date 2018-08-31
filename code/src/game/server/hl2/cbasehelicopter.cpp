@@ -827,7 +827,11 @@ void CBaseHelicopter::UpdatePlayerDopplerShift( )
 	}
 	else
 	{
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+		CBaseEntity *pPlayer = NULL;
+
+		// UNDONE: this needs to send different sounds to every player for multiplayer.	
+		// FIXME: this isn't the correct way to find a player!!!
+		pPlayer = gEntList.FindEntityByName( NULL, "!player" );
 		if (pPlayer)
 		{
 			Vector dir;

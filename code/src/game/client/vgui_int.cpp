@@ -32,20 +32,10 @@
 #include "tf_gamerules.h"
 #endif
 
-#if defined( TF_CLASSIC_CLIENT )
-#include "tf_mainmenu.h"
-#include "tf_mainmenu_interface.h"
-#include "tier0/icommandline.h"
-#endif
-
 using namespace vgui;
 
 void MP3Player_Create( vgui::VPANEL parent );
 void MP3Player_Destroy();
-
-#if defined( TF_CLASSIC_CLIENT )
-void OverrideMainMenu();
-#endif
 
 #include <vgui/IInputInternal.h>
 vgui::IInputInternal *g_InputInternal = NULL;
@@ -207,7 +197,6 @@ void VGui_CreateGlobalPanels( void )
 {
 	VPANEL gameToolParent = enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS );
 	VPANEL toolParent = enginevgui->GetPanel( PANEL_TOOLS );
-	//VPANEL GameUiDll = enginevgui->GetPanel( PANEL_GAMEUIDLL );
 #if defined( TRACK_BLOCKING_IO )
 	VPANEL gameDLLPanel = enginevgui->GetPanel( PANEL_GAMEDLL );
 #endif
@@ -215,14 +204,6 @@ void VGui_CreateGlobalPanels( void )
 	internalCenterPrint->Create( gameToolParent );
 	loadingdisc->Create( gameToolParent );
 	messagechars->Create( gameToolParent );
-
-#ifdef TF_CLASSIC_CLIENT
-	if ( CommandLine()->CheckParm( "-nonewmenu" ) == NULL )
-	{
-		MainMenu->Create( NULL );
-		OverrideMainMenu();
-	}
-#endif
 
 	// Debugging or related tool
 	fps->Create( toolParent );
@@ -260,11 +241,6 @@ void VGui_Shutdown()
 	loadingdisc->Destroy();
 	internalCenterPrint->Destroy();
 
-#if defined (TF_CLASSIC_CLIENT)
-	//verPanel->Destroy();
-	//MainMenu->Destroy();
-#endif
-
 	if ( g_pClientMode )
 	{
 		g_pClientMode->VGui_Shutdown();
@@ -273,7 +249,6 @@ void VGui_Shutdown()
 	// Make sure anything "marked for deletion"
 	//  actually gets deleted before this dll goes away
 	vgui::ivgui()->RunFrame();
-
 }
 
 static ConVar cl_showpausedimage( "cl_showpausedimage", "1", 0, "Show the 'Paused' image when game is paused." );

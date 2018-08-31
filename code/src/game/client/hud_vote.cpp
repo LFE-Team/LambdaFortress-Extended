@@ -29,17 +29,13 @@
 #include <vgui_controls/ImageList.h>
 #include "vgui_avatarimage.h"
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
-#include "ienginevgui.h"
 #ifdef TF_CLIENT_DLL
+#include "ienginevgui.h"
 #include "tf_gcmessages.h"
-#endif
 #include "c_tf_player.h"
 #include "econ_notifications.h"
-#ifdef TF_CLIENT_DLL
 #include "confirm_dialog.h"
 #include "gc_clientsystem.h"
-#endif
 #include "tf_gamerules.h"
 #include "c_playerresource.h"
 #include "c_tf_objective_resource.h"
@@ -51,7 +47,7 @@
 ConVar cl_vote_ui_active_after_voting( "cl_vote_ui_active_after_voting", "0" );
 ConVar cl_vote_ui_show_notification( "cl_vote_ui_show_notification", "0" );
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -72,14 +68,12 @@ public:
 	}
 	virtual void Trigger()
 	{
-#ifdef TF_CLIENT_DLL
 		CTFGenericConfirmDialog *pDialog = ShowConfirmDialog( "#GameUI_Vote_Notification_Title", 
 															  "#GameUI_Vote_Notification_Text", 
 															  "#GameUI_Vote_Notification_View", 
 															  "#cancel", &ConfirmShowVoteSetup );
 		pDialog->SetContext( this );
 		pDialog->AddStringToken( "initiator", m_wszPlayerName );
-#endif
 		// so we aren't deleted
 		SetIsInUse( true );
 	}
@@ -205,7 +199,7 @@ CVoteSetupDialog::CVoteSetupDialog( vgui::Panel *parent ) : BaseClass( parent, "
 	m_pComboBox = new ComboBox( this, "ComboBox", 5, false );
 	m_pImageList = NULL;
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ClientScheme.res", "ClientScheme");
 	SetScheme(scheme);
 #else
@@ -402,7 +396,7 @@ void CVoteSetupDialog::AddVoteIssueParams_MapCycle( CUtlStringList &m_VoteSetupM
 	}
 }
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 //-----------------------------------------------------------------------------
 // Purpose: Feeds the server's PopFiles to the parameters dialog
 //-----------------------------------------------------------------------------
@@ -695,7 +689,7 @@ void CVoteSetupDialog::OnItemSelected( vgui::Panel *panel )
 					}
 				}
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 				SetDialogVariable( "combo_label", g_pVGuiLocalize->Find( "#TF_VoteKickReason" ) );
 				m_pComboBox->AddItem( g_pVGuiLocalize->Find( "TF_VoteKickReason_Other" ), new KeyValues( "other" ) );
 				m_pComboBox->AddItem( g_pVGuiLocalize->Find( "TF_VoteKickReason_Cheating" ), new KeyValues( "cheating" ) );
@@ -873,7 +867,7 @@ CHudVote::CHudVote( const char *pElementName ) : CHudElement( pElementName ), Ba
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ClientScheme.res", "ClientScheme");
 	SetScheme(scheme);
 #endif
@@ -1390,7 +1384,7 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 		gameeventmanager->FireEventClientSide( event );
 	}
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 	if ( bShowNotif )
 	{
 		NotificationQueue_Add( new CTFVoteNotification( pszCallerName ) );
@@ -1622,7 +1616,7 @@ void CHudVote::PropagateOptionParameters( void )
 
 	m_pVoteSetupDialog->AddVoteIssueParams_MapCycle( m_VoteSetupMapCycle );
 
-#if defined TF_CLIENT_DLL || defined TF_CLASSIC_CLIENT
+#ifdef TF_CLIENT_DLL
 	m_pVoteSetupDialog->AddVoteIssueParams_PopFiles( m_VoteSetupPopFiles );
 #endif // TF_CLIENT_DLL
 

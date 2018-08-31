@@ -174,11 +174,8 @@ private:
 #ifndef HL2_EPISODIC
 	CBaseEntity *GetActor()		{ return m_hActor.Get();			}
 #endif
-#ifdef TF_CLASSIC
-	CBasePlayer *GetPlayer()	{ return UTIL_GetNearestPlayer( GetAbsOrigin() );	}
-#else
 	CBasePlayer *GetPlayer()	{ return UTIL_GetLocalPlayer();	}
-#endif
+
 	//---------------------------------
 
 	// @Note (toml 07-17-02): At some point, it may be desireable to switch to using function objects instead of functions. Probably

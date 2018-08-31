@@ -109,7 +109,8 @@ bool CTFWeaponBaseGrenade::Deploy( void )
 //-----------------------------------------------------------------------------
 void CTFWeaponBaseGrenade::Prime() 
 {
-	m_flThrowTime = gpGlobals->curtime + GetTFWpnData().m_flPrimerTime;
+	CTFWeaponInfo weaponInfo = GetTFWpnData();
+	m_flThrowTime = gpGlobals->curtime + weaponInfo.m_flPrimerTime;
 	m_bPrimed = true;
 
 #ifndef CLIENT_DLL
@@ -289,7 +290,7 @@ void CTFWeaponBaseGrenade::ItemPostFrame()
 		// tell our player that we're all done with the grenade throw.
 		if ( IsEffectActive(EF_NODRAW) )
 		{
-			//pPlayer->FinishThrowGrenade();
+			pPlayer->FinishThrowGrenade();
 			return;
 		}
 

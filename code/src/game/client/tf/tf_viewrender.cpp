@@ -11,7 +11,6 @@
 #include "tf_viewrender.h"
 #include "viewpostprocess.h"
 #include <game/client/iviewport.h>
-#include "c_point_camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -14,14 +14,14 @@
 #include "vgui_controls/AnimationController.h"
 #include "c_playerresource.h"
 #include "c_team_objectiveresource.h"
-#if defined( TF_CLIENT_DLL ) || defined ( TF_CLASSIC_CLIENT )
+#if defined( TF_CLIENT_DLL ) || defined( TF_CLASSIC_CLIENT )
 #include "tf_gamerules.h"
 #include "c_tf_player.h"
 #endif // TF_CLIENT_DLL
 #else
 #include "team.h"
 #include "team_objectiveresource.h"
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#if defined( TF_DLL ) || defined( TF_CLASSIC )
 #include "tf_player.h"
 #endif // TF_DLL
 #endif
@@ -44,7 +44,7 @@
 #define ROUND_SETUP_2SECS	"Announcer.RoundBegins2Seconds"
 #define ROUND_SETUP_1SECS	"Announcer.RoundBegins1Seconds"
 
-#if defined( TF_CLIENT_DLL ) || defined ( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 #define MERASMUS_SETUP_5SECS	"Merasmus.RoundBegins5Seconds"
 #define MERASMUS_SETUP_4SECS	"Merasmus.RoundBegins4Seconds"
 #define MERASMUS_SETUP_3SECS	"Merasmus.RoundBegins3Seconds"
@@ -82,7 +82,7 @@ enum
 
 extern bool IsInCommentaryMode();
 
-#if defined( GAME_DLL ) && ( defined( TF_DLL ) || defined( TF_CLASSIC ) )
+#if defined( GAME_DLL ) && (defined( TF_DLL ) || defined( TF_CLASSIC ))
 ConVar tf_overtime_nag( "tf_overtime_nag", "0", FCVAR_NOTIFY, "Announcer overtime nag." );
 #endif
 
@@ -292,7 +292,7 @@ void CTeamRoundTimer::Precache( void )
 	PrecacheScriptSound( ROUND_TIMER_TIME_ADDED_WINNER );
 	PrecacheScriptSound( ROUND_START_BELL );
 
-#if defined( TF_CLIENT_DLL ) || defined ( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 	PrecacheScriptSound( MERASMUS_SETUP_5SECS );
 	PrecacheScriptSound( MERASMUS_SETUP_4SECS );
 	PrecacheScriptSound( MERASMUS_SETUP_3SECS );

@@ -22,8 +22,6 @@ struct WeaponData_t
 {
 	int		m_nDamage;
 	int		m_nBulletsPerShot;
-	int		m_nBurstSize;
-	float	m_flBurstDelay;
 	float	m_flRange;
 	float	m_flSpread;
 	float	m_flPunchAngle;
@@ -43,8 +41,6 @@ struct WeaponData_t
 	{
 		m_nDamage = 0;
 		m_nBulletsPerShot = 0;
-		m_nBurstSize = 0;
-		m_flBurstDelay = 0.0f;
 		m_flRange = 0.0f;
 		m_flSpread = 0.0f;
 		m_flPunchAngle = 0.0f;
@@ -94,7 +90,6 @@ public:
 	// Muzzle flash
 	char	m_szMuzzleFlashModel[128];
 	float	m_flMuzzleFlashModelDuration;
-	float	m_flMuzzleFlashModelScale;
 	char	m_szMuzzleFlashParticleEffect[128];
 
 	// Tracer
@@ -109,16 +104,10 @@ public:
 	char	m_szExplosionEffect[128];
 	char	m_szExplosionPlayerEffect[128];
 	char	m_szExplosionWaterEffect[128];
-	char	m_szExplosionEffect_Crit[128];
-	char	m_szExplosionPlayerEffect_Crit[128];
-	char	m_szExplosionWaterEffect_Crit[128];
-	bool	m_bHasTeamColoredExplosions;
 
 	bool	m_bDontDrop;
 
-	// DM specific things
-	int		m_iMaxAmmo;
-	int		m_iSpawnAmmo;
+	bool	m_bUseHands;
 };
 
 #endif // TF_WEAPON_PARSE_H

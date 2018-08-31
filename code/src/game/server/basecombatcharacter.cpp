@@ -197,6 +197,9 @@ END_SEND_TABLE();
 // This table encodes the CBaseCombatCharacter
 //-----------------------------------------------------------------------------
 IMPLEMENT_SERVERCLASS_ST(CBaseCombatCharacter, DT_BaseCombatCharacter)
+#ifdef GLOWS_ENABLE
+	SendPropBool( SENDINFO( m_bGlowEnabled ) ),
+#endif // GLOWS_ENABLE
 	// Data that only gets sent to the local player.
 	SendPropDataTable( "bcc_localdata", 0, &REFERENCE_SEND_TABLE(DT_BCCLocalPlayerExclusive), SendProxy_SendBaseCombatCharacterLocalDataTable ),
 
@@ -259,18 +262,6 @@ bool CBaseCombatCharacter::HasHumanGibs( void )
 		return true;
 	}
 
-#elif defined( TF_CLASSIC )
-	Class_T myClass = Classify();
-	if ( myClass == CLASS_CITIZEN_PASSIVE   ||
-		 myClass == CLASS_CITIZEN_REBEL		||
-		 myClass == CLASS_COMBINE			||
-		 myClass == CLASS_CONSCRIPT			||
-		 myClass == CLASS_METROPOLICE		||
-		 myClass == CLASS_HUMAN_MILITARY	||
-		 myClass == CLASS_PLAYER_ALLY		||
-		 myClass == CLASS_HUMAN_PASSIVE		||
-		 myClass == CLASS_PLAYER )	
-		 return true;
 #endif
 
 	return false;
@@ -299,21 +290,6 @@ bool CBaseCombatCharacter::HasAlienGibs( void )
 		 myClass == CLASS_ALIEN_PREY )
 	{
 		return true;
-	}
-#elif defined( TF_CLASSIC )
-	Class_T myClass = Classify();
-	if ( myClass == CLASS_BARNACLE		 || 
-		 myClass == CLASS_STALKER		 ||
-		 myClass == CLASS_ZOMBIE		 ||
-		 myClass == CLASS_VORTIGAUNT	 ||
-		 myClass == CLASS_ALIEN_MILITARY ||
-		 myClass == CLASS_ALIEN_MONSTER ||
-		 myClass == CLASS_INSECT ||
-		 myClass == CLASS_ALIEN_PREDATOR ||
-		 myClass == CLASS_ALIEN_PREY ||
-		 myClass == CLASS_HEADCRAB )
-	{
-		 return true;
 	}
 #endif
 
@@ -363,7 +339,7 @@ bool CBaseCombatCharacter::FVisible( CBaseEntity *pEntity, int traceMask, CBaseE
 	VPROF( "CBaseCombatCharacter::FVisible" );
 
 	if ( traceMask != MASK_BLOCKLOS || !ShouldUseVisibilityCache() || pEntity == this
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#if defined(HL2_DLL)
 		 || Classify() == CLASS_BULLSEYE || pEntity->Classify() == CLASS_BULLSEYE 
 #endif
 		 )
@@ -774,6 +750,10 @@ CBaseCombatCharacter::CBaseCombatCharacter( void )
 	m_impactEnergyScale = 1.0f;
 
 	m_bForceServerRagdoll = ai_force_serverside_ragdoll.GetBool();
+
+#ifdef GLOWS_ENABLE
+	m_bGlowEnabled.Set( false );
+#endif // GLOWS_ENABLE
 }
 
 //------------------------------------------------------------------------------
@@ -1672,7 +1652,7 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 				pDroppedWeapon->Dissolve( NULL, gpGlobals->curtime, false, nDissolveType );
 			}
 		}
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 		else if ( PlayerHasMegaPhysCannon() )
 		{
 			if ( pDroppedWeapon )
@@ -2915,7 +2895,7 @@ CBaseEntity *CBaseCombatCharacter::Weapon_FindUsable( const Vector &range )
 {
 	bool bConservative = false;
 
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	if( hl2_episodic.GetBool() && !GetActiveWeapon() )
 	{
 		// Unarmed citizens are conservative in their weapon finding
@@ -3116,7 +3096,7 @@ float CBaseCombatCharacter::CalculatePhysicsStressDamage( vphysics_objectstress_
 
 void CBaseCombatCharacter::ApplyStressDamage( IPhysicsObject *pPhysics, bool bRequireLargeObject )
 {
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
+#ifdef HL2_DLL
 	if( Classify() == CLASS_PLAYER_ALLY || Classify() == CLASS_PLAYER_ALLY_VITAL )
 	{
 		// Bypass stress completely for allies and vitals.
@@ -3307,6 +3287,33 @@ float CBaseCombatCharacter::GetSpreadBias( CBaseCombatWeapon *pWeapon, CBaseEnti
 		return pWeapon->GetSpreadBias(GetCurrentWeaponProficiency());
 	return 1.0;
 }
+
+#ifdef GLOWS_ENABLE
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::AddGlowEffect( void )
+{
+	SetTransmitState( FL_EDICT_ALWAYS );
+	m_bGlowEnabled.Set( true );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::RemoveGlowEffect( void )
+{
+	m_bGlowEnabled.Set( false );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseCombatCharacter::IsGlowEffectActive( void )
+{
+	return m_bGlowEnabled;
+}
+#endif // GLOWS_ENABLE
 
 //-----------------------------------------------------------------------------
 // Assume everyone is average with every weapon. Override this to make exceptions.

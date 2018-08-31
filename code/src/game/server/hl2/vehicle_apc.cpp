@@ -181,7 +181,7 @@ void CPropAPC::CreateAPCLaserDot( void )
 //-----------------------------------------------------------------------------
 bool CPropAPC::ShouldAttractAutoAim( CBaseEntity *pAimingEnt )
 {
-	if( g_pGameRules->GetAutoAimMode() == AUTOAIM_ON_CONSOLE && pAimingEnt->IsPlayer() || pAimingEnt->IsBaseObject() && GetDriver() )
+	if( g_pGameRules->GetAutoAimMode() == AUTOAIM_ON_CONSOLE && pAimingEnt->IsPlayer() && GetDriver() )
 	{
 		return true;
 	}
@@ -250,15 +250,14 @@ Class_T	CPropAPC::ClassifyPassenger( CBaseCombatCharacter *pPassenger, Class_T d
 // Purpose: Damage events as modified for the passenger of the APC, not the APC itself
 //-----------------------------------------------------------------------------
 float CPropAPC::PassengerDamageModifier( const CTakeDamageInfo &info ) 
-{
-#ifndef TF_CLASSIC // tf2 weapon is op.
+{ 
 	CTakeDamageInfo DmgInfo = info;
 
 	// bullets, slashing and headbutts don't hurt us in the apc, neither do rockets
 	if( (DmgInfo.GetDamageType() & DMG_BULLET) || (DmgInfo.GetDamageType() & DMG_SLASH) ||
 		(DmgInfo.GetDamageType() & DMG_CLUB) || (DmgInfo.GetDamageType() & DMG_BLAST) )
 		return (0);
-#endif
+
 	// Accept everything else by default
 	return 1.0; 
 }
@@ -549,16 +548,14 @@ int CPropAPC::OnTakeDamage( const CTakeDamageInfo &info )
 
 	m_OnDamaged.FireOutput( info.GetAttacker(), this );
 
-	if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
+	if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
 	{
 		m_OnDamagedByPlayer.FireOutput( info.GetAttacker(), this );
 	}
 
 	CTakeDamageInfo dmgInfo = info;
-	#ifndef TF_CLASSIC
 	if ( dmgInfo.GetDamageType() & (DMG_BLAST | DMG_AIRBOAT) )
 	{
-	#endif
 		int nPrevHealth = GetHealth();
 
 		m_iHealth -= dmgInfo.GetDamage();
@@ -585,9 +582,7 @@ int CPropAPC::OnTakeDamage( const CTakeDamageInfo &info )
 				ExplodeAndThrowChunk( dmgInfo.GetDamagePosition() );
 			}
 		}
-	#ifndef TF_CLASSIC
 	}
-	#endif
 	return 1;
 }
 

@@ -28,14 +28,15 @@ BEGIN_NETWORK_TABLE( C_TFProjectile_SentryRocket, DT_TFProjectile_SentryRocket )
 END_NETWORK_TABLE()
 
 BEGIN_NETWORK_TABLE_NOBASE( C_ObjectSentrygun, DT_SentrygunLocalData )
-	RecvPropInt( RECVINFO( m_iKills ) ),
-	RecvPropInt( RECVINFO( m_iAssists ) ),
+	RecvPropInt( RECVINFO(m_iKills) ),
 END_NETWORK_TABLE()
 
-IMPLEMENT_CLIENTCLASS_DT( C_ObjectSentrygun, DT_ObjectSentrygun, CObjectSentrygun )
-	RecvPropInt( RECVINFO( m_iAmmoShells ) ),
-	RecvPropInt( RECVINFO( m_iAmmoRockets ) ),
-	RecvPropInt( RECVINFO( m_iState ) ),
+IMPLEMENT_CLIENTCLASS_DT(C_ObjectSentrygun, DT_ObjectSentrygun, CObjectSentrygun)
+	RecvPropInt( RECVINFO(m_iUpgradeLevel) ),
+	RecvPropInt( RECVINFO(m_iAmmoShells) ),
+	RecvPropInt( RECVINFO(m_iAmmoRockets) ),
+	RecvPropInt( RECVINFO(m_iState) ),
+	RecvPropInt( RECVINFO(m_iUpgradeMetal) ),
 	RecvPropDataTable( "SentrygunLocalData", 0, 0, &REFERENCE_RECV_TABLE( DT_SentrygunLocalData ) ),
 END_RECV_TABLE()
 
@@ -235,7 +236,6 @@ void C_ObjectSentrygun::GetTargetIDString( wchar_t *sIDString, int iMaxLenInByte
 {
 	return BaseClass::GetTargetIDString( sIDString, iMaxLenInBytes );
 
-#if 0
 	sIDString[0] = '\0';
 
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
@@ -267,10 +267,10 @@ void C_ObjectSentrygun::GetTargetIDString( wchar_t *sIDString, int iMaxLenInByte
 		_snwprintf( wszHealthText, ARRAYSIZE(wszHealthText) - 1, L"%.0f%%", ( (float)GetHealth() / (float)GetMaxHealth() ) * 100 );
 		wszHealthText[ ARRAYSIZE(wszHealthText)-1 ] = '\0';
 
-		if ( m_iUpgradeLevel < m_iHighestUpgradeLevel )
+		if ( m_iUpgradeLevel < 3 )
 		{
 			// level 1 and 2 show upgrade progress
-			_snwprintf( wszUpgradeProgress, ARRAYSIZE(wszUpgradeProgress) - 1, L"%d / %d", m_iUpgradeMetal, m_iUpgradeMetalRequired );
+			_snwprintf( wszUpgradeProgress, ARRAYSIZE(wszUpgradeProgress) - 1, L"%d / %d", m_iUpgradeMetal, SENTRYGUN_UPGRADE_METAL );
 			wszUpgradeProgress[ ARRAYSIZE(wszUpgradeProgress)-1 ] = '\0';
 
 			const char *printFormatString = "#TF_playerid_object_upgrading";
@@ -293,7 +293,48 @@ void C_ObjectSentrygun::GetTargetIDString( wchar_t *sIDString, int iMaxLenInByte
 				wszHealthText );
 		}
 	}
-#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_ObjectSentrygun::GetTargetIDDataString( wchar_t *sDataString, int iMaxLenInBytes )
+{
+	sDataString[0] = '\0';
+
+	if ( m_iUpgradeLevel >= 3 )
+		return;
+
+	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
+	if ( !pLocalPlayer )
+		return;
+
+	wchar_t wszBuilderName[ MAX_PLAYER_NAME_LENGTH ];
+	wchar_t wszObjectName[ 32 ];
+	wchar_t wszUpgradeProgress[ 32 ];
+
+	g_pVGuiLocalize->ConvertANSIToUnicode( GetStatusName(), wszObjectName, sizeof(wszObjectName) );
+
+	C_BasePlayer *pBuilder = GetOwner();
+
+	if ( pBuilder )
+	{
+		g_pVGuiLocalize->ConvertANSIToUnicode( pBuilder->GetPlayerName(), wszBuilderName, sizeof(wszBuilderName) );
+	}
+	else
+	{
+		wszBuilderName[0] = '\0';
+	}
+
+	// level 1 and 2 show upgrade progress
+	_snwprintf( wszUpgradeProgress, ARRAYSIZE(wszUpgradeProgress) - 1, L"%d / %d", m_iUpgradeMetal, SENTRYGUN_UPGRADE_METAL );
+	wszUpgradeProgress[ ARRAYSIZE(wszUpgradeProgress)-1 ] = '\0';
+
+	const char *printFormatString = "#TF_playerid_object_upgrading";
+
+	g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find(printFormatString),
+		1,
+		wszUpgradeProgress );
 }
 
 //-----------------------------------------------------------------------------
@@ -384,9 +425,6 @@ void C_ObjectSentrygun::UpdateDamageEffects( BuildingDamageLevel_t damageLevel )
 		ParticleProp()->StopEmission( m_pDamageEffects );
 		m_pDamageEffects = NULL;
 	}
-
-	if ( IsPlacing() )
-		return;
 
 	const char *pszEffect = "";
 

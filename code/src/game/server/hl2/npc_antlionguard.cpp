@@ -896,14 +896,6 @@ void CNPC_AntlionGuard::Activate( void )
 			pObject->m_debugOverlays |= OVERLAY_BBOX_BIT;
 		}
 	}
-
-#ifdef TF_CLASSIC
-	IGameEvent *event = gameeventmanager->CreateEvent( "antlionguard_spawned" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -997,7 +989,7 @@ int CNPC_AntlionGuard::SelectUnreachableSchedule( void )
 		return SCHED_ANTLIONGUARD_CHASE_ENEMY_TOLERANCE;
 
 	// Fire that we're unable to reach our target!
-	if ( GetEnemy() && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
+	if ( GetEnemy() && GetEnemy()->IsPlayer() )
 	{
 		m_OnLostPlayer.FireOutput( this, this );
 	}
@@ -1614,11 +1606,7 @@ public:
 //-----------------------------------------------------------------------------
 void CNPC_AntlionGuard::Footstep( bool bHeavy )
 {
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 	Assert( pPlayer != NULL );
 	if ( pPlayer == NULL )
 		return;
@@ -4355,14 +4343,6 @@ void CNPC_AntlionGuard::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}	
 	}
-
-#ifdef TF_CLASSIC
-	IGameEvent *event = gameeventmanager->CreateEvent( "antlionguard_death" );
-	if ( event )
-	{
-		gameeventmanager->FireEvent( event );
-	}
-#endif
 
 	DestroyGlows();
 

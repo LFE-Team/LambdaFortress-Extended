@@ -14,10 +14,6 @@
 #include "tf_weaponbase.h"
 #include "basegrenade_shared.h"
 
-#ifdef GAME_DLL
-#include "SpriteTrail.h"
-#endif
-
 // Client specific.
 #ifdef CLIENT_DLL
 class C_TFPlayer;
@@ -45,29 +41,17 @@ class CTFPlayer;
 
 
 //=============================================================================
+
 // Damage storage for crit multiplier calculation
 class CTFDamageEvent
 {
 	DECLARE_EMBEDDED_NETWORKVAR()
-#ifdef CLIENT_DLL
-	DECLARE_CLIENTCLASS_NOBASE();
-#else
-	DECLARE_SERVERCLASS_NOBASE();
-#endif
 
 public:
 	float flDamage;
 	float flTime;
 	bool bKill;
 };
-
-enum
-{
-	STUN_PHASE_NONE,
-	STUN_PHASE_LOOP,
-	STUN_PHASE_END,
-};
-
 //=============================================================================
 //
 // Shared player class.
@@ -115,21 +99,11 @@ public:
 	void	ConditionThink( void );
 	float	GetConditionDuration( int nCond );
 
-	bool	IsCritBoosted( void );
-	bool	IsMiniCritBoosted( void );
-	bool	IsInvulnerable( void );
-	bool	IsStealthed( void );
-	bool	IsJared( void );
-
 	void	ConditionGameRulesThink( void );
 
 	void	InvisibilityThink( void );
 
 	int		GetMaxBuffedHealth( void );
-
-	// Max Health
-	int		GetMaxHealth( void );	
-	void	SetMaxHealth( int iMaxHealth ) { m_iMaxHealth = iMaxHealth; }
 
 #ifdef CLIENT_DLL
 	// This class only receives calls for these from C_TFPlayer, not
@@ -138,7 +112,7 @@ public:
 	virtual void OnDataChanged( void );
 
 	// check the newly networked conditions for changes
-	void	SyncConditions( int nCond, int nOldCond, int nUnused, int iOffset );
+	void	UpdateConditions( void );
 #endif
 
 	void	Disguise( int nTeam, int nClass );
@@ -147,7 +121,6 @@ public:
 	void	FindDisguiseTarget( void );
 	int		GetDisguiseTeam( void )				{ return m_nDisguiseTeam; }
 	int		GetDisguiseClass( void ) 			{ return m_nDisguiseClass; }
-	int		GetMaskClass( void )				{ return m_nMaskClass; }
 	int		GetDesiredDisguiseClass( void )		{ return m_nDesiredDisguiseClass; }
 	int		GetDesiredDisguiseTeam( void )		{ return m_nDesiredDisguiseTeam; }
 	EHANDLE GetDisguiseTarget( void ) 	
@@ -162,49 +135,24 @@ public:
 	}
 	int		GetDisguiseHealth( void )			{ return m_iDisguiseHealth; }
 	void	SetDisguiseHealth( int iDisguiseHealth );
-	int		AddDisguiseHealth( int iHealthToAdd, bool bOverheal = false );
-	int		GetDisguiseMaxHealth( void )		{ return m_iDisguiseMaxHealth; }
-	int		GetDisguiseMaxBuffedHealth( void );
-
-	CEconItemView *GetDisguiseItem( void )			{ return &m_DisguiseItem; }
-	void	RecalcDisguiseWeapon( int iSlot = 0 );
 
 #ifdef CLIENT_DLL
 	void	OnDisguiseChanged( void );
+	void	RecalcDisguiseWeapon( void );
 	int		GetDisguiseWeaponModelIndex( void ) { return m_iDisguiseWeaponModelIndex; }
 	CTFWeaponInfo *GetDisguiseWeaponInfo( void );
-
-	void	UpdateCritBoostEffect( bool bForceHide = false );
-	bool	SetParticleToMercColor( CNewParticleEffect *pParticle );
 #endif
 
 #ifdef GAME_DLL
 	void	Heal( CTFPlayer *pPlayer, float flAmount, bool bDispenserHeal = false );
 	void	StopHealing( CTFPlayer *pPlayer );
-	void	RecalculateChargeEffects( bool bInstantRemove = false );
+	void	RecalculateInvuln( bool bInstantRemove = false );
 	int		FindHealerIndex( CTFPlayer *pPlayer );
 	EHANDLE	GetFirstHealer();
-	void	HealthKitPickupEffects( int iAmount );
-
-	// Jarate Player
-	EHANDLE	m_hUrineAttacker;
 #endif
 	int		GetNumHealers( void ) { return m_nNumHealers; }
 
-	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
-	void	StunPlayer( float flDuration, CTFPlayer *pStunner );
-
-#ifdef GAME_DLL
-	void	AddPhaseEffects( void );
-	CUtlVector< CSpriteTrail * > m_pPhaseTrails;
-#else
-	CNewParticleEffect *m_pStun;
-	CNewParticleEffect *m_pWarp;
-#endif
-
-	void	UpdatePhaseEffects( void );
-
-	void	RecalculatePlayerBodygroups( void );
+	void	Burn( CTFPlayer *pPlayer );
 
 	// Weapons.
 	CTFWeaponBase *GetActiveTFWeapon() const;
@@ -212,26 +160,19 @@ public:
 	// Utility.
 	bool	IsAlly( CBaseEntity *pEntity );
 
-	bool	IsLoser( void );
-
 	// Separation force
 	bool	IsSeparationEnabled( void ) const	{ return m_bEnableSeparation; }
 	void	SetSeparation( bool bEnable )		{ m_bEnableSeparation = bEnable; }
 	const Vector &GetSeparationVelocity( void ) const { return m_vSeparationVelocity; }
 	void	SetSeparationVelocity( const Vector &vSeparationVelocity ) { m_vSeparationVelocity = vSeparationVelocity; }
 
-	void	FadeInvis( float flInvisFadeTime, bool bNoAttack = false );
+	void	FadeInvis( float flInvisFadeTime );
 	float	GetPercentInvisible( void );
 	void	NoteLastDamageTime( int nDamage );
 	void	OnSpyTouchedByEnemy( void );
 	float	GetLastStealthExposedTime( void ) { return m_flLastStealthExposeTime; }
 
 	int		GetDesiredPlayerClassIndex( void );
-
-	int		GetDesiredWeaponIndex( void ) { return m_iDesiredWeaponID; }
-	void	SetDesiredWeaponIndex( int iWeaponID ) { m_iDesiredWeaponID = iWeaponID; }
-	int		GetRespawnParticleID( void ) { return m_iRespawnParticleID; }
-	void	SetRespawnParticleID(int iParticleID) { m_iRespawnParticleID = iParticleID; }
 
 	float	GetSpyCloakMeter() const		{ return m_flCloakMeter; }
 	void	SetSpyCloakMeter( float val ) { m_flCloakMeter = val; }
@@ -240,9 +181,6 @@ public:
 	void	SetJumping( bool bJumping );
 	bool    IsAirDashing( void ) { return m_bAirDash; }
 	void    SetAirDash( bool bAirDash );
-	int		GetAirDucks( void ) { return m_nAirDucked; }
-	void	IncrementAirDucks( void );
-	void	ResetAirDucks( void );
 
 	void	DebugPrintConditions( void );
 
@@ -259,30 +197,6 @@ public:
 	void InCutScene( bool cutscene )	{ m_bInCutScene = cutscene; }  
 	bool IsInCutScene( void )	{ return m_bInCutScene; }
 
-	bool	IsCarryingObject( void ) { return m_bCarryingObject; }
-
-#ifdef GAME_DLL
-	void				SetCarriedObject( CBaseObject *pObj );
-	CBaseObject*		GetCarriedObject( void );
-#endif
-
-	int		GetKillstreak( void ) { return m_nStreaks.Get( 0 ); }
-	void	SetKillstreak( int iKillstreak ) { m_nStreaks.Set( 0, iKillstreak ); }
-	void	IncKillstreak() { m_nStreaks.Set( 0, m_nStreaks.Get( 0 ) + 1 ); }
-
-	int		GetStunPhase( void ) { return m_iStunPhase; }
-	void	SetStunPhase( int iPhase ) { m_iStunPhase = iPhase; }
-	float	GetStunExpireTime( void ) { return m_flStunExpireTime; }
-	void	SetStunExpireTime( float flTime ) { m_flStunExpireTime = flTime; }
-
-	int		GetTeleporterEffectColor( void ) { return m_nTeamTeleporterUsed; }
-	void	SetTeleporterEffectColor( int iTeam ) { m_nTeamTeleporterUsed = iTeam; }
-#ifdef CLIENT_DLL
-	bool	ShouldShowRecentlyTeleported( void );
-#endif
-
-	int GetSequenceForDeath( CBaseAnimating *pAnim, int iDamageCustom );
-
 private:
 
 	void ImpactWaterTrace( trace_t &trace, const Vector &vecStart );
@@ -293,20 +207,6 @@ private:
 	void OnAddBurning( void );
 	void OnAddDisguising( void );
 	void OnAddDisguised( void );
-	void OnAddTaunting( void );
-	void OnAddSlowed( void );
-	void OnAddCritboosted( void );
-	void OnAddMiniCritboosted( void );
-	void OnAddStunned( void );
-	void OnAddHalloweenGiant( void );
-	void OnAddHalloweenTiny( void );
-	void OnAddRagemode( void );
-	void OnAddPhase( void );
-	void OnAddSpeedBoost( void );
-	void OnAddJar( void );
-	void OnAddTeamGlows( void );
-
-	void OnAddPowerPlay( void );
 
 	void OnRemoveZoomed( void );
 	void OnRemoveBurning( void );
@@ -315,20 +215,6 @@ private:
 	void OnRemoveDisguising( void );
 	void OnRemoveInvulnerable( void );
 	void OnRemoveTeleported( void );
-	void OnRemoveTaunting( void );
-	void OnRemoveSlowed( void );
-	void OnRemoveCritboosted( void );
-	void OnRemoveMiniCritboosted( void );
-	void OnRemoveStunned( void );
-	void OnRemoveHalloweenGiant( void );
-	void OnRemoveHalloweenTiny( void );
-	void OnRemoveRagemode( void );
-	void OnRemovePhase( void );
-	void OnRemoveSpeedBoost( void );
-	void OnRemoveJar( void );
-	void OnRemoveTeamGlows( void );
-
-	void OnRemovePowerPlay( void );
 
 	float GetCritMult( void );
 
@@ -339,9 +225,8 @@ private:
 	int	  GetNumKillsInTime( float flTime );
 
 	// Invulnerable.
-	medigun_charge_types  GetChargeEffectBeingProvided( CTFPlayer *pPlayer );
-	void  SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider );
-	void  TestAndExpireChargeEffect( medigun_charge_types chargeType );
+	bool  IsProvidingInvuln( CTFPlayer *pPlayer );
+	void  SetInvulnerable( bool bState, bool bInstant = false );
 #endif
 
 private:
@@ -349,27 +234,17 @@ private:
 	// Vars that are networked.
 	CNetworkVar( int, m_nPlayerState );			// Player state.
 	CNetworkVar( int, m_nPlayerCond );			// Player condition flags.
-	// Ugh...
-	CNetworkVar( int, m_nPlayerCondEx );
-	CNetworkVar( int, m_nPlayerCondEx2 );
-	CNetworkVar( int, m_nPlayerCondEx3 );
-	CNetworkArray( float, m_flCondExpireTimeLeft, TF_COND_LAST ); // Time until each condition expires
+	float m_flCondExpireTimeLeft[TF_COND_LAST];		// Time until each condition expires
 
 //TFTODO: What if the player we're disguised as leaves the server?
 //...maybe store the name instead of the index?
 	CNetworkVar( int, m_nDisguiseTeam );		// Team spy is disguised as.
 	CNetworkVar( int, m_nDisguiseClass );		// Class spy is disguised as.
-	CNetworkVar( int, m_nMaskClass );			// Fake disguise class.
 	EHANDLE m_hDisguiseTarget;					// Playing the spy is using for name disguise.
 	CNetworkVar( int, m_iDisguiseTargetIndex );
 	CNetworkVar( int, m_iDisguiseHealth );		// Health to show our enemies in player id
-	CNetworkVar( int, m_iDisguiseMaxHealth );
-	CNetworkVar( float, m_flDisguiseChargeLevel );
 	CNetworkVar( int, m_nDesiredDisguiseClass );
 	CNetworkVar( int, m_nDesiredDisguiseTeam );
-	CEconItemView m_DisguiseItem;
-
-	CNetworkVar( int, m_iMaxHealth );
 
 	bool m_bEnableSeparation;		// Keeps separation forces on when player stops moving, but still penetrating
 	Vector m_vSeparationVelocity;	// Velocity used to keep player seperate from teammates
@@ -390,32 +265,28 @@ private:
 		EHANDLE	pPlayer;
 		float	flAmount;
 		bool	bDispenserHeal;
-		float	iRecentAmount;
-		float	flNextNofityTime;
 	};
 	CUtlVector< healers_t >	m_aHealers;	
 	float					m_flHealFraction;	// Store fractional health amounts
 	float					m_flDisguiseHealFraction;	// Same for disguised healing
 
-	float		m_flChargeOffTime[TF_CHARGE_COUNT];
-	bool		m_bChargeSounds[TF_CHARGE_COUNT];
+	float m_flInvulnerableOffTime;
 #endif
 
 	// Burn handling
 	CHandle<CTFPlayer>		m_hBurnAttacker;
-	CHandle<CTFWeaponBase>	m_hBurnWeapon;
 	CNetworkVar( int,		m_nNumFlames );
 	float					m_flFlameBurnTime;
 	float					m_flFlameRemoveTime;
 	float					m_flTauntRemoveTime;
-	float					m_flStunTime;
-	float					m_flPhaseTime;
+
 
 	float m_flDisguiseCompleteTime;
 
+	int	m_nOldConditions;
+	int	m_nOldDisguiseClass;
+
 	CNetworkVar( int, m_iDesiredPlayerClass );
-	CNetworkVar( int, m_iDesiredWeaponID );
-	CNetworkVar( int, m_iRespawnParticleID );
 
 	float m_flNextBurningSound;
 
@@ -423,30 +294,19 @@ private:
 
 	CNetworkVar( bool, m_bJumping );
 	CNetworkVar( bool, m_bAirDash );
-	CNetworkVar( int, m_nAirDucked );
 
 	CNetworkVar( float, m_flStealthNoAttackExpire );
 	CNetworkVar( float, m_flStealthNextChangeTime );
 
 	CNetworkVar( int, m_iCritMult );
 
-	CNetworkArray( int, m_nStreaks, 3 );
-
 	CNetworkArray( bool, m_bPlayerDominated, MAX_PLAYERS+1 );		// array of state per other player whether player is dominating other players
 	CNetworkArray( bool, m_bPlayerDominatingMe, MAX_PLAYERS+1 );	// array of state per other player whether other players are dominating this player
-
-	CNetworkHandle( CTFPlayer, m_hStunner );
-	CNetworkVar( float, m_flStunExpireTime );
-	int m_iStunPhase;
-	
-	CNetworkHandle( CBaseObject, m_hCarriedObject );
-	CNetworkVar( bool, m_bCarryingObject );
-
-	CNetworkVar( int, m_nTeamTeleporterUsed );
 
 	CNetworkVar( int, m_iLives );
 
 	CNetworkVar( bool, m_bInCutScene );
+	
 #ifdef GAME_DLL
 	float	m_flNextCritUpdate;
 	CUtlVector<CTFDamageEvent> m_DamageEvents;
@@ -456,24 +316,6 @@ private:
 	CTFWeaponInfo *m_pDisguiseWeaponInfo;
 
 	WEAPON_FILE_INFO_HANDLE	m_hDisguiseWeaponInfo;
-
-	CNewParticleEffect *m_pCritEffect;
-	EHANDLE m_hCritEffectHost;
-	CSoundPatch *m_pCritSound;
-	CSoundPatch *m_pInvulnerableSound;
-
-	int	m_nOldDisguiseClass;
-	int m_nOldDisguiseTeam;
-
-	int m_iOldDisguiseWeaponID;
-
-	int	m_nOldConditions;
-	int m_nOldConditionsEx;
-	int m_nOldConditionsEx2;
-	int m_nOldConditionsEx3;
-
-	bool m_bWasCritBoosted;
-	bool m_bWasMiniCritBoosted;
 #endif
 };			   
 

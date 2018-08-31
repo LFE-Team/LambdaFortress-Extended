@@ -30,14 +30,6 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "npc_headcrab.h"
 
-#ifdef TF_CLASSIC
-#include "tf_obj.h"
-#include "tf_obj_sentrygun.h"
-#include "tf_obj_dispenser.h"
-#include "tf_obj_teleporter.h"
-#include "tf_player.h"
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -764,10 +756,9 @@ void CNPC_Combine::StartTask( const Task_t *pTask )
 	case TASK_COMBINE_SIGNAL_BEST_SOUND:
 		if( IsInSquad() && GetSquad()->NumMembers() > 1 )
 		{
-			CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer( this, GetTeamNumber() );
-			//CBaseObject *pObject = dynamic_cast<CBaseObject*>( GetAbsOrigin() );
+			CBasePlayer *pPlayer = AI_GetSinglePlayer();
 
-			if( /*pObject ||*/ pPlayer && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_HANDSIGN ) && pPlayer->FInViewCone( this ) /*|| pObject->FInViewCone( this )*/ )
+			if( pPlayer && OccupyStrategySlot( SQUAD_SLOT_EXCLUSIVE_HANDSIGN ) && pPlayer->FInViewCone( this ) )
 			{
 				CSound *pSound;
 				pSound = GetBestSound();
@@ -817,7 +808,7 @@ void CNPC_Combine::StartTask( const Task_t *pTask )
 				// -----------------------------------------------------------
 				CBaseCombatCharacter *pBCC = GetEnemyCombatCharacterPointer();
 
-				if (pBCC && pBCC->IsPlayer() && (!pBCC->FInViewCone(this)) &&
+				if	(pBCC && pBCC->IsPlayer() && (!pBCC->FInViewCone ( this )) &&
 					(gpGlobals->curtime - m_flLastAttackTime > 3.0) )
 				{
 					m_flLastAttackTime = gpGlobals->curtime;
@@ -975,7 +966,7 @@ void CNPC_Combine::StartTask( const Task_t *pTask )
 				{
 					// NOTE: This is a good time to check to see if the player is hurt.
 					// Have the combine notice this and call out
-					if ( !HasMemory(bits_MEMORY_PLAYER_HURT) && pEntity->IsPlayer() || pEntity->IsBaseObject() && pEntity->GetHealth() <= 40 )
+					if ( !HasMemory(bits_MEMORY_PLAYER_HURT) && pEntity->IsPlayer() && pEntity->GetHealth() <= 20 )
 					{
 						if ( m_pSquad )
 						{
@@ -1781,11 +1772,7 @@ int CNPC_Combine::SelectSchedule( void )
 				Assert( pSound != NULL );
 				if ( pSound)
 				{
-					#ifdef TF_CLASSIC // uber and crit is freakin dangerous so run.
-					if (pSound->m_iType & SOUND_DANGER && !IsInvulnerable() || !IsCritBoosted() )
-					#else
 					if (pSound->m_iType & SOUND_DANGER)
-					#endif
 					{
 						// I hear something dangerous, probably need to take cover.
 						// dangerous sound nearby!, call it out
@@ -1956,69 +1943,6 @@ int CNPC_Combine::SelectScheduleAttack()
 		if ( !GetEnemy()->MyNPCPointer()->FInViewCone( this ) && OccupyStrategySlot( SQUAD_SLOT_GRENADE1 ) )
 			return SCHED_COMBINE_CHARGE_TURRET;
 	}
-
-#if TF_CLASSIC
-	// I'm fighting Engineer, I need to be SMARTER
-	if ( GetEnemy() && GetEnemy()->IsBaseObject() )
-	{
-		CBaseObject* pObject = assert_cast<CBaseObject *>(GetEnemy());
-
-		// I'm fighting SENTRY, STAY AWAY FROM IT.
-		if ( pObject->ObjectType() == OBJ_SENTRYGUN )
-		{
-			CObjectSentrygun* pSentry = assert_cast<CObjectSentrygun *>(GetEnemy());
-
-			bool bFirstContact = false;
-			float flTimeSinceFirstSeen = gpGlobals->curtime - GetEnemies()->FirstTimeSeen( pSentry );
-
-			if( flTimeSinceFirstSeen < 3.0f )
-				bFirstContact = true;
-
-			if( !bFirstContact && OccupyStrategySlotRange( SQUAD_SLOT_ATTACK1, SQUAD_SLOT_ATTACK2 ) )
-			{
-				if( random->RandomInt(0, 100) < 60 )
-				{
-					return SCHED_ESTABLISH_LINE_OF_FIRE;
-				}
-				else
-				{
-					return SCHED_COMBINE_PRESS_ATTACK;
-				}
-			}
-
-			if ( HasCondition( COND_CAN_RANGE_ATTACK1 ) && OccupyStrategySlot( SQUAD_SLOT_ATTACK1 ) )
-			{
-				// Start suppressing if someone isn't firing already (SLOT_ATTACK1). This means
-				// I'm the guy who spotted the enemy, I should react immediately.
-				return SCHED_COMBINE_SUPPRESS;
-			}
-
-			// First contact, and I'm alone, or not the squad leader.
-			if( HasCondition( COND_SEE_ENEMY ) && CanGrenadeEnemy() )
-			{
-				if( OccupyStrategySlot( SQUAD_SLOT_GRENADE1 ) )
-				{
-					return SCHED_RANGE_ATTACK2;
-				}
-			}
-			if ( pSentry && pSentry->IsDisabled() && OccupyStrategySlot( SQUAD_SLOT_GRENADE1 ) )
-				return SCHED_COMBINE_CHARGE_TURRET;
-		}
-
-		// I'm fighting harmless object CHARGE!
-		if ( pObject->ObjectType() == OBJ_DISPENSER || pObject->ObjectType() == OBJ_TELEPORTER )
-		{
-			CObjectDispenser* pDispenser = assert_cast<CObjectDispenser *>(GetEnemy());
-			CObjectTeleporter* pTeleporter = assert_cast<CObjectTeleporter *>(GetEnemy());
-
-			if ( pDispenser || pTeleporter && OccupyStrategySlot( SQUAD_SLOT_GRENADE1 ) )
-				return SCHED_COMBINE_CHARGE_TURRET;
-		}
-
-		// oh hell no.
-		return SCHED_TAKE_COVER_FROM_ENEMY;
-	}
-#endif
 
 	// When fighting against the player who's wielding a mega-physcannon, 
 	// always close the distance if possible
@@ -2341,7 +2265,7 @@ int CNPC_Combine::TranslateSchedule( int scheduleType )
 	case SCHED_COMBINE_SUPPRESS:
 		{
 #define MIN_SIGNAL_DIST	256
-			if ( GetEnemy() != NULL && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() && m_bFirstEncounter )
+			if ( GetEnemy() != NULL && GetEnemy()->IsPlayer() && m_bFirstEncounter )
 			{
 				float flDistToEnemy = ( GetEnemy()->GetAbsOrigin() - GetAbsOrigin() ).Length();
 

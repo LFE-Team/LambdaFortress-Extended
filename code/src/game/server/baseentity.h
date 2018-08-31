@@ -86,7 +86,7 @@ class INextBot;
 class IHasAttributes;
 
 typedef CUtlVector< CBaseEntity* > EntityList_t;
-/*
+
 #if defined( HL2_DLL )
 
 // For CLASSIFY
@@ -120,6 +120,27 @@ enum Class_T
 	CLASS_EARTH_FAUNA,
 	CLASS_HACKED_ROLLERMINE,
 	CLASS_COMBINE_HUNTER,
+
+	NUM_AI_CLASSES
+};
+
+#elif defined( NONE )
+
+enum Class_T
+{
+	CLASS_NONE = 0,
+	CLASS_MACHINE,
+	CLASS_PLAYER,
+	CLASS_HUMAN_PASSIVE,
+	CLASS_HUMAN_MILITARY,
+	CLASS_ALIEN_MILITARY,
+	CLASS_ALIEN_MONSTER,
+	CLASS_ALIEN_PREY,
+	CLASS_ALIEN_PREDATOR,
+	CLASS_INSECT,
+	CLASS_PLAYER_ALLY,
+	CLASS_PLAYER_BIOWEAPON,
+	CLASS_ALIEN_BIOWEAPON,
 
 	NUM_AI_CLASSES
 };
@@ -166,9 +187,9 @@ enum Class_T
 	CLASS_PLAYER_ALLY,
 	NUM_AI_CLASSES
 };
-*/
-//#elif defined( TF_CLASSIC )
-#if defined( TF_CLASSIC )
+
+#elif defined( TF_CLASSIC )
+
 enum Class_T
 {
 	CLASS_NONE=0,				
@@ -212,8 +233,7 @@ enum Class_T
 
 	NUM_AI_CLASSES
 };
-#endif
-/*
+
 #else
 
 enum Class_T
@@ -225,7 +245,7 @@ enum Class_T
 };
 
 #endif
-*/
+
 //
 // Structure passed to input handlers.
 //
@@ -693,9 +713,6 @@ public:
 	void InputFireUser2( inputdata_t &inputdata );
 	void InputFireUser3( inputdata_t &inputdata );
 	void InputFireUser4( inputdata_t &inputdata );
-	#ifdef TF_CLASSIC
-	void InputSetMoveType( inputdata_t &inputdata );
-	#endif
 
 	// Returns the origin at which to play an inputted dispatcheffect 
 	virtual void GetInputDispatchEffectPosition( const char *sInputString, Vector &pOrigin, QAngle &pAngles );
@@ -820,7 +837,7 @@ public:
 	CNetworkVar( unsigned char, m_nRenderMode );
 	CNetworkVar( short, m_nModelIndex );
 	
-#if defined( TF_DLL ) || defined ( TF_CLASSIC )
+#ifdef TF_DLL
 	CNetworkArray( int, m_nModelIndexOverrides, MAX_VISION_MODES ); // used to override the base model index on the client if necessary
 #endif
 

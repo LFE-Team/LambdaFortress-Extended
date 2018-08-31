@@ -16,7 +16,6 @@
 #ifdef TF_CLASSIC_CLIENT
 #include "ai_basenpc_shared.h"
 #include "tf_shareddefs.h"
-#include "c_tf_player.h"
 #endif
 
 // NOTE: Moved all controller code into c_basestudiomodel
@@ -26,9 +25,7 @@ class C_AI_BaseNPC : public C_BaseCombatCharacter
 
 public:
 	DECLARE_CLIENTCLASS();
-	#ifdef TF_CLASSIC_CLIENT
-	DECLARE_PREDICTABLE();
-	#endif
+
 	C_AI_BaseNPC();
 	virtual unsigned int	PhysicsSolidMaskForEntity( void ) const;
 	virtual bool			IsNPC( void ) { return true; }
@@ -83,33 +80,14 @@ public:
 	//void	ConditionThink( void );
 	float	GetConditionDuration( int nCond );
 
-	// check the newly networked conditions for changes
-	void	SyncConditions( int nCond, int nOldCond, int nUnused, int iOffset );
-
-	bool	IsCritBoosted( void );
-	bool	IsMiniCritBoosted( void );
-	bool	IsInvulnerable( void );
-	bool	IsStealthed( void );
+	void	UpdateConditions( void );
 
 	virtual bool IsOnFire() { return InCond( TF_COND_BURNING ); }
 	void	OnAddBurning( void );
 	void	OnRemoveBurning( void );
 
-	void	OnAddInvulnerable( void );
-	void	OnRemoveInvulnerable( void );
-	void	OnAddSlowed( void );
-	void	OnRemoveSlowed( void );
-	void OnAddCritboosted( void );
-	void OnRemoveCritboosted( void );
-	void OnAddMiniCritboosted( void );
-	void OnRemoveMiniCritboosted( void );
-	void OnAddUrine( void );
-	void OnRemoveUrine( void );
-
 	void	StartBurningSound( void );
 	void	StopBurningSound( void );
-
-	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
 
 	CMaterialReference *GetInvulnMaterialRef( void ) { return &m_InvulnerableMaterial; }
 	void	InitInvulnerableMaterial( void );
@@ -117,17 +95,6 @@ public:
 	bool	AllowBackstab( void ) { return ( m_nTFFlags & TFFL_NOBACKSTAB ) == 0; }
 	bool	IsMech( void ) { return ( m_nTFFlags & TFFL_MECH ) != 0; }
 	bool	CanBeHealed( void ) { return ( m_nTFFlags & TFFL_NOHEALING ) == 0; }
-	bool	AllowJar( void ) { return ( m_nTFFlags & TFFL_NOJAR ) == 0; }
-	bool	AllowDeathNotice( void ) { return ( m_nTFFlags & TFFL_NODEATHNOTICE ) == 0; }
-	bool	NoReward( void ) { return ( m_nTFFlags & TFFL_NOREWARD ) == 0; }
-
-	void	UpdateCritBoostEffect( bool bForceHide = false );
-
-	CNewParticleEffect *m_pCritEffect;
-	EHANDLE m_hCritEffectHost;
-	CSoundPatch *m_pCritSound;
-
-	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 #endif
 
 private:
@@ -155,19 +122,9 @@ private:
 
 	// Conditions
 	int m_nPlayerCond;
-	int m_nPlayerCondEx;
-	int m_nPlayerCondEx2;
-	int m_nPlayerCondEx3;
+	int m_nOldConditions;
 	float m_flCondExpireTimeLeft[TF_COND_LAST];
 	int m_nNumHealers;
-
-	int	m_nOldConditions;
-	int m_nOldConditionsEx;
-	int m_nOldConditionsEx2;
-	int m_nOldConditionsEx3;
-
-	bool m_bWasCritBoosted;
-	bool m_bWasMiniCritBoosted;
 
 	// Burning
 	CSoundPatch			*m_pBurningSound;

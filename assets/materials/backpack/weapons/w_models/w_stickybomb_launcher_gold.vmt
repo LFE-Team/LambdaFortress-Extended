@@ -1,6 +1,0 @@
-"UnlitGeneric"
-{
-	"$baseTexture" "backpack/weapons/w_models/w_stickybomb_launcher_gold"
-	$translucent 1
-	$vertexcolor 1
-}

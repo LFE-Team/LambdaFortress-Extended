@@ -7,13 +7,12 @@
 #include "cbase.h"
 #include "clientmode_tf.h"
 #include "c_tf_objective_resource.h"
-#include "engine/IEngineSound.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 
-IMPLEMENT_CLIENTCLASS_DT( C_TFObjectiveResource, DT_TFObjectiveResource, CTFObjectiveResource )
+IMPLEMENT_CLIENTCLASS_DT( C_TFObjectiveResource, DT_TFObjectiveResource, CTFObjectiveResource)
 
 END_RECV_TABLE()
 
@@ -24,8 +23,6 @@ C_TFObjectiveResource::C_TFObjectiveResource()
 {
 	PrecacheMaterial( "sprites/obj_icons/icon_obj_cap_blu" );
 	PrecacheMaterial( "sprites/obj_icons/icon_obj_cap_red" );
-	PrecacheMaterial( "sprites/obj_icons/icon_obj_cap_grn" );
-	PrecacheMaterial( "sprites/obj_icons/icon_obj_cap_ylw" );
 }
 
 //-----------------------------------------------------------------------------
@@ -43,19 +40,8 @@ const char *C_TFObjectiveResource::GetGameSpecificCPCappingSwipe( int index, int
 	Assert( index < m_iNumControlPoints );
 	Assert( iCappingTeam != TEAM_UNASSIGNED );
 
-	switch ( iCappingTeam )
-	{
-	case TF_TEAM_RED:
-		return "sprites/obj_icons/icon_obj_cap_red";
-		break;
-	case TF_TEAM_BLUE:
-		return "sprites/obj_icons/icon_obj_cap_blu";
-		break;
-	default:
-		return "sprites/obj_icons/icon_obj_cap_blu";
-		break;
-	}
-
+	if ( iCappingTeam == TF_TEAM_RED )
+		return "sprites/obj_icons/icon_obj_cap_red";	
 
 	return "sprites/obj_icons/icon_obj_cap_blu";
 }
@@ -67,18 +53,12 @@ const char *C_TFObjectiveResource::GetGameSpecificCPBarFG( int index, int iOwnin
 {
 	Assert( index < m_iNumControlPoints );
 
-	switch ( iOwningTeam )
-	{
-	case TF_TEAM_RED:
+	if ( iOwningTeam == TF_TEAM_RED )
 		return "progress_bar_red";
-		break;
-	case TF_TEAM_BLUE:
+
+	if ( iOwningTeam == TF_TEAM_BLUE )
 		return "progress_bar_blu";
-		break;
-	default:
-		return "progress_bar";
-		break;
-	}
+
 	return "progress_bar";
 }
 
@@ -90,18 +70,8 @@ const char *C_TFObjectiveResource::GetGameSpecificCPBarBG( int index, int iCappi
 	Assert( index < m_iNumControlPoints );
 	Assert( iCappingTeam != TEAM_UNASSIGNED );
 
-	switch ( iCappingTeam )
-	{
-	case TF_TEAM_RED:
+	if ( iCappingTeam == TF_TEAM_RED )
 		return "progress_bar_red";
-		break;
-	case TF_TEAM_BLUE:
-		return "progress_bar_blu";
-		break;
-	default:
-		return "progress_bar";
-		break;
-	}
 
 	return "progress_bar_blu";
 }
@@ -121,7 +91,7 @@ void C_TFObjectiveResource::SetCappingTeam( int index, int team )
 			if ( iLocalTeam != team )
 			{
 				CLocalPlayerFilter filter;
-				C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, "Announcer.ControlPointContested" );
+				C_BaseEntity::EmitSound( filter, -1, "Announcer.ControlPointContested" );
 			}
 		}
 	}

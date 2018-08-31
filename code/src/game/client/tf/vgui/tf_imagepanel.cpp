@@ -20,18 +20,15 @@
 
 #include "tf_imagepanel.h"
 #include "c_tf_player.h"
-#include "tf_gamerules.h"
 
 using namespace vgui;
 
 DECLARE_BUILD_FACTORY( CTFImagePanel );
 
-extern ConVar tf2c_coloredhud;
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CTFImagePanel::CTFImagePanel(Panel *parent, const char *name) : ScalableImagePanel(parent, name)
+CTFImagePanel::CTFImagePanel( Panel *parent, const char *name ) : ImagePanel( parent, name )
 {
 	for ( int i = 0; i < TF_TEAM_COUNT; i++ )
 	{
@@ -47,12 +44,13 @@ CTFImagePanel::CTFImagePanel(Panel *parent, const char *name) : ScalableImagePan
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFImagePanel::ApplySettings(KeyValues *inResourceData)
+void CTFImagePanel::ApplySettings( KeyValues *inResourceData )
 {
 	for ( int i = 0; i < TF_TEAM_COUNT; i++ )
 	{
 		Q_strncpy( m_szTeamBG[i], inResourceData->GetString( VarArgs("teambg_%d", i), "" ), sizeof( m_szTeamBG[i] ) );
 	}
+
 	BaseClass::ApplySettings( inResourceData );
 
 	UpdateBGImage();
@@ -75,21 +73,7 @@ void CTFImagePanel::UpdateBGImage( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFImagePanel::SetBGImage( int iTeamNum )
-{
-	if ( m_iBGTeam >= 0 && m_iBGTeam < TF_TEAM_COUNT )
-	{
-		if ( m_szTeamBG[iTeamNum] && m_szTeamBG[iTeamNum][0] )
-		{
-			SetImage( m_szTeamBG[iTeamNum] );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFImagePanel::FireGameEvent(IGameEvent * event)
+void CTFImagePanel::FireGameEvent( IGameEvent * event )
 {
 	if ( FStrEq( "localplayer_changeteam", event->GetName() ) )
 	{
@@ -102,7 +86,7 @@ void CTFImagePanel::FireGameEvent(IGameEvent * event)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-Color CTFImagePanel::GetDrawColor(void)
+Color CTFImagePanel::GetDrawColor( void )
 {
 	Color tempColor = GetFgColor();
 	tempColor[3] = GetAlpha();

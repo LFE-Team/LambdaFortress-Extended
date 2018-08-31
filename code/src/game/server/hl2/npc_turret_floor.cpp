@@ -22,7 +22,6 @@
 #include "beam_shared.h"
 #include "props.h"
 #include "particle_parse.h"
-#include "tf_obj_sapper.h"
 
 #ifdef PORTAL
 	#include "prop_portal_shared.h"
@@ -169,8 +168,7 @@ CNPC_FloorTurret::CNPC_FloorTurret( void ) :
 	m_flThrashTime( 0.0f ),
 	m_pMotionController( NULL ),
 	m_bEnabled( false ),
-	m_bSelfDestructing( false ),
-	m_bHasSapper( false )
+	m_bSelfDestructing( false )
 {
 	m_vecGoalAngles.Init();
 
@@ -1899,11 +1897,7 @@ QAngle CNPC_FloorTurret::PreferredCarryAngles( void )
 	static QAngle g_prefAngles;
 
 	Vector vecUserForward;
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 	pPlayer->EyeVectors( &vecUserForward );
 
 	// If we're looking up, then face directly forward
@@ -2159,58 +2153,6 @@ void CNPC_FloorTurret::InputSelfDestruct( inputdata_t &inputdata )
 		DispatchSpawn( m_hFizzleEffect );
 		m_hFizzleEffect->Activate();
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return true if I have at least 1 sapper on me
-//-----------------------------------------------------------------------------
-bool CNPC_FloorTurret::HasSapper( void )
-{
-	return m_bHasSapper;
-}
-
-void CNPC_FloorTurret::OnAddSapper( void )
-{
-	// Assume we can only build 1 sapper per object
-	Assert( m_bHasSapper == false );
-
-	m_bHasSapper = true;
-
-	UpdateDisabledState();
-}
-
-void CNPC_FloorTurret::OnRemoveSapper( void )
-{
-	m_bHasSapper = false;
-
-	UpdateDisabledState();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: called on edge cases to see if we need to change our disabled state
-//-----------------------------------------------------------------------------
-void CNPC_FloorTurret::UpdateDisabledState( void )
-{
-	SetDisabled( HasSapper() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: called when our disabled state changes
-//-----------------------------------------------------------------------------
-void CNPC_FloorTurret::SetDisabled( bool bDisabled )
-{
-	if ( bDisabled && !m_bEnabled )
-	{
-		SetThink( &CNPC_FloorTurret::DisabledThink );
-		SetEyeState( TURRET_EYE_DISABLED );
-	}
-	else if ( !bDisabled && m_bEnabled )
-	{
-		SetThink( &CNPC_FloorTurret::AutoSearchThink );
-		SetEyeState( TURRET_EYE_DORMANT );
-	}
-
-	m_bEnabled = bDisabled;
 }
 
 // 

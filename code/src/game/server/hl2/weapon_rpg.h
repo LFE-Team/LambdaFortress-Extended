@@ -16,7 +16,7 @@
 #include "Sprite.h"
 #include "npcevent.h"
 #include "beam_shared.h"
-#include "iscorer.h"
+
 class CWeaponRPG;
 class CLaserDot;
 class RocketTrail;
@@ -24,7 +24,7 @@ class RocketTrail;
 //###########################################################################
 //	>> CMissile		(missile launcher class is below this one!)
 //###########################################################################
-class CMissile : public CBaseCombatCharacter, public IScorer
+class CMissile : public CBaseCombatCharacter
 {
 	DECLARE_CLASS( CMissile, CBaseCombatCharacter );
 
@@ -69,17 +69,6 @@ public:
 	static void AddCustomDetonator( CBaseEntity *pEntity, float radius, float height = -1 );
 	static void RemoveCustomDetonator( CBaseEntity *pEntity );
 
-	virtual bool	IsDeflectable() { return true; }
-	virtual void	Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
-	virtual void	IncremenentDeflected( void );
-
-	CNetworkVar( int, m_iDeflected );
-
-	// IScorer interface
-	virtual CBaseEntity *GetScorer( void );
-	virtual CBaseEntity *GetAssistant( void ) { return NULL; }
-
-	void			SetScorer( CBaseEntity *pScorer );
 protected:
 	virtual void DoExplosion();	
 	virtual void ComputeActualDotPosition( CLaserDot *pLaserDot, Vector *pActualDotPosition, float *pHomingSpeed );
@@ -105,7 +94,6 @@ protected:
 
 	static CUtlVector<CustomDetonator_t> gm_CustomDetonators;
 
-	EHANDLE					m_hScorer;
 private:
 	float					m_flGracePeriodEndsAt;
 	bool					m_bCreateDangerSounds;

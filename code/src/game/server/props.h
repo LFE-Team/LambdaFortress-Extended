@@ -380,8 +380,6 @@ public:
 	string_t GetPhysOverrideScript( void ) { return m_iszOverrideScript; }
 	float	GetMassScale( void ) { return m_massScale; }
 
-	// LF's Pyro Airblast.
-	virtual bool					IsDeflectable() { return true; }
 private:
 	// Compute impulse to apply to the enabled entity.
 	void ComputeEnablingImpulse( int index, gamevcollisionevent_t *pEvent );

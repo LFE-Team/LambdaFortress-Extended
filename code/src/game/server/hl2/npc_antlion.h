@@ -175,8 +175,6 @@ public:
 
 	virtual void	NotifyDeadFriend( CBaseEntity *pFriend );
 
-	virtual void Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
-
 private:
 
 	inline CBaseEntity *EntityToWatch( void );

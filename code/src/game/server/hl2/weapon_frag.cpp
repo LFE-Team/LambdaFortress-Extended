@@ -55,7 +55,6 @@ public:
 
 	bool	ShouldDisplayHUDHint() { return true; }
 
-	//virtual bool	IsDeflectable() { return true; }
 private:
 	void	ThrowGrenade( CBasePlayer *pPlayer );
 	void	RollGrenade( CBasePlayer *pPlayer );
@@ -459,8 +458,7 @@ void CWeaponFrag::RollGrenade( CBasePlayer *pPlayer )
 		CrossProduct( vecFacing, tr.plane.normal, tangent );
 		CrossProduct( tr.plane.normal, tangent, vecFacing );
 	}
-	//vecSrc += (vecFacing * 18.0);
-	vecSrc += vecFacing;
+	vecSrc += (vecFacing * 18.0);
 	CheckThrowPosition( pPlayer, pPlayer->WorldSpaceCenter(), vecSrc );
 
 	Vector vecThrow;

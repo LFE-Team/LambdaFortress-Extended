@@ -7,77 +7,18 @@
 #include "cbase.h"
 #include "tf_weapon_bonesaw.h"
 
-#ifdef CLIENT_DLL
-#include "tf_weapon_medigun.h"
-#include "c_tf_player.h"
-#include "tf_viewmodel.h"
-#include "c_tf_viewmodeladdon.h"
-#endif
-
 //=============================================================================
 //
 // Weapon Bonesaw tables.
 //
 
-CREATE_SIMPLE_WEAPON_TABLE( TFBonesaw, tf_weapon_bonesaw )
+IMPLEMENT_NETWORKCLASS_ALIASED( TFBonesaw, DT_TFWeaponBonesaw )
 
-void CTFBonesaw::SecondaryAttack( void )
-{
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
-		return;
-/*
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( iType != 0 )
-	{
-#ifdef GAME_DLL
-		pOwner->Taunt();
-#endif
-	}
-*/
-}
+BEGIN_NETWORK_TABLE( CTFBonesaw, DT_TFWeaponBonesaw )
+END_NETWORK_TABLE()
 
-#ifdef CLIENT_DLL
-void CTFBonesaw::OnDataChanged( DataUpdateType_t updateType )
-{
-	BaseClass::OnDataChanged( updateType );
-	UpdateChargePoseParam();
-}
+BEGIN_PREDICTION_DATA( CTFBonesaw )
+END_PREDICTION_DATA()
 
-bool CTFBonesaw::Deploy( void )
-{
-	if ( BaseClass::Deploy() )
-	{
-		UpdateChargePoseParam();
-		return true;
-	}
-
-	return false;
-}
-
-void CTFBonesaw::UpdateChargePoseParam( void )
-{
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
-		return;
-
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( iType != 0 )
-	{
-		CWeaponMedigun *pMedigun = pOwner->GetMedigun();
-		if ( pMedigun )
-		{
-			SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
-
-			C_ViewmodelAttachmentModel *pAttachment = GetViewmodelAddon();
-			if ( pAttachment )
- 			{
-				pAttachment->SetPoseParameter( "syringe_charge_level", pMedigun->GetChargeLevel() );
-			}
-		}
-	}
-}
-
-#endif
+LINK_ENTITY_TO_CLASS( tf_weapon_bonesaw, CTFBonesaw );
+PRECACHE_WEAPON_REGISTER( tf_weapon_bonesaw );

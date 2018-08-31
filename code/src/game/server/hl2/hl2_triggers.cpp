@@ -10,11 +10,6 @@
 #include "saverestore_utlvector.h"
 #include "triggers.h"
 
-#ifdef TF_CLASSIC
-#include "tf_gamerules.h"
-#include "tf_player.h"
-#endif
-
 //-----------------------------------------------------------------------------
 // Weapon-dissolve trigger; all weapons in this field (sans the physcannon) are destroyed!
 //-----------------------------------------------------------------------------
@@ -468,13 +463,6 @@ void CTriggerPhysicsTrap::Touch( CBaseEntity *pOther )
 		PhysCannonBeginUpgrade( pAnim );
 		return;
 	}
-#elif TF_CLASSIC
-	// HACK: Upgrade the physcannon
-	if ( FClassnameIs( pAnim, "tf_weapon_physcannon" ) )
-	{
-		PhysCannonBeginUpgrade( pAnim );
-		return;
-	}
 #endif
 
 	pAnim->Dissolve( NULL, gpGlobals->curtime, false, m_nDissolveType );
@@ -730,11 +718,7 @@ void CTriggerWateryDeath::Touch( CBaseEntity *pOther )
 
 		// Use DMG_GENERIC & make the target inflict the damage on himself.
 		// This ensures that if the target is the player, the damage isn't modified by skill
-		#ifndef TF_CLASSIC
 		CTakeDamageInfo info = CTakeDamageInfo( pOther, pOther, m_flPainValue, DMG_GENERIC );
-		#else
-		CTakeDamageInfo info = CTakeDamageInfo( pOther, pOther, m_flPainValue, DMG_GENERIC, LFE_DMG_CUSTOM_LEECHES );
-#endif
 
 		GuessDamageForce( &info, (pOther->GetAbsOrigin() - GetAbsOrigin()), pOther->GetAbsOrigin() );
 		pOther->TakeDamage( info );

@@ -206,10 +206,6 @@ IMPLEMENT_CLIENTCLASS_DT(C_BaseAnimating, DT_BaseAnimating, CBaseAnimating)
 	RecvPropFloat( RECVINFO( m_fadeMaxDist ) ), 
 	RecvPropFloat( RECVINFO( m_flFadeScale ) ), 
 
-#ifdef GLOWS_ENABLE
-	RecvPropBool( RECVINFO( m_bGlowEnabled ) ),
-	RecvPropVector( RECVINFO( m_vGlowColor ) ),
-#endif // GLOWS_ENABLE
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_BaseAnimating )
@@ -746,13 +742,6 @@ C_BaseAnimating::C_BaseAnimating() :
 	Q_memset(&m_mouth, 0, sizeof(m_mouth));
 	m_flCycle = 0;
 	m_flOldCycle = 0;
-
-#ifdef GLOWS_ENABLE
-	m_pGlowEffect = NULL;
-	m_bGlowEnabled = false;
-	m_bOldGlowEnabled = false;
-	m_bClientSideGlowEnabled = false;
-#endif // GLOWS_ENABLE
 }
 
 //-----------------------------------------------------------------------------
@@ -793,10 +782,6 @@ C_BaseAnimating::~C_BaseAnimating()
 		m_pAttachedTo->RemoveBoneAttachment( this );
 		m_pAttachedTo = NULL;
 	}
-
-#ifdef GLOWS_ENABLE
-	DestroyGlowEffect();
-#endif // GLOWS_ENABLE
 }
 
 bool C_BaseAnimating::UsesPowerOfTwoFrameBufferTexture( void )
@@ -3152,7 +3137,7 @@ int C_BaseAnimating::DrawModel( int flags )
 
 	int drawn = 0;
 
-#if defined( TF_CLIENT_DLL ) || defined ( TF_CLASSIC_CLIENT )
+#ifdef TF_CLIENT_DLL
 	ValidateModelIndex();
 #endif
 
@@ -3390,12 +3375,12 @@ int C_BaseAnimating::InternalDrawModel( int flags )
 	return bMarkAsDrawn;
 }
 
-extern ConVar lfe_muzzlelight;
+extern ConVar muzzleflash_light;
 
 void C_BaseAnimating::ProcessMuzzleFlashEvent()
 {
 	// If we have an attachment, then stick a light on it.
-	if ( lfe_muzzlelight.GetBool() )
+	if ( muzzleflash_light.GetBool() )
 	{
 		//FIXME: We should really use a named attachment for this
 		if ( m_Attachments.Count() > 0 )
@@ -4585,10 +4570,6 @@ void C_BaseAnimating::OnPreDataChanged( DataUpdateType_t updateType )
 	BaseClass::OnPreDataChanged( updateType );
 
 	m_bLastClientSideFrameReset = m_bClientSideFrameReset;
-
-#ifdef GLOWS_ENABLE
-	m_bOldGlowEnabled = m_bGlowEnabled;
-#endif // GLOWS_ENABLE
 }
 
 bool C_BaseAnimating::ForceSetupBonesAtTime( matrix3x4_t *pBonesOut, float flTime )
@@ -4887,13 +4868,6 @@ void C_BaseAnimating::OnDataChanged( DataUpdateType_t updateType )
 		delete m_pRagdollInfo;
 		m_pRagdollInfo = NULL;
 	}
-
-#ifdef GLOWS_ENABLE
-	if ( m_bOldGlowEnabled != m_bGlowEnabled )
-	{
-		UpdateGlowEffect();
-	}
-#endif // GLOWS_ENABLE
 }
 
 //-----------------------------------------------------------------------------
@@ -6550,38 +6524,3 @@ void C_BaseAnimating::MoveBoneAttachments( C_BaseAnimating* attachTarget )
 		}
 	}
 }
-
-#ifdef GLOWS_ENABLE
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_BaseAnimating::UpdateGlowEffect( void )
-{
-	// destroy the existing effect
-	if ( m_pGlowEffect )
-	{
-		DestroyGlowEffect();
-	}
-
-	// create a new effect
-	if ( m_bGlowEnabled || m_bClientSideGlowEnabled )
-	{
-		//GetGlowEffectColor( &r, &g, &b, &a );
-
-		m_pGlowEffect = new CGlowObject( this, Vector( 0, 0, 0 ), 1.0, true, true );
-		m_pGlowEffect->SetColor( m_vGlowColor );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_BaseAnimating::DestroyGlowEffect( void )
-{
-	if ( m_pGlowEffect )
-	{
-		delete m_pGlowEffect;
-		m_pGlowEffect = NULL;
-	}
-}
-#endif // GLOWS_ENABLE

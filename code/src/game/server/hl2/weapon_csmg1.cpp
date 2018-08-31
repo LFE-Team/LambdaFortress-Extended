@@ -23,17 +23,17 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar sk_csmg1_npc_damage("sk_csmg1_npc_damage","2");
-ConVar sk_csmg1_player_damage("sk_csmg1_player_damage","2");
-ConVar sk_csmg1_npc_primary_rpm("sk_csmg1_npc_primary_rpm", "1000" );
-ConVar sk_csmg1_primary_rpm("sk_csmg1_primary_rpm","1000");
-ConVar sk_csmg1_secondary_rpm("sk_csmg1_secondary_rpm","1000");
-ConVar sk_csmg1_altfire("sk_csmg1_altfire","1");
-ConVar sk_weapon_csmg1_alt_fire_vel("sk_weapon_csmg1_alt_fire_vel", "1000");
-ConVar sk_weapon_csmg1_alt_fire_radius( "sk_weapon_csmg1_alt_fire_radius", "2" );
-ConVar sk_weapon_csmg1_alt_fire_duration( "sk_weapon_csmg1_alt_fire_duration", "2" );
-ConVar sk_weapon_csmg1_alt_fire_mass( "sk_weapon_csmg1_alt_fire_mass", "150" );
-ConVar sk_csmg1_vector_cone("sk_csmg1_vector_cone","1");
+ConVar dev_csmg1_npc_damage("dev_csmg1_npc_damage","2");
+ConVar dev_csmg1_player_damage("dev_csmg1_player_damage","2");
+ConVar dev_csmg1_npc_primary_rpm("dev_csmg1_npc_primary_rpm", "1000" );
+ConVar dev_csmg1_primary_rpm("dev_csmg1_primary_rpm","1000");
+ConVar dev_csmg1_secondary_rpm("dev_csmg1_secondary_rpm","1000");
+ConVar dev_csmg1_altfire("dev_csmg1_altfire","1");
+ConVar dev_weapon_csmg1_alt_fire_vel("dev_weapon_csmg1_alt_fire_vel", "1000");
+ConVar dev_weapon_csmg1_alt_fire_radius( "dev_weapon_csmg1_alt_fire_radius", "2" );
+ConVar dev_weapon_csmg1_alt_fire_duration( "dev_weapon_csmg1_alt_fire_duration", "2" );
+ConVar dev_weapon_csmg1_alt_fire_mass( "dev_weapon_csmg1_alt_fire_mass", "150" );
+ConVar dev_csmg1_vector_cone("dev_csmg1_vector_cone","1");
 
 
 class CWeaponCSMG1 : public CHLSelectFireMachineGun
@@ -67,14 +67,14 @@ public:
 
 	Vector GetCSMG1BulletSpread( void )
 	{
-		float spread = sin( DEG2RAD( sk_csmg1_vector_cone.GetFloat() /2.0f ));
+		float spread = sin( DEG2RAD( dev_csmg1_vector_cone.GetFloat() /2.0f ));
 		return Vector(spread,spread,spread);
 	}
 
 	//Vector& GetBulletSpread( void )
 	//{
 	//	DevMsg("Hello! I am in CWeaponCSMG1::GetBulletSpread\n");
-	//	float spread = sin( DEG2RAD( sk_csmg1_vector_cone.GetFloat() /2.0f ));
+	//	float spread = sin( DEG2RAD( dev_csmg1_vector_cone.GetFloat() /2.0f ));
 	//	return Vector(spread,spread,spread);
 	//}
 
@@ -214,7 +214,7 @@ void CWeaponCSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
-	info.m_flDamage = sk_csmg1_npc_damage.GetInt();
+	info.m_flDamage = dev_csmg1_npc_damage.GetInt();
 	//info.m_pAttacker = pAttacker;
 	//info.m_nFlags = bFirstShotAccurate ? FIRE_BULLETS_FIRST_SHOT_ACCURATE : 0;
 	//info.m_bPrimaryAttack = bPrimaryAttack;
@@ -309,20 +309,20 @@ bool CWeaponCSMG1::Reload( void )
 float CWeaponCSMG1::GetFireRate( void )
 { 
 	//return 0.075f; 	// 13.3hz  
-	return 60.0/sk_csmg1_npc_primary_rpm.GetFloat();
+	return 60.0/dev_csmg1_npc_primary_rpm.GetFloat();
 }
 
 // primary fire rate
 float CWeaponCSMG1::GetPrimaryFireRate( void )
 { 
 	//return 0.075f; 	// 13.3hz  
-	return 60.0/sk_csmg1_primary_rpm.GetFloat();
+	return 60.0/dev_csmg1_primary_rpm.GetFloat();
 }
 
 // secondary fire rate
 float CWeaponCSMG1::GetSecondaryFireRate( void )
 { 
-	return 60.0/sk_csmg1_secondary_rpm.GetFloat();
+	return 60.0/dev_csmg1_secondary_rpm.GetFloat();
 }
 
 //-----------------------------------------------------------------------------
@@ -376,14 +376,14 @@ void CWeaponCSMG1::FireCombineBalls( void )
 
 	Vector vecSrc		= pPlayer->Weapon_ShootPosition();
 	Vector vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );	
-	Vector vecVelocity = vecAiming * sk_weapon_csmg1_alt_fire_vel.GetFloat();
+	Vector vecVelocity = vecAiming * dev_weapon_csmg1_alt_fire_vel.GetFloat();
 
-#if defined ( HL2_DLL )
+#ifdef HL2_DLL
 	CreateCombineBall2(	vecSrc, 
 						vecVelocity,
-						sk_weapon_csmg1_alt_fire_radius.GetFloat(),
-						sk_weapon_csmg1_alt_fire_mass.GetFloat(),
-						sk_weapon_csmg1_alt_fire_duration.GetFloat(),
+						dev_weapon_csmg1_alt_fire_radius.GetFloat(),
+						dev_weapon_csmg1_alt_fire_mass.GetFloat(),
+						dev_weapon_csmg1_alt_fire_duration.GetFloat(),
 						pPlayer, 
 						1 );
 #endif
@@ -453,7 +453,7 @@ void CWeaponCSMG1::PrimaryAttack( void )
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
 	
-	info.m_flDamage = sk_csmg1_player_damage.GetInt();
+	info.m_flDamage = dev_csmg1_player_damage.GetInt();
 	
 	FireBullets( info );
 
@@ -485,7 +485,7 @@ void CWeaponCSMG1::PrimaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponCSMG1::SecondaryAttack( void )
 {
-	if (sk_csmg1_altfire.GetInt() == 1)
+	if (dev_csmg1_altfire.GetInt() == 1)
 	{
 		FireCombineBalls();
 	}

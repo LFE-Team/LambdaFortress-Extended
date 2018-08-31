@@ -812,11 +812,7 @@ void CHunterFlechette::SeekThink()
 //-----------------------------------------------------------------------------
 void CHunterFlechette::DopplerThink()
 {
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 	if ( !pPlayer )
 		return;
 
@@ -2306,13 +2302,8 @@ void CNPC_Hunter::GatherConditions()
 						if ( timeDrawnArrow != gpGlobals->curtime )
 						{
 							timeDrawnArrow = gpGlobals->curtime;
-#ifdef TF_CLASSIC
-							Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter().z - 24 );
-							NDebugOverlay::HorzArrow( UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 255, 0, 0, 64, true, .1 );
-#else
 							Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetLocalPlayer()->WorldSpaceCenter().z - 24 );
 							NDebugOverlay::HorzArrow( UTIL_GetLocalPlayer()->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 255, 0, 0, 64, true, .1 );
-#endif
 						}
 					}
 				}
@@ -2337,13 +2328,8 @@ void CNPC_Hunter::GatherConditions()
 				if ( timeDrawnArrow != gpGlobals->curtime )
 				{
 					timeDrawnArrow = gpGlobals->curtime;
-#ifdef TF_CLASSIC
-					Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter().z - 24 );
-					NDebugOverlay::HorzArrow( UTIL_GetNearestPlayer( GetAbsOrigin() )->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 127, 127, 127, 64, true, .1 );
-#else
 					Vector vEndpoint( vecFuturePos.x, vecFuturePos.y, UTIL_GetLocalPlayer()->WorldSpaceCenter().z - 24 );
 					NDebugOverlay::HorzArrow( UTIL_GetLocalPlayer()->WorldSpaceCenter() - Vector(0, 0, 24), vEndpoint, hunter_dodge_warning_width.GetFloat(), 127, 127, 127, 64, true, .1 );
-#endif
 				}
 			}
 
@@ -2420,11 +2406,7 @@ void CNPC_Hunter::ManageSiegeTargets()
 	}
 
 	m_flTimeNextSiegeTargetAttack = gpGlobals->curtime + (hunter_siege_frequency.GetFloat() * RandomFloat( 0.8f, 1.2f) );
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = AI_GetNearestPlayer( GetAbsOrigin() );
-#else
 	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif
 
 	// Start by assuming we are not going to create a siege target
 	bool bCreateSiegeTarget = false;
@@ -3049,11 +3031,7 @@ int CNPC_Hunter::SelectSchedule()
 				}
 				else
 				{
-#ifdef TF_CLASSIC
-					SetTarget( UTIL_GetNearestPlayer( GetAbsOrigin() ) );
-#else
 					SetTarget( UTIL_GetLocalPlayer() );
-#endif
 					return SCHED_TARGET_FACE;
 				}
 			}
@@ -3085,11 +3063,7 @@ int CNPC_Hunter::SelectSchedule()
 		}
 		else
 		{
-#ifdef TF_CLASSIC
-			SetTarget( UTIL_GetNearestPlayer( GetAbsOrigin() ) );
-#else
 			SetTarget( UTIL_GetLocalPlayer() );
-#endif
 			return SCHED_TARGET_FACE;
 		}
 
@@ -3513,7 +3487,7 @@ void CNPC_Hunter::StartTask( const Task_t *pTask )
 		{
 			SetLastAttackTime( gpGlobals->curtime );
 			
-			if ( GetEnemy() && GetEnemy()->IsPlayer() || GetEnemy()->IsBaseObject() )
+			if ( GetEnemy() && GetEnemy()->IsPlayer() )
 			{
 				ResetIdealActivity( ( Activity )ACT_HUNTER_MELEE_ATTACK1_VS_PLAYER );
 			}
@@ -5364,7 +5338,7 @@ void CNPC_Hunter::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &v
 
 	// Even though the damage might not hurt us, we want to react to it
 	// if it's from the player.
-	if ( info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
+	if ( info.GetAttacker()->IsPlayer() )
 	{
 		if ( !HasMemory( bits_MEMORY_PROVOKED ) )
 		{
@@ -5819,13 +5793,9 @@ void CNPC_Hunter::Event_Killed( const CTakeDamageInfo &info )
 		if ( AIGetNumFollowers( m_EscortBehavior.GetFollowTarget(), m_iClassname ) == 1 )
 		{
 			m_EscortBehavior.GetEscortTarget()->AlertSound();
-			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() || info.GetAttacker()->IsBaseObject() )
+			if ( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
 			{
-#ifdef TF_CLASSIC
-				m_EscortBehavior.GetEscortTarget()->UpdateEnemyMemory( UTIL_GetNearestPlayer( GetAbsOrigin() ), UTIL_GetNearestPlayer( GetAbsOrigin() )->GetAbsOrigin(), this );
-#else
 				m_EscortBehavior.GetEscortTarget()->UpdateEnemyMemory( UTIL_GetLocalPlayer(), UTIL_GetLocalPlayer()->GetAbsOrigin(), this );
-#endif
 			}
 		}
 	}
@@ -6679,7 +6649,7 @@ Activity CNPC_Hunter::GetDeathActivity()
 //-----------------------------------------------------------------------------
 void CAI_HunterEscortBehavior::OnDamage( const CTakeDamageInfo &info )
 {
-	if ( info.GetDamage() > 0 && info.GetAttacker()->IsPlayer() /*|| info.GetAttacker()->IsBaseObject()*/ &&
+	if ( info.GetDamage() > 0 && info.GetAttacker()->IsPlayer() &&
 		GetFollowTarget() && ( AIGetNumFollowers( GetFollowTarget() ) > 1 ) &&
 		( GetOuter()->GetSquad()->GetSquadSoundWaitTime() <= gpGlobals->curtime ) ) // && !FarFromFollowTarget()
 	{
@@ -6751,7 +6721,7 @@ void CAI_HunterEscortBehavior::GatherConditions( void )
 
 	BaseClass::GatherConditions();
 
-	if (GetEnemy() && GetEnemy()->IsPlayer() && HasCondition(COND_SEE_ENEMY))
+	if ( GetEnemy() && GetEnemy()->IsPlayer() && HasCondition( COND_SEE_ENEMY ) )
 	{
 		if ( GetOuter()->GetSquad()->GetSquadSoundWaitTime() <= gpGlobals->curtime && ((CBasePlayer *)GetEnemy())->IsInAVehicle() )
 		{

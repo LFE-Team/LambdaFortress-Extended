@@ -48,7 +48,6 @@ public:
 	virtual bool	AllowBlockedExit( CBasePlayer *pPlayer, int nRole ) { return false; }
 	virtual bool	CanExitVehicle( CBaseEntity *pEntity );
 	virtual bool	IsVehicleBodyInWater() { return m_WaterData.m_bBodyInWater; }
-	bool	m_bFromSpawner;
 	
 	// Passengers do not directly receive damage from blasts or radiation damage
 	virtual bool PassengerShouldReceiveDamage( CTakeDamageInfo &info ) 
@@ -87,9 +86,9 @@ public:
 	const char		*GetTracerType( void ) { return "AR2Tracer"; }
 	void			DoImpactEffect( trace_t &tr, int nDamageType );
 
-	bool HeadlightIsOn(void) { return m_bHeadlightIsOn; }
-	void HeadlightTurnOn(void);
-	void HeadlightTurnOff(void);
+	bool HeadlightIsOn( void ) { return m_bHeadlightIsOn; }
+	void HeadlightTurnOn( void ) { m_bHeadlightIsOn = true; }
+	void HeadlightTurnOff( void ) { m_bHeadlightIsOn = false; }
 
 private:
 
@@ -105,7 +104,6 @@ private:
 	void		CheckWaterLevel( void );
 	void		CreateSplash( const Vector &vecPosition );
 	void		CreateRipple( const Vector &vecPosition );
-	void		InputEnableGunSpawner(inputdata_t &inputdata);
 
 	void		CreateDangerSounds( void );
 
@@ -120,7 +118,6 @@ private:
 	void		InputShowHudHint( inputdata_t &inputdata );
 	void		InputStartRemoveTauCannon( inputdata_t &inputdata );
 	void		InputFinishRemoveTauCannon( inputdata_t &inputdata );
-	void	InputFromSpawner(inputdata_t &inputdata);
 
 protected:
 

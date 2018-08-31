@@ -1,4 +1,4 @@
-//====== Copyright Â© 1996-2003, Valve Corporation, All rights reserved. =======
+//====== Copyright © 1996-2003, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -14,12 +14,10 @@
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
 #include "soundenvelope.h"
-#include "bone_setup.h"
 
 // Server specific.
 #else
 #include "tf_player.h"
-#include "soundent.h"
 #endif
 
 #define MAX_BARREL_SPIN_VELOCITY	20
@@ -72,6 +70,7 @@ CTFMinigun::CTFMinigun()
 #ifdef CLIENT_DLL
 	m_pSoundCur = NULL;
 #endif
+
 
 #ifdef CLIENT_DLL
 	m_pEjectBrassEffect = NULL;
@@ -137,11 +136,6 @@ void CTFMinigun::Precache( void )
 	BaseClass::Precache();
 }
 
-void CTFMinigun::Spawn(void)
-{
-	BaseClass::Spawn();
-}
-
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -199,13 +193,6 @@ void CTFMinigun::SharedAttack()
 					m_iWeaponState = AC_STATE_SPINNING;
 #ifdef GAME_DLL
 					pPlayer->SpeakWeaponFire( MP_CONCEPT_WINDMINIGUN );
-
-					int nMinigunNoSound = 0;
-					CALL_ATTRIB_HOOK_INT( nMinigunNoSound, minigun_no_spin_sounds );
-					if ( nMinigunNoSound != 1 )
-					{
-						CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
-					}
 #endif
 				}
 				else
@@ -216,9 +203,7 @@ void CTFMinigun::SharedAttack()
 #endif
 				}
 
-				float flSpinUpTime = 0.1f;
-				CALL_ATTRIB_HOOK_FLOAT( flSpinUpTime, mult_minigun_spinup_time );
-				m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flTimeWeaponIdle = gpGlobals->curtime + flSpinUpTime;
+				m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flTimeWeaponIdle = gpGlobals->curtime + 0.1;
 			}
 			break;
 		}
@@ -229,8 +214,6 @@ void CTFMinigun::SharedAttack()
 #ifdef GAME_DLL
 				pPlayer->ClearWeaponFireScene();
 				pPlayer->SpeakWeaponFire( MP_CONCEPT_WINDMINIGUN );
-
-				CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 4.0 );
 #endif
 				m_iWeaponState = AC_STATE_SPINNING;
 
@@ -255,15 +238,12 @@ void CTFMinigun::SharedAttack()
 				}
 #endif
 
-
 				// Only fire if we're actually shooting
-				if ( gpGlobals->curtime >= m_flNextPrimaryAttack )
-				{
-					BaseClass::PrimaryAttack();		// fire and do timers
-					m_bCritShot = IsCurrentAttackACrit();
-					pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-					m_flTimeWeaponIdle = gpGlobals->curtime + 0.2;
-				}
+				BaseClass::PrimaryAttack();		// fire and do timers
+				CalcIsAttackCritical();
+				m_bCritShot = IsCurrentAttackACrit();
+				pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+				m_flTimeWeaponIdle = gpGlobals->curtime + 0.2;
 			}
 			break;
 		}
@@ -291,13 +271,6 @@ void CTFMinigun::SharedAttack()
 #ifdef GAME_DLL
 					pPlayer->ClearWeaponFireScene();
 					pPlayer->SpeakWeaponFire( MP_CONCEPT_FIREMINIGUN );
-
-					int nMinigunNoSound = 0;
-					CALL_ATTRIB_HOOK_INT( nMinigunNoSound, minigun_no_spin_sounds );
-					if ( nMinigunNoSound != 1 )
-					{
-						CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), 600, 3.0 );
-					}
 #endif
 					m_iWeaponState = AC_STATE_FIRING;
 				}
@@ -363,12 +336,7 @@ bool CTFMinigun::CanHolster( void ) const
 	if ( m_iWeaponState > AC_STATE_IDLE )
 		return false;
 
-	if ( GetActivity() == ACT_MP_ATTACK_STAND_POSTFIRE ||
-		GetActivity() == ACT_PRIMARY_ATTACK_STAND_POSTFIRE ||
-		GetActivity() == ACT_SECONDARY_ATTACK_STAND_POSTFIRE ||
-		GetActivity() == ACT_MELEE_ATTACK_STAND_POSTFIRE ||
-		GetActivity() == ACT_ITEM1_ATTACK_STAND_POSTFIRE ||
-		GetActivity() == ACT_ITEM2_ATTACK_STAND_POSTFIRE )
+	if ( GetActivity() == ACT_MP_ATTACK_STAND_POSTFIRE )
 	{
 		if ( !IsViewModelSequenceFinished() )
 			return false;
@@ -386,7 +354,6 @@ bool CTFMinigun::Holster( CBaseCombatWeapon *pSwitchingTo )
 	{
 		WindDown();
 	}
-	m_flBarrelCurrentVelocity = 0.0f;
 
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -511,18 +478,12 @@ void CTFMinigun::HandleFireOnEmpty( void )
 
 		 if ( m_iWeaponMode == TF_WEAPON_SECONDARY_MODE )
 		 {
-			int nMinigunNoSound = 0;
-			CALL_ATTRIB_HOOK_INT( nMinigunNoSound, minigun_no_spin_sounds );
-			if ( nMinigunNoSound != 1 )
-			{
-				m_iWeaponState = AC_STATE_SPINNING;
-			}
+			m_iWeaponState = AC_STATE_SPINNING;
 		 }
 	}
 }
 
 #ifdef CLIENT_DLL
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -564,33 +525,13 @@ void CTFMinigun::StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternio
 		/*
 		RadianEuler a;
 		QuaternionAngles( q[iBarrelBone], a );
+
 		a.x = m_flBarrelAngle;
+
 		AngleQuaternion( a, q[iBarrelBone] );
 		*/
 
 		AngleQuaternion( RadianEuler( 0, 0, m_flBarrelAngle ), q[m_iBarrelBone] );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFMinigun::ViewModelAttachmentBlending( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask )
-{
-	// Weapon happens to be aligned to (0,0,0)
-	// If that changes, use this code block instead to
-	// modify the angles
-
-	int iBarrelBone = Studio_BoneIndexByName( hdr, "barrel" );
-
-	if  ( iBarrelBone != -1 && ( hdr->boneFlags( iBarrelBone ) & boneMask ) )
-	{
-		RadianEuler a;
-		QuaternionAngles( q[ iBarrelBone ], a );
-
-		a.x = GetBarrelRotation();
-
-		AngleQuaternion( RadianEuler( 0, 0, GetBarrelRotation() ), q[iBarrelBone] );
 	}
 }
 
@@ -622,12 +563,7 @@ void CTFMinigun::OnDataChanged( DataUpdateType_t updateType )
 {
 	// Brass ejection and muzzle flash.
 	HandleBrassEffect();
-	/*
-//	if (!ShouldMuzzleFlash())
-	if (!tf2c_model_muzzleflash.GetBool())
-	{*/
-		HandleMuzzleEffect();
-	//}
+	HandleMuzzleEffect();
 
 	BaseClass::OnDataChanged( updateType );
 
@@ -675,8 +611,7 @@ void CTFMinigun::SetDormant( bool bDormant )
 	}
 
 	// Deliberately skip base combat weapon
-	//C_BaseEntity::SetDormant( bDormant );
-	BaseClass::SetDormant(bDormant);
+	C_BaseEntity::SetDormant( bDormant );
 }
 
 
@@ -696,8 +631,6 @@ void CTFMinigun::ItemPreFrame( void )
 //-----------------------------------------------------------------------------
 void CTFMinigun::StartBrassEffect()
 {
-	StopBrassEffect();
-
 	C_BaseEntity *pEffectOwner = GetWeaponForEffect();
 	if ( !pEffectOwner )
 		return;
@@ -714,7 +647,6 @@ void CTFMinigun::StartBrassEffect()
 	if ( m_iEjectBrassAttachment != -1 && m_pEjectBrassEffect == NULL )
 	{
 		m_pEjectBrassEffect = pEffectOwner->ParticleProp()->Create( "eject_minigunbrass", PATTACH_POINT_FOLLOW, m_iEjectBrassAttachment );
-		m_hBrassEffectHost = pEffectOwner;
 	}
 }
 
@@ -723,8 +655,6 @@ void CTFMinigun::StartBrassEffect()
 //-----------------------------------------------------------------------------
 void CTFMinigun::StartMuzzleEffect()
 {
-	StopMuzzleEffect();
-
 	C_BaseEntity *pEffectOwner = GetWeaponForEffect();
 	if ( !pEffectOwner )
 		return;
@@ -741,7 +671,6 @@ void CTFMinigun::StartMuzzleEffect()
 	if ( m_iMuzzleAttachment != -1 && m_pMuzzleEffect == NULL )
 	{
 		m_pMuzzleEffect = pEffectOwner->ParticleProp()->Create( "muzzle_minigun_constant", PATTACH_POINT_FOLLOW, m_iMuzzleAttachment );
-		m_hMuzzleEffectHost = pEffectOwner;
 	}
 }
 
@@ -750,17 +679,14 @@ void CTFMinigun::StartMuzzleEffect()
 //-----------------------------------------------------------------------------
 void CTFMinigun::StopBrassEffect()
 {
-	C_BaseEntity *pEffectOwner = m_hBrassEffectHost.Get();
+	C_BaseEntity *pEffectOwner = GetWeaponForEffect();
+	if ( !pEffectOwner )
+		return;
 
 	// Stop the brass ejection.
 	if ( m_pEjectBrassEffect )
 	{
-		if ( pEffectOwner )
-		{
-			pEffectOwner->ParticleProp()->StopEmission( m_pEjectBrassEffect );
-			m_hBrassEffectHost = NULL;
-		}
-
+		pEffectOwner->ParticleProp()->StopEmission( m_pEjectBrassEffect );
 		m_pEjectBrassEffect = NULL;
 	}
 }
@@ -770,17 +696,14 @@ void CTFMinigun::StopBrassEffect()
 //-----------------------------------------------------------------------------
 void CTFMinigun::StopMuzzleEffect()
 {
-	C_BaseEntity *pEffectOwner = m_hMuzzleEffectHost.Get();
+	C_BaseEntity *pEffectOwner = GetWeaponForEffect();
+	if ( !pEffectOwner )
+		return;
 
 	// Stop the muzzle flash.
 	if ( m_pMuzzleEffect )
 	{
-		if ( pEffectOwner )
-		{
-			pEffectOwner->ParticleProp()->StopEmission( m_pMuzzleEffect );
-			m_hMuzzleEffectHost = NULL;
-		}
-
+		pEffectOwner->ParticleProp()->StopEmission( m_pMuzzleEffect );
 		m_pMuzzleEffect = NULL;
 	}
 }
@@ -806,7 +729,7 @@ void CTFMinigun::HandleBrassEffect()
 void CTFMinigun::HandleMuzzleEffect()
 {
 	if ( m_iWeaponState == AC_STATE_FIRING && m_pMuzzleEffect == NULL )
-	{	
+	{
 		StartMuzzleEffect();
 	}
 	else if ( m_iWeaponState != AC_STATE_FIRING && m_pMuzzleEffect )
@@ -829,9 +752,6 @@ float CTFMinigun::GetBarrelRotation( void )
 //-----------------------------------------------------------------------------
 void CTFMinigun::CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles )
 {
-	// Stop reload from fucing states up -tf2vintage
-	pCmd->buttons &= ~IN_RELOAD;
-
 	// Prevent jumping while firing
 	if ( m_iWeaponState != AC_STATE_IDLE )
 	{
