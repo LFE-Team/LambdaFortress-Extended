@@ -1787,19 +1787,6 @@ void CTFGameRules::Activate()
 
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
-	tf_gamemode_arena.SetValue( 0 );
-	tf_gamemode_cp.SetValue( 0 );
-	tf_gamemode_ctf.SetValue( 0 );
-	tf_gamemode_sd.SetValue( 0 );
-	tf_gamemode_payload.SetValue( 0 );
-	tf_gamemode_mvm.SetValue( 0 );
-	tf_gamemode_rd.SetValue( 0 );
-	tf_gamemode_passtime.SetValue( 0 );
-	lfe_versus.SetValue( 0 );
-	lfe_blucoop.SetValue( 0 );
-	lfe_gamemode_zs.SetValue( 0 );
-	hl2_episodic.SetValue( 0 );
-
 	SetMultipleTrains( false );
 
 	if ( lfe_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) &&
