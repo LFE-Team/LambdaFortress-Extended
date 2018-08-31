@@ -49,6 +49,7 @@ typedef enum
 	AE_STOP_SCRIPTED_EFFECT,
 
 	AE_CLIENT_EFFECT_ATTACH,
+	CL_BODYGROUP,
 	
 	AE_MUZZLEFLASH,			// Muzzle flash from weapons held by the player
 	AE_NPC_MUZZLEFLASH,		// Muzzle flash from weapons held by NPCs
