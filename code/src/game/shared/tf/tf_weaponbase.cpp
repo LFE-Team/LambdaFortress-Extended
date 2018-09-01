@@ -3717,7 +3717,45 @@ bool CTFWeaponBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& orig
 
 		return true;
 	}
+	if ( event == AE_WPN_PRIMARYATTACK && GetWeaponID() )
+	{
+		PrimaryAttack();
 
+		return true;
+	}
+
+	if ( event == AE_CL_BODYGROUP_SET_VALUE_CMODEL_WPN && GetWeaponID() )
+	{
+		int value;
+		char token[256];
+		char szBodygroupName[256];
+
+		const char *p = options;
+
+		// Bodygroup Name
+		p = nexttoken(token, p, ' ');
+		Q_strncpy( szBodygroupName, token, sizeof( szBodygroupName ) );
+
+		// Get the desired value
+		p = nexttoken(token, p, ' ');
+		value = token[0] ? atoi( token ) : 0;
+
+		int index = FindBodygroupByName( szBodygroupName );
+		if ( index >= 0 )
+		{
+			SetBodygroup( index, value );
+		}
+
+		C_ViewmodelAttachmentModel *pAddon = GetViewmodelAddon();
+		if ( pAddon )
+		{
+			int indexadd = pAddon->FindBodygroupByName( szBodygroupName );
+			if ( indexadd >= 0 )
+			{
+				pAddon->SetBodygroup( indexadd, value );
+			}
+		}
+	}
 	return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
 }
 

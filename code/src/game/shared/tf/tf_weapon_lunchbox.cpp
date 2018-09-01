@@ -17,9 +17,6 @@
 
 CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox, tf_weapon_lunchbox )
 
-#define SANDVICH_BODYGROUP_BITE 0
-#define SANDVICH_STATE_BITTEN 1
-#define SANDVICH_STATE_NORMAL 0
 #define TF_SANDVICH_PLATE_MODEL "models/items/plate.mdl"
 
 //-----------------------------------------------------------------------------
@@ -42,12 +39,6 @@ void CTFLunchBox::PrimaryAttack( void )
 			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
 			pOwner->SwitchToNextBestWeapon(this);
 			StartEffectBarRegen();
-		}	
-#else
-		C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
-		if ( pAttach )
-		{
-			pAttach->SetBodygroup( SANDVICH_BODYGROUP_BITE, SANDVICH_STATE_BITTEN );
 		}
 #endif
 	}

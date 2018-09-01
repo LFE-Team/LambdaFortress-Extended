@@ -108,10 +108,10 @@ void CTFWinPanel::FireGameEvent( IGameEvent * event )
 {
 	KeyValues *pConditions = NULL;
 
-	if ( TFGameRules() && TFGameRules()->IsAnyCoOp() )
+	if ( TFGameRules() && TFGameRules()->IsBluCoOp() )
 	{
 		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_coop" );
+		AddSubKeyNamed( pConditions, "if_blucoop" );
 	}
 
 	const char *pEventName = event->GetName();

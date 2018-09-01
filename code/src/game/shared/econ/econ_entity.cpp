@@ -73,10 +73,28 @@ void CEconEntity::FireEvent( const Vector& origin, const QAngle& angles, int eve
 {
 	if ( event == AE_CL_BODYGROUP_SET_VALUE_CMODEL_WPN )
 	{
-		// Something?
+		int value;
+		char token[256];
+		char szBodygroupName[256];
+
+		const char *p = options;
+
+		// Bodygroup Name
+		p = nexttoken(token, p, ' ');
+		Q_strncpy( szBodygroupName, token, sizeof( szBodygroupName ) );
+
+		// Get the desired value
+		p = nexttoken(token, p, ' ');
+		value = token[0] ? atoi( token ) : 0;
+
+		int index = FindBodygroupByName( szBodygroupName );
+		if ( index >= 0 )
+		{
+			SetBodygroup( index, value );
+		}
 	}
-	else
-		BaseClass::FireEvent( origin, angles, event, options );
+
+	BaseClass::FireEvent( origin, angles, event, options );
 }
 
 //-----------------------------------------------------------------------------

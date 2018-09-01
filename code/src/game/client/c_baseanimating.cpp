@@ -3787,7 +3787,11 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 			iAttachType = GetAttachTypeFromString( token );
 			if ( iAttachType == -1 )
 			{
+				#ifdef TF_CLASSIC_CLIENT
+				Warning("Invalid attach type specified for particle effect AE_CL_CREATE_PARTICLE_EFFECT event. Trying to spawn effect '%s' with attach type of '%s'\n", szParticleEffect, token );
+				#else
 				Warning("Invalid attach type specified for particle effect anim event. Trying to spawn effect '%s' with attach type of '%s'\n", szParticleEffect, token );
+				#endif
 				return;
 			}
 
@@ -3803,7 +3807,11 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 					iAttachment = LookupAttachment( token );
 					if ( iAttachment <= 0 )
 					{
+						#ifdef TF_CLASSIC_CLIENT
+						Warning( "Failed to find attachment point specified for particle effect AE_CL_CREATE_PARTICLE_EFFECT event. Trying to spawn effect '%s' on attachment named '%s'\n", szParticleEffect, token );
+						#else
 						Warning( "Failed to find attachment point specified for particle effect anim event. Trying to spawn effect '%s' on attachment named '%s'\n", szParticleEffect, token );
+						#endif
 						return;
 					}
 				}
@@ -4010,7 +4018,48 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 			}
 		}
 		break;
+#ifdef TF_CLASSIC_CLIENT
+	case AE_CL_REMOVE_PARTICLE_EFFECT:
+		{
+			int iAttachment = -1;
+			char token[256];
+			char szParticleEffect[256];
 
+			// Get the particle effect name
+			const char *p = options;
+			p = nexttoken(token, p, ' ');
+
+			const char* mtoken = ModifyEventParticles( token );
+			if ( !mtoken || mtoken[0] == '\0' )
+				return;
+			Q_strncpy( szParticleEffect, mtoken, sizeof(szParticleEffect) );
+
+			// Get the attachment type
+			p = nexttoken(token, p, ' ');
+
+			// Get the attachment point index
+			p = nexttoken(token, p, ' ');
+			if ( token[0] )
+			{
+				iAttachment = atoi(token);
+
+				// See if we can find any attachment points matching the name
+				if ( token[0] != '0' && iAttachment == 0 )
+				{
+					iAttachment = LookupAttachment( token );
+					if ( iAttachment <= 0 )
+					{
+						Warning( "Failed to find attachment point specified for particle effect AE_CL_REMOVE_PARTICLE_EFFECT event. Trying to stop effect '%s' on attachment named '%s'\n", szParticleEffect, token );
+						return;
+					}
+				}
+			}
+
+			// Spawn the particle effect
+			ParticleProp()->StopParticlesWithNameAndAttachment( szParticleEffect, iAttachment );
+		}
+		break;
+#endif
 	default:
 		break;
 	}

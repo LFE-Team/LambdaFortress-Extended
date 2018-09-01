@@ -35,6 +35,8 @@ void CTFAdvModelPanel::ApplySettings(KeyValues *inResourceData)
 	BaseClass::ApplySettings(inResourceData);
 
 	m_bAutoRotate = inResourceData->GetBool("autorotate", false);
+
+	InvalidateLayout( false, true ); // force ApplySchemeSettings to run
 }
 
 
