@@ -102,6 +102,8 @@ void CTFDialogPanelBase::Show()
 	vgui::GetAnimationController()->RunAnimationCommand(this, "Position", p_AnimHover, 0.0f, 0.3f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE, NULL);
 	*/
 	MAINMENU_ROOT->ShowPanel(SHADEBACKGROUND_MENU);
+	MAINMENU_ROOT->HidePanel(CURRENT_MENU);
+	MAINMENU_ROOT->HidePanel(NOTIFICATION_MENU);
 };
 
 void CTFDialogPanelBase::Hide()
