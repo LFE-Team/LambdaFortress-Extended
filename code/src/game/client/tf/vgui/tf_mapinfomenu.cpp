@@ -669,6 +669,7 @@ static s_MapInfo s_Maps[] = {
 	"ep2_outland_01",		"To The White Forest (Part 1)",	"#Gametype_CoOp",		"Train, Valve",
 	"ep2_outland_01a",		"To The White Forest (Part 1)",	"#Gametype_CoOp",		"Train, Valve",
 	"ep2_outland_02",		"This Vortal Coil (Part 1)",	"#Gametype_CoOp",		"Train, Valve",
+	"ep2_outland_02_p2",	"This Vortal Coil (Part 3.5)",	"#Gametype_CoOp",		"Train, Valve",
 	"ep2_outland_03",		"This Vortal Coil (Part 2)",	"#Gametype_CoOp",		"Train, Valve",
 	"ep2_outland_04",		"This Vortal Coil (Part 3)",	"#Gametype_CoOp",		"Train, Valve",
 	"ep2_outland_05",		"Freeman Pontifex (Part 1)",	"#Gametype_CoOp",		"Train, Valve",
