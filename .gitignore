@@ -112,3 +112,6 @@ code/src/game/server/Release_tf_coop_extended/vc120.pdb
 >>>>>>> master
 *.pdb
 *.lib
+*.lib
+*.pdb
+*.sentinel
