@@ -110,3 +110,5 @@ code/src/game/client/Release_tf_coop_extended/vc120.pdb
 =======
 code/src/game/server/Release_tf_coop_extended/vc120.pdb
 >>>>>>> master
+*.pdb
+*.lib

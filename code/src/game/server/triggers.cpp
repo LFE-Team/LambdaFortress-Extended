@@ -3121,7 +3121,8 @@ void CTriggerCamera::Enable( void )
 			m_hPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
 			Msg ("m_hPlayer should now be the nearest player.");
 #else
-			m_hPlayer = UTIL_GetLocalPlayer();
+			//m_hPlayer = UTIL_GetLocalPlayer();
+			m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #endif //TF_CLASSIC
 
 		}
@@ -3321,7 +3322,8 @@ void CTriggerCamera::Enable( void )
 #ifdef TF_CLASSIC
 		m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
 #else
-		m_hPlayer = UTIL_GetLocalPlayer();
+		//m_hPlayer = UTIL_GetLocalPlayer();
+		m_hPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
 #endif //TF_CLASSIC
 
 	}
