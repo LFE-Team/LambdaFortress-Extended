@@ -134,6 +134,9 @@ extern IToolFrameworkServer *g_pToolFrameworkServer;
 extern IParticleSystemQuery *g_pParticleSystemQuery;
 
 extern ConVar commentary;
+#ifdef TF_CLASSIC
+extern ConVar lfe_mapadd_system_enable;
+#endif
 
 #ifndef NO_STEAM
 // this context is not available on dedicated servers
@@ -156,6 +159,9 @@ CTimedEventMgr g_NetworkPropertyEventMgr;
 
 ISaveRestoreBlockHandler *GetEventQueueSaveRestoreBlockHandler();
 ISaveRestoreBlockHandler *GetCommentarySaveRestoreBlockHandler();
+#ifdef TF_CLASSIC
+ISaveRestoreBlockHandler *GetMapAddSaveRestoreBlockHandler();
+#endif
 
 CUtlLinkedList<CMapEntityRef, unsigned short> g_MapEntityRefs;
 
@@ -680,6 +686,9 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetTemplateSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetCommentarySaveRestoreBlockHandler() );
+	#ifdef TF_CLASSIC
+	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetMapAddSaveRestoreBlockHandler() );
+	#endif
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 
@@ -759,6 +768,9 @@ void CServerGameDLL::DLLShutdown( void )
 
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetCommentarySaveRestoreBlockHandler() );
+	#ifdef TF_CLASSIC
+	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetMapAddSaveRestoreBlockHandler() );
+	#endif
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetTemplateSaveRestoreBlockHandler() );

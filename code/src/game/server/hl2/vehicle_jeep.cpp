@@ -144,8 +144,8 @@ BEGIN_DATADESC( CPropJeep )
 	DEFINE_INPUTFUNC( FIELD_VOID, "ShowHudHint", InputShowHudHint ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartRemoveTauCannon", InputStartRemoveTauCannon ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "FinishRemoveTauCannon", InputFinishRemoveTauCannon ),
-	DEFINE_INPUTFUNC(FIELD_VOID, "FromSpawner", InputFromSpawner),
-	DEFINE_INPUTFUNC(FIELD_VOID, "EnableGunSpawner", InputEnableGunSpawner),
+	DEFINE_INPUTFUNC( FIELD_VOID, "FromSpawner", InputFromSpawner ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "EnableGunSpawner", InputEnableGunSpawner ),
 
 	DEFINE_THINKFUNC( JeepSeagullThink ),
 END_DATADESC()
@@ -271,6 +271,7 @@ void CPropJeep::InputEnableGunSpawner(inputdata_t &inputdata)
 	SetPoseParameter(JEEP_GUN_SPIN, m_nSpinPos);
 	m_aimYaw = 0;
 	m_aimPitch = 0;
+	m_bHasGun = true;
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

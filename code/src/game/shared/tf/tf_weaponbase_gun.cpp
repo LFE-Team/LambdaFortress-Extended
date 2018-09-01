@@ -728,7 +728,7 @@ CBaseEntity *CTFWeaponBaseGun::FireJar( CTFPlayer *pPlayer, int iType )
 	// Set the starting position a bit behind the player so the projectile
 	// launches out of the players view
 	Vector vecSrc = pPlayer->Weapon_ShootPosition();
-	vecSrc +=  vecForward * -64.0f + vecRight * 8.0f + vecUp * -6.0f;
+	vecSrc +=  vecForward * -32.0f + vecRight * 8.0f + vecUp * -6.0f;
 
 	Vector vecVelocity = ( vecForward * GetProjectileSpeed() ) + ( vecUp * 200.0f ) + ( random->RandomFloat( -10.0f, 10.0f ) * vecRight ) +		
 		( random->RandomFloat( -10.0f, 10.0f ) * vecUp );

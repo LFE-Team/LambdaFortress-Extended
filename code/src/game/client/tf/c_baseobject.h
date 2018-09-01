@@ -198,6 +198,9 @@ public:
 public:
 	virtual void		DisplayHintTo( C_BasePlayer *pPlayer );
 
+	// moving this to public for hud_building_status
+	bool IsMiniBuilding( void ) { return m_bMiniBuilding; }
+
 protected:
 	virtual void		UpdateDamageEffects( BuildingDamageLevel_t damageLevel ) {}	// default is no effects
 
@@ -260,7 +263,6 @@ private:
 
 	int m_nObjectOldSequence;
 
-	bool			IsMiniBuilding( void ) { return m_bMiniBuilding; }
 protected:
 
 	int m_iUpgradeLevel;

@@ -1,4 +1,3 @@
-
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
@@ -253,7 +252,7 @@ void CTFStatPanel::UpdateStats( int iMsgType )
 		{
 			// show the panel now if dead or very recently spawned
 			vgui::ivgui()->AddTickSignal( GetVPanel(), 1000 );
-			ShowStatPanel( m_iCurStatClass, m_iCurStatTeam, m_iCurStatValue, m_statRecord, m_recordBreakType, bAlive );
+			//ShowStatPanel( m_iCurStatClass, m_iCurStatTeam, m_iCurStatValue, m_statRecord, m_recordBreakType, bAlive );
 			m_flTimeHide = gpGlobals->curtime + ( bAlive ? 12.0f : 20.0f );
 			m_statRecord = TFSTAT_UNDEFINED;
 		}

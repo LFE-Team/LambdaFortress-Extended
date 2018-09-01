@@ -1063,9 +1063,9 @@ ConVar tf_cheapobjects( "tf_cheapobjects","0", FCVAR_CHEAT | FCVAR_DEVELOPMENTON
 //			If bLast is set, return the cost of the last built object of the specified type
 // 
 // Note: Used to contain logic from tf2 that multiple instances of the same object
-//       cost different amounts. See tf2/game_shared/tf_shareddefs.cpp for details
+//       cost different amounts. See game/shared/tf_shareddefs.cpp for details
 //-----------------------------------------------------------------------------
-int CalculateObjectCost( int iObjectType )
+int CalculateObjectCost( int iObjectType, bool bMini /*= false*/ )
 {
 	if ( tf_cheapobjects.GetInt() )
 	{
@@ -1073,6 +1073,11 @@ int CalculateObjectCost( int iObjectType )
 	}
 
 	int iCost = GetObjectInfo( iObjectType )->m_Cost;
+
+	if ( iObjectType == OBJ_SENTRYGUN && bMini )
+	{
+		iCost = 100;
+	}
 
 	return iCost;
 }

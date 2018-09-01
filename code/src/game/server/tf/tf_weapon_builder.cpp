@@ -659,14 +659,14 @@ void CTFWeaponBuilder::StartBuilding(void)
 //-----------------------------------------------------------------------------
 // Purpose: Return true if this weapon has some ammo
 //-----------------------------------------------------------------------------
-bool CTFWeaponBuilder::HasAmmo(void)
+bool CTFWeaponBuilder::HasAmmo( void )
 {
-	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
-	if (!pOwner)
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+	if ( !pOwner )
 		return false;
 
-	int iCost = CalculateObjectCost(m_iObjectType);
-	return (pOwner->GetBuildResources() >= iCost);
+	int iCost = CalculateObjectCost( m_iObjectType, pOwner->HasGunslinger() );
+	return ( pOwner->GetBuildResources() >= iCost );
 }
 
 //-----------------------------------------------------------------------------

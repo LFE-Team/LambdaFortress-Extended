@@ -89,7 +89,7 @@ public:
 	bool		 IsActiveTFWeapon(int iWeaponID);
 
 	virtual void Simulate( void );
-	virtual void FireEvent(const Vector& origin, const QAngle& angles, int event, int group, int value, const char *options);
+	virtual void FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options );
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	void LoadInventory(void);
@@ -259,6 +259,9 @@ public:
 	virtual CAttributeContainer *GetAttributeContainer( void ) { return NULL; }
 	virtual CBaseEntity *GetAttributeOwner( void ) { return NULL; }
 	virtual void ReapplyProvision( void ) { /*Do nothing*/ };
+
+	// Vintage Gunslinger
+	bool				HasGunslinger( void ) { return m_Shared.m_bGunslinger; }
 
 public:
 	// Ragdolls.

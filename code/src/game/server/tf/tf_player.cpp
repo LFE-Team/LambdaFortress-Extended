@@ -483,7 +483,10 @@ ConCommand cc_CreatePredictionError( "CreatePredictionError", cc_CreatePredictio
 // Hint callbacks
 bool HintCallbackNeedsResources_Sentrygun( CBasePlayer *pPlayer )
 {
-	return ( pPlayer->GetAmmoCount( TF_AMMO_METAL ) > CalculateObjectCost( OBJ_SENTRYGUN ) );
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+	if ( !pTFPlayer )
+		return false;
+ 	return ( pPlayer->GetAmmoCount( TF_AMMO_METAL ) > CalculateObjectCost( OBJ_SENTRYGUN, pTFPlayer->HasGunslinger() ) );
 }
 bool HintCallbackNeedsResources_Dispenser( CBasePlayer *pPlayer )
 {
@@ -964,6 +967,18 @@ void CTFPlayer::PreThink()
 				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly.", GetPlayerName() );
 				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP2." ) );
 			}
+		}
+
+
+
+		if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 440 ) )
+		{
+			UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "You never played TF2?.", GetPlayerName() );
+		}
+
+		if ( !steamapicontext->SteamApps()->BIsAppInstalled( 440 ) )
+		{	
+			UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Why did you uninstalled TF2?.", GetPlayerName() );
 		}
 	}
 }
@@ -1812,13 +1827,14 @@ void CTFPlayer::GiveDefaultItems()
 
 	int nMiniBuilding = 0;
 	CALL_ATTRIB_HOOK_INT( nMiniBuilding, wrench_builds_minisentry );
+	bool bMiniBuilding = nMiniBuilding ? true : false;
 
 	// If we've switched to/from gunslinger destroy all of our buildings
-	if ( nMiniBuilding == 0 )
+	if ( m_Shared.m_bGunslinger != bMiniBuilding )
 	{
-	    for (int i = GetObjectCount()-1; i >= 0; i--)
+	   for ( int i = GetObjectCount()-1; i >= 0; i-- )
 	    {
-	        CBaseObject *obj = GetObject(i);
+	        CBaseObject *obj = GetObject( i );
 	        Assert( obj );
 
 			if ( !obj->IsMiniBuilding() )
@@ -1826,20 +1842,12 @@ void CTFPlayer::GiveDefaultItems()
 				obj->DetonateObject();
 			}        
 		}
-	}
-	else if ( nMiniBuilding == 1 )
-	{
-	    for (int i = GetObjectCount()-1; i >= 0; i--)
-	    {
-	        CBaseObject *obj = GetObject(i);
-	        Assert( obj );
 
-			if ( obj )
-			{
-				obj->DetonateObject();
-			}        
-		}
+ 		if ( GetActiveWeapon() )
+			GetActiveWeapon()->Deploy();
 	}
+
+	m_Shared.m_bGunslinger = bMiniBuilding;
 }
 
 //-----------------------------------------------------------------------------
@@ -5227,12 +5235,14 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 	if ( pVictim->IsPlayer() )
 	{
 		CTFPlayer *pTFVictim = ToTFPlayer(pVictim);
+		bool bInflictor = false;
 
 		// Custom death handlers
 		const char *pszCustomDeath = "customdeath:none";
 		if ( info.GetAttacker() && info.GetAttacker()->IsBaseObject() )
 		{
 			pszCustomDeath = "customdeath:sentrygun";
+			bInflictor = true;
 		}
 		else if ( info.GetInflictor() && info.GetInflictor()->IsBaseObject() )
 		{
@@ -5257,6 +5267,13 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
 		{
 			pszCustomDeath = "customdeath:burning";
+		}
+
+		// special responses for mini-sentry
+		if ( V_strcmp( pszCustomDeath, "customdeath:sentrygun" ) == 0 )
+		{
+			if ( HasGunslinger() )
+				pszCustomDeath = "customdeath:minisentrygun";
 		}
 
 		// Revenge handler

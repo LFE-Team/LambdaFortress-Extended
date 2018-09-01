@@ -181,9 +181,7 @@ void CObjectSentrygun::Spawn()
 
 	m_iState.Set( SENTRY_STATE_INACTIVE );
 
-	int nMiniSentry = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetBuilder(), nMiniSentry, wrench_builds_minisentry );
-	if ( nMiniSentry == 1 )
+	if ( GetBuilder() && GetBuilder()->HasGunslinger() )
 	{
 		m_bMiniBuilding = true;
 		SetMaxHealth( MINI_SENTRYGUN_MAX_HEALTH );
@@ -1146,13 +1144,10 @@ bool CObjectSentrygun::Fire()
 		info.m_vecSpread = vec3_origin;
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
+		info.m_flDamage = tf_sentrygun_damage.GetFloat();
 		if ( IsMiniBuilding() )
 		{
-			info.m_flDamage = 8;
-		}
-		else
-		{
-			info.m_flDamage = tf_sentrygun_damage.GetFloat();
+			info.m_flDamage /= 2;
 		}
 
 		FireBullets( info );

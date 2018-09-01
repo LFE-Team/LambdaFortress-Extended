@@ -1787,6 +1787,19 @@ void CTFGameRules::Activate()
 
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
+	tf_gamemode_arena.SetValue( 0 );
+	tf_gamemode_cp.SetValue( 0 );
+	tf_gamemode_ctf.SetValue( 0 );
+	tf_gamemode_sd.SetValue( 0 );
+	tf_gamemode_payload.SetValue( 0 );
+	tf_gamemode_mvm.SetValue( 0 );
+	tf_gamemode_rd.SetValue( 0 );
+	tf_gamemode_passtime.SetValue( 0 );
+	lfe_versus.SetValue( 0 );
+	lfe_blucoop.SetValue( 0 );
+	lfe_gamemode_zs.SetValue( 0 );
+	//hl2_episodic.SetValue( 0 );
+
 	SetMultipleTrains( false );
 
 	if ( lfe_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) &&
@@ -1794,6 +1807,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
 		lfe_coop.SetValue( 1 );
+		if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 1 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server coop config file\n", NULL );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
 		engine->ServerExecute();
@@ -1804,6 +1819,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_VS );
 		lfe_versus.SetValue( 1 );
+		if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 1 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server versus config file\n", NULL );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
@@ -1814,6 +1831,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
 		lfe_blucoop.SetValue( 1 );
+		if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 1 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server blue coop file\n", NULL );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
@@ -5395,7 +5414,7 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	// In case of a sentry kill change the icon according to sentry level.
 	if ( V_strcmp( killer_weapon_name, "obj_sentrygun" ) == 0 )
 	{
-		CBaseObject *pObject = assert_cast<CBaseObject *>( pInflictor );
+		CObjectSentrygun *pObject = assert_cast<CObjectSentrygun *>( pInflictor );
 
 		if ( pObject )
 		{
