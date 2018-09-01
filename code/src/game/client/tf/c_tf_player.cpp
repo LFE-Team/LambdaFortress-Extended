@@ -4303,7 +4303,7 @@ void C_TFPlayer::EditInventory( int iSlot, int iWeapon )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int event, int group, int value, const char *options )
+void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options )
 {
 	if ( event == 7001 )
 	{
@@ -4375,13 +4375,6 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 		if ( GetActiveWeapon() )
 		{
 			GetActiveWeapon()->SetWeaponVisible( false );
-		}
-	}
-	else if (event == CL_BODYGROUP)
-	{
-		if (GetActiveWeapon())
-		{
-			GetActiveWeapon()->SetBodygroup(group, value);
 		}
 	}
 	else if ( event == AE_WPN_UNHIDE )
