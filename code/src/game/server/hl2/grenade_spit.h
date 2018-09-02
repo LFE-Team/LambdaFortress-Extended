@@ -44,6 +44,7 @@ public:
 	void				SetSpitSize( int nSize );
 	void				Detonate( void );
 	void				Think( void );
+	void				AutoRemoveThink(void);
 
 	virtual bool			IsDeflectable() { return true; }
 	virtual void			Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );

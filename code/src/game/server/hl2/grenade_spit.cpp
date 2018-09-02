@@ -94,8 +94,16 @@ void CGrenadeSpit::Spawn( void )
 	}
 
 	m_flDetonateTime = gpGlobals->curtime + 1.5f;
+	SetContextThink(&CGrenadeSpit::AutoRemoveThink, gpGlobals->curtime + 4.0f, "autoremove_context");
 }
 
+void CGrenadeSpit::AutoRemoveThink(void)
+{
+	if (this) //make sure we're valid first
+	{
+		UTIL_Remove(this);
+	}
+}
 
 void CGrenadeSpit::SetSpitSize( int nSize )
 {
