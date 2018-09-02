@@ -613,6 +613,11 @@ void CPropVehicleDriveable::EnterVehicle( CBaseCombatCharacter *pPassenger )
 		// NPCs are not yet supported - jdw
 		Assert( 0 );
 	}
+	
+#ifdef TF_CLASSIC
+	// Set owner so player can get Their kill
+	SetOwnerEntity( pPlayer );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -642,6 +647,11 @@ void CPropVehicleDriveable::ExitVehicle( int nRole )
 
 	// Clear our state
 	m_pServerVehicle->InitViewSmoothing( vec3_origin, vec3_angle );
+
+#ifdef TF_CLASSIC
+	// Remove owner
+	SetOwnerEntity( NULL );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -885,16 +895,18 @@ void CPropVehicleDriveable::VPhysicsCollision( int index, gamevcollisionevent_t 
 
 //=============================================================================
 #ifdef HL2_EPISODIC
-
-	// Notify all children
-	for ( int i = 0; i < m_hPhysicsChildren.Count(); i++ )
+	// if we're jeep then stop.
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
 	{
-		if ( m_hPhysicsChildren[i] == NULL )
-			continue;
+		// Notify all children
+		for ( int i = 0; i < m_hPhysicsChildren.Count(); i++ )
+		{
+			if ( m_hPhysicsChildren[i] == NULL )
+				continue;
 
-		m_hPhysicsChildren[i]->VPhysicsCollision( index, pEvent );
+			m_hPhysicsChildren[i]->VPhysicsCollision( index, pEvent );
+		}
 	}
-
 #endif // HL2_EPISODIC
 //=============================================================================
 
@@ -949,8 +961,8 @@ void CPropVehicleDriveable::VPhysicsCollision( int index, gamevcollisionevent_t 
 		Vector damagePos;
 		pEvent->pInternalData->GetContactPoint( damagePos );
 		Vector damageForce = pEvent->postVelocity[index] * pEvent->pObjects[index]->GetMass();
-		CTakeDamageInfo info( this, GetDriver(), damageForce, damagePos, flDamage, (damageType|DMG_VEHICLE) );
-		GetDriver()->TakeDamage( info );
+		CTakeDamageInfo info( this, pDriver, damageForce, damagePos, flDamage, (damageType|DMG_VEHICLE) );
+		pDriver->TakeDamage( info );
 	}
 }
 
@@ -993,6 +1005,9 @@ void CPropVehicleDriveable::TraceAttack( const CTakeDamageInfo &info, const Vect
 		}
 
 #ifdef HL2_EPISODIC
+	// if we're jeep then stop.
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	{
 		// Notify all children
 		for ( int i = 0; i < m_hPhysicsChildren.Count(); i++ )
 		{
@@ -1002,6 +1017,7 @@ void CPropVehicleDriveable::TraceAttack( const CTakeDamageInfo &info, const Vect
 			variant_t emptyVariant;
 			m_hPhysicsChildren[i]->AcceptInput( "VehiclePunted", info.GetAttacker(), this, emptyVariant, USE_TOGGLE );
 		}
+	}
 #endif // HL2_EPISODIC
 
 	}
@@ -1130,7 +1146,7 @@ ConVar r_JeepFOV( "r_JeepFOV", "90", FCVAR_CHEAT | FCVAR_REPLICATED );
 #endif // HL2_EPISODIC
 */
 
-ConVar r_JeepFOV( "r_JeepFOV", "90", FCVAR_CHEAT | FCVAR_REPLICATED );
+ConVar r_JeepFOV( "r_JeepFOV", "86", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 //-----------------------------------------------------------------------------
 // Purpose: Setup our view smoothing information

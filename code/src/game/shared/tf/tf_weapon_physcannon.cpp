@@ -658,7 +658,7 @@ class CPlayerPickupController : public CBaseEntity
 public:
 	void Init( CBasePlayer *pPlayer, CBaseEntity *pObject );
 	void Shutdown( bool bThrown = false );
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	virtual int ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual int UpdateTransmitState( void );
 #endif
@@ -1866,8 +1866,7 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			DryFire();
 			return;
 		}
-#ifdef GAME_DLL 
-
+#ifdef GAME_DLL
 		if( pOwner->IsPlayer() && ( !IsMegaPhysCannon() || iType != 1 ) )
 		{
 			// Don't let the player zap any NPC's except regular antlions and headcrabs.
@@ -1898,24 +1897,6 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				if ( pOwner->m_Shared.IsCritBoosted() )
 				{
 					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
-
-					CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
-					int nNPCCount = g_AI_Manager.NumAIs();
-					for ( int iNPC = 0; iNPC < nNPCCount; ++iNPC )
-					{
-						CAI_BaseNPC *pNPC = ppAIs[iNPC];
-						if ( !pNPC )
-							continue;
-			
-						if ( !pNPC->InSameTeam( pOwner ) )
-							continue;
-						
-						CTakeDamageInfo allInfo( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
-
-						// charged is already op, but what about charged + crit?
-						pNPC->TakeDamage( allInfo );
-					}
-
 				}
 				else if ( pOwner->m_Shared.IsMiniCritBoosted() )
 				{
@@ -1933,13 +1914,12 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			}
 		}
 #endif
-
 		PuntNonVPhysics( pEntity, forward, tr );
 	}
 	else
 	{
 #ifndef CLIENT_DLL 
-		if ( EntityAllowsPunts( pEntity) == false )
+		if ( EntityAllowsPunts( pEntity ) == false )
 		{
 			DryFire();
 			return;
@@ -1981,14 +1961,14 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SecondaryAttack( void )
 {
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	if ( m_flNextSecondaryAttack > gpGlobals->curtime )
 		return;
 
 	if ( !CanAttack() )
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
@@ -2033,6 +2013,40 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 
 		DoEffect( EFFECT_HOLDING );
 	}
+#endif
+}	
+
+//-----------------------------------------------------------------------------
+// Purpose: F0rtnite Rift with damage lol.
+//-----------------------------------------------------------------------------
+void CWeaponPhysCannon::TertiaryAttack( void )
+{
+#ifdef GAME_DLL
+	if ( m_flNextTertiaryAttack > gpGlobals->curtime )
+		return;
+
+	if ( !CanAttack() )
+		return;
+
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
+	if ( pOwner == NULL )
+		return;
+
+	if ( ( pOwner->m_afButtonPressed & IN_ATTACK3 ) && pOwner->m_Shared.IsCritBoosted() )
+	{
+		// Drop the held object
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
+
+		PrimaryFireEffect();
+		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+
+		TFGameRules()->BroadcastSound( 255, "Weapon_MegaPhysCannon.SpecialAttackCrit" );
+
+		CTakeDamageInfo info( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+		RadiusDamage( info, pOwner->GetAbsOrigin(), 1024.0f, CLASS_NONE, pOwner );
+	}
+
 #endif
 }	
 
@@ -2937,7 +2951,7 @@ void CWeaponPhysCannon::DoEffectIdle(void)
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::ItemPostFrame()
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	if ( pOwner == NULL )
 	{
 		// We found an object. Debounce the button
@@ -3004,7 +3018,14 @@ void CWeaponPhysCannon::ItemPostFrame()
 		{
 			m_flNextPrimaryAttack = gpGlobals->curtime;
 		}
+
+		if ( pOwner->m_afButtonPressed & IN_ATTACK3 && pOwner->m_Shared.IsCritBoosted() )
+		{
+			TertiaryAttack();
+		}
 	}
+
+	m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -3579,7 +3600,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::DoEffectLaunch( Vector *pos )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	if ( pOwner == NULL )
 		return;
 

@@ -73,24 +73,10 @@ void CEconEntity::FireEvent( const Vector& origin, const QAngle& angles, int eve
 {
 	if ( event == AE_CL_BODYGROUP_SET_VALUE_CMODEL_WPN )
 	{
-		int value;
-		char token[256];
-		char szBodygroupName[256];
-
-		const char *p = options;
-
-		// Bodygroup Name
-		p = nexttoken(token, p, ' ');
-		Q_strncpy( szBodygroupName, token, sizeof( szBodygroupName ) );
-
-		// Get the desired value
-		p = nexttoken(token, p, ' ');
-		value = token[0] ? atoi( token ) : 0;
-
-		int index = FindBodygroupByName( szBodygroupName );
-		if ( index >= 0 )
+		C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+		if ( pAttach)
 		{
-			SetBodygroup( index, value );
+			pAttach->FireEvent( origin, angles, AE_CL_BODYGROUP_SET_VALUE, options );
 		}
 	}
 
@@ -104,7 +90,12 @@ bool CEconEntity::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin
 {
 	if ( event == AE_CL_BODYGROUP_SET_VALUE_CMODEL_WPN )
 	{
-		return true;
+		C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+		if ( pAttach)
+		{
+			pAttach->FireEvent( origin, angles, AE_CL_BODYGROUP_SET_VALUE, options );
+			return true;
+		}
 	}
 	return false;
 }

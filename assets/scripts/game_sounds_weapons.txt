@@ -8150,12 +8150,24 @@
 "Weapon_MegaPhysCannon.LaunchCrit"
 {
 	"channel"		"CHAN_WEAPON"
-	"volume"		"0.6"
+	"volume"		"0.8"
 	"soundlevel"	"SNDLVL_GUNFIRE"
 	"pitch"		"130,140"
 
 	"rndwave"
 	{
-		"wave"		"weapons/physcannon/superphys_launch_crit.wav"
+		"wave"		"weapons/physcannon/superphys_launch1.wav"
+		"wave"		"weapons/physcannon/superphys_launch2.wav"
+		"wave"		"weapons/physcannon/superphys_launch4.wav"
 	}
+}
+
+"Weapon_MegaPhysCannon.SpecialAttackCrit"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1.0"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+	"pitch"		"130,140"
+
+	"wave"		"weapons/physcannon/superphys_launch_crit.wav"
 }

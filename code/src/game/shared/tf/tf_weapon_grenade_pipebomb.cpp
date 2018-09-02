@@ -34,6 +34,7 @@ END_NETWORK_TABLE()
 
 #ifdef GAME_DLL
 static string_t s_iszTrainName;
+static string_t s_iszOildRumName;
 #endif
 
 //-----------------------------------------------------------------------------
@@ -45,7 +46,10 @@ CTFGrenadePipebombProjectile::CTFGrenadePipebombProjectile()
 #ifdef GAME_DLL
 	m_bTouched = false;
 	m_flFullDamage = 0.0f;
+
+
 	s_iszTrainName = AllocPooledString( "models/props_vehicles/train_enginecar.mdl" );
+	s_iszOildRumName = AllocPooledString( "models/props_c17/oildrum001_explosive.mdl" );
 #endif
 }
 
@@ -266,7 +270,7 @@ void CTFGrenadePipebombProjectile::PipebombTouch( CBaseEntity *pOther )
 	}
 
 	// Train hack!
-	if ( pOther->GetModelName() == s_iszTrainName && ( pOther->GetAbsVelocity().LengthSqr() > 1.0f ) )
+	if ( pOther->GetModelName() == s_iszTrainName || pOther->GetModelName() == s_iszOildRumName && ( pOther->GetAbsVelocity().LengthSqr() > 1.0f ) )
 	{
 		Explode( &pTrace, GetDamageType() );
 	}

@@ -1029,33 +1029,36 @@ void CWeaponMedigun::PrimaryAttack( void )
 
 			SendWeaponAnim( ACT_MP_ATTACK_STAND_PREFIRE );
 			pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRE );
-			
-#ifdef CLIENT_DLL
-			// Handle the dynamic light
-			if (lfe_muzzlelight.GetBool())
-			{
-				dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-				dl->origin = pOwner->Weapon_ShootPosition();;
-				switch ( GetTFPlayerOwner()->GetTeamNumber() )
-				{
-				case TF_TEAM_RED:
-					dl->color.r = 255;
-					dl->color.g = 80;
-					dl->color.b = 10;
-					break;
 
-				case TF_TEAM_BLUE:
-					dl->color.r = 10;
-					dl->color.g = 80;
-					dl->color.b = 255;
-					break;
+			if ( pOwner->m_nButtons & IN_ATTACK )
+			{
+#ifdef CLIENT_DLL
+				// Handle the dynamic light
+				if (lfe_muzzlelight.GetBool())
+				{
+					dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+					dl->origin = pOwner->Weapon_ShootPosition();;
+					switch ( GetTFPlayerOwner()->GetTeamNumber() )
+					{
+					case TF_TEAM_RED:
+						dl->color.r = 255;
+						dl->color.g = 80;
+						dl->color.b = 10;
+						break;
+
+					case TF_TEAM_BLUE:
+						dl->color.r = 10;
+						dl->color.g = 80;
+						dl->color.b = 255;
+						break;
+					}
+					dl->die = gpGlobals->curtime + 0.01f;
+					dl->radius = 128.f;
+					dl->decay = 512.0f;
+					dl->style = 1;
 				}
-				dl->die = gpGlobals->curtime + 0.01f;
-				dl->radius = 128.f;
-				dl->decay = 512.0f;
-				dl->style = 1;
-			}
 #endif
+			}
 		}
 
 		m_bHealing = true;

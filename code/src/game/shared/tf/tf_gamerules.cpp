@@ -7541,10 +7541,10 @@ const char *CTFGameRules::GetGameDescription(void)
 			return "TF2 (Arena)";
 			break;
 		case TF_GAMETYPE_COOP:
-			return "LF (Co-Op)";
+			return "LFE (Co-Op)";
 			break;
 		case TF_GAMETYPE_VS:
-			return "LF (Versus)";
+			return "LFE (Versus)";
 			break;
 		case TF_GAMETYPE_ZS:
 			return "LFE (Zombie Survival)";

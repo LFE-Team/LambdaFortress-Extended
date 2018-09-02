@@ -506,6 +506,35 @@ C_ViewmodelAttachmentModel *C_TFWeaponBase::GetViewmodelAddon( void )
 	}
 	return NULL;
 }
+
+//-----------------------------------------------------------------------------
+// Vintage Purpose:
+//-----------------------------------------------------------------------------
+C_BaseAnimating *C_TFWeaponBase::GetAppropriateWorldOrViewModel( void )
+{
+	C_TFPlayer *pPlayer = GetTFPlayerOwner();
+	if ( pPlayer && UsingViewModel() && GetItem() && GetItem()->GetStaticData() )
+	{
+		// what kind of viewmodel is this?
+		int iType = GetItem()->GetStaticData()->attach_to_hands;
+ 		// Is this a cmodel?
+		if ( iType == VMTYPE_TF2 )
+		{
+			C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+			if ( pAttach)
+				return pAttach;
+		}
+ 		// Is this a vmodel?
+		// FIXME: updating this on the client does nothing!
+		C_BaseViewModel *vm = pPlayer->GetViewModel();
+		if ( vm )
+		{
+			return vm;
+		}
+	}
+ 	// this too
+	return this;
+}
 #endif
 
 const char *CTFWeaponBase::DetermineViewModelType( const char *vModel ) const
@@ -898,36 +927,15 @@ void CTFWeaponBase::PrimaryAttack( void )
 		return;
 
 	BaseClass::PrimaryAttack();
-	/*
+
 	int iSGKnockback = 0;
 	CALL_ATTRIB_HOOK_INT( iSGKnockback, set_scattergun_has_knockback );
 	if ( iSGKnockback )
 	{
-		Vector vecDir;
-		QAngle angDir = pOwner->EyeAngles();
-		AngleVectors( angDir, &vecDir );
-		QAngle angPushDir = angDir;
-
-		// Push them at least 45 degrees up.
-		angPushDir[PITCH] = min( -45, angPushDir[PITCH] );
-
-		AngleVectors( angPushDir, &vecDir );
-
-		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pOwner->WorldSpaceCenter();
-
-		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
-		VectorNormalize( vecVictimDir2D );
-
-		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
-		VectorNormalize( vecDir2D );
-
-		//If not on ground, then don't make them fly!
-		if ( pOwner && !( pOwner->GetFlags() & FL_ONGROUND ) )
-		{
-			pOwner->ApplyAbsVelocityImpulse( vecDir * 500 );
-		}
+		#ifdef GAME_DLL
+		Knockback();
+		#endif
 	}
-	*/
 
 	// Due to cl_autoreload we can now interrupt ANY reload.
 	AbortReload();
@@ -2367,6 +2375,31 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: i think it's for force-a-nature
+// ----------------------------------------------------------------------------
+void CTFWeaponBase::Knockback( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+	if ( !pOwner )
+		return;
+
+	Vector vecDir;
+	QAngle angDir = pOwner->EyeAngles();
+	AngleVectors( angDir, &vecDir );
+	QAngle angPushDir = angDir;
+
+	// Push them at least 45 degrees up.
+	angPushDir[PITCH] = min( -45, angPushDir[PITCH] );
+
+	AngleVectors( angPushDir, &vecDir );
+
+	//If not on ground, then don't make them fly!
+	if ( pOwner && !( pOwner->GetFlags() & FL_ONGROUND ) )
+	{
+		pOwner->ApplyAbsVelocityImpulse( vecDir * 500 );
+	}
+}
 #else
 
 void TE_DynamicLight( IRecipientFilter& filter, float delay,
@@ -3717,13 +3750,6 @@ bool CTFWeaponBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& orig
 
 		return true;
 	}
-	if ( event == AE_WPN_PRIMARYATTACK && GetWeaponID() )
-	{
-		PrimaryAttack();
-
-		return true;
-	}
-
 	if ( event == AE_CL_BODYGROUP_SET_VALUE_CMODEL_WPN && GetWeaponID() )
 	{
 		int value;
@@ -3745,17 +3771,14 @@ bool CTFWeaponBase::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& orig
 		{
 			SetBodygroup( index, value );
 		}
-
-		C_ViewmodelAttachmentModel *pAddon = GetViewmodelAddon();
-		if ( pAddon )
-		{
-			int indexadd = pAddon->FindBodygroupByName( szBodygroupName );
-			if ( indexadd >= 0 )
-			{
-				pAddon->SetBodygroup( indexadd, value );
-			}
-		}
 	}
+	if ( event == AE_WPN_PRIMARYATTACK && GetWeaponID() )
+	{
+		PrimaryAttack();
+
+		return true;
+	}
+
 	return BaseClass::OnFireEvent( pViewModel, origin, angles, event, options );
 }
 

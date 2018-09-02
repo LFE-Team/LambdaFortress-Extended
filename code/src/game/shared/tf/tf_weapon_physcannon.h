@@ -75,7 +75,6 @@ struct game_shadowcontrol_params_t : public hlshadowcontrol_params_t
 class CGrabController : public IMotionEvent
 {
 public:
-
 	CGrabController( void );
 	~CGrabController( void );
 	void AttachEntity( CBasePlayer *pPlayer, CBaseEntity *pEntity, IPhysicsObject *pPhys, bool bIsMegaPhysCannon, const Vector &vGrabPosition, bool bUseGrabPosition );
@@ -275,12 +274,13 @@ public:
 	virtual void	OnRestore();
 	virtual void	StopLoopingSounds();
 	virtual void	UpdateOnRemove(void);
-	void	PrimaryAttack();
-	void	SecondaryAttack();
-	void	WeaponIdle();
-	void	ItemPreFrame();
-	void	ItemPostFrame();
-	void	ItemHolsterFrame();
+	virtual void	PrimaryAttack();
+	virtual void	SecondaryAttack();
+	void	TertiaryAttack();
+	virtual void	WeaponIdle();
+	virtual void	ItemPreFrame();
+	virtual void	ItemPostFrame();
+	virtual void	ItemHolsterFrame();
 
 	void	ForceDrop( void );
 	bool	DropIfEntityHeld( CBaseEntity *pTarget );	// Drops its held entity if it matches the entity passed in
@@ -312,6 +312,7 @@ public:
 
 	EHANDLE m_hOldAttachedObject;
 
+	CNetworkVar( float, m_flNextTertiaryAttack );					// soonest time ItemPostFrame will call TertiaryAttack
 protected:
 	enum FindObjectResult_t
 	{

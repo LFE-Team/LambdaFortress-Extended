@@ -337,6 +337,18 @@ void CTFBaseRocket::RocketTouch( CBaseEntity *pOther )
 		return;
 	}
 
+	if ( ( pTrace->contents & CONTENTS_WATER ) )
+	{
+		// Splash!
+		CEffectData data;
+		data.m_fFlags = 0;
+		data.m_vOrigin = pTrace->endpos;
+		data.m_vNormal = Vector( 0, 0, 1 );
+		data.m_flScale = 8.0f;
+
+		DispatchEffect( "watersplash", data );
+	}
+
 	trace_t trace;
 	memcpy( &trace, pTrace, sizeof( trace_t ) );
 	Explode( &trace, pOther );

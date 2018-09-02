@@ -4369,6 +4369,19 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 			//DispatchEffect( "waterripple", data );
 			DispatchEffect( "watersplash", data );
 		}
+	} // vintage.
+	else if ( event == AE_CL_BODYGROUP_SET_VALUE_CMODEL_WPN )
+	{
+		CTFWeaponBase *pTFWeapon = GetActiveTFWeapon();
+		
+		if ( pTFWeapon )
+		{
+			C_BaseAnimating *vm = pTFWeapon->GetAppropriateWorldOrViewModel();
+			if ( vm )
+			{
+				vm->FireEvent( origin, angles, AE_CL_BODYGROUP_SET_VALUE, options );
+			}
+		}
 	}
 	else if ( event == AE_WPN_HIDE )
 	{
@@ -4382,6 +4395,18 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 		if ( GetActiveWeapon() )
 		{
 			GetActiveWeapon()->SetWeaponVisible( true );
+		}
+	}
+	else if ( event == AE_WPN_PLAYWPNSOUND )
+	{
+		if ( GetActiveWeapon() )
+		{
+			WeaponSound_t nWeaponSound = EMPTY;
+			GetWeaponSoundFromString( options );
+ 			if ( nWeaponSound != EMPTY )
+			{
+				GetActiveWeapon()->WeaponSound( nWeaponSound );
+			}
 		}
 	}
 	else if ( event == TF_AE_CIGARETTE_THROW )
