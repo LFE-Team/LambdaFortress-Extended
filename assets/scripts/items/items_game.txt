@@ -1052,7 +1052,7 @@
 
 		"weapon_sword"
 		{
-			"enabled"	"1"
+			"enabled"	"0"
 			"item_class"	"tf_weapon_sword"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
@@ -4899,7 +4899,6 @@
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
 			"item_name"	"#TF_Weapon_Spy_Sapper"
-			"item_description"	"#TF_Weapon_Spy_Sapper_desc"
 			"item_type_name"	"#TF_Weapon_Spy_Sapper"
 			"item_slot"	"building"
 			"item_quality"	"unique"
@@ -5668,7 +5667,6 @@
 			"craft_material_type"	"weapon"
 			"item_type_name"	"#TF_Weapon_PipebombLauncher"
 			"item_name"	"#TF_Weapon_PipebombLauncher"
-			"item_description" "#TF_Weapon_PipebombLauncher_desc"
 			"item_slot"	"secondary"
 			"anim_slot"	"primary"
 			"item_quality"	"normal"
@@ -6208,7 +6206,6 @@
 			"craft_material_type"	"weapon"
 			"item_type_name"	"#TF_Weapon_Wrench"
 			"item_name"	"#TF_Weapon_Wrench"
-			"item_description"	"#TF_Weapon_Wrench_Desc"
 			"item_slot"	"melee"
 			"item_quality"	"normal"
 			"baseitem" "0"

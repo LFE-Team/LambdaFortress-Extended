@@ -9,7 +9,17 @@ The major changes include:
  >Added Elasticity to buildings
  >Added proper huntsman charge hud
  >Added Glow outline effect on alyx in episodic maps
+ >Added Credits panel
+ >Added Proximity Voice and sv_voiceproximity (Disabled by default)
+ >Added Crit DLight for projectile
+ >Added Scout bonk voices
+ >Added Scout bonk materials
+ >Added Anti-piracy system
+ >Added live tf2 bodygroups
+ >Added Physics Constraint to Stickybomb
+ >Added WIP EP2 maps   
  >Fixed Dragon's Fury particle effect
+ >Fixed Dragon's Fury kill icon
  >Fixed crit effect on rockets
  >Fixed missing player classes info tip
  >Fixed Heavy Melee attack play only one voice
@@ -18,6 +28,15 @@ The major changes include:
  >Fixed Player able to score point by killing birds
  >Fixed player unable to join team after going spectate
  >Fixed some npc following the !player instead of nearest player
+ >Fixed Antlion Worker acid attack
+ >Fixed random game crash by combine soldier and hunter
+ >Fixed Projectile not emit dlight 
+ >Fixed KGB team colored
+ >Fixed player unable to shoot jeep's taugun
+ >Fixed EP1 Antlion holes, Alyx hacking rollermine and more episodic fixes
+ >Fixed player able to eat sandvich and bonk underwater
  >Updated the Director
- >Updated Loadout, Options, Stats and Quit Panel 
+ >Updated Main menu, Loadout, Options, Stats and Quit Panel 
  >Updated the localization files
+ >Updated Discord rpc
+ 
