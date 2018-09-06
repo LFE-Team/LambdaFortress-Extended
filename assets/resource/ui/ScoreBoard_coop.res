@@ -511,6 +511,28 @@
 			"wide"			"175"
 		}
 	}
+	"HorizontalLine"
+	{
+		"ControlName"		"ImagePanel"
+		"fieldName"		"HorizontalLine"
+		"xpos"			"115"
+		"ypos"			"397"
+		"zpos"			"3"
+		"wide"			"465"
+		"tall"			"1"
+		"autoResize"	"0"
+		"pinCorner"		"0"
+		"visible"		"0"
+		"enabled"		"0"
+		"tabPosition"	"0"	
+		"fillcolor"		"127 127 127 153"
+		"PaintBackgroundType"	"0"
+		
+		if_mvm
+		{
+			"visible"		"1"
+		}
+	}	
 	"ServerLabelNew"
 	{
 		"ControlName"		"CExLabel"
