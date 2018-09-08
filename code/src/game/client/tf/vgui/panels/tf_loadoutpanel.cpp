@@ -326,6 +326,7 @@ void CTFLoadoutPanel::OnCommand( const char* command )
 	else if ( !Q_strcmp( command, "resetloadout" ) )
 	{
 		GetTFInventory()->ResetInventory();
+		Hide();
 	}
 	else
 	{

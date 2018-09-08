@@ -10977,6 +10977,13 @@ public:
 	void InputEnableCappedPhysicsDamage( inputdata_t &inputdata );
 	void InputDisableCappedPhysicsDamage( inputdata_t &inputdata );
 	void InputSetLocatorTargetEntity( inputdata_t &inputdata );
+	void InputIgniteAllPlayer( inputdata_t &inputdata );
+	void InputExtinguishAllPlayer( inputdata_t &inputdata );
+	void InputSpeakResponseConcept( inputdata_t &inputdata );
+	void InputSetForcedTauntCam( inputdata_t &inputdata );
+	void InputSetHUDVisibility( inputdata_t &inputdata );
+	void InputHandleMapEvent( inputdata_t &inputdata );
+	void InputSetFogController( inputdata_t &inputdata );
 #ifdef PORTAL
 	void InputSuppressCrosshair( inputdata_t &inputdata );
 #endif // PORTAL2
@@ -11018,21 +11025,28 @@ LINK_ENTITY_TO_CLASS( logic_playerproxy, CLogicPlayerProxy);
 
 BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_OUTPUT( m_OnFlashlightOn, "OnFlashlightOn" ),
-	DEFINE_OUTPUT( m_OnFlashlightOff, "OnFlashlightOff" ),
-	DEFINE_OUTPUT( m_RequestedPlayerHealth, "PlayerHealth" ),
+	DEFINE_OUTPUT( m_OnFlashlightOff,"OnFlashlightOff" ),
+	DEFINE_OUTPUT( m_RequestedPlayerHealth,"PlayerHealth" ),
 	DEFINE_OUTPUT( m_PlayerHasAmmo, "PlayerHasAmmo" ),
-	DEFINE_OUTPUT( m_PlayerHasNoAmmo, "PlayerHasNoAmmo" ),
+	DEFINE_OUTPUT( m_PlayerHasNoAmmo,"PlayerHasNoAmmo" ),
 	DEFINE_OUTPUT( m_PlayerDied,	"PlayerDied" ),
 	DEFINE_OUTPUT( m_PlayerMissedAR2AltFire, "PlayerMissedAR2AltFire" ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestPlayerHealth",	InputRequestPlayerHealth ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightSlowDrain",	InputSetFlashlightSlowDrain ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetFlashlightNormalDrain",	InputSetFlashlightNormalDrain ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetPlayerHealth",	InputSetPlayerHealth ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,"SetPlayerHealth",	InputSetPlayerHealth ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"RequestAmmoState", InputRequestAmmoState ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"LowerWeapon", InputLowerWeapon ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"EnableCappedPhysicsDamage", InputEnableCappedPhysicsDamage ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"DisableCappedPhysicsDamage", InputDisableCappedPhysicsDamage ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SetLocatorTargetEntity", InputSetLocatorTargetEntity ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"IgniteAllPlayer", InputIgniteAllPlayer ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"ExtinguishAllPlayer", InputExtinguishAllPlayer ),
+	DEFINE_INPUTFUNC( FIELD_STRING,	"SpeakResponseConcept", InputSpeakResponseConcept ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,"SetForcedTauntCam", InputSetForcedTauntCam ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,"SetHUDVisibility", InputSetHUDVisibility ),
+	DEFINE_INPUTFUNC( FIELD_STRING,	"HandleMapEvent", InputHandleMapEvent ),
+	DEFINE_INPUTFUNC( FIELD_STRING,	"SetFogController", InputSetFogController ),
 #ifdef PORTAL
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SuppressCrosshair", InputSuppressCrosshair ),
 #endif // PORTAL
@@ -11178,6 +11192,81 @@ void CLogicPlayerProxy::InputSetLocatorTargetEntity( inputdata_t &inputdata )
 
 	//CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
 	//pPlayer->SetLocatorTargetEntity(pTarget);
+}
+
+void CLogicPlayerProxy::InputIgniteAllPlayer( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	pPlayer->AcceptInput( "IgnitePlayer", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputExtinguishAllPlayer( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	pPlayer->AcceptInput( "ExtinguishPlayer", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputSetForcedTauntCam( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	sVariant.SetInt( inputdata.value.Int() );
+	pPlayer->AcceptInput( "SetForcedTauntCam", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputSpeakResponseConcept( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	sVariant.SetString( MAKE_STRING( inputdata.value.String() ));
+	pPlayer->AcceptInput( "SpeakResponseConcept", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputSetHUDVisibility( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	sVariant.SetInt( inputdata.value.Int() );
+	pPlayer->AcceptInput( "SetHUDVisibility", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputHandleMapEvent( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	sVariant.SetString( MAKE_STRING( inputdata.value.String() ));
+	pPlayer->AcceptInput( "HandleMapEvent", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputSetFogController( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	sVariant.SetString( MAKE_STRING( inputdata.value.String() ));
+	pPlayer->AcceptInput( "SetFogController", this, this, sVariant, 0 );
 }
 
 #ifdef PORTAL

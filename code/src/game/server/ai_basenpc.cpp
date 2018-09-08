@@ -3887,6 +3887,15 @@ bool CAI_BaseNPC::PreThink( void )
 		NDebugOverlay::Line( EyePosition(), m_hOpeningDoor->WorldSpaceCenter(), 255, 255, 255, false, .1 );
 	}
 
+#ifdef TF_CLASSIC
+	//
+	// If we're not on the ground, we're falling. Update our falling velocity.
+	//
+	if ( !( GetFlags() & FL_ONGROUND ) )
+	{
+		m_flFallVelocity = -GetAbsVelocity().z;
+	}
+#endif
 	return true;
 }
 
@@ -5519,6 +5528,9 @@ void CAI_BaseNPC::CheckOnGround( void )
 		{
 			ClearCondition( COND_FLOATING_OFF_GROUND );
 			ClearAirblastState();
+
+			// Clear the fall velocity so the impact doesn't happen again.
+			m_flFallVelocity = 0;
 		}
 	}
 
@@ -11768,6 +11780,9 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
 	DEFINE_ARRAY( m_szClassname,				FIELD_STRING, 128 ),
+	#ifdef TF_CLASSIC
+	DEFINE_FIELD( m_flFallVelocity, 			FIELD_FLOAT ),
+	#endif
 
 	// Satisfy classcheck
 	// DEFINE_FIELD( m_ScheduleHistory, CUtlVector < AIScheduleChoice_t > ),

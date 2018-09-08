@@ -105,7 +105,6 @@ ConVar lfe_force_birthday( "lfe_force_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLI
 ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 // TF2C's cvars.
-ConVar lfe_falldamage_disablespread( "lfe_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
 ConVar lfe_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
 
 ConVar lfe_force_legacy( "lfe_force_legacy", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Force original lambda fortress style mode" );
@@ -5800,22 +5799,22 @@ void CTFGameRules::ClientDisconnected( edict_t *pClient )
 // Falling damage stuff.
 #define TF_PLAYER_MAX_SAFE_FALL_SPEED	650		
 
+//-----------------------------------------------------------------------------
+// Purpose: How can Players Take fall damage?
+//-----------------------------------------------------------------------------
 float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 {
 	if ( pPlayer->m_Local.m_flFallVelocity > TF_PLAYER_MAX_SAFE_FALL_SPEED )
 	{
 		// Old TFC damage formula
-		float flFallDamage = 5 * (pPlayer->m_Local.m_flFallVelocity / 300);
+		float flFallDamage = 5 * ( pPlayer->m_Local.m_flFallVelocity / 300 );
 
 		// Fall damage needs to scale according to the player's max health, or
 		// it's always going to be much more dangerous to weaker classes than larger.
 		float flRatio = (float)pPlayer->GetMaxHealth() / 100.0;
 		flFallDamage *= flRatio;
 
-		if ( lfe_falldamage_disablespread.GetBool() == false )
-		{
-			flFallDamage *= random->RandomFloat( 0.8, 1.2 );
-		}
+		flFallDamage *= random->RandomFloat( 0.8, 1.2 );
 
 		return flFallDamage;
 	}
@@ -5824,6 +5823,34 @@ float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 	return 0;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: How can NPCs Take fall damage?
+//-----------------------------------------------------------------------------
+float CTFGameRules::FlNPCFallDamage( CAI_BaseNPC *pNPC )
+{
+	// only with airblast
+	if ( pNPC->m_flFallVelocity > TF_PLAYER_MAX_SAFE_FALL_SPEED && pNPC->InCond( TF_COND_KNOCKED_INTO_AIR ) )
+	{
+		// Old TFC damage formula
+		float flFallDamage = 5 * ( pNPC->m_flFallVelocity / 300 );
+
+		// Fall damage needs to scale according to the player's max health, or
+		// it's always going to be much more dangerous to weaker classes than larger.
+		float flRatio = (float)pNPC->GetMaxHealth() / 100.0;
+		flFallDamage *= flRatio;
+
+		flFallDamage *= random->RandomFloat( 0.8, 1.2 );
+
+		return flFallDamage;
+	}
+
+	// Fall caused no damage
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Send info to winpanel
+//-----------------------------------------------------------------------------
 void CTFGameRules::SendWinPanelInfo( void )
 {
 	IGameEvent *winEvent = gameeventmanager->CreateEvent( "teamplay_win_panel" );

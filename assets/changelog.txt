@@ -1,42 +1,28 @@
-Welcome to our new Changelog! It may not be html based but it's good to have one anyways.
+Welcome to our new Changelog!
 The major changes include:
- >Updated Blog panel
- >Added Gunslinger
- >Added Mini-Sentrygun
- >Added autocomplete list to give and npc_create command
+ >Added Gunslinger and Mini-Sentry
  >Added SetMoveType, StartGlowing, StopGlowing, SetGlowColor to all model entity
  >Added 4TH Difficulty: UNUSUAL
- >Added Elasticity to buildings
- >Added proper huntsman charge hud
  >Added Glow outline effect on alyx in episodic maps
  >Added Credits panel
- >Added Proximity Voice and sv_voiceproximity (Disabled by default)
- >Added Crit DLight for projectile
+ >Added Proximity Voice and sv_voiceproximity
+ >Added Dynamic Light for projectile
  >Added Scout bonk voices
- >Added Scout bonk materials
  >Added Anti-piracy system
- >Added live tf2 bodygroups
  >Added Physics Constraint to Stickybomb
  >Added WIP EP2 maps   
- >Fixed Dragon's Fury particle effect
- >Fixed Dragon's Fury kill icon
- >Fixed crit effect on rockets
- >Fixed missing player classes info tip
- >Fixed Heavy Melee attack play only one voice
+ >Fixed Dragon's Fury particle effect and kill icon
  >Fixed Jarate won't break after collide with npcs
  >Fixed Lag when player collide with npcs
  >Fixed Player able to score point by killing birds
  >Fixed player unable to join team after going spectate
- >Fixed some npc following the !player instead of nearest player
  >Fixed Antlion Worker acid attack
- >Fixed random game crash by combine soldier and hunter
- >Fixed Projectile not emit dlight 
- >Fixed KGB team colored
- >Fixed player unable to shoot jeep's taugun
- >Fixed EP1 Antlion holes, Alyx hacking rollermine and more episodic fixes
+ >Fixed random crashes by combine soldier
+ >Fixed player unable to use buggy's taugun
+ >Fixed Episodics
  >Fixed player able to eat sandvich and bonk underwater
  >Updated the Director
- >Updated Main menu, Loadout, Options, Stats and Quit Panel 
+ >Updated Main Menus
  >Updated the localization files
- >Updated Discord rpc
+ >Updated RPC
  

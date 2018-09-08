@@ -2229,7 +2229,9 @@ public:
 	// Team support for TF2C!
 	virtual void		ChangeTeam( int iTeamNum );
 
-public:
+	// Velocity at time when we hit ground
+	float	m_flFallVelocity;
+
 	void	DeathNotice( const CTakeDamageInfo &info );
 
 	// TF2 conditions

@@ -1464,10 +1464,6 @@
 			"image_inventory"	"backpack/weapons/c_models/c_energy_drink/c_energy_drink"
 			"model_player"	"models/weapons/c_models/c_energy_drink/c_energy_drink.mdl"
 			"xifier_class_remap"	"weapon_bonk"
-			"used_by_classes"
-			{
-				"scout" "1"
-			}
 		}
 
 		"weapon_bottle"
@@ -3607,7 +3603,7 @@
 			"image_inventory"	"backpack/weapons/c_models/c_overhealer/c_overhealer"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_medigun/c_medigun.mdl"
+			"model_player"	"models/weapons/c_models/c_kritzkrieg/c_kritzkrieg.mdl"
 			"attach_to_hands"	"1"
 			"item_quality"	"unique"
 			"propername"	"1"
@@ -3651,13 +3647,6 @@
 			}
 			"visuals_red"
 			{
-				"attached_models"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer.mdl"
-					}
-				}
 				"custom_particlesystem"
 				{
 					"system"	"medicgun_beam_attrib_overheal_red"
@@ -3665,13 +3654,6 @@
 			}
 			"visuals_blu"
 			{
-				"attached_models"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer.mdl"
-					}
-				}
 				"custom_particlesystem"
 				{
 					"system"	"medicgun_beam_attrib_overheal_blue"
@@ -3679,7 +3661,6 @@
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
-			"lfe_attached_models"	"models/weapons/c_models/c_overhealer/c_overhealer.mdl"
 		}
 
 		"weapon_lochnload"
@@ -7177,10 +7158,6 @@
 			"image_inventory"	"backpack/weapons/c_models/c_energy_drink/c_energy_drink"
 			"model_player"	"models/weapons/c_models/c_energy_drink/c_energy_drink.mdl"
 			"show_in_armory"	"1"
-			"used_by_classes"
-			{
-				"scout" "1"
-			}
 		}
 		"56"
 		{
@@ -16525,6 +16502,13 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 			"stored_as_integer"	"0"
+		}
+		"10008"
+		{
+			"name"	"melee cleave attack"
+			"attribute_class"	"melee_cleave_attack"
+			"hidden"	"1"
+			"effect_type"	"positive"
 		}
 	}
 	"attribute_controlled_attached_particles"
