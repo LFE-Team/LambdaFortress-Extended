@@ -1652,6 +1652,13 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 	}
 	SendOnKilledGameEvent( info );
 
+#ifdef USE_NAV_MESH
+	// increase the danger where we died
+	const float deathDanger = 1.0f;
+	const float deathDangerRadius = 500.0f;
+	TheNavMesh->IncreaseDangerNearby(m_registeredNavTeam, deathDanger, m_lastNavArea, GetAbsOrigin(), deathDangerRadius);
+#endif // USE_NAV_MESH
+
 	// Ragdoll unless we've gibbed
 	if ( ShouldGib( info ) == false )
 	{
@@ -3478,7 +3485,7 @@ float CBaseCombatCharacter::GetFogObscuredRatio( float range ) const
 //-----------------------------------------------------------------------------
 void CBaseCombatCharacter::UpdateLastKnownArea( void )
 {
-#ifdef NEXT_BOT
+#ifdef USE_NAV_MESH
 	if ( TheNavMesh->IsGenerating() )
 	{
 		ClearLastKnownArea();

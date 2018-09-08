@@ -97,6 +97,10 @@
 	#include "prop_portal_shared.h"
 #endif
 
+#ifdef USE_NAV_MESH
+#include "nav_mesh.h"
+#endif // USE_NAV_MESH
+
 #include "env_debughistory.h"
 #include "collisionutils.h"
 
@@ -3826,7 +3830,11 @@ bool CAI_BaseNPC::PreThink( void )
 	//
 	// Don't do this if the convar wants it hidden
 	// ----------------------------------------------------------
-	if ( (CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || !g_pAINetworkManager->NetworksLoaded()) )
+#ifdef USE_NAV_MESH
+	if ((CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || (!g_pAINetworkManager->NetworksLoaded() && TheNavMesh->GetNavAreaCount() <= 0)))
+#else
+	if ((CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || !g_pAINetworkManager->NetworksLoaded()))
+#endif // USE_NAV_MESH
 	{
 		if ( gpGlobals->curtime >= g_AINextDisabledMessageTime && !IsInCommentaryMode() )
 		{
@@ -4887,6 +4895,8 @@ void CAI_BaseNPC::NPCThink( void )
 
 			if ( PreThink() )
 			{
+				UpdateLastKnownArea();
+
 				if ( m_flNextDecisionTime <= gpGlobals->curtime )
 				{
 					bRanDecision = true;

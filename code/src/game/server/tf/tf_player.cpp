@@ -777,7 +777,6 @@ void CTFPlayer::PreThink()
 	if ( m_afPhysicsFlags & PFLAG_DIROVERRIDE )
 	{
 		CBaseEntity *pTrain = GetGroundEntity();
-		float vel;
 
 		if ( pTrain )
 		{
@@ -834,7 +833,7 @@ void CTFPlayer::PreThink()
 		}
 
 		SetAbsVelocity( vec3_origin );
-		vel = 0;
+		int vel = 0;
 		if ( m_afButtonPressed & IN_FORWARD )
 		{
 			vel = 1;
@@ -848,7 +847,7 @@ void CTFPlayer::PreThink()
 
 		if (vel)
 		{
-			m_iTrain = TrainSpeed(pTrain->m_flSpeed, ((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
+			m_iTrain = TrainSpeed(((CFuncTrackTrain*)pTrain)->GetDesiredSpeed(), ((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
 			m_iTrain |= TRAIN_ACTIVE|TRAIN_NEW;
 		}
 	} 
@@ -6425,18 +6424,6 @@ void CTFPlayer::RemoveOwnedProjectiles( void )
 			pProjectile->SetNextThink( gpGlobals->curtime );
 			pProjectile->SetTouch( NULL );
 			pProjectile->AddEffects( EF_NODRAW );
-		}
-	}
-
-	// Remove flames.
-	for ( int i = 0; i < ITFFlameEntityAutoList::AutoList().Count(); i++ )
-	{
-		CTFFlameEntity *pFlame = static_cast<CTFFlameEntity *>( ITFFlameEntityAutoList::AutoList()[i] );
-
-		if ( pFlame->GetAttacker() == this )
-		{
-			pFlame->SetThink( &CBaseEntity::SUB_Remove );
-			pFlame->SetNextThink( gpGlobals->curtime );
 		}
 	}
 }

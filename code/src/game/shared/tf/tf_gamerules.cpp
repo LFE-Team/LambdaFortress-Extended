@@ -6947,7 +6947,15 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	// Respawn rooms only collide with players
 	if ( collisionGroup1 == TFCOLLISION_GROUP_RESPAWNROOMS )
 		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
+	
+	// Arrows only collide with players
+	if ( collisionGroup1 == TFCOLLISION_GROUP_ARROWS )
+		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
 
+ 	// VintageCollide with nothing
+	if ( collisionGroup1 == TFCOLLISION_GROUP_NONE )
+ 		return false;
+ 	
 /*	if ( collisionGroup0 == COLLISION_GROUP_PLAYER )
 	{
 		// Players don't collide with objects or other players
@@ -6998,6 +7006,23 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		if (collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER)
 			return false;
 	}
+
+	// tf_pumpkin_bomb
+ 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
+		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		return false;
+ 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) &&
+		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		return true;
+ 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
+		 ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		 return false;
+ 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+		 ( collisionGroup0 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) || ( collisionGroup0 == TFCOLLISION_GROUP_ROCKETS ) )
+		 return false;
+ 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+		 ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
+		 return false;
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }

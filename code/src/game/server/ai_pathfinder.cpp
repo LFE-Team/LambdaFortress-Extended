@@ -25,6 +25,14 @@
 //@todo: bad dependency!
 #include "ai_navigator.h"
 
+// peter source++ support for nav mesh
+#ifdef USE_NAV_MESH
+#include "nav_mesh.h"
+#include "nav_pathfind.h"
+#include "nav_area.h"
+#include "movevars_shared.h"
+#endif // USE_NAV_MESH
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -32,6 +40,198 @@
 
 const float MAX_LOCAL_NAV_DIST_GROUND[2] = { (50*12), (25*12) };
 const float MAX_LOCAL_NAV_DIST_FLY[2] = { (750*12), (750*12) };
+
+#ifdef USE_NAV_MESH
+#define NAV_LADDER_WAYPOINT_DIST_SCALE 2.0f
+ //--------------------------------------------------------------------------------------------------------------
+/**
+* Functor used with NavAreaBuildPath()
+*/
+class PathCost
+{
+public:
+	PathCost(CAI_BaseNPC *bot, RouteType route = SAFEST_ROUTE)
+	{
+		m_bot = bot;
+		m_route = route;
+	}
+ 	float operator() (CNavArea *area, CNavArea *fromArea, const CNavLadder *ladder, const CFuncElevator *elevator, float length)
+	{
+		float baseDangerFactor = 100.0f;	// 100
+ 											// respond to the danger modulated by our aggression (even super-aggressives pay SOME attention to danger)
+		float dangerFactor = (1.0f - (0.95f * GetAggression())) * baseDangerFactor;
+ 		if (fromArea == NULL)
+		{
+			if (m_route == FASTEST_ROUTE)
+				return 0.0f;
+ 			// first area in path, cost is just danger
+			return dangerFactor * area->GetDanger(m_bot->GetTeamNumber());
+		}
+		else if ((fromArea->GetAttributes() & NAV_MESH_JUMP) && (area->GetAttributes() & NAV_MESH_JUMP))
+		{
+			// cannot actually walk in jump areas - disallow moving from jump area to jump area
+			return -1.0f;
+		}
+ 		if (ladder && (m_bot->CapabilitiesGet() & bits_CAP_MOVE_CLIMB) != bits_CAP_MOVE_CLIMB)
+			return -1.0f;
+ 		if (area->IsConnected(fromArea, NUM_DIRECTIONS) == false && (m_bot->CapabilitiesGet() & bits_CAP_MOVE_JUMP) != bits_CAP_MOVE_JUMP)
+			return -1.0f;
+		if ((area->GetAttributes() & NAV_MESH_CROUCH) && m_bot->GetHullHeight() > HumanCrouchHeight) //(g_pGameRules->GetViewVectors()->m_vDuckHullMax.z)
+			return -1.0f;
+
+ 		//if (area->GetAttributes() & NAV_MESH_NO_HOSTAGES && m_bot->GetHostageEscortCount())
+		//{
+		//	// if we're leading hostages, don't try to go where they can't
+		//	return -1.0f;
+		//}
+		//else
+		{
+			// compute distance from previous area to this area
+			float dist;
+			if (ladder)
+			{
+				// ladders are slow to use
+				const float ladderPenalty = 1.0f; // 3.0f;
+				dist = ladderPenalty * ladder->m_length;
+ 				// if we are currently escorting hostages, avoid ladders (hostages are confused by them)
+				//if (m_bot->GetHostageEscortCount())
+				//	dist *= 100.0f;
+			}
+			else
+			{
+				dist = (area->GetCenter() - fromArea->GetCenter()).Length();
+			}
+ 			// compute distance travelled along path so far
+			float cost = dist + fromArea->GetCostSoFar();
+ 			// zombies ignore all path penalties
+			if (m_bot->Classify() == CLASS_ZOMBIE)
+				return cost;
+			if (area->IsDamaging())
+			{
+				cost += 100.0f;
+			}
+ 			// add cost of "jump down" pain unless we're jumping into water
+			if (!area->IsUnderwater() && area->IsConnected(fromArea, NUM_DIRECTIONS) == false)
+			{
+ 				// this is a "jump down" (one way drop) transition - estimate damage we will take to traverse it
+				float fallDistance = -fromArea->ComputeGroundHeightChange(area);
+ 				// if it's a drop-down ladder, estimate height from the bottom of the ladder to the lower area
+				if (ladder && ladder->m_bottom.z < fromArea->GetCenter().z && ladder->m_bottom.z > area->GetCenter().z)
+				{
+					fallDistance = ladder->m_bottom.z - area->GetCenter().z;
+				}
+ 				float flVelocity = 2 * (m_bot->GetGravity()*GetCurrentGravity())*fallDistance;
+				float fallDamage = 0.0f;
+				if (flVelocity >= PLAYER_MAX_SAFE_FALL_SPEED)
+					fallDamage = (DAMAGE_FOR_FALL_SPEED) * flVelocity;
+ 				if (fallDamage > 0.0f)
+				{
+					// if the fall would kill us, don't use it
+					const float deathFallMargin = 10.0f;
+					if (fallDamage + deathFallMargin >= m_bot->GetHealth())
+						return -1.0f;
+ 					// if we need to get there in a hurry, ignore minor pain
+					const float painTolerance = 15.0f * GetAggression() + 10.0f;
+					if (m_route != FASTEST_ROUTE || fallDamage > painTolerance)
+					{
+						// cost is proportional to how much it hurts when we fall
+						// 10 points - not a big deal, 50 points - ouch!
+						cost += 100.0f * fallDamage * fallDamage;
+					}
+				}
+			}
+ 			// if this is a "crouch" or "walk" area, add penalty
+			if (area->GetAttributes() & (NAV_MESH_CROUCH | NAV_MESH_WALK))
+			{
+ 				// these areas are very slow to move through
+				float penalty = (m_route == FASTEST_ROUTE) ? 20.0f : 5.0f;
+ 				// avoid crouch areas if we are rescuing hostages 
+				/*if ((area->GetAttributes() & NAV_MESH_CROUCH) && m_bot->GetHostageEscortCount())
+				{
+					penalty *= 3.0f;
+				}*/
+ 				cost += penalty * dist;
+			}
+ 			// if this is a "jump" area, add penalty
+			if (area->GetAttributes() & NAV_MESH_JUMP)
+			{
+				// jumping can slow you down
+				//const float jumpPenalty = (m_route == FASTEST_ROUTE) ? 100.0f : 0.5f;
+				const float jumpPenalty = 1.0f;
+				cost += jumpPenalty * dist;
+			}
+ 			// if this is an area to avoid, add penalty
+			if (area->GetAttributes() & NAV_MESH_AVOID)
+			{
+				const float avoidPenalty = 20.0f;
+				cost += avoidPenalty * dist;
+			}
+ 			if (m_route == SAFEST_ROUTE)
+			{
+				// add in the danger of this path - danger is per unit length travelled
+				cost += dist * dangerFactor * area->GetDanger(m_bot->GetTeamNumber());
+			}
+ 			//if (!m_bot->)
+			//{
+			//	// add in cost of teammates in the way
+ 			//	// approximate density of teammates based on area
+			//	float size = (area->GetSizeX() + area->GetSizeY()) / 2.0f;
+ 			//	// degenerate check
+			//	if (size >= 1.0f)
+			//	{
+			//		// cost is proportional to the density of teammates in this area
+			//		const float costPerFriendPerUnit = 50000.0f;
+			//		cost += costPerFriendPerUnit * (float)area->GetPlayerCount(m_bot->GetTeamNumber()) / size;
+			//	}
+			//}
+ 			return cost;
+		}
+	}
+ private:
+	CAI_BaseNPC * m_bot;
+	RouteType m_route;
+ 	float GetAggression()
+	{
+		float flAggro = m_bot->GetHealth() / m_bot->GetMaxHealth();
+		float flScalar = 0.5f;
+ 		switch (m_bot->GetState())
+		{
+		case NPC_STATE_COMBAT:
+			flScalar = 1.0f;
+			break;
+ 		case NPC_STATE_ALERT:
+			flScalar = 0.5f;
+			break;
+ 		case NPC_STATE_IDLE:
+		default:
+			flScalar = 0.1f;
+			break;
+		}
+ 		return flAggro*flScalar;
+	}
+};
+ //--------------------------------------------------------------------------------------------------------------
+/**
+* Finds a point from which we can approach a descending ladder.  First it tries behind the ladder,
+* then in front of ladder, based on LOS.  Once we know the direction, we snap to the aproaching nav
+* area.  Returns true if we're approaching from behind the ladder.
+*/
+static bool FindDescendingLadderApproachPoint(const CNavLadder *ladder, const CNavArea *area, Vector *pos)
+{
+	*pos = ladder->m_top - ladder->GetNormal() * NAV_LADDER_WAYPOINT_DIST_SCALE * HalfHumanWidth;
+ 	trace_t result;
+	UTIL_TraceLine(ladder->m_top, *pos, MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result);
+	if (result.fraction < 1.0f)
+	{
+		*pos = ladder->m_top + ladder->GetNormal() * NAV_LADDER_WAYPOINT_DIST_SCALE * HalfHumanWidth;
+ 		area->GetClosestPointOnArea(*pos, pos);
+	}
+ 	// Use a cross product to determine which side of the ladder 'pos' is on
+	Vector posToLadder = *pos - ladder->m_top;
+	float dot = posToLadder.Dot(ladder->GetNormal());
+	return (dot < 0.0f);
+}
+#endif // USE_NAV_MESH
 
 //-----------------------------------------------------------------------------
 // CAI_Pathfinder
@@ -1432,10 +1632,232 @@ AI_Waypoint_t *CAI_Pathfinder::BuildRoute( const Vector &vStart, const Vector &v
 		pResult = BuildNodeRoute( vStart, vEnd, buildFlags, goalTolerance );
 	}
 
+#ifdef USE_NAV_MESH
+	//  If the node fails, try a nav mesh route
+	// the nav mesh doesn't supports flying npc's, like the strider or gunship
+	if (!pResult && curNavType != NAV_FLY)
+	{
+		pResult = BuildNavRoute(vStart, vEnd, buildFlags, goalTolerance);
+	}
+#endif
+
 	m_bIgnoreStaleLinks = false;
 
 	return pResult;
 }
+
+#ifdef USE_NAV_MESH
+ //-----------------------------------------------------------------------------
+// Purpose: Builds a route to the given vecGoal using the navigation mesh result
+//-----------------------------------------------------------------------------
+AI_Waypoint_t *CAI_Pathfinder::BuildNavRoute(const Vector &vStart, const Vector &vEnd, int buildFlags, float goalTolerance)
+{
+	CNavArea *goalArea = TheNavMesh->GetNearestNavArea(vEnd);
+ 	CNavArea *startArea = TheNavMesh->GetNearestNavArea(vStart);
+	if (startArea == NULL)
+		return nullptr;
+ 	
+ 	// note final specific position
+	Vector pathEndPosition = vEnd;
+ 	// make sure path end position is on the ground
+	if (goalArea)
+		pathEndPosition.z = goalArea->GetZ(pathEndPosition);
+	else
+		TheNavMesh->GetGroundHeight(pathEndPosition, &pathEndPosition.z);
+ 	// if we are already in the goal area, build trivial path
+	if (startArea == goalArea)
+	{
+		return BuildLocalRoute(vStart, pathEndPosition, NULL, bits_WP_TO_GOAL, NO_NODE, buildFlags, goalTolerance);
+	}
+ 	//
+	// Compute shortest path to goal
+	//
+	CNavArea *closestArea = NULL;
+	PathCost cost(GetOuter());
+	bool pathToGoalExists = NavAreaBuildPath(startArea, goalArea, &vEnd, cost, &closestArea);
+ 	CNavArea *effectiveGoalArea = (pathToGoalExists) ? goalArea : closestArea;
+ 	//
+	// Build path by following parent links
+	//
+ 	// get count
+	int count = 0;
+	CNavArea *area;
+	for (area = effectiveGoalArea; area; area = area->GetParent())
+		++count;
+ 	if (count == 0)
+		return nullptr;
+ 	if (count == 1)
+	{
+		return BuildLocalRoute(vStart, pathEndPosition, NULL, bits_WP_TO_GOAL, NO_NODE, buildFlags, goalTolerance);
+	}
+ 	// build path
+	AI_Waypoint_t *pWaypoint = NULL;
+	CNavArea *pLastArea = NULL;
+	for (area = effectiveGoalArea; count && area; area = area->GetParent())
+	{
+		--count;
+ 		AI_Waypoint_t *newway = nullptr;
+ 		if (area->GetParent() != nullptr)
+		{
+			CNavArea *from = area->GetParent();
+			NavTraverseType tohow = area->GetParentHow();
+ 			Vector center, center_portal, delta, from_center_portal;
+			float hwidth, hwidthhull, moveyaw;
+			NavDirType dir;
+			int endFlags = 0;
+			//Navigation_t curNavType = NAV_GROUND;
+ 			Vector closestpoint, fromclosestpoint;
+ 			center = area->GetParent()->GetCenter();
+			dir = area->ComputeDirection(&center);
+			area->ComputePortal(area->GetParent(), dir, &center_portal, &hwidth);
+			area->ComputeClosestPointInPortal(area->GetParent(), dir, area->GetParent()->GetCenter(), &closestpoint);
+ 			center = area->GetCenter();
+			dir = from->ComputeDirection(&center);
+			from->ComputePortal(area, dir, &from_center_portal, &hwidth);
+			from->ComputeClosestPointInPortal(area, dir, area->GetCenter(), &fromclosestpoint);
+ 			moveyaw = DirectionToAngle(dir);
+ 			// this point would be the closest route. But does or our hull fits?
+			trace_t trace;
+			CTraceFilterWorldOnly traceFilter;
+			AI_TraceHull(closestpoint, closestpoint, WorldAlignMins(), WorldAlignMaxs(), MASK_SOLID, &traceFilter, &trace);
+			if (trace.fraction != 1.0f)
+			{
+				// move a bit to the center
+				delta = closestpoint - center_portal;
+				hwidthhull = GetOuter()->GetHullWidth() / 2.0f;
+				if (delta.IsLengthGreaterThan(hwidthhull))
+				{
+					closestpoint = closestpoint + ((hwidthhull / delta.Length()) * delta);
+				}
+			}
+ 			/*if (area == effectiveGoalArea && closestpoint.DistToSqr(vEnd) <= Sqr(goalTolerance))
+				endFlags |= bits_WP_TO_GOAL;*/
+ 			if (tohow <= GO_WEST)
+			{
+				closestpoint.z = area->GetZ(closestpoint);
+ 				if (area->IsConnected(from, NUM_DIRECTIONS) == false)
+				{
+					// this is a "jump down" link
+ 					// compute direction of path just prior to "jump down"
+					Vector2D vdir;
+					Vector endPos = closestpoint;
+					DirectionToVector2D((NavDirType)tohow, &vdir);
+ 					// shift top of "jump down" out a bit to "get over the ledge"
+					const float pushDist = 75.0f; // 25.0f;
+					endPos.x += pushDist * vdir.x;
+					endPos.y += pushDist * vdir.y;
+ 					newway = BuildJumpRoute(fromclosestpoint, endPos, nullptr, endFlags, NO_NODE, buildFlags, moveyaw);
+				}
+				else
+				{
+					newway = BuildLocalRoute(fromclosestpoint, closestpoint, nullptr, endFlags, NO_NODE, buildFlags, goalTolerance);
+					if (!newway)
+						return nullptr;
+ 					AI_Waypoint_t *pToCenter = BuildLocalRoute(closestpoint, center, nullptr, endFlags, NO_NODE, buildFlags, goalTolerance);
+					if (pToCenter != nullptr)
+						AddWaypointLists(newway, pToCenter);
+				}
+			}
+			else if (tohow == GO_LADDER_UP)		// to get to next area, must go up a ladder
+			{
+				// find our ladder
+				auto* list = from->GetLadders(CNavLadder::LADDER_UP);
+				int it2 = 0;
+				//FOR_EACH_VEC((*list), it)
+				for (int it = 0; it < (*list).Count(); it++)
+				{
+					it2 = it;
+					CNavLadder *ladder = (*list)[it].ladder;
+ 					// can't use "behind" area when ascending...
+					if (ladder->m_topForwardArea == area ||
+						ladder->m_topLeftArea == area ||
+						ladder->m_topRightArea == area)
+					{
+						AI_Waypoint_t *baseway = nullptr;
+						AI_Waypoint_t *ladderway = nullptr;
+						AI_Waypoint_t *topway = nullptr;
+						float flYaw = UTIL_VecToYaw(-ladder->GetNormal());
+						Vector bottom = ladder->m_bottom + ladder->GetNormal() * NAV_LADDER_WAYPOINT_DIST_SCALE * HalfHumanWidth;
+						Vector top = ladder->m_top + (ladder->GetNormal() * NAV_LADDER_WAYPOINT_DIST_SCALE * HalfHumanWidth) + Vector(0, 0, 2.0f);
+						baseway = BuildLocalRoute(fromclosestpoint, bottom, nullptr, 0, NO_NODE, buildFlags, goalTolerance);
+						if (!baseway)
+							return nullptr;
+ 						ladderway = BuildClimbRoute(bottom, top, nullptr, endFlags, NO_NODE, buildFlags, flYaw);
+						if (!ladderway)
+							return nullptr;
+ 						Vector approach;
+						FindDescendingLadderApproachPoint(ladder, area, &approach);
+ 						topway = BuildLocalRoute(top, approach, nullptr, 0, NO_NODE, buildFlags | bits_BUILD_CLIMB, goalTolerance);
+						if (!topway)
+							return nullptr;
+ 						AddWaypointLists(baseway, ladderway);
+						AddWaypointLists(baseway, topway);
+						newway = baseway;
+						break;
+					}
+				}
+ 				if (it2 == list->InvalidIndex())
+				{
+					DevMsg(GetOuter(), "ERROR: Can't find ladder in path\n");
+					return nullptr;
+				}
+			}
+			else if (tohow == GO_LADDER_DOWN)		// to get to next area, must go down a ladder
+			{
+				// find our ladder
+				auto* list = from->GetLadders(CNavLadder::LADDER_DOWN);
+				int it2 = 0;
+				//FOR_EACH_VEC((*list), it)
+				for (int it = 0; it < (*list).Count(); it++)
+				{
+					it2 = it;
+					CNavLadder *ladder = (*list)[it].ladder;
+ 					if (ladder->m_bottomArea == area)
+					{
+						AI_Waypoint_t *baseway = nullptr;
+						AI_Waypoint_t *ladderway = nullptr;
+						float flYaw = UTIL_VecToYaw(-ladder->GetNormal());
+						Vector bottom = ladder->m_bottom + ladder->GetNormal() * NAV_LADDER_WAYPOINT_DIST_SCALE * HalfHumanWidth;
+						Vector top = ladder->m_top + ladder->GetNormal() * NAV_LADDER_WAYPOINT_DIST_SCALE * HalfHumanWidth;
+ 						Vector approach;
+						FindDescendingLadderApproachPoint(ladder, from, &approach);
+ 						baseway = BuildLocalRoute(approach, top, nullptr, 0, NO_NODE, buildFlags, goalTolerance);
+						if (!baseway)
+							return nullptr;
+						ladderway = BuildClimbRoute(top, bottom, nullptr, endFlags, NO_NODE, buildFlags, flYaw);
+						if (!ladderway)
+							return nullptr;
+ 						AddWaypointLists(baseway, ladderway);
+						newway = baseway;
+						break;
+					}
+				}
+ 				if (it2 == list->InvalidIndex())
+				{
+					DevMsg(GetOuter(), "ERROR: Can't find ladder in path\n");
+					return nullptr;
+				}
+			}
+		}
+		else
+		{
+			newway = BuildLocalRoute(vStart, area->GetCenter(), nullptr, 0, NO_NODE, buildFlags, goalTolerance);
+		}
+ 		if (!newway)
+			return nullptr;
+ 		if (pWaypoint)
+			AddWaypointLists(newway, pWaypoint);
+ 		pWaypoint = newway;
+		pLastArea = area;
+	}
+ 	if (pWaypoint/* && pWaypoint->GetLast()->GetPos().DistToSqr(vEnd) > Sqr(goalTolerance)*/)
+	{
+		AI_Waypoint_t *pToGoal = BuildLocalRoute(pWaypoint->GetLast()->GetPos(), vEnd, NULL, bits_WP_TO_GOAL, NO_NODE, buildFlags, goalTolerance);
+ 		AddWaypointLists(pWaypoint, pToGoal);
+	}
+ 	return pWaypoint;
+}
+#endif //USE_NAV_MESH
 
 void CAI_Pathfinder::UnlockRouteNodes( AI_Waypoint_t *pPath )
 {

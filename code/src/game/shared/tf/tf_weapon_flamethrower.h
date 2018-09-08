@@ -11,6 +11,7 @@
 #include "tf_weaponbase_gun.h"
 #include "tf_weaponbase_rocket.h"
 #include "tf_weapon_grenade_pipebomb.h"
+#include "tf_flame.h"
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -95,6 +96,7 @@ public:
 
 	void			SetHitTarget( void );
 	void			HitTargetThink( void );
+
 #endif
 
 private:
@@ -152,40 +154,5 @@ public:
 	virtual const char *GetTrailParticleName( void ) { return "incendiaryrockettrail"; }
 #endif
 };
-
-#ifdef GAME_DLL
-DECLARE_AUTO_LIST( ITFFlameEntityAutoList );
-
-class CTFFlameEntity : public CBaseEntity, public ITFFlameEntityAutoList
-{
-	DECLARE_CLASS( CTFFlameEntity, CBaseEntity );
-public:
-
-	virtual void Spawn( void );
-
-public:
-	static CTFFlameEntity *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, int iDmgType, float m_flDmgAmount );
-
-	void FlameThink( void );
-	void CheckCollision( CBaseEntity *pOther, bool *pbHitWorld );
-	CBaseEntity *GetAttacker( void ) { return m_hAttacker.Get(); }
-private:
-	void OnCollide( CBaseEntity *pOther );
-	void SetHitTarget( void );
-
-	Vector						m_vecInitialPos;		// position the flame was fired from
-	Vector						m_vecPrevPos;			// position from previous frame
-	Vector						m_vecBaseVelocity;		// base velocity vector of the flame (ignoring rise effect)
-	Vector						m_vecAttackerVelocity;	// velocity of attacking player at time flame was fired
-	float						m_flTimeRemove;			// time at which the flame should be removed
-	int							m_iDmgType;				// damage type
-	float						m_flDmgAmount;			// amount of base damage
-	CUtlVector<EHANDLE>			m_hEntitiesBurnt;		// list of entities this flame has burnt
-	EHANDLE						m_hAttacker;			// attacking player
-	int							m_iAttackerTeam;		// team of attacking player
-	CHandle<CTFFlameThrower>	m_hLauncher;			// weapon that fired this flame
-};
-
-#endif // GAME_DLL
 
 #endif // TF_WEAPON_FLAMETHROWER_H

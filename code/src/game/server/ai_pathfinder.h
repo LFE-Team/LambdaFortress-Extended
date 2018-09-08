@@ -21,7 +21,7 @@ struct AI_Waypoint_t;
 class CAI_Link;
 class CAI_Network;
 class CAI_Node;
-
+class CNavArea;
 
 //-----------------------------------------------------------------------------
 // The type of route to build
@@ -79,7 +79,9 @@ public:
 	void SetIgnoreBadLinks()		{ m_bIgnoreStaleLinks = true; } // lasts only for the next pathfind
 
 	// --------------------------------
-	
+#ifdef USE_NAV_MESH
+	virtual AI_Waypoint_t *BuildNavRoute(const Vector &vStart, const Vector &vEnd, int buildFlags, float goalTolerance);
+#endif
 	virtual AI_Waypoint_t *BuildNodeRoute( const Vector &vStart, const Vector &vEnd, int buildFlags, float goalTolerance );
 	virtual AI_Waypoint_t *BuildLocalRoute( const Vector &vStart, const Vector &vEnd, CBaseEntity const *pTarget, int endFlags, int nodeID, int buildFlags, float goalTolerance);
 	virtual AI_Waypoint_t *BuildRadialRoute( const Vector &vStartPos, const Vector &vCenterPos, const Vector &vGoalPos, float flRadius, float flArc, float flStepDist, bool bClockwise, float goalTolerance, bool bAirRoute );	

@@ -349,6 +349,10 @@ void CTFGrenadeStickybombProjectile::VPhysicsCollision( int index, gamevcollisio
 			if ( pPhysObject == NULL )
 				return;
 
+			IServerVehicle *pVehicle = pFollowParent->GetServerVehicle();
+			if ( pVehicle == NULL )
+				return;
+
 			m_bTouched = true;
 			CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 256, 5, this );
 			m_bHasWarnedAI = true;

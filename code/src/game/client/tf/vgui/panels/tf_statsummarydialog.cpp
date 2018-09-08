@@ -269,7 +269,8 @@ void CTFStatsSummaryDialog::UpdateClassDetails()
 		int			 iFlagsClass;		// bit mask of classes to show this stat for
 		const char * szResourceName;	// name of label resource
 	};
-
+#pragma warning( push )
+#pragma warning( disable : 4838 )
 	ClassDetails_t classDetails[] =
 	{
 		{ TFSTAT_POINTSSCORED, ALL_CLASSES, "#TF_ClassRecord_MostPoints" },
@@ -288,7 +289,7 @@ void CTFStatsSummaryDialog::UpdateClassDetails()
 		{ TFSTAT_HEADSHOTS, MAKEFLAG(TF_CLASS_SNIPER), "#TF_ClassRecord_MostHeadshots" },
 		{ TFSTAT_BACKSTABS, MAKEFLAG(TF_CLASS_SPY), "#TF_ClassRecord_MostBackstabs" },
 	};
-
+#pragma warning(pop)
 	wchar_t *wzWithClassFmt = g_pVGuiLocalize->Find("#StatSummary_ScoreAsClassFmt");
 	wchar_t *wzWithoutClassFmt = L"%s1";
 

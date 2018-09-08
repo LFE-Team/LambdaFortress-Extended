@@ -571,6 +571,8 @@ $Project "Server (TF)"
 						$File	"$SRCDIR\game\shared\tf\tf_weapon_physcannon.h"
 						$File	"$SRCDIR\game\shared\tf\tf_weapon_jar.cpp"
 						$File	"$SRCDIR\game\shared\tf\tf_weapon_jar.h"
+						$File	"$SRCDIR\game\shared\tf\tf_flame.cpp"
+						$File	"$SRCDIR\game\shared\tf\tf_flame.h"
 					}
 					$File	"$SRCDIR\game\shared\tf\tf_weapon_bat.cpp"
 					$File	"$SRCDIR\game\shared\tf\tf_weapon_bat.h"

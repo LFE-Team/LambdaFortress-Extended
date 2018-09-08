@@ -4137,8 +4137,8 @@ void CRendering3dView::DrawOpaqueRenderables( ERenderDepthMode DepthMode )
 	//
 	// Ropes and particles
 	//
-	RopeManager()->DrawRenderCache( DepthMode );
-	g_pParticleSystemMgr->DrawRenderCache( DepthMode );
+	RopeManager()->DrawRenderCache( DepthMode != DEPTH_MODE_NORMAL );
+	g_pParticleSystemMgr->DrawRenderCache( DepthMode != DEPTH_MODE_NORMAL );
 }
 
 

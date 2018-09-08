@@ -89,7 +89,7 @@ public:
 	virtual void	UpdateOnRemove( void );
 	virtual void	Event_Killed( const CTakeDamageInfo &info );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
 
 	void	InputSquash( inputdata_t &data );
 
@@ -808,13 +808,13 @@ void CAntlionGrub::Squash( CBaseEntity *pOther, bool bDealDamage, bool bSpawnBlo
 //			&vecDir - 
 //			*ptr - 
 //-----------------------------------------------------------------------------
-void CAntlionGrub::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CAntlionGrub::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator)
 {
 	QAngle vecAngles;
 	VectorAngles( -vecDir, vecAngles );
 	DispatchParticleEffect( "GrubBlood", ptr->endpos, vecAngles );
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------
