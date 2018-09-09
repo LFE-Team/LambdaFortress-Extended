@@ -559,10 +559,10 @@
 	output OnPickedUpFlag(void) : "Sent when a flag is picked up in the zone."
 ]
 
-@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle) = func_nogrenades :
+@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle, Parentname) = func_nogrenades :
 	"Grenades protected area." []
 
-@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle) = func_nobuild : "Engineer no-build area."
+@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle, Parentname) = func_nobuild : "Engineer no-build area."
 [
 	AllowSentry(choices) : "Allow Sentries" : 0 : "Sentries are allowed to be built in this volume" =
 	[
@@ -592,7 +592,7 @@
 @SolidClass base(Targetname, EnableDisable, Toggle) = func_respawnflag :
 	"Designates an area that triggers the flag to reset when it touches the area." []
 
-@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle) = func_respawnroom :
+@SolidClass base(Targetname, TeamNum, EnableDisable, Toggle, Parentname) = func_respawnroom :
 	"Designates a respawn room for a team."
 [
 	AllowFlag(choices) : "Allow flags inside" : 0 : "Sets whether the respawn room should allow the flag carried by a player to enter the respawn room." =
@@ -1867,13 +1867,14 @@
 	duration(float)			: "Duration"		:  0	: "The duration of the condition. NOTE: -1 duration means last until the player exits the trigger."
 ]
 
-@PointClass base(Targetname) = lfe_logic_playerteleport : "Teleports a team's players."  
+@PointClass base(Targetname, Angles) studio("models/player/heavy.mdl") = lfe_logic_playerteleport : "Teleports a team's players."  
 [
 	team_to_teleport(choices) : "Team to Teleport" : 1 =
 	[
 		1 : "RED"
 		2 : "BLU"
 	]
+
 	input TeleportPlayers(void) : "Teleport the team's players."
 ]
 
