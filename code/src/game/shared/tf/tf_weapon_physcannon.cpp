@@ -1209,115 +1209,24 @@ bool CWeaponPhysCannon::Deploy( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SetViewModel( void )
 {
-	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
-	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
-
 	int iType = 0;
-
-	//BaseClass::SetViewModel();
-	if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SCOUT))
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( !IsMegaPhysCannon() || iType != 1 )
 	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_scout.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_scout.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_soldier.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_soldier.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_PYRO))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_pyro.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_pyro.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_demo.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_demo.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_heavy.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_heavy.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_engineer.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_engineer.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_MEDIC))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_medic.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_medic.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SNIPER))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_sniper.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_sniper.mdl", this);
-	}
-	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
-	{
-		PrecacheModel("models/weapons/v_models/v_physcannon_spy.mdl");
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_spy.mdl", this);
+		BaseClass::SetViewModel();
+		return;
 	}
 
+ 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (pOwner == NULL)
 		return;
+
+ 	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
 
 	if (vm == NULL)
 		return;
 
-	//vm->SetWeaponModel( MEGACANNON_MODEL, this ); //we don't need this anymore but we probably shouldn't delete it
-
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( IsMegaPhysCannon() || iType != 0 )
-	{
-		if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SCOUT))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_scout.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_scout.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_soldier.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_soldier.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_PYRO))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_pyro.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_pyro.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_demoman.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_demoman.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_heavy.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_heavy.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_engineer.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_engineer.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_MEDIC))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_medic.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_medic.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SNIPER))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_sniper.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_sniper.mdl", this);
-		}
-		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
-		{
-			PrecacheModel("models/weapons/v_models/v_superphyscannon_spy.mdl");
-			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_spy.mdl", this);
-		}
-	}
+ 	vm->SetWeaponModel( MEGACANNON_MODEL, this );
 	//BaseClass::SetViewModel();
 }
 
