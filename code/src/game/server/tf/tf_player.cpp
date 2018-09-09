@@ -9981,6 +9981,23 @@ CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
 */
 }
 
+CON_COMMAND( dev_playsound, "Play a sound for everyone.\nFormat: <sound>\nBut this command is only for the devs" )
+{
+	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
+	if ( !pPlayer->m_bIsPlayerADev )
+		return;
+
+	if ( args.ArgC() < 2 )
+		return;
+
+	const char *pszSoundName = args[1];
+
+	if ( TFGameRules() )
+	{
+		TFGameRules()->BroadcastSound( 255, pszSoundName );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
