@@ -463,6 +463,7 @@ public:
 	bool   RadiusJarEffect( CTFRadiusDamageInfo &radiusInfo, int iCond );
 
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
+	virtual float FlNPCFallDamage( CAI_BaseNPC *pNPC );
 
 	virtual bool  FlPlayerFallDeathDoesScreenFade( CBasePlayer *pl ) { return false; }
 

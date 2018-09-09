@@ -97,6 +97,10 @@
 	#include "prop_portal_shared.h"
 #endif
 
+#ifdef USE_NAV_MESH
+#include "nav_mesh.h"
+#endif // USE_NAV_MESH
+
 #include "env_debughistory.h"
 #include "collisionutils.h"
 
@@ -3826,7 +3830,11 @@ bool CAI_BaseNPC::PreThink( void )
 	//
 	// Don't do this if the convar wants it hidden
 	// ----------------------------------------------------------
-	if ( (CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || !g_pAINetworkManager->NetworksLoaded()) )
+#ifdef USE_NAV_MESH
+	if ((CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || (!g_pAINetworkManager->NetworksLoaded() && TheNavMesh->GetNavAreaCount() <= 0)))
+#else
+	if ((CAI_BaseNPC::m_nDebugBits & bits_debugDisableAI || !g_pAINetworkManager->NetworksLoaded()))
+#endif // USE_NAV_MESH
 	{
 		if ( gpGlobals->curtime >= g_AINextDisabledMessageTime && !IsInCommentaryMode() )
 		{
@@ -3879,6 +3887,15 @@ bool CAI_BaseNPC::PreThink( void )
 		NDebugOverlay::Line( EyePosition(), m_hOpeningDoor->WorldSpaceCenter(), 255, 255, 255, false, .1 );
 	}
 
+#ifdef TF_CLASSIC
+	//
+	// If we're not on the ground, we're falling. Update our falling velocity.
+	//
+	if ( !( GetFlags() & FL_ONGROUND ) )
+	{
+		m_flFallVelocity = -GetAbsVelocity().z;
+	}
+#endif
 	return true;
 }
 
@@ -4887,6 +4904,8 @@ void CAI_BaseNPC::NPCThink( void )
 
 			if ( PreThink() )
 			{
+				UpdateLastKnownArea();
+
 				if ( m_flNextDecisionTime <= gpGlobals->curtime )
 				{
 					bRanDecision = true;
@@ -5509,6 +5528,9 @@ void CAI_BaseNPC::CheckOnGround( void )
 		{
 			ClearCondition( COND_FLOATING_OFF_GROUND );
 			ClearAirblastState();
+
+			// Clear the fall velocity so the impact doesn't happen again.
+			m_flFallVelocity = 0;
 		}
 	}
 
@@ -11758,6 +11780,9 @@ BEGIN_DATADESC( CAI_BaseNPC )
 	DEFINE_FIELD( m_bImportanRagdoll,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPlayerAvoidState,			FIELD_BOOLEAN ),
 	DEFINE_ARRAY( m_szClassname,				FIELD_STRING, 128 ),
+	#ifdef TF_CLASSIC
+	DEFINE_FIELD( m_flFallVelocity, 			FIELD_FLOAT ),
+	#endif
 
 	// Satisfy classcheck
 	// DEFINE_FIELD( m_ScheduleHistory, CUtlVector < AIScheduleChoice_t > ),

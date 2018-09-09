@@ -523,10 +523,33 @@ class CAchievementTFKillGunships : public CBaseAchievement
 {
 	void Init() 
 	{
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_WITH_GAME );
+		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
 		SetVictimFilter( "npc_combinegunship" );
 		SetGoal( 6 );	// note: goal is really six, although #define is "THREEGUNSHIPS"
 	}
+
+	void OnPlayerStatsUpdate()
+	{
+		// when stats are updated by server, use most recent stat values
+
+		int iKills = 0;
+		// get sum of kills per class across all classes to get total kills
+		for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass <= TF_LAST_NORMAL_CLASS; iClass++ )
+		{
+			ClassStats_t &classStats = CTFStatPanel::GetClassStats( iClass );
+			iKills += classStats.accumulated.m_iStat[TFSTAT_KILLS];
+		}
+
+		int iOldCount = m_iCount;
+		m_iCount = iKills;
+		if ( m_iCount != iOldCount )
+		{
+			m_pAchievementMgr->SetDirty( true );
+		}
+
+		EvaluateNewAchievement();
+	}
 };
+DECLARE_ACHIEVEMENT( CAchievementTFKillGunships, ACHIEVEMENT_HL2_KILL_THREEGUNSHIPS, "LFE_KILL_THREEGUNSHIPS", 5 );
 
 #endif // CLIENT_DLL

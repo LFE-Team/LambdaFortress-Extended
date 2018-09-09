@@ -216,3 +216,16 @@ const char *GetLanguageVGUILocalization( ELanguage eLang )
 	return s_LanguageNames[0].m_pchVGUILocalizationName;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: return the short string name used for this language by SteamUI
+//-----------------------------------------------------------------------------
+const char *GetLanguageName( ELanguage eLang )
+{
+	Assert( Q_ARRAYSIZE( s_LanguageNames ) == k_Lang_MAX + 1 );
+	if ( s_LanguageNames[eLang + 1].m_ELanguage == eLang )
+	{
+		return s_LanguageNames[eLang + 1].m_pchName;
+	}
+ 	Assert( !"enum ELanguage order mismatched from Language_t s_LanguageNames, fix it!" );
+	return s_LanguageNames[0].m_pchShortName;
+} 

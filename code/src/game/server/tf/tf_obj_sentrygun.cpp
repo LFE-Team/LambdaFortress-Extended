@@ -54,7 +54,7 @@ extern bool IsInCommentaryMode();
 
 #define SENTRYGUN_SAPPER_OWNER_DAMAGE_MODIFIER	0.33f
 
-#define MINI_SENTRYGUN_PITCH	150
+#define MINI_SENTRYGUN_PITCH	120
 #define MINI_SENTRY_LIGHT	2
 
 enum
@@ -902,24 +902,17 @@ void CObjectSentrygun::FoundTarget( CBaseEntity *pTarget, const Vector &vecSound
 		// Play one sound to everyone but the target.
 		CPASFilter filter( vecSoundCenter );
 
-		EmitSound_t params;
-		params.m_flSoundTime = 0;
-		params.m_pSoundName = "Building_Sentrygun.Alert";
-		params.m_nPitch = m_bMiniBuilding ? MINI_SENTRYGUN_PITCH : PITCH_NORM;
-
 		if ( pTarget->IsPlayer() )
 		{
 			CTFPlayer *pPlayer = ToTFPlayer( pTarget );
 
 			// Play a specific sound just to the target and remove it from the genral recipient list.
 			CSingleUserRecipientFilter singleFilter( pPlayer );
-			params.m_pSoundName = "Building_Sentrygun.AlertTarget";
-			params.m_nPitch = m_bMiniBuilding ? MINI_SENTRYGUN_PITCH : PITCH_NORM;
-			EmitSound( singleFilter, entindex(), params );
+			EmitSentrySound( singleFilter, entindex(), "Building_Sentrygun.AlertTarget" );
 			filter.RemoveRecipient( pPlayer );
 		}
 
-		EmitSound( filter, entindex(), params );
+		EmitSentrySound( filter, entindex(), "Building_Sentrygun.Alert" );
 	}
 
 	// Update timers, we are attacking now!
@@ -1268,10 +1261,6 @@ void CObjectSentrygun::SentryRotate( void )
 		return;
 
 	CPASAttenuationFilter filter( this );
-	EmitSound_t params;
-	params.m_flSoundTime = 0;
-	params.m_pSoundName = "Building_Sentrygun.Idle";
-	params.m_nPitch = m_bMiniBuilding ? MINI_SENTRYGUN_PITCH : PITCH_NORM;
 
 	// Rotate
 	if ( !MoveTurret() )
@@ -1289,7 +1278,7 @@ void CObjectSentrygun::SentryRotate( void )
 			{
 			case 1:
 			default:
-				EmitSound( filter, entindex(), params );
+				EmitSentrySound( filter, entindex(), "Building_Sentrygun.Idle" );
 				break;
 			case 2:
 				EmitSound( "Building_Sentrygun.Idle2" );
@@ -1459,13 +1448,10 @@ bool CObjectSentrygun::MoveTurret( void )
 				}
 				else
 				{
-				if ( IsMiniBuilding() )
-				{
 					if (m_flTurnRate < iBaseTurnRate * 30)
 					{
 						m_flTurnRate += iBaseTurnRate * 3;
 					}
-				}
 				}
 			}
 		}
@@ -1668,6 +1654,22 @@ float CObjectSentrygun::GetConstructionMultiplier( void )
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flMultiplier, sentry_build_rate_multiplier );
 
 	return BaseClass::GetConstructionMultiplier();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CObjectSentrygun::EmitSentrySound( IRecipientFilter &filter, int index, char const* pszSound  )
+{
+	EmitSound_t params;
+	params.m_pSoundName = pszSound;
+ 	if ( IsMiniBuilding() )
+	{
+		StopSound( pszSound );
+		params.m_nPitch = MINI_SENTRYGUN_PITCH;
+		params.m_nFlags = SND_CHANGE_PITCH;
+	}
+ 	EmitSound( filter, index, params );
 }
 
 LINK_ENTITY_TO_CLASS( tf_projectile_sentryrocket, CTFProjectile_SentryRocket );

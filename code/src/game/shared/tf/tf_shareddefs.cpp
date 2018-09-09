@@ -460,7 +460,8 @@ const char *g_aWeaponNames[] =
 
 	"TF_WEAPON_COUNT",	// end marker, do not add below here
 };
-
+#pragma warning( push )
+#pragma warning( disable : 4838 )
 int g_aWeaponDamageTypes[] =
 {
 	DMG_GENERIC,	// TF_WEAPON_NONE
@@ -575,6 +576,7 @@ int g_aWeaponDamageTypes[] =
 	TF_DMG_SENTINEL_VALUE
 };
 
+#pragma warning(pop)
 // Spread pattern for tf_use_fixed_weaponspreads.
 const Vector g_vecFixedWpnSpreadPellets[] =
 {

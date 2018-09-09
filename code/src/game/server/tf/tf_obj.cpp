@@ -443,7 +443,7 @@ void CBaseObject::MakeMiniBuilding( void )
 		break;
 	}
 
-	m_flModelScale = 0.6f;
+	SetModelScale( 0.75f );
 }
 
 void CBaseObject::MakeCarriedObject( CTFPlayer *pPlayer )

@@ -377,8 +377,7 @@ int CPropJeep::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		// Scale the damage and mark that we're passing it in so the base player accepts the damage
 		info.ScaleDamage( PassengerDamageModifier( info ) );
-		info.SetDamageType( info.GetDamageType() | DMG_VEHICLE );
-		info.SetDamageCustom( info.GetDamageCustom() | LFE_DMG_CUSTOM_JEEP );
+		info.SetDamageType( info.GetDamageType() | DMG_GENERIC );
 		
 		// Deal the damage to the passenger
 		GetDriver()->TakeDamage( info );
@@ -1521,7 +1520,8 @@ void CPropJeep::EnterVehicle( CBaseCombatCharacter *pPassenger )
 	// Start looking for seagulls to land
 	m_hLastPlayerInVehicle = m_hPlayer;
 	SetContextThink( NULL, 0, g_pJeepThinkContext );
-	if (m_bFromSpawner)
+
+	if ( m_bFromSpawner )
 	{
 		KeyValue("targetname", "jeepfromspawner_protected");
 	}
@@ -1560,6 +1560,8 @@ void CPropJeep::ExitVehicle( int nRole )
 			SetContextThink( &CPropJeep::JeepSeagullThink, gpGlobals->curtime + JEEP_SEAGULL_THINK_INTERVAL, g_pJeepThinkContext );
 		}
 	}
+
+	SetOwnerEntity( NULL );
 }
 
 //-----------------------------------------------------------------------------

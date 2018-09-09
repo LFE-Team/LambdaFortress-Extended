@@ -658,7 +658,7 @@ class CPlayerPickupController : public CBaseEntity
 public:
 	void Init( CBasePlayer *pPlayer, CBaseEntity *pObject );
 	void Shutdown( bool bThrown = false );
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	virtual int ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual int UpdateTransmitState( void );
 #endif
@@ -1209,13 +1209,21 @@ bool CWeaponPhysCannon::Deploy( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SetViewModel( void )
 {
+<<<<<<< HEAD
 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
 	CTFPlayer *pOwner2 = ToTFPlayer(GetOwner()); //this really sucks but whatever
+=======
+	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
+	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
+
+>>>>>>> experimental
 	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( !IsMegaPhysCannon() || iType != 1 )
+
+	//BaseClass::SetViewModel();
+	if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SCOUT))
 	{
+<<<<<<< HEAD
 		//BaseClass::SetViewModel();
 		if (pOwner2 && pOwner2->IsPlayerClass(TF_CLASS_SCOUT))
 		{
@@ -1263,6 +1271,50 @@ void CWeaponPhysCannon::SetViewModel( void )
 			vm->SetWeaponModel("models/weapons/v_models/physcannon/spy.mdl", this);
 		}
 		return;
+=======
+		PrecacheModel("models/weapons/v_models/v_physcannon_scout.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_scout.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_soldier.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_soldier.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_PYRO))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_pyro.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_pyro.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_demo.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_demo.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_heavy.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_heavy.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_engineer.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_engineer.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_MEDIC))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_medic.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_medic.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SNIPER))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_sniper.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_sniper.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
+	{
+		PrecacheModel("models/weapons/v_models/v_physcannon_spy.mdl");
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_spy.mdl", this);
+>>>>>>> experimental
 	}
 
 	if (pOwner == NULL)
@@ -1272,6 +1324,7 @@ void CWeaponPhysCannon::SetViewModel( void )
 		return;
 
 	//vm->SetWeaponModel( MEGACANNON_MODEL, this ); //we don't need this anymore but we probably shouldn't delete it
+<<<<<<< HEAD
 	if (pOwner2 && pOwner2->IsPlayerClass(TF_CLASS_SCOUT))
 	{
 		PrecacheModel("models/weapons/v_models/physcannon_mega/scout.mdl");
@@ -1316,6 +1369,57 @@ void CWeaponPhysCannon::SetViewModel( void )
 	{
 		PrecacheModel("models/weapons/v_models/physcannon_mega/spy.mdl");
 		vm->SetWeaponModel("models/weapons/v_models/physcannon_mega/spy.mdl", this);
+=======
+
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( IsMegaPhysCannon() || iType != 0 )
+	{
+		if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SCOUT))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_scout.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_scout.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_soldier.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_soldier.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_PYRO))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_pyro.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_pyro.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_demoman.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_demoman.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_heavy.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_heavy.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_engineer.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_engineer.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_MEDIC))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_medic.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_medic.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SNIPER))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_sniper.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_sniper.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
+		{
+			PrecacheModel("models/weapons/v_models/v_superphyscannon_spy.mdl");
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_spy.mdl", this);
+		}
+>>>>>>> experimental
 	}
 	//BaseClass::SetViewModel();
 }
@@ -1957,8 +2061,7 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			DryFire();
 			return;
 		}
-#ifdef GAME_DLL 
-
+#ifdef GAME_DLL
 		if( pOwner->IsPlayer() && ( !IsMegaPhysCannon() || iType != 1 ) )
 		{
 			// Don't let the player zap any NPC's except regular antlions and headcrabs.
@@ -1989,24 +2092,6 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				if ( pOwner->m_Shared.IsCritBoosted() )
 				{
 					ragdollInfo.SetDamageType( DMG_PHYSGUN | DMG_REMOVENORAGDOLL | DMG_CRITICAL );
-
-					CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
-					int nNPCCount = g_AI_Manager.NumAIs();
-					for ( int iNPC = 0; iNPC < nNPCCount; ++iNPC )
-					{
-						CAI_BaseNPC *pNPC = ppAIs[iNPC];
-						if ( !pNPC )
-							continue;
-			
-						if ( !pNPC->InSameTeam( pOwner ) )
-							continue;
-						
-						CTakeDamageInfo allInfo( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
-
-						// charged is already op, but what about charged + crit?
-						pNPC->TakeDamage( allInfo );
-					}
-
 				}
 				else if ( pOwner->m_Shared.IsMiniCritBoosted() )
 				{
@@ -2024,13 +2109,12 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 			}
 		}
 #endif
-
 		PuntNonVPhysics( pEntity, forward, tr );
 	}
 	else
 	{
 #ifndef CLIENT_DLL 
-		if ( EntityAllowsPunts( pEntity) == false )
+		if ( EntityAllowsPunts( pEntity ) == false )
 		{
 			DryFire();
 			return;
@@ -2072,14 +2156,14 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SecondaryAttack( void )
 {
-#ifndef CLIENT_DLL
+#ifdef GAME_DLL
 	if ( m_flNextSecondaryAttack > gpGlobals->curtime )
 		return;
 
 	if ( !CanAttack() )
 		return;
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	
 	if ( pOwner == NULL )
 		return;
@@ -2124,6 +2208,40 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 
 		DoEffect( EFFECT_HOLDING );
 	}
+#endif
+}	
+
+//-----------------------------------------------------------------------------
+// Purpose: F0rtnite Rift with damage lol.
+//-----------------------------------------------------------------------------
+void CWeaponPhysCannon::TertiaryAttack( void )
+{
+#ifdef GAME_DLL
+	if ( m_flNextTertiaryAttack > gpGlobals->curtime )
+		return;
+
+	if ( !CanAttack() )
+		return;
+
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
+	if ( pOwner == NULL )
+		return;
+
+	if ( ( pOwner->m_afButtonPressed & IN_ATTACK3 ) && pOwner->m_Shared.IsCritBoosted() )
+	{
+		// Drop the held object
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
+
+		PrimaryFireEffect();
+		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+
+		TFGameRules()->BroadcastSound( 255, "Weapon_MegaPhysCannon.SpecialAttackCrit" );
+
+		CTakeDamageInfo info( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+		RadiusDamage( info, pOwner->GetAbsOrigin(), 1024.0f, CLASS_NONE, pOwner );
+	}
+
 #endif
 }	
 
@@ -3028,7 +3146,7 @@ void CWeaponPhysCannon::DoEffectIdle(void)
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::ItemPostFrame()
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	if ( pOwner == NULL )
 	{
 		// We found an object. Debounce the button
@@ -3095,7 +3213,14 @@ void CWeaponPhysCannon::ItemPostFrame()
 		{
 			m_flNextPrimaryAttack = gpGlobals->curtime;
 		}
+
+		if ( pOwner->m_afButtonPressed & IN_ATTACK3 && pOwner->m_Shared.IsCritBoosted() )
+		{
+			TertiaryAttack();
+		}
 	}
+
+	m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -3670,7 +3795,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::DoEffectLaunch( Vector *pos )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 	if ( pOwner == NULL )
 		return;
 

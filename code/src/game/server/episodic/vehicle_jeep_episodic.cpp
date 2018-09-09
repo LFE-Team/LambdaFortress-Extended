@@ -391,14 +391,7 @@ m_bExitLocked(false),
 m_bAddingCargo(false),
 m_flNextAvoidBroadcastTime(0.0f)
 {
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
-	{
-		m_bHasGun = false;
-	}
-	else
-	{
-		m_bHasGun = true;
-	}
+	m_bHasGun = false;
 
 	m_bUnableToFire = true;
 	m_bRadarDetectsEnemies = false;
@@ -476,6 +469,14 @@ void CPropJeepEpisodic::Spawn(void)
 		pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
 	}
 
+	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	{
+		m_bHasGun = false;
+	}
+	else
+	{
+		m_bHasGun = true;
+	}
 
 	SetBodygroup(JEEP_HOPPER_BODYGROUP, m_bBusterHopperVisible ? 1 : 0);
 	CreateCargoTrigger();

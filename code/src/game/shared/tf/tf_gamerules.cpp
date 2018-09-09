@@ -105,7 +105,6 @@ ConVar lfe_force_birthday( "lfe_force_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLI
 ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 // TF2C's cvars.
-ConVar lfe_falldamage_disablespread( "lfe_falldamage_disablespread", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles random 20% fall damage spread." );
 ConVar lfe_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
 
 ConVar lfe_force_legacy( "lfe_force_legacy", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Force original lambda fortress style mode" );
@@ -5412,29 +5411,24 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	}
 
 	// In case of a sentry kill change the icon according to sentry level.
-	if ( V_strcmp( killer_weapon_name, "obj_sentrygun" ) == 0 )
+	if (V_strcmp(killer_weapon_name, "obj_sentrygun") == 0)
 	{
-		CObjectSentrygun *pObject = assert_cast<CObjectSentrygun *>( pInflictor );
+		CObjectSentrygun *pObject = assert_cast<CObjectSentrygun *>(pInflictor);
 
-		if ( pObject )
+		if (pObject)
 		{
-			switch ( pObject->GetUpgradeLevel() )
+			switch (pObject->GetUpgradeLevel())
 			{
-				case 2:
-					killer_weapon_name = "obj_sentrygun2";
-					break;
-				case 3:
-					killer_weapon_name = "obj_sentrygun3";
-					break;
+			case 2:
+				killer_weapon_name = "obj_sentrygun2";
+				break;
+			case 3:
+				killer_weapon_name = "obj_sentrygun3";
+				break;
 			}
-			
-			if ( pObject->IsMiniBuilding() )
+			if (pObject->IsMiniBuilding())
 			{
 				killer_weapon_name = "obj_minisentry";
-			}
-			else
-			{
-				killer_weapon_name = "obj_sentrygun";
 			}
 		}
 	}
@@ -5805,22 +5799,22 @@ void CTFGameRules::ClientDisconnected( edict_t *pClient )
 // Falling damage stuff.
 #define TF_PLAYER_MAX_SAFE_FALL_SPEED	650		
 
+//-----------------------------------------------------------------------------
+// Purpose: How can Players Take fall damage?
+//-----------------------------------------------------------------------------
 float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 {
 	if ( pPlayer->m_Local.m_flFallVelocity > TF_PLAYER_MAX_SAFE_FALL_SPEED )
 	{
 		// Old TFC damage formula
-		float flFallDamage = 5 * (pPlayer->m_Local.m_flFallVelocity / 300);
+		float flFallDamage = 5 * ( pPlayer->m_Local.m_flFallVelocity / 300 );
 
 		// Fall damage needs to scale according to the player's max health, or
 		// it's always going to be much more dangerous to weaker classes than larger.
 		float flRatio = (float)pPlayer->GetMaxHealth() / 100.0;
 		flFallDamage *= flRatio;
 
-		if ( lfe_falldamage_disablespread.GetBool() == false )
-		{
-			flFallDamage *= random->RandomFloat( 0.8, 1.2 );
-		}
+		flFallDamage *= random->RandomFloat( 0.8, 1.2 );
 
 		return flFallDamage;
 	}
@@ -5829,6 +5823,34 @@ float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 	return 0;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: How can NPCs Take fall damage?
+//-----------------------------------------------------------------------------
+float CTFGameRules::FlNPCFallDamage( CAI_BaseNPC *pNPC )
+{
+	// only with airblast
+	if ( pNPC->m_flFallVelocity > TF_PLAYER_MAX_SAFE_FALL_SPEED && pNPC->InCond( TF_COND_KNOCKED_INTO_AIR ) )
+	{
+		// Old TFC damage formula
+		float flFallDamage = 5 * ( pNPC->m_flFallVelocity / 300 );
+
+		// Fall damage needs to scale according to the player's max health, or
+		// it's always going to be much more dangerous to weaker classes than larger.
+		float flRatio = (float)pNPC->GetMaxHealth() / 100.0;
+		flFallDamage *= flRatio;
+
+		flFallDamage *= random->RandomFloat( 0.8, 1.2 );
+
+		return flFallDamage;
+	}
+
+	// Fall caused no damage
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Send info to winpanel
+//-----------------------------------------------------------------------------
 void CTFGameRules::SendWinPanelInfo( void )
 {
 	IGameEvent *winEvent = gameeventmanager->CreateEvent( "teamplay_win_panel" );
@@ -6952,7 +6974,15 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	// Respawn rooms only collide with players
 	if ( collisionGroup1 == TFCOLLISION_GROUP_RESPAWNROOMS )
 		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
+	
+	// Arrows only collide with players
+	if ( collisionGroup1 == TFCOLLISION_GROUP_ARROWS )
+		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
 
+ 	// VintageCollide with nothing
+	if ( collisionGroup1 == TFCOLLISION_GROUP_NONE )
+ 		return false;
+ 	
 /*	if ( collisionGroup0 == COLLISION_GROUP_PLAYER )
 	{
 		// Players don't collide with objects or other players
@@ -7003,6 +7033,23 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		if (collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER)
 			return false;
 	}
+
+	// tf_pumpkin_bomb
+ 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
+		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		return false;
+ 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) &&
+		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		return true;
+ 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
+		 ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		 return false;
+ 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+		 ( collisionGroup0 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) || ( collisionGroup0 == TFCOLLISION_GROUP_ROCKETS ) )
+		 return false;
+ 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+		 ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
+		 return false;
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }
@@ -7541,10 +7588,10 @@ const char *CTFGameRules::GetGameDescription(void)
 			return "TF2 (Arena)";
 			break;
 		case TF_GAMETYPE_COOP:
-			return "LF (Co-Op)";
+			return "LFE (Co-Op)";
 			break;
 		case TF_GAMETYPE_VS:
-			return "LF (Versus)";
+			return "LFE (Versus)";
 			break;
 		case TF_GAMETYPE_ZS:
 			return "LFE (Zombie Survival)";

@@ -39,6 +39,11 @@
 #include "hl2_player.h"
 #endif
 
+#ifdef USE_NAV_MESH
+#include "nav_area.h"
+#include "nav_mesh.h"
+#endif // USE_NAV_MESH
+
 #ifdef TF_CLASSIC
 #include "tf_player.h"
 #include "tf_gamerules.h"
@@ -769,6 +774,15 @@ bool CTriggerHurt::HurtEntity( CBaseEntity *pOther, float damage )
 		}
 		
 		pOther->TakeDamage( info );
+
+		if ( pOther->IsCombatCharacter() )
+		{
+			CBaseCombatCharacter *pBCC = pOther->MyCombatCharacterPointer();
+			// increase the danger where we died
+			const float deathDanger = damage / 50.0f;
+			const float deathDangerRadius = 256.0f;
+			TheNavMesh->IncreaseDangerNearby(pBCC->GetTeamNumber(), deathDanger, pBCC->GetLastKnownArea(), GetAbsOrigin(), deathDangerRadius);
+		}
 	}
 
 	if (pOther->IsPlayer())
@@ -795,6 +809,7 @@ void CTriggerHurt::HurtThink()
 	{
 		SetNextThink( gpGlobals->curtime + 0.5f );
 	}
+
 }
 
 void CTriggerHurt::EndTouch( CBaseEntity *pOther )
@@ -875,6 +890,33 @@ int CTriggerHurt::HurtAllTouchers( float dt )
 			m_flDmgResetTime = gpGlobals->curtime + TRIGGER_HURT_FORGIVE_TIME;
 		}
 	}
+
+#ifdef USE_NAV_MESH
+	Extent extent;
+	extent.Init(this);
+ 	CUtlVector< CNavArea * > overlapVector;
+	TheNavMesh->CollectAreasOverlappingExtent(extent, &overlapVector);
+ 	Ray_t ray;
+	trace_t tr;
+	ICollideable *pCollide = CollisionProp();
+ 	for (int i = 0; i < overlapVector.Count(); i++)
+	{
+		CNavArea *pArea = overlapVector[i];
+ 		ray.Init(pArea->GetCenter(), pArea->GetCenter());
+ 		enginetrace->ClipRayToCollideable(ray, MASK_ALL, pCollide, &tr);
+ 		if (tr.startsolid)
+		{
+			pArea->MarkAsDamaging(dt);
+ 			//for (int j = 0; j < MAX_NAV_TEAMS; j++)
+			//{
+			//	// increase the danger where we died
+			//	const float deathDanger = fldmg / 100.0f;
+			//	const float deathDangerRadius = 256.0f;
+			//	TheNavMesh->IncreaseDangerNearby(j, deathDanger, pArea, GetAbsOrigin(), deathDangerRadius, 1.0f);
+			//}
+		}
+	}
+#endif // USE_NAV_MESH
 
 	return hurtCount;
 }

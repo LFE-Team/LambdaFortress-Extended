@@ -91,6 +91,9 @@ private:
 	bool FInViewCone ( CBaseEntity *pEntity );
 	int Range( CBaseEntity *pTarget );
 
+	// Sentry sounds
+	void EmitSentrySound( IRecipientFilter &filter, int index, char const* pszSound );
+
 	// Rotations
 	void SentryRotate( void );
 	bool MoveTurret( void );

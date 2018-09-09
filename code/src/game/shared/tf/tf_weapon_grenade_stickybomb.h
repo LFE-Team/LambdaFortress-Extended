@@ -11,6 +11,11 @@
 
 #include "tf_weaponbase_grenadeproj.h"
 
+#ifdef GAME_DLL
+#include "vphysics/constraints.h"
+#include "physics_saverestore.h"
+#endif
+
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFGrenadeStickybombProjectile C_TFGrenadeStickybombProjectile
@@ -37,6 +42,9 @@ public:
 
 	float				GetCreationTime( void ) { return m_flCreationTime; }
 
+#ifdef GAME_DLL
+	virtual void		OnRestore( void );
+#endif
 private:
 	float		m_flCreationTime;
 
@@ -53,6 +61,11 @@ private:
 	bool		m_bPulsed;
 
 #else
+	bool	CreateConstraintToObject( CBaseEntity *pObject );
+	void	DestroyConstraint( void );
+
+	IPhysicsConstraint			*m_pConstraint;
+	EHANDLE						m_hConstrainedEntity;
 
 public:
 	DECLARE_DATADESC();

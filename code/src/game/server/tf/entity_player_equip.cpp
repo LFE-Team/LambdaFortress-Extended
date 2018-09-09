@@ -35,7 +35,8 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS(tf_player_equip, CTFPlayerEquip);
-
+#pragma warning (push)
+#pragma warning (disable : 4838)
 //---------------------------------------------------------
 // Save/Restore
 //---------------------------------------------------------
@@ -52,7 +53,7 @@ BEGIN_DATADESC(CTFPlayerEquip)
 	DEFINE_INPUTFUNC(FIELD_VOID, "EquipWeapons", InputEquipWeapons),
 
 END_DATADESC()
-
+#pragma warning(pop)
 void CTFPlayerEquip::Touch(CBaseEntity *pOther)
 {
 	if (UseOnly())

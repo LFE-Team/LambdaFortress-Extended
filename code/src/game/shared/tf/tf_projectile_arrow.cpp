@@ -172,6 +172,8 @@ void CTFProjectile_Arrow::Spawn( void )
 	SetSolidFlags( FSOLID_NOT_SOLID | FSOLID_TRIGGER );
 #endif
 
+	SetCollisionGroup( TFCOLLISION_GROUP_ARROWS );
+
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	SetGravity( 0.3f ); // TODO: Check again later.
 

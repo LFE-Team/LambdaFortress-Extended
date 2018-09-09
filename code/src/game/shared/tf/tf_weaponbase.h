@@ -145,7 +145,9 @@ class CTFWeaponBase : public CBaseCombatWeapon
 #ifdef CLIENT_DLL
 	virtual void UpdateViewModel( void );
 
+	// Vintage
 	C_ViewmodelAttachmentModel *GetViewmodelAddon( void );
+	C_BaseAnimating *GetAppropriateWorldOrViewModel( void );
 #endif
 
 	virtual void Drop( const Vector &vecVelocity );
@@ -294,6 +296,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	// On hit effects.
 	void ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
+	void	Knockback( void );
 // Client specific.
 #else
 

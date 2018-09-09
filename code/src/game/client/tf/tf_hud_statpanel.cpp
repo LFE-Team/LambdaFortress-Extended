@@ -36,6 +36,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#pragma warning( push )
+#pragma warning( disable : 4838 )
+
 DECLARE_HUDELEMENT_DEPTH( CTFStatPanel, 1 );
 DECLARE_HUD_MESSAGE( CTFStatPanel, PlayerStatsUpdate );
 

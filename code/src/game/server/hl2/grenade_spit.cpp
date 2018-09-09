@@ -99,10 +99,7 @@ void CGrenadeSpit::Spawn( void )
 
 void CGrenadeSpit::AutoRemoveThink(void)
 {
-	if (this) //make sure we're valid first
-	{
-		UTIL_Remove(this);
-	}
+	Detonate();
 }
 
 void CGrenadeSpit::SetSpitSize( int nSize )

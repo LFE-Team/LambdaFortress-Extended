@@ -698,15 +698,10 @@ void CPropAirboat::EnterVehicle( CBaseCombatCharacter *pPlayer )
 
 	// Start playing the engine's idle sound as the startup sound finishes.
 	m_flEngineIdleTime = gpGlobals->curtime + flDuration - 0.1;
-	/*
-	if ((GetKeyValue("targetname", "airboatfromspawner", NULL)) || GetKeyValue("targetname", "airboatfromspawner_protected", NULL))
+
+	if ( m_bFromSpawnerBoat )
 	{
-		SetOwnerEntity(pPlayer);
-	}
-	*/
-	if (m_bFromSpawnerBoat)
-	{
-		KeyValue("targetname", "airboatfromspawner_protected");
+		KeyValue( "targetname", "airboatfromspawner_protected" );
 	}
 }
 
@@ -785,14 +780,8 @@ void CPropAirboat::ExitVehicle( int nRole )
 	controller.SoundChangeVolume( m_pWaterStoppedSound, 0.0, 0.0 );
 	controller.SoundChangeVolume( m_pWaterFastSound, 0.0, 0.0 );
 	controller.SoundChangeVolume( m_pGunFiringSound, 0.0, 0.0 );
-	/*
-	if ((GetKeyValue("targetname", "airboatfromspawner", NULL)) || GetKeyValue("targetname", "airboatfromspawner_protected", NULL))
-	{
-		SetOwnerEntity(this);
-		KeyValue("targetname", "airboatfromspawner_protected");
-	}
-	*/
-	KeyValue("targetname", "airboatfromspawner_protected");
+
+	SetOwnerEntity( NULL );
 }
 
 
@@ -943,8 +932,7 @@ int CPropAirboat::OnTakeDamage( const CTakeDamageInfo &info )
 		CTakeDamageInfo playerDmg = info;
 
 		// Mark that we're passing it to the player so the base player accepts the damage
-		playerDmg.SetDamageType( info.GetDamageType() | DMG_VEHICLE );
-		playerDmg.SetDamageCustom( info.GetDamageCustom() | LFE_DMG_CUSTOM_AIRBOAT );
+		playerDmg.SetDamageType( info.GetDamageType() | DMG_GENERIC );
 
 		// Deal the damage to the passenger
 		m_hPlayer->TakeDamage( playerDmg );

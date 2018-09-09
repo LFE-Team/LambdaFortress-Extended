@@ -1052,7 +1052,7 @@
 
 		"weapon_sword"
 		{
-			"enabled"	"1"
+			"enabled"	"0"
 			"item_class"	"tf_weapon_sword"
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
@@ -3607,7 +3607,7 @@
 			"image_inventory"	"backpack/weapons/c_models/c_overhealer/c_overhealer"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_medigun/c_medigun.mdl"
+			"model_player"	"models/weapons/c_models/c_kritzkrieg/c_kritzkrieg.mdl"
 			"attach_to_hands"	"1"
 			"item_quality"	"unique"
 			"propername"	"1"
@@ -3651,13 +3651,6 @@
 			}
 			"visuals_red"
 			{
-				"attached_models"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer.mdl"
-					}
-				}
 				"custom_particlesystem"
 				{
 					"system"	"medicgun_beam_attrib_overheal_red"
@@ -3665,13 +3658,6 @@
 			}
 			"visuals_blu"
 			{
-				"attached_models"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer.mdl"
-					}
-				}
 				"custom_particlesystem"
 				{
 					"system"	"medicgun_beam_attrib_overheal_blue"
@@ -3679,7 +3665,6 @@
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
-			"lfe_attached_models"	"models/weapons/c_models/c_overhealer/c_overhealer.mdl"
 		}
 
 		"weapon_lochnload"
@@ -4899,7 +4884,6 @@
 			"craft_class"	"weapon"
 			"craft_material_type"	"weapon"
 			"item_name"	"#TF_Weapon_Spy_Sapper"
-			"item_description"	"#TF_Weapon_Spy_Sapper_desc"
 			"item_type_name"	"#TF_Weapon_Spy_Sapper"
 			"item_slot"	"building"
 			"item_quality"	"unique"
@@ -5668,7 +5652,6 @@
 			"craft_material_type"	"weapon"
 			"item_type_name"	"#TF_Weapon_PipebombLauncher"
 			"item_name"	"#TF_Weapon_PipebombLauncher"
-			"item_description" "#TF_Weapon_PipebombLauncher_desc"
 			"item_slot"	"secondary"
 			"anim_slot"	"primary"
 			"item_quality"	"normal"
@@ -6208,7 +6191,6 @@
 			"craft_material_type"	"weapon"
 			"item_type_name"	"#TF_Weapon_Wrench"
 			"item_name"	"#TF_Weapon_Wrench"
-			"item_description"	"#TF_Weapon_Wrench_Desc"
 			"item_slot"	"melee"
 			"item_quality"	"normal"
 			"baseitem" "0"
@@ -16528,6 +16510,13 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 			"stored_as_integer"	"0"
+		}
+		"10008"
+		{
+			"name"	"melee cleave attack"
+			"attribute_class"	"melee_cleave_attack"
+			"hidden"	"1"
+			"effect_type"	"positive"
 		}
 	}
 	"attribute_controlled_attached_particles"

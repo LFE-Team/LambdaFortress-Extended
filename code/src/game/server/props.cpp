@@ -1697,7 +1697,11 @@ void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 		if( HasInteraction( PROPINTER_PHYSGUN_BREAK_EXPLODE ) )
 		{
 			ExplosionCreate( WorldSpaceCenter(), angles, pAttacker, m_explodeDamage, m_explodeRadius, 
+				#ifdef TF_CLASSIC
+				SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_SURFACEONLY | SF_ENVEXPLOSION_NOSOUND,
+				#else
 				SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_SURFACEONLY | SF_ENVEXPLOSION_NOSOUND,
+				#endif
 				0.0f, this );
 			EmitSound("PropaneTank.Burst");
 		}
@@ -1705,7 +1709,11 @@ void CBreakableProp::Break( CBaseEntity *pBreaker, const CTakeDamageInfo &info )
 		{
 			float flScale = GetModelScale();
 			ExplosionCreate( WorldSpaceCenter(), angles, pAttacker, m_explodeDamage * flScale, m_explodeRadius * flScale,
+				#ifdef TF_CLASSIC
+				SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_SURFACEONLY,
+				#else
 				SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS | SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_SURFACEONLY,
+				#endif
 				0.0f, this );
 		}
 

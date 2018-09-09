@@ -43,6 +43,7 @@ CTFGrenadeStickybombProjectile::CTFGrenadeStickybombProjectile()
 	s_iszSawBlade01 = AllocPooledString( "sawmovelinear01" );
 	s_iszSawBlade02 = AllocPooledString( "sawmovelinear02" );
 	m_bTouched = false;
+	m_pConstraint = NULL;
 #else
 	m_bPulsed = false;
 #endif
@@ -83,6 +84,10 @@ void CTFGrenadeStickybombProjectile::UpdateOnRemove( void )
 	{
 		pLauncher->DeathNotice( this );
 	}
+
+#ifdef GAME_DLL
+	DestroyConstraint();
+#endif
 
 	BaseClass::UpdateOnRemove();
 }
@@ -183,6 +188,7 @@ int CTFGrenadeStickybombProjectile::DrawModel( int flags )
 #else
 
 BEGIN_DATADESC( CTFGrenadeStickybombProjectile )
+	DEFINE_PHYSPTR( m_pConstraint ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( tf_projectile_pipe_remote, CTFGrenadeStickybombProjectile );
@@ -292,6 +298,7 @@ void CTFGrenadeStickybombProjectile::VPhysicsCollision( int index, gamevcollisio
 	}
 
 	bool bIsDynamicProp = ( NULL != dynamic_cast<CDynamicProp *>( pHitEntity ) );
+	bool bIsPhysicsProp = ( NULL != dynamic_cast<CPhysicsProp *>( pHitEntity ) );
 
 	// HACK: Prevents stickies from sticking to blades in Sawmill. Need to find a way that is not as silly.
 	CBaseEntity *pParent = pHitEntity->GetMoveParent();
@@ -314,8 +321,42 @@ void CTFGrenadeStickybombProjectile::VPhysicsCollision( int index, gamevcollisio
 		pEvent->pInternalData->GetSurfaceNormal( m_vecImpactNormal );
 		m_vecImpactNormal.Negate();
 
-		CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 400, 5, this );
+		CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 256, 5, this );
 		m_bHasWarnedAI = true;
+	}
+
+	if ( ( bIsPhysicsProp ) && gpGlobals->curtime > m_flMinSleepTime )
+	{
+		// Attempt to constraint to it
+		if ( CreateConstraintToObject( pHitEntity ) )
+		{
+			// Only works for striders, at the moment
+			CBaseEntity *pFollowParent = pHitEntity->GetOwnerEntity();
+			if ( pFollowParent == NULL )
+				return;
+
+			// Allows us to identify our constrained object later
+			SetOwnerEntity( pFollowParent );
+
+			// Make a sound
+			//EmitSound( "Weapon_StriderBuster.StickToEntity" );
+
+			// Stop touching things
+			SetTouch( NULL );
+
+			// Must be a strider
+			CPhysicsProp *pPhysObject = dynamic_cast<CPhysicsProp *>(pFollowParent);
+			if ( pPhysObject == NULL )
+				return;
+
+			IServerVehicle *pVehicle = pFollowParent->GetServerVehicle();
+			if ( pVehicle == NULL )
+				return;
+
+			m_bTouched = true;
+			CSoundEnt::InsertSound ( SOUND_DANGER, GetAbsOrigin(), 256, 5, this );
+			m_bHasWarnedAI = true;
+		}
 	}
 }
 
@@ -397,4 +438,88 @@ void CTFGrenadeStickybombProjectile::Deflected( CBaseEntity *pDeflectedBy, Vecto
 	// TODO: Live TF2 adds white trail to reflected pipes and stickies. We need one as well.
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGrenadeStickybombProjectile::OnRestore( void )
+{
+	BaseClass::OnRestore();
+/*
+	// If we have an entity we're attached to, attempt to reconstruct our bone follower setup
+	if ( m_hConstrainedEntity != NULL )
+	{
+		CPhysicsProp *pPhysObject = dynamic_cast<CPhysicsProp *>(m_hConstrainedEntity.Get());
+		if ( pPhysObject != NULL )
+		{
+			// Make sure we've done this step or we'll have no controller to attach to
+			pPhysObject->InitBoneFollowers();
+
+			// Attempt to make a connection to the same bone follower we attached to previously
+			CBoneFollower *pBoneFollower = pPhysObject->GetBoneFollowerByIndex( m_nAttachedBoneFollowerIndex );
+			if ( CreateConstraintToObject( pBoneFollower ) == false )
+			{
+				Msg( "Failed to reattach to bone follower %d\n", m_nAttachedBoneFollowerIndex );
+			}
+		}
+	}
+*/
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGrenadeStickybombProjectile::DestroyConstraint( void )
+{
+	// Destroy the constraint
+	if ( m_pConstraint != NULL )
+	{ 
+		physenv->DestroyConstraint( m_pConstraint );
+		m_pConstraint = NULL;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Create a constraint between this object and another
+// Input  : *pObject - Object to constrain ourselves to
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CTFGrenadeStickybombProjectile::CreateConstraintToObject( CBaseEntity *pObject )
+{
+	if ( m_pConstraint != NULL )
+	{
+		// Should we destroy the constraint and make a new one at this point?
+		Assert( 0 );
+		return false;
+	}
+
+	if ( pObject == NULL )
+		return false;
+
+	IPhysicsObject *pPhysObject = pObject->VPhysicsGetObject();
+	if ( pPhysObject == NULL )
+		return false;
+
+	IPhysicsObject *pMyPhysObject = VPhysicsGetObject();
+	if ( pPhysObject == NULL )
+		return false;
+
+	// Create the fixed constraint
+	constraint_fixedparams_t fixedConstraint;
+	fixedConstraint.Defaults();
+	fixedConstraint.InitWithCurrentObjectState( pPhysObject, pMyPhysObject );
+
+	IPhysicsConstraint *pConstraint = physenv->CreateFixedConstraint( pPhysObject, pMyPhysObject, NULL, fixedConstraint );
+	if ( pConstraint == NULL )
+		return false;
+
+	// Hold on to us
+	m_pConstraint = pConstraint;
+	pConstraint->SetGameData( (void *)this );
+	m_hConstrainedEntity = pObject->GetOwnerEntity();;
+
+	// Disable collisions between the two ents
+	PhysDisableObjectCollisions( pPhysObject, pMyPhysObject );
+
+	return true;
+}
 #endif
