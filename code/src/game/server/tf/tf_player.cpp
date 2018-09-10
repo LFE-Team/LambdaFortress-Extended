@@ -903,83 +903,6 @@ void CTFPlayer::PreThink()
 			}
 		}
 	}
-
-	if ( !IsHLTV() || !IsFakeClient()  )
-	{
-		if ( TFGameRules()->IsInHL2Map() )
-		{
-			// bought the game yet?
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 220 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2 on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2" ) );
-			}
-
-			// installed the game yet?
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 220 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2 installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2" ) );
-			}
-		}
-
-		if ( TFGameRules()->IsInHL1Map() )
-		{
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 280 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life: Source on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL:S" ) );
-			}
-
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 280 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life: Source installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL:S" ) );
-			}
-		}
-
-		if ( TFGameRules()->IsInHL2EP1Map() )
-		{
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 380 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode One on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2:EP1" ) );
-			}
-
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 380 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode One installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP1" ) );
-			}
-		}
-
-		if ( TFGameRules()->IsInHL2EP2Map() )
-		{
-			if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 420 ) )
-			{
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortress: Extended requires a registered copy of Half-Life 2: Episode Two on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify ownership of game content: HL2:EP2" ) );
-			}
-
-			if ( !steamapicontext->SteamApps()->BIsAppInstalled( 420 ) )
-			{	
-				UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Lambda Fortres: Extended requires a registered copy of Half-Life 2: Episode Two installed on this steam account to function correctly.", GetPlayerName() );
-				engine->ServerCommand( UTIL_VarArgs( "kickid %d %s\n", GetUserID(), "Unable to verify installed game content: HL2:EP2." ) );
-			}
-		}
-
-
-
-		if ( !steamapicontext->SteamUser()->UserHasLicenseForApp( steamapicontext->SteamUser()->GetSteamID(), 440 ) )
-		{
-			UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "You never played TF2?.", GetPlayerName() );
-		}
-
-		if ( !steamapicontext->SteamApps()->BIsAppInstalled( 440 ) )
-		{	
-			UTIL_ClientPrintAll( HUD_PRINTCONSOLE, "Why did you uninstalled TF2?.", GetPlayerName() );
-		}
-	}
 }
 
 ConVar mp_idledealmethod( "mp_idledealmethod", "1", FCVAR_GAMEDLL, "Deals with Idle Players. 1 = Sends them into Spectator mode then kicks them if they're still idle, 2 = Kicks them out of the game;" );
@@ -10056,6 +9979,23 @@ CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
 		}
 	}
 */
+}
+
+CON_COMMAND( dev_playsound, "Play a sound for everyone.\nFormat: <sound>\nBut this command is only for the devs" )
+{
+	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
+	if ( !pPlayer->m_bIsPlayerADev )
+		return;
+
+	if ( args.ArgC() < 2 )
+		return;
+
+	const char *pszSoundName = args[1];
+
+	if ( TFGameRules() )
+	{
+		TFGameRules()->BroadcastSound( 255, pszSoundName );
+	}
 }
 
 //-----------------------------------------------------------------------------
