@@ -28,277 +28,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-class CPropAirboat : public CPropVehicleDriveable
-{
-	DECLARE_CLASS(CPropAirboat, CPropVehicleDriveable);
-
-public:
-
-	DECLARE_SERVERCLASS();
-	DECLARE_DATADESC();
-
-	// CPropVehicle
-	virtual void	ProcessMovement(CBasePlayer *pPlayer, CMoveData *pMoveData);
-	virtual void	DriveVehicle(float flFrameTime, CUserCmd *ucmd, int iButtonsDown, int iButtonsReleased);
-	void			DampenEyePosition(Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles);
-	bool			ShouldThink() { return true; }
-
-	// CBaseEntity
-	void			Think(void);
-	void			Precache(void);
-	void			Spawn(void);
-	bool			m_bFromSpawnerBoat;
-	virtual void	OnRestore();
-	virtual void	Activate();
-	virtual void	UpdateOnRemove();
-	virtual int		ObjectCaps(void) { return BaseClass::ObjectCaps() | FCAP_USE_IN_RADIUS; };
-	virtual void	DoMuzzleFlash(void);
-	virtual void	StopLoopingSounds();
-
-	// position to shoot at
-	virtual Vector	BodyTarget(const Vector &posSrc, bool bNoisy);
-	virtual Vector	GetSmoothedVelocity(void);
-
-	virtual void	EnterVehicle(CBaseCombatCharacter *pPlayer);
-
-	virtual bool	AllowBlockedExit(CBaseCombatCharacter *pPlayer, int nRole) { return false; }
-	virtual void	PreExitVehicle(CBaseCombatCharacter *pPlayer, int nRole);
-	virtual void	ExitVehicle(int nRole);
-
-	void			ComputePDControllerCoefficients(float *pCoefficientsOut, float flFrequency, float flDampening, float flDeltaTime);
-	void			DampenForwardMotion(Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime);
-	void			DampenUpMotion(Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime);
-	void			InputFromSpawnerBoat(inputdata_t &inputdata);
-
-	virtual void	TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
-	virtual int		OnTakeDamage(const CTakeDamageInfo &info);
-
-	void VPhysicsUpdate(IPhysicsObject *pPhysics);
-
-	// Scraping noises for the various things we drive on. 
-	virtual void	VPhysicsFriction(IPhysicsObject *pObject, float energy, int surfaceProps, int surfacePropsHit);
-
-	bool HeadlightIsOn(void) { return m_bHeadlightIsOn; }
-	void HeadlightTurnOn(void);
-	void HeadlightTurnOff(void);
-
-	virtual bool ShouldDrawWaterImpacts(void);
-
-	bool ShouldForceExit() { return m_bForcedExit; }
-	void ClearForcedExit() { m_bForcedExit = false; }
-
-	// Input handlers.
-	void InputWake(inputdata_t &inputdata);
-	void InputExitVehicle(inputdata_t &inputdata);
-	void InputEnableGun(inputdata_t &inputdata);
-	void InputStartRotorWashForces(inputdata_t &inputdata);
-	void InputStopRotorWashForces(inputdata_t &inputdata);
-	void InputEnableGunSpawnerBoat(inputdata_t &inputdata);
-
-	// Allows the shooter to change the impact effect of his bullets
-	virtual void DoImpactEffect(trace_t &tr, int nDamageType);
-
-	// Airboat passengers do not directly receive damage from blasts or radiation damage
-	virtual bool PassengerShouldReceiveDamage(CTakeDamageInfo &info)
-	{
-		if (info.GetDamageType() & DMG_VEHICLE)
-			return true;
-
-		if (info.GetDamageCustom() & LFE_DMG_CUSTOM_AIRBOAT)
-			return true;
-
-		return (info.GetDamageType() & (DMG_RADIATION | DMG_BLAST | DMG_CRUSH)) == 0;
-	}
-
-	const char *GetTracerType(void);
-
-private:
-
-	void			CreateAntiFlipConstraint();
-
-	void			ApplyStressDamage(IPhysicsObject *pPhysics);
-	float			CalculatePhysicsStressDamage(vphysics_objectstress_t *pStressOut, IPhysicsObject *pPhysics);
-
-	void			CreateDangerSounds(void);
-
-	void			FireGun();
-
-	void			UpdateSplashEffects(void);
-	void			CreateSplash(int nSplashType);
-
-	// Purpose: Aim Gun at a target
-	void			AimGunAt(const Vector &endPos, float flInterval);
-
-	// Purpose: Returns the direction the gun is currently aiming at
-	void			GetGunAimDirection(Vector *resultDir);
-
-	// Recharges the ammo based on speed
-	void			RechargeAmmo();
-
-	// Removes the ammo...
-	void			RemoveAmmo(float flAmmoAmount);
-
-	// Purpose: 
-	void			ComputeAimPoint(Vector *pVecAimPoint);
-
-	// Do the right thing for the gun
-	void			UpdateGunState(CUserCmd *ucmd);
-
-	// Sound management
-	void			CreateSounds();
-	void			UpdateSound();
-	void			UpdateWeaponSound();
-	void			UpdateEngineSound(CSoundEnvelopeController &controller, float speedRatio);
-	void			UpdateFanSound(CSoundEnvelopeController &controller, float speedRatio);
-	void			UpdateWaterSound(CSoundEnvelopeController &controller, float speedRatio);
-
-	void			UpdatePropeller();
-	void			UpdateGauge();
-
-	void			CreatePlayerBlocker();
-	void			DestroyPlayerBlocker();
-	void			EnablePlayerBlocker(bool bEnable);
-
-private:
-
-	enum
-	{
-		GUN_STATE_IDLE = 0,
-		GUN_STATE_FIRING,
-	};
-
-	Vector			m_vecLastEyePos;
-	Vector			m_vecLastEyeTarget;
-	Vector			m_vecEyeSpeed;
-
-	//float			m_flHandbrakeTime;			// handbrake after the fact to keep vehicles from rolling
-	//bool			m_bInitialHandbrake;
-
-	bool			m_bForcedExit;
-
-	int				m_nGunRefAttachment;
-	int				m_nGunBarrelAttachment;
-	float			m_aimYaw;
-	float			m_aimPitch;
-	float			m_flChargeRemainder;
-	float			m_flDrainRemainder;
-	int				m_nGunState;
-	float			m_flNextHeavyShotTime;
-	float			m_flNextGunShakeTime;
-
-	CNetworkVar(int, m_nAmmoCount);
-	CNetworkVar(bool, m_bHeadlightIsOn);
-	EHANDLE			m_hAvoidSphere;
-
-	int				m_nSplashAttachment;
-
-	float			m_flPrevThrottle;			// Throttle during last think. Used for detecting state changes.
-	float			m_flSpinRate;				// Current rate of spin of propeller: 0 = min, 1.0 = max
-	float			m_flTargetSpinRate;			// Target rate of spin of propeller: 0 = min, 1.0 = max
-	float			m_flPropTime;				// Time to turn on/off the prop.
-	float			m_flBlurTime;				// Time to turn on/off the blur.
-
-	CSoundPatch		*m_pFanSound;
-	CSoundPatch		*m_pFanMaxSpeedSound;
-	CSoundPatch		*m_pEngineSound;
-	CSoundPatch		*m_pWaterFastSound;
-	CSoundPatch		*m_pWaterStoppedSound;
-	CSoundPatch		*m_pGunFiringSound;
-
-	float			m_flEngineIdleTime;			// Time to start playing the engine's idle sound.
-	float			m_flEngineDuckTime;			// Time to reduce the volume of the engine's idle sound.
-
-	bool			m_bFadeOutFan;				// Fade out fan sound after cruising at max speed for a while.
-
-	int				m_nPrevWaterLevel;			// Used for detecting transitions into/out of water.
-	float			m_flWaterStoppedPitchTime;	// Time to pitch shift the water stopped sound.
-
-	float			m_flLastImpactEffectTime;
-	int				m_iNumberOfEntries;
-
-	IPhysicsConstraint *m_pAntiFlipConstraint;	// A ragdoll constraint that prevents us from flipping.
-
-	CHandle<CEntityBlocker>	m_hPlayerBlocker;
-
-	CNetworkVar(Vector, m_vecPhysVelocity);
-
-	CNetworkVar(int, m_nExactWaterLevel);
-
-	IMPLEMENT_NETWORK_VAR_FOR_DERIVED(m_nWaterLevel);
-
-};
-
-IMPLEMENT_SERVERCLASS_ST(CPropAirboat, DT_PropAirboat)
-SendPropBool(SENDINFO(m_bHeadlightIsOn)),
-SendPropInt(SENDINFO(m_nAmmoCount), 9),
-SendPropInt(SENDINFO(m_nExactWaterLevel)),
-SendPropInt(SENDINFO(m_nWaterLevel)),
-SendPropVector(SENDINFO(m_vecPhysVelocity)),
-END_SEND_TABLE();
-
-LINK_ENTITY_TO_CLASS(prop_vehicle_airboat, CPropAirboat);
-
-BEGIN_DATADESC(CPropAirboat)
-DEFINE_FIELD(m_vecLastEyePos, FIELD_POSITION_VECTOR),
-DEFINE_FIELD(m_vecLastEyeTarget, FIELD_POSITION_VECTOR),
-DEFINE_FIELD(m_vecEyeSpeed, FIELD_VECTOR),
-
-//	DEFINE_FIELD( m_flHandbrakeTime,	FIELD_TIME ),
-//	DEFINE_FIELD( m_bInitialHandbrake,FIELD_BOOLEAN ),
-//	DEFINE_FIELD( m_nGunRefAttachment,	FIELD_INTEGER ),
-//	DEFINE_FIELD( m_nGunBarrelAttachment,	FIELD_INTEGER ),
-DEFINE_FIELD(m_aimYaw, FIELD_FLOAT),
-DEFINE_FIELD(m_aimPitch, FIELD_FLOAT),
-DEFINE_FIELD(m_flChargeRemainder, FIELD_FLOAT),
-DEFINE_FIELD(m_flDrainRemainder, FIELD_FLOAT),
-DEFINE_FIELD(m_nGunState, FIELD_INTEGER),
-DEFINE_FIELD(m_flNextHeavyShotTime, FIELD_TIME),
-DEFINE_FIELD(m_flNextGunShakeTime, FIELD_TIME),
-DEFINE_FIELD(m_nAmmoCount, FIELD_INTEGER),
-DEFINE_FIELD(m_bHeadlightIsOn, FIELD_BOOLEAN),
-DEFINE_FIELD(m_hAvoidSphere, FIELD_EHANDLE),
-//	DEFINE_FIELD( m_nSplashAttachment,	FIELD_INTEGER ),
-DEFINE_FIELD(m_hPlayerBlocker, FIELD_EHANDLE),
-
-DEFINE_FIELD(m_vecPhysVelocity, FIELD_VECTOR),
-DEFINE_FIELD(m_nExactWaterLevel, FIELD_INTEGER),
-
-DEFINE_FIELD(m_flPrevThrottle, FIELD_FLOAT),
-DEFINE_FIELD(m_flSpinRate, FIELD_FLOAT),
-DEFINE_FIELD(m_flTargetSpinRate, FIELD_FLOAT),
-DEFINE_FIELD(m_flPropTime, FIELD_TIME),
-DEFINE_FIELD(m_flBlurTime, FIELD_TIME),
-DEFINE_FIELD(m_bForcedExit, FIELD_BOOLEAN),
-
-DEFINE_SOUNDPATCH(m_pFanSound),
-DEFINE_SOUNDPATCH(m_pFanMaxSpeedSound),
-DEFINE_SOUNDPATCH(m_pEngineSound),
-DEFINE_SOUNDPATCH(m_pWaterFastSound),
-DEFINE_SOUNDPATCH(m_pWaterStoppedSound),
-DEFINE_SOUNDPATCH(m_pGunFiringSound),
-
-DEFINE_PHYSPTR(m_pAntiFlipConstraint),
-
-DEFINE_FIELD(m_flEngineIdleTime, FIELD_TIME),
-DEFINE_FIELD(m_flEngineDuckTime, FIELD_TIME),
-DEFINE_FIELD(m_bFadeOutFan, FIELD_BOOLEAN),
-
-DEFINE_FIELD(m_nPrevWaterLevel, FIELD_INTEGER),
-DEFINE_FIELD(m_flWaterStoppedPitchTime, FIELD_TIME),
-
-DEFINE_FIELD(m_flLastImpactEffectTime, FIELD_TIME),
-DEFINE_FIELD(m_iNumberOfEntries, FIELD_INTEGER),
-
-DEFINE_INPUTFUNC(FIELD_BOOLEAN, "EnableGun", InputEnableGun),
-DEFINE_INPUTFUNC(FIELD_VOID, "StartRotorWashForces", InputStartRotorWashForces),
-DEFINE_INPUTFUNC(FIELD_VOID, "StopRotorWashForces", InputStopRotorWashForces),
-DEFINE_INPUTFUNC(FIELD_VOID, "ExitVehicle", InputExitVehicle),
-DEFINE_INPUTFUNC(FIELD_VOID, "Wake", InputWake),
-DEFINE_INPUTFUNC(FIELD_VOID, "FromSpawnerBoat", InputFromSpawnerBoat),
-DEFINE_INPUTFUNC(FIELD_VOID, "EnableGunSpawnerBoat", InputEnableGunSpawnerBoat)
-
-END_DATADESC()
-
 extern ConVar sv_vehicle_autoaim_scale;
 
 #define	VEHICLE_HITBOX_DRIVER	1
@@ -342,6 +71,277 @@ static ConVar hud_airboathint_numentries( "hud_airboathint_numentries", "10", FC
 static ConVar airboat_fatal_stress( "airboat_fatal_stress", "5000", FCVAR_NONE, "Amount of stress in kg that would kill the airboat driver." );
 
 extern ConVar autoaim_max_dist;
+
+class CPropAirboat : public CPropVehicleDriveable
+{
+	DECLARE_CLASS( CPropAirboat, CPropVehicleDriveable );
+
+public:
+
+	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
+
+	// CPropVehicle
+	virtual void	ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMoveData );
+	virtual void	DriveVehicle( float flFrameTime, CUserCmd *ucmd, int iButtonsDown, int iButtonsReleased );
+	void			DampenEyePosition( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles );
+	bool			ShouldThink() { return true; }
+
+	// CBaseEntity
+	void			Think(void);
+	void			Precache( void );
+	void			Spawn( void );
+	bool			m_bFromSpawnerBoat;
+	virtual void	OnRestore();
+	virtual void	Activate();
+	virtual void	UpdateOnRemove();
+	virtual int		ObjectCaps( void ) { return BaseClass::ObjectCaps() | FCAP_USE_IN_RADIUS; };
+	virtual void	DoMuzzleFlash( void );
+	virtual void	StopLoopingSounds();
+
+	// position to shoot at
+	virtual Vector	BodyTarget( const Vector &posSrc, bool bNoisy );
+	virtual Vector	GetSmoothedVelocity( void );
+
+	virtual void	EnterVehicle( CBaseCombatCharacter *pPlayer );
+
+	virtual bool	AllowBlockedExit( CBaseCombatCharacter *pPlayer, int nRole ) { return false; }
+	virtual void	PreExitVehicle( CBaseCombatCharacter *pPlayer, int nRole );
+	virtual void	ExitVehicle( int nRole );
+
+	void			ComputePDControllerCoefficients( float *pCoefficientsOut, float flFrequency, float flDampening, float flDeltaTime );
+	void			DampenForwardMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
+	void			DampenUpMotion( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles, float flFrameTime );
+	void			InputFromSpawnerBoat(inputdata_t &inputdata);
+
+	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
+	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
+
+	void VPhysicsUpdate( IPhysicsObject *pPhysics );
+
+	// Scraping noises for the various things we drive on. 
+	virtual void	VPhysicsFriction( IPhysicsObject *pObject, float energy, int surfaceProps, int surfacePropsHit );
+
+	bool HeadlightIsOn( void ) { return m_bHeadlightIsOn; }
+	void HeadlightTurnOn( void );
+	void HeadlightTurnOff( void );
+
+	virtual bool ShouldDrawWaterImpacts( void );
+
+	bool ShouldForceExit() { return m_bForcedExit; }
+	void ClearForcedExit() { m_bForcedExit = false; }
+
+	// Input handlers.
+	void InputWake( inputdata_t &inputdata );
+	void InputExitVehicle( inputdata_t &inputdata );
+	void InputEnableGun( inputdata_t &inputdata );
+	void InputStartRotorWashForces( inputdata_t &inputdata );
+	void InputStopRotorWashForces( inputdata_t &inputdata );
+	void InputEnableGunSpawnerBoat(inputdata_t &inputdata);
+
+	// Allows the shooter to change the impact effect of his bullets
+	virtual void DoImpactEffect( trace_t &tr, int nDamageType );
+	
+	// Airboat passengers do not directly receive damage from blasts or radiation damage
+	virtual bool PassengerShouldReceiveDamage( CTakeDamageInfo &info ) 
+	{ 
+		if ( info.GetDamageType() & DMG_VEHICLE )
+			return true;
+
+		if ( info.GetDamageCustom() & LFE_DMG_CUSTOM_AIRBOAT )
+			return true;
+
+		return (info.GetDamageType() & (DMG_RADIATION|DMG_BLAST|DMG_CRUSH) ) == 0; 
+	}
+	
+	const char *GetTracerType( void );
+
+private:
+
+	void			CreateAntiFlipConstraint();
+
+	void			ApplyStressDamage( IPhysicsObject *pPhysics );
+	float			CalculatePhysicsStressDamage( vphysics_objectstress_t *pStressOut, IPhysicsObject *pPhysics );
+
+	void			CreateDangerSounds( void );
+
+	void			FireGun( );
+
+	void			UpdateSplashEffects( void );
+	void			CreateSplash( int nSplashType );
+
+	// Purpose: Aim Gun at a target
+	void			AimGunAt( const Vector &endPos, float flInterval );
+
+	// Purpose: Returns the direction the gun is currently aiming at
+	void			GetGunAimDirection( Vector *resultDir );
+
+	// Recharges the ammo based on speed
+ 	void			RechargeAmmo();
+
+	// Removes the ammo...
+	void			RemoveAmmo( float flAmmoAmount );
+
+	// Purpose: 
+	void			ComputeAimPoint( Vector *pVecAimPoint );
+	
+	// Do the right thing for the gun
+	void			UpdateGunState( CUserCmd *ucmd );
+
+	// Sound management
+	void			CreateSounds();
+	void			UpdateSound();
+	void			UpdateWeaponSound();
+	void			UpdateEngineSound( CSoundEnvelopeController &controller, float speedRatio );
+	void			UpdateFanSound( CSoundEnvelopeController &controller, float speedRatio );
+	void			UpdateWaterSound( CSoundEnvelopeController &controller, float speedRatio );
+
+	void			UpdatePropeller();
+	void			UpdateGauge();
+
+	void			CreatePlayerBlocker();
+	void			DestroyPlayerBlocker();
+	void			EnablePlayerBlocker( bool bEnable );
+
+private:
+
+	enum
+	{
+		GUN_STATE_IDLE = 0,
+		GUN_STATE_FIRING,
+	};
+
+	Vector			m_vecLastEyePos;
+	Vector			m_vecLastEyeTarget;
+	Vector			m_vecEyeSpeed;
+
+	//float			m_flHandbrakeTime;			// handbrake after the fact to keep vehicles from rolling
+	//bool			m_bInitialHandbrake;
+
+	bool			m_bForcedExit;
+
+	int				m_nGunRefAttachment;
+	int				m_nGunBarrelAttachment;
+	float			m_aimYaw;
+	float			m_aimPitch;
+	float			m_flChargeRemainder;
+	float			m_flDrainRemainder;
+	int				m_nGunState;
+	float			m_flNextHeavyShotTime;
+	float			m_flNextGunShakeTime;
+
+	CNetworkVar( int, m_nAmmoCount );
+	CNetworkVar( bool, m_bHeadlightIsOn );
+	EHANDLE			m_hAvoidSphere;
+
+	int				m_nSplashAttachment;
+
+	float			m_flPrevThrottle;			// Throttle during last think. Used for detecting state changes.
+	float			m_flSpinRate;				// Current rate of spin of propeller: 0 = min, 1.0 = max
+	float			m_flTargetSpinRate;			// Target rate of spin of propeller: 0 = min, 1.0 = max
+	float			m_flPropTime;				// Time to turn on/off the prop.
+	float			m_flBlurTime;				// Time to turn on/off the blur.
+
+	CSoundPatch		*m_pFanSound;
+	CSoundPatch		*m_pFanMaxSpeedSound;
+	CSoundPatch		*m_pEngineSound;
+	CSoundPatch		*m_pWaterFastSound;
+	CSoundPatch		*m_pWaterStoppedSound;
+	CSoundPatch		*m_pGunFiringSound;
+
+	float			m_flEngineIdleTime;			// Time to start playing the engine's idle sound.
+	float			m_flEngineDuckTime;			// Time to reduce the volume of the engine's idle sound.
+
+	bool			m_bFadeOutFan;				// Fade out fan sound after cruising at max speed for a while.
+
+	int				m_nPrevWaterLevel;			// Used for detecting transitions into/out of water.
+	float			m_flWaterStoppedPitchTime;	// Time to pitch shift the water stopped sound.
+
+	float			m_flLastImpactEffectTime;
+	int				m_iNumberOfEntries;
+	
+	IPhysicsConstraint *m_pAntiFlipConstraint;	// A ragdoll constraint that prevents us from flipping.
+	
+	CHandle<CEntityBlocker>	m_hPlayerBlocker;
+	
+	CNetworkVar( Vector, m_vecPhysVelocity );
+
+	CNetworkVar( int, m_nExactWaterLevel );
+
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_nWaterLevel );
+
+};
+
+IMPLEMENT_SERVERCLASS_ST( CPropAirboat, DT_PropAirboat )
+	SendPropBool( SENDINFO( m_bHeadlightIsOn ) ),
+	SendPropInt( SENDINFO( m_nAmmoCount ), 9 ),
+	SendPropInt( SENDINFO( m_nExactWaterLevel ) ),
+	SendPropInt( SENDINFO( m_nWaterLevel ) ),
+	SendPropVector( SENDINFO( m_vecPhysVelocity ) ),
+END_SEND_TABLE();
+
+LINK_ENTITY_TO_CLASS( prop_vehicle_airboat, CPropAirboat );
+
+BEGIN_DATADESC( CPropAirboat )
+	DEFINE_FIELD( m_vecLastEyePos,		FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_vecLastEyeTarget,	FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( m_vecEyeSpeed,		FIELD_VECTOR ),
+
+//	DEFINE_FIELD( m_flHandbrakeTime,	FIELD_TIME ),
+//	DEFINE_FIELD( m_bInitialHandbrake,FIELD_BOOLEAN ),
+//	DEFINE_FIELD( m_nGunRefAttachment,	FIELD_INTEGER ),
+//	DEFINE_FIELD( m_nGunBarrelAttachment,	FIELD_INTEGER ),
+	DEFINE_FIELD( m_aimYaw,				FIELD_FLOAT ),
+	DEFINE_FIELD( m_aimPitch,			FIELD_FLOAT ),
+	DEFINE_FIELD( m_flChargeRemainder,	FIELD_FLOAT ),
+	DEFINE_FIELD( m_flDrainRemainder,	FIELD_FLOAT ),
+	DEFINE_FIELD( m_nGunState,			FIELD_INTEGER ),
+	DEFINE_FIELD( m_flNextHeavyShotTime, FIELD_TIME ),
+	DEFINE_FIELD( m_flNextGunShakeTime, FIELD_TIME ),
+	DEFINE_FIELD( m_nAmmoCount,			FIELD_INTEGER ),
+	DEFINE_FIELD( m_bHeadlightIsOn,		FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_hAvoidSphere,		FIELD_EHANDLE ),
+//	DEFINE_FIELD( m_nSplashAttachment,	FIELD_INTEGER ),
+	DEFINE_FIELD( m_hPlayerBlocker,		FIELD_EHANDLE ),
+
+	DEFINE_FIELD( m_vecPhysVelocity,	FIELD_VECTOR ),
+	DEFINE_FIELD( m_nExactWaterLevel,	FIELD_INTEGER ),
+
+	DEFINE_FIELD( m_flPrevThrottle,		FIELD_FLOAT ),
+	DEFINE_FIELD( m_flSpinRate,			FIELD_FLOAT ),
+	DEFINE_FIELD( m_flTargetSpinRate,	FIELD_FLOAT ),
+	DEFINE_FIELD( m_flPropTime,			FIELD_TIME ),
+	DEFINE_FIELD( m_flBlurTime,			FIELD_TIME ),
+	DEFINE_FIELD( m_bForcedExit,		FIELD_BOOLEAN ),
+
+	DEFINE_SOUNDPATCH( m_pFanSound ),
+	DEFINE_SOUNDPATCH( m_pFanMaxSpeedSound ),
+	DEFINE_SOUNDPATCH( m_pEngineSound ),
+	DEFINE_SOUNDPATCH( m_pWaterFastSound ),
+	DEFINE_SOUNDPATCH( m_pWaterStoppedSound ),
+	DEFINE_SOUNDPATCH( m_pGunFiringSound ),
+
+	DEFINE_PHYSPTR( m_pAntiFlipConstraint ),
+
+	DEFINE_FIELD( m_flEngineIdleTime,			FIELD_TIME ),
+	DEFINE_FIELD( m_flEngineDuckTime,			FIELD_TIME ),
+	DEFINE_FIELD( m_bFadeOutFan,				FIELD_BOOLEAN ),
+
+	DEFINE_FIELD( m_nPrevWaterLevel,			FIELD_INTEGER ),
+	DEFINE_FIELD( m_flWaterStoppedPitchTime,	FIELD_TIME ),
+
+	DEFINE_FIELD( m_flLastImpactEffectTime,		FIELD_TIME ),
+	DEFINE_FIELD( m_iNumberOfEntries,			FIELD_INTEGER ),
+
+	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "EnableGun", InputEnableGun ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StartRotorWashForces", InputStartRotorWashForces ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "StopRotorWashForces", InputStopRotorWashForces ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "ExitVehicle", InputExitVehicle ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "Wake", InputWake ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "FromSpawnerBoat", InputFromSpawnerBoat),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableGunSpawnerBoat", InputEnableGunSpawnerBoat)
+
+END_DATADESC()
 
 
 //-----------------------------------------------------------------------------
