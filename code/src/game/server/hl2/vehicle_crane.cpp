@@ -395,6 +395,7 @@ bool CPropCrane::CanExitVehicle( CBaseEntity *pEntity )
 {
 	// Prevent exiting if the vehicle's locked, or rotating
 	// Adrian: Check also if I'm currently jumping in or out.
+	DevMsg("Checking if we can exit.");
 	return ( !m_bLocked && (GetLocalAngularVelocity() == vec3_angle) && m_bExitAnimOn == false && m_bEnterAnimOn == false );
 }
 
@@ -456,6 +457,7 @@ void CPropCrane::EnterVehicle( CBaseCombatCharacter *pPassenger )
 //-----------------------------------------------------------------------------
 void CPropCrane::ExitVehicle( int nRole )
 {
+	DevMsg("Attempting exit.");
 	CBasePlayer *pPlayer = m_hPlayer;
 	if ( !pPlayer )
 		return;

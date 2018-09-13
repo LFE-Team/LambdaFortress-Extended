@@ -3497,12 +3497,12 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if ( FStrEq( pcmd, "taunt" ) )
+	else if ( FStrEq( pcmd, "taunt" ) && !bInVehicle )
 	{
 		Taunt();
 		return true;
 	}
-	else if ( FStrEq( pcmd, "build" ) )
+	else if ( FStrEq( pcmd, "build" ) && !bInVehicle )
 	{
 		int iBuilding = 0;
 		int iMode = 0;

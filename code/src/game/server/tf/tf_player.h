@@ -93,6 +93,7 @@ public:
 	virtual void		ResetScores( void );
 	virtual void		PlayerUse( void );
 	void CheckTeam(void);
+	bool bInVehicle;
 
 	void				CreateViewModel( int iViewModel = 0 );
 	CBaseViewModel		*GetOffHandViewModel();
