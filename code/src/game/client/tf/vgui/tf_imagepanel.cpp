@@ -26,8 +26,6 @@ using namespace vgui;
 
 DECLARE_BUILD_FACTORY( CTFImagePanel );
 
-extern ConVar tf2c_coloredhud;
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
