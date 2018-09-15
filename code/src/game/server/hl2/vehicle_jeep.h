@@ -13,6 +13,7 @@
 #include "vehicle_base.h"
 
 #define JEEP_WHEEL_COUNT	4
+extern BOOL m_bFromSpawner;
 
 struct JeepWaterData_t
 {

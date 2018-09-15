@@ -104,7 +104,7 @@ ConVar lfe_force_birthday( "lfe_force_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLI
 
 ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
-// TF2C's cvars.
+// LF:E's cvars.
 ConVar lfe_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow players to switch to third person mode." );
 
 ConVar lfe_force_legacy( "lfe_force_legacy", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Force original lambda fortress style mode" );

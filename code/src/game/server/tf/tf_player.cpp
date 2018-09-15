@@ -130,10 +130,6 @@ extern ConVar sv_maxunlag;
 extern ConVar sv_alltalk;
 extern ConVar tf_gravetalk;
 
-// Team Fortress 2 Classic's commands
-ConVar lfe_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Makes players spawn with random loadout. CURRENTLY STILL BROKEN!!!" );
-
-
 ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun." );
 
 // Cvars from HL2 player
@@ -1705,9 +1701,7 @@ void CTFPlayer::GiveDefaultItems()
 	}
 
 	// Give weapons.
-	if ( lfe_random_weapons.GetBool() )
-		ManageRandomWeapons( pData );
-	else if ( lfe_force_legacy.GetBool() )
+	if ( lfe_force_legacy.GetBool() )
 		ManageRegularWeaponsLegacy( pData );
 	else
 		ManageRegularWeapons( pData );
@@ -3497,12 +3491,12 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if ( FStrEq( pcmd, "taunt" ) )
+	else if ( FStrEq( pcmd, "taunt" ) && !bInVehicle )
 	{
 		Taunt();
 		return true;
 	}
-	else if ( FStrEq( pcmd, "build" ) )
+	else if ( FStrEq( pcmd, "build" ) && !bInVehicle )
 	{
 		int iBuilding = 0;
 		int iMode = 0;

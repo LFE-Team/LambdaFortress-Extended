@@ -1,4 +1,4 @@
-﻿//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Physics cannon
 //
@@ -1209,24 +1209,97 @@ bool CWeaponPhysCannon::Deploy( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::SetViewModel( void )
 {
+	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
+	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
+
 	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( !IsMegaPhysCannon() || iType != 1 )
+
+	//BaseClass::SetViewModel();
+	if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SCOUT))
 	{
-		BaseClass::SetViewModel();
-		return;
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_scout.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_soldier.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_PYRO))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_pyro.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_demo.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_heavy.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_engineer.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_MEDIC))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_medic.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SNIPER))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_sniper.mdl", this);
+	}
+	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
+	{
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_spy.mdl", this);
 	}
 
- 	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
 	if (pOwner == NULL)
 		return;
-
- 	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
 
 	if (vm == NULL)
 		return;
 
- 	vm->SetWeaponModel( MEGACANNON_MODEL, this );
+	//vm->SetWeaponModel( MEGACANNON_MODEL, this ); //we don't need this anymore but we probably shouldn't delete it
+
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( IsMegaPhysCannon() || iType != 0 )
+	{
+		if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SCOUT))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_scout.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_soldier.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_PYRO))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_pyro.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_demoman.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_heavy.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_engineer.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_MEDIC))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_medic.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SNIPER))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_sniper.mdl", this);
+		}
+		else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_SPY))
+		{
+			vm->SetWeaponModel("models/weapons/v_models/v_superphyscannon_spy.mdl", this);
+		}
+	}
 	//BaseClass::SetViewModel();
 }
 
@@ -4142,6 +4215,25 @@ void CWeaponPhysCannon_Secondary::Precache( void )
 	// Set the proper classname so it loads the correct script file.
 	SetClassname( "tf_weapon_physcannon_secondary" );
 #endif
+	PrecacheModel("models/weapons/v_models/v_physcannon_scout.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_scout.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_sniper.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_sniper.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_soldier.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_soldier.mdl");	
+	PrecacheModel("models/weapons/v_models/v_physcannon_heavy.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_heavy.mdl");	
+	PrecacheModel("models/weapons/v_models/v_physcannon_medic.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_medic.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_demo.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_demoman.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_spy.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_spy.mdl");	
+	PrecacheModel("models/weapons/v_models/v_physcannon_engineer.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_engineer.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_pyro.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_pyro.mdl");
+	
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
 
