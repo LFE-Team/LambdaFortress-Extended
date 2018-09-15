@@ -16,6 +16,7 @@
 using namespace vgui;
 
 DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CExButton, CExButton );
+DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CExImageButton, CExImageButton );
 DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CExLabel, CExLabel );
 DECLARE_BUILD_FACTORY( CExRichText );
 DECLARE_BUILD_FACTORY( CTFFooter );
@@ -62,6 +63,172 @@ void CExButton::ApplySchemeSettings(IScheme *pScheme)
 
 	SetFont( pScheme->GetFont( m_szFont, true ) );
 	SetFgColor( pScheme->GetColor( m_szColor, Color( 255, 255, 255, 255 ) ) );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Msalinas2877's reverse engie
+//-----------------------------------------------------------------------------
+CExImageButton::CExImageButton( Panel *parent, const char *name, const char *text ) : CExButton( parent, name, text )
+{
+	m_clrDraw = Color( 0, 0, 0, 0 );
+	m_clrArmed = Color( 0, 0, 0, 0 );
+	m_clrSelected = Color( 0, 0, 0, 0 );
+	m_pSubImage = new vgui::ImagePanel( this, "SubImage" );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CExImageButton::CExImageButton( Panel *parent, const char *name, const wchar_t *wszText ) : CExButton( parent, name, wszText )
+{
+	m_clrDraw = Color( 0, 0, 0, 0 );
+	m_clrArmed = Color( 0, 0, 0, 0 );
+	m_clrSelected = Color( 0, 0, 0, 0 );
+	m_pSubImage = new vgui::ImagePanel( this, "SubImage" );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CExImageButton::ApplySettings( KeyValues *inResourceData )
+{
+	BaseClass::ApplySettings(inResourceData);
+ 	m_clrDraw = inResourceData->GetColor( "image_drawcolor" );
+	m_clrArmed = inResourceData->GetColor( "image_armedcolor" );
+	m_clrDepressed = inResourceData->GetColor( "image_depressedcolor" );
+	m_clrDisabled = inResourceData->GetColor( "image_disabledcolor" );
+	m_clrSelected = inResourceData->GetColor( "image_selectedcolor" );
+ 	KeyValues* SubImage = inResourceData->FindKey("SubImage");
+	if ( SubImage )
+		m_pSubImage->ApplySettings(SubImage);
+	const char* ImageDefault = inResourceData->GetString("image_default");
+	if ( ImageDefault )
+	{
+		Q_strncpy(m_pszImageDefaultName, ImageDefault, sizeof(m_pszImageDefaultName));
+		if ( !IsArmed() )
+			m_pSubImage->SetImage(m_pszImageDefaultName);
+	}
+	const char* ImageArmed = inResourceData->GetString("image_armed");
+	if ( ImageArmed )
+	{
+		Q_strncpy(m_pszImageArmedName, ImageArmed, sizeof(m_pszImageArmedName));
+		if ( IsArmed() )
+			m_pSubImage->SetImage(m_pszImageArmedName);
+	}
+	const char* ImageSelected = inResourceData->GetString("image_selected");
+	if ( ImageSelected )
+	{
+		Q_strncpy( m_pszImageSelectedName, ImageSelected, sizeof( m_pszImageArmedName ) );
+		if ( IsSelected() )
+			m_pSubImage->SetImage(m_pszImageArmedName);
+	}
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CExImageButton::SetArmed( bool state )
+{
+	BaseClass::SetArmed( state );
+ 	Color drawcolor;
+	if ( m_pSubImage )
+	{
+		Color drawcolor;
+		if ( IsEnabled() )
+		{
+			if ( IsSelected() )
+				drawcolor = m_clrSelected;
+			else if ( IsDepressed() )
+				drawcolor = m_clrDepressed;
+			else if ( IsArmed() )
+				drawcolor = m_clrArmed;
+			else 
+				drawcolor = m_clrDraw;
+		}
+		else
+		{
+			drawcolor = m_clrDisabled;
+		}
+		m_pSubImage->SetDrawColor( drawcolor );
+ 		char* image = m_pszImageDefaultName;
+		if ( IsArmed() )
+			image = m_pszImageArmedName;
+		if ( image )
+			m_pSubImage->SetImage(image);
+	}
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CExImageButton::ApplySchemeSettings( vgui::IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+ 	m_pSubImage->SetMouseInputEnabled( false );
+	Color drawcolor;
+	if ( IsEnabled() )
+	{
+		if ( IsSelected() )
+			drawcolor = m_clrSelected;
+		else if ( IsDepressed() )
+			drawcolor = m_clrDepressed;
+		else if ( IsArmed() )
+			drawcolor = m_clrArmed;
+		else 
+			drawcolor = m_clrDraw;
+	}
+	else
+	{
+		drawcolor = m_clrDisabled;
+	}
+	m_pSubImage->SetDrawColor( drawcolor );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CExImageButton::SetImageArmed( const char* image )
+{
+	Q_strncpy( m_pszImageArmedName, image, sizeof( m_pszImageArmedName ) );
+	if ( IsArmed() )
+		m_pSubImage->SetImage( m_pszImageArmedName );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CExImageButton::SetImageSelected( const char* image )
+{
+	Q_strncpy( m_pszImageSelectedName, image, sizeof( m_pszImageSelectedName ));
+	if ( IsSelected() )
+		m_pSubImage->SetImage(m_pszImageSelectedName);
+}
+ //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CExImageButton::SetSelected( bool state )
+{
+	BaseClass::SetSelected( state );
+ 	Color drawcolor;
+	if ( m_pSubImage )
+	{
+		Color drawcolor;
+		if ( IsEnabled() )
+		{
+			if ( IsSelected() )
+				drawcolor = m_clrSelected;
+			else if ( IsDepressed() )
+				drawcolor = m_clrDepressed;
+			else if ( IsArmed() )
+				drawcolor = m_clrArmed;
+			else 
+				drawcolor = m_clrDraw;
+		}
+		else
+		{
+			drawcolor = m_clrDisabled;
+		}
+		m_pSubImage->SetDrawColor( drawcolor );
+ 		char* image = m_pszImageDefaultName;
+		if ( IsSelected() )
+			image = m_pszImageSelectedName;
+		if ( image )
+			m_pSubImage->SetImage(image);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -112,13 +279,11 @@ CExRichText::CExRichText(Panel *parent, const char *name) : RichText(parent, nam
 
 	SetCursor(dc_arrow);
 
-	Q_strncpy( pDefaultScrollUpImage, "chalkboard_scroll_up", sizeof( pDefaultScrollUpImage ) );
-
-	m_pUpArrow = new CTFImagePanel( this, "UpArrow" );
+	m_pUpArrow = new CExImageButton( this, "UpArrow", "" );
 	if ( m_pUpArrow )
 	{
-		//m_pUpArrow->SetShouldScaleImage( true );
-		m_pUpArrow->SetImage( pDefaultScrollUpImage );
+	//	m_pUpArrow->Shouldsca( true );
+	//	m_pUpArrow->SetImage( "chalkboard_scroll_up" );
 		m_pUpArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
 		m_pUpArrow->SetAlpha( 255 );
 		m_pUpArrow->SetVisible( false );
@@ -134,13 +299,11 @@ CExRichText::CExRichText(Panel *parent, const char *name) : RichText(parent, nam
 		m_pLine->SetVisible( false );
 	}
 
-	Q_strncpy( pDefaultScrollDownImage, "chalkboard_scroll_down", sizeof( pDefaultScrollDownImage ) );
-
-	m_pDownArrow = new CTFImagePanel( this, "DownArrow" );
+	m_pDownArrow = new CExImageButton( this, "DownArrow", "" );
 	if ( m_pDownArrow )
 	{
-		//m_pDownArrow->SetShouldScaleImage( true );
-		m_pDownArrow->SetImage( pDefaultScrollDownImage );
+//		m_pDownArrow->SetShouldScaleImage( true );
+//		m_pDownArrow->SetImage( "chalkboard_scroll_down" );
 		m_pDownArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
 		m_pDownArrow->SetAlpha( 255 );
 		m_pDownArrow->SetVisible( false );
@@ -169,9 +332,7 @@ void CExRichText::ApplySettings( KeyValues *inResourceData )
 	Q_strncpy( m_szFont, inResourceData->GetString( "font", "Default" ), sizeof( m_szFont ) );
 	Q_strncpy( m_szColor, inResourceData->GetString( "fgcolor", "RichText.TextColor" ), sizeof( m_szColor ) );
 	Q_strncpy( pDefaultScrollImage, inResourceData->GetString( "scroll_box_image", "chalkboard_scroll_box" ), sizeof( pDefaultScrollImage ));
-	Q_strncpy( pDefaultScrollUpImage, inResourceData->GetString( "scroll_up_image", "chalkboard_scroll_up" ), sizeof( pDefaultScrollUpImage ));
 	Q_strncpy( pDefaultScrollLineImage, inResourceData->GetString( "scroll_line_image", "chalkboard_scroll_line" ), sizeof( pDefaultScrollLineImage ));
-	Q_strncpy( pDefaultScrollDownImage, inResourceData->GetString( "scroll_down_image", "chalkboard_scroll_down" ), sizeof( pDefaultScrollDownImage ));
 
 	InvalidateLayout( false, true ); // force ApplySchemeSettings to run
 }

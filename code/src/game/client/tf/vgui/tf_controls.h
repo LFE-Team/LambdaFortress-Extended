@@ -44,6 +44,33 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+// Purpose: Msalinas2877's reverse engie
+//-----------------------------------------------------------------------------
+class CExImageButton : public CExButton
+{
+public:
+	DECLARE_CLASS_SIMPLE( CExImageButton, CExButton );
+ 	CExImageButton( vgui::Panel *parent, const char *name, const char *text );
+	CExImageButton( vgui::Panel *parent, const char *name, const wchar_t *wszText );
+ 	virtual void ApplySettings( KeyValues *inResourceData );
+	virtual void SetArmed( bool state );
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void SetImageArmed( const char* image );
+	virtual void SetImageSelected( const char* image );
+	virtual void SetSelected( bool state );
+protected:
+	vgui::ImagePanel *m_pSubImage;
+	char	m_pszImageDefaultName[260];
+	char	m_pszImageArmedName[260];
+	char	m_pszImageSelectedName[260];
+	Color	m_clrDraw;
+	Color	m_clrArmed;
+	Color	m_clrDepressed;
+	Color	m_clrDisabled;
+	Color	m_clrSelected;
+};
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 class CExLabel : public vgui::Label
@@ -84,15 +111,13 @@ private:
 	char		m_szFont[64];
 	char		m_szColor[64];
 
-	CTFImagePanel		*m_pUpArrow;
+	CExImageButton		*m_pUpArrow;
 	vgui::ImagePanel	*m_pLine;
-	CTFImagePanel		*m_pDownArrow;
+	CExImageButton		*m_pDownArrow;
 	vgui::ImagePanel	*m_pBox;
 protected:
 	char			pDefaultScrollImage[64];
-	char			pDefaultScrollUpImage[64];
 	char			pDefaultScrollLineImage[64];
-	char			pDefaultScrollDownImage[64];
 };
 
 //-----------------------------------------------------------------------------
