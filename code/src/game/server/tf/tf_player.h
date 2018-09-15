@@ -93,7 +93,6 @@ public:
 	virtual void		ResetScores( void );
 	virtual void		PlayerUse( void );
 	void CheckTeam(void);
-	bool bInVehicle;
 
 	void				CreateViewModel( int iViewModel = 0 );
 	CBaseViewModel		*GetOffHandViewModel();
@@ -377,6 +376,7 @@ public:
 	// Entity inputs
 	void	InputIgnitePlayer( inputdata_t &inputdata );
 	void	InputExtinguishPlayer( inputdata_t &inputdata );
+	void	InputBleedPlayer( inputdata_t &inputdata );
 	void	InputSpeakResponseConcept( inputdata_t &inputdata );
 	void	InputSetForcedTauntCam( inputdata_t &inputdata );
 

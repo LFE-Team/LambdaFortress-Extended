@@ -367,6 +367,7 @@ BEGIN_DATADESC( CTFPlayer )
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SpeakResponseConcept",	InputSpeakResponseConcept ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"IgnitePlayer",	InputIgnitePlayer ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"ExtinguishPlayer",	InputExtinguishPlayer ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"BleedPlayer",	InputBleedPlayer ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetForcedTauntCam", InputSetForcedTauntCam ),
 	DEFINE_FIELD(m_bHasLongJump, FIELD_BOOLEAN),
 	DEFINE_OUTPUT( m_OnDeath, "OnDeath" ),
@@ -1523,9 +1524,16 @@ void CTFPlayer::Regenerate( void )
 		SetHealth( iCurrentHealth );
 	}
 
+	// Remove burning condition
 	if ( m_Shared.InCond( TF_COND_BURNING ) )
 	{
 		m_Shared.RemoveCond( TF_COND_BURNING );
+	}
+
+	// Remove bleeding condition
+	if ( m_Shared.InCond( TF_COND_BLEEDING ) )
+	{
+		m_Shared.RemoveCond( TF_COND_BLEEDING );
 	}
 
 	// Remove slow life condition
@@ -1534,11 +1542,15 @@ void CTFPlayer::Regenerate( void )
 		m_Shared.RemoveCond( TF_COND_SLOWED );
 	}
 
-	if ( m_Shared.InCond( TF_COND_URINE ) )
+	// Remove liquid condition
+	if ( m_Shared.IsJared() )
 	{
 		m_Shared.RemoveCond( TF_COND_URINE );
+		m_Shared.RemoveCond( TF_COND_MAD_MILK );
+		m_Shared.RemoveCond( TF_COND_GAS );
 	}
 
+	// Remove bonk condition
 	if ( m_Shared.InCond( TF_COND_PHASE ) )
 	{
 		m_Shared.RemoveCond( TF_COND_PHASE );
@@ -3491,12 +3503,12 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if ( FStrEq( pcmd, "taunt" ) && !bInVehicle )
+	else if ( FStrEq( pcmd, "taunt" ) )
 	{
 		Taunt();
 		return true;
 	}
-	else if ( FStrEq( pcmd, "build" ) && !bInVehicle )
+	else if ( FStrEq( pcmd, "build" ) && !IsInAVehicle() )
 	{
 		int iBuilding = 0;
 		int iMode = 0;
@@ -4817,6 +4829,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	int iOldHealth = m_iHealth;
 	bool bIgniting = false;
+	bool bBleeding = false;
 
 	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
 	{
@@ -4828,6 +4841,13 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			int iIgniting = 0;
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iIgniting, set_dmgtype_ignite );
 			bIgniting = ( iIgniting != 0 );
+		}
+
+		if ( !bBleeding )
+		{
+			int iBleeding = 0;
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iBleeding, bleeding_duration );
+			bBleeding = ( iBleeding != 0 );
 		}
 
 		// Take damage - round to the nearest integer.
@@ -4845,6 +4865,11 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( bIgniting )
 	{
 		m_Shared.Burn( ToTFPlayer( pAttacker ), pTFWeapon );
+	}
+
+	if ( bBleeding )
+	{
+		m_Shared.Bleed( ToTFPlayer( pAttacker ), pTFWeapon );
 	}
 
 	// Fire a global game event - "player_hurt"
@@ -5172,15 +5197,9 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		{
 			pszCustomDeath = "customdeath:backstab";
 		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
+		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING 
+		|| info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING
+		|| info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
 		{
 			pszCustomDeath = "customdeath:burning";
 		}
@@ -5274,15 +5293,9 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		{
 			pszCustomDeath = "customdeath:backstab";
 		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
-		{
-			pszCustomDeath = "customdeath:burning";
-		}
-		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
+		else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING 
+		|| info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING
+		|| info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE )
 		{
 			pszCustomDeath = "customdeath:burning";
 		}
@@ -6226,6 +6239,14 @@ void CTFPlayer::InputExtinguishPlayer( inputdata_t &inputdata )
 		EmitSound( "TFPlayer.FlameOut" );
 		m_Shared.RemoveCond( TF_COND_BURNING );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Bleed a player
+//-----------------------------------------------------------------------------
+void CTFPlayer::InputBleedPlayer( inputdata_t &inputdata )
+{
+	m_Shared.Bleed( ToTFPlayer( inputdata.pActivator ), NULL );
 }
 
 
@@ -8285,10 +8306,13 @@ void CTFPlayer::Taunt( void )
 	if ( GetGroundEntity() == NULL )
 		return;
 
-	// Can't Taunt while cutscene is playing.
+	// Check to see if cutscene is playing.
 	if ( m_Shared.IsInCutScene() )
 		return;
 
+	// Check to see if we are in a vehicle
+	if ( !IsInAVehicle() )
+		return;
 	// Can't taunt while cloaked.
 	if ( m_Shared.InCond( TF_COND_STEALTHED ) )
 		return;
@@ -10908,6 +10932,7 @@ public:
 	void InputSetLocatorTargetEntity( inputdata_t &inputdata );
 	void InputIgniteAllPlayer( inputdata_t &inputdata );
 	void InputExtinguishAllPlayer( inputdata_t &inputdata );
+	void InputBleedAllPlayer( inputdata_t &inputdata );
 	void InputSpeakResponseConcept( inputdata_t &inputdata );
 	void InputSetForcedTauntCam( inputdata_t &inputdata );
 	void InputSetHUDVisibility( inputdata_t &inputdata );
@@ -10976,6 +11001,7 @@ BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_INPUTFUNC( FIELD_INTEGER,"SetHUDVisibility", InputSetHUDVisibility ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"HandleMapEvent", InputHandleMapEvent ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SetFogController", InputSetFogController ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"BleedAllPlayer", InputBleedAllPlayer ),
 #ifdef PORTAL
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SuppressCrosshair", InputSuppressCrosshair ),
 #endif // PORTAL
@@ -11196,6 +11222,16 @@ void CLogicPlayerProxy::InputSetFogController( inputdata_t &inputdata )
 	variant_t sVariant;
 	sVariant.SetString( MAKE_STRING( inputdata.value.String() ));
 	pPlayer->AcceptInput( "SetFogController", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputBleedAllPlayer( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	variant_t sVariant;
+	pPlayer->AcceptInput( "BleedPlayer", this, this, sVariant, 0 );
 }
 
 #ifdef PORTAL

@@ -1201,49 +1201,6 @@
 	// Outputs
 	output OnDetonate(void) : "Fired when this bomb detonates."
 ]
-	
-@PointClass base(Item) studio("models/items/medkit_large.mdl") = tf_weaponspawner :
-	"Entity that spawns the selected weapon. (This will only work in DM)"
-[
-	WeaponNumber(Choices) : "Weapon (OBSOLETE)" : 0 =
-	[
-		0 : "None"
-		15 : "Scattergun ( Primary )"
-		16 : "Sniper rifle ( Primary )"
-		17 : "Minigun ( Primary )"
-		21 : "Rocket launcher ( Primary )"
-		22 : "Pipebomb launcher ( Primary )"
-		24 : "Flamethrower ( Primary )"
-		67 : "Sten Gun ( Primary )"
-		71 : "Heavy Artillery ( Primary )"
-		68 : "Double barrel shotgun ( Primary )"
-		12 : "Shotgun ( Secondary )"
-		18 : "SMG ( Secondary )"
-		37 : "Pistol ( Secondary )"
-		69 : "Six Shooter ( Secondary )"
-		5 : "Crowbar ( Melee )"
-	]
-	itemid(Choices) : "Weapon" : 0 =
-	[
-		14 : "Sniper rifle ( Primary )"
-		15 : "Minigun ( Primary )"
-		18 : "Rocket launcher ( Primary )"
-		19 : "Pipebomb launcher ( Primary )"
-		21 : "Flamethrower ( Primary )"
-		9011 : "Sten Gun ( Primary )"
-		9014 : "Heavy Artillery ( Primary )"
-		9012 : "Double barrel shotgun ( Primary )"
-		10 : "Shotgun ( Secondary )"
-		16 : "SMG ( Secondary )"
-		22 : "Pistol ( Secondary )"
-		9013 : "Six Shooter ( Secondary )"
-		9010 : "Crowbar ( Melee )"
-	]
-	
-	RespawnTime(integer) : "Respawn delay (in seconds)" : 10
-	StaticSpawner(integer) : "Disable spinning/rotating weapon effect" : 0
-	DisableWeaponOutline(integer) : "Disable weapon outline glows" : 0
-]
 
 @PointClass base(Targetname) size(-8 -8 -8, 8 8 8) = tf_player_equip : 
 	"An entity that gives equipment to the player who activates it."
@@ -1925,4 +1882,42 @@
 
 // Outputs
 	output OnDate(void)	: "Fired when the computer's date is matched"
+]
+
+@PointClass base(Targetname, DamageFilter) size(-8 -8 -8, 8 8 8) = logic_playerproxy :
+	"An entity that is used to relay inputs/ouputs to the player and back to the world."
+[
+	// Outputs
+	output OnFlashlightOn(float) 			: "Fired when the player turns on his flashlight. This output has the value of how much energy the player had when this happened [0..1]."
+	output OnFlashlightOff(float) 			: "Fired when the player turns off his flashlight. This output has the value of how much energy the player had when this happened [0..1]."
+	input RequestPlayerHealth(void) 		: "Requests the current player's health from the proxy. This will fire the PlayerHealth output with the value."
+	output PlayerHealth(integer)			: "The player's current health value."
+	output PlayerMissedAR2AltFire(void)		: "Player fired an AR2 combine ball that didn't kill any enemies."
+
+	input SetFlashlightSlowDrain(void)		: "Puts the player's flashlight in slow-power-drain mode (for Episodic darkness)"
+	input SetFlashlightNormalDrain(void)		: "Puts the player's flashlight to default power drain"
+
+	input SetPlayerHealth(integer)			: "Sets the player's health to this value."
+	
+	input RequestAmmoState(void)			: "Request the ammo state of the player. It will fire PlayerHasAmmo or PlayerHasNoAmmo outputs."
+	output PlayerHasAmmo(void) 				: "Fired by request if the player has any ammo."
+	output PlayerHasNoAmmo(void) 			: "Fired by request if the player doesn't have any ammo."
+	
+	output PlayerDied(void) 				: "Fires when the player dies."
+
+	input LowerWeapon(void)					: "Lowers the players weapon."
+	
+	input EnableCappedPhysicsDamage(void) :	 "Cause player to take less damage from physics objects, and never more than 30 points from any individual strike."
+	input DisableCappedPhysicsDamage(void) : "Undo effects of EnableCappedPhysicsDamage"
+	input SetLocatorTargetEntity(string) : "Set the entity that the HUD locator should track. (Usually a vehicle)"
+
+	// LFE Inputs
+	input IgniteAllPlayer(void)				: "Ignite all player"
+	input ExtinguishAllPlayer(void)			: "Extinguish all player"
+	input SpeakResponseConcept(string)		: "Forced all player to speak a concept"
+	input SetForcedTauntCam(bool)			: "Forced all player to switch to thirdperson"
+	input SetHUDVisibility(bool)			: "Toggle Hud visible for all player"
+	input HandleMapEvent(string) 			: "Handles map events. This will be different events for different maps."
+	input SetFogController(string) 			: "Set new env_fog_controller for all player"
+	input BleedAllPlayer(string) 			: "Bleed all player"
 ]

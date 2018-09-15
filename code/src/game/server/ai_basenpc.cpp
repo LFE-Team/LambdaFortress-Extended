@@ -1647,6 +1647,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	int iOldHealth = m_iHealth;
 	bool bIgniting = false;
+	bool bBleeding = false;
 
 	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
 	{
@@ -1658,6 +1659,13 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			int iIgniting = 0;
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iIgniting, set_dmgtype_ignite );
 			bIgniting = ( iIgniting != 0 );
+		}
+
+		if ( !bBleeding )
+		{
+			int iBleeding = 0;
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iBleeding, bleeding_duration );
+			bBleeding = ( iBleeding != 0 );
 		}
 
 		// Take damage - round to the nearest integer.
@@ -1675,6 +1683,11 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( bIgniting )
 	{
 		Burn( ToTFPlayer( pAttacker ), pTFWeapon );
+	}
+
+	if ( bBleeding )
+	{
+		Bleed( ToTFPlayer( pAttacker ), pTFWeapon );
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
@@ -15651,7 +15664,7 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 					// If we're being healed, we reduce bad conditions faster
 					if ( m_aHealers.Count() > 0 )
 					{
-						if ( i == TF_COND_URINE )
+						if ( i == TF_COND_URINE || i == TF_COND_MAD_MILK || i == TF_COND_GAS )
 							flReduction *= m_aHealers.Count() + 1;
 						else
 							flReduction += ( m_aHealers.Count() * flReduction * 4 );
@@ -15768,6 +15781,12 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 			float flReduction = 2;	 // ( flReduction + 1 ) x faster reduction
 			m_flFlameRemoveTime -= flReduction * gpGlobals->frametime;
 		}
+		else if ( InCond( TF_COND_BLEEDING ) )
+		{
+			// Reduce the duration of this bleed 
+			float flReduction = 2;	 // ( flReduction + 1 ) x faster reduction
+			m_flBleedRemoveTime -= flReduction * gpGlobals->frametime;
+		}
 	}
 
 	if ( bDecayHealth )
@@ -15816,12 +15835,33 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 			float flBurnDamage = TF_BURNING_DMG;
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hBurnWeapon, flBurnDamage, mult_wpn_burndmg );
 
-			// Burn the player (if not pyro, who does not take persistent burning damage)
+			// Burn the npc
 			CTakeDamageInfo info( m_hBurnAttacker, m_hBurnAttacker, m_hBurnWeapon, flBurnDamage, DMG_BURN | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BURNING );
 			TakeDamage( info );
 			m_flFlameBurnTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
 		}
 	}
+
+	if ( InCond( TF_COND_BLEEDING ) )
+	{
+		if ( ( gpGlobals->curtime >= m_flBleedTime ) )
+		{
+			float flBleedDamage = TF_BURNING_DMG + 1.0f;
+
+			// Bleed the npc
+			CTakeDamageInfo info( m_hBleedAttacker, m_hBleedAttacker, m_hBleedWeapon, flBleedDamage, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BLEEDING );
+			TakeDamage( info );
+			m_flBleedTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
+		}
+	}
+
+	if ( IsJared() && GetWaterLevel() >= WL_Waist )
+ 	{
+		RemoveCond( TF_COND_URINE );
+		RemoveCond( TF_COND_MAD_MILK );
+		RemoveCond( TF_COND_GAS );
+	}
+
 
 	TestAndExpireChargeEffect( TF_CHARGE_INVULNERABLE );
 	TestAndExpireChargeEffect( TF_CHARGE_CRITBOOSTED );

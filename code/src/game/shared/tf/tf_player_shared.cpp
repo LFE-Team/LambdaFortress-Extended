@@ -80,6 +80,7 @@ ConVar sv_showplayerhitboxes( "sv_showplayerhitboxes", "0", FCVAR_REPLICATED, "S
 #ifdef GAME_DLL 
 	ConVar sv_infinite_ammo( "sv_infinite_ammo", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Player's active weapon will never run out of ammo" );
 	extern ConVar	lfe_force_legacy;
+	extern ConVar	tf_fireball_burn_duration;
 #endif
 #define TF_SPY_STEALTH_BLINKTIME   0.3f
 #define TF_SPY_STEALTH_BLINKSCALE  0.85f
@@ -706,16 +707,18 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-		OnAddCritboosted();
-		break;
-
 	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
 	case TF_COND_MINICRITBOOSTED_ON_KILL:
-		OnAddMiniCritboosted();
+		OnAddCritboosted();
 		break;
 
 	case TF_COND_BURNING:
 		OnAddBurning();
+		break;
+
+	case TF_COND_BLEEDING:
+	case TF_COND_GRAPPLINGHOOK_BLEEDING:
+		OnAddBleeding();
 		break;
 		
 	case TF_COND_PHASE:
@@ -828,18 +831,20 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
-		OnRemoveCritboosted();
-		break;
-
 	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
 	case TF_COND_MINICRITBOOSTED_ON_KILL:
-		OnRemoveMiniCritboosted();
+		OnRemoveCritboosted();
 		break;
 
 	case TF_COND_BURNING:
 		OnRemoveBurning();
 		break;
-		
+
+	case TF_COND_BLEEDING:
+	case TF_COND_GRAPPLINGHOOK_BLEEDING:
+		OnRemoveBleeding();
+		break;
+
 	case TF_COND_PHASE:
 		OnRemovePhase();
 		break;
@@ -1079,6 +1084,12 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			float flReduction = 2;	 // ( flReduction + 1 ) x faster reduction
 			m_flFlameRemoveTime -= flReduction * gpGlobals->frametime;
 		}
+		else if ( InCond( TF_COND_BLEEDING ) )
+		{
+			// Reduce the duration of this bleed 
+			float flReduction = 2;	 // ( flReduction + 1 ) x faster reduction
+			m_flBleedRemoveTime -= flReduction * gpGlobals->frametime;
+		}
 	}
 
 	if ( bDecayHealth )
@@ -1162,7 +1173,7 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		{
 			RemoveCond( TF_COND_BURNING );
 		}
-		else if ( ( gpGlobals->curtime >= m_flFlameBurnTime ) && ( TF_CLASS_PYRO != m_pOuter->GetPlayerClass()->GetClassIndex() ) )
+		else if ( ( gpGlobals->curtime >= m_flFlameBurnTime ) && ( TF_CLASS_PYRO != m_pOuter->GetPlayerClass()->GetClassIndex() ) || !InCond( TF_COND_AFTERBURN_IMMUNE ) )
 		{
 			float flBurnDamage = TF_BURNING_DMG;
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hBurnWeapon, flBurnDamage, mult_wpn_burndmg );
@@ -1176,7 +1187,20 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		if ( m_flNextBurningSound < gpGlobals->curtime )
 		{
 			m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_ONFIRE );
-			m_flNextBurningSound = gpGlobals->curtime + 2.5;
+			m_flNextBurningSound = gpGlobals->curtime + 2.5f;
+		}
+	}
+
+	if ( InCond( TF_COND_BLEEDING ) )
+	{
+		if ( ( gpGlobals->curtime >= m_flBleedTime ) )
+		{
+			float flBleedDamage = TF_BURNING_DMG + 1.0f;
+
+			// Bleed the player
+			CTakeDamageInfo info( m_hBleedAttacker, m_hBleedAttacker, m_hBleedWeapon, flBleedDamage, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BLEEDING );
+			m_pOuter->TakeDamage( info );
+			m_flBleedTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
 		}
 	}
 
@@ -1356,6 +1380,11 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 		RemoveCond( TF_COND_SLOWED );
 	}
 
+	if ( InCond( TF_COND_BLEEDING ) )
+	{
+		RemoveCond( TF_COND_BLEEDING );
+	}
+
 	if ( IsJared() )
 	{
 		RemoveCond( TF_COND_URINE );
@@ -1514,27 +1543,7 @@ void CTFPlayerShared::OnAddCritboosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMiniCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayerShared::OnRemoveCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMiniCritboosted( void )
 {
 #ifdef CLIENT_DLL
 	UpdateCritBoostEffect();
@@ -1798,7 +1807,7 @@ void CTFPlayerShared::OnAddJar( void )
 	{
 		m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
 
-		// set the burning screen overlay
+		// set the piss screen overlay
 		if ( m_pOuter->IsLocalPlayer() )
 		{
 			IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
@@ -1944,11 +1953,45 @@ void CTFPlayerShared::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NUL
 	else
 	{
 		// dragon's fury afterburn is 2 second
-		m_flFlameRemoveTime = bVictimIsPyro ? gpGlobals->curtime + flFlameLife : gpGlobals->curtime + flFlameLife - 8.0f;
+		m_flFlameRemoveTime = bVictimIsPyro ? gpGlobals->curtime + flFlameLife : gpGlobals->curtime + tf_fireball_burn_duration.GetFloat();
 	}
 
 	m_hBurnAttacker = pAttacker;
 	m_hBurnWeapon = pWeapon;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: BLOOD LEAKING
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flBleedDuration /*= -1.0f*/ )
+{
+#ifdef CLIENT_DLL
+
+#else
+	// Don't bother bleeding players who have just been killed by the bleed damage.
+	if ( !m_pOuter->IsAlive() )
+		return;
+
+	if ( !InCond( TF_COND_BLEEDING ) )
+	{
+		// Start burning
+		AddCond( TF_COND_BLEEDING );
+		m_flBleedTime = gpGlobals->curtime;	//asap
+	}
+
+	float flBleedTime = TF_BURNING_FLAME_LIFE;
+
+	if ( flBleedDuration != -1.0f )
+		flBleedTime = flBleedDuration;
+
+	if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_FIREBALL ) )
+	{
+		m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
+	}
+
+	m_hBleedAttacker = pAttacker;
+	m_hBleedWeapon = pWeapon;
 #endif
 }
 
@@ -2081,6 +2124,25 @@ void CTFPlayerShared::OnRemoveBurning( void )
 #else
 	m_hBurnAttacker = NULL;
 	m_hBurnWeapon = NULL;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveBleeding( void )
+{
+#ifdef CLIENT_DLL
+	if ( m_pOuter->IsLocalPlayer() )
+	{
+		view->SetScreenOverlayMaterial( NULL );
+	}
+
+	m_pOuter->m_flBurnEffectStartTime = 0;
+	m_pOuter->m_flBurnEffectEndTime = 0;
+#else
+	m_hBleedAttacker = NULL;
+	m_hBleedWeapon = NULL;
 #endif
 }
 
@@ -2242,6 +2304,24 @@ void CTFPlayerShared::OnAddBurning( void )
 
 	// play a fire-starting sound
 	m_pOuter->EmitSound( "Fire.Engulf" );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddBleeding( void )
+{
+#ifdef CLIENT_DLL
+	// set the bleeding screen overlay
+	if ( m_pOuter->IsLocalPlayer() )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "effects/bleed_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
+		if ( !IsErrorMaterial( pMaterial ) )
+		{
+			view->SetScreenOverlayMaterial( pMaterial );
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

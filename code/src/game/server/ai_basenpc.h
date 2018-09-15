@@ -2250,8 +2250,10 @@ public:
 	bool	IsMiniCritBoosted( void );
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
+	bool	IsJared( void );
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
+	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
 
 	// TF2 healer and burning handling
 	void	ConditionGameRulesThink( void );
@@ -2278,8 +2280,11 @@ public:
 	void	OnRemoveCritboosted( void );
 	void	OnAddMiniCritboosted( void );
 	void	OnRemoveMiniCritboosted( void );
-	void	OnAddUrine( void );
-	void	OnRemoveUrine( void );
+	void	OnAddJar( void );
+	void	OnRemoveJar( void );
+	void	SetBleedAttacker( CBaseEntity *pAttacker ) { m_hBleedAttacker = pAttacker; }
+	void	OnAddBleeding( void );
+	void	OnRemoveBleeding( void );
 
 	// Damager history, used for TF2 assists.
 	void				AddDamagerToHistory( EHANDLE hDamager );
@@ -2294,6 +2299,7 @@ public:
 	bool	AllowJar( void ) { return ( m_nTFFlags & TFFL_NOJAR ) == 0; }
 	bool	AllowDeathNotice( void ) { return ( m_nTFFlags & TFFL_NODEATHNOTICE ) == 0; }
 	bool	NoReward( void ) { return ( m_nTFFlags & TFFL_NOREWARD ) == 0; }
+	bool	NoBleed( void ) { return ( m_nTFFlags & TFFL_NOBLEED ) == 0; }
 
 	float GetCritMult( void );
 
@@ -2325,12 +2331,16 @@ protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;
 	CHandle<CTFWeaponBase>	m_hBurnWeapon;
+	EHANDLE					m_hBleedAttacker;
+	CHandle<CTFWeaponBase>	m_hBleedWeapon;
 	//CNetworkVar( int,		m_nNumFlames );
 	float					m_flFlameBurnTime;
 	float					m_flFlameRemoveTime;
+	float					m_flBleedTime;
+	float					m_flBleedRemoveTime;
 	CNetworkVar( bool, m_bBurningDeath );
 
-	// Some networked flags used by TF2C like backstab immunity.
+	// Some networked flags used by TF like backstab immunity.
 	CNetworkVar( int, m_nTFFlags );
 
 private:

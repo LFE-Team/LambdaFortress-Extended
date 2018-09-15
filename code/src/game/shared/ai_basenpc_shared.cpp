@@ -35,7 +35,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR | TFFL_NOBLEED,
 	},
 	{
 		"npc_kleiner",
@@ -177,7 +177,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_nihilanth",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR | TFFL_NOBLEED,
 	},
 	{
 		"monster_hornet",
@@ -222,12 +222,12 @@ TF_NPCData g_aNPCData[] =
 	{
 		"monster_tentacle",
 		TF_TEAM_GREEN,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_NODEFLECT | TFFL_NOJAR | TFFL_NOBLEED,
 	},
 	{
 		"monster_gman",
 		TF_TEAM_RED,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR | TFFL_NOBLEED,
 	},
 	{
 		"monster_human_assassin",
@@ -258,7 +258,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_breen",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR,
+		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_FIREPROOF | TFFL_NODEFLECT | TFFL_NOJAR | TFFL_NOBLEED,
 	},
 	// Regular enemies.
 	{
@@ -285,17 +285,17 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_cscanner",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_clawscanner",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	{
 		"npc_manhack",
 		TF_TEAM_BLUE,
-		TFFL_NOBACKSTAB | TFFL_NOHEALING | TFFL_BUILDING,
+		TFFL_BUILDING,
 	},
 	// Indestructible combine mechs.
 	{
@@ -700,6 +700,11 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		OnAddBurning();
 		break;
 
+	case TF_COND_BLEEDING:
+	case TF_COND_GRAPPLINGHOOK_BLEEDING:
+		OnAddBleeding();
+		break;
+
 	case TF_COND_HEALTH_OVERHEALED:
 		//UpdateOverhealEffect();
 		break;
@@ -737,16 +742,15 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
+	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
+	case TF_COND_MINICRITBOOSTED_ON_KILL:
 		OnAddCritboosted();
 		break;
 
-	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
-	case TF_COND_MINICRITBOOSTED_ON_KILL:
-		OnAddMiniCritboosted();
-		break;
-
 	case TF_COND_URINE:
-		OnAddUrine();
+	case TF_COND_MAD_MILK:
+	case TF_COND_GAS:
+		OnAddJar();
 		break;
 
 	default:
@@ -769,6 +773,11 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 */
 	case TF_COND_BURNING:
 		OnRemoveBurning();
+		break;
+
+	case TF_COND_BLEEDING:
+	case TF_COND_GRAPPLINGHOOK_BLEEDING:
+		OnRemoveBleeding();
 		break;
 
 	case TF_COND_HEALTH_BUFF:
@@ -799,16 +808,15 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	case TF_COND_CRITBOOSTED_ON_KILL:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
+	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
+	case TF_COND_MINICRITBOOSTED_ON_KILL:
 		OnRemoveCritboosted();
 		break;
 
-	//case TF_COND_NOHEALINGDAMAGEBUFF: // this one doesn't have spark effect.
-	case TF_COND_MINICRITBOOSTED_ON_KILL:
-		OnRemoveMiniCritboosted();
-		break;
-
 	case TF_COND_URINE:
-		OnRemoveUrine();
+	case TF_COND_MAD_MILK:
+	case TF_COND_GAS:
+		OnRemoveJar();
 		break;
 
 	default:
@@ -876,6 +884,19 @@ bool CAI_BaseNPC::IsStealthed( void )
 	return false;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::IsJared( void )
+{
+	if ( InCond( TF_COND_URINE ) ||
+		InCond( TF_COND_MAD_MILK ) ||
+		InCond( TF_COND_GAS ) )
+		return true;
+
+	return false;
+}
+
 int CAI_BaseNPC::GetMaxBuffedHealth( void )
 {
 	float flBoostMax = GetMaxHealth() * tf_max_health_boost.GetFloat();
@@ -885,7 +906,7 @@ int CAI_BaseNPC::GetMaxBuffedHealth( void )
 
 	return iRoundDown;
 }
-
+	extern ConVar	tf_fireball_burn_duration;
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -927,12 +948,46 @@ void CAI_BaseNPC::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/,
 	else
 	{
 		// dragon's fury afterburn is 2 second
-		m_flFlameRemoveTime = gpGlobals->curtime + flFlameLife - 8.0f;
+		m_flFlameRemoveTime = gpGlobals->curtime + tf_fireball_burn_duration.GetFloat();
 	}
 
 	m_hBurnAttacker = pAttacker;
 	m_hBurnWeapon = pWeapon;
 
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: BLOOD LEAKING
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flBleedDuration /*= -1.0f*/ )
+{
+#ifdef CLIENT_DLL
+
+#else
+	// Don't bother bleeding npc who have just been killed by the bleed damage.
+	if ( !IsAlive() )
+		return;
+
+	if ( !InCond( TF_COND_BLEEDING ) )
+	{
+		// Start burning
+		AddCond( TF_COND_BLEEDING );
+		m_flBleedTime = gpGlobals->curtime;	//asap
+	}
+
+	float flBleedTime = TF_BURNING_FLAME_LIFE;
+
+	if ( flBleedDuration != -1.0f )
+		flBleedTime = flBleedDuration;
+
+	if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_FIREBALL ) )
+	{
+		m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
+	}
+
+	m_hBleedAttacker = pAttacker;
+	m_hBleedWeapon = pWeapon;
 #endif
 }
 
@@ -977,6 +1032,23 @@ void CAI_BaseNPC::OnRemoveBurning( void )
 	m_hBurnAttacker = NULL;
 #endif
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddBleeding( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveBleeding( void )
+{
+#ifdef GAME_DLL
+	m_hBleedAttacker = NULL;
+#endif
+}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -990,9 +1062,21 @@ void CAI_BaseNPC::OnAddInvulnerable( void )
 		RemoveCond( TF_COND_BURNING );
 	}
 
+	if ( InCond( TF_COND_BLEEDING ) )
+	{
+		RemoveCond( TF_COND_BLEEDING );
+	}
+
 	if ( InCond( TF_COND_SLOWED ) )
 	{
 		RemoveCond( TF_COND_SLOWED );
+	}
+
+	if ( IsJared() )
+	{
+		RemoveCond( TF_COND_URINE );
+		RemoveCond( TF_COND_MAD_MILK );
+		RemoveCond( TF_COND_GAS );
 	}
 }
 
@@ -1032,16 +1116,6 @@ void CAI_BaseNPC::OnAddCritboosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddMiniCritboosted( void )
-{
-#ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnRemoveCritboosted( void )
 {
 #ifdef CLIENT_DLL
@@ -1052,28 +1126,25 @@ void CAI_BaseNPC::OnRemoveCritboosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveMiniCritboosted( void )
+void CAI_BaseNPC::OnAddJar( void )
 {
 #ifdef CLIENT_DLL
-	UpdateCritBoostEffect();
+	if ( InCond( TF_COND_URINE ) )
+	{
+		SetRenderColor( 255, 255, 108 );
+		ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
+	}
+	else if ( InCond( TF_COND_MAD_MILK ) )
+	{
+		ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
+	}
 #endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddUrine( void )
-{
-#ifdef CLIENT_DLL
-	SetRenderColor( 255, 255, 108 );
-	ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveUrine(void)
+void CAI_BaseNPC::OnRemoveJar(void)
 {
 #ifdef GAME_DLL
 	if( IsAlive() )
@@ -1081,7 +1152,14 @@ void CAI_BaseNPC::OnRemoveUrine(void)
 		m_hUrineAttacker = NULL;
 	}
 #else
-	SetRenderColor( 255, 255, 255 );
-	ParticleProp()->StopParticlesNamed( "peejar_drips" );
+	if ( InCond( TF_COND_URINE ) )
+	{
+		SetRenderColor( 255, 255, 255 );
+		ParticleProp()->StopParticlesNamed( "peejar_drips" );
+	}
+	else  if ( InCond( TF_COND_MAD_MILK ) )
+	{
+		ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
+	}
 #endif
 }

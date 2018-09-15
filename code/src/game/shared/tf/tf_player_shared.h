@@ -192,6 +192,7 @@ public:
 	int		GetNumHealers( void ) { return m_nNumHealers; }
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
+	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
 	void	StunPlayer( float flDuration, CTFPlayer *pStunner );
 
 #ifdef GAME_DLL
@@ -296,7 +297,6 @@ private:
 	void OnAddTaunting( void );
 	void OnAddSlowed( void );
 	void OnAddCritboosted( void );
-	void OnAddMiniCritboosted( void );
 	void OnAddStunned( void );
 	void OnAddHalloweenGiant( void );
 	void OnAddHalloweenTiny( void );
@@ -305,6 +305,7 @@ private:
 	void OnAddSpeedBoost( void );
 	void OnAddJar( void );
 	void OnAddTeamGlows( void );
+	void OnAddBleeding( void );
 
 	void OnAddPowerPlay( void );
 
@@ -318,7 +319,6 @@ private:
 	void OnRemoveTaunting( void );
 	void OnRemoveSlowed( void );
 	void OnRemoveCritboosted( void );
-	void OnRemoveMiniCritboosted( void );
 	void OnRemoveStunned( void );
 	void OnRemoveHalloweenGiant( void );
 	void OnRemoveHalloweenTiny( void );
@@ -327,6 +327,7 @@ private:
 	void OnRemoveSpeedBoost( void );
 	void OnRemoveJar( void );
 	void OnRemoveTeamGlows( void );
+	void OnRemoveBleeding( void );
 
 	void OnRemovePowerPlay( void );
 
@@ -404,9 +405,13 @@ private:
 	// Burn handling
 	CHandle<CTFPlayer>		m_hBurnAttacker;
 	CHandle<CTFWeaponBase>	m_hBurnWeapon;
+	CHandle<CTFPlayer>		m_hBleedAttacker;
+	CHandle<CTFWeaponBase>	m_hBleedWeapon;
 	CNetworkVar( int,		m_nNumFlames );
 	float					m_flFlameBurnTime;
 	float					m_flFlameRemoveTime;
+	float					m_flBleedTime;
+	float					m_flBleedRemoveTime;
 	float					m_flTauntRemoveTime;
 	float					m_flStunTime;
 	float					m_flPhaseTime;

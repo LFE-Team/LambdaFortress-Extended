@@ -90,6 +90,7 @@ public:
 	bool	IsMiniCritBoosted( void );
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
+	bool	IsJared( void );
 
 	virtual bool IsOnFire() { return InCond( TF_COND_BURNING ); }
 	void	OnAddBurning( void );
@@ -99,17 +100,18 @@ public:
 	void	OnRemoveInvulnerable( void );
 	void	OnAddSlowed( void );
 	void	OnRemoveSlowed( void );
-	void OnAddCritboosted( void );
-	void OnRemoveCritboosted( void );
-	void OnAddMiniCritboosted( void );
-	void OnRemoveMiniCritboosted( void );
-	void OnAddUrine( void );
-	void OnRemoveUrine( void );
+	void	OnAddCritboosted( void );
+	void	OnRemoveCritboosted( void );
+	void	OnAddJar( void );
+	void	OnRemoveJar( void );
+	void	OnAddBleeding( void );
+	void	OnRemoveBleeding( void );
 
 	void	StartBurningSound( void );
 	void	StopBurningSound( void );
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
+	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
 
 	CMaterialReference *GetInvulnMaterialRef( void ) { return &m_InvulnerableMaterial; }
 	void	InitInvulnerableMaterial( void );
@@ -120,6 +122,7 @@ public:
 	bool	AllowJar( void ) { return ( m_nTFFlags & TFFL_NOJAR ) == 0; }
 	bool	AllowDeathNotice( void ) { return ( m_nTFFlags & TFFL_NODEATHNOTICE ) == 0; }
 	bool	NoReward( void ) { return ( m_nTFFlags & TFFL_NOREWARD ) == 0; }
+	bool	NoBleed( void ) { return ( m_nTFFlags & TFFL_NOBLEED ) == 0; }
 
 	void	UpdateCritBoostEffect( bool bForceHide = false );
 

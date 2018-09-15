@@ -579,12 +579,9 @@ void CPropVehicleDriveable::EnterVehicle( CBaseCombatCharacter *pPassenger )
 	if ( pPassenger == NULL )
 		return;
 
-	//CBasePlayer *pPlayer = ToBasePlayer( pPassenger	);
-	CTFPlayer *pPlayer = ToTFPlayer(pPassenger);
+	CTFPlayer *pPlayer = ToTFPlayer( pPassenger );
 	if ( pPlayer != NULL )
 	{
-		pPlayer->bInVehicle = true;
-		//pPlayer = ToTFPlayer(pPlayer);
 		// Remove any player who may be in the vehicle at the moment
 		if ( m_hPlayer )
 		{
@@ -628,14 +625,12 @@ void CPropVehicleDriveable::EnterVehicle( CBaseCombatCharacter *pPassenger )
 //-----------------------------------------------------------------------------
 void CPropVehicleDriveable::ExitVehicle( int nRole )
 {
-	//CBasePlayer *pPlayer = m_hPlayer;
-	CTFPlayer *pPlayer = ToTFPlayer(m_hPlayer);
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer );
 	if ( !pPlayer )
 		return;
 
 	m_hPlayer = NULL;
 	ResetUseKey( pPlayer );
-	pPlayer->bInVehicle = false;
 	
 	m_playerOff.FireOutput( pPlayer, this, 0 );
 

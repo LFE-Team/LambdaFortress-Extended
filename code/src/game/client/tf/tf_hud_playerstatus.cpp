@@ -314,8 +314,8 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 
 	// bleeds
 	m_pHealthBleedImage = new ImagePanel( this, "PlayerStatusBleedImage" );
-	//m_pHealthHookBleedImage = new ImagePanel( this, "PlayerStatusHookBleedImage" );
-	m_pHealthHookBleedImage = dynamic_cast< ImagePanel * >(FindChildByName("PlayerStatusHookBleedImage"));
+	//m_pHealthBleedImage = dynamic_cast< ImagePanel * >(FindChildByName("PlayerStatusBleedImage"));
+	m_pHealthHookBleedImage = new ImagePanel( this, "PlayerStatusHookBleedImage" );
 
 	// conds
 	m_pHealthMilkImage = new ImagePanel( this, "PlayerStatusMilkImage" );	
