@@ -1913,3 +1913,16 @@
 	input RemoveAllVehicles(void) : "Remove all vehicles."
 	input ForceSpawn(void ) : "Spawn vehicles."
 ]
+
+@PointClass base(Targetname,EnableDisable) = lfe_logic_date : 	"Logic Entity fired on computer's date"
+[	
+	year(integer) : "Year" : 0 : "Years since 1900"
+	month(integer) : "Month" : 0 : "Months since January - [0,11]"
+	day(integer) : "Day" : 0 : "Day of the month - [1,31]"
+	hour(integer) : "Hour" : 0 : "Hours since midnight - [0,23]"
+	minute(integer) : "Minute" : 0 : "Minutes after the hour - [0,59]"
+	second(integer) : "second" : 0 : "Seconds after the minute - [0,59]"
+
+// Outputs
+	output OnDate(void)	: "Fired when the computer's date is matched"
+]

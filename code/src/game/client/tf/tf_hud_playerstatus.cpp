@@ -312,6 +312,57 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 
 	m_pHealthImageBuildingBG = new ImagePanel( this, "BuildingStatusHealthImageBG" );	
 
+	// bleeds
+	m_pHealthBleedImage = new ImagePanel( this, "PlayerStatusBleedImage" );
+	//m_pHealthHookBleedImage = new ImagePanel( this, "PlayerStatusHookBleedImage" );
+	m_pHealthHookBleedImage = dynamic_cast< ImagePanel * >(FindChildByName("PlayerStatusHookBleedImage"));
+
+	// conds
+	m_pHealthMilkImage = new ImagePanel( this, "PlayerStatusMilkImage" );	
+	m_pHealthGasImage = new ImagePanel( this, "PlayerStatusGasImage" );	
+
+	// fan o war and others.
+	m_pHealthMiniCritImage = new ImagePanel( this, "PlayerStatusMarkedForDeathImage" );	
+	m_pHealthMiniCritSlientImage = new ImagePanel( this, "PlayerStatusMarkedForDeathSilentImage" );	
+
+	// vaccinator
+	m_pHealthMedicBulletResist = new ImagePanel( this, "PlayerStatus_MedicUberBulletResistImage" );	
+	m_pHealthMedicBlastResist = new ImagePanel( this, "PlayerStatus_MedicUberBlastResistImage" );	
+	m_pHealthMedicFireResist = new ImagePanel( this, "PlayerStatus_MedicUberFireResistImage" );	
+	m_pHealthMedicSmallBulletResist = new ImagePanel( this, "PlayerStatus_MedicSmallBulletResistImage" );	
+	m_pHealthMedicSmallBlastResist = new ImagePanel( this, "PlayerStatus_MedicSmallBlastResistImage" );	
+	m_pHealthMedicSmallFireResist = new ImagePanel( this, "PlayerStatus_MedicSmallFireResistImage" );	
+
+	// ghost fort wheel of doom
+	m_pHealthWheelOfDoom = new ImagePanel( this, "PlayerStatus_WheelOfDoom" );
+
+	// banners
+	m_pHealthSoldierOffenseBuff = new ImagePanel( this, "PlayerStatus_SoldierOffenseBuff" );	
+	m_pHealthSoldierDefenseBuff = new ImagePanel( this, "PlayerStatus_SoldierDefenseBuff" );	
+	m_pHealthSoldierHealOnHitBuff = new ImagePanel( this, "PlayerStatus_SoldierHealOnHitBuff" );	
+
+	m_pHealthSpyMarked = new ImagePanel( this, "PlayerStatus_SpyMarked" );	
+
+	// love & war
+	m_pHealthParachute = new ImagePanel( this, "PlayerStatus_Parachute" );	
+
+	// mannpower
+	m_pHealthRuneStrength = new ImagePanel( this, "PlayerStatus_RuneStrength" );	
+	m_pHealthRuneHaste = new ImagePanel( this, "PlayerStatus_RuneHaste" );	
+	m_pHealthRuneRegen = new ImagePanel( this, "PlayerStatus_RuneRegen" );	
+	m_pHealthRuneResist = new ImagePanel( this, "PlayerStatus_RuneResist" );	
+	m_pHealthRuneVampire = new ImagePanel( this, "PlayerStatus_RuneVampire" );	
+	m_pHealthRuneReflect = new ImagePanel( this, "PlayerStatus_RuneReflect" );	
+	m_pHealthRunePrecision = new ImagePanel( this, "PlayerStatus_RunePrecision" );	
+	m_pHealthRuneAgility = new ImagePanel( this, "PlayerStatus_RuneAgility" );	
+	m_pHealthRuneKnockout = new ImagePanel( this, "PlayerStatus_RuneKnockout" );	
+	m_pHealthRuneKing = new ImagePanel( this, "PlayerStatus_RuneKing" );	
+	m_pHealthRunePlague = new ImagePanel( this, "PlayerStatus_RunePlague" );	
+	m_pHealthRuneSupernova = new ImagePanel( this, "PlayerStatus_RuneSupernova" );
+
+	// jungle inferno
+	m_pHealthSlowed = new ImagePanel( this, "PlayerStatusSlowed" );
+
 	m_flNextThink = 0.0f;
 }
 
@@ -366,7 +417,6 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 			m_pHealthImageBG->SetVisible( false );
 		}
 
-
 		if ( m_pHealthImageBuildingBG->IsVisible() )
 		{
 			m_pHealthImageBuildingBG->SetVisible( false );
@@ -388,6 +438,342 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 				m_pHealthImageBuildingBG->SetVisible( true );
 			else
 				m_pHealthImageBuildingBG->SetVisible( false );
+		}
+
+		C_TFPlayer *pPlayer = ToTFPlayer( C_BasePlayer::GetLocalPlayer() );
+		if ( pPlayer )
+		{
+			if ( pPlayer->m_Shared.InCond( TF_COND_BLEEDING ) )
+			{
+				if ( !m_pHealthBleedImage->IsVisible() )
+					m_pHealthBleedImage->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthBleedImage->IsVisible() )
+					m_pHealthBleedImage->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_GRAPPLINGHOOK_BLEEDING ) )
+			{
+				if ( !m_pHealthHookBleedImage->IsVisible() )
+					m_pHealthHookBleedImage->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthHookBleedImage->IsVisible() )
+					m_pHealthHookBleedImage->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MAD_MILK ) )
+			{
+				if ( !m_pHealthMilkImage->IsVisible() )
+					m_pHealthMilkImage->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMilkImage->IsVisible() )
+					m_pHealthMilkImage->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_GAS ) )
+			{
+				if ( !m_pHealthGasImage->IsVisible() )
+					m_pHealthGasImage->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthGasImage->IsVisible() )
+					m_pHealthGasImage->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MARKEDFORDEATH ) )
+			{
+				if ( !m_pHealthMiniCritImage->IsVisible() )
+					m_pHealthMiniCritImage->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMiniCritImage->IsVisible() )
+					m_pHealthMiniCritImage->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MARKEDFORDEATH_SILENT ) )
+			{
+				if ( !m_pHealthMiniCritSlientImage->IsVisible() )
+					m_pHealthMiniCritSlientImage->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMiniCritSlientImage->IsVisible() )
+					m_pHealthMiniCritSlientImage->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_BULLET_RESIST ) )
+			{
+				if ( !m_pHealthMedicBulletResist->IsVisible() )
+					m_pHealthMedicBulletResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMedicBulletResist->IsVisible() )
+					m_pHealthMedicBulletResist->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_BLAST_RESIST ) )
+			{
+				if ( !m_pHealthMedicBlastResist->IsVisible() )
+					m_pHealthMedicBlastResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMedicBlastResist->IsVisible() )
+					m_pHealthMedicBlastResist->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_FIRE_RESIST ) )
+			{
+				if ( !m_pHealthMedicFireResist->IsVisible() )
+					m_pHealthMedicFireResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMedicFireResist->IsVisible() )
+					m_pHealthMedicFireResist->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_SMALL_BULLET_RESIST ) )
+			{
+				if ( !m_pHealthMedicSmallBulletResist->IsVisible() )
+					m_pHealthMedicSmallBulletResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMedicSmallBulletResist->IsVisible() )
+					m_pHealthMedicSmallBulletResist->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_SMALL_BLAST_RESIST ) )
+			{
+				if ( !m_pHealthMedicSmallBlastResist->IsVisible() )
+					m_pHealthMedicSmallBlastResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMedicSmallBlastResist->IsVisible() )
+					m_pHealthMedicSmallBlastResist->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_SMALL_FIRE_RESIST ) )
+			{
+				if ( !m_pHealthMedicSmallFireResist->IsVisible() )
+					m_pHealthMedicSmallFireResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthMedicSmallFireResist->IsVisible() )
+					m_pHealthMedicSmallFireResist->SetVisible( false );
+			}
+
+			// skip this one entirely
+			if ( m_pHealthWheelOfDoom->IsVisible() )
+			{
+				m_pHealthWheelOfDoom->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_OFFENSEBUFF ) )
+			{
+				if ( !m_pHealthSoldierOffenseBuff->IsVisible() )
+					m_pHealthSoldierOffenseBuff->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthSoldierOffenseBuff->IsVisible() )
+					m_pHealthSoldierOffenseBuff->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_DEFENSEBUFF ) )
+			{
+				if ( !m_pHealthSoldierDefenseBuff->IsVisible() )
+					m_pHealthSoldierDefenseBuff->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthSoldierDefenseBuff->IsVisible() )
+					m_pHealthSoldierDefenseBuff->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_REGENONDAMAGEBUFF ) )
+			{
+				if ( !m_pHealthSoldierHealOnHitBuff->IsVisible() )
+					m_pHealthSoldierHealOnHitBuff->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthSoldierHealOnHitBuff->IsVisible() )
+					m_pHealthSoldierHealOnHitBuff->SetVisible( false );
+			}
+
+			// skip this one entirely because i don't know what it is -puddy
+			if ( m_pHealthSpyMarked->IsVisible() )
+			{
+				m_pHealthSpyMarked->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) || pPlayer->m_Shared.InCond( TF_COND_PARACHUTE_DEPLOYED ) )
+			{
+				if ( !m_pHealthParachute->IsVisible() )
+					m_pHealthParachute->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthParachute->IsVisible() )
+					m_pHealthParachute->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_STRENGTH ) )
+			{
+				if ( !m_pHealthRuneStrength->IsVisible() )
+					m_pHealthRuneStrength->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneStrength->IsVisible() )
+					m_pHealthRuneStrength->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_HASTE ) )
+			{
+				if ( !m_pHealthRuneHaste->IsVisible() )
+					m_pHealthRuneHaste->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneHaste->IsVisible() )
+					m_pHealthRuneHaste->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_REGEN ) )
+			{
+				if ( !m_pHealthRuneRegen->IsVisible() )
+					m_pHealthRuneRegen->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneRegen->IsVisible() )
+					m_pHealthRuneRegen->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_RESIST ) )
+			{
+				if ( !m_pHealthRuneResist->IsVisible() )
+					m_pHealthRuneResist->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneResist->IsVisible() )
+					m_pHealthRuneResist->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_VAMPIRE ) )
+			{
+				if ( !m_pHealthRuneVampire->IsVisible() )
+					m_pHealthRuneVampire->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneVampire->IsVisible() )
+					m_pHealthRuneVampire->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_WARLOCK ) )
+			{
+				if ( !m_pHealthRuneReflect->IsVisible() )
+					m_pHealthRuneReflect->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneReflect->IsVisible() )
+					m_pHealthRuneReflect->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_PRECISION ) )
+			{
+				if ( !m_pHealthRunePrecision->IsVisible() )
+					m_pHealthRuneReflect->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRunePrecision->IsVisible() )
+					m_pHealthRunePrecision->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_AGILITY ) )
+			{
+				if ( !m_pHealthRuneAgility->IsVisible() )
+					m_pHealthRuneAgility->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneAgility->IsVisible() )
+					m_pHealthRuneAgility->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_KNOCKOUT ) )
+			{
+				if ( !m_pHealthRuneKnockout->IsVisible() )
+					m_pHealthRuneKnockout->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneKnockout->IsVisible() )
+					m_pHealthRuneKnockout->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_KING ) )
+			{
+				if ( !m_pHealthRuneKing->IsVisible() )
+					m_pHealthRuneKing->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneKing->IsVisible() )
+					m_pHealthRuneKing->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_PLAGUE ) )
+			{
+				if ( !m_pHealthRunePlague->IsVisible() )
+					m_pHealthRunePlague->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRunePlague->IsVisible() )
+					m_pHealthRunePlague->SetVisible( false );
+			}
+
+			if ( pPlayer->m_Shared.InCond( TF_COND_RUNE_SUPERNOVA ) )
+			{
+				if ( !m_pHealthRuneSupernova->IsVisible() )
+					m_pHealthRuneSupernova->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthRuneSupernova->IsVisible() )
+					m_pHealthRuneSupernova->SetVisible( false );
+			}
+
+			// not sure if this the correct cond
+			if ( pPlayer->m_Shared.InCond( TF_COND_STUNNED ) || pPlayer->m_Shared.InCond( TF_COND_SLOWED ) )
+			{
+				if ( !m_pHealthSlowed->IsVisible() )
+					m_pHealthSlowed->SetVisible( true );
+			}
+			else
+			{
+				if ( m_pHealthSlowed->IsVisible() )
+					m_pHealthSlowed->SetVisible( false );
+			}
 		}
 
 		// are we getting a health bonus?
@@ -464,7 +850,17 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 		else
 		{
 			SetDialogVariable( "Health", "" );
-		}	
+		}
+
+		// are we lower than max?
+		if ( m_nHealth < m_nMaxHealth )
+		{
+			SetDialogVariable( "MaxHealth", m_nMaxHealth );
+		}
+		else
+		{
+			SetDialogVariable( "MaxHealth", "" );
+		}
 	}
 }
 

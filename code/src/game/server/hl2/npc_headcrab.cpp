@@ -1708,15 +1708,16 @@ int CBaseHeadcrab::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	//
 	// Don't take any acid damage.
 	//
+	/* take it because we have tf2 crits
 	if ( info.GetDamageType() & DMG_ACID )
 	{
 		info.SetDamage( 0 );
-	}
+	}*/
 
 	//
 	// Certain death from melee bludgeon weapons!
 	//
-	if ( info.GetDamageType() & DMG_CLUB )
+	if ( info.GetDamageType() & DMG_CLUB || info.GetDamageType() & DMG_SLASH )
 	{
 		info.SetDamage( m_iHealth );
 	}
@@ -1730,13 +1731,13 @@ int CBaseHeadcrab::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	if( info.GetDamageType() & DMG_BURN )
+	if( info.GetDamageType() & DMG_BURN || info.GetDamageType() & DMG_IGNITE )
 	{
 		// Slow down burn damage so that headcrabs live longer while on fire.
 		info.ScaleDamage( 0.25 );
 
-#define HEADCRAB_SCORCH_RATE	5
-#define HEADCRAB_SCORCH_FLOOR	30
+		#define HEADCRAB_SCORCH_RATE	5
+		#define HEADCRAB_SCORCH_FLOOR	30
 
 		if( IsOnFire() )
 		{
@@ -2022,7 +2023,7 @@ void CBaseHeadcrab::TraceAttack( const CTakeDamageInfo &info, const Vector &vecD
 	CTakeDamageInfo	newInfo = info;
 
 	// Ignore if we're in a dynamic scripted sequence
-	if ( info.GetDamageType() & DMG_PHYSGUN && !IsRunningDynamicInteraction() )
+	if ( info.GetDamageType() & DMG_PHYSGUN || info.GetDamageType() & DMG_CRIT && !IsRunningDynamicInteraction() )
 	{
 		Vector	puntDir = ( info.GetDamageForce() * 1000.0f );
 

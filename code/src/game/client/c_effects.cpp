@@ -28,8 +28,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar	cl_winddir			( "cl_winddir", "0", FCVAR_CHEAT, "Weather effects wind direction angle" );
-ConVar	cl_windspeed		( "cl_windspeed", "0", FCVAR_CHEAT, "Weather effects wind speed scalar" );
+static ConVar	cl_winddir			( "cl_winddir", "0", FCVAR_CHEAT, "Weather effects wind direction angle" );
+static ConVar	cl_windspeed		( "cl_windspeed", "0", FCVAR_CHEAT, "Weather effects wind speed scalar" );
 
 Vector g_vSplashColor( 0.5, 0.5, 0.5 );
 float g_flSplashScale = 0.15;
@@ -1368,6 +1368,7 @@ void CClient_Precipitation::EmitParticles( float fTimeDelta )
 
 void CClient_Precipitation::ComputeWindVector( )
 {
+#if 0
 	// Compute the wind direction
 	QAngle windangle( 0, cl_winddir.GetFloat(), 0 );	// used to turn wind yaw direction into a vector
 
@@ -1377,6 +1378,9 @@ void CClient_Precipitation::ComputeWindVector( )
 
 	AngleVectors( windangle, &s_WindVector );
 	VectorScale( s_WindVector, windspeed, s_WindVector );
+#else
+	GetWindspeedAtTime(gpGlobals->curtime, s_WindVector);
+#endif
 }
 
 

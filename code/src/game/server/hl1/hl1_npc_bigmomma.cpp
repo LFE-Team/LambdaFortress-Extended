@@ -578,10 +578,10 @@ int CNPC_BigMomma::OnTakeDamage( const CTakeDamageInfo &info )
 	CTakeDamageInfo newInfo = info;
 
 	// Don't take any acid damage -- BigMomma's mortar is acid
-	if ( newInfo.GetDamageType() & DMG_ACID )
+	/*if ( newInfo.GetDamageType() & DMG_ACID )
 	{
 		newInfo.SetDamage( 0 );
-	}
+	}*/
 	
 	// never die from damage, just advance to the next node
 	if ( ( GetHealth() - newInfo.GetDamage() ) < 1 ) 

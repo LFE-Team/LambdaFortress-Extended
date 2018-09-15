@@ -125,7 +125,7 @@ ConVar lfe_versus( "lfe_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_D
 ConVar lfe_blucoop( "lfe_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_gamemode_zs( "lfe_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar sv_dynamicnpcs("sv_dynamicnpcs", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable The Dynamic NPC System.");
-ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set the New Difficulty System.\n1 = Original \n2 = Medium\n 3 = Hard");
+ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set the New Difficulty System.\n1 = Original \n2 = Medium\n 3 = Hard \n4 = Unusual");
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -1052,6 +1052,105 @@ CTFVehicleBlock::CTFVehicleBlock()
 
 CTFVehicleBlock::~CTFVehicleBlock()
 {
+}
+
+class CTFLogicDate : public CBaseEntity
+{
+public:
+	DECLARE_CLASS( CTFLogicDate, CBaseEntity );
+	CTFLogicDate();
+	~CTFLogicDate();
+
+	void Activate(void);
+	void Think(void);
+
+	int ObjectCaps(void) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+
+	DECLARE_DATADESC();
+
+private:
+
+	// fired no matter why the map loaded
+	COutputEvent m_OnMapSpawn;
+
+	// fired for specified types of map loads
+	COutputEvent m_OnDate;
+
+	int iDay;
+	int iMonth;
+	int iYear;
+	int iHour;
+	int iMinute;
+	int iSecond;
+};
+
+LINK_ENTITY_TO_CLASS(lfe_logic_date, CTFLogicDate);
+
+BEGIN_DATADESC( CTFLogicDate )
+
+	DEFINE_KEYFIELD(iDay, FIELD_INTEGER, "day"),
+	DEFINE_KEYFIELD(iMonth, FIELD_INTEGER, "month"),
+	DEFINE_KEYFIELD(iYear, FIELD_INTEGER, "year"),
+	DEFINE_KEYFIELD(iHour, FIELD_INTEGER, "hour"),
+	DEFINE_KEYFIELD(iMinute, FIELD_INTEGER, "minute"),
+	DEFINE_KEYFIELD(iMinute, FIELD_INTEGER, "second"),
+
+	// Outputs
+	DEFINE_OUTPUT(m_OnDate, "OnDate" ),
+
+END_DATADESC()
+
+CTFLogicDate::CTFLogicDate()
+{
+	iDay = 0;
+	iMonth = 0;
+	iYear = 0;
+	iHour = 0;
+	iMinute = 0;
+	iSecond = 0;
+}
+
+CTFLogicDate::~CTFLogicDate()
+{
+}
+
+//------------------------------------------------------------------------------
+// Purpose : Fire my outputs here if I fire on map reload
+//------------------------------------------------------------------------------
+void CTFLogicDate::Activate(void)
+{
+	BaseClass::Activate();
+	SetNextThink( gpGlobals->curtime + 0.2 );
+}
+
+/*
+        int tm_sec;     // seconds after the minute - [0,59]
+        int tm_min;    // minutes after the hour - [0,59]
+        int tm_hour;    // hours since midnight - [0,23]
+        int tm_mday;    // day of the month - [1,31]
+        int tm_mon;     // months since January - [0,11]
+        int tm_year;    // years since 1900
+        int tm_wday;    // days since Sunday - [0,6] 
+        int tm_yday;    // days since January 1 - [0,365]
+        int tm_isdst;   // daylight savings time flag
+*/
+//-----------------------------------------------------------------------------
+// Purpose: Called shortly after level spawn. Checks the global state and fires
+//			targets if the global state is set or if there is not global state
+//			to check.
+//-----------------------------------------------------------------------------
+void CTFLogicDate::Think(void)
+{
+	time_t ltime = time(0);
+	const time_t *ptime = &ltime;
+	struct tm *today = localtime( ptime );
+	if ( today )
+	{
+		if ( today->tm_mon == iMonth && today->tm_mday == iDay && today->tm_year == iYear && today->tm_hour == iHour && today->tm_min == iMinute && today->tm_sec == iSecond )
+		{
+			m_OnDate.FireOutput(NULL, this);
+		}
+	}
 }
 
 class CTFClassLimits : public CBaseEntity

@@ -118,6 +118,38 @@ private:
 	vgui::ImagePanel	*m_pHealthImageBG;
 	vgui::ImagePanel	*m_pHealthImageBuildingBG;
 
+	vgui::ImagePanel	*m_pHealthBleedImage;
+	vgui::ImagePanel	*m_pHealthHookBleedImage;
+	vgui::ImagePanel	*m_pHealthMilkImage;
+	vgui::ImagePanel	*m_pHealthGasImage;
+	vgui::ImagePanel	*m_pHealthMiniCritImage;
+	vgui::ImagePanel	*m_pHealthMiniCritSlientImage;
+	vgui::ImagePanel	*m_pHealthMedicBulletResist;
+	vgui::ImagePanel	*m_pHealthMedicBlastResist;
+	vgui::ImagePanel	*m_pHealthMedicFireResist;
+	vgui::ImagePanel	*m_pHealthMedicSmallBulletResist;
+	vgui::ImagePanel	*m_pHealthMedicSmallBlastResist;
+	vgui::ImagePanel	*m_pHealthMedicSmallFireResist;
+	vgui::ImagePanel	*m_pHealthWheelOfDoom;
+	vgui::ImagePanel	*m_pHealthSoldierOffenseBuff;
+	vgui::ImagePanel	*m_pHealthSoldierDefenseBuff;
+	vgui::ImagePanel	*m_pHealthSoldierHealOnHitBuff;
+	vgui::ImagePanel	*m_pHealthSpyMarked;
+	vgui::ImagePanel	*m_pHealthParachute;
+	vgui::ImagePanel	*m_pHealthRuneStrength;
+	vgui::ImagePanel	*m_pHealthRuneHaste;
+	vgui::ImagePanel	*m_pHealthRuneRegen;
+	vgui::ImagePanel	*m_pHealthRuneResist;
+	vgui::ImagePanel	*m_pHealthRuneVampire;
+	vgui::ImagePanel	*m_pHealthRuneReflect;
+	vgui::ImagePanel	*m_pHealthRunePrecision;
+	vgui::ImagePanel	*m_pHealthRuneAgility;
+	vgui::ImagePanel	*m_pHealthRuneKnockout;
+	vgui::ImagePanel	*m_pHealthRuneKing;
+	vgui::ImagePanel	*m_pHealthRunePlague;
+	vgui::ImagePanel	*m_pHealthRuneSupernova;
+	vgui::ImagePanel	*m_pHealthSlowed;
+
 	int					m_nHealth;
 	int					m_nMaxHealth;
 

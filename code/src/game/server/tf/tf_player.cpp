@@ -137,9 +137,9 @@ ConVar lfe_random_weapons( "lfe_random_weapons", "0", FCVAR_NOTIFY | FCVAR_DEVEL
 ConVar lfe_allow_team_weapons( "lfe_allow_team_weapons", "1", FCVAR_NOTIFY, "Makes players spawn with gravity gun." );
 
 // Cvars from HL2 player
-ConVar hl2_walkspeed( "hl2_walkspeed", "150" );
-ConVar hl2_normspeed( "hl2_normspeed", "190" );
-ConVar hl2_sprintspeed( "hl2_sprintspeed", "320" );
+ConVar hl2_walkspeed( "hl2_walkspeed", "180" );
+ConVar hl2_normspeed( "hl2_normspeed", "210" );
+ConVar hl2_sprintspeed( "hl2_sprintspeed", "350" );
 
 ConVar player_squad_transient_commands( "player_squad_transient_commands", "1", FCVAR_REPLICATED );
 ConVar player_squad_double_tap_time( "player_squad_double_tap_time", "0.25" );
@@ -9602,6 +9602,9 @@ CON_COMMAND_F( tf_crashclients, "testing only, crashes about 50 percent of the c
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Dev commands
+//-----------------------------------------------------------------------------
 // Add class name prefixes to show in the "give_weapon" command autocomplete here
 static ClassNamePrefix_t s_pWpnEntityPrefixes[] =
 {
@@ -10126,14 +10129,6 @@ void CTFPlayer::UpdatePlayerColor( void )
 	// Bots pick colors themselves.
 	if ( IsFakeClient() )
 		return;
-
-	// Update color from their convars
-	Vector vecNewColor;
-	vecNewColor.x = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_r" ) ) / 255.0f;
-	vecNewColor.y = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_g" ) ) / 255.0f;
-	vecNewColor.z = V_atoi( engine->GetClientConVarValue( entindex(), "tf2c_setmerccolor_b" ) ) / 255.0f;
-
-	m_vecPlayerColor = vecNewColor;
 }
 
 //-----------------------------------------------------------------------------

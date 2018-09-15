@@ -42,7 +42,7 @@ void OverrideMainMenu()
 	}
 }
 
-CON_COMMAND( lfe_hud_reload_mainmenu, "Reload Main Menu" )
+CON_COMMAND( lfe_mainmenu_reload, "Reload Main Menu" )
 {
 	MAINMENU_ROOT->InvalidatePanelsLayout(true, true);
 }

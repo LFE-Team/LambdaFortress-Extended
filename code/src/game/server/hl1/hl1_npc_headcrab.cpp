@@ -256,10 +256,10 @@ int CNPC_Headcrab::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	//
 	// Don't take any acid damage.
 	//
-	if ( info.GetDamageType() & DMG_ACID )
+	/*if ( info.GetDamageType() & DMG_ACID )
 	{
 		return 0;
-	}
+	}*/
 
 	return BaseClass::OnTakeDamage_Alive( info );
 }

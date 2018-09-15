@@ -9,9 +9,17 @@
 #include "baseparticleentity.h"
 #include "entityparticletrail_shared.h"
 #include "collisionutils.h"
+#include "engine/ivdebugoverlay.h"
+#include "raytrace.h"
+#include "animation.h"
 
 #if defined( CLIENT_DLL )
 #include "c_pixel_visibility.h"
+#include "c_effects.h"
+#include "view.h"
+#include "viewrender.h"
+//#include "model_types.h"
+//#include "c_env_projectedtexture.h"
 #endif
 
 #if defined( TF_CLIENT_DLL ) || defined(TF_CLASSIC_CLIENT)
@@ -25,7 +33,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
+// asw port
+#define POINT_AT_ORIGIN_EPSILON 0.1f
 //-----------------------------------------------------------------------------
 // Interface to allow the particle system to call back into the game code
 //-----------------------------------------------------------------------------
@@ -53,6 +62,9 @@ public:
 		Vector *pHitBoxRelativeCoordOut,
 		int *pHitBoxIndexOut
 		);
+
+	// asw port
+	virtual int GetRayTraceEnvironmentFromName( const char *pszRtEnvName );
 
 	virtual int GetCollisionGroupFromName( const char *pszCollisionGroupName );
 
@@ -536,6 +548,32 @@ bool CParticleSystemQuery::IsPointInControllingObjectHitBox(
 	return bSuccess;
 }
 
+// asw port
+extern CUtlVector< RayTracingEnvironment * > g_RayTraceEnvironments;
+
+struct RayTraceEnvironmentNameRecord_t
+{
+	const char *m_pszGroupName;
+	int m_nGroupID;
+};
+
+
+static RayTraceEnvironmentNameRecord_t s_RtEnvNameMap[]={
+	{ "PRECIPITATION", 0 },
+	{ "PRECIPITATIONBLOCKER", 1 },
+};
+
+
+int CParticleSystemQuery::GetRayTraceEnvironmentFromName( const char *pszRtEnvName )
+{
+	for(int i = 0; i < ARRAYSIZE( s_RtEnvNameMap ); i++ )
+	{
+		if ( ! stricmp( s_RtEnvNameMap[i].m_pszGroupName, pszRtEnvName ) )
+			return s_RtEnvNameMap[i].m_nGroupID;
+	}
+	return 0;
+}
+//-asw port
 
 struct CollisionGroupNameRecord_t
 {

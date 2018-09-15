@@ -4957,21 +4957,16 @@ void C_TFPlayer::AddEntity( void )
 		{
 			//int iAttachment = LookupAttachment( "anim_attachment_RH" );
 			// let's attach to the weapon's muzzle instead of our arm.
-			int iAttachment = LookupAttachment( "muzzle" );
 
-			if ( iAttachment < 0 )
-				return;
 
 			Vector vecOrigin;
 			QAngle eyeAngles = m_angEyeAngles;
-/*
-			CTFViewModel *vm = dynamic_cast<CTFViewModel*>(GetViewModel(0));
-			if (vm)
-			{
-				vm->GetAttachment( iAttachment, vecOrigin, eyeAngles );
-			}
-*/
+
 			CTFWeaponBase *pActiveWpn = GetActiveTFWeapon();
+			int iAttachment = pActiveWpn->LookupAttachment( "muzzle" );
+
+			if ( iAttachment < 0 )
+				return;
 			if (pActiveWpn)
 			{
 				pActiveWpn->GetAttachment( iAttachment, vecOrigin, eyeAngles );

@@ -74,6 +74,8 @@
 #include "c_point_camera.h"
 #endif // USE_MONITORS
 
+#include "env_wind_shared.h"
+
 // Projective textures
 #include "c_env_projected_texture.h"
 
@@ -1331,12 +1333,17 @@ void CViewRender::ViewDrawScene( bool bDrew3dSkybox, SkyboxVisibility_t nSkyboxV
 	g_viewscene_refractUpdateFrame = gpGlobals->framecount - 1;
 
 	g_pClientShadowMgr->PreRender();
-
+	CMatRenderContextPtr pRenderContext(materials);
 	// Shadowed flashlights supported on ps_2_b and up...
 	if ( r_flashlightdepthtexture.GetBool() && (viewID == VIEW_MAIN) )
 	{
 		g_pClientShadowMgr->ComputeShadowDepthTextures( view );
 	}
+
+	Vector vecWind;
+	GetWindspeedAtTime(gpGlobals->curtime, vecWind);
+	pRenderContext->SetVectorRenderingParameter(VECTOR_RENDERPARM_WIND_DIRECTION, vecWind);
+	pRenderContext.SafeRelease();
 
 	m_BaseDrawFlags = baseDrawFlags;
 

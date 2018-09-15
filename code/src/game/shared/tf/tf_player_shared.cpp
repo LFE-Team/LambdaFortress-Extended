@@ -76,12 +76,10 @@ ConVar tf_always_loser( "tf_always_loser", "0", FCVAR_REPLICATED | FCVAR_CHEAT, 
 
 ConVar sv_showimpacts( "sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point (1=both, 2=client-only, 3=server-only)" );
 ConVar sv_showplayerhitboxes( "sv_showplayerhitboxes", "0", FCVAR_REPLICATED, "Show lag compensated hitboxes for the specified player index whenever a player fires." );
-
-ConVar tf2c_building_hauling( "lfe_building_hauling", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY, "Toggle Engineer's building hauling ability." );
-
 //
 #ifdef GAME_DLL 
 	ConVar sv_infinite_ammo( "sv_infinite_ammo", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Player's active weapon will never run out of ammo" );
+	extern ConVar	lfe_force_legacy;
 #endif
 #define TF_SPY_STEALTH_BLINKTIME   0.3f
 #define TF_SPY_STEALTH_BLINKSCALE  0.85f
@@ -4064,10 +4062,10 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pObject )
 {
 	if ( !pObject )
 		return false;
-
-	if ( !tf2c_building_hauling.GetBool() )
+#ifdef GAME_DLL
+	if ( lfe_force_legacy.GetBool() )
 		return false;
-
+#endif
 	if ( m_Shared.IsLoser() )
 		return false;
 
