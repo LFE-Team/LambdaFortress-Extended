@@ -7195,6 +7195,18 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 			return false;
 	}
 
+	if ( collisionGroup1 == HL2COLLISION_GROUP_STRIDER )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_STRIDER )
+			return false;
+	}
+
+	if ( collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP )
+			return false;
+	}
+
 	if ( ( collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB ) && ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB ) )
 		return false;
 
