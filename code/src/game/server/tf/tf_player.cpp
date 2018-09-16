@@ -3186,7 +3186,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 
 	if ( FStrEq( pcmd, "addcond" ) )
 	{
-		if ( sv_cheats->GetBool() )
+		if ( sv_cheats->GetBool() || IsDeveloper()  )
 		{
 			if ( args.ArgC() >= 2 )
 			{
@@ -3226,7 +3226,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( FStrEq( pcmd, "removecond" ) )
 	{
-		if ( sv_cheats->GetBool() )
+		if ( sv_cheats->GetBool() || IsDeveloper() )
 		{
 			if ( args.ArgC() >= 2 )
 			{
@@ -3239,7 +3239,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( FStrEq( pcmd, "burn" ) ) 
 	{
-		if ( sv_cheats->GetBool() )
+		if ( sv_cheats->GetBool() || IsDeveloper() )
 		{
 			m_Shared.Burn( this );
 			return true;
@@ -3273,7 +3273,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( FStrEq( pcmd, "jointeam_nokill" ) )
 	{
-		if ( sv_cheats->GetBool() )
+		if ( sv_cheats->GetBool() || IsDeveloper() )
 		{
 			if ( args.ArgC() >= 2 )
 			{
@@ -3450,7 +3450,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			return true;
 		}
 
-		if ( sv_cheats->GetBool() )
+		if ( sv_cheats->GetBool() || IsDeveloper() )
 		{
 			if ( !PlayGesture( args[1] ) )
 			{
@@ -3468,7 +3468,7 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			return true;
 		}
 
-		if ( sv_cheats->GetBool() )
+		if ( sv_cheats->GetBool() || IsDeveloper() )
 		{
 			if ( !PlaySpecificSequence( args[1] ) )
 			{
@@ -3931,6 +3931,11 @@ void CTFPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 			// This does smaller splotches on the guy and splats blood on the world.
 			TraceBleed( info_modified.GetDamage(), vecDir, ptr, info_modified.GetDamageType() );
 		}
+	}
+
+	if ( m_Shared.IsMiniCritBoosted() )
+	{
+		info_modified.AddDamageType( DMG_MINICRITICAL );
 	}
 
 	AddMultiDamage( info_modified, this );
@@ -7010,7 +7015,7 @@ void CTFPlayer::CheatImpulseCommands( int iImpulse )
 	{
 	case 101:
 		{
-			if( sv_cheats->GetBool() )
+			if( sv_cheats->GetBool() || IsDeveloper() )
 			{
 				extern int gEvilImpulse101;
 				gEvilImpulse101 = true;
@@ -8311,7 +8316,7 @@ void CTFPlayer::Taunt( void )
 		return;
 
 	// Check to see if we are in a vehicle
-	if ( !IsInAVehicle() )
+	if ( IsInAVehicle() )
 		return;
 	// Can't taunt while cloaked.
 	if ( m_Shared.InCond( TF_COND_STEALTHED ) )
@@ -9736,7 +9741,7 @@ CON_COMMAND_F_COMPLETION( give_weapon, "Give specified weapon.", FCVAR_CHEAT, Gi
 CON_COMMAND_F_COMPLETION( dev_give_weapon, "Give specified weapon. \n for devs", 0, GiveWpnAutoComplete )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
+	if ( !pPlayer->IsDeveloper() )
 		return;
 
 	if ( args.ArgC() < 2 )
@@ -9853,7 +9858,7 @@ CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nF
 CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
+	if ( !pPlayer->IsDeveloper() )
 		return;
 
 	if ( args.ArgC() < 2 )
@@ -9930,7 +9935,7 @@ CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\
 CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
+	if ( !pPlayer->IsDeveloper() )
 		return;
 
 	if ( args.ArgC() < 2 )
@@ -9975,7 +9980,7 @@ CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema
 
 CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
 {
-	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() );
+	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( args.ArgC() < 2 )
 		return;
 
@@ -9989,8 +9994,8 @@ CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
 			pWearable->SetParticle( pszParticleName );
 		}
 	}
-/*
-	for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++ )
+
+	/*for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++ )
 	{
 		CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->Weapon_GetSlot( i );
 
@@ -9998,14 +10003,13 @@ CON_COMMAND_F( give_particle, NULL, FCVAR_CHEAT )
 		{
 			pWeapon->SetParticle( pszParticleName );
 		}
-	}
-*/
+	}*/
 }
 
 CON_COMMAND( dev_playsound, "Play a sound for everyone.\nFormat: <sound>\nBut this command is only for the devs" )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer->m_bIsPlayerADev )
+	if ( !pPlayer->IsDeveloper() )
 		return;
 
 	if ( args.ArgC() < 2 )
@@ -10047,6 +10051,7 @@ uint64 powerplay_ids[] =
 	76561198116553704 ^ powerplaymask,		// swox
 	76561198031570068 ^ powerplaymask,		// leakdealer
 	76561198033171144 ^ powerplaymask,		// agent agrimar
+	76561198053356818 ^ powerplaymask,		// jesus "nicknine" chirst
 };
 
 //-----------------------------------------------------------------------------

@@ -344,7 +344,7 @@
 		
 		"SubButton"
 		{
-			"labelText" 		"Loadout"
+			"labelText" 		"#MMenu_Loadout"
 			"xshift" 			"0"
 			"yshift" 			"-2"
 			"textAlignment"		"west"
@@ -612,7 +612,7 @@
 			"xshift" 			"0"
 			"yshift" 			"-1"
 			"bordervisible"		"0"
-			"tooltip" 			"Credits"
+			"tooltip" 			"#MMenu_Credits"
 			"textAlignment"		"center"
 			"font"				"HudFontSmallBold"
 			"border_default"	"AdvSquareButtonDefault"
@@ -721,7 +721,7 @@
 		"visible"				"1"
 		"enabled"				"1"
 		"bordervisible"			"1"
-		"command"			"gamemenucommand openplayerlistdialog"
+		"command"				"gamemenucommand openplayerlistdialog"
 
 		"SubButton"
 		{

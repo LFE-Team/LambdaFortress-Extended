@@ -41,7 +41,7 @@
 		"visible"			"1"
 		"enabled"			"1"
 		"alpha"				"255"
-		"labelText"			"Latest Changelog"
+		"labelText"			"#MMenu_Changelog"
 		"textAlignment"		"west"
 		"font"				"HudFontSmallBoldShadow"
 		"fgcolor"			"AdvTextDefault"

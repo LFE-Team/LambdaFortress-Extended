@@ -78,7 +78,7 @@ private:
 	//CPanelAnimationVarAliasType( float, m_flDeltaItemX, "delta_item_x", "0", "proportional_float" );
 
 	CPanelAnimationVar( Color, m_DeltaPositiveColor, "PositiveColor", "0 255 0 255" );
-	CPanelAnimationVar( Color, m_DeltaNegativeColor, "NegativeColor", "255 0 0 255" );
+	//CPanelAnimationVar( Color, m_DeltaNegativeColor, "NegativeColor", "255 0 0 255" );
 
 	CPanelAnimationVar( float, m_flDeltaLifetime, "delta_lifetime", "2.0" );
 
@@ -88,22 +88,26 @@ private:
 
 DECLARE_HUDELEMENT( CDamageAccountPanel );
 
-ConVar hud_combattext( "hud_combattext", "1", FCVAR_ARCHIVE, "" );
-ConVar hud_combattext_batching( "hud_combattext_batching", "0", FCVAR_ARCHIVE, "If set to 1, numbers that are too close together are merged." );
+ConVar hud_combattext( "hud_combattext", "1", FCVAR_ARCHIVE, "Display damage done as text over your target" );
+ConVar hud_combattext_batching( "hud_combattext_batching", "1", FCVAR_ARCHIVE, "If set to 1, numbers that are too close together are merged." );
 ConVar hud_combattext_batching_window( "hud_combattext_batching_window", "0.2", FCVAR_ARCHIVE, "Maximum delay between damage events in order to batch numbers." );
 
 ConVar tf_dingalingaling( "tf_dingalingaling", "0", FCVAR_ARCHIVE, "If set to 1, play a sound everytime you injure an enemy. The sound can be customized by replacing the 'tf/sound/ui/hitsound.wav' file." );
-ConVar tf_dingalingaling_effect( "tf_dingalingaling_effect", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Which Dingalingaling sound is used" );
+ConVar tf_dingalingaling_effect( "tf_dingalingaling_effect", "0", FCVAR_ARCHIVE, "Which Dingalingaling sound is used" );
 ConVar tf_dingaling_volume( "tf_dingaling_volume", "0.75", FCVAR_ARCHIVE, "Desired volume of the hit sound.", true, 0.0, true, 1.0 );
 ConVar tf_dingaling_pitchmindmg( "tf_dingaling_pitchmindmg", "100", FCVAR_ARCHIVE, "Desired pitch of the hit sound when a minimal damage hit (<= 10 health) is done.", true, 1, true, 255 );
 ConVar tf_dingaling_pitchmaxdmg( "tf_dingaling_pitchmaxdmg", "100", FCVAR_ARCHIVE, "Desired pitch of the hit sound when a maximum damage hit (>= 150 health) is done.", true, 1, true, 255 );
 ConVar tf_dingalingaling_repeat_delay( "tf_dingalingaling_repeat_delay", "0", FCVAR_ARCHIVE, "Desired repeat delay of the hit sound. Set to 0 to play a sound for every instance of damage dealt." );
 
 ConVar tf_dingalingaling_lasthit( "tf_dingalingaling_lasthit", "0", FCVAR_ARCHIVE, "If set to 1, play a sound whenever one of your attacks kills an enemy. The sound can be customized by replacing the 'tf/sound/ui/killsound.wav' file." );
-ConVar tf_dingalingaling_last_effect( "tf_dingalingaling_last_effect", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Which final hit sound to play when the target expires." );
+ConVar tf_dingalingaling_last_effect( "tf_dingalingaling_last_effect", "0", FCVAR_ARCHIVE, "Which final hit sound to play when the target expires." );
 ConVar tf_dingaling_lasthit_volume( "tf_dingaling_lasthit_volume", "0.75", FCVAR_ARCHIVE, "Desired volume of the last hit sound.", true, 0.0, true, 1.0 );
 ConVar tf_dingaling_lasthit_pitchmindmg( "tf_dingaling_lasthit_pitchmindmg", "100", FCVAR_ARCHIVE, "Desired pitch of the last hit sound when a minimal damage hit (<= 10 health) is done.", true, 1, true, 255 );
 ConVar tf_dingaling_lasthit_pitchmaxdmg( "tf_dingaling_lasthit_pitchmaxdmg", "100", FCVAR_ARCHIVE, "Desired pitch of the last hit sound when a maximum damage hit (>= 150 health) is done.", true, 1, true, 255 );
+
+ConVar hud_combattext_red( "hud_combattext_red", "255", FCVAR_ARCHIVE, "Red modifier for color of damage indicators", true, 0, true, 255 );
+ConVar hud_combattext_green( "hud_combattext_green", "0", FCVAR_ARCHIVE, "Green modifier for color of damage indicators", true, 0, true, 255 );
+ConVar hud_combattext_blue( "hud_combattext_blue", "0", FCVAR_ARCHIVE, "Blue modifier for color of damage indicators", true, 0, true, 255 );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -388,7 +392,26 @@ void CDamageAccountPanel::PlayHitSound( int iAmount, bool bKill )
 
 	if ( bKill )
 	{
-		params.m_pSoundName = "ui/killsound.wav";
+		if ( tf_dingalingaling_last_effect.GetInt() == 0 )
+			params.m_pSoundName = "Player.KillSoundDefaultDing";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 1 )
+			params.m_pSoundName = "Player.KillSoundElectro";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 2 )
+			params.m_pSoundName = "Player.KillSoundNotes";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 3 )
+			params.m_pSoundName = "Player.KillSoundPercussion";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 4 )
+			params.m_pSoundName = "Player.KillSoundRetro";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 5 )
+			params.m_pSoundName = "Player.KillSoundSpace";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 6 )
+			params.m_pSoundName = "Player.KillSoundBeepo";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 7 )
+			params.m_pSoundName = "Player.KillSoundVortex";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 8 )
+			params.m_pSoundName = "Player.KillSoundSquasher";
+		else if ( tf_dingalingaling_last_effect.GetInt() == 9 )
+			params.m_pSoundName = "ui/killsound_custom.wav";
 
 		params.m_flVolume = tf_dingaling_lasthit_volume.GetFloat();
 
@@ -398,7 +421,26 @@ void CDamageAccountPanel::PlayHitSound( int iAmount, bool bKill )
 	}
 	else
 	{
-		params.m_pSoundName = "ui/hitsound.wav";
+		if ( tf_dingalingaling_effect.GetInt() == 0 )
+			params.m_pSoundName = "Player.HitSoundDefaultDing";
+		else if ( tf_dingalingaling_effect.GetInt() == 1 )
+			params.m_pSoundName = "Player.HitSoundElectro";
+		else if ( tf_dingalingaling_effect.GetInt() == 2 )
+			params.m_pSoundName = "Player.HitSoundNotes";
+		else if ( tf_dingalingaling_effect.GetInt() == 3 )
+			params.m_pSoundName = "Player.HitSoundPercussion";
+		else if ( tf_dingalingaling_effect.GetInt() == 4 )
+			params.m_pSoundName = "Player.HitSoundRetro";
+		else if ( tf_dingalingaling_effect.GetInt() == 5 )
+			params.m_pSoundName = "Player.HitSoundSpace";
+		else if ( tf_dingalingaling_effect.GetInt() == 6 )
+			params.m_pSoundName = "Player.HitSoundBeepo";
+		else if ( tf_dingalingaling_effect.GetInt() == 7 )
+			params.m_pSoundName = "Player.HitSoundVortex";
+		else if ( tf_dingalingaling_effect.GetInt() == 8 )
+			params.m_pSoundName = "Player.HitSoundSquasher";
+		else if ( tf_dingalingaling_effect.GetInt() == 9 )
+			params.m_pSoundName = "ui/hitsound_custom.wav";
 
 		params.m_flVolume = tf_dingaling_volume.GetFloat();
 
@@ -428,7 +470,10 @@ void CDamageAccountPanel::Paint( void )
 		if ( m_AccountDeltaItems[i].m_flDieTime > gpGlobals->curtime )
 		{
 			// position and alpha are determined from the lifetime
-			// color is determined by the delta - green for positive, red for negative
+			// color is determined by the delta
+			// Negative damage deltas are determined by convar settings
+			// Positive damage deltas are green
+ 			Color m_DeltaNegativeColor( hud_combattext_red.GetInt(), hud_combattext_green.GetInt(), hud_combattext_blue.GetInt(), 255 );
 
 			Color c = m_AccountDeltaItems[i].m_iAmount > 0 ? m_DeltaPositiveColor : m_DeltaNegativeColor;
 

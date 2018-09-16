@@ -84,18 +84,110 @@ DESCRIPTION INFO_OPTIONS
 		{ "1" }
 	}
 
-	//"tf_dingaling_volume"
-	//{
-	//	"#TF_Dingaling_Volume"
-	//	"#Tooltip_Dingaling_Volume"
-	//	{ SLIDER 0 1 }
-	//	{ "0.75" }
-	//}
+	"tf_dingaling_volume"
+	{
+		"#TF_Dingaling_Volume"
+		"#Tooltip_Dingaling_Volume"
+		{ SLIDER 0 1 }
+		{ "0.75" }
+	}
+	
+	"tf_dingalingaling_effect"
+	{
+		"#tf_dingalingaling_effect"
+		{ LIST
+			"#tf_dingalingaling_Default"                "0"
+			"#tf_dingalingaling_Electro"                "1"
+			"#tf_dingalingaling_Notes"	            	"2"
+			"#tf_dingalingaling_Percussion"             "3"
+			"#tf_dingalingaling_Retro"                  "4"
+			"#tf_dingalingaling_Space"					"5"
+			"#tf_dingalingaling_Beepo"					"6"
+			"#tf_dingalingaling_Vortex"					"7"
+			"#tf_dingalingaling_Squasher"				"8"
+			"#tf_dingalingaling_Custom"					"9"
+		}
+		{ "-1" }
+	}
+
+	"tf_dingaling_pitchmindmg"
+	{
+		"#TF_Dingaling_PitchLowDmg"
+		"#Tooltip_Dingaling_PitchLowDmg"
+		{ SLIDER 1 255 }
+		{ "100" }
+	}
+	
+	"tf_dingaling_pitchmaxdmg"
+	{
+		"#TF_Dingaling_PitchHighDmg"
+		"#Tooltip_Dingaling_PitchHighDmg"
+		{ SLIDER 1 255 }
+		{ "100" }
+	}
+	
+	"tf_dingalingaling_lasthit"
+	{
+		"#TF_LastHitbeeps"
+		"#Tooltip_Hitbeeps"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"tf_dingaling_lasthit_volume"
+	{
+		"#TF_Dingaling_LastHit_Volume"
+		"#Tooltip_Dingaling_Volume"
+		{ SLIDER 0 1 }
+		{ "0.75" }
+	}
+
+	"tf_dingalingaling_last_effect"
+	{
+		"#tf_dingalingaling_last_effect"
+		{ LIST
+			"#tf_dingalingaling_Default"                "0"
+			"#tf_dingalingaling_Electro"                "1"
+			"#tf_dingalingaling_Notes"	            	"2"
+			"#tf_dingalingaling_Percussion"             "3"
+			"#tf_dingalingaling_Retro"                  "4"
+			"#tf_dingalingaling_Space"					"5"
+			"#tf_dingalingaling_Beepo"					"6"
+			"#tf_dingalingaling_Vortex"					"7"
+			"#tf_dingalingaling_Squasher"				"8"
+			"#tf_dingalingaling_Custom"					"9"
+		}
+		{ "0" }
+	}
+
+	"tf_dingaling_lasthit_pitchmindmg"
+	{
+		"#TF_Dingaling_LastHit_PitchLowDmg"
+		"#Tooltip_Dingaling_PitchLowDmg"
+		{ SLIDER 1 255 }
+		{ "100" }
+	}
+	
+	"tf_dingaling_lasthit_pitchmaxdmg"
+	{
+		"#TF_Dingaling_LastHit_PitchHighDmg"
+		"#Tooltip_Dingaling_PitchHighDmg"
+		{ SLIDER 1 255 }
+		{ "100" }
+	}
 	
 	"hud_combattext"
 	{
 		"#TF_CombatText"
 		"#Tooltip_CombatText"
+		{ BOOL }
+		{ "1" }
+	}
+	
+	"hud_combattext_batching"
+	{
+		"#TF_CombatTextBatching"
+		"#Tooltip_CombatTextBatching"
 		{ BOOL }
 		{ "1" }
 	}
@@ -107,7 +199,28 @@ DESCRIPTION INFO_OPTIONS
 	//	{ BOOL }
 	//	{ "1" }
 	//}
-	
+
+	"hud_combattext_red"
+	{
+		"#TF_CombatText_Red"
+		{ SLIDER 0 255 }
+		{ "255" }
+	}
+
+	"hud_combattext_green"
+	{
+		"#TF_CombatText_Green"
+		{ SLIDER 0 255 }
+		{ "0" }
+	}
+
+	"hud_combattext_blue"
+	{
+		"#TF_CombatText_Blue"
+		{ SLIDER 0 255 }
+		{ "0" }
+	}
+
 	//"tf_remember_activeweapon"
 	//{
 	//	"#TF_rememberactiveweapon"
@@ -199,7 +312,7 @@ DESCRIPTION INFO_OPTIONS
 		"#TF_OptionCategory_HUD"
 		{ CATEGORY }
 	}
-	
+
 	"cl_hud_minmode"
 	{
 		"#GameUI_EnableHUDMinMode"
@@ -207,7 +320,7 @@ DESCRIPTION INFO_OPTIONS
 		{ BOOL }
 		{ "0" }
 	}
-	
+
 	//"tf_colorblindassist"
 	//{
 	//	"#TF_colorblindassist"
@@ -215,14 +328,14 @@ DESCRIPTION INFO_OPTIONS
 	//	{ BOOL }
 	//	{ "0" }
 	//}	
-	
+
 	//"cl_use_tournament_specgui"
 	//{
 	//	"#TF_UseAdvancedTourneyGUI"
 	//	"#Tooltip_UseAdvancedTourneyGUI"
 	//	{ BOOL }
 	//	{ "0" }
-	//}	
+	//}
 
 	//"cl_spec_carrieditems"
 	//{
@@ -331,13 +444,13 @@ DESCRIPTION INFO_OPTIONS
 	//	{ "0" }
 	//}
 
-	//"tf_hud_target_id_alpha"
-	//{
-	//	"#TF_TargetID_Alpha"
-	//	"#ToolTip_TargetID_Alpha"
-	//	{ SLIDER 0 255 }
-	//	{ "100" }
-	//}
+	"tf_hud_target_id_alpha"
+	{
+		"#TF_TargetID_Alpha"
+		"#ToolTip_TargetID_Alpha"
+		{ SLIDER 0 255 }
+		{ "100" }
+	}
 	
 	//"tf_contract_progress_show"
 	//{
@@ -349,6 +462,27 @@ DESCRIPTION INFO_OPTIONS
 	//		"#TF_Contract_Progress_Active"	"2"
 	//	}
 	//	{ "1" }
+	//}
+
+	//"tf_scoreboard_mouse_mode"
+	//{
+	//	"#TF_ScoreBoard_MouseMode"
+	//	{ BOOL }
+	//	{ "0" }
+	//}
+
+	//"tf_scoreboard_ping_as_text"
+	//{
+	//	"#TF_ScoreBoard_PingAsText"
+	//	{ BOOL }
+	//	{ "0" }
+	//}
+
+	//"tf_scoreboard_alt_class_icons"
+	//{
+	//	"#TF_ScoreBoard_AltClassIcons"
+	//	{ BOOL }
+	//	{ "0" }
 	//}
 
 	//"category4"
@@ -464,7 +598,7 @@ DESCRIPTION INFO_OPTIONS
 		{ BOOL }
 		{ "1" }
 	}
-	
+
 	//"tf_respawn_on_loadoutchanges"
 	//{
 	//	"#TF_loadoutrespawn"
@@ -472,15 +606,23 @@ DESCRIPTION INFO_OPTIONS
 	//	{ BOOL }
 	//	{ "1" }
 	//}
-	
+
 	"cl_flipviewmodels"
 	{
 		"#TF_flipviewmodel_option"
 		"#Tooltip_flipviewmodel_option"
 		{ BOOL }
 		{ "0" }
-	}		
-	
+	}
+
+	//"tf_use_min_viewmodels"
+	//{
+	//	"#TF_use_min_viewmodels_option"
+	//	"#Tooltip_use_min_viewmodels_option"
+	//	{ BOOL }
+	//	{ "0" }
+	//}
+
 	"cl_playerspraydisable"
 	{
 		"#GameUI_DisableSprays"
@@ -544,13 +686,6 @@ DESCRIPTION INFO_OPTIONS
 	//	{ "1" }
 	//}
 	
-	//"tf_scoreboard_mouse_mode"
-	//{
-	//	"#TF_ScoreBoard_MouseMode"
-	//	{ BOOL }
-	//	{ "0" }
-	//}
-	
 	"category6"
 	{
 		"#TF_OptionCategory_Extended"
@@ -568,19 +703,5 @@ DESCRIPTION INFO_OPTIONS
 		"#TFOption_muzzlelight"
 		{ BOOL }
 		{ "1" }
-	}
-
-	"cl_hl1_rollspeed"
-	{
-		"#TFOption_viewroll_speed"
-		{ SLIDER 0 600 }
-		{ "300" }
-	}
-
-	"cl_hl1_rollangle"
-	{
-		"#TFOption_viewroll_angle"
-		{ SLIDER 0.0 1.0 }
-		{ "0.65" }
 	}
 }

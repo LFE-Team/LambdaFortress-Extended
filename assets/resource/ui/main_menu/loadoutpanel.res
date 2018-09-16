@@ -312,7 +312,7 @@
 		
 		"SubButton"
 		{
-			"labelText" 		"<< Back (&Esc)"
+			"labelText" 		"#MMenu_Loadout_Back"
 			"xshift" 			"0"
 			"yshift" 			"-2"
 			"textAlignment"		"center"
@@ -338,12 +338,12 @@
 		
 		"SubButton"
 		{
-			"labelText" 		"Reset"
+			"labelText" 		"#MMenu_Loadout_Reset"
 			"xshift" 			"0"
 			"yshift" 			"-2"
 			"textAlignment"		"center"
 			"font"				"HudFontSmallBold"
-			"tooltip"			"Reset All Selected Weapons"
+			"tooltip"			"#MMenu_Loadout_Tooltip_Reset"
 			"border_default"	"AdvRoundedButtonDefault"
 			"border_armed"		"AdvRoundedButtonArmed"
 			"border_depressed"	"AdvRoundedButtonDepressed"	

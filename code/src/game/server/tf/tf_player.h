@@ -729,6 +729,7 @@ public:
 	bool				SetPowerplayEnabled( bool bOn );
 	bool				PlayerHasPowerplay( void );
 	bool				PlayerIsDevTrain( void );
+	bool				IsDeveloper( void ) { return m_bIsPlayerADev; }
 	void				PowerplayThink( void );
 	float				m_flPowerPlayTime;
 	
