@@ -283,6 +283,13 @@ void CTFWeaponBaseGrenadeProj::InitGrenade( const Vector &velocity, const Angula
 	SetFriction( 0.2f/*BaseClass::GetGrenadeFriction()*/ );
 	SetElasticity( 0.45f/*BaseClass::GetGrenadeElasticity()*/ );
 
+	int iNoBounce = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_hLauncher.Get(), iNoBounce, grenade_no_bounce );
+	if ( iNoBounce )
+	{
+		SetElasticity( 0.01f );
+	}
+
 	SetLauncher( pWeapon );
 
 	CTFWeaponBaseGun *pTFWeapon = dynamic_cast<CTFWeaponBaseGun *>( pWeapon );
@@ -517,6 +524,8 @@ void CTFWeaponBaseGrenadeProj::Detonate( void )
 //-----------------------------------------------------------------------------
 void CTFWeaponBaseGrenadeProj::SetDetonateTimerLength( float timer )
 {
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_hLauncher.Get(), m_flDetonateTime, fuse_mult );
+
 	m_flDetonateTime = gpGlobals->curtime + timer;
 	m_flWarnAITime = gpGlobals->curtime + (timer - 1.5);
 }

@@ -562,6 +562,7 @@ CTFPlayer::CTFPlayer()
 	memset( m_WeaponPreset, 0, TF_CLASS_COUNT_ALL * TF_LOADOUT_SLOT_COUNT * sizeof( int ) );
 
 	m_bIsPlayerADev = false;
+	m_bIsPlayerNicknine = false;
 }
 
 
@@ -10051,7 +10052,6 @@ uint64 powerplay_ids[] =
 	76561198116553704 ^ powerplaymask,		// swox
 	76561198031570068 ^ powerplaymask,		// leakdealer
 	76561198033171144 ^ powerplaymask,		// agent agrimar
-	76561198053356818 ^ powerplaymask,		// jesus "nicknine" chirst
 };
 
 //-----------------------------------------------------------------------------
@@ -10092,6 +10092,30 @@ bool CTFPlayer::PlayerIsDevTrain( void )
 		{
 			if ( steamIDForPlayer.ConvertToUint64() == ( 76561198145444029 ) )
 				return true;
+		}
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: jesus "nicknine" chirst
+//-----------------------------------------------------------------------------
+bool CTFPlayer::IsNicknine( void )
+{
+	if ( !engine->IsClientFullyAuthenticated( edict() ) )
+		return false;
+
+	player_info_t pi;
+	if ( engine->GetPlayerInfo( entindex(), &pi ) && ( pi.friendsID ) )
+	{
+		CSteamID steamIDForPlayer( pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual );
+		for ( int i = 0; i < ARRAYSIZE(powerplay_ids); i++ )
+		{
+			if ( steamIDForPlayer.ConvertToUint64() == ( 76561198053356818 ) )
+			{
+				return true;
+			}
 		}
 	}
 

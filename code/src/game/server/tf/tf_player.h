@@ -478,6 +478,7 @@ public:
 	bool	m_bAirblasted;
 
 	bool	m_bIsPlayerADev;
+	bool	m_bIsPlayerNicknine;
 
 	int					StateGet( void ) const;
 
@@ -730,6 +731,7 @@ public:
 	bool				PlayerHasPowerplay( void );
 	bool				PlayerIsDevTrain( void );
 	bool				IsDeveloper( void ) { return m_bIsPlayerADev; }
+	bool				IsNicknine( void );
 	void				PowerplayThink( void );
 	float				m_flPowerPlayTime;
 	

@@ -1030,8 +1030,6 @@ void CWeaponMedigun::PrimaryAttack( void )
 			SendWeaponAnim( ACT_MP_ATTACK_STAND_PREFIRE );
 			pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRE );
 
-			if ( pOwner->m_nButtons & IN_ATTACK )
-			{
 #ifdef CLIENT_DLL
 				// Handle the dynamic light
 				if (lfe_muzzlelight.GetBool())
@@ -1058,7 +1056,6 @@ void CWeaponMedigun::PrimaryAttack( void )
 					dl->style = 1;
 				}
 #endif
-			}
 		}
 
 		m_bHealing = true;

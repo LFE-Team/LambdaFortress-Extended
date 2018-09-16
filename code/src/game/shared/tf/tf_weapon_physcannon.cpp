@@ -2103,11 +2103,10 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 		return;
 
 	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-
 	if ( pOwner == NULL )
 		return;
 
-	if ( ( pOwner->m_afButtonPressed & IN_ATTACK3 ) && pOwner->m_Shared.IsCritBoosted() )
+	if ( pOwner->m_Shared.IsCritBoosted() )
 	{
 		// Drop the held object
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
@@ -2119,6 +2118,8 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 
 		CTakeDamageInfo info( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
 		RadiusDamage( info, pOwner->GetAbsOrigin(), 1024.0f, CLASS_NONE, pOwner );
+
+		//m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
 	}
 
 #endif
@@ -3093,13 +3094,11 @@ void CWeaponPhysCannon::ItemPostFrame()
 			m_flNextPrimaryAttack = gpGlobals->curtime;
 		}
 
-		if ( pOwner->m_afButtonPressed & IN_ATTACK3 && pOwner->m_Shared.IsCritBoosted() )
+		if ( pOwner->m_afButtonPressed & IN_ATTACK3 )
 		{
 			TertiaryAttack();
 		}
 	}
-
-	m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
 }
 
 //-----------------------------------------------------------------------------

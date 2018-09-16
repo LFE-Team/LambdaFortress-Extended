@@ -4735,7 +4735,7 @@ const char *CTFGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 			}
 		}
 	}
-	else if ( pTFPlayer->m_bIsPlayerADev )
+	else if ( pTFPlayer->IsDeveloper() )
 	{
 		if ( pTFPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 		{
@@ -4750,6 +4750,24 @@ const char *CTFGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 			else
 			{
 				pszFormat = "TF_Chat_Dev";
+			}
+		}
+	}
+	else if ( pTFPlayer->IsNicknine() )
+	{
+		if ( pTFPlayer->GetTeamNumber() == TEAM_SPECTATOR )
+		{
+			pszFormat = "TF_Chat_NicknineSpec";
+		}
+		else
+		{
+			if (pTFPlayer->IsAlive() == false && State_Get() != GR_STATE_TEAM_WIN)
+			{
+				pszFormat = "TF_Chat_NicknineDead";
+			}
+			else
+			{
+				pszFormat = "TF_Chat_Nicknine";
 			}
 		}
 	}
@@ -4877,6 +4895,7 @@ void CTFGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	pTFPlayer->SetDefaultFOV( iFov );
 
 	pTFPlayer->m_bIsPlayerADev = pTFPlayer->PlayerHasPowerplay() && ( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "lfe_dev_mark" ) ) > 0 );
+	pTFPlayer->m_bIsPlayerNicknine = pTFPlayer->IsNicknine() && ( Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "lfe_dev_mark" ) ) > 0 );
 }
 
 static const char *g_aTaggedConVars[] =
