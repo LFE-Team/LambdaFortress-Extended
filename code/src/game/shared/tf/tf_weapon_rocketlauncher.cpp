@@ -636,7 +636,7 @@ void CTFWeaponFlameBall::SetHitTarget( void )
 		if ( tf_fireball_hit_recharge_boost.GetBool() )
 		{
 			// recharge faster when hit something.
-			m_flNextPrimaryAttack = 0.5f;
+			m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime - 0.5f;
 		}
 	//}
 	//else

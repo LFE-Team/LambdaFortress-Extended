@@ -305,7 +305,7 @@ static const char *s_PreserveEnts[] =
 	"info_node_climb",
 	"info_target",
 	"point_commentary_node",
-	"point_viewcontrol",
+	//"point_viewcontrol",
 	"func_precipitation",
 	"func_team_wall",
 	"shadow_control",

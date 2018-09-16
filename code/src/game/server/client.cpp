@@ -98,11 +98,11 @@ void sv_allow_point_servercommand_changed( IConVar *pConVar, const char *pOldStr
 
 ConVar sv_allow_point_servercommand ( "sv_allow_point_servercommand",
 #if defined( TF_DLL ) || defined ( TF_CLASSIC )
-                                      // The default value here should match the default of the convar
-                                      "official",
-#else
                                       // Other games may use this in their official maps, and only TF exposes IsValveMap() currently
                                       "always",
+#else
+                                      // The default value here should match the default of the convar
+                                      "official",
 #endif // TF_DLL
                                       FCVAR_NONE,
                                       "Allow use of point_servercommand entities in map. Potentially dangerous for untrusted maps.\n"
@@ -974,8 +974,18 @@ CON_COMMAND_F_COMPLETION( give, "Give item to player. Syntax: <item name>", FCVA
 CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+	if ( !pPlayer )
+		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+#endif
 	if ( pPlayer 
+#ifdef TF_CLASSIC
+&& ( gpGlobals->maxClients == 1 || sv_cheats->GetBool() || pTFPlayer->IsDeveloper() ) 
+#else
 		&& (gpGlobals->maxClients == 1 || sv_cheats->GetBool()) 
+#endif
 		&& args.ArgC() >= 2 )
 	{
 		char item_to_give[ 256 ];
@@ -983,7 +993,7 @@ CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
 		Q_strlower( item_to_give );
 
 		// Don't allow regular users to create point_servercommand entities for the same reason as blocking ent_fire
-		if ( !Q_stricmp( item_to_give, "point_servercommand" ) )
+		/*if ( !Q_stricmp( item_to_give, "point_servercommand" ) )
 		{
 			if ( engine->IsDedicatedServer() )
 			{
@@ -998,7 +1008,7 @@ CON_COMMAND( give, "Give item to player.\n\tArguments: <item_name>" )
 				if ( pPlayer != pHostPlayer )
 					return;
 			}
-		}
+		}*/
 
 		// Dirty hack to avoid suit playing it's pickup sound
 		if ( !Q_stricmp( item_to_give, "item_suit" ) )
@@ -1253,12 +1263,19 @@ void EnableNoClip( CBasePlayer *pPlayer )
 
 void CC_Player_NoClip( void )
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	CPlayerState *pl = pPlayer->PlayerData();
 	Assert( pl );
@@ -1313,12 +1330,19 @@ static ConCommand noclip("noclip", CC_Player_NoClip, "Toggle. Player becomes non
 //------------------------------------------------------------------------------
 void CC_God_f (void)
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 #if defined( TF_DLL ) || defined ( TF_CLASSIC )
    if ( TFGameRules() && ( TFGameRules()->IsPVEModeActive() == false ) )
@@ -1346,12 +1370,19 @@ static ConCommand god("god", CC_God_f, "Toggle. Player becomes invulnerable.", F
 //------------------------------------------------------------------------------
 CON_COMMAND_F( setpos, "Move player to specified origin (must have sv_cheats).", FCVAR_CHEAT )
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	if ( args.ArgC() < 3 )
 	{
@@ -1380,12 +1411,19 @@ CON_COMMAND_F( setpos, "Move player to specified origin (must have sv_cheats).",
 //------------------------------------------------------------------------------
 void CC_setang_f (const CCommand &args)
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	if ( args.ArgC() < 3 )
 	{
@@ -1421,12 +1459,19 @@ static float GetHexFloat( const char *pStr )
 //------------------------------------------------------------------------------
 CON_COMMAND_F( setpos_exact, "Move player to an exact specified origin (must have sv_cheats).", FCVAR_CHEAT )
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	if ( args.ArgC() < 3 )
 	{
@@ -1455,12 +1500,19 @@ CON_COMMAND_F( setpos_exact, "Move player to an exact specified origin (must hav
 
 CON_COMMAND_F( setang_exact, "Snap player eyes and orientation to specified pitch yaw <roll:optional> (must have sv_cheats).", FCVAR_CHEAT )
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	if ( args.ArgC() < 3 )
 	{
@@ -1489,12 +1541,19 @@ CON_COMMAND_F( setang_exact, "Snap player eyes and orientation to specified pitc
 //------------------------------------------------------------------------------
 void CC_Notarget_f (void)
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	if ( gpGlobals->deathmatch )
 		return;
@@ -1513,12 +1572,19 @@ ConCommand notarget("notarget", CC_Notarget_f, "Toggle. Player becomes hidden to
 //------------------------------------------------------------------------------
 void CC_HurtMe_f(const CCommand &args)
 {
-	if ( !sv_cheats->GetBool() )
-		return;
-
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
+
+#ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
+	if ( !sv_cheats->GetBool() || !pTFPlayer->IsDeveloper() )
+		return;
+#else
+	if ( !sv_cheats->GetBool() )
+		return;
+#endif
 
 	int iDamage = 10;
 	if ( args.ArgC() >= 2 )

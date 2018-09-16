@@ -3052,7 +3052,7 @@ void CBaseObject::FallThink ( void )
 	// which is the case when creating currencypacks in MvM
 	if ( !( GetFlags() & FL_ONGROUND ) )
 	{
-		if (!GetAbsVelocity().Length() && GetMoveType() == MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE )
+		if (!GetAbsVelocity().Length() && GetMoveType() == MOVETYPE_FLYGRAVITY )
 		{
 			// Mr. Game, meet Mr. Hammer.  Mr. Hammer, meet the uncooperative Mr. Physics.
 			// Mr. Physics really doesn't want to give our friend the FL_ONGROUND flag.

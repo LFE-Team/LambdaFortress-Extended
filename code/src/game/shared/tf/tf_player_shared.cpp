@@ -757,13 +757,28 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 	case TF_COND_GAS:
 		OnAddJar();
 		break;
-		
+
 	case TF_COND_SPEED_BOOST:
 		OnAddSpeedBoost();
 		break;
-		
+
 	case TF_COND_TEAM_GLOWS:
 		OnAddTeamGlows();
+		break;
+
+	case TF_COND_RUNE_STRENGTH:
+	case TF_COND_RUNE_HASTE:
+	case TF_COND_RUNE_REGEN:
+	case TF_COND_RUNE_RESIST:
+	case TF_COND_RUNE_VAMPIRE:
+	case TF_COND_RUNE_WARLOCK:
+	case TF_COND_RUNE_PRECISION:
+	case TF_COND_RUNE_AGILITY:
+	case TF_COND_RUNE_KNOCKOUT:
+	case TF_COND_RUNE_KING:
+	case TF_COND_RUNE_PLAGUE:
+	case TF_COND_RUNE_SUPERNOVA:
+		OnAddRune();
 		break;
 
 	default:
@@ -883,6 +898,21 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 
 	case TF_COND_TEAM_GLOWS:
 		OnRemoveTeamGlows();
+		break;
+
+	case TF_COND_RUNE_STRENGTH:
+	case TF_COND_RUNE_HASTE:
+	case TF_COND_RUNE_REGEN:
+	case TF_COND_RUNE_RESIST:
+	case TF_COND_RUNE_VAMPIRE:
+	case TF_COND_RUNE_WARLOCK:
+	case TF_COND_RUNE_PRECISION:
+	case TF_COND_RUNE_AGILITY:
+	case TF_COND_RUNE_KNOCKOUT:
+	case TF_COND_RUNE_KING:
+	case TF_COND_RUNE_PLAGUE:
+	case TF_COND_RUNE_SUPERNOVA:
+		OnRemoveRune();
 		break;
 
 	default:
@@ -1835,20 +1865,36 @@ void CTFPlayerShared::OnRemoveJar( void )
 		m_hUrineAttacker = NULL;
 	}
 #else
-	if ( InCond( TF_COND_URINE ) )
-	{
+	//if ( InCond( TF_COND_URINE ) )
+	//{
 		m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips" );
 
 		if ( m_pOuter->IsLocalPlayer() )
 		{
 			view->SetScreenOverlayMaterial( NULL );
 		}
-	}
-	else if ( InCond( TF_COND_MAD_MILK ) )
-	{
+	//}
+	//else if ( InCond( TF_COND_MAD_MILK ) )
+	//{
 		m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
-	}
+	//}
 #endif
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddRune( void )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveRune( void )
+{
+
 }
 
 //-----------------------------------------------------------------------------

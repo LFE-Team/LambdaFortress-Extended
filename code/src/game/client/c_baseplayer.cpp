@@ -1246,7 +1246,7 @@ void C_BasePlayer::UpdateFlashlight()
  		if (GetActiveWeapon())
 		{
 			C_BaseCombatWeapon *pWeap = GetActiveWeapon();
-			int iAttachment = pWeap->LookupAttachment("muzzle_flash");
+			int iAttachment = pWeap->LookupAttachment("muzzle");
 			if (iAttachment > 0)
 				pWeap->GetAttachment(iAttachment, vec_origin, ang_FlashlightAngle);
 			else

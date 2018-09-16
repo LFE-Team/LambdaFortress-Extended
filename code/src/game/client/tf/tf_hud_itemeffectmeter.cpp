@@ -142,9 +142,11 @@ void CHudItemEffectMeter::UpdateStatus( void )
 
 		return;
 	}
-
-	if ( !IsVisible() )
-		SetVisible( true );
+	else
+	{
+		if ( !IsVisible() )
+			SetVisible( true );
+	}
 
 	if ( m_pEffectMeter )
 	{

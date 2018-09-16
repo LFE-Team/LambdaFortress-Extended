@@ -306,6 +306,7 @@ private:
 	void OnAddJar( void );
 	void OnAddTeamGlows( void );
 	void OnAddBleeding( void );
+	void OnAddRune( void );
 
 	void OnAddPowerPlay( void );
 
@@ -328,6 +329,7 @@ private:
 	void OnRemoveJar( void );
 	void OnRemoveTeamGlows( void );
 	void OnRemoveBleeding( void );
+	void OnRemoveRune( void );
 
 	void OnRemovePowerPlay( void );
 

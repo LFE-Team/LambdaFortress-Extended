@@ -2057,6 +2057,20 @@ float CTFWeaponBase::GetEffectBarProgress( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+const char *CTFWeaponBase::GetEffectLabelText( void )
+{
+	string_t strMeterLabel = NULL_STRING;
+	CALL_ATTRIB_HOOK_STRING( strMeterLabel, meter_label );
+	if ( strMeterLabel != NULL_STRING )
+	{
+		return ( STRING( strMeterLabel ) );
+	}
+	return "";
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CTFWeaponBase::OnControlStunned( void )
 {
 	AbortReload();
@@ -2397,7 +2411,7 @@ void CTFWeaponBase::Knockback( void )
 	//If not on ground, then don't make them fly!
 	if ( pOwner && !( pOwner->GetFlags() & FL_ONGROUND ) )
 	{
-		pOwner->ApplyAbsVelocityImpulse( vecDir * 500 );
+		pOwner->ApplyAbsVelocityImpulse( vecDir * 300 );
 	}
 }
 #else

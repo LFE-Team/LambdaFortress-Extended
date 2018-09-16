@@ -7346,7 +7346,7 @@ void CC_Ent_Create( const CCommand& args )
 	}
 
 	// Don't allow regular users to create point_servercommand entities for the same reason as blocking ent_fire
-	if ( !Q_stricmp( args[1], "point_servercommand" ) )
+	/*if ( !Q_stricmp( args[1], "point_servercommand" ) )
 	{
 		if ( engine->IsDedicatedServer() )
 		{
@@ -7361,7 +7361,7 @@ void CC_Ent_Create( const CCommand& args )
 			if ( pPlayer != pHostPlayer )
 				return;
 		}
-	}
+	}*/
 
 	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
 	CBaseEntity::SetAllowPrecache( true );
