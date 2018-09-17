@@ -12,7 +12,6 @@
 #include "eventlist.h"
 #include "hintsystem.h"
 #include <vgui_controls/ProgressBar.h>
-#include "igameevents.h"
 
 #include "c_obj_sentrygun.h"
 
@@ -47,6 +46,12 @@ C_ObjectSentrygun::C_ObjectSentrygun()
 	m_pDamageEffects = NULL;
 	m_iOldUpgradeLevel = 0;
 	m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_1;
+}
+
+C_ObjectSentrygun::~C_ObjectSentrygun() 
+{
+	if ( m_pSiren )
+		DestroySiren();
 }
 
 void C_ObjectSentrygun::GetAmmoCount( int &iShells, int &iMaxShells, int &iRockets, int & iMaxRockets )
@@ -362,6 +367,7 @@ CStudioHdr *C_ObjectSentrygun::OnNewModel( void )
 	CStudioHdr *hdr = BaseClass::OnNewModel();
 
 	UpdateDamageEffects( m_damageLevel );
+	DestroySiren();
 
 	// Reset Bodygroups
 	for ( int i = GetNumBodyGroups()-1; i >= 0; i-- )
@@ -412,7 +418,7 @@ void C_ObjectSentrygun::UpdateDamageEffects( BuildingDamageLevel_t damageLevel )
 		break;
 	}
 
-	if ( Q_strlen(pszEffect) > 0 )
+	if ( V_strlen(pszEffect) > 0 )
 	{
 		switch( m_iUpgradeLevel )
 		{
@@ -463,4 +469,67 @@ void C_ObjectSentrygun::DebugDamageParticles( void )
 
 	// print all particles owned by particleprop
 	ParticleProp()->DebugPrintEffects();
+}
+
+void C_ObjectSentrygun::OnStartDisabled()
+{
+	DestroySiren();
+	BaseClass::OnStartDisabled();
+}
+
+void C_ObjectSentrygun::OnEndDisabled()
+{
+	CreateSiren();
+	BaseClass::OnEndDisabled();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_ObjectSentrygun::OnGoActive( void )
+{
+	CreateSiren();
+	BaseClass::OnGoActive();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_ObjectSentrygun::OnGoInactive( void )
+{
+	DestroySiren();
+	BaseClass::OnGoInactive();
+}
+
+void C_ObjectSentrygun::CreateSiren( void )
+{
+	if ( !IsMiniBuilding() || m_pSiren )
+		return;
+ 	// mini-sentry siren
+	const char *pszEffect = "";
+	switch( GetTeamNumber() )
+	{
+	case TF_TEAM_RED:
+		pszEffect = "cart_flashinglight_red";
+		break;
+	case TF_TEAM_BLUE:
+	default:
+		pszEffect = "cart_flashinglight";
+		break;
+	}
+ 	m_pSiren = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, "siren" );
+}
+
+void C_ObjectSentrygun::DestroySiren( void )
+{
+	if ( m_pSiren )
+	{
+		ParticleProp()->StopEmissionAndDestroyImmediately( m_pSiren );
+		m_pSiren = NULL;
+	}
+}
+
+void C_ObjectSentrygun::UpdateOnRemove( void )
+{
+	BaseClass::UpdateOnRemove();
 }

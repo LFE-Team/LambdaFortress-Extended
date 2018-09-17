@@ -55,7 +55,6 @@ extern bool IsInCommentaryMode();
 #define SENTRYGUN_SAPPER_OWNER_DAMAGE_MODIFIER	0.33f
 
 #define MINI_SENTRYGUN_PITCH	120
-#define MINI_SENTRY_LIGHT	2
 
 enum
 {	
@@ -240,12 +239,6 @@ void CObjectSentrygun::SentryThink( void )
 	default:
 		Assert( 0 );
 		break;
-	}
-
-	// dunno where to put.
-	if ( IsMiniBuilding() )
-	{
-		SetBodygroup( MINI_SENTRY_LIGHT, true );
 	}
 
 	SetContextThink( &CObjectSentrygun::SentryThink, gpGlobals->curtime + SENTRY_THINK_DELAY, SENTRYGUN_CONTEXT );
