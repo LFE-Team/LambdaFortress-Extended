@@ -42,6 +42,7 @@ particles_manifest
 	"file"		"!particles/drg_pyro.pcf"
 	"file"		"!particles/rain_fx.pcf"
 	"file"		"!particles/rain_storm_fx.pcf"
+	"file"		"!particles/physcannon.pcf"
 //hl2
 	"file"		"!particles/blood_impact_hl2.pcf"
 	"file"		"particles/vehicle.pcf"

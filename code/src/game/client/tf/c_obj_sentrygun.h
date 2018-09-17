@@ -27,6 +27,7 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	C_ObjectSentrygun();
+	~C_ObjectSentrygun();
 
 	void GetAmmoCount( int &iShells, int &iMaxShells, int &iRockets, int & iMaxRockets );
 
@@ -55,6 +56,15 @@ public:
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 
+	// Vintage Siren
+	virtual void	OnGoActive( void );
+	virtual void	OnGoInactive( void );
+	virtual void	OnStartDisabled( void );
+	virtual void	OnEndDisabled( void );
+ 	void			CreateSiren( void );
+	void			DestroySiren( void );
+
+ 	virtual void	UpdateOnRemove( void );
 	// ITargetIDProvidesHint
 public:
 	virtual void	DisplayHintTo( C_BasePlayer *pPlayer );
@@ -73,6 +83,7 @@ private:
 	int m_iKills;
 	int m_iAssists;
 
+	CNewParticleEffect *m_pSiren;
 	CNewParticleEffect *m_pDamageEffects;
 
 	int m_iPlacementBodygroup;

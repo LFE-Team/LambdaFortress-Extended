@@ -28,6 +28,7 @@
     #include "physobj.h"
 	#include "tf_gamestats.h"
 	#include "soundent.h"
+	#include "effect_dispatch_data.h"
 #endif
 
 #include "gamerules.h"
@@ -54,21 +55,28 @@ static const char *s_pWaitForUpgradeContext = "WaitForUpgrade";
 
 ConVar	g_debug_physcannon( "g_debug_physcannon", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
 
-ConVar physcannon_minforce( "physcannon_minforce", "700", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_maxforce( "physcannon_maxforce", "1500", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_maxmass( "physcannon_maxmass", "250", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_tracelength( "physcannon_tracelength", "250", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_chargetime("physcannon_chargetime", "2", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_pullforce( "physcannon_pullforce", "4000", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_cone( "physcannon_cone", "0.97", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar physcannon_ball_cone( "physcannon_ball_cone", "0.997", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar player_throwforce( "player_throwforce", "1000", FCVAR_REPLICATED | FCVAR_CHEAT );
 
-ConVar physcannon_mega_tracelength("physcannon_mega_tracelength", "850");
-ConVar physcannon_mega_pullforce("physcannon_mega_pullforce", "8000");
+ConVar physcannon_minforce( "physcannon_minforce", "700", FCVAR_REPLICATED );
+ConVar physcannon_maxforce( "physcannon_maxforce", "1500", FCVAR_REPLICATED );
+ConVar physcannon_maxmass( "physcannon_maxmass", "250", FCVAR_REPLICATED );
+ConVar physcannon_tracelength( "physcannon_tracelength", "250", FCVAR_REPLICATED );
+ConVar physcannon_chargetime("physcannon_chargetime", "2", FCVAR_REPLICATED );
+ConVar physcannon_pullforce( "physcannon_pullforce", "4000", FCVAR_REPLICATED );
+ConVar physcannon_cone( "physcannon_cone", "0.97", FCVAR_REPLICATED );
+ConVar physcannon_ball_cone( "physcannon_ball_cone", "0.997", FCVAR_REPLICATED );
+ConVar player_throwforce( "player_throwforce", "1000", FCVAR_REPLICATED );
 
+ConVar physcannon_mega_tracelength("physcannon_mega_tracelength", "850", FCVAR_REPLICATED );
+ConVar physcannon_mega_pullforce("physcannon_mega_pullforce", "8000", FCVAR_REPLICATED );
 
-#ifndef CLIENT_DLL
+ConVar lfe_physcannon_crit_pullforce( "lfe_physcannon_crit_pullforce", "6000", FCVAR_REPLICATED );
+ConVar lfe_physcannon_mega_crit_tracelength("lfe_physcannon_mega_crit_tracelength", "1000", FCVAR_REPLICATED );
+ConVar lfe_physcannon_mega_crit_pullforce("lfe_physcannon_mega_crit_pullforce", "10000", FCVAR_REPLICATED );
+ConVar lfe_physcannon_mega_crit_tertiary_damage("lfe_physcannon_mega_crit_tertiary_damage", "500", FCVAR_REPLICATED );
+ConVar lfe_physcannon_mega_crit_tertiary_radius("lfe_physcannon_mega_crit_tertiary_radius", "1024", FCVAR_REPLICATED );
+ConVar lfe_physcannon_mega_crit_tertiary_cooldown("lfe_physcannon_mega_crit_tertiary_cooldown", "10", FCVAR_REPLICATED );
+
+#ifdef GAME_DLL
 extern ConVar hl2_normspeed;
 extern ConVar hl2_walkspeed;
 #endif
@@ -1035,6 +1043,25 @@ void CWeaponPhysCannon::Precache( void )
 	// Set the proper classname so it loads the correct script file.
 	SetClassname( "tf_weapon_physcannon" );
 #endif
+	PrecacheModel("models/weapons/v_models/v_physcannon_scout.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_scout.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_sniper.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_sniper.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_soldier.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_soldier.mdl");	
+	PrecacheModel("models/weapons/v_models/v_physcannon_heavy.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_heavy.mdl");	
+	PrecacheModel("models/weapons/v_models/v_physcannon_medic.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_medic.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_demo.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_demoman.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_spy.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_spy.mdl");	
+	PrecacheModel("models/weapons/v_models/v_physcannon_engineer.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_engineer.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_pyro.mdl");
+	PrecacheModel("models/weapons/v_models/v_superphyscannon_pyro.mdl");
+
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
 
@@ -1058,6 +1085,9 @@ void CWeaponPhysCannon::Precache( void )
 	PrecacheScriptSound( "Weapon_MegaPhysCannon.Drop" );
 	PrecacheScriptSound( "Weapon_MegaPhysCannon.HoldSound" );
 	PrecacheScriptSound( "Weapon_MegaPhysCannon.ChargeZap" );
+
+	PrecacheParticleSystem( "physcannon_super_crit_shockwave" );
+	PrecacheParticleSystem( "physcannon_super_crit_attack_glow" );
 
 	BaseClass::Precache();
 }
@@ -1787,15 +1817,21 @@ void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForwa
 //-----------------------------------------------------------------------------
 float CWeaponPhysCannon::TraceLength()
 {
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
+
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( !IsMegaPhysCannon() || iType != 1 )
+	if ( IsMegaPhysCannon() || iType == 1 )
 	{
-		return physcannon_tracelength.GetFloat();
+		return physcannon_mega_tracelength.GetFloat();
+	}
+	else if ( IsMegaPhysCannon() || iType == 1 && pOwner->m_Shared.IsCritBoosted() )
+	{
+		return lfe_physcannon_mega_crit_tracelength.GetFloat();
 	}
 	else
 	{
-		return physcannon_mega_tracelength.GetFloat();
+		return physcannon_tracelength.GetFloat();
 	}
 }
 
@@ -2095,10 +2131,6 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::TertiaryAttack( void )
 {
-#ifdef GAME_DLL
-	if ( m_flNextTertiaryAttack > gpGlobals->curtime )
-		return;
-
 	if ( !CanAttack() )
 		return;
 
@@ -2106,23 +2138,30 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 	if ( pOwner == NULL )
 		return;
 
-	if ( pOwner->m_Shared.IsCritBoosted() )
+	if ( pOwner->m_Shared.IsCritBoosted() && ( m_flNextTertiaryAttack < gpGlobals->curtime ) )
 	{
 		// Drop the held object
-		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
-
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + lfe_physcannon_mega_crit_tertiary_cooldown.GetFloat();
+#ifdef GAME_DLL
 		PrimaryFireEffect();
 		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
 
 		TFGameRules()->BroadcastSound( 255, "Weapon_MegaPhysCannon.SpecialAttackCrit" );
 
-		CTakeDamageInfo info( pOwner, pOwner, 500.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
-		RadiusDamage( info, pOwner->GetAbsOrigin(), 1024.0f, CLASS_NONE, pOwner );
-
-		//m_flNextTertiaryAttack = gpGlobals->curtime + 10.0f;
-	}
-
+		CTakeDamageInfo info( pOwner, pOwner, lfe_physcannon_mega_crit_tertiary_damage.GetFloat(), DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+		RadiusDamage( info, pOwner->GetAbsOrigin(), lfe_physcannon_mega_crit_tertiary_radius.GetFloat(), CLASS_NONE, pOwner );
+#else
+		//DispatchParticleEffect( "physcannon_super_crit_shockwave", pOwner->GetAbsOrigin(), vec3_angle );
+		//DispatchParticleEffect( "physcannon_super_crit_attack_glow", pOwner->GetAbsOrigin(), vec3_angle );
+		DispatchParticleEffect( "physcannon_super_crit_shockwave", PATTACH_POINT, this, 1 );
+		DispatchParticleEffect( "physcannon_super_crit_attack_glow", PATTACH_POINT, this, 1 );
 #endif
+	}
+	else
+	{
+		WeaponSound( SPECIAL3 );
+		return;
+	}
 }	
 
 //-----------------------------------------------------------------------------
@@ -2317,6 +2356,7 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+	bool bIsCritboosted = ( pPlayer->m_Shared.IsCritBoosted() );
 	// Find anything within a general cone in front
 	CBaseEntity *pConeEntity = NULL;
 	if ( !bIsMegaPhysCannon )
@@ -2394,8 +2434,15 @@ CWeaponPhysCannon::FindObjectResult_t CWeaponPhysCannon::FindObject( void )
 	Vector	pullDir = start - pEntity->WorldSpaceCenter();
 	VectorNormalize( pullDir );
 
-	pullDir *= bIsMegaPhysCannon ? physcannon_mega_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
-
+	if ( !bIsMegaPhysCannon )
+	{
+		pullDir *= bIsCritboosted ? lfe_physcannon_crit_pullforce.GetFloat() : physcannon_pullforce.GetFloat();
+	}
+	else
+	{
+		pullDir *= bIsCritboosted ? lfe_physcannon_mega_crit_pullforce.GetFloat() : physcannon_mega_pullforce.GetFloat();
+	}
+	
 	float mass = PhysGetEntityMass( pEntity );
 	if ( mass < 50.0f )
 	{
@@ -4214,48 +4261,6 @@ void CWeaponPhysCannon_Secondary::Precache( void )
 	// Set the proper classname so it loads the correct script file.
 	SetClassname( "tf_weapon_physcannon_secondary" );
 #endif
-	PrecacheModel("models/weapons/v_models/v_physcannon_scout.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_scout.mdl");
-	PrecacheModel("models/weapons/v_models/v_physcannon_sniper.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_sniper.mdl");
-	PrecacheModel("models/weapons/v_models/v_physcannon_soldier.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_soldier.mdl");	
-	PrecacheModel("models/weapons/v_models/v_physcannon_heavy.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_heavy.mdl");	
-	PrecacheModel("models/weapons/v_models/v_physcannon_medic.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_medic.mdl");
-	PrecacheModel("models/weapons/v_models/v_physcannon_demo.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_demoman.mdl");
-	PrecacheModel("models/weapons/v_models/v_physcannon_spy.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_spy.mdl");	
-	PrecacheModel("models/weapons/v_models/v_physcannon_engineer.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_engineer.mdl");
-	PrecacheModel("models/weapons/v_models/v_physcannon_pyro.mdl");
-	PrecacheModel("models/weapons/v_models/v_superphyscannon_pyro.mdl");
-	
-	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
-	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
-
-	PrecacheModel( MEGACANNON_BEAM_SPRITE );
-	PrecacheModel( MEGACANNON_GLOW_SPRITE );
-	PrecacheModel( MEGACANNON_ENDCAP_SPRITE );
-	PrecacheModel( MEGACANNON_CENTER_GLOW );
-	PrecacheModel( MEGACANNON_BLAST_SPRITE );
-
-	PrecacheModel( MEGACANNON_RAGDOLL_BOOGIE_SPRITE );
-
-	// Precache our alternate model
-	PrecacheModel( MEGACANNON_MODEL );
-
-
-	PrecacheScriptSound( "Weapon_PhysCannon.HoldSound" );
-
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.DryFire" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Launch" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Pickup" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.Drop" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.HoldSound" );
-	PrecacheScriptSound( "Weapon_MegaPhysCannon.ChargeZap" );
 
 	BaseClass::Precache();
 }

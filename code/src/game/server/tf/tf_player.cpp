@@ -1754,25 +1754,37 @@ void CTFPlayer::GiveDefaultItems()
 	if ( GetActiveWeapon() == NULL )
 		SwitchToNextBestWeapon( NULL );
 
-	int nMiniBuilding = 0;
-	CALL_ATTRIB_HOOK_INT( nMiniBuilding, wrench_builds_minisentry );
-	bool bMiniBuilding = nMiniBuilding ? true : false;
+ 	int nMiniBuilding = 0;
+ 	CALL_ATTRIB_HOOK_INT( nMiniBuilding, wrench_builds_minisentry );
+ 	bool bMiniBuilding = nMiniBuilding ? true : false;
 
-	// If we've switched to/from gunslinger destroy all of our buildings
-	if ( m_Shared.m_bGunslinger != bMiniBuilding )
-	{
-	   for ( int i = GetObjectCount()-1; i >= 0; i-- )
-	    {
-	        CBaseObject *obj = GetObject( i );
-	        Assert( obj );
-
-			if ( !obj->IsMiniBuilding() )
-			{
-				obj->DetonateObject();
-			}        
+ 	// If we've switched to/from gunslinger destroy all of our buildings
+ 	if ( m_Shared.m_bGunslinger != bMiniBuilding )
+ 	{
+ 		// blow up any carried buildings
+ 		if ( IsPlayerClass( TF_CLASS_ENGINEER ) && m_Shared.GetCarriedObject() )
+ 		{
+ 			// Blow it up at our position.
+ 			CBaseObject *pObject = m_Shared.GetCarriedObject();
+			pObject->Teleport( &WorldSpaceCenter(), &GetAbsAngles(), &vec3_origin );
+			pObject->DropCarriedObject(this);
+			pObject->DetonateObject();
+			SwitchToNextBestWeapon( GetActiveWeapon() );
 		}
-
- 		if ( GetActiveWeapon() )
+ 		// destroy any planted buildings
+ 		for ( int i = GetObjectCount()-1; i >= 0; i-- )
+ 		{
+ 			CBaseObject *obj = GetObject( i );
+ 			Assert( obj );
+ 
+ 			if ( obj )
+ 			{
+ 				obj->DetonateObject();
+ 			}		
+		}
+ 		// make sure we update the c_models
+		if ( GetActiveWeapon() )
+		if ( GetActiveWeapon() && !Weapon_Switch( Weapon_GetSlot( TF_LOADOUT_SLOT_MELEE ) ) )
 			GetActiveWeapon()->Deploy();
 	}
 
