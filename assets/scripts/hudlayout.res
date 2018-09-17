@@ -411,6 +411,20 @@
 	{
 
 	}
+	
+	HudLocator
+	{
+		"fieldName" "HudLocator"
+		"visible" "1"
+		"PaintBackgroundType"	"2"
+		"xpos"	"c8"	[$WIN32]
+		"ypos"	"r36"	[$WIN32]
+		"xpos"	"c-32"	[$X360]
+		"ypos_hidef"	"r52"	[$X360]
+		"ypos_lodef"	"r95"	[$X360]		// 52 is aligned to bottom of HudSuit
+		"wide"	"64"
+		"tall"  "24"
+	}
 
 	HudCommentary
 	{

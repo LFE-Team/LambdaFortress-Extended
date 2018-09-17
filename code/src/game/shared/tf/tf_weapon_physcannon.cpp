@@ -1259,7 +1259,7 @@ void CWeaponPhysCannon::SetViewModel( void )
 	}
 	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
 	{
-		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_demo.mdl", this);
+		vm->SetWeaponModel("models/weapons/v_models/v_physcannon_demoman.mdl", this);
 	}
 	else if (pOwner && pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
 	{
