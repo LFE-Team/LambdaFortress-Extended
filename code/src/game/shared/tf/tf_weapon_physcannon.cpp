@@ -2131,9 +2131,6 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::TertiaryAttack( void )
 {
-	if ( m_flNextTertiaryAttack > gpGlobals->curtime )
-		return;
-
 	if ( !CanAttack() )
 		return;
 
@@ -2141,7 +2138,7 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 	if ( pOwner == NULL )
 		return;
 
-	if ( pOwner->m_Shared.IsCritBoosted() )
+	if ( pOwner->m_Shared.IsCritBoosted() && ( m_flNextTertiaryAttack < gpGlobals->curtime ) )
 	{
 		// Drop the held object
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + lfe_physcannon_mega_crit_tertiary_cooldown.GetFloat();
