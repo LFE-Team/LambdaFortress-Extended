@@ -11865,6 +11865,8 @@ BEGIN_DATADESC( CAI_BaseNPC )
 
 	#ifdef TF_CLASSIC
 	DEFINE_INPUTFUNC( FIELD_FLOAT,		"SetPlaybackRate",	InputSetPlaybackRate ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"AddCond",	InputAddCond ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"RemoveCond",	InputRemoveCond ),
 	#endif
 
 	// Function pointers
@@ -15844,12 +15846,12 @@ void CAI_BaseNPC::ConditionGameRulesThink( void )
 	{
 		if ( ( gpGlobals->curtime >= m_flBleedTime ) )
 		{
-			float flBleedDamage = TF_BURNING_DMG + 1.0f;
+			float flBleedDamage = TF_BLEEDING_DMG;
 
 			// Bleed the npc
 			CTakeDamageInfo info( m_hBleedAttacker, m_hBleedAttacker, m_hBleedWeapon, flBleedDamage, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BLEEDING );
 			TakeDamage( info );
-			m_flBleedTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
+			m_flBleedTime = gpGlobals->curtime + TF_BLEEDING_FREQUENCY;
 		}
 	}
 
@@ -16086,5 +16088,21 @@ void CAI_BaseNPC::InputSetPlaybackRate( inputdata_t &inputdata )
 {
 	SetPlaybackRate( inputdata.value.Float() );
 	RunAnimation();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::InputAddCond( inputdata_t &inputdata )
+{
+	AddCond( inputdata.value.Int() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::InputRemoveCond( inputdata_t &inputdata )
+{
+	RemoveCond( inputdata.value.Int() );
 }
 #endif

@@ -1321,7 +1321,7 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 
 	if ( pEvent->event == AE_ANTLION_WORKER_EXPLODE )
 	{
-		CTakeDamageInfo info( this, this, sk_antlion_worker_burst_damage.GetFloat(), DMG_BLAST_SURFACE | ( ANTLION_WORKER_BURST_IS_POISONOUS() ? DMG_POISON : DMG_ACID ) );
+		CTakeDamageInfo info( this, this, sk_antlion_worker_burst_damage.GetFloat(), DMG_BLAST_SURFACE | ( ANTLION_WORKER_BURST_IS_POISONOUS() ? DMG_POISON : DMG_ACID ), LFE_DMG_CUSTOM_ANTLION_WORKER_EXPLODE );
 		Event_Gibbed( info );
 		return;
 	}
@@ -4421,7 +4421,7 @@ void CNPC_Antlion::DoPoisonBurst()
 {
 	if ( GetWaterLevel() < 2 )
 	{
-		CTakeDamageInfo info( this, this, sk_antlion_worker_burst_damage.GetFloat(), DMG_BLAST_SURFACE | ( ANTLION_WORKER_BURST_IS_POISONOUS() ? DMG_POISON : DMG_ACID ) );
+		CTakeDamageInfo info( this, this, sk_antlion_worker_burst_damage.GetFloat(), DMG_BLAST_SURFACE | ( ANTLION_WORKER_BURST_IS_POISONOUS() ? DMG_POISON : DMG_ACID ), LFE_DMG_CUSTOM_ANTLION_WORKER_EXPLODE );
 
 		RadiusDamage( info, GetAbsOrigin(), sk_antlion_worker_burst_radius.GetFloat(), CLASS_NONE, this );
 

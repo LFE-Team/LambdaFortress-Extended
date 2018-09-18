@@ -685,7 +685,7 @@ void CHunterFlechette::FlechetteTouch( CBaseEntity *pOther )
 			flDamage = MAX( pOther->GetHealth(), flDamage );
 		}
 
-		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), flDamage, DMG_DISSOLVE | DMG_NEVERGIB );
+		CTakeDamageInfo	dmgInfo( this, GetOwnerEntity(), flDamage, DMG_DISSOLVE | DMG_NEVERGIB, LFE_DMG_CUSTOM_HUNTER_FLECHETTE );
 		CalculateMeleeDamageForce( &dmgInfo, vecNormalizedVel, tr.endpos, 0.7f );
 		dmgInfo.SetDamagePosition( tr.endpos );
 		pOther->DispatchTraceAttack( dmgInfo, vecNormalizedVel, &tr );
@@ -918,8 +918,8 @@ void CHunterFlechette::Explode()
 		nDamageType |= DMG_PREVENT_PHYSICS_FORCE;
 	}
 
-	RadiusDamage( CTakeDamageInfo( this, GetOwnerEntity(), sk_hunter_flechette_explode_dmg.GetFloat(), nDamageType ), GetAbsOrigin(), sk_hunter_flechette_explode_radius.GetFloat(), CLASS_NONE, NULL );
-		
+	RadiusDamage( CTakeDamageInfo( this, GetOwnerEntity(), sk_hunter_flechette_explode_dmg.GetFloat(), nDamageType, LFE_DMG_CUSTOM_HUNTER_FLECHETTE_EXPLODE ), GetAbsOrigin(), sk_hunter_flechette_explode_radius.GetFloat(), CLASS_NONE, NULL );
+
     AddEffects( EF_NODRAW );
 
 	SetThink( &CBaseEntity::SUB_Remove );
@@ -5184,7 +5184,7 @@ CBaseEntity *CNPC_Hunter::MeleeAttack( float flDist, int iDamage, QAngle &qaView
 							CBreakableProp *pBreak = dynamic_cast<CBreakableProp*>(pHurt);
 							if ( pBreak )
 							{
-								CTakeDamageInfo info( this, this, 20, DMG_SLASH );
+								CTakeDamageInfo info( this, this, sk_hunter_dmg_one_slash.GetFloat(), DMG_SLASH );
 								pBreak->Break( this, info );
 							}
 						}

@@ -2002,7 +2002,7 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				pRagdoll->SetCollisionBounds( pEntity->CollisionProp()->OBBMins(), pEntity->CollisionProp()->OBBMaxs() );
 
 				// Necessary to cause it to do the appropriate death cleanup
-				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL, LFE_DMG_CUSTOM_PHYSCANNON_MEGA );
 
 				if ( pOwner->m_Shared.IsCritBoosted() )
 				{
@@ -2148,7 +2148,7 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 
 		TFGameRules()->BroadcastSound( 255, "Weapon_MegaPhysCannon.SpecialAttackCrit" );
 
-		CTakeDamageInfo info( pOwner, pOwner, lfe_physcannon_mega_crit_tertiary_damage.GetFloat(), DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+		CTakeDamageInfo info( pOwner, pOwner, lfe_physcannon_mega_crit_tertiary_damage.GetFloat(), DMG_PHYSGUN | DMG_REMOVENORAGDOLL, LFE_DMG_CUSTOM_PHYSCANNON_MEGA_TERTIARY );
 		RadiusDamage( info, pOwner->GetAbsOrigin(), lfe_physcannon_mega_crit_tertiary_radius.GetFloat(), CLASS_NONE, pOwner );
 #else
 		//DispatchParticleEffect( "physcannon_super_crit_shockwave", pOwner->GetAbsOrigin(), vec3_angle );
@@ -2227,7 +2227,7 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 			pRagdoll->SetCollisionBounds(pObject->CollisionProp()->OBBMins(), pObject->CollisionProp()->OBBMaxs());
 
 			// Necessary to cause it to do the appropriate death cleanup
-			CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
+			CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL, LFE_DMG_CUSTOM_PHYSCANNON_MEGA );
 
 			if ( pOwner->m_Shared.IsCritBoosted() )
 			{

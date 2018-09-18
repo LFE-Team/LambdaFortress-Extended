@@ -1225,12 +1225,12 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 	{
 		if ( ( gpGlobals->curtime >= m_flBleedTime ) )
 		{
-			float flBleedDamage = TF_BURNING_DMG + 1.0f;
+			float flBleedDamage = TF_BLEEDING_DMG;
 
 			// Bleed the player
 			CTakeDamageInfo info( m_hBleedAttacker, m_hBleedAttacker, m_hBleedWeapon, flBleedDamage, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_BLEEDING );
 			m_pOuter->TakeDamage( info );
-			m_flBleedTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
+			m_flBleedTime = gpGlobals->curtime + TF_BLEEDING_FREQUENCY;
 		}
 	}
 
@@ -2026,7 +2026,7 @@ void CTFPlayerShared::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NU
 		m_flBleedTime = gpGlobals->curtime;	//asap
 	}
 
-	float flBleedTime = TF_BURNING_FLAME_LIFE;
+	float flBleedTime = TF_BLEEDING_TIME;
 
 	if ( flBleedDuration != -1.0f )
 		flBleedTime = flBleedDuration;

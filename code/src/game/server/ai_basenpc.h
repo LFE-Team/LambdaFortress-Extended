@@ -2327,6 +2327,8 @@ public:
 	int	m_iCritMult;
 
 	void InputSetPlaybackRate( inputdata_t &inputdata );
+	void InputAddCond( inputdata_t &inputdata );
+	void InputRemoveCond( inputdata_t &inputdata );
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;
