@@ -976,7 +976,7 @@ void CAI_BaseNPC::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/
 		m_flBleedTime = gpGlobals->curtime;	//asap
 	}
 
-	float flBleedTime = TF_BURNING_FLAME_LIFE;
+	float flBleedTime = TF_BLEEDING_TIME;
 
 	if ( flBleedDuration != -1.0f )
 		flBleedTime = flBleedDuration;
@@ -1152,14 +1152,14 @@ void CAI_BaseNPC::OnRemoveJar(void)
 		m_hUrineAttacker = NULL;
 	}
 #else
-	if ( InCond( TF_COND_URINE ) )
-	{
+	//if ( InCond( TF_COND_URINE ) )
+	//{
 		SetRenderColor( 255, 255, 255 );
 		ParticleProp()->StopParticlesNamed( "peejar_drips" );
-	}
-	else  if ( InCond( TF_COND_MAD_MILK ) )
-	{
+	//}
+	//else  if ( InCond( TF_COND_MAD_MILK ) )
+	//{
 		ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
-	}
+	//}
 #endif
 }

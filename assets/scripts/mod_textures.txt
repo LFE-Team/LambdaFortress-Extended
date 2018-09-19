@@ -3655,6 +3655,16 @@
 			"width"	"96"
 			"height"	"32"
 		}
+
+		"zombie_custom"
+		{
+			"dfile"	"HUD/d_images_hl2"
+			"dnegfile"	"HUD/dneg_images_hl2"
+			"x"	"96"
+			"y"	"0"
+			"width"	"96"
+			"height"	"32"
+		}
 		
 		"fastzombie"
 		{
@@ -3707,6 +3717,16 @@
 		}
 		
 		"headcrab_poison"
+		{
+			"dfile"	"HUD/d_images_hl2"
+			"dnegfile"	"HUD/dneg_images_hl2"
+			"x"	"96"
+			"y"	"64"
+			"width"	"96"
+			"height"	"32"
+		}
+		
+		"headcrab_black"
 		{
 			"dfile"	"HUD/d_images_hl2"
 			"dnegfile"	"HUD/dneg_images_hl2"
@@ -4002,7 +4022,7 @@
 			"dnegfile"	"HUD/dneg_images_hl2"
 			"x"	"284"
 			"y"	"32"
-			"width"	"96"
+			"width"	"128"
 			"height"	"32"
 		}
 
@@ -4012,7 +4032,7 @@
 			"dnegfile"	"HUD/dneg_images_hl2"
 			"x"	"284"
 			"y"	"64"
-			"width"	"96"
+			"width"	"128"
 			"height"	"32"
 		}
 
@@ -4023,6 +4043,26 @@
 			"x"		"258"
 			"y"		"359"
 			"width"		"96"
+			"height"	"32"
+		}
+
+		"physcannon_mega_tertiary"
+		{
+			"dfile"	"HUD/d_images_hl2"
+			"dnegfile"	"HUD/dneg_images_hl2"
+			"x"	"284"
+			"y"	"96"
+			"width"	"128"
+			"height"	"32"
+		}
+
+		"flechette_explode"
+		{
+			"dfile"	"HUD/d_images_hl2"
+			"dnegfile"	"HUD/dneg_images_hl2"
+			"x"	"284"
+			"y"	"128"
+			"width"	"96"
 			"height"	"32"
 		}
 	}

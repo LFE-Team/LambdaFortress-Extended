@@ -5358,6 +5358,21 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	case LFE_DMG_CUSTOM_JALOPY:
 		pszCustomKill = "jeep_episodic";
 		break;
+	case LFE_DMG_CUSTOM_HUNTER_FLECHETTE:
+		pszCustomKill = "flechette";
+		break;
+	case LFE_DMG_CUSTOM_HUNTER_FLECHETTE_EXPLODE:
+		pszCustomKill = "flechette_explode";
+		break;
+	case LFE_DMG_CUSTOM_ANTLION_WORKER_EXPLODE:
+		pszCustomKill = "antworker_explosion";
+		break;
+	case LFE_DMG_CUSTOM_PHYSCANNON_MEGA:
+		pszCustomKill = "physcannon_mega";
+		break;
+	case LFE_DMG_CUSTOM_PHYSCANNON_MEGA_TERTIARY:
+		pszCustomKill = "physcannon_mega_tertiary";
+		break;
 	}
 
 	if ( pszCustomKill != NULL )
@@ -5514,7 +5529,7 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	}
 
 	// strip certain prefixes from inflictor's classname
-	const char *prefix[] = { "tf_weapon_grenade_", "tf_weapon_", "weapon_", "npc_", "func_", "prop_", "monster_" };
+	const char *prefix[] = { "tf_weapon_grenade_", "tf_weapon_", "weapon_", "npc_", "func_", "prop_", "monster_", "grenade_" };
 	for ( int i = 0; i < ARRAYSIZE( prefix ); i++ )
 	{
 		// if prefix matches, advance the string pointer past the prefix
@@ -5587,18 +5602,29 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 			killer_weapon_name = "vortigaunt_beam";
 		}
 	}
-	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_jeep" ) == 0 )
+	else if ( V_strcmp( killer_weapon_name, "vehicle_jeep" ) == 0 )
 	{
 		if ( info.GetDamageType() & DMG_SHOCK )
 		{
 			killer_weapon_name = "gauss";
 		}
 	}
-	else if ( V_strcmp( killer_weapon_name, "prop_vehicle_airboat" ) == 0 )
+	else if ( V_strcmp( killer_weapon_name, "vehicle_airboat" ) == 0 )
 	{
 		if ( info.GetAmmoType() & DMG_BULLET )
 		{
 			killer_weapon_name = "helicopter";
+		}
+	}
+	else if ( V_strcmp( killer_weapon_name, "hunter" ) == 0 )
+	{
+		if ( info.GetAmmoType() & DMG_CLUB )
+		{
+			killer_weapon_name = "hunter_charge";
+		}
+		else if ( info.GetAmmoType() & DMG_CLUB )
+		{
+			killer_weapon_name = "hunter_skewer";
 		}
 	}
 

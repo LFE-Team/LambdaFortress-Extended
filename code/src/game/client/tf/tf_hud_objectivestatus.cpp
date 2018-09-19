@@ -708,7 +708,6 @@ CTFHudObjectiveStatus::CTFHudObjectiveStatus( const char *pElementName ) : CHudE
 	m_pEscortRacePanel = new CTFHudMultipleEscort( this, "ObjectiveStatusMultipleEscort" );
 	//m_pTrainingPanel = new CTFHudTraining( this, "ObjectiveStatusTraining" );
 	//m_pRobotDestructionPanel = new CTFHUDRobotDestruction( this, "ObjectiveStatusRobotDestruction" );
-	m_pDMPanel = new CTFHudDeathMatchObjectives( this, "ObjectiveStatusDeathMatchPanel" );
 
 	SetHiddenBits( 0 );
 
@@ -750,11 +749,6 @@ void CTFHudObjectiveStatus::Reset()
 	if ( m_pFlagPanel )
 	{
 		m_pFlagPanel->Reset();
-	}
-
-	if ( m_pDMPanel )
-	{
-		m_pDMPanel->Reset();
 	}
 
 	if ( m_pEscortPanel )
@@ -912,12 +906,6 @@ void CTFHudObjectiveStatus::TurnOffPanels()
 	if ( m_pControlPointIconsPanel && m_pControlPointIconsPanel->IsVisible() )
 	{
 		m_pControlPointIconsPanel->SetVisible( false );
-	}
-
-	// turn off the DM score panel
-	if ( m_pDMPanel && m_pDMPanel->IsVisible() )
-	{
-		m_pDMPanel->SetVisible( false );
 	}
 
 	if ( m_pEscortPanel && m_pEscortPanel->IsVisible() )

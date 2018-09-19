@@ -1102,12 +1102,14 @@ void CWeaponPhysCannon::Spawn(void)
 	// Need to get close to pick it up
 	CollisionProp()->UseTriggerBounds(false);
 
-	m_bPhyscannonState = IsMegaPhysCannon();
-
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+
+	m_bPhyscannonState = bIsMegaPhysCannon;
+
 	// The megacannon uses a different skin
-	if ( IsMegaPhysCannon() || iType == 1 )
+	if ( bIsMegaPhysCannon )
 	{
 		m_nSkin = MEGACANNON_SKIN;
 	}
@@ -1123,7 +1125,11 @@ void CWeaponPhysCannon::OnRestore()
 	BaseClass::OnRestore();
 	m_grabController.OnRestore();
 
-	m_bPhyscannonState = IsMegaPhysCannon();
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+
+	m_bPhyscannonState = bIsMegaPhysCannon;
 
 	// Tracker 8106:  Physcannon effects disappear through level transition, so
 	//  just recreate any effects here
@@ -2002,7 +2008,7 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 				pRagdoll->SetCollisionBounds( pEntity->CollisionProp()->OBBMins(), pEntity->CollisionProp()->OBBMaxs() );
 
 				// Necessary to cause it to do the appropriate death cleanup
-				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+				CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL, LFE_DMG_CUSTOM_PHYSCANNON_MEGA );
 
 				if ( pOwner->m_Shared.IsCritBoosted() )
 				{
@@ -2148,7 +2154,7 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 
 		TFGameRules()->BroadcastSound( 255, "Weapon_MegaPhysCannon.SpecialAttackCrit" );
 
-		CTakeDamageInfo info( pOwner, pOwner, lfe_physcannon_mega_crit_tertiary_damage.GetFloat(), DMG_PHYSGUN | DMG_REMOVENORAGDOLL );
+		CTakeDamageInfo info( pOwner, pOwner, lfe_physcannon_mega_crit_tertiary_damage.GetFloat(), DMG_CRITICAL | DMG_PHYSGUN | DMG_REMOVENORAGDOLL, LFE_DMG_CUSTOM_PHYSCANNON_MEGA_TERTIARY );
 		RadiusDamage( info, pOwner->GetAbsOrigin(), lfe_physcannon_mega_crit_tertiary_radius.GetFloat(), CLASS_NONE, pOwner );
 #else
 		//DispatchParticleEffect( "physcannon_super_crit_shockwave", pOwner->GetAbsOrigin(), vec3_angle );
@@ -2217,7 +2223,7 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 			return false;
 		}
 
-		if (pObject->IsNPC() || pObject->IsPlayer() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL))
+		if (pObject->IsNPC() || pObject->IsPlayer() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL) )
 		{
 			Assert(pObject->MyNPCPointer()->CanBecomeRagdoll());
 			CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC);
@@ -2227,7 +2233,7 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 			pRagdoll->SetCollisionBounds(pObject->CollisionProp()->OBBMins(), pObject->CollisionProp()->OBBMaxs());
 
 			// Necessary to cause it to do the appropriate death cleanup
-			CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL);
+			CTakeDamageInfo ragdollInfo( pOwner, pOwner, 10000.0, DMG_PHYSGUN | DMG_REMOVENORAGDOLL, LFE_DMG_CUSTOM_PHYSCANNON_MEGA );
 
 			if ( pOwner->m_Shared.IsCritBoosted() )
 			{
@@ -2968,12 +2974,16 @@ void CWeaponPhysCannon::CheckForTarget( void )
 //-----------------------------------------------------------------------------
 void CWeaponPhysCannon::BeginUpgrade()
 {
-	if (IsMegaPhysCannon())
-		Msg("Is mega! \n");
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
+
+	if ( bIsMegaPhysCannon )
+		Msg( "Is mega! \n" );
 	return;
 
-	if (m_bIsCurrentlyUpgrading)
-		Msg("Is currently upgrading! \n");
+	if ( m_bIsCurrentlyUpgrading )
+		Msg( "Is currently upgrading! \n" );
 	return;
 
 	SetSequence(SelectWeightedSequence(ACT_PHYSCANNON_UPGRADE));
@@ -3449,7 +3459,7 @@ void CWeaponPhysCannon::StartEffects( void )
 
 	/*int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	bool bIsMegaPhysCannon = ( PlayerHasMegaPhysCannon() == true || iType == 1 );*/
+	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );*/
 
 	// ------------------------------------------
 	// Core

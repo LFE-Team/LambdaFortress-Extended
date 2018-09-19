@@ -986,13 +986,8 @@ void CPropJeepEpisodic::UpdateRadar(bool forceUpdate)
 
 	//Msg("Server detected %d objects\n", m_iNumRadarContacts );
 
-	//SecobMod__Information: Fix pPlayer from sp to mp.
-#ifdef TF_CLASSIC
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-#else
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-	CSingleUserRecipientFilter filter(pPlayer);
+	//CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	CBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "UpdateJalopyRadar");
 	WRITE_BYTE(0); // end marker
 	MessageEnd();	// send message
@@ -1172,7 +1167,7 @@ CBaseEntity *CPropJeepEpisodic::OnFailedPhysGunPickup(Vector vPhysgunPos)
 		Vector vecPlayerForward;
 		//SecobMod__Information: Fix pPlayer from sp to mp.
 #ifdef TF_CLASSIC
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer( vPhysgunPos );
 #else
 		CBasePlayer *pPlayer = AI_GetSinglePlayer();
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI

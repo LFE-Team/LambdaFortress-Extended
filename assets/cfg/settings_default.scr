@@ -84,38 +84,45 @@ DESCRIPTION SERVER_OPTIONS
 	
 	"lfe_coop"
 	{
-		"#TF_CoopMode"
+		"#LFE_CoopMode"
 		{ BOOL }
 		{ "1" }
 	}
 	
 	"lfe_use_hl2_player_hull"
 	{
-		"#TF_HL2Hull"
+		"#LFE_HL2Hull"
 		{ BOOL }
 		{ "1" }
 	}
 
 	"sv_difficulty"
 	{
-		"#TF_Difficulty"
+		"#LFE_Difficulty"
 		{
 			LIST
-			"#TF_DifficultyOriginal" "1"
-			"#TF_DifficultyMedium"	"2"
-			"#TF_DifficultyHard"	"3"
-			"Unusual"	"3"
+			"#LFE_DifficultyOriginal"	"1"
+			"#LFE_DifficultyMedium"		"2"
+			"#LFE_DifficultyHard"		"3"
+			"#LFE_DifficultyUnusual"	"4"
 		}
 		{ "1" }
 	}
-	
+
+	"lfe_force_legacy"
+	{
+		"#LFE_ForceLegacy"
+		{ BOOL }
+		{ "0" }
+	}
+
 	"sv_dynamicnpcs"
 	{
 		"#LFE_DynamicNPC"
 		{ BOOL }
 		{ "0" }
 	}
-	
+
 	"sv_hl2_beta"
 	{
 		"#LFE_HL2BetaNpcs"
@@ -129,7 +136,7 @@ DESCRIPTION SERVER_OPTIONS
 		{ BOOL }
 		{ "0" }
     }
-	
+
 	"sv_hl1_hd"
 	{
 		"#LFE_HL1HDModels"

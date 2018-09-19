@@ -267,6 +267,8 @@ public:
 					Warning("MapAdd: Failed to spawn entity, type: '%s'\n", pMapAddEntName );
 				}
 
+				pkvFile->deleteThis();
+
 				// Move to next entity
 				pkvEnt = pkvEnt->GetNextKey();
 			}
