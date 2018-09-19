@@ -1,6 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose:
 //
 // $NoKeywords: $
 //
@@ -172,9 +172,12 @@ public:
 	}
 	~CLeakTrack()
 	{
-		if ( keys.Count() != 0 )
+		AssertMsg(keys.Count() == 0, VarArgs("keys.Count() is %i", keys.Count()));
+ 		for (int x = 0; x < keys.Count(); x++)
 		{
 			Assert( 0 );
+			keys[x].kv->deleteThis();
+			keys.Remove(x);
 		}
 	}
 
@@ -216,8 +219,8 @@ static CLeakTrack track;
 
 #else
 
-#define TRACK_KV_ADD( ptr, name ) 
-#define TRACK_KV_REMOVE( ptr )	
+#define TRACK_KV_ADD( ptr, name )
+#define TRACK_KV_REMOVE( ptr )
 
 #endif
 
@@ -708,7 +711,7 @@ bool KeyValues::LoadFromFile( IBaseFileSystem *filesystem, const char *resourceN
 
 	char *buffer = (char*)((IFileSystem *)filesystem)->AllocOptimalReadBuffer( f, bufSize );
 	Assert( buffer );
-	
+
 	// read into local buffer
 	bool bRetOK = ( ((IFileSystem *)filesystem)->ReadEx( buffer, bufSize, fileSize, f ) != 0 );
 
@@ -796,7 +799,7 @@ void KeyValues::WriteConvertedString( IBaseFileSystem *filesystem, FileHandle_t 
 		}
 		convertedString[j] = pszString[i];
 		j++;
-	}		
+	}
 
 	INTERNALWRITE(convertedString, Q_strlen(convertedString));
 }
@@ -839,7 +842,7 @@ void KeyValues::RecursiveSaveToFile( IBaseFileSystem *filesystem, FileHandle_t f
 			vecSortedKeys.InsertNoSort(dat);
 		}
 		vecSortedKeys.RedoSort();
-		
+
 		FOR_EACH_VEC( vecSortedKeys, i )
 		{
 			SaveKeyToFile( vecSortedKeys[i], filesystem, f, pBuf, indentLevel, sortKeys, bAllowEmptyString );
@@ -874,10 +877,10 @@ void KeyValues::SaveKeyToFile( KeyValues *dat, IBaseFileSystem *filesystem, File
 				{
 					WriteIndents(filesystem, f, pBuf, indentLevel + 1);
 					INTERNALWRITE("\"", 1);
-					WriteConvertedString(filesystem, f, pBuf, dat->GetName());	
+					WriteConvertedString(filesystem, f, pBuf, dat->GetName());
 					INTERNALWRITE("\"\t\t\"", 4);
 
-					WriteConvertedString(filesystem, f, pBuf, dat->m_sValue);	
+					WriteConvertedString(filesystem, f, pBuf, dat->m_sValue);
 
 					INTERNALWRITE("\"\n", 2);
 				}
@@ -1213,7 +1216,7 @@ void KeyValues::RemoveSubKey(KeyValues *subKey)
 				kv->m_pPeer = subKey->m_pPeer;
 				break;
 			}
-			
+
 			kv = kv->m_pPeer;
 		}
 	}
@@ -1455,7 +1458,7 @@ const char *KeyValues::GetString( const char *keyName, const char *defaultValue 
 		default:
 			return defaultValue;
 		};
-		
+
 		return dat->m_sValue;
 	}
 	return defaultValue;
@@ -1511,7 +1514,7 @@ const wchar_t *KeyValues::GetWString( const char *keyName, const wchar_t *defaul
 		default:
 			return defaultValue;
 		};
-		
+
 		return (const wchar_t* )dat->m_wsValue;
 	}
 	return defaultValue;
@@ -1861,7 +1864,7 @@ void KeyValues::CopyKeyValue( const KeyValues& src, size_t tmpBufferSizeB, char*
 			m_Color[3] = src.m_Color[3];
 		}
 		break;
-			
+
 	default:
 		{
 			// do nothing . .what the heck is this?
@@ -2344,7 +2347,7 @@ bool KeyValues::LoadFromBuffer( char const *resourceName, CUtlBuffer &buf, IBase
 		}
 	}
 
-	g_KeyValuesErrorStack.SetFilename( "" );	
+	g_KeyValuesErrorStack.SetFilename( "" );
 
 	return true;
 }
@@ -2446,7 +2449,7 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 			g_KeyValuesErrorStack.ReportError("RecursiveLoadFromBuffer:  got NULL key" );
 			break;
 		}
-		
+
 		if ( *value == '}' && !wasQuoted )
 		{
 			g_KeyValuesErrorStack.ReportError("RecursiveLoadFromBuffer:  got } in key" );
@@ -2467,7 +2470,7 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 				g_KeyValuesErrorStack.ReportError("RecursiveLoadFromBuffer:  got conditional between key and value" );
 				break;
 			}
-			
+
 			if (dat->m_sValue)
 			{
 				delete[] dat->m_sValue;
@@ -2493,7 +2496,7 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 				pFEnd = (char *)value;
 			}
 #endif
-				
+
 			if ( *value == 0 )
 			{
 				dat->m_iDataType = TYPE_STRING;	
@@ -2719,7 +2722,7 @@ bool KeyValues::ReadAsBinary( CUtlBuffer &buffer, int nStackDepth )
 				int len = Q_strlen( token );
 				dat->m_sValue = new char[len + 1];
 				Q_memcpy( dat->m_sValue, token, len+1 );
-								
+
 				break;
 			}
 		case TYPE_WSTRING:

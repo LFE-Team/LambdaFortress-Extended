@@ -7169,7 +7169,7 @@ void CTFPlayer::StopPlacement( void )
 int	CTFPlayer::StartedBuildingObject( int iObjectType )
 {
 	// Deduct the cost of the object
-	int iCost = CalculateObjectCost( iObjectType );
+	int iCost = CalculateObjectCost( iObjectType, HasGunslinger() );
 	if ( iCost > GetBuildResources() )
 	{
 		// Player must have lost resources since he started placing

@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "tf_triggers.h"
 #include "tf_player.h"
+#include "ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -59,14 +60,24 @@ void CTriggerAddTFPlayerCondition::Touch( CBaseEntity *pOther )
 
 		if ( m_flDuration == -1 )
 		{
-			if ( pPlayer )
-			{
-				  pPlayer->m_Shared.AddCond( m_nCondition );
-			}
-			else
-			{
-				  pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
-			}
+			pPlayer->m_Shared.AddCond( m_nCondition );
+		}
+		else
+		{
+			pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
+		}
+	}
+	else if ( pOther->IsNPC() )
+	{
+		CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( pOther );
+
+		if ( m_flDuration == -1 )
+		{
+			pNPC->AddCond( m_nCondition );
+		}
+		else
+		{
+			pNPC->AddCond( m_nCondition, m_flDuration );
 		}
 	}
 }
@@ -92,14 +103,24 @@ void CTriggerAddTFPlayerCondition::StartTouch( CBaseEntity *pOther )
 
 		if ( m_flDuration == -1 )
 		{
-			if ( pPlayer )
-			{
-				  pPlayer->m_Shared.AddCond( m_nCondition );
-			}
-			else
-			{
-				  pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
-			}
+			pPlayer->m_Shared.AddCond( m_nCondition );
+		}
+		else
+		{
+			pPlayer->m_Shared.AddCond( m_nCondition, m_flDuration );
+		}
+	}
+	else if ( pOther->IsNPC() )
+	{
+		CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( pOther );
+
+		if ( m_flDuration == -1 )
+		{
+			pNPC->AddCond( m_nCondition );
+		}
+		else
+		{
+			pNPC->AddCond( m_nCondition, m_flDuration );
 		}
 	}
 }
@@ -121,6 +142,19 @@ void CTriggerAddTFPlayerCondition::EndTouch( CBaseEntity *pOther )
 			{
 				if ( !(pPlayer->GetFlags() & FL_DONTTOUCH ) )
 					  pPlayer->m_Shared.RemoveCond( m_nCondition );
+			}
+		}
+	}
+	else if ( pOther->IsNPC() )
+	{
+		CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC*>( pOther );
+
+		if ( m_flDuration == -1 )
+		{
+			if ( pNPC )
+			{
+				if ( !(pNPC->GetFlags() & FL_DONTTOUCH ) )
+					  pNPC->RemoveCond( m_nCondition );
 			}
 		}
 	}
@@ -172,7 +206,18 @@ void CTriggerRemoveTFPlayerCondition::Touch( CBaseEntity *pOther )
 
 		if ( pPlayer )
 		{
-			pPlayer->m_Shared.RemoveCond( m_nCondition );
+			if ( !(pPlayer->GetFlags() & FL_DONTTOUCH ) )
+				  pPlayer->m_Shared.RemoveCond( m_nCondition );
+		}
+	}
+	else if ( pOther->IsNPC() )
+	{
+		CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC*>( pOther );
+
+		if ( pNPC )
+		{
+			if ( !(pNPC->GetFlags() & FL_DONTTOUCH ) )
+				  pNPC->RemoveCond( m_nCondition );
 		}
 	}
 }
@@ -197,7 +242,18 @@ void CTriggerRemoveTFPlayerCondition::StartTouch( CBaseEntity *pOther )
 
 		if ( pPlayer )
 		{
-			pPlayer->m_Shared.RemoveCond( m_nCondition );
+			if ( !(pPlayer->GetFlags() & FL_DONTTOUCH ) )
+				  pPlayer->m_Shared.RemoveCond( m_nCondition );
+		}
+	}
+	else if ( pOther->IsNPC() )
+	{
+		CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC*>( pOther );
+
+		if ( pNPC )
+		{
+			if ( !(pNPC->GetFlags() & FL_DONTTOUCH ) )
+				  pNPC->RemoveCond( m_nCondition );
 		}
 	}
 }
