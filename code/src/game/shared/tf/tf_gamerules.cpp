@@ -7092,22 +7092,14 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return true;
 
-	// Rockets need to collide with npcs when they hit
-	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) && 
+	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
-		return true;
+		return false;
 
-	// Don't stand on rockets
-	/*if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) && 
-		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
-		return false;*/
-
-	// Don't collide with weapons
 	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return false;
 
-	// Or Grenades
 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return false;
@@ -7121,20 +7113,33 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		( collisionGroup1 == TF_COLLISIONGROUP_GRENADES ) )
 		return false;
 
-	// Respawn rooms only collide with players and npcs
+	// Respawn rooms only collide with players
 	if ( collisionGroup1 == TFCOLLISION_GROUP_RESPAWNROOMS )
-		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) ||
-			   ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR );
+		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
 
-	// Arrows don't collide with weapon
-	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS ) && 
-		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
-		return false;
+/*	if ( collisionGroup0 == COLLISION_GROUP_PLAYER )
+	{
+		// Players don't collide with objects or other players
+		if ( collisionGroup1 == COLLISION_GROUP_PLAYER  )
+			 return false;
+ 	}
 
- 	// VintageCollide with nothing
-	if ( collisionGroup1 == TFCOLLISION_GROUP_NONE )
- 		return false;
+	if ( collisionGroup1 == COLLISION_GROUP_PLAYER_MOVEMENT )
+	{
+		// This is only for probing, so it better not be on both sides!!!
+		Assert( collisionGroup0 != COLLISION_GROUP_PLAYER_MOVEMENT );
 
+		// No collide with players any more
+		// Nor with objects or grenades
+		switch ( collisionGroup0 )
+		{
+		default:
+			break;
+		case COLLISION_GROUP_PLAYER:
+			return false;
+		}
+	}
+*/
 	// don't want caltrops and other grenades colliding with each other
 	// caltops getting stuck on other caltrops, etc.)
 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
@@ -7156,131 +7161,12 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
-	// tf_pumpkin_bomb
- 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
-		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
-		return false;
-
- 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) &&
-		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
-		return true;
-
- 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
-		 ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
-		 return false;
-
- 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
-		 ( collisionGroup0 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) || ( collisionGroup0 == TFCOLLISION_GROUP_ROCKETS ) )
-		 return false;
-
- 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
-		 ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
-		 return false;
-
-	// Prevent the player movement from colliding with spit globs (caused the player to jump on top of globs while in water)
-	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
-		return false;
-
-	//If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.
-	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
-	{
-		collisionGroup1 = COLLISION_GROUP_NPC;
-	}
-
 	// This is only for the super physcannon
-	if ( m_bMegaPhysgun )
+	if (m_bMegaPhysgun)
 	{
-		if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER )
+		if (collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER)
 			return false;
 	}
-	else
-	{
-		if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER )
-			return true;
-	}
-
-	if ( collisionGroup0 == HL2COLLISION_GROUP_COMBINE_BALL )
-	{
-		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
-			return false;
-	}
-
-	if ( collisionGroup0 == HL2COLLISION_GROUP_COMBINE_BALL && collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL_NPC )
-		return false;
-
-	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) ||
-		( collisionGroup0 == COLLISION_GROUP_PLAYER ) ||
-		( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
-	{
-		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
-			return false;
-	}
-
-	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS )
-	{
-		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
-			return true;
-	}
-
-	if (collisionGroup0 == HL2COLLISION_GROUP_HOUNDEYE && collisionGroup1 == HL2COLLISION_GROUP_HOUNDEYE )
-		return false;
-
-	if (collisionGroup0 == HL2COLLISION_GROUP_HOMING_MISSILE && collisionGroup1 == HL2COLLISION_GROUP_HOMING_MISSILE )
-		return false;
-
-	if ( collisionGroup1 == HL2COLLISION_GROUP_CROW )
-	{
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_CROW )
-			return false;
-	}
-
-	if ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB )
-	{
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB )
-			return false;
-	}
-
-	if ( collisionGroup1 == HL2COLLISION_GROUP_STRIDER )
-	{
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_STRIDER )
-			return false;
-	}
-
-	if ( collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP )
-	{
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP )
-			return false;
-	}
-
-	if ( ( collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB ) && ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB ) )
-		return false;
-
-	// striders don't collide with other striders
-	if ( collisionGroup0 == HL2COLLISION_GROUP_STRIDER && collisionGroup1 == HL2COLLISION_GROUP_STRIDER )
-		return false;
-
-	// gunships don't collide with other gunships
-	if ( collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP && collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP )
-		return false;
-
-	// weapons and NPCs don't collide
-	if ( collisionGroup0 == COLLISION_GROUP_WEAPON && (collisionGroup1 >= HL2COLLISION_GROUP_FIRST_NPC && collisionGroup1 <= HL2COLLISION_GROUP_LAST_NPC ) )
-		return false;
-
-	//players don't collide against NPC Actors.
-	//I could've done this up where I check if collisionGroup0 is NOT a player but I decided to just
-	//do what the other checks are doing in this function for consistency sake.
-	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 == COLLISION_GROUP_PLAYER )
-		return false;
-		
-	// In cases where NPCs are playing a script which causes them to interpenetrate while riding on another entity,
-	// such as a train or elevator, you need to disable collisions between the actors so the mover can move them.
-	if ( collisionGroup0 == COLLISION_GROUP_NPC_SCRIPTED && collisionGroup1 == COLLISION_GROUP_NPC_SCRIPTED )
-		return false;
-
-	// Spit doesn't touch other spit
-	if ( collisionGroup0 == HL2COLLISION_GROUP_SPIT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
-		return false;
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }
