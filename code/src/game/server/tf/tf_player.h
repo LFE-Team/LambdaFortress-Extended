@@ -132,6 +132,7 @@ public:
 
 	CTFWeaponBase		*GetActiveTFWeapon( void ) const;
 	bool				IsActiveTFWeapon(int iWeaponID);
+	bool				DidntActuallyChangeClass;
 
 	CEconItemView		*GetLoadoutItem( int iClass, int iSlot );
 	void				HandleCommand_WeaponPreset(int iSlotNum, int iPresetNum);
