@@ -1053,7 +1053,7 @@ void CWeaponPhysCannon::Precache( void )
 	PrecacheModel("models/weapons/v_models/v_superphyscannon_heavy.mdl");	
 	PrecacheModel("models/weapons/v_models/v_physcannon_medic.mdl");
 	PrecacheModel("models/weapons/v_models/v_superphyscannon_medic.mdl");
-	PrecacheModel("models/weapons/v_models/v_physcannon_demo.mdl");
+	PrecacheModel("models/weapons/v_models/v_physcannon_demoman.mdl");
 	PrecacheModel("models/weapons/v_models/v_superphyscannon_demoman.mdl");
 	PrecacheModel("models/weapons/v_models/v_physcannon_spy.mdl");
 	PrecacheModel("models/weapons/v_models/v_superphyscannon_spy.mdl");	
