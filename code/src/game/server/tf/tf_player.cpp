@@ -122,37 +122,10 @@ ConVar lfe_debug_transition( "lfe_debug_transition", "0", FCVAR_NOTIFY | FCVAR_R
 ConVar lfe_debug_tf_dropped_weapon( "lfe_debug_tf_dropped_weapon", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow weapons to drop on death." );
 
 ConVar tf_allow_sliding_taunt( "tf_allow_sliding_taunt", "0", 0, "Allow player to slide for a bit after taunting." );
-ConVar lfe_class_limit_scout("lfe_class_limit_scout", "0", 0, "Scout class limit.");
-ConVar lfe_class_limit_soldier("lfe_class_limit_soldier", "0", 0, "Soldier class limit.");
-ConVar lfe_class_limit_pyro("lfe_class_limit_pyro", "0", 0, "Pyro class limit.");
-ConVar lfe_class_limit_demo("lfe_class_limit_demo", "0", 0, "Demoman class limit.");
-ConVar lfe_class_limit_heavy("lfe_class_limit_heavy", "0", 0, "Heavy class limit.");
-ConVar lfe_class_limit_engineer("lfe_class_limit_engineer", "0", 0, "Engineer class limit.");
-ConVar lfe_class_limit_medic("lfe_class_limit_medic", "0", 0, "Medic class limit.");
-ConVar lfe_class_limit_sniper("lfe_class_limit_sniper", "0", 0, "Sniper class limit.");
-ConVar lfe_class_limit_spy("lfe_class_limit_spy", "0", 0, "Spy class limit.");
-ConVar lfe_used_classes_scout("lfe_used_classes_scout", "0", FCVAR_DEVELOPMENTONLY, "Used scout slots.");
-ConVar lfe_used_classes_soldier("lfe_used_classes_soldier", "0", FCVAR_DEVELOPMENTONLY, "Used soldier slots.");
-ConVar lfe_used_classes_pyro("lfe_used_classes_pyro", "0", FCVAR_DEVELOPMENTONLY, "Used pyro slots.");
-ConVar lfe_used_classes_demo("lfe_used_classes_demo", "0", FCVAR_DEVELOPMENTONLY, "Used demo slots.");
-ConVar lfe_used_classes_heavy("lfe_used_classes_heavy", "0", FCVAR_DEVELOPMENTONLY, "Used heavy slots.");
-ConVar lfe_used_classes_engineer("lfe_used_classes_engineer", "0", FCVAR_DEVELOPMENTONLY, "Used engineer slots.");
-ConVar lfe_used_classes_medic("lfe_used_classes_medic", "0", FCVAR_DEVELOPMENTONLY, "Used medic slots.");
-ConVar lfe_used_classes_sniper("lfe_used_classes_sniper", "0", FCVAR_DEVELOPMENTONLY, "Used sniper slots.");
-ConVar lfe_used_classes_spy("lfe_used_classes_spy", "0", FCVAR_DEVELOPMENTONLY, "Used spy slots.");
 
 extern ConVar spec_freeze_time;
 extern ConVar spec_freeze_traveltime;
 extern ConVar sv_maxunlag;
-extern ConVar lfe_class_limit_scout;
-extern ConVar lfe_class_limit_soldier;
-extern ConVar lfe_class_limit_pyro;
-extern ConVar lfe_class_limit_demo;
-extern ConVar lfe_class_limit_heavy;
-extern ConVar lfe_class_limit_engineer;
-extern ConVar lfe_class_limit_medic;
-extern ConVar lfe_class_limit_sniper;
-extern ConVar lfe_class_limit_spy;
 
 extern ConVar sv_alltalk;
 extern ConVar tf_gravetalk;
@@ -3052,134 +3025,6 @@ void CTFPlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 {
-	DidntActuallyChangeClass = false;
-	if (stricmp(pClassName, "scout") == 0 && (lfe_class_limit_scout.GetFloat() == lfe_used_classes_scout.GetFloat() || lfe_used_classes_scout.GetFloat() > lfe_class_limit_scout.GetFloat()) && lfe_class_limit_scout.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "soldier") == 0 && (lfe_class_limit_soldier.GetFloat() == lfe_used_classes_soldier.GetFloat() || lfe_used_classes_soldier.GetFloat() > lfe_class_limit_soldier.GetFloat()) && lfe_class_limit_soldier.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "pyro") == 0 && (lfe_class_limit_pyro.GetFloat() == lfe_used_classes_pyro.GetFloat() || lfe_used_classes_pyro.GetFloat() > lfe_class_limit_pyro.GetFloat()) && lfe_class_limit_pyro.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "demoman") == 0 && (lfe_class_limit_demo.GetFloat() == lfe_used_classes_demo.GetFloat() || lfe_used_classes_demo.GetFloat() > lfe_class_limit_demo.GetFloat()) && lfe_class_limit_demo.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "heavyweapons") == 0 && (lfe_class_limit_heavy.GetFloat() == lfe_used_classes_heavy.GetFloat() || lfe_used_classes_heavy.GetFloat() > lfe_class_limit_heavy.GetFloat()) && lfe_class_limit_heavy.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "engineer") == 0 && (lfe_class_limit_engineer.GetFloat() == lfe_used_classes_engineer.GetFloat() || lfe_used_classes_engineer.GetFloat() > lfe_class_limit_engineer.GetFloat()) && lfe_class_limit_engineer.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "medic") == 0 && (lfe_class_limit_medic.GetFloat() == lfe_used_classes_medic.GetFloat() || lfe_used_classes_medic.GetFloat() > lfe_class_limit_medic.GetFloat()) && lfe_class_limit_medic.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "sniper") == 0 && (lfe_class_limit_sniper.GetFloat() == lfe_used_classes_sniper.GetFloat() || lfe_used_classes_sniper.GetFloat() > lfe_class_limit_sniper.GetFloat()) && lfe_class_limit_sniper.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	else if (stricmp(pClassName, "spy") == 0 && (lfe_class_limit_spy.GetFloat() == lfe_used_classes_spy.GetFloat() || lfe_used_classes_spy.GetFloat() > lfe_class_limit_spy.GetFloat()) && lfe_class_limit_spy.GetFloat() > 0)
-	{
-		DidntActuallyChangeClass = true;
-		return;
-	}
-	if (stricmp(pClassName, "scout") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_scout.SetValue(lfe_used_classes_scout.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "soldier") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_soldier.SetValue(lfe_used_classes_soldier.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "pyro") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_pyro.SetValue(lfe_used_classes_pyro.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "demoman") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_demo.SetValue(lfe_used_classes_demo.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "heavyweapons") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_heavy.SetValue(lfe_used_classes_heavy.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "engineer") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_engineer.SetValue(lfe_used_classes_engineer.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "medic") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_medic.SetValue(lfe_used_classes_medic.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "sniper") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_sniper.SetValue(lfe_used_classes_sniper.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	else if (stricmp(pClassName, "spy") == 0 && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_spy.SetValue(lfe_used_classes_spy.GetFloat() + 1);
-		DidntActuallyChangeClass = false;
-	}
-	if (IsPlayerClass(TF_CLASS_SCOUT) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_scout.SetValue(lfe_used_classes_scout.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_SOLDIER) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_soldier.SetValue(lfe_used_classes_soldier.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_PYRO) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_pyro.SetValue(lfe_used_classes_pyro.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_DEMOMAN) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_demo.SetValue(lfe_used_classes_demo.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_HEAVYWEAPONS) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_heavy.SetValue(lfe_used_classes_heavy.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_ENGINEER) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_engineer.SetValue(lfe_used_classes_engineer.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_MEDIC) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_medic.SetValue(lfe_used_classes_medic.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_SNIPER) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_sniper.SetValue(lfe_used_classes_sniper.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_SPY) && !DidntActuallyChangeClass)
-	{
-		lfe_used_classes_spy.SetValue(lfe_used_classes_spy.GetFloat() - 1);
-	}
-
 	if ( GetNextChangeClassTime() > gpGlobals->curtime )
 		return;
 
@@ -3341,7 +3186,6 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName )
 		CommitSuicide( false, true );
 		RemoveAllObjects( false );
 	}
-	
 }
 
 //-----------------------------------------------------------------------------
@@ -6493,42 +6337,6 @@ void CTFPlayer::DisplayLocalItemStatus( CTFGoal *pGoal )
 // Called when the player disconnects from the server.
 void CTFPlayer::TeamFortress_ClientDisconnected( void )
 {
-	if (IsPlayerClass(TF_CLASS_SCOUT))
-	{
-		lfe_used_classes_scout.SetValue(lfe_used_classes_scout.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_SOLDIER))
-	{
-		lfe_used_classes_soldier.SetValue(lfe_used_classes_soldier.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_PYRO))
-	{
-		lfe_used_classes_pyro.SetValue(lfe_used_classes_pyro.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_DEMOMAN))
-	{
-		lfe_used_classes_demo.SetValue(lfe_used_classes_demo.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
-	{
-		lfe_used_classes_heavy.SetValue(lfe_used_classes_heavy.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_ENGINEER))
-	{
-		lfe_used_classes_engineer.SetValue(lfe_used_classes_engineer.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_MEDIC))
-	{
-		lfe_used_classes_medic.SetValue(lfe_used_classes_medic.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_SNIPER))
-	{
-		lfe_used_classes_sniper.SetValue(lfe_used_classes_sniper.GetFloat() - 1);
-	}
-	else if (IsPlayerClass(TF_CLASS_SPY))
-	{
-		lfe_used_classes_spy.SetValue(lfe_used_classes_spy.GetFloat() - 1);
-	}
 	RemoveAllOwnedEntitiesFromWorld( false );
 	RemoveNemesisRelationships();
 	m_OnDeath.FireOutput(this, this);
