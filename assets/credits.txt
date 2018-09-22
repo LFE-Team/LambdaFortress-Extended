@@ -18,3 +18,4 @@ Team Fortress 2 Vintage: https://github.com/bachingo/TF2Vintage
 Community Contributors:
 Rad: Floor Turret Sapper Model, Gravity Gun Viewmodels
 Sergant Stacker: HL2 Beta SNPCS, Gonome, HGrunts Teams
+ficool2: Pyro wrist fix, Pyro thumb fix, Demo sleeve fix.
