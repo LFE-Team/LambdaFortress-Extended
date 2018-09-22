@@ -693,6 +693,8 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		break;
 
 	case TF_COND_INVULNERABLE:
+	case TF_COND_INVULNERABLE_USER_BUFF:
+	case TF_COND_INVULNERABLE_CARD_EFFECT:
 		OnAddInvulnerable();
 		break;
 
@@ -705,33 +707,18 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		OnAddBleeding();
 		break;
 
+	case TF_COND_PHASE:
+		OnAddPhase();
+		break;
+
 	case TF_COND_HEALTH_OVERHEALED:
 		//UpdateOverhealEffect();
 		break;
-
+#ifdef GAME_DLL
 	case TF_COND_SLOWED:
 		OnAddSlowed();
 		break;
-/*
-	case TF_COND_DISGUISING:
-		OnAddDisguising();
-		break;
-
-	case TF_COND_DISGUISED:
-		OnAddDisguised();
-		break;
-
-	case TF_COND_TAUNTING:
-		{
-			CTFWeaponBase *pWpn = m_pOuter->GetActiveTFWeapon();
-			if ( pWpn )
-			{
-				// cancel any reload in progress.
-				pWpn->AbortReload();
-			}
-		}
-		break;
-*/
+#endif
 	case TF_COND_CRITBOOSTED:
 	case TF_COND_CRITBOOSTED_PUMPKIN:
 	case TF_COND_CRITBOOSTED_USER_BUFF:
@@ -746,13 +733,58 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 	case TF_COND_MINICRITBOOSTED_ON_KILL:
 		OnAddCritboosted();
 		break;
-
-	case TF_COND_URINE:
-	case TF_COND_MAD_MILK:
-	case TF_COND_GAS:
-		OnAddJar();
+#ifdef GAME_DLL
+	case TF_COND_HALLOWEEN_GIANT:
+		OnAddHalloweenGiant();
 		break;
 
+	case TF_COND_HALLOWEEN_TINY:
+		OnAddHalloweenTiny();
+		break;
+#endif
+	case TF_COND_STUNNED:
+		OnAddStunned();
+		break;
+#ifdef CLIENT_DLL
+	case TF_COND_URINE:
+		OnAddUrine();
+		break;
+
+	case TF_COND_MAD_MILK:
+		OnAddMilk();
+		break;
+
+	case TF_COND_GAS:
+		OnAddGas();
+		break;
+#endif
+	case TF_COND_SPEED_BOOST:
+	case TF_COND_HALLOWEEN_SPEED_BOOST:
+		OnAddSpeedBoost();
+		break;
+#ifdef GAME_DLL
+	case TF_COND_RUNE_STRENGTH:
+	case TF_COND_RUNE_HASTE:
+	case TF_COND_RUNE_REGEN:
+	case TF_COND_RUNE_RESIST:
+	case TF_COND_RUNE_VAMPIRE:
+	case TF_COND_RUNE_WARLOCK:
+	case TF_COND_RUNE_PRECISION:
+	case TF_COND_RUNE_AGILITY:
+	case TF_COND_RUNE_KNOCKOUT:
+	case TF_COND_RUNE_KING:
+	case TF_COND_RUNE_PLAGUE:
+	case TF_COND_RUNE_SUPERNOVA:
+		OnAddRune();
+		break;
+#endif
+#ifdef CLIENT_DLL
+	case TF_COND_OFFENSEBUFF:
+	case TF_COND_DEFENSEBUFF:
+	case TF_COND_REGENONDAMAGEBUFF:
+		OnAddBuff();
+		break;
+#endif
 	default:
 		break;
 	}
@@ -766,11 +798,6 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 {
 	switch( nCond )
 	{
-/*
-	case TF_COND_ZOOMED:
-		OnRemoveZoomed();
-		break;
-*/
 	case TF_COND_BURNING:
 		OnRemoveBurning();
 		break;
@@ -778,6 +805,10 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	case TF_COND_BLEEDING:
 	case TF_COND_GRAPPLINGHOOK_BLEEDING:
 		OnRemoveBleeding();
+		break;
+
+	case TF_COND_PHASE:
+		OnRemovePhase();
 		break;
 
 	case TF_COND_HEALTH_BUFF:
@@ -789,12 +820,14 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	case TF_COND_HEALTH_OVERHEALED:
 		//UpdateOverhealEffect();
 		break;
-
+#ifdef GAME_DLL
 	case TF_COND_SLOWED:
 		OnRemoveSlowed();
 		break;
-
+#endif
 	case TF_COND_INVULNERABLE:
+	case TF_COND_INVULNERABLE_USER_BUFF:
+	case TF_COND_INVULNERABLE_CARD_EFFECT:
 		OnRemoveInvulnerable();
 		break;
 
@@ -812,13 +845,58 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	case TF_COND_MINICRITBOOSTED_ON_KILL:
 		OnRemoveCritboosted();
 		break;
-
-	case TF_COND_URINE:
-	case TF_COND_MAD_MILK:
-	case TF_COND_GAS:
-		OnRemoveJar();
+#ifdef GAME_DLL
+	case TF_COND_HALLOWEEN_GIANT:
+		OnRemoveHalloweenGiant();
 		break;
 
+	case TF_COND_HALLOWEEN_TINY:
+		OnRemoveHalloweenTiny();
+		break;
+#endif
+	case TF_COND_STUNNED:
+		OnRemoveStunned();
+		break;
+
+	case TF_COND_URINE:
+		OnRemoveUrine();
+		break;
+
+	case TF_COND_MAD_MILK:
+		OnRemoveMilk();
+		break;
+
+	case TF_COND_GAS:
+		OnRemoveGas();
+		break;
+
+	case TF_COND_SPEED_BOOST:
+	case TF_COND_HALLOWEEN_SPEED_BOOST:
+		OnRemoveSpeedBoost();
+		break;
+#ifdef GAME_DLL
+	case TF_COND_RUNE_STRENGTH:
+	case TF_COND_RUNE_HASTE:
+	case TF_COND_RUNE_REGEN:
+	case TF_COND_RUNE_RESIST:
+	case TF_COND_RUNE_VAMPIRE:
+	case TF_COND_RUNE_WARLOCK:
+	case TF_COND_RUNE_PRECISION:
+	case TF_COND_RUNE_AGILITY:
+	case TF_COND_RUNE_KNOCKOUT:
+	case TF_COND_RUNE_KING:
+	case TF_COND_RUNE_PLAGUE:
+	case TF_COND_RUNE_SUPERNOVA:
+		OnRemoveRune();
+		break;
+#endif
+#ifdef CLIENT_DLL
+	case TF_COND_OFFENSEBUFF:
+	case TF_COND_DEFENSEBUFF:
+	case TF_COND_REGENONDAMAGEBUFF:
+		OnRemoveBuff();
+		break;
+#endif
 	default:
 		break;
 	}
@@ -892,6 +970,31 @@ bool CAI_BaseNPC::IsJared( void )
 	if ( InCond( TF_COND_URINE ) ||
 		InCond( TF_COND_MAD_MILK ) ||
 		InCond( TF_COND_GAS ) )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::IsSpeedBoosted( void )
+{
+	if ( InCond( TF_COND_SPEED_BOOST ) ||
+		InCond( TF_COND_HALLOWEEN_SPEED_BOOST ) )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::IsBuffed( void )
+{
+	if ( InCond( TF_COND_OFFENSEBUFF ) ||
+		InCond( TF_COND_DEFENSEBUFF ) || 
+		InCond( TF_COND_REGENONDAMAGEBUFF ) )
 		return true;
 
 	return false;
@@ -971,9 +1074,9 @@ void CAI_BaseNPC::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/
 
 	if ( !InCond( TF_COND_BLEEDING ) )
 	{
-		// Start burning
+		// Start bleeding
 		AddCond( TF_COND_BLEEDING );
-		m_flBleedTime = gpGlobals->curtime;	//asap
+		m_flBleedTime = gpGlobals->curtime;
 	}
 
 	float flBleedTime = TF_BLEEDING_TIME;
@@ -981,10 +1084,7 @@ void CAI_BaseNPC::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/
 	if ( flBleedDuration != -1.0f )
 		flBleedTime = flBleedDuration;
 
-	if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_FIREBALL ) )
-	{
-		m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
-	}
+	m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
 
 	m_hBleedAttacker = pAttacker;
 	m_hBleedWeapon = pWeapon;
@@ -1086,7 +1186,7 @@ void CAI_BaseNPC::OnAddInvulnerable( void )
 void CAI_BaseNPC::OnRemoveInvulnerable( void )
 {
 }
-
+#ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1102,7 +1202,7 @@ void CAI_BaseNPC::OnRemoveSlowed( void )
 {
 	SetPlaybackRate( 1.0f );
 }
-
+#endif
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1126,25 +1226,239 @@ void CAI_BaseNPC::OnRemoveCritboosted( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddJar( void )
+void CAI_BaseNPC::OnAddStunned( void )
 {
-#ifdef CLIENT_DLL
-	if ( InCond( TF_COND_URINE ) )
-	{
-		SetRenderColor( 255, 255, 108 );
-		ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
-	}
-	else if ( InCond( TF_COND_MAD_MILK ) )
-	{
-		ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
-	}
+#ifdef GAME_DLL
+	SetPlaybackRate( 0.0f );
+#else
+	if ( !m_pStun )
+		m_pStun = ParticleProp()->Create( "conc_stars", PATTACH_POINT_FOLLOW, "head" );
 #endif
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveJar(void)
+void CAI_BaseNPC::OnRemoveStunned( void )
+{
+	/*m_flStunExpireTime = 0.0f;
+	m_hStunner = NULL;
+	m_iStunPhase = 0;*/
+
+#ifdef GAME_DLL
+	SetPlaybackRate( 1.0f );
+#else
+	ParticleProp()->StopEmission( m_pStun );
+	m_pStun = NULL;
+#endif
+}
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddHalloweenGiant( void )
+{
+	SetModelScale( 2.0, 0.0 );
+
+	SetMaxHealth( GetMaxHealth() * 10 );
+	SetHealth( GetMaxHealth() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveHalloweenGiant( void )
+{
+	SetModelScale( 1.0, 0.0 );
+
+	SetMaxHealth( GetMaxHealth() );
+	SetHealth( GetMaxHealth() );
+
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddPhase(void)
+{
+	UpdatePhaseEffects();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemovePhase(void)
+{
+#ifdef GAME_DLL
+	for ( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+	{
+		m_pPhaseTrails[i]->SUB_Remove();
+	}
+	m_pPhaseTrails.RemoveAll();
+#else
+	ParticleProp()->StopEmission( m_pWarp );
+	m_pWarp = NULL;
+#endif
+}
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddHalloweenTiny( void )
+{
+	SetModelScale( 0.5, 0.0 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveHalloweenTiny( void )
+{
+
+	SetModelScale( 1.0, 0.0 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Bonk phase effects
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::AddPhaseEffects(void)
+{
+	const char* pszEffect = GetTeamNumber() == TF_TEAM_BLUE ? "effects/beam001_blu.vmt" : "effects/beam001_red.vmt";
+	Vector vecOrigin = GetAbsOrigin();
+	
+	/*CSpriteTrail *pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 12.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( this, LookupAttachment( "back_upper" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 16.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( this, LookupAttachment( "back_lower" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	// White trail for socks
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 8.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 0.5 );
+	pPhaseTrail->SetAttachment( this, LookupAttachment( "foot_R" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+
+	pPhaseTrail = CSpriteTrail::SpriteTrailCreate( "effects/beam001_white.vmt", vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 8.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 0.5 );
+	pPhaseTrail->SetAttachment( this, LookupAttachment( "foot_L" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );*/
+
+	CSpriteTrail *pPhaseTrail = CSpriteTrail::SpriteTrailCreate( pszEffect, vecOrigin, true );
+	pPhaseTrail->SetTransparency( kRenderTransAlpha, 255, 255, 255, 255, 0 );
+	pPhaseTrail->SetStartWidth( 16.0f );
+	pPhaseTrail->SetTextureResolution( 0.01416667 );
+	pPhaseTrail->SetLifeTime( 1.0 );
+	pPhaseTrail->SetAttachment( this, LookupAttachment( "root" ) );
+	m_pPhaseTrails.AddToTail( pPhaseTrail );
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: Update phase effects
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::UpdatePhaseEffects(void)
+{
+	if ( !InCond( TF_COND_PHASE ) )
+		return;
+
+#ifdef CLIENT_DLL
+	if( GetAbsVelocity() != vec3_origin )
+	{
+		if ( !m_pWarp )
+		{
+			m_pWarp = ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
+		}
+	}
+#else
+	if ( m_pPhaseTrails.IsEmpty() )
+	{
+		AddPhaseEffects();
+	}
+		
+	// Turn on the trails if they're not active already
+	if ( m_pPhaseTrails[0] && !m_pPhaseTrails[0]->IsOn() )
+	{
+		for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
+		{
+			m_pPhaseTrails[i]->TurnOn();
+		}
+	}
+#endif
+}
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Update speedboost effects
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::UpdateSpeedBoostEffects(void)
+{
+	if ( !IsSpeedBoosted() )
+		return;
+
+	if(  GetAbsVelocity() != vec3_origin )
+	{
+		// We're on the move
+		if ( !m_pSpeedTrails )
+		{
+			m_pSpeedTrails = ParticleProp()->Create( "speed_boost_trail", PATTACH_ABSORIGIN_FOLLOW );
+		}
+	}
+	else
+	{
+		// We're not moving
+		if( m_pSpeedTrails )
+		{
+			ParticleProp()->StopEmission( m_pSpeedTrails );
+			m_pSpeedTrails = NULL;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddUrine( void )
+{
+	ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddMilk( void )
+{
+	ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddGas( void )
+{
+	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", GetTeamNumber(), true );
+	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW ); 
+}
+#endif
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveUrine( void )
 {
 #ifdef GAME_DLL
 	if( IsAlive() )
@@ -1152,14 +1466,110 @@ void CAI_BaseNPC::OnRemoveJar(void)
 		m_hUrineAttacker = NULL;
 	}
 #else
-	//if ( InCond( TF_COND_URINE ) )
-	//{
-		SetRenderColor( 255, 255, 255 );
-		ParticleProp()->StopParticlesNamed( "peejar_drips" );
-	//}
-	//else  if ( InCond( TF_COND_MAD_MILK ) )
-	//{
-		ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
-	//}
+	ParticleProp()->StopParticlesNamed( "peejar_drips" );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveMilk( void )
+{
+#ifdef GAME_DLL
+	if( IsAlive() )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
+	ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveGas( void )
+{
+#ifdef GAME_DLL
+	if( IsAlive() )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
+	ParticleProp()->StopParticlesNamed( "gas_can_drips_red" );
+	ParticleProp()->StopParticlesNamed( "gas_can_drips_blue" );
+#endif
+}
+
+#ifdef GAME_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddRune( void )
+{
+
+
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveRune( void )
+{
+
+}
+#endif
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddBuff( void )
+{
+
+	// Start the buff effect
+	if ( !m_pBuffAura )
+	{
+		const char *pszEffectName = ConstructTeamParticle( "soldierbuff_%s_buffed", GetTeamNumber(), true );
+
+		m_pBuffAura = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+	}
+
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveBuff( void )
+{
+	if ( m_pBuffAura )
+	{
+		ParticleProp()->StopEmission( m_pBuffAura );
+		m_pBuffAura = NULL;
+	}
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddSpeedBoost( void )
+{
+#ifdef GAME_DLL
+	SetPlaybackRate( 1.5f );
+#else
+	UpdateSpeedBoostEffects();
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveSpeedBoost( void )
+{
+#ifdef GAME_DLL
+	SetPlaybackRate( 1.0f );
+#else
+	UpdateSpeedBoostEffects();
 #endif
 }

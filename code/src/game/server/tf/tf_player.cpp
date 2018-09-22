@@ -1090,7 +1090,12 @@ void CTFPlayer::Precache()
 	PrecacheParticleSystem( "rocketjump_smoke" );
 	PrecacheTeamParticles( "overhealedplayer_%s_pluses", false );
 	PrecacheParticleSystem( "speech_typing" );
+
+	PrecacheTeamParticles( "healhuff_%s", false, g_aTeamNamesShort );
 	PrecacheParticleSystem( "peejar_drips" );
+	PrecacheParticleSystem( "flashlight_thirdperson" );
+	PrecacheParticleSystem( "flashlight_firstperson_" );
+	PrecacheTeamParticles( "soldierbuff_%s_buffed", false, g_aTeamNamesShort );
 					 
 	BaseClass::Precache();
 }
@@ -10979,6 +10984,8 @@ public:
 	void InputSetHUDVisibility( inputdata_t &inputdata );
 	void InputHandleMapEvent( inputdata_t &inputdata );
 	void InputSetFogController( inputdata_t &inputdata );
+	void InputFreezeAllPlayerMovement( inputdata_t &inputdata );
+	void InputUnFreezeAllPlayerMovement( inputdata_t &inputdata );
 #ifdef PORTAL
 	void InputSuppressCrosshair( inputdata_t &inputdata );
 #endif // PORTAL2
@@ -11043,6 +11050,8 @@ BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_INPUTFUNC( FIELD_STRING,	"HandleMapEvent", InputHandleMapEvent ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SetFogController", InputSetFogController ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"BleedAllPlayer", InputBleedAllPlayer ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"FreezeAllPlayerMovement", InputFreezeAllPlayerMovement ),
+	DEFINE_INPUTFUNC( FIELD_VOID,	"UnFreezeAllPlayerMovement", InputUnFreezeAllPlayerMovement ),
 #ifdef PORTAL
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SuppressCrosshair", InputSuppressCrosshair ),
 #endif // PORTAL
@@ -11273,6 +11282,24 @@ void CLogicPlayerProxy::InputBleedAllPlayer( inputdata_t &inputdata )
 	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
 	variant_t sVariant;
 	pPlayer->AcceptInput( "BleedPlayer", this, this, sVariant, 0 );
+}
+
+void CLogicPlayerProxy::InputFreezeAllPlayerMovement( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	pPlayer->AddFlag( FL_FROZEN );
+}
+
+void CLogicPlayerProxy::InputUnFreezeAllPlayerMovement( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPlayer.Get() );
+	pPlayer->RemoveFlag( FL_FROZEN );
 }
 
 #ifdef PORTAL

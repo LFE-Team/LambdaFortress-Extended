@@ -60,7 +60,7 @@
 #include "materialsystem/imaterialvar.h"
 #include "c_tf_team.h"
 #include "tf_viewmodel.h"
-#include "iviewrender_beams.h"			// flashlight beam
+#include "c_tf_viewmodeladdon.h"
 #include "tf_inventory.h"
 #include "flashlighteffect.h"
 #if defined( CTFPlayer )
@@ -2131,11 +2131,9 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 
 void C_TFPlayer::ReleaseFlashlight( void )
 {
-	if( m_pFlashlightBeam )
+	if ( m_pFlashlightBeam )
 	{
-		m_pFlashlightBeam->flags = 0;
-		m_pFlashlightBeam->die = gpGlobals->curtime - 1;
-
+		ParticleProp()->StopEmission( m_pFlashlightBeam );
 		m_pFlashlightBeam = NULL;
 	}
 }
@@ -4941,100 +4939,52 @@ void C_TFPlayer::AddEntity( void )
 {
 	BaseClass::AddEntity();
 
-	QAngle vTempAngles = GetLocalAngles();
-	vTempAngles[PITCH] = m_angEyeAngles[PITCH];
-
-	SetLocalAngles( vTempAngles );
-		
-	//m_PlayerAnimState.Update();
-
-	// Zero out model pitch, blending takes care of all of it.
-	SetLocalAnglesDim( X_INDEX, 0 );
-
-	if( this != C_BasePlayer::GetLocalPlayer() )
+	if ( IsAlive() && IsEffectActive( EF_DIMLIGHT ) )
 	{
-		if ( IsAlive() && IsEffectActive( EF_DIMLIGHT ) )
+		if ( !InFirstPersonView() && this != C_TFPlayer::GetLocalTFPlayer() )
 		{
-			//int iAttachment = LookupAttachment( "anim_attachment_RH" );
-			// let's attach to the weapon's muzzle instead of our arm.
-
-
-			Vector vecOrigin;
-			QAngle eyeAngles = m_angEyeAngles;
-
-			CTFWeaponBase *pActiveWpn = GetActiveTFWeapon();
+			C_TFWeaponBase *pActiveWpn = GetActiveTFWeapon();
 			int iAttachment = pActiveWpn->LookupAttachment( "muzzle" );
 
 			if ( iAttachment < 0 )
-				return;
-			if (pActiveWpn)
 			{
-				pActiveWpn->GetAttachment( iAttachment, vecOrigin, eyeAngles );
+				iAttachment = pActiveWpn->LookupAttachment( "root" );
 			}
 
-			Vector vForward;
-			AngleVectors( eyeAngles, &vForward );
-				
-			trace_t tr;
-			UTIL_TraceLine( vecOrigin, vecOrigin + (vForward * 200), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
-
-			if( !m_pFlashlightBeam )
+			if ( !m_pFlashlightBeam )
 			{
-				BeamInfo_t beamInfo;
-				beamInfo.m_nType = TE_BEAMPOINTS;
-				beamInfo.m_vecStart = tr.startpos;
-				beamInfo.m_vecEnd = tr.endpos;
-				beamInfo.m_pszModelName = "sprites/glow01.vmt";
-				beamInfo.m_pszHaloName = "sprites/glow01.vmt";
-				beamInfo.m_flHaloScale = 3.0;
-				beamInfo.m_flWidth = 8.0f;
-				beamInfo.m_flEndWidth = 35.0f;
-				beamInfo.m_flFadeLength = 300.0f;
-				beamInfo.m_flAmplitude = 0;
-				beamInfo.m_flBrightness = 60.0;
-				beamInfo.m_flSpeed = 0.0f;
-				beamInfo.m_nStartFrame = 0.0;
-				beamInfo.m_flFrameRate = 0.0;
-				beamInfo.m_flRed = 255.0;
-				beamInfo.m_flGreen = 255.0;
-				beamInfo.m_flBlue = 255.0;
-				beamInfo.m_nSegments = 8;
-				beamInfo.m_bRenderable = true;
-				beamInfo.m_flLife = 0.5;
-				beamInfo.m_nFlags = FBEAM_FOREVER | FBEAM_ONLYNOISEONCE | FBEAM_NOTILE | FBEAM_HALOBEAM;
-				
-				m_pFlashlightBeam = beams->CreateBeamPoints( beamInfo );
-			}
-
-			if( m_pFlashlightBeam )
-			{
-				BeamInfo_t beamInfo;
-				beamInfo.m_vecStart = tr.startpos;
-				beamInfo.m_vecEnd = tr.endpos;
-				beamInfo.m_flRed = 255.0;
-				beamInfo.m_flGreen = 255.0;
-				beamInfo.m_flBlue = 255.0;
-
-				beams->UpdateBeamInfo( m_pFlashlightBeam, beamInfo );
-
-				dlight_t *el = effects->CL_AllocDlight( 0 );
-				el->origin = tr.endpos;
-				el->radius = 50; 
-				el->color.r = 200;
-				el->color.g = 200;
-				el->color.b = 200;
-				el->die = gpGlobals->curtime + 0.1;
+				m_pFlashlightBeam = ParticleProp()->Create( "flashlight_thirdperson", PATTACH_POINT_FOLLOW, iAttachment );
 			}
 		}
-		else if ( m_pFlashlightBeam )
+		else
 		{
-			ReleaseFlashlight();
+			C_TFWeaponBase *pActiveWpn = GetActiveTFWeapon();
+			C_ViewmodelAttachmentModel *pAttachment = pActiveWpn->GetViewmodelAddon();
+			if ( pAttachment )
+			{
+				int iAttachment = pAttachment->LookupAttachment( "muzzle" );
+
+				if ( iAttachment < 0 )
+				{
+					iAttachment = pAttachment->LookupAttachment( "root" );
+				}
+
+				if ( !m_pFlashlightBeam )
+				{
+					m_pFlashlightBeam = ParticleProp()->Create( "flashlight_firstperson_", PATTACH_POINT_FOLLOW, iAttachment );
+				}
+			}
 		}
+	}
+	else if ( m_pFlashlightBeam )
+	{
+		ReleaseFlashlight();
 	}
 }
 
 void C_TFPlayer::UpdateFlashlight()
 {
+	// Should we add a new tf cond for flashlight?
 	if ( IsEffectActive( EF_DIMLIGHT ) )
 	{
 		if (!m_pFlashlight)
@@ -5047,42 +4997,64 @@ void C_TFPlayer::UpdateFlashlight()
 
 			m_pFlashlight->TurnOn();
 		}
-		QAngle angLightDir;
-		Vector vecLightOrigin, vecForward, vecRight, vecUp;
 
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if (pWeapon)
+		Vector vecForward, vecRight, vecUp;
+		EyeVectors( &vecForward, &vecRight, &vecUp );
+
+		// mimics l4d flashlight offset.
+		//flashlight origin is the player pos if a weapon isn't detected.
+		Vector vec_origin = EyePosition();
+		QAngle ang_FlashlightAngle = EyeAngles();
+		int iDist = TF_FLASHLIGHT_DISTANCE;
+ 		if ( GetActiveTFWeapon() )
 		{
-			C_BaseViewModel  *pVM = GetViewModel();
-			if (pVM)
+			C_TFWeaponBase *pActiveWpn = GetActiveTFWeapon();
+			C_ViewmodelAttachmentModel *pAttachment = pActiveWpn->GetViewmodelAddon();
+			if ( pAttachment )
 			{
-				//If we have a flashlight attachment, use that.
-				if (pVM->LookupAttachment( "muzzle" ) != 0)
-				{
-					pVM->GetAttachment(pVM->LookupAttachment( "muzzle" ), vecLightOrigin, angLightDir);
-				}
+				int iAttachment = pAttachment->LookupAttachment( "muzzle" );
+
+				if ( iAttachment > 0 )
+					pAttachment->GetAttachment( iAttachment, vec_origin, ang_FlashlightAngle );
 				else
 				{
-					//Looks like we don't have a flashlight attachment. Let's settle with the muzzle.
-					pVM->GetAttachment(1, vecLightOrigin, angLightDir);
+					Vector aimFwd;
+					AngleVectors( ang_FlashlightAngle, &aimFwd );
+					vec_origin += aimFwd * ( VEC_HULL_MAX ).Length2D();
 				}
-				//pVM->FormatViewModelAttachment(vecLightOrigin, true);
+
+				iDist = 0;
 			}
-			AngleVectors(angLightDir, &vecForward, &vecRight, &vecUp);
-			EyeVectors(&vecForward, &vecRight, &vecUp);
-			vecLightOrigin = EyePosition();
+		}
+		else
+		{
+			//lookup our camera attachment
+			C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
+			int iAttachment = pPlayer->LookupAttachment( "camera" );
+			if (iAttachment > 0)
+				pPlayer->GetAttachment( iAttachment, vec_origin, ang_FlashlightAngle );
+			else
+			{
+				Vector aimFwd;
+				AngleVectors( ang_FlashlightAngle, &aimFwd );
+				vec_origin += aimFwd * ( VEC_HULL_MAX ).Length2D();
+			}
+
+			iDist = 0;
 		}
 
-		m_pFlashlight->UpdateLight(vecLightOrigin, vecForward, vecRight, vecUp, TF_FLASHLIGHT_DISTANCE);
+ 		AngleVectors( ang_FlashlightAngle, &vecForward, &vecRight, &vecUp );
+
+		m_pFlashlight->UpdateLight( vec_origin, vecForward, vecRight, vecUp, TF_FLASHLIGHT_DISTANCE );
 	}
-	else if (m_pFlashlight)
+	else if ( m_pFlashlight )
 	{
 		// Turned off the flashlight; delete it.
 		delete m_pFlashlight;
 		m_pFlashlight = NULL;
 	}
 
-	BaseClass::UpdateFlashlight();
+	//BaseClass::UpdateFlashlight();
 }
 
 //-----------------------------------------------------------------------------

@@ -2388,6 +2388,14 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 			}
 		}
 	}
+
+	int iBuffType = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pOwner, iBuffType, set_buff_type );
+	if ( iBuffType != 0 )
+	{
+		float flDamage = info.GetDamage();
+		m_flEffectBarRegenTime = gpGlobals->curtime + flDamage;
+	}
 }
 
 //-----------------------------------------------------------------------------

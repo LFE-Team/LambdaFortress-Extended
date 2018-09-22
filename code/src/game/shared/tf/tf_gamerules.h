@@ -104,6 +104,8 @@ public:
 	void	InputPlayVORed( inputdata_t &inputdata );
 	void	InputPlayVOBlue( inputdata_t &inputdata );
 
+	void	InputSetDifficulty( inputdata_t &inputdata );
+
 	virtual void Activate();
 
 	int		m_iHud_Type;
@@ -151,6 +153,7 @@ public:
 
 	static int		CalcPlayerScore( RoundStats_t *pRoundStats );
 
+	virtual bool	IsHolidayActive( EHoliday holiday );
 	bool			IsBirthday( void );
 	bool			IsAprilFool( void );
 	bool			IsHalloween( void );

@@ -1237,46 +1237,9 @@ void C_BasePlayer::UpdateFlashlight()
 
 		Vector vecForward, vecRight, vecUp;
 		EyeVectors( &vecForward, &vecRight, &vecUp );
-#ifdef TF_CLASSIC_CLIENT
-		//DM - mimics l4d flashlight offset.
-		//flashlight origin is the player pos if a weapon isn't detected.
-		Vector vec_origin = EyePosition();
-		QAngle ang_FlashlightAngle = EyeAngles();
-		int dist = FLASHLIGHT_DISTANCE;
- 		if (GetActiveWeapon())
-		{
-			C_BaseCombatWeapon *pWeap = GetActiveWeapon();
-			int iAttachment = pWeap->LookupAttachment("muzzle");
-			if (iAttachment > 0)
-				pWeap->GetAttachment(iAttachment, vec_origin, ang_FlashlightAngle);
-			else
-			{
-				Vector aimFwd;
-				AngleVectors(ang_FlashlightAngle, &aimFwd);
-				vec_origin += aimFwd * (VEC_HULL_MAX).Length2D();
-			}
-			dist = 0;
-		}
-		else
-		{
-			//lookup our camera attachment
-			C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-			int iAttachment = player->LookupAttachment("camera");
-			if (iAttachment > 0)
-				player->GetAttachment(iAttachment, vec_origin, ang_FlashlightAngle);
-			else
-			{
-				Vector aimFwd;
-				AngleVectors(ang_FlashlightAngle, &aimFwd);
-				vec_origin += aimFwd * (VEC_HULL_MAX).Length2D();
-			}
-			dist = 0;
-		}
 
- 		AngleVectors(ang_FlashlightAngle, &vecForward, &vecRight, &vecUp);
-#endif
 		// Update the light with the new position and direction.		
-		m_pFlashlight->UpdateLight( vec_origin, vecForward, vecRight, vecUp, FLASHLIGHT_DISTANCE );
+		m_pFlashlight->UpdateLight( EyePosition(), vecForward, vecRight, vecUp, FLASHLIGHT_DISTANCE );
 	}
 	else if (m_pFlashlight)
 	{

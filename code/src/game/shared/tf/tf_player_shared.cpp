@@ -500,6 +500,31 @@ bool CTFPlayerShared::IsJared( void )
 	return false;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFPlayerShared::IsSpeedBoosted( void )
+{
+	if ( InCond( TF_COND_SPEED_BOOST ) ||
+		InCond( TF_COND_HALLOWEEN_SPEED_BOOST ) )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CTFPlayerShared::IsBuffed( void )
+{
+	if ( InCond( TF_COND_OFFENSEBUFF ) ||
+		InCond( TF_COND_DEFENSEBUFF ) || 
+		InCond( TF_COND_REGENONDAMAGEBUFF ) )
+		return true;
+
+	return false;
+}
+
 void CTFPlayerShared::DebugPrintConditions( void )
 {
 #ifndef CLIENT_DLL
@@ -753,12 +778,19 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 		break;
 
 	case TF_COND_URINE:
+		OnAddUrine();
+		break;
+
 	case TF_COND_MAD_MILK:
+		OnAddMilk();
+		break;
+
 	case TF_COND_GAS:
-		OnAddJar();
+		OnAddGas();
 		break;
 
 	case TF_COND_SPEED_BOOST:
+	case TF_COND_HALLOWEEN_SPEED_BOOST:
 		OnAddSpeedBoost();
 		break;
 
@@ -779,6 +811,12 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 	case TF_COND_RUNE_PLAGUE:
 	case TF_COND_RUNE_SUPERNOVA:
 		OnAddRune();
+		break;
+
+	case TF_COND_OFFENSEBUFF:
+	case TF_COND_DEFENSEBUFF:
+	case TF_COND_REGENONDAMAGEBUFF:
+		OnAddBuff();
 		break;
 
 	default:
@@ -887,12 +925,19 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 		break;
 
 	case TF_COND_URINE:
+		OnRemoveUrine();
+		break;
+
 	case TF_COND_MAD_MILK:
+		OnRemoveGas();
+		break;
+
 	case TF_COND_GAS:
-		OnRemoveJar();
+		OnRemoveGas();
 		break;
 
 	case TF_COND_SPEED_BOOST:
+	case TF_COND_HALLOWEEN_SPEED_BOOST:
 		OnRemoveSpeedBoost();
 		break;
 
@@ -913,6 +958,12 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 	case TF_COND_RUNE_PLAGUE:
 	case TF_COND_RUNE_SUPERNOVA:
 		OnRemoveRune();
+		break;
+
+	case TF_COND_OFFENSEBUFF:
+	case TF_COND_DEFENSEBUFF:
+	case TF_COND_REGENONDAMAGEBUFF:
+		OnRemoveBuff();
 		break;
 
 	default:
@@ -1703,58 +1754,6 @@ void CTFPlayerShared::OnRemoveHalloweenTiny( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddRagemode( void )
-{
-#ifdef GAME_DLL
-	/*
-	CTFWeaponBase *pWeapon = (CTFWeaponBase *)m_pOuter->GiveNamedItem( "tf_weapon_hammerfists" );
-	if ( pWeapon )
-	{
-		pWeapon->DefaultTouch( m_pOuter );
-		m_pOuter->Weapon_Switch( pWeapon );
-	}
-	*/
-	m_pOuter->TeamFortress_SetSpeed();
-#else
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		IMaterial *pMaterial = materials->FindMaterial( "effects/invuln_overlay_red", TEXTURE_GROUP_CLIENT_EFFECTS, false );
-		if ( !IsErrorMaterial( pMaterial ) )
-		{
-			view->SetScreenOverlayMaterial( pMaterial );
-		}
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRagemode( void )
-{
-#ifdef GAME_DLL
-	/*
-	CTFWeaponBase *pWeapon = (CTFWeaponBase *)m_pOuter->Weapon_OwnsThisID( TF_WEAPON_HAMMERFISTS );
-
-	if ( pWeapon )
-	{
-		m_pOuter->Weapon_Detach( pWeapon );
-		UTIL_Remove( pWeapon );
-		m_pOuter->SwitchToNextBestWeapon( NULL );
-	}
-	*/
-	m_pOuter->TeamFortress_SetSpeed();
-#else
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		view->SetScreenOverlayMaterial( NULL );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddTeamGlows( void )
 {
 // need to be client.
@@ -1810,6 +1809,8 @@ void CTFPlayerShared::OnRemoveTeamGlows( void )
 void CTFPlayerShared::OnAddSpeedBoost( void )
 {
 	m_pOuter->TeamFortress_SetSpeed();
+
+	UpdateSpeedBoostEffects();
 }
 
 //-----------------------------------------------------------------------------
@@ -1823,33 +1824,28 @@ void CTFPlayerShared::OnRemoveSpeedBoost( void )
 #endif
 
 	m_pOuter->TeamFortress_SetSpeed();
+
+	UpdateSpeedBoostEffects();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddJar( void )
+void CTFPlayerShared::OnAddUrine( void )
 {
 #ifdef GAME_DLL
 	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
 #else
-	if ( InCond( TF_COND_URINE ) )
-	{
-		m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
+	m_pOuter->ParticleProp()->Create( "peejar_drips", PATTACH_ABSORIGIN_FOLLOW ); 
 
-		// set the piss screen overlay
-		if ( m_pOuter->IsLocalPlayer() )
-		{
-			IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
-			if ( !IsErrorMaterial( pMaterial ) )
-			{
-				view->SetScreenOverlayMaterial( pMaterial );
-			}
-		}
-	}
-	else if ( InCond( TF_COND_MAD_MILK ) )
+	// set the piss screen overlay
+	if ( m_pOuter->IsLocalPlayer() )
 	{
-		m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
+		IMaterial *pMaterial = materials->FindMaterial( "effects/jarate_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
+		if ( !IsErrorMaterial( pMaterial ) )
+		{
+			view->SetScreenOverlayMaterial( pMaterial );
+		}
 	}
 #endif
 }
@@ -1857,7 +1853,42 @@ void CTFPlayerShared::OnAddJar( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveJar( void )
+void CTFPlayerShared::OnAddMilk( void )
+{
+#ifdef GAME_DLL
+	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
+#else
+	m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddGas( void )
+{
+#ifdef GAME_DLL
+	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
+#else
+	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", m_pOuter->GetTeamNumber(), true );
+	m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW ); 
+
+	// set the gas screen overlay
+	if ( m_pOuter->IsLocalPlayer() )
+	{
+		IMaterial *pMaterial = materials->FindMaterial( "effects/gas_overlay", TEXTURE_GROUP_CLIENT_EFFECTS, false );
+		if ( !IsErrorMaterial( pMaterial ) )
+		{
+			view->SetScreenOverlayMaterial( pMaterial );
+		}
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveUrine( void )
 {
 #ifdef GAME_DLL
 	if( m_nPlayerState != TF_STATE_DYING )
@@ -1865,19 +1896,48 @@ void CTFPlayerShared::OnRemoveJar( void )
 		m_hUrineAttacker = NULL;
 	}
 #else
-	//if ( InCond( TF_COND_URINE ) )
-	//{
-		m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips" );
+	m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips" );
 
-		if ( m_pOuter->IsLocalPlayer() )
-		{
-			view->SetScreenOverlayMaterial( NULL );
-		}
-	//}
-	//else if ( InCond( TF_COND_MAD_MILK ) )
-	//{
-		m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
-	//}
+	if ( m_pOuter->IsLocalPlayer() )
+	{
+		view->SetScreenOverlayMaterial( NULL );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveMilk( void )
+{
+#ifdef GAME_DLL
+	if( m_nPlayerState != TF_STATE_DYING )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
+	m_pOuter->ParticleProp()->StopParticlesNamed( "peejar_drips_milk" );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveGas( void )
+{
+#ifdef GAME_DLL
+	if( m_nPlayerState != TF_STATE_DYING )
+	{
+		m_hUrineAttacker = NULL;
+	}
+#else
+	m_pOuter->ParticleProp()->StopParticlesNamed( "gas_can_drips_red" );
+	m_pOuter->ParticleProp()->StopParticlesNamed( "gas_can_drips_blue" );
+
+	if ( m_pOuter->IsLocalPlayer() )
+	{
+		view->SetScreenOverlayMaterial( NULL );
+	}
 #endif
 }
 
@@ -1887,6 +1947,9 @@ void CTFPlayerShared::OnRemoveJar( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddRune( void )
 {
+#ifdef CLIENT_DLL
+#else
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1894,7 +1957,39 @@ void CTFPlayerShared::OnAddRune( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnRemoveRune( void )
 {
+#ifdef CLIENT_DLL
+#else
+#endif
+}
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddBuff( void )
+{
+#ifdef CLIENT_DLL
+	// Start the buff effect
+	if ( !m_pBuffAura )
+	{
+		const char *pszEffectName = ConstructTeamParticle( "soldierbuff_%s_buffed", m_pOuter->GetTeamNumber(), true );
+
+		m_pBuffAura = m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveBuff( void )
+{
+#ifdef CLIENT_DLL
+	if ( m_pBuffAura )
+	{
+		m_pOuter->ParticleProp()->StopEmission( m_pBuffAura );
+		m_pBuffAura = NULL;
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2021,9 +2116,9 @@ void CTFPlayerShared::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NU
 
 	if ( !InCond( TF_COND_BLEEDING ) )
 	{
-		// Start burning
+		// Start bleeding
 		AddCond( TF_COND_BLEEDING );
-		m_flBleedTime = gpGlobals->curtime;	//asap
+		m_flBleedTime = gpGlobals->curtime;
 	}
 
 	float flBleedTime = TF_BLEEDING_TIME;
@@ -2031,10 +2126,8 @@ void CTFPlayerShared::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NU
 	if ( flBleedDuration != -1.0f )
 		flBleedTime = flBleedDuration;
 
-	if ( pWeapon && !pWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_FIREBALL ) )
-	{
-		m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
-	}
+
+	m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
 
 	m_hBleedAttacker = pAttacker;
 	m_hBleedWeapon = pWeapon;
@@ -2105,25 +2198,11 @@ void CTFPlayerShared::AddPhaseEffects(void)
 void CTFPlayerShared::UpdatePhaseEffects(void)
 {
 	if ( !InCond( TF_COND_PHASE ) )
-	{
 		return;
-	}
 
 #ifdef CLIENT_DLL
 	if(  m_pOuter->GetAbsVelocity() != vec3_origin )
 	{
-		/*
-		// We're on the move
-		if( m_pWarp )
-		{
-			m_pOuter->ParticleProp()->StopEmission( m_pWarp );
-			m_pWarp = NULL;
-		}
-		*/
-	}
-	else
-	{
-		// We're not moving
 		if ( !m_pWarp )
 		{
 			m_pWarp = m_pOuter->ParticleProp()->Create( "warp_version", PATTACH_ABSORIGIN_FOLLOW );
@@ -2141,6 +2220,35 @@ void CTFPlayerShared::UpdatePhaseEffects(void)
 		for( int i = 0; i < m_pPhaseTrails.Count(); i++ )
 		{
 			m_pPhaseTrails[i]->TurnOn();
+		}
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Update speedboost effects
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::UpdateSpeedBoostEffects(void)
+{
+	if ( !IsSpeedBoosted() )
+		return;
+
+#ifdef CLIENT_DLL
+	if(  m_pOuter->GetAbsVelocity() != vec3_origin )
+	{
+		// We're on the move
+		if ( !m_pSpeedTrails )
+		{
+			m_pSpeedTrails = m_pOuter->ParticleProp()->Create( "speed_boost_trail", PATTACH_ABSORIGIN_FOLLOW );
+		}
+	}
+	else
+	{
+		// We're not moving
+		if( m_pSpeedTrails )
+		{
+			m_pOuter->ParticleProp()->StopEmission( m_pSpeedTrails );
+			m_pSpeedTrails = NULL;
 		}
 	}
 #endif

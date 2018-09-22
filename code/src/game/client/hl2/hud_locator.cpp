@@ -130,8 +130,8 @@ bool CHudLocator::ShouldDraw( void )
 
 	if( pPlayer->m_HL2Local.m_vecLocatorOrigin == vec3_invalid )
 		return false;
-	
-	return true;
+
+	return false;
 }
 
 //-----------------------------------------------------------------------------
