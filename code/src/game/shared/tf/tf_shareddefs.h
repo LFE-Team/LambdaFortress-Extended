@@ -28,6 +28,7 @@ enum
 	TF_TEAM_BLUE,
 	TF_TEAM_GREEN,
 	TF_TEAM_YELLOW,
+	//TF_TEAM_HALLOWEEN_BOSS,
 	TF_TEAM_COUNT
 };
 
@@ -154,7 +155,7 @@ extern const char *g_aPlayerClassEmblemsDead[];
 //-----------------------------------------------------------------------------
 // For entity_capture_flags to use when placed in the world
 //-----------------------------------------------------------------------------
-enum
+enum ETFFlagType
 {
 	TF_FLAGTYPE_CTF = 0,
 	TF_FLAGTYPE_ATTACK_DEFEND,
@@ -508,7 +509,7 @@ extern const char *g_szProjectileNames[];
 #define PERMANENT_CONDITION		-1
 
 // Most of these conds aren't actually implemented but putting them here for compatibility.
-enum ETF2Conditions
+enum ETFCond
 {
 	TF_COND_AIMING = 0,		// Sniper aiming, Heavy minigun.
 	TF_COND_ZOOMED,
@@ -1243,33 +1244,45 @@ enum
 };
 
 //--------------------------------------------------------------------------
-// Vintage Stun
+// Stun
 //--------------------------------------------------------------------------
 enum
 {
-	STUN_BIG,
-	STUN_CONC,
-	STUN_YIKES,
-	STUN_NO_EFFECT,
+	TF_STUNFLAG_SLOWDOWN			= (1<<0), // activates slowdown modifier
+	TF_STUNFLAG_BONKSTUCK			= (1<<1), // bonk sound, stuck
+	TF_STUNFLAG_LIMITMOVEMENT		= (1<<2), // disable forward/backward movement
+	TF_STUNFLAG_CHEERSOUND			= (1<<3), // cheering sound
+	TF_STUNFLAG_NOSOUNDOREFFECT		= (1<<4), // no sound or particle
+	TF_STUNFLAG_THIRDPERSON			= (1<<5), // panic animation
+	TF_STUNFLAG_GHOSTEFFECT			= (1<<6), // ghost particles
+	
+	TF_STUNFLAGS_LOSERSTATE		= TF_STUNFLAG_SLOWDOWN | TF_STUNFLAG_NOSOUNDOREFFECT | TF_STUNFLAG_THIRDPERSON,
+	TF_STUNFLAGS_GHOSTSCARE		= TF_STUNFLAG_GHOSTEFFECT | TF_STUNFLAG_THIRDPERSON,
+	TF_STUNFLAGS_SMALLBONK		= TF_STUNFLAG_THIRDPERSON | TF_STUNFLAG_SLOWDOWN,
+	TF_STUNFLAGS_NORMALBONK		= TF_STUNFLAG_BONKSTUCK,
+	TF_STUNFLAGS_BIGBONK		= TF_STUNFLAG_CHEERSOUND | TF_STUNFLAG_BONKSTUCK,
 
-	STUN_COUNT
-}; // Live tf2 uses flags for this I think
+	TF_STUNFLAGS_COUNT
+};
 
  //--------------------------------------------------------------------------
 // Holiday
 //--------------------------------------------------------------------------
 enum EHoliday
 {
-	TF_HOLIDAY_BIRTHDAY = 1,
-	TF_HOLIDAY_HALLOWEEN,
-	TF_HOLIDAY_CHRISTMAS,
-	TF_HOLIDAY_COMMUNITYUPDATE,
-	TF_HOLIDAY_ENDOFTHELINE,
-	TF_HOLIDAY_VALENTINESDAY,
-	TF_HOLIDAY_MEETTHEPYRO,
-	TF_HOLIDAY_FULLMOON,
-	TF_HOLIDAY_APRIL_FOOLS,
-	LFE_HOLIDAY_BIRTHDAY
+	kHoliday_None = 1,
+	kHoliday_TF2Birthday,
+	kHoliday_Halloween,
+	kHoliday_Christmas,
+	kHoliday_CommunityUpdate,
+	kHoliday_EOTL,
+	kHoliday_ValentinesDay,
+	kHoliday_MeetThePyro,
+	kHoliday_FullMoon,
+	kHoliday_HalloweenOrFullMoon,
+	kHoliday_HalloweenOrFullMoonOrValentines,
+	kHoliday_AprilFools,
+	kHoliday_LFBirthday
 };
 
 #define	MAX_CABLE_CONNECTIONS 4

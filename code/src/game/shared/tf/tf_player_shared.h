@@ -361,6 +361,13 @@ private:
 	// Vars that are networked.
 	CNetworkVar( int, m_nPlayerState );			// Player state.
 	CNetworkVar( int, m_nPlayerCond );			// Player condition flags.
+	/*CNetworkVar( float, m_flMovementStunTime );
+	CNetworkVar( int, m_iMovementStunAmount );
+	CNetworkVar( int, m_iMovementStunParity );*/
+	CNetworkHandle( CTFPlayer, m_hStunner );
+	CNetworkVar( float, m_flStunExpireTime );
+	int m_iStunPhase;
+	//CNetworkVar( int, m_iStunFlags );
 	// Ugh...
 	CNetworkVar( int, m_nPlayerCondEx );
 	CNetworkVar( int, m_nPlayerCondEx2 );
@@ -450,10 +457,6 @@ private:
 
 	CNetworkArray( bool, m_bPlayerDominated, MAX_PLAYERS+1 );		// array of state per other player whether player is dominating other players
 	CNetworkArray( bool, m_bPlayerDominatingMe, MAX_PLAYERS+1 );	// array of state per other player whether other players are dominating this player
-
-	CNetworkHandle( CTFPlayer, m_hStunner );
-	CNetworkVar( float, m_flStunExpireTime );
-	int m_iStunPhase;
 	
 	CNetworkHandle( CBaseObject, m_hCarriedObject );
 	CNetworkVar( bool, m_bCarryingObject );

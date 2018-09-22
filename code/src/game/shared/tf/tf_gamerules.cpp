@@ -5302,8 +5302,11 @@ void CTFGameRules::CreateStandardEntities()
 
 	CBaseEntity::Create("vote_controller", vec3_origin, vec3_angle);
 
-	CKickIssue* pIssue = new CKickIssue("Kick");
-	pIssue->Init();
+	CKickIssue* pKickIssue = new CKickIssue("Kick");
+	pKickIssue->Init();
+
+	CRestartGameIssue* pRestartIssue = new CRestartGameIssue("Restartgame");
+	pRestartIssue->Init();
 }
 
 //-----------------------------------------------------------------------------
@@ -6877,15 +6880,16 @@ bool CTFGameRules::TeamMayCapturePoint( int iTeam, int iPointIndex )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason /* = NULL */, int iMaxReasonLength /* = 0 */ )
+bool CTFGameRules::PlayerMayCapturePoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason /* = NULL */, int iMaxReasonLength /* = 0 */ )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-
 	if ( !pTFPlayer )
-	{
 		return false;
-	}
-
+#ifdef GAME_DLL
+	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
+	if ( !pNPC )
+		return false;
+#endif
 	// Disguised and invisible spies cannot capture points
 	if ( pTFPlayer->m_Shared.IsStealthed() )
 	{
@@ -6896,7 +6900,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		return false;
 	}
 
-	if ( pTFPlayer->m_Shared.InCond( TF_COND_INVULNERABLE ) || pTFPlayer->m_Shared.InCond( TF_COND_PHASE ) )
+	if ( pTFPlayer->m_Shared.IsInvulnerable() || pTFPlayer->m_Shared.InCond( TF_COND_PHASE ) )
 	{
 		if ( pszReason )
 		{
@@ -6913,19 +6917,32 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		}
 		return false;
 	}
-
+#ifdef GAME_DLL
+	if ( pNPC->IsInvulnerable() || pNPC->InCond( TF_COND_PHASE ) )
+	{
+		if ( pszReason )
+		{
+			Q_snprintf( pszReason, iMaxReasonLength, "#Cant_cap_invuln" );
+		}
+		return false;
+	}
+#endif
 	return true;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason, int iMaxReasonLength )
+bool CTFGameRules::PlayerMayBlockPoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason, int iMaxReasonLength )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( !pTFPlayer )
 		return false;
-
+#ifdef GAME_DLL
+	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
+	if ( !pNPC )
+		return false;
+#endif
 	// Invuln players can block points
 	if ( pTFPlayer->m_Shared.IsInvulnerable() )
 	{
@@ -6935,7 +6952,17 @@ bool CTFGameRules::PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, c
 		}
 		return true;
 	}
-
+#ifdef GAME_DLL
+	// Invuln npcs can block points
+	if ( pNPC->IsInvulnerable() )
+	{
+		if ( pszReason )
+		{
+			Q_snprintf( pszReason, iMaxReasonLength, "#Cant_cap_invuln" );
+		}
+		return true;
+	}
+#endif
 	return false;
 }
 
@@ -6967,19 +6994,19 @@ bool CTFGameRules::IsHolidayActive( EHoliday holiday )
 	bool bActive = false;
  	switch ( holiday )
 	{
-		case TF_HOLIDAY_BIRTHDAY:
+		case kHoliday_TF2Birthday:
 			bActive = IsBirthday();
 			break;
-		case TF_HOLIDAY_HALLOWEEN:
+		case kHoliday_Halloween:
 			bActive = IsHalloween();
 			break;
-		case TF_HOLIDAY_CHRISTMAS:
+		case kHoliday_Christmas:
 			bActive = IsSmissmas();
 			break;
-		case TF_HOLIDAY_APRIL_FOOLS:
+		case kHoliday_AprilFools:
 			bActive = IsAprilFool();
 			break;
-		case LFE_HOLIDAY_BIRTHDAY:
+		case kHoliday_LFBirthday:
 			bActive = IsLFBirthday();
 			break;
 		default:
@@ -7190,7 +7217,8 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return true;
 
 	// Rockets need to collide with npcs when they hit
-	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) && 
+	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) || ( collisionGroup0 == HL2COLLISION_GROUP_STRIDER ) ||
+		 ( collisionGroup0 == HL2COLLISION_GROUP_STRIDER ) || ( collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return true;
 
@@ -7384,7 +7412,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 //-----------------------------------------------------------------------------
 // Purpose: Return the value of this player towards capturing a point
 //-----------------------------------------------------------------------------
-int	CTFGameRules::GetCaptureValueForPlayer( CBasePlayer *pPlayer )
+int	CTFGameRules::GetCaptureValueForPlayer( CBaseCombatCharacter *pPlayer )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( pTFPlayer->IsPlayerClass( TF_CLASS_SCOUT ) )

@@ -2356,6 +2356,10 @@ public:
 	void InputSetPlaybackRate( inputdata_t &inputdata );
 	void InputAddCond( inputdata_t &inputdata );
 	void InputRemoveCond( inputdata_t &inputdata );
+
+	// How long since this npc last interacted with something the game considers an objective/target/goal
+	float				GetTimeSinceLastObjective( void ) const { return ( m_flLastObjectiveTime == -1.f ) ? 999.f : gpGlobals->curtime - m_flLastObjectiveTime; }
+	void				SetLastObjectiveTime( float flTime ) { m_flLastObjectiveTime = flTime; }
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;
@@ -2396,6 +2400,8 @@ private:
 	CNetworkVar( int, m_nNumHealers );
 
 	DamagerHistory_t m_DamagerHistory[MAX_DAMAGER_HISTORY];	// history of who has damaged this NPC
+
+	float		m_flLastObjectiveTime;				// Last curtime player touched/killed something the gamemode considers an objective
 #endif
 public:
 	CUtlFixedLinkedList<LagRecordNPC>* GetLagTrack() { return m_LagTrack; }

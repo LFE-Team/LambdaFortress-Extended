@@ -46,10 +46,19 @@ public:
 	DECLARE_CLASS( CTeamplayRules, CMultiplayRules );
 
 	// Return the value of this player towards capturing a point
+	#if defined ( TF_CLASSIC ) ||  defined ( TF_CLASSIC_CLIENT )
+	virtual int	 GetCaptureValueForPlayer( CBaseCombatCharacter *pPlayer ) { return 1; }
+	#else
 	virtual int	 GetCaptureValueForPlayer( CBasePlayer *pPlayer ) { return 1; }
+	#endif
 	virtual bool TeamMayCapturePoint( int iTeam, int iPointIndex ) { return true; }
+	#if defined ( TF_CLASSIC ) ||  defined ( TF_CLASSIC_CLIENT )
+	virtual bool PlayerMayCapturePoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return true; }
+	virtual bool PlayerMayBlockPoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return false; }
+	#else
 	virtual bool PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return true; }
 	virtual bool PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return false; }
+	#endif
 
 	// Return false if players aren't allowed to cap points at this time (i.e. in WaitingForPlayers)
 	virtual bool PointsMayBeCaptured( void ) { return true; }

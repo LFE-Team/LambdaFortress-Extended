@@ -6,25 +6,29 @@
 
 #include "vote_controller.h"
 
+//-----------------------------------------------------------------------------
+// Purpose: Kick Issue
+//-----------------------------------------------------------------------------
 class CKickIssue : public CBaseIssue
 {
 public:
 	CKickIssue(const char *typeString);
 	~CKickIssue();
-	const char *GetDisplayString();
-	const char * GetVotePassedString();
-	void ListIssueDetails(CBasePlayer *a2);
-	bool IsEnabled();
-	const char * GetDetailsString();
-	void OnVoteStarted();
-	void Init();
-	void NotifyGC(bool a2);
-	int PrintLogData();
-	void OnVoteFailed(int a2);
-	bool CreateVoteDataFromDetails(const char *s);
-	int CanCallVote(int a1, char *s, int a2, int a3); // idb
-	void ExecuteCommand();
-	bool IsTeamRestrictedVote();
+	virtual const char *GetDisplayString();
+	virtual const char *GetVotePassedString();
+	virtual void	ListIssueDetails( CBasePlayer *pForWhom );
+	virtual bool	IsEnabled();
+	virtual const char *GetDetailsString();
+	virtual void	OnVoteStarted();
+	void			Init();
+	void			NotifyGC( bool a2 );
+	int				PrintLogData();
+	virtual void	OnVoteFailed( int iEntityHoldingVote );
+	bool			CreateVoteDataFromDetails(const char *s);
+	//virtual bool	CanCallVote( int nEntIndex, const char *pszDetails, vote_create_failed_t &nFailCode, int &nTime );
+	virtual void	ExecuteCommand();
+	virtual bool	IsTeamRestrictedVote() { return true; }
+	virtual void	SetIssueCooldownDuration( float flDuration );
 
 private:
 	char		 m_pzPlayerName[64];
@@ -32,5 +36,33 @@ private:
 	int			 m_iPlayerID;
 };
 
+//-----------------------------------------------------------------------------
+// Purpose: Restart Game Issue
+//-----------------------------------------------------------------------------
+class CRestartGameIssue : public CBaseIssue
+{
+public:
+	CRestartGameIssue( const char *typeString );
+	~CRestartGameIssue();
+	virtual const char *GetDisplayString();
+	virtual const char *GetVotePassedString();
+	virtual void	ListIssueDetails( CBasePlayer *pForWhom );
+	virtual bool	IsEnabled();
+	virtual const char *GetDetailsString();
+	virtual void	OnVoteStarted();
+	void			Init();
+	void			NotifyGC( bool a2 );
+	int				PrintLogData();
+	virtual void	OnVoteFailed( int iEntityHoldingVote );
+	bool			CreateVoteDataFromDetails( const char *s );
+	//virtual bool	CanCallVote( int nEntIndex, const char *pszDetails, vote_create_failed_t &nFailCode, int &nTime );
+	virtual void	ExecuteCommand();
+	virtual bool	IsTeamRestrictedVote() { return false; }
+	virtual void	SetIssueCooldownDuration( float flDuration );
 
-#endif // TF_INVENTORY_H
+private:
+	char		 m_pzPlayerName[64];
+	int			 m_iPlayerID;
+};
+
+#endif // TF_VOTEISSUES_H

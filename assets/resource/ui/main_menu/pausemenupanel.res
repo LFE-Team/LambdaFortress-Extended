@@ -731,9 +731,9 @@
 			"tooltip" 			"#MMenu_MutePlayers"
 			"textAlignment"		"west"
 			"font"				"HudFontSmallBold"
-			"border_default"	"AdvRoundedButtonDefault"
-			"border_armed"		"AdvRoundedButtonArmed"
-			"border_depressed"	"AdvRoundedButtonDepressed"
+			"border_default"	"AdvLeftButtonDefault"
+			"border_armed"		"AdvLeftButtonArmed"
+			"border_depressed"	"AdvLeftButtonDepressed"
 		}
 
 		"SubImage"
@@ -752,8 +752,8 @@
 		"zpos"					"5"
 		"wide"					"30"
 		"tall"					"30"
-		"visible"				"0"
-		"enabled"				"0"
+		"visible"				"1"
+		"enabled"				"1"
 		"bordervisible"			"1"
 		"command"				"callvote"
 

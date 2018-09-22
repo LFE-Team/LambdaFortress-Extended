@@ -148,8 +148,8 @@ public:
 
 	int				GetFarthestOwnedControlPoint( int iTeam, bool bWithSpawnpoints );
 	virtual bool	TeamMayCapturePoint( int iTeam, int iPointIndex );
-	virtual bool	PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
-	virtual bool	PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
+	virtual bool	PlayerMayCapturePoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
+	virtual bool	PlayerMayBlockPoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
 
 	static int		CalcPlayerScore( RoundStats_t *pRoundStats );
 
@@ -298,7 +298,7 @@ protected:
 
 public:
 	// Return the value of this player towards capturing a point
-	virtual int		GetCaptureValueForPlayer( CBasePlayer *pPlayer );
+	virtual int		GetCaptureValueForPlayer( CBaseCombatCharacter *pPlayer );
 
 	// Collision and Damage rules.
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
