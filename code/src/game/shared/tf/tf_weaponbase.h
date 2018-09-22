@@ -276,6 +276,8 @@ class CTFWeaponBase : public CBaseCombatWeapon
 
 	void				OnControlStunned( void );
 
+	virtual bool CanInspect( void ) { return false; }
+
 	void		SetParticle( const char* name );
 // Server specific.
 #if !defined( CLIENT_DLL )

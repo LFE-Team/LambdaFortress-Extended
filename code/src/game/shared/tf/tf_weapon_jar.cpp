@@ -457,15 +457,6 @@ float CTFJar::GetProjectileGravity( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFJar::CalcIsAttackCriticalHelper( void )
-{
-	// No random critical hits.
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 float CTFJar::GetProjectileSpeed( void )
 {
 	float flVelocity = TF_JAR_VEL;

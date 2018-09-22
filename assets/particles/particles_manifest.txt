@@ -18,6 +18,7 @@ particles_manifest
 	"file"		"!particles/teleported_fx.pcf"
 	"file"		"!particles/cig_smoke.pcf"
 	"file"		"!particles/class_fx.pcf"
+	"file"		"!particles/soldierbuff.pcf"
 	"file"		"!particles/crit.pcf"
 	"file"		"!particles/medicgun_beam.pcf"
 	"file"		"!particles/bigboom.pcf"
@@ -43,6 +44,7 @@ particles_manifest
 	"file"		"!particles/rain_fx.pcf"
 	"file"		"!particles/rain_storm_fx.pcf"
 	"file"		"!particles/physcannon.pcf"
+	"file"		"!particles/survivor_fx.pcf"
 //hl2
 	"file"		"!particles/blood_impact_hl2.pcf"
 	"file"		"particles/vehicle.pcf"

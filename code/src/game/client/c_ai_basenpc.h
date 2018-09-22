@@ -91,27 +91,56 @@ public:
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
 	bool	IsJared( void );
+	bool	IsSpeedBoosted( void );
+	bool	IsBuffed( void );
 
 	virtual bool IsOnFire() { return InCond( TF_COND_BURNING ); }
-	void	OnAddBurning( void );
-	void	OnRemoveBurning( void );
 
-	void	OnAddInvulnerable( void );
-	void	OnRemoveInvulnerable( void );
-	void	OnAddSlowed( void );
-	void	OnRemoveSlowed( void );
-	void	OnAddCritboosted( void );
-	void	OnRemoveCritboosted( void );
-	void	OnAddJar( void );
-	void	OnRemoveJar( void );
-	void	OnAddBleeding( void );
-	void	OnRemoveBleeding( void );
+	void OnAddInvulnerable( void );
+	void OnAddBurning( void );
+	//void OnAddSlowed( void );
+	void OnAddCritboosted( void );
+	void OnAddStunned( void );
+	//void OnAddHalloweenGiant( void );
+	//void OnAddHalloweenTiny( void );
+	void OnAddPhase( void );
+	void OnAddSpeedBoost( void );
+	void OnAddUrine( void );
+	void OnAddMilk( void );
+	void OnAddGas( void );
+	void OnAddBleeding( void );
+	void OnAddBuff( void );
+	//void OnAddRune( void );
+
+	void OnRemoveBurning( void );
+	void OnRemoveInvulnerable( void );
+	//void OnRemoveSlowed( void );
+	void OnRemoveCritboosted( void );
+	void OnRemoveStunned( void );
+	//void OnRemoveHalloweenGiant( void );
+	//void OnRemoveHalloweenTiny( void );
+	void OnRemovePhase( void );
+	void OnRemoveSpeedBoost( void );
+	void OnRemoveUrine( void );
+	void OnRemoveMilk( void );
+	void OnRemoveGas( void );
+	void OnRemoveBleeding( void );
+	void OnRemoveBuff( void );
+	//void OnRemoveRune( void );
 
 	void	StartBurningSound( void );
 	void	StopBurningSound( void );
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
 	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
+
+	CNewParticleEffect *m_pStun;
+	CNewParticleEffect *m_pWarp;
+	CNewParticleEffect *m_pSpeedTrails;
+	CNewParticleEffect *m_pBuffAura;
+
+	void	UpdatePhaseEffects( void );
+	void	UpdateSpeedBoostEffects( void );
 
 	CMaterialReference *GetInvulnMaterialRef( void ) { return &m_InvulnerableMaterial; }
 	void	InitInvulnerableMaterial( void );

@@ -88,7 +88,6 @@ public:
 	virtual float	GetProjectileDamage( void );
 	virtual float	GetProjectileSpeed( void );
 	virtual float	GetProjectileGravity( void );
-	virtual bool	CalcIsAttackCriticalHelper( void );
 
 	virtual bool		HasChargeBar( void )							{ return true; }
 	virtual const char* GetEffectLabelText( void )						{ return "#TF_Jar"; }

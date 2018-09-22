@@ -25,7 +25,6 @@
 #include "ihasattributes.h"
 #include "c_tf_spymask.h"
 #include "hl_movedata.h"
-#include "beamdraw.h"
 
 class C_MuzzleFlashModel;
 class C_BaseObject;
@@ -209,7 +208,7 @@ public:
 	void	UpdateFlashlight( void );
 
 	void ReleaseFlashlight( void );
-	Beam_t	*m_pFlashlightBeam;
+	CNewParticleEffect	*m_pFlashlightBeam;
 
 	virtual bool ShouldReceiveProjectedTextures( int flags );
 public:

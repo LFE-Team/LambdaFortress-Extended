@@ -1219,7 +1219,7 @@ bool CWeaponPhysCannon::Deploy( void )
 
 	bool bReturn = BaseClass::Deploy();
 
-	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime;
+	m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime;
 
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
@@ -1230,7 +1230,7 @@ bool CWeaponPhysCannon::Deploy( void )
 		CollisionProp()->UseTriggerBounds(false);
 	}
 
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
 	if ( pOwner )
 	{
@@ -1676,7 +1676,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 	m_flCheckSuppressTime = gpGlobals->curtime + 0.25f;
 
 	// Don't allow the gun to regrab a thrown object!!
-	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+	m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 0.5f;
 }
 
 //-----------------------------------------------------------------------------
@@ -1814,7 +1814,7 @@ void CWeaponPhysCannon::PuntRagdoll(CBaseEntity *pEntity, const Vector &vecForwa
 	m_flCheckSuppressTime = gpGlobals->curtime + 0.25f;
 
 	// Don't allow the gun to regrab a thrown object!!
-	m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+	m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 0.5f;
 }
 #endif
 
@@ -2095,6 +2095,7 @@ void CWeaponPhysCannon::SecondaryAttack( void )
 		// Drop the held object
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
 		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5;
+		m_flNextTertiaryAttack = gpGlobals->curtime + 0.5;
 
 		DetachObject();
 
@@ -3193,7 +3194,7 @@ void CWeaponPhysCannon::LaunchObject( const Vector &vecDir, float flForce )
 			ApplyVelocityBasedForce( pObject, vecDir );
 
 			// Don't allow the gun to regrab a thrown object!!
-			m_flNextSecondaryAttack = m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
+			m_flNextSecondaryAttack = m_flNextPrimaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + 0.5;
 			
 			Vector	center = pObject->WorldSpaceCenter();
 

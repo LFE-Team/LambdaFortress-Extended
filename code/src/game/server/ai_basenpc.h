@@ -40,6 +40,7 @@
 #ifdef TF_CLASSIC
 #include "ai_basenpc_shared.h"
 #include "tf_player.h"
+#include "SpriteTrail.h"
 #endif
 
 #define PLAYER_SQUADNAME "player_squad"
@@ -2251,9 +2252,17 @@ public:
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
 	bool	IsJared( void );
+	bool	IsSpeedBoosted( void );
+	bool	IsBuffed( void );
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
 	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
+
+	void	AddPhaseEffects( void );
+	CUtlVector< CSpriteTrail * > m_pPhaseTrails;
+
+	void	UpdatePhaseEffects( void );
+	void	UpdateSpeedBoostEffects( void );
 
 	// TF2 healer and burning handling
 	void	ConditionGameRulesThink( void );
@@ -2269,22 +2278,40 @@ public:
 	virtual bool	IsOnFire( void ) { return InCond( TF_COND_BURNING ); }
 	virtual void	Extinguish( void ) { RemoveCond( TF_COND_BURNING ); }
 	void	SetBurnAttacker( CBaseEntity *pAttacker ) { m_hBurnAttacker = pAttacker; }
-	void	OnAddBurning( void );
-	void	OnRemoveBurning( void );
 
-	void	OnAddInvulnerable( void );
-	void	OnRemoveInvulnerable( void );
-	void	OnAddSlowed( void );
-	void	OnRemoveSlowed( void );
-	void	OnAddCritboosted( void );
-	void	OnRemoveCritboosted( void );
-	void	OnAddMiniCritboosted( void );
-	void	OnRemoveMiniCritboosted( void );
-	void	OnAddJar( void );
-	void	OnRemoveJar( void );
+	void OnAddInvulnerable( void );
+	void OnAddBurning( void );
+	void OnAddSlowed( void );
+	void OnAddCritboosted( void );
+	void OnAddStunned( void );
+	void OnAddHalloweenGiant( void );
+	void OnAddHalloweenTiny( void );
+	void OnAddPhase( void );
+	void OnAddSpeedBoost( void );
+	/*void OnAddUrine( void );
+	void OnAddMilk( void );
+	void OnAddGas( void );*/
+	void OnAddBleeding( void );
+	//void OnAddBuff( void );
+	void OnAddRune( void );
+
+	void OnRemoveBurning( void );
+	void OnRemoveInvulnerable( void );
+	void OnRemoveSlowed( void );
+	void OnRemoveCritboosted( void );
+	void OnRemoveStunned( void );
+	void OnRemoveHalloweenGiant( void );
+	void OnRemoveHalloweenTiny( void );
+	void OnRemovePhase( void );
+	void OnRemoveSpeedBoost( void );
+	void OnRemoveUrine( void );
+	void OnRemoveMilk( void );
+	void OnRemoveGas( void );
+	void OnRemoveBleeding( void );
+	//void OnRemoveBuff( void );
+	void OnRemoveRune( void );
+
 	void	SetBleedAttacker( CBaseEntity *pAttacker ) { m_hBleedAttacker = pAttacker; }
-	void	OnAddBleeding( void );
-	void	OnRemoveBleeding( void );
 
 	// Damager history, used for TF2 assists.
 	void				AddDamagerToHistory( EHANDLE hDamager );

@@ -224,7 +224,7 @@ enum
 enum EAmmoSource
 {
 	TF_AMMO_SOURCE_AMMOPACK = 0, // Default, used for ammopacks
-	TF_AMMO_SOURCE_RESUPPLY, // Maybe?
+	TF_AMMO_SOURCE_RESUPPLY,
 	TF_AMMO_SOURCE_DISPENSER,
 	TF_AMMO_SOURCE_COUNT
 };
@@ -1240,6 +1240,36 @@ enum
 	POWERUP_RUSH,		// Rally flag
 	POWERUP_POWER,		// Object power
 	MAX_POWERUPS
+};
+
+//--------------------------------------------------------------------------
+// Vintage Stun
+//--------------------------------------------------------------------------
+enum
+{
+	STUN_BIG,
+	STUN_CONC,
+	STUN_YIKES,
+	STUN_NO_EFFECT,
+
+	STUN_COUNT
+}; // Live tf2 uses flags for this I think
+
+ //--------------------------------------------------------------------------
+// Holiday
+//--------------------------------------------------------------------------
+enum EHoliday
+{
+	TF_HOLIDAY_BIRTHDAY = 1,
+	TF_HOLIDAY_HALLOWEEN,
+	TF_HOLIDAY_CHRISTMAS,
+	TF_HOLIDAY_COMMUNITYUPDATE,
+	TF_HOLIDAY_ENDOFTHELINE,
+	TF_HOLIDAY_VALENTINESDAY,
+	TF_HOLIDAY_MEETTHEPYRO,
+	TF_HOLIDAY_FULLMOON,
+	TF_HOLIDAY_APRIL_FOOLS,
+	LFE_HOLIDAY_BIRTHDAY
 };
 
 #define	MAX_CABLE_CONNECTIONS 4

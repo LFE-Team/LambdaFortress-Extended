@@ -131,6 +131,7 @@ ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
 
+// TF2's Tournament mode cvars
 ConVar tf_tournament_classlimit_scout( "tf_tournament_classlimit_scout", "-1", FCVAR_NOTIFY, "Tournament mode per-team class limit for Scouts.\n" );
 ConVar tf_tournament_classlimit_sniper( "tf_tournament_classlimit_sniper", "-1", FCVAR_NOTIFY, "Tournament mode per-team class limit for Snipers.\n" );
 ConVar tf_tournament_classlimit_soldier( "tf_tournament_classlimit_soldier", "-1", FCVAR_NOTIFY, "Tournament mode per-team class limit for Soldiers.\n" );
@@ -142,7 +143,19 @@ ConVar tf_tournament_classlimit_spy( "tf_tournament_classlimit_spy", "-1", FCVAR
 ConVar tf_tournament_classlimit_engineer( "tf_tournament_classlimit_engineer", "-1", FCVAR_NOTIFY, "Tournament mode per-team class limit for Engineers.\n" );
 ConVar tf_tournament_classchange_allowed( "tf_tournament_classchange_allowed", "1", FCVAR_NOTIFY, "Allow players to change class while the game is active?.\n" );
 ConVar tf_tournament_classchange_ready_allowed( "tf_tournament_classchange_ready_allowed", "1", FCVAR_NOTIFY, "Allow players to change class after they are READY?.\n" );
+
 ConVar tf_classlimit( "tf_classlimit", "0", FCVAR_NOTIFY, "Limit on how many players can be any class (i.e. tf_class_limit 2 would limit 2 players per class).\n" );
+
+// LFE's non-tournament mode cvars
+ConVar lfe_classlimit_scout( "lfe_classlimit_scout", "-1", FCVAR_NOTIFY, "Per-team class limit for Scouts.\n" );
+ConVar lfe_classlimit_sniper( "lfe_classlimit_sniper", "-1", FCVAR_NOTIFY, "Per-team class limit for Snipers.\n" );
+ConVar lfe_classlimit_soldier( "lfe_classlimit_soldier", "-1", FCVAR_NOTIFY, "Per-team class limit for Soldiers.\n" );
+ConVar lfe_classlimit_demoman( "lfe_classlimit_demoman", "-1", FCVAR_NOTIFY, "Per-team class limit for Demomen.\n" );
+ConVar lfe_classlimit_medic( "lfe_classlimit_medic", "-1", FCVAR_NOTIFY, "Per-team class limit for Medics.\n" );
+ConVar lfe_classlimit_heavy( "lfe_classlimit_heavy", "-1", FCVAR_NOTIFY, "Per-team class limit for Heavies.\n" );
+ConVar lfe_classlimit_pyro( "lfe_classlimit_pyro", "-1", FCVAR_NOTIFY, "Per-team class limit for Pyros.\n" );
+ConVar lfe_classlimit_spy( "lfe_classlimit_spy", "-1", FCVAR_NOTIFY, "Per-team class limit for Spies.\n" );
+ConVar lfe_classlimit_engineer( "lfe_classlimit_engineer", "-1", FCVAR_NOTIFY, "Per-team class limit for Engineers.\n" );
 #endif
 
 #ifdef GAME_DLL
@@ -344,6 +357,8 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVOBlue", InputPlayVOBlue ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVO", InputPlayVO ),
 
+	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetDifficulty", InputSetDifficulty ),
+
 
 END_DATADESC()
 
@@ -514,6 +529,14 @@ void CTFGameRulesProxy::InputPlayVOBlue( inputdata_t &inputdata )
 	{
 		TFGameRules()->BroadcastSound( TF_TEAM_BLUE, inputdata.value.String() );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGameRulesProxy::InputSetDifficulty( inputdata_t &inputdata )
+{
+	sv_difficulty.SetValue( inputdata.value.Int() );
 }
 
 //-----------------------------------------------------------------------------
@@ -1055,6 +1078,9 @@ CTFVehicleBlock::~CTFVehicleBlock()
 {
 }
 
+//------------------------------------------------------------------------------
+// Purpose : Logic entity that fired on computer's date
+//------------------------------------------------------------------------------
 class CTFLogicDate : public CBaseEntity
 {
 public:
@@ -2097,6 +2123,48 @@ int CTFGameRules::GetClassLimit( int iDesiredClassIndex, int iTeam )
 				result = pLimits->GetLimitForClass( iDesiredClassIndex );
 			}
 		} while (nullptr != (pLimits = dynamic_cast< CTFClassLimits * > ( gEntList.FindEntityByClassname(pLimits, "tf_class_limits") )));
+	}
+	else if ( !IsInTournamentMode() )
+	{
+		if ( iDesiredClassIndex <= TF_LAST_NORMAL_CLASS )
+		{
+			switch ( iDesiredClassIndex )
+			{
+				default:
+					result = -1;
+				case TF_CLASS_ENGINEER:
+					result = lfe_classlimit_engineer.GetInt();
+					break;
+				case TF_CLASS_SPY:
+					result = lfe_classlimit_spy.GetInt();
+					break;
+				case TF_CLASS_PYRO:
+					result = lfe_classlimit_pyro.GetInt();
+					break;
+				case TF_CLASS_HEAVYWEAPONS:
+					result = lfe_classlimit_heavy.GetInt();
+					break;
+				case TF_CLASS_MEDIC:
+					result = lfe_classlimit_medic.GetInt();
+					break;
+				case TF_CLASS_DEMOMAN:
+					result = lfe_classlimit_demoman.GetInt();
+					break;
+				case TF_CLASS_SOLDIER:
+					result = lfe_classlimit_soldier.GetInt();
+					break;
+				case TF_CLASS_SNIPER:
+					result = lfe_classlimit_sniper.GetInt();
+					break;
+				case TF_CLASS_SCOUT:
+					result = lfe_classlimit_scout.GetInt();
+					break;
+			}
+		}
+		else
+		{
+			result = -1;
+		}
 	}
 	else
 	{
@@ -6892,6 +6960,35 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CTFGameRules::IsHolidayActive( EHoliday holiday )
+{
+	bool bActive = false;
+ 	switch ( holiday )
+	{
+		case TF_HOLIDAY_BIRTHDAY:
+			bActive = IsBirthday();
+			break;
+		case TF_HOLIDAY_HALLOWEEN:
+			bActive = IsHalloween();
+			break;
+		case TF_HOLIDAY_CHRISTMAS:
+			bActive = IsSmissmas();
+			break;
+		case TF_HOLIDAY_APRIL_FOOLS:
+			bActive = IsAprilFool();
+			break;
+		case LFE_HOLIDAY_BIRTHDAY:
+			bActive = IsLFBirthday();
+			break;
+		default:
+			break;
+	}
+ 	return bActive;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: TF's Birthday
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsBirthday( void )
@@ -7092,14 +7189,22 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return true;
 
+	// Rockets need to collide with npcs when they hit
+	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) && 
+		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
+		return true;
+
+	// Don't stand on rockets
 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
-		return false;
+		return true;
 
+	// Don't collide with weapons
 	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return false;
 
+	// Or Grenades
 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return false;
@@ -7113,33 +7218,20 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		( collisionGroup1 == TF_COLLISIONGROUP_GRENADES ) )
 		return false;
 
-	// Respawn rooms only collide with players
+	// Respawn rooms only collide with players and npcs
 	if ( collisionGroup1 == TFCOLLISION_GROUP_RESPAWNROOMS )
-		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT );
+		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) ||
+			   ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR );
 
-/*	if ( collisionGroup0 == COLLISION_GROUP_PLAYER )
-	{
-		// Players don't collide with objects or other players
-		if ( collisionGroup1 == COLLISION_GROUP_PLAYER  )
-			 return false;
- 	}
+	// Arrows don't collide with weapon
+	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS ) && 
+		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
+		return false;
 
-	if ( collisionGroup1 == COLLISION_GROUP_PLAYER_MOVEMENT )
-	{
-		// This is only for probing, so it better not be on both sides!!!
-		Assert( collisionGroup0 != COLLISION_GROUP_PLAYER_MOVEMENT );
+ 	// VintageCollide with nothing
+	/*if ( collisionGroup1 == TFCOLLISION_GROUP_NONE )
+ 		return false;*/
 
-		// No collide with players any more
-		// Nor with objects or grenades
-		switch ( collisionGroup0 )
-		{
-		default:
-			break;
-		case COLLISION_GROUP_PLAYER:
-			return false;
-		}
-	}
-*/
 	// don't want caltrops and other grenades colliding with each other
 	// caltops getting stuck on other caltrops, etc.)
 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
@@ -7148,25 +7240,143 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
-
-	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+	// Owners don't collide with their own building
+	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_PLAYER &&
 		collisionGroup1 == TFCOLLISION_GROUP_COMBATOBJECT )
 	{
 		return false;
 	}
 
-	if ( collisionGroup0 == COLLISION_GROUP_PLAYER &&
-		collisionGroup1 == TFCOLLISION_GROUP_COMBATOBJECT )
-	{
+	// tf_pumpkin_bomb
+ 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
+		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
 		return false;
+
+ 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) &&
+		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		return true;
+
+ 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
+		 ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
+		 return false;
+
+ 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+		 ( collisionGroup0 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) || ( collisionGroup0 == TFCOLLISION_GROUP_ROCKETS ) )
+		 return false;
+
+ 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+		 ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
+		 return false;
+
+	// Prevent the player movement from colliding with spit globs (caused the player to jump on top of globs while in water)
+	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
+		return false;
+
+	//If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.
+	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
+	{
+		collisionGroup1 = COLLISION_GROUP_NPC;
 	}
 
 	// This is only for the super physcannon
-	if (m_bMegaPhysgun)
+	if ( m_bMegaPhysgun )
 	{
-		if (collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER)
+		if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER )
 			return false;
 	}
+	else
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER )
+			return true;
+	}
+
+	// Combine ball don't collide with other combine ball
+	if ( collisionGroup0 == HL2COLLISION_GROUP_COMBINE_BALL )
+	{
+		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
+			return false;
+	}
+
+	if ( collisionGroup0 == HL2COLLISION_GROUP_COMBINE_BALL && collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL_NPC )
+		return false;
+
+	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) ||
+		( collisionGroup0 == COLLISION_GROUP_PLAYER ) ||
+		( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
+	{
+		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
+			return false;
+	}
+
+	if ( collisionGroup0 == COLLISION_GROUP_DEBRIS )
+	{
+		if ( collisionGroup1 == HL2COLLISION_GROUP_COMBINE_BALL )
+			return true;
+	}
+
+	// Do we really need this?
+	if ( collisionGroup0 == HL2COLLISION_GROUP_HOUNDEYE && collisionGroup1 == HL2COLLISION_GROUP_HOUNDEYE )
+		return false;
+
+	if ( collisionGroup0 == HL2COLLISION_GROUP_HOMING_MISSILE && collisionGroup1 == HL2COLLISION_GROUP_HOMING_MISSILE )
+		return false;
+
+	// Npcs and Players don't collide with birds
+	if ( collisionGroup1 == HL2COLLISION_GROUP_CROW )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_CROW )
+			return false;
+	}
+
+	// Npcs and Players don't collide with headcrab (not really)
+	if ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB )
+			return false;
+	}
+
+	// Strider don't collide with npc or other strider
+	if ( collisionGroup1 == HL2COLLISION_GROUP_STRIDER )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_STRIDER )
+			return false;
+
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
+		collisionGroup0 == TFCOLLISION_GROUP_ARROWS || collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
+		collisionGroup0 == TF_COLLISIONGROUP_GRENADES )
+			return true;
+	}
+
+	// Gunship don't collide with npc or other Gunship
+	if ( collisionGroup1 == HL2COLLISION_GROUP_GUNSHIP )
+	{
+		if ( collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP )
+			return false;
+
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER ||
+		collisionGroup0 == TFCOLLISION_GROUP_ARROWS || collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
+		collisionGroup0 == TF_COLLISIONGROUP_GRENADES )
+			return true;
+	}
+
+	// weapons and NPCs don't collide
+	if ( collisionGroup0 == COLLISION_GROUP_WEAPON && (collisionGroup1 >= HL2COLLISION_GROUP_FIRST_NPC && collisionGroup1 <= HL2COLLISION_GROUP_LAST_NPC ) )
+		return false;
+
+	//players don't collide against NPC Actors.
+	//I could've done this up where I check if collisionGroup0 is NOT a player but I decided to just
+	//do what the other checks are doing in this function for consistency sake.
+	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 == COLLISION_GROUP_PLAYER )
+		return false;
+		
+	// In cases where NPCs are playing a script which causes them to interpenetrate while riding on another entity,
+	// such as a train or elevator, you need to disable collisions between the actors so the mover can move them.
+	if ( collisionGroup0 == COLLISION_GROUP_NPC_SCRIPTED && collisionGroup1 == COLLISION_GROUP_NPC_SCRIPTED )
+		return false;
+
+	// Spit doesn't touch other spit
+	if ( collisionGroup0 == HL2COLLISION_GROUP_SPIT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
+		return false;
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }

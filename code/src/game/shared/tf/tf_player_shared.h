@@ -120,6 +120,8 @@ public:
 	bool	IsInvulnerable( void );
 	bool	IsStealthed( void );
 	bool	IsJared( void );
+	bool	IsSpeedBoosted( void );
+	bool	IsBuffed( void );
 
 	void	ConditionGameRulesThink( void );
 
@@ -201,9 +203,12 @@ public:
 #else
 	CNewParticleEffect *m_pStun;
 	CNewParticleEffect *m_pWarp;
+	CNewParticleEffect *m_pSpeedTrails;
+	CNewParticleEffect *m_pBuffAura;
 #endif
 
 	void	UpdatePhaseEffects( void );
+	void	UpdateSpeedBoostEffects( void );
 
 	void	RecalculatePlayerBodygroups( void );
 
@@ -300,13 +305,15 @@ private:
 	void OnAddStunned( void );
 	void OnAddHalloweenGiant( void );
 	void OnAddHalloweenTiny( void );
-	void OnAddRagemode( void );
 	void OnAddPhase( void );
 	void OnAddSpeedBoost( void );
-	void OnAddJar( void );
+	void OnAddUrine( void );
+	void OnAddMilk( void );
+	void OnAddGas( void );
 	void OnAddTeamGlows( void );
 	void OnAddBleeding( void );
 	void OnAddRune( void );
+	void OnAddBuff( void );
 
 	void OnAddPowerPlay( void );
 
@@ -323,13 +330,15 @@ private:
 	void OnRemoveStunned( void );
 	void OnRemoveHalloweenGiant( void );
 	void OnRemoveHalloweenTiny( void );
-	void OnRemoveRagemode( void );
 	void OnRemovePhase( void );
 	void OnRemoveSpeedBoost( void );
-	void OnRemoveJar( void );
+	void OnRemoveUrine( void );
+	void OnRemoveMilk( void );
+	void OnRemoveGas( void );
 	void OnRemoveTeamGlows( void );
 	void OnRemoveBleeding( void );
 	void OnRemoveRune( void );
+	void OnRemoveBuff( void );
 
 	void OnRemovePowerPlay( void );
 
