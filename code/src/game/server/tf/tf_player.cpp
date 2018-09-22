@@ -4788,6 +4788,10 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pWeapon = info.GetWeapon();
 
+	if (pAttacker && pAttacker->IsNPC() && pAttacker->GetTeamNumber() == this->GetTeamNumber())
+	{
+		return 0;
+	}
 	// If this is an object get the builder
 	if ( pAttacker->IsBaseObject() )
 	{
