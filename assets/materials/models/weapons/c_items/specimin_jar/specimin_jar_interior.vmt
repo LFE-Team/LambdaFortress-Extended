@@ -1,9 +1,0 @@
-"VertexLitGeneric"
-{
-	"$basetexture"	"models\weapons\c_items\specimin_jar\specimin_jar_interior"
-	"$surfaceprop"	"default"
-	"$translucent"	1
-	//"$additive" "1"
-	"$envmap" "env_cubemap"
-	"$envmaptint" "[.5 .5 .5]"
-}

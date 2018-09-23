@@ -1,7 +1,0 @@
-spritecard
-{
-$basetexture "particle\particle_flares\particle_flare_007b"
-$translucent 1
-$additive 1
-$depthblend 0
-}

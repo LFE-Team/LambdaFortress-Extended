@@ -1,5 +1,0 @@
-spritecard
-{
-$basetexture "particle\particle_flares\aircraft_blue"
-$additive 1
-}
