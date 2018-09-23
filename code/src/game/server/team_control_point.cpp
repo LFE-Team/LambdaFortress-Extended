@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "team_control_point.h"
 #include "player.h"
+#include "ai_basenpc.h"
 #include "teamplay_gamerules.h"
 #include "teamplayroundbased_gamerules.h"
 #include "team.h"
@@ -771,7 +772,7 @@ void CTeamControlPoint::SendCapString( int iCapTeam, int iNumCappingPlayers, int
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTeamControlPoint::CaptureBlocked( CBaseMultiplayerPlayer *pPlayer, CBaseMultiplayerPlayer *pVictim )
+void CTeamControlPoint::CaptureBlocked( CBaseCombatCharacter *pPlayer, CBaseCombatCharacter *pVictim )
 {
 	if( strlen( STRING(m_iszPrintName) ) <= 0 )
 		return;
@@ -792,7 +793,8 @@ void CTeamControlPoint::CaptureBlocked( CBaseMultiplayerPlayer *pPlayer, CBaseMu
 		gameeventmanager->FireEvent( event );
 	}
 
-	PlayerBlocked( pPlayer );
+	CBaseMultiplayerPlayer *pMultiPlayer = ToBaseMultiplayerPlayer( pPlayer );
+	PlayerBlocked( pMultiPlayer );
 }
 
 //-----------------------------------------------------------------------------

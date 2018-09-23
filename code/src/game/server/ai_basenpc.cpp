@@ -12524,6 +12524,8 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_bAirblasted = false;
 
 	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
+
+	m_flLastObjectiveTime = -1.f;
 #endif
 }
 
