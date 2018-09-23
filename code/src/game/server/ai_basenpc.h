@@ -620,6 +620,7 @@ public:
 
 	virtual void		CleanupOnDeath( CBaseEntity *pCulprit = NULL, bool bFireDeathOutput = true );
 	virtual void		UpdateOnRemove( void );
+	void				SentryThink(void);
 
 	virtual int			UpdateTransmitState();
 

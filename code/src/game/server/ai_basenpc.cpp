@@ -12573,6 +12573,7 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_bInChoreo = true; // assume so until call to UpdateEfficiency()
 	
 	SetCollisionGroup( COLLISION_GROUP_NPC );
+	SetContextThink(&CAI_BaseNPC::SentryThink, gpGlobals->curtime + 0.1, "sentrycontext");
 
 #ifdef TF_CLASSIC
 	m_nPlayerCond = 0;
@@ -12630,6 +12631,26 @@ void CAI_BaseNPC::UpdateOnRemove(void)
 
 	// Chain at end to mimic destructor unwind order
 	BaseClass::UpdateOnRemove();
+}
+
+void CAI_BaseNPC::SentryThink(void)
+{
+	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest("obj_sentrygun", GetAbsOrigin(), 512);
+	if (pSentry && pSentry->GetTeamNumber() != GetTeamNumber())
+	{
+		SetTarget(pSentry);
+	}
+	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest("obj_dispenser", GetAbsOrigin(), 512);
+	if (!pSentry && pDispenser && pDispenser->GetTeamNumber() != GetTeamNumber())
+	{
+		SetTarget(pDispenser);
+	}
+	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest("obj_teleporter", GetAbsOrigin(), 512);
+	if (!pSentry && !pDispenser && pTeleporter && pTeleporter->GetTeamNumber() != GetTeamNumber())
+	{
+		SetTarget(pTeleporter);
+	}
+	SetContextThink(&CAI_BaseNPC::SentryThink, gpGlobals->curtime + 0.1, "sentrycontext");
 }
 
 //-----------------------------------------------------------------------------
