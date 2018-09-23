@@ -345,7 +345,7 @@ void CTriggerAreaCapture::CaptureThink( void )
 	Assert( GetNumberOfTeams() <= MAX_CAPTURE_TEAMS );
 	int iNumPlayers[MAX_CAPTURE_TEAMS];
 	int iNumBlockablePlayers[MAX_CAPTURE_TEAMS]; // Players in the zone who can't cap, but can block / pause caps
-	CBaseCombatCharacter *pFirstPlayerTouching[MAX_CAPTURE_TEAMS];
+	CBaseEntity *pFirstPlayerTouching[MAX_CAPTURE_TEAMS];
 	for ( int i = FIRST_GAME_TEAM; i < GetNumberOfTeams(); i++ )
 	{
 		iNumPlayers[i] = 0;
@@ -551,7 +551,7 @@ void CTriggerAreaCapture::CaptureThink( void )
 				// find the first player that is not on the capturing team
 				// they have just broken a cap and should be rewarded		
 				// tell the player the capture attempt number, for checking later
-				CBaseCombatCharacter *pBlockingPlayer = NULL;
+				CBaseEntity *pBlockingPlayer = NULL;
 				for ( int i = FIRST_GAME_TEAM; i < GetNumberOfTeams(); i++ )
 				{
 					if ( m_nCapturingTeam == i )
@@ -1182,7 +1182,7 @@ void CTriggerAreaCapture::InputSetControlPoint( inputdata_t &inputdata )
 // return FALSE if the player is not in this area
 // return TRUE otherwise ( eg player is in area, but his death does not cause break )
 //-----------------------------------------------------------------------------
-bool CTriggerAreaCapture::CheckIfDeathCausesBlock( CBaseCombatCharacter *pVictim, CBaseCombatCharacter *pKiller )
+bool CTriggerAreaCapture::CheckIfDeathCausesBlock( CBaseEntity *pVictim, CBaseEntity *pKiller )
 {
 	if ( !pVictim || !pKiller )
 		return false;

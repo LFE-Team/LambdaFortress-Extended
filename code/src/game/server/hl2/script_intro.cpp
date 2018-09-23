@@ -236,14 +236,17 @@ void CScriptIntro::InputSetFOVBlendTime( inputdata_t &inputdata )
 	else
 	{
 		// If we weren't blending, then we need to construct a proper starting point from scratch
-		CBasePlayer *pPlayer = AI_GetSinglePlayer();
-		if ( pPlayer )
+		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
-			m_iStartFOV = ( m_iFOV ) ? m_iFOV : pPlayer->GetFOV();
-		}
-		else
-		{
-			m_iStartFOV = m_iFOV;
+			CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+			if ( pPlayer )
+			{
+				m_iStartFOV = ( m_iFOV ) ? m_iFOV : pPlayer->GetFOV();
+			}
+			else
+			{
+				m_iStartFOV = m_iFOV;
+			}
 		}
 	}
 
@@ -316,9 +319,12 @@ void CScriptIntro::InputActivate( inputdata_t &inputdata )
 	g_hIntroScript = this;
 
 #ifdef TF_CLASSIC //Lambda Fortress
-	CTFPlayer *pPlayer = ToTFPlayer(UTIL_GetLocalPlayer());
-	if ( pPlayer )
-		pPlayer->m_Shared.InCutScene( true );
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+		if ( pPlayer )
+			pPlayer->m_Shared.InCutScene( true );
+	}
 #endif
 }
 
@@ -331,9 +337,12 @@ void CScriptIntro::InputDeactivate( inputdata_t &inputdata )
 	m_bActive = false;
 
 #ifdef TF_CLASSIC //Lambda Fortress
-	CTFPlayer *pPlayer = ToTFPlayer(UTIL_GetLocalPlayer());
-	if ( pPlayer )
-		pPlayer->m_Shared.InCutScene( false );
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+		if ( pPlayer )
+			pPlayer->m_Shared.InCutScene( false );
+	}
 #endif
 }
 

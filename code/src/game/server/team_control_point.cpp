@@ -772,7 +772,7 @@ void CTeamControlPoint::SendCapString( int iCapTeam, int iNumCappingPlayers, int
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTeamControlPoint::CaptureBlocked( CBaseCombatCharacter *pPlayer, CBaseCombatCharacter *pVictim )
+void CTeamControlPoint::CaptureBlocked( CBaseEntity *pPlayer, CBaseEntity *pVictim )
 {
 	if( strlen( STRING(m_iszPrintName) ) <= 0 )
 		return;

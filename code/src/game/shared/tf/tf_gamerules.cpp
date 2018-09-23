@@ -929,10 +929,9 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 {
 	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
 	Vector vecForward;
-	//Vector vecOrigin = GetAbsOrigin() + vecForward * 1 + Vector(0, 0, 64);
 	Vector vecOrigin = GetAbsOrigin();
 	Vector velocity = vec3_origin;
-	//CBaseEntity *pTeamPlayer = gEntList.FindEntityByClassname(NULL, "player");
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CTFPlayer *pTeamPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
@@ -6886,7 +6885,7 @@ bool CTFGameRules::TeamMayCapturePoint( int iTeam, int iPointIndex )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::PlayerMayCapturePoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason /* = NULL */, int iMaxReasonLength /* = 0 */ )
+bool CTFGameRules::PlayerMayCapturePoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason /* = NULL */, int iMaxReasonLength /* = 0 */ )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( !pTFPlayer )
@@ -6939,7 +6938,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBaseCombatCharacter *pPlayer, int iPo
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::PlayerMayBlockPoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason, int iMaxReasonLength )
+bool CTFGameRules::PlayerMayBlockPoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason, int iMaxReasonLength )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( !pTFPlayer )
@@ -7306,10 +7305,10 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 
 	//If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.
-	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
+	/*if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
 	{
 		collisionGroup1 = COLLISION_GROUP_NPC;
-	}
+	}*/
 
 	// This is only for the super physcannon
 	if ( m_bMegaPhysgun )
@@ -7417,7 +7416,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 //-----------------------------------------------------------------------------
 // Purpose: Return the value of this player towards capturing a point
 //-----------------------------------------------------------------------------
-int	CTFGameRules::GetCaptureValueForPlayer( CBaseCombatCharacter *pPlayer )
+int	CTFGameRules::GetCaptureValueForPlayer( CBaseEntity *pPlayer )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( pTFPlayer->IsPlayerClass( TF_CLASS_SCOUT ) )
@@ -7433,6 +7432,11 @@ int	CTFGameRules::GetCaptureValueForPlayer( CBaseCombatCharacter *pPlayer )
 			return 10;
 		}
 	}
+
+	int iAddCaptureValue = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFPlayer, iAddCaptureValue, add_player_capturevalue );
+	if ( iAddCaptureValue )
+		return iAddCaptureValue;
 
 	return BaseClass::GetCaptureValueForPlayer( pPlayer );
 }

@@ -63,7 +63,7 @@ public:
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 
 	bool	IsActive( void );
-	bool	CheckIfDeathCausesBlock( CBaseCombatCharacter *pVictim, CBaseCombatCharacter *pKiller );
+	bool	CheckIfDeathCausesBlock( CBaseEntity *pVictim, CBaseEntity *pKiller );
 
 	void	UpdateNumPlayers( bool bBlocked = false );
 	void	UpdateOwningTeam( void );
@@ -151,7 +151,7 @@ private:
 
 	struct blockers_t
 	{
-		CHandle<CBaseCombatCharacter>	hPlayer;
+		CHandle<CBaseEntity>	hPlayer;
 		int						iCapAttemptNumber;
 		float					flNextBlockTime;
 	};

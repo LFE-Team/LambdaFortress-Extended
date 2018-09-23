@@ -47,14 +47,14 @@ public:
 
 	// Return the value of this player towards capturing a point
 	#if defined ( TF_CLASSIC ) ||  defined ( TF_CLASSIC_CLIENT )
-	virtual int	 GetCaptureValueForPlayer( CBaseCombatCharacter *pPlayer ) { return 1; }
+	virtual int	 GetCaptureValueForPlayer( CBaseEntity *pPlayer ) { return 1; }
 	#else
 	virtual int	 GetCaptureValueForPlayer( CBasePlayer *pPlayer ) { return 1; }
 	#endif
 	virtual bool TeamMayCapturePoint( int iTeam, int iPointIndex ) { return true; }
 	#if defined ( TF_CLASSIC ) ||  defined ( TF_CLASSIC_CLIENT )
-	virtual bool PlayerMayCapturePoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return true; }
-	virtual bool PlayerMayBlockPoint( CBaseCombatCharacter *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return false; }
+	virtual bool PlayerMayCapturePoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return true; }
+	virtual bool PlayerMayBlockPoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return false; }
 	#else
 	virtual bool PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return true; }
 	virtual bool PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 ) { return false; }

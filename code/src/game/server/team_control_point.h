@@ -82,7 +82,7 @@ public:
 
 	void		SetCappersRequiredForTeam( int iGameTeam, int iCappers );
 
-	void		CaptureBlocked( CBaseCombatCharacter *pPlayer, CBaseCombatCharacter *pVictim );
+	void		CaptureBlocked( CBaseEntity *pPlayer, CBaseEntity *pVictim );
 
 	int			PointValue( void );
 

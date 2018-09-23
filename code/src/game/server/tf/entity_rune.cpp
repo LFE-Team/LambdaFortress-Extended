@@ -106,21 +106,6 @@ bool CTFRune::MyTouch( CBasePlayer *pPlayer )
 		// Add the condition and duration from derived classes
 		pTFPlayer->m_Shared.AddCond( GetCondition(), GetEffectDuration() );
 
-		// Give full health
-		int iHealthRestored = pTFPlayer->TakeHealth( pTFPlayer->GetMaxHealth(), DMG_GENERIC );
-
-		if ( iHealthRestored )
-		{
-			IGameEvent *event_healonhit = gameeventmanager->CreateEvent( "player_healonhit" );
-			if ( event_healonhit )
-			{
-				event_healonhit->SetInt( "amount", iHealthRestored );
-				event_healonhit->SetInt( "entindex", pTFPlayer->entindex() );
-
-				gameeventmanager->FireEvent( event_healonhit );
-			}
-		}
-
 		CSingleUserRecipientFilter user( pTFPlayer );
 		user.MakeReliable();
 
