@@ -1715,8 +1715,6 @@ C_TFPlayer::C_TFPlayer() :
 
 	m_bTyping = false;
 
-	m_pFlashlightBeam = NULL;
-
 	ListenForGameEvent( "localplayer_changeteam" );
 
 	ConVarRef scissor("r_flashlightscissor");
@@ -1730,7 +1728,6 @@ C_TFPlayer::~C_TFPlayer()
 {
 	ShowNemesisIcon( false );
 	m_PlayerAnimState->Release();
-	ReleaseFlashlight();
 }
 
 
@@ -1901,14 +1898,6 @@ void C_TFPlayer::OnPreDataChanged( DataUpdateType_t updateType )
 
 void C_TFPlayer::NotifyShouldTransmit( ShouldTransmitState_t state )
 {
-	if ( state == SHOULDTRANSMIT_END )
-	{
-		if( m_pFlashlightBeam != NULL )
-		{
-			ReleaseFlashlight();
-		}
-	}
-
 	BaseClass::NotifyShouldTransmit( state );
 }
 
@@ -2126,15 +2115,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 		}
 	
 		m_bUpdateObjectHudState = false;
-	}
-}
-
-void C_TFPlayer::ReleaseFlashlight( void )
-{
-	if ( m_pFlashlightBeam )
-	{
-		ParticleProp()->StopEmission( m_pFlashlightBeam );
-		m_pFlashlightBeam = NULL;
 	}
 }
 
@@ -2460,7 +2440,7 @@ void C_TFPlayer::ShowNemesisIcon( bool bShow )
 {
 	if ( bShow )
 	{
-		const char *pszEffect = ConstructTeamParticle( "particle_nemesis_%s", GetTeamNumber(), true );
+		const char *pszEffect = ConstructTeamParticle( "particle_nemesis_%s", GetTeamNumber() );
 
 		m_Shared.SetParticleToMercColor(
 			ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, "head" )
@@ -4834,7 +4814,7 @@ void C_TFPlayer::UpdateOverhealEffect( void )
 	{
 		if ( !m_pOverhealEffect )
 		{
-			const char *pszEffect = ConstructTeamParticle( "overhealedplayer_%s_pluses", GetTeamNumber(), false );
+			const char *pszEffect = ConstructTeamParticle( "overhealedplayer_%s_pluses", GetTeamNumber() );
 			m_pOverhealEffect = ParticleProp()->Create( pszEffect, PATTACH_ABSORIGIN_FOLLOW );
 		}
 	}
@@ -4930,56 +4910,6 @@ bool C_TFPlayer::ShouldReceiveProjectedTextures( int flags )
 	}
 
 	return BaseClass::ShouldReceiveProjectedTextures( flags );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::AddEntity( void )
-{
-	BaseClass::AddEntity();
-
-	if ( IsAlive() && IsEffectActive( EF_DIMLIGHT ) )
-	{
-		if ( !InFirstPersonView() && this != C_TFPlayer::GetLocalTFPlayer() )
-		{
-			C_TFWeaponBase *pActiveWpn = GetActiveTFWeapon();
-			int iAttachment = pActiveWpn->LookupAttachment( "muzzle" );
-
-			if ( iAttachment < 0 )
-			{
-				iAttachment = pActiveWpn->LookupAttachment( "root" );
-			}
-
-			if ( !m_pFlashlightBeam )
-			{
-				m_pFlashlightBeam = ParticleProp()->Create( "flashlight_thirdperson", PATTACH_POINT_FOLLOW, iAttachment );
-			}
-		}
-		else
-		{
-			C_TFWeaponBase *pActiveWpn = GetActiveTFWeapon();
-			C_ViewmodelAttachmentModel *pAttachment = pActiveWpn->GetViewmodelAddon();
-			if ( pAttachment )
-			{
-				int iAttachment = pAttachment->LookupAttachment( "muzzle" );
-
-				if ( iAttachment < 0 )
-				{
-					iAttachment = pAttachment->LookupAttachment( "root" );
-				}
-
-				if ( !m_pFlashlightBeam )
-				{
-					m_pFlashlightBeam = ParticleProp()->Create( "flashlight_firstperson_", PATTACH_POINT_FOLLOW, iAttachment );
-				}
-			}
-		}
-	}
-	else if ( m_pFlashlightBeam )
-	{
-		ReleaseFlashlight();
-	}
 }
 
 void C_TFPlayer::UpdateFlashlight()

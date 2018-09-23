@@ -64,7 +64,6 @@ public:
 
 	virtual Vector GetObserverCamOrigin( void );
 	virtual int DrawModel( int flags );
-	virtual void AddEntity( void );
 	virtual bool CreateMove( float flInputSampleTime, CUserCmd *pCmd );
 
 	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles; }
@@ -206,9 +205,6 @@ public:
 	// Flashlight
 	void	Flashlight( void );
 	void	UpdateFlashlight( void );
-
-	void ReleaseFlashlight( void );
-	CNewParticleEffect	*m_pFlashlightBeam;
 
 	virtual bool ShouldReceiveProjectedTextures( int flags );
 public:

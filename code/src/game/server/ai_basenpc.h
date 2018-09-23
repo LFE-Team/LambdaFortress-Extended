@@ -41,6 +41,7 @@
 #include "ai_basenpc_shared.h"
 #include "tf_player.h"
 #include "SpriteTrail.h"
+#include "tf_item.h"
 #endif
 
 #define PLAYER_SQUADNAME "player_squad"
@@ -2360,6 +2361,14 @@ public:
 	// How long since this npc last interacted with something the game considers an objective/target/goal
 	float				GetTimeSinceLastObjective( void ) const { return ( m_flLastObjectiveTime == -1.f ) ? 999.f : gpGlobals->curtime - m_flLastObjectiveTime; }
 	void				SetLastObjectiveTime( float flTime ) { m_flLastObjectiveTime = flTime; }
+
+	bool				HasItem( void );					// Currently can have only one item at a time.
+	void				SetItem( CTFItem *pItem );
+	CTFItem				*GetItem( void );
+	bool IsAllowedToPickUpFlag( void );
+	bool HasTheFlag( void );
+
+	void				DropFlag( void );
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;
@@ -2402,6 +2411,9 @@ private:
 	DamagerHistory_t m_DamagerHistory[MAX_DAMAGER_HISTORY];	// history of who has damaged this NPC
 
 	float		m_flLastObjectiveTime;				// Last curtime player touched/killed something the gamemode considers an objective
+
+	// Items.
+	CNetworkHandle( CTFItem, m_hItem );
 #endif
 public:
 	CUtlFixedLinkedList<LagRecordNPC>* GetLagTrack() { return m_LagTrack; }

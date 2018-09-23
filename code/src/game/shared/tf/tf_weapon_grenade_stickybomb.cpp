@@ -104,7 +104,7 @@ void CTFGrenadeStickybombProjectile::UpdateOnRemove( void )
 //-----------------------------------------------------------------------------
 const char *CTFGrenadeStickybombProjectile::GetTrailParticleName( void )
 {
-	return ConstructTeamParticle( "stickybombtrail_%s", GetTeamNumber(), true );
+	return ConstructTeamParticle( "stickybombtrail_%s", GetTeamNumber() );
 }
 
 //-----------------------------------------------------------------------------
@@ -116,7 +116,7 @@ void CTFGrenadeStickybombProjectile::CreateTrails( void )
 
 	if ( m_bCritical )
 	{
-		const char *pszEffectName = ConstructTeamParticle( "critical_grenade_%s", GetTeamNumber(), true );
+		const char *pszEffectName = ConstructTeamParticle( "critical_grenade_%s", GetTeamNumber() );
 
 		pParticle = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
@@ -236,7 +236,7 @@ void CTFGrenadeStickybombProjectile::Spawn( void )
 void CTFGrenadeStickybombProjectile::Precache( void )
 {
 	PrecacheModel( TF_WEAPON_STICKYBOMB_MODEL );
-	PrecacheTeamParticles( "stickybombtrail_%s", true );
+	PrecacheTeamParticles( "stickybombtrail_%s" );
 
 	BaseClass::Precache();
 }

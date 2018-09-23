@@ -43,6 +43,7 @@
 #include "tf_gamerules.h"
 #include "c_playerresource.h"
 #include "c_tf_objective_resource.h"
+#include "tf_mainmenu.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -484,6 +485,9 @@ void CVoteSetupDialog::OnCommand(const char *command)
 	// We should have enough data to issue a CallVote command
 	if ( !V_stricmp( command, "CallVote" ) )
 	{
+		//#ifdef TF_CLASSIC_CLIENT
+		//MAINMENU_ROOT->HidePanel(PAUSE_MENU);
+		//#endif
 		int iSelectedItem = m_pVoteSetupList->GetSelectedItem();
 		if ( iSelectedItem >= 0 )
 		{

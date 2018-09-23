@@ -55,6 +55,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
 	RecvPropArray3( RECVINFO_ARRAY( m_flCondExpireTimeLeft ), RecvPropFloat( RECVINFO( m_flCondExpireTimeLeft[0] ) ) ),
 	RecvPropInt( RECVINFO( m_nNumHealers ) ),
 	RecvPropBool( RECVINFO( m_bBurningDeath ) ),
+	RecvPropEHandle( RECVINFO( m_hItem ) ),
 	RecvPropInt( RECVINFO( m_nTFFlags ) )
 #endif
 END_RECV_TABLE()
@@ -578,7 +579,7 @@ void C_AI_BaseNPC::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 			m_pCritEffect = NULL;
 		}
 
-			C_BaseCombatWeapon *pWeapon = this->GetActiveWeapon();
+		C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
 
 		// Don't add crit effect to weapons without a model.
 		if ( pWeapon && pWeapon->GetWorldModelIndex() != 0 )
@@ -592,7 +593,7 @@ void C_AI_BaseNPC::UpdateCritBoostEffect( bool bForceHide /*= false*/ )
 
 		if ( m_hCritEffectHost.Get() )
 		{
-			const char *pszEffect = ConstructTeamParticle( "critgun_weaponmodel_%s", this->GetTeamNumber(), true, g_aTeamNamesShort );
+			const char *pszEffect = ConstructTeamParticle( "critgun_weaponmodel_%s", GetTeamNumber(), true, g_aTeamNamesShort );
 			m_pCritEffect = m_hCritEffectHost->ParticleProp()->Create( pszEffect, PATTACH_ABSORIGIN_FOLLOW );
 		}
 

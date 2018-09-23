@@ -241,7 +241,7 @@ bool CRestartGameIssue::CreateVoteDataFromDetails(const char *s)
 
 void CRestartGameIssue::ExecuteCommand()
 {
-	engine->ServerCommand( "mp_restartgame 5 \n" );
+	engine->ServerCommand( "mp_restartgame 1 \n" );
 }
 
 void CRestartGameIssue::SetIssueCooldownDuration( float flDuration )

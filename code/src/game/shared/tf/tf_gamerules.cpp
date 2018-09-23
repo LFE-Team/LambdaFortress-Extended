@@ -186,7 +186,7 @@ ConVar tf_flag_caps_per_round( "tf_flag_caps_per_round", "3", FCVAR_REPLICATED, 
 							  );
 
 ConVar lfe_use_hl2_player_hull( "lfe_use_hl2_player_hull", "1", FCVAR_NOTIFY | FCVAR_REPLICATED );
-ConVar lfe_coop( "lfe_coop", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables cooperative mode. Changes will take effect upon map restart." );
+ConVar lfe_coop( "lfe_coop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables cooperative mode. Changes will take effect upon map restart." );
 ConVar lfe_coop_min_red_players( "lfe_coop_min_red_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minumum amount of players on RED required to join BLU in Versus mode." );
 
 // This sets what percentage of players are required in the changelevel trigger before map change takes effect. Currently it's set to 100% (all players required).
@@ -1897,6 +1897,12 @@ static const char *s_PreserveEnts[] =
 	"entity_carrier",
 	"entity_sign",
 	"entity_saucer",
+	"lfe_logic_coop",
+	"lfe_logic_blucoop",	
+	"lfe_logic_versus",
+	"lfe_logic_zs",
+	"lfe_logic_longjump",
+	"lfe_logic_date",
 	"", // END Marker
 };
 
@@ -7217,8 +7223,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return true;
 
 	// Rockets need to collide with npcs when they hit
-	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) || ( collisionGroup0 == HL2COLLISION_GROUP_STRIDER ) ||
-		 ( collisionGroup0 == HL2COLLISION_GROUP_STRIDER ) || ( collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP ) && 
+	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ROCKETS ) )
 		return true;
 
@@ -7371,7 +7376,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 
 		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
 		collisionGroup0 == TFCOLLISION_GROUP_ARROWS || collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
-		collisionGroup0 == TF_COLLISIONGROUP_GRENADES )
+		collisionGroup0 == TF_COLLISIONGROUP_GRENADES || collisionGroup0 == TFCOLLISION_GROUP_ROCKETS )
 			return true;
 	}
 
@@ -7383,7 +7388,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 
 		if ( collisionGroup0 == COLLISION_GROUP_PLAYER ||
 		collisionGroup0 == TFCOLLISION_GROUP_ARROWS || collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
-		collisionGroup0 == TF_COLLISIONGROUP_GRENADES )
+		collisionGroup0 == TF_COLLISIONGROUP_GRENADES || collisionGroup0 == TFCOLLISION_GROUP_ROCKETS )
 			return true;
 	}
 

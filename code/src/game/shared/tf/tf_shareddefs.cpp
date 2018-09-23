@@ -43,32 +43,34 @@ const char *g_aTeamParticleNames[TF_TEAM_COUNT] =
 	"yellow"
 };
 
-const char *GetTeamParticleName( int iTeam, bool bDeathmatchOverride /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
+const char *GetTeamParticleName( int iTeam, bool bHasFourTeam /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
 {
 	return pNames[iTeam];
 }
 
-const char *ConstructTeamParticle( const char *pszFormat, int iTeam, bool bDeathmatchOverride /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
+const char *ConstructTeamParticle( const char *pszFormat, int iTeam, bool bHasFourTeam /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
 {
 	static char szParticleName[128];
 
-	V_snprintf( szParticleName, sizeof( szParticleName ), pszFormat, GetTeamParticleName( iTeam, bDeathmatchOverride, pNames ) );
+	V_snprintf( szParticleName, sizeof( szParticleName ), pszFormat, GetTeamParticleName( iTeam, bHasFourTeam, pNames ) );
 	return szParticleName;
 }
 
-void PrecacheTeamParticles( const char *pszFormat, bool bDeathmatchOverride /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
+void PrecacheTeamParticles( const char *pszFormat, bool bHasFourTeam /*= false*/, const char **pNames/* = g_aTeamParticleNames*/ )
 {
-	for ( int i = FIRST_GAME_TEAM; i < TF_TEAM_COUNT; i++ )
+	for ( int i = FIRST_GAME_TEAM; i < TF_TEAM_GREEN; i++ )
 	{
 		const char *pszParticle = ConstructTeamParticle( pszFormat, i, false, pNames );
 		PrecacheParticleSystem( pszParticle );
 	}
 
-	if ( bDeathmatchOverride )
+	if ( bHasFourTeam )
 	{
-		char szParticle[128];
-		V_snprintf( szParticle, sizeof( szParticle ), pszFormat, "dm" );
-		PrecacheParticleSystem( szParticle );
+		for ( int i = FIRST_GAME_TEAM; i < TF_TEAM_COUNT; i++ )
+		{
+			const char *pszParticle = ConstructTeamParticle( pszFormat, i, false, pNames );
+			PrecacheParticleSystem( pszParticle );
+		}
 	}
 }
 

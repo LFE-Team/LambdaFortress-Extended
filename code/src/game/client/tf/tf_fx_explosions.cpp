@@ -144,7 +144,7 @@ void TFExplosionCallback( const Vector &vecOrigin, const Vector &vecNormal, int 
 	if ( bColored )
 	{
 		// Assuming it's a formatted string.
-		pszEffect = ConstructTeamParticle( pszFormat, iTeam, true );
+		pszEffect = ConstructTeamParticle( pszFormat, iTeam );
 	}
 	else
 	{

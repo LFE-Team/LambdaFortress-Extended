@@ -75,7 +75,7 @@ CTFGrenadePipebombProjectile::~CTFGrenadePipebombProjectile()
 //-----------------------------------------------------------------------------
 const char *CTFGrenadePipebombProjectile::GetTrailParticleName( void )
 {
-	return ConstructTeamParticle( "pipebombtrail_%s", GetTeamNumber(), true );
+	return ConstructTeamParticle( "pipebombtrail_%s", GetTeamNumber() );
 }
 
 //-----------------------------------------------------------------------------
@@ -87,7 +87,7 @@ void CTFGrenadePipebombProjectile::CreateTrails( void )
 
 	if ( m_bCritical )
 	{
-		const char *pszEffectName = ConstructTeamParticle(  "critical_pipe_%s", GetTeamNumber(), true );
+		const char *pszEffectName = ConstructTeamParticle(  "critical_pipe_%s", GetTeamNumber() );
 
 		pParticle = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}

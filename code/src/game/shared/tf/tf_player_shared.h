@@ -205,6 +205,7 @@ public:
 	CNewParticleEffect *m_pWarp;
 	CNewParticleEffect *m_pSpeedTrails;
 	CNewParticleEffect *m_pBuffAura;
+	CNewParticleEffect *m_pFlashlightBeam;
 #endif
 
 	void	UpdatePhaseEffects( void );
@@ -314,6 +315,7 @@ private:
 	void OnAddBleeding( void );
 	void OnAddRune( void );
 	void OnAddBuff( void );
+	void OnAddFlashlight( void );
 
 	void OnAddPowerPlay( void );
 
@@ -339,6 +341,7 @@ private:
 	void OnRemoveBleeding( void );
 	void OnRemoveRune( void );
 	void OnRemoveBuff( void );
+	void OnRemoveFlashlight( void );
 
 	void OnRemovePowerPlay( void );
 

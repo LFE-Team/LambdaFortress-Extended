@@ -87,8 +87,8 @@ void CTFProjectile_Flare::Precache()
 	PrecacheModel( TF_WEAPON_FLARE_MODEL );
 
 	PrecacheParticleSystem( "rockettrail_waterbubbles" );
-	PrecacheTeamParticles( "flaregun_trail_%s", true );
-	PrecacheTeamParticles( "flaregun_trail_crit_%s", true );
+	PrecacheTeamParticles( "flaregun_trail_%s" );
+	PrecacheTeamParticles( "flaregun_trail_crit_%s" );
 
 	PrecacheScriptSound( "TFPlayer.FlareImpact" );
 	BaseClass::Precache();
@@ -325,7 +325,7 @@ void CTFProjectile_Flare::CreateTrails( void )
 	else
 	{
 		const char *pszFormat = m_bCritical ? "flaregun_trail_crit_%s" : "flaregun_trail_%s";
-		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
+		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber() );
 
 		ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
@@ -416,7 +416,7 @@ void CTFProjectile_BallOfFire::Precache()
 
 	PrecacheParticleSystem( "projectile_fireball" );
 	PrecacheParticleSystem( "rockettrail_waterbubbles" );
-	PrecacheTeamParticles( "projectile_fireball_crit_%s", true );
+	PrecacheTeamParticles( "projectile_fireball_crit_%s" );
 
 	PrecacheScriptSound( "Weapon_DragonsFury.Impact" );
 	PrecacheScriptSound( "Weapon_DragonsFury.BonusDamageHit" );
@@ -789,7 +789,7 @@ void CTFProjectile_BallOfFire::CreateTrails( void )
 	else
 	{
 		const char *pszFormat = m_bCritical ? "projectile_fireball_crit_%s" : "projectile_fireball";
-		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber(), false );
+		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber() );
 
 		ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}

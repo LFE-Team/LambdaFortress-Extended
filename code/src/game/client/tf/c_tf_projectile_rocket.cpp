@@ -85,7 +85,7 @@ void C_TFProjectile_Rocket::CreateRocketTrails( void )
 
 	if ( m_bCritical )
 	{
-		const char *pszEffectName = ConstructTeamParticle( "critical_rocket_%s", GetTeamNumber(), false );
+		const char *pszEffectName = ConstructTeamParticle( "critical_rocket_%s", GetTeamNumber() );
 		ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
 }

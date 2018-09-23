@@ -90,9 +90,17 @@ void CFlagDetectionZone::InputDisable( inputdata_t &inputdata )
 bool CFlagDetectionZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( pEntity );
+	CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
 	if ( pPlayer && pPlayer->HasItem() )
 	{
 		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pPlayer->GetItem() );
+		if ( pFlag )
+			return true;
+	}
+
+	if ( pNPC && pNPC->HasItem() )
+	{
+		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pNPC->GetItem() );
 		if ( pFlag )
 			return true;
 	}
@@ -103,23 +111,32 @@ bool CFlagDetectionZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::FlagCaptured( CTFPlayer *pPlayer )
+void CFlagDetectionZone::FlagCaptured( CBaseEntity *pPlayer )
 {
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
+
 	// I have no idea why
 	if ( !Q_strcmp( gpGlobals->mapname.ToCStr(), "sd_doomsday" ) )
 		return;
 
-	if ( pPlayer && IsTouching( pPlayer ) )
+	if ( pTFPlayer && IsTouching( pTFPlayer ) )
 	{
 		// Apparently this function is used for giving an achievement in live tf2
 		// however since we don't have that, we'll just leave this function as a stub
 	}
+
+	if ( pNPC && IsTouching( pNPC ) )
+	{
+		// same as above
+	}
+
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagCapturedInDetectionZone( CTFPlayer *pPlayer )
+void HandleFlagCapturedInDetectionZone( CBaseEntity *pPlayer )
 {
 	for ( int i = 0; i < IFlagDetectionZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -134,19 +151,19 @@ void HandleFlagCapturedInDetectionZone( CTFPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::FlagDropped( CTFPlayer *pPlayer )
+void CFlagDetectionZone::FlagDropped( CBaseEntity *pPlayer )
 {
 	if ( pPlayer && IsTouching( pPlayer ) )
 	{
 		m_outOnDroppedFlag.FireOutput( this, this);
 		m_outOnEndTouchFlag.FireOutput( this, this );
-	};
+	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagDroppedInDetectionZone( CTFPlayer *pPlayer )
+void HandleFlagDroppedInDetectionZone( CBaseEntity *pPlayer )
 {
 	for ( int i = 0; i < IFlagDetectionZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -199,7 +216,7 @@ void CFlagDetectionZone::EndTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::FlagPickedUp( CTFPlayer *pPlayer )
+void CFlagDetectionZone::FlagPickedUp( CBaseEntity *pPlayer )
 {
 	if ( pPlayer && IsTouching( pPlayer ) )
 	{
@@ -211,7 +228,7 @@ void CFlagDetectionZone::FlagPickedUp( CTFPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagPickedUpInDetectionZone( CTFPlayer *pPlayer )
+void HandleFlagPickedUpInDetectionZone( CBaseEntity *pPlayer )
 {
 	for ( int i = 0; i < IFlagDetectionZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -227,7 +244,6 @@ void HandleFlagPickedUpInDetectionZone( CTFPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::InputTest(inputdata_t &inputdata)
-{
-	
-}
+//void CFlagDetectionZone::InputTest(inputdata_t &inputdata)
+//{
+//}

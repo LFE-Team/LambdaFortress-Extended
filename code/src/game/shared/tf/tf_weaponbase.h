@@ -297,6 +297,8 @@ class CTFWeaponBase : public CBaseCombatWeapon
 
 	// On hit effects.
 	void ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
+	void ApplyPostHitEffects( const CTakeDamageInfo &info, CBaseEntity *pVictim );
+	void ApplyOnInjuredAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
 	void	Knockback( void );
 // Client specific.

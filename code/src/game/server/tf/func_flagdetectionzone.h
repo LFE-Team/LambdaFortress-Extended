@@ -12,6 +12,7 @@
 
 #include "triggers.h"
 #include "tf_player.h"
+#include "ai_basenpc.h"
 
 //=============================================================================
 
@@ -31,16 +32,16 @@ public:
 
 	bool	EntityIsFlagCarrier( CBaseEntity *pEntity );
 
-	void	FlagCaptured( CTFPlayer *pPlayer );
-	void	FlagDropped( CTFPlayer *pPlayer );
-	void	FlagPickedUp( CTFPlayer *pPlayer );
+	void	FlagCaptured( CBaseEntity *pPlayer );
+	void	FlagDropped( CBaseEntity *pPlayer );
+	void	FlagPickedUp( CBaseEntity *pPlayer );
 
 	bool	IsDisabled( void ) { return m_bDisabled; };
 
 	// Input handlers
 	virtual void	InputEnable( inputdata_t &inputdata );
 	virtual void	InputDisable( inputdata_t &inputdata );
-	virtual void	InputTest( inputdata_t &inputdata );
+	//virtual void	InputTest( inputdata_t &inputdata );
 
 private:
 	bool	m_bDisabled;
@@ -52,9 +53,9 @@ private:
 	COutputEvent m_outOnPickedUpFlag; // Sent when a flag is picked up in the zone.
 };
 
-void HandleFlagPickedUpInDetectionZone( CTFPlayer *pPlayer );
-void HandleFlagDroppedInDetectionZone( CTFPlayer *pPlayer );
-void HandleFlagCapturedInDetectionZone( CTFPlayer *pPlayer );
+void HandleFlagPickedUpInDetectionZone( CBaseEntity *pPlayer );
+void HandleFlagDroppedInDetectionZone( CBaseEntity *pPlayer );
+void HandleFlagCapturedInDetectionZone( CBaseEntity *pPlayer );
 
 #endif // FUNC_FLAGDETECTION_ZONE_H
 

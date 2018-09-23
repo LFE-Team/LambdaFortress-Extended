@@ -17,6 +17,7 @@
 #include "ai_basenpc_shared.h"
 #include "tf_shareddefs.h"
 #include "c_tf_player.h"
+#include "tf_item.h"
 #endif
 
 // NOTE: Moved all controller code into c_basestudiomodel
@@ -160,6 +161,15 @@ public:
 	CSoundPatch *m_pCritSound;
 
 	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
+
+
+	CNetworkHandle( C_TFItem, m_hItem );
+
+	bool			HasItem( void );					// Currently can have only one item at a time.
+	void			SetItem( C_TFItem *pItem );
+	C_TFItem		*GetItem( void );
+	bool			IsAllowedToPickUpFlag( void );
+	bool			HasTheFlag( void );
 #endif
 
 private:

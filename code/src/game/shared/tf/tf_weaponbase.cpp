@@ -319,17 +319,17 @@ void CTFWeaponBase::Precache()
 
 	if ( pTFInfo->m_szExplosionEffect_Crit[0] )
 	{
-		PrecacheTeamParticles( pTFInfo->m_szExplosionEffect_Crit, true );
+		PrecacheTeamParticles( pTFInfo->m_szExplosionEffect_Crit );
 	}
 
 	if ( pTFInfo->m_szExplosionPlayerEffect_Crit[0] )
 	{
-		PrecacheTeamParticles( pTFInfo->m_szExplosionPlayerEffect_Crit, true );
+		PrecacheTeamParticles( pTFInfo->m_szExplosionPlayerEffect_Crit );
 	}
 
 	if ( pTFInfo->m_szExplosionWaterEffect_Crit[0] )
 	{
-		PrecacheTeamParticles( pTFInfo->m_szExplosionWaterEffect_Crit, true );
+		PrecacheTeamParticles( pTFInfo->m_szExplosionWaterEffect_Crit );
 	}
 
 	// Tracers
@@ -340,8 +340,8 @@ void CTFWeaponBase::Precache()
 
 		V_snprintf( szTracerEffect, sizeof( szTracerEffect ), "%s_%%s", pTFInfo->m_szTracerEffect );
 		V_snprintf( szTracerEffectCrit, sizeof( szTracerEffectCrit ), "%s_%%s_crit", pTFInfo->m_szTracerEffect );
-		PrecacheTeamParticles( szTracerEffect, true );
-		PrecacheTeamParticles( szTracerEffectCrit, true );
+		PrecacheTeamParticles( szTracerEffect );
+		PrecacheTeamParticles( szTracerEffectCrit );
 	}
 }
 
@@ -1003,7 +1003,7 @@ void CTFWeaponBase::CalcIsAttackCritical( void )
 	{
 		m_bCurrentAttackIsCrit = true;
 	}
-	else if ( pPlayer->m_Shared.IsMiniCritBoosted() )
+	else if ( pPlayer->m_Shared.IsMiniCritBoosted() || pPlayer->m_Shared.InCond( TF_COND_NOHEALINGDAMAGEBUFF ) )
 	{
 		m_bCurrentAttackIsMiniCrit = true;
 	}
@@ -1956,7 +1956,7 @@ const char *CTFWeaponBase::GetTracerType( void )
 	{
 		if ( GetOwner() && !m_szTracerName[0] )
 		{
-			const char *pszTeamName = GetTeamParticleName( GetOwner()->GetTeamNumber(), true );
+			const char *pszTeamName = GetTeamParticleName( GetOwner()->GetTeamNumber() );
 			V_snprintf( m_szTracerName, MAX_TRACER_NAME, "%s_%s", GetTFWpnData().m_szTracerEffect, pszTeamName );
 		}
 
@@ -2396,6 +2396,20 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 		float flDamage = info.GetDamage();
 		m_flEffectBarRegenTime = gpGlobals->curtime + flDamage;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// ----------------------------------------------------------------------------
+void CTFWeaponBase::ApplyPostHitEffects( const CTakeDamageInfo &info, CBaseEntity *pVictim )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+// ----------------------------------------------------------------------------
+void CTFWeaponBase::ApplyOnInjuredAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info )
+{
 }
 
 //-----------------------------------------------------------------------------

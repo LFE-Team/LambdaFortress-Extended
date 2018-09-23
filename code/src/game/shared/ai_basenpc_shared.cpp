@@ -1282,6 +1282,10 @@ void CAI_BaseNPC::OnRemoveHalloweenGiant( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnAddPhase(void)
 {
+#ifdef GAME_DLL
+	DropFlag();
+#endif
+
 	UpdatePhaseEffects();
 }
 
@@ -1365,7 +1369,7 @@ void CAI_BaseNPC::AddPhaseEffects(void)
 	pPhaseTrail->SetStartWidth( 16.0f );
 	pPhaseTrail->SetTextureResolution( 0.01416667 );
 	pPhaseTrail->SetLifeTime( 1.0 );
-	pPhaseTrail->SetAttachment( this, LookupAttachment( "root" ) );
+	pPhaseTrail->FollowEntity( this );
 	m_pPhaseTrails.AddToTail( pPhaseTrail );
 }
 #endif
@@ -1451,7 +1455,7 @@ void CAI_BaseNPC::OnAddMilk( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnAddGas( void )
 {
-	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", GetTeamNumber(), true );
+	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", GetTeamNumber() );
 	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW ); 
 }
 #endif
@@ -1530,7 +1534,7 @@ void CAI_BaseNPC::OnAddBuff( void )
 	// Start the buff effect
 	if ( !m_pBuffAura )
 	{
-		const char *pszEffectName = ConstructTeamParticle( "soldierbuff_%s_buffed", GetTeamNumber(), true );
+		const char *pszEffectName = ConstructTeamParticle( "soldierbuff_%s_buffed", GetTeamNumber() );
 
 		m_pBuffAura = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
@@ -1572,4 +1576,49 @@ void CAI_BaseNPC::OnRemoveSpeedBoost( void )
 #else
 	UpdateSpeedBoostEffects();
 #endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::HasItem( void )
+{
+	return ( m_hItem != NULL );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::SetItem( CTFItem *pItem )
+{
+	m_hItem = pItem;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CTFItem	*CAI_BaseNPC::GetItem( void )
+{
+	return m_hItem;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Is the player allowed to use a teleporter ?
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::HasTheFlag( void )
+{
+	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Are we allowed to pick the flag up?
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::IsAllowedToPickUpFlag( void )
+{
+	return true;
 }

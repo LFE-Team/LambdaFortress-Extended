@@ -77,7 +77,7 @@ const char *GetSyringeTrailParticleName( int iTeamNumber, bool bCritical )
 {
 	const char *pszFormat = bCritical ? "nailtrails_medic_%s_crit" : "nailtrails_medic_%s";
 
-	return ConstructTeamParticle( pszFormat, iTeamNumber, true );
+	return ConstructTeamParticle( pszFormat, iTeamNumber );
 }
 
 //-----------------------------------------------------------------------------
@@ -176,7 +176,7 @@ const char *GetNailTrailParticleName( int iTeamNumber, bool bCritical )
 {
 	const char *pszFormat = bCritical ? "nailtrails_scout_%s_crit" : "nailtrails_scout_%s";
 
-	return ConstructTeamParticle( pszFormat, iTeamNumber, true );
+	return ConstructTeamParticle( pszFormat, iTeamNumber );
 }
 
 //-----------------------------------------------------------------------------
@@ -273,7 +273,7 @@ const char *GetTranqDartTrailParticleName( int iTeamNumber, bool bCritical )
 {
 	const char *pszFormat = bCritical ? "tranq_tracer_teamcolor_%s_crit" : "tranq_tracer_teamcolor_%s";
 
-	return ConstructTeamParticle( pszFormat, iTeamNumber, true );
+	return ConstructTeamParticle( pszFormat, iTeamNumber );
 }
 
 //-----------------------------------------------------------------------------

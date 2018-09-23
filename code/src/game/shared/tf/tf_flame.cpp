@@ -176,22 +176,18 @@ void CTFFlameEntity::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void CTFFlameEntity::CreateTrails( void )
 {
-	if ( IsDormant() )
-		return;
-/*
-	const char *pszParticleEffect = "new_flame";
+	/*const char *pszParticleEffect = "new_flame_core";
  	// Halloween Spell Effect Check
 	int iGreenFlames = 0;
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), iGreenFlames, halloween_green_flames__halloween );
 
  	if ( iGreenFlames != 0 )
 	{
-		pszParticleEffect = "new_flame_fan";
+		pszParticleEffect = "new_flame_core_fan";
 	}
 
 	CNewParticleEffect *pFlameEffect = ParticleProp()->Create( pszParticleEffect, PATTACH_ABSORIGIN_FOLLOW );
-	ParticleProp()->AddControlPoint( pFlameEffect, 1, this, PATTACH_ABSORIGIN_FOLLOW );
-*/
+	ParticleProp()->AddControlPoint( pFlameEffect, 1, this, PATTACH_ABSORIGIN_FOLLOW );*/
 }
 
 //=============================================================================

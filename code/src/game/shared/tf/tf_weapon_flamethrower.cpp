@@ -470,6 +470,11 @@ void CTFFlameThrower::PrimaryAttack()
 			iDmgType |= DMG_CRITICAL;
 		}
 
+		if ( IsCurrentAttackAMiniCrit() )
+		{
+			iDmgType |= DMG_MINICRITICAL;
+		}
+
 #ifdef CLIENT_DLL
 		if ( bWasCritical != m_bCritFire )
 		{

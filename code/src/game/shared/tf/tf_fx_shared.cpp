@@ -226,6 +226,10 @@ void FX_FireBullets( int iPlayer, const Vector &vecOrigin, const QAngle &vecAngl
 		{
 			nDamageType |= DMG_CRITICAL;
 		}
+		else if ( pWeapon->IsCurrentAttackAMiniCrit() )
+		{
+			nDamageType |= DMG_MINICRITICAL;
+		}
 
 		nCustomDamageType = pWeapon->GetCustomDamageType();
 		bBuckshot = ( nDamageType & DMG_BUCKSHOT ) != 0;

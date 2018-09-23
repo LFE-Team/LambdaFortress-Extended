@@ -131,6 +131,7 @@ extern ConVar lfe_debug_director_print;
 #include "tf_weapon_medigun.h"
 #include "triggers.h"
 #include "tf_gamestats.h"
+#include "entity_capture_flag.h"
 #include "tf_shareddefs.h"
 #endif
 
@@ -687,6 +688,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	CAI_BaseNPC *pVictim = this;
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pKiller = info.GetAttacker();
+	CTFPlayer *pTFKiller = ToTFPlayer( pKiller );
 	//CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
 	CTFPlayer *pScorer = ToTFPlayer( TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim ) );
 	CBaseEntity *pAssister = TFGameRules()->GetAssister( pVictim, pKiller, pInflictor );
@@ -694,6 +696,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	// Work out what killed the player, and send a message to all clients about it
 	const char *killer_weapon_name = TFGameRules()->GetKillingWeaponName( info, NULL, iWeaponID );
 	const char *killer_weapon_log_name = NULL;
+
 
 	if ( iWeaponID && pScorer )
 	{
@@ -743,6 +746,39 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 			event->SetInt( "customkill", info.GetDamageCustom() );
 			event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
 
+			gameeventmanager->FireEvent( event );
+		}
+	}
+
+	// If the npc has a capture flag and was killed by a player, award that player a defense
+	if ( HasItem() && pTFKiller && ( pKiller != this ) )
+	{
+		CCaptureFlag *pCaptureFlag = dynamic_cast<CCaptureFlag *>( GetItem() );
+		if ( pCaptureFlag )
+		{
+			IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
+			if ( event )
+			{
+				event->SetInt( "player", pTFKiller->entindex() );
+				event->SetInt( "eventtype", TF_FLAGEVENT_DEFEND );
+				event->SetInt( "priority", 8 );
+				gameeventmanager->FireEvent( event );
+			}
+			CTF_GameStats.Event_PlayerDefendedPoint( pTFKiller );
+		}
+	}
+
+	// If the npc has a capture flag, drop it.
+	if ( HasItem() )
+	{
+		GetItem()->Drop( this, true );
+
+		IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
+		if ( event )
+		{
+			event->SetInt( "player", entindex() );
+			event->SetInt( "eventtype", TF_FLAGEVENT_DROPPED );
+			event->SetInt( "priority", 8 );
 			gameeventmanager->FireEvent( event );
 		}
 	}
@@ -3970,6 +4006,29 @@ void CAI_BaseNPC::RunAnimation( void )
 	else
 	{
 		SetPlaybackRate( 1.0f );
+	}
+
+	if ( IsSpeedBoosted() )
+	{
+		SetPlaybackRate( 1.2f );
+	}
+	else
+	{
+		SetPlaybackRate( 1.0f );
+	}
+
+	// Second, see if any flags are slowing them down
+	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
+	{
+		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( GetItem() );
+
+		if ( pFlag )
+		{
+			if ( pFlag->GetGameType() == TF_FLAGTYPE_ATTACK_DEFEND || pFlag->GetGameType() == TF_FLAGTYPE_TERRITORY_CONTROL )
+			{
+				SetPlaybackRate( 0.6f );
+			}
+		}
 	}
 #endif
 
@@ -11913,8 +11972,9 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropInt( SENDINFO( m_nPlayerCondEx3 ), -1, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropInt( SENDINFO( m_nNumHealers ), 5, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropBool( SENDINFO( m_bBurningDeath ) ),
-	SendPropInt( SENDINFO( m_nTFFlags ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_flCondExpireTimeLeft ), SendPropFloat( SENDINFO_ARRAY( m_flCondExpireTimeLeft ) ) )
+	SendPropArray3( SENDINFO_ARRAY3( m_flCondExpireTimeLeft ), SendPropFloat( SENDINFO_ARRAY( m_flCondExpireTimeLeft ) ) ),
+	SendPropEHandle( SENDINFO( m_hItem ) ),
+	SendPropInt( SENDINFO( m_nTFFlags ) )
 #endif
 END_SEND_TABLE()
 
@@ -12523,9 +12583,10 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 
 	m_bAirblasted = false;
 
-	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
-
 	m_flLastObjectiveTime = -1.f;
+	m_hItem = NULL;
+
+	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
 #endif
 }
 
@@ -15525,22 +15586,27 @@ void CAI_BaseNPC::RecalculateChargeEffects( bool bInstantRemove )
 	bool bShouldCharge[TF_CHARGE_COUNT] = { };
 	CTFPlayer *pProviders[TF_CHARGE_COUNT] = { };
 
-		// Check players healing us.
-		for ( int i = 0; i < m_aHealers.Count(); i++ )
+	// Check players healing us.
+	for ( int i = 0; i < m_aHealers.Count(); i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( m_aHealers[i].pPlayer );
+		if ( !pPlayer )
+			continue;
+
+		medigun_charge_types chargeType = GetChargeEffectBeingProvided( pPlayer );
+
+		if ( chargeType != TF_CHARGE_NONE )
 		{
-			CTFPlayer *pPlayer = ToTFPlayer( m_aHealers[i].pPlayer );
-			if ( !pPlayer )
-				continue;
-
-			medigun_charge_types chargeType = GetChargeEffectBeingProvided( pPlayer );
-
-			if ( chargeType != TF_CHARGE_NONE )
-			{
-				bShouldCharge[chargeType] = true;
-				pProviders[chargeType] = pPlayer;
-			}
+			bShouldCharge[chargeType] = true;
+			pProviders[chargeType] = pPlayer;
 		}
+	}
 
+	// Deny stock uber while carrying flag.
+	if ( HasTheFlag() )
+	{
+		bShouldCharge[TF_CHARGE_INVULNERABLE] = false;
+	}
 
 	for ( int i = 0; i < TF_CHARGE_COUNT; i++ )
 	{
@@ -15568,7 +15634,7 @@ void CAI_BaseNPC::SetChargeEffect( medigun_charge_types chargeType, bool bShould
 
 	if ( bShouldCharge )
 	{
-		Assert( chargeType != TF_CHARGE_INVULNERABLE );
+		Assert( chargeType != TF_CHARGE_INVULNERABLE || !HasTheFlag()  );
 
 		if ( m_flChargeOffTime[chargeType] != 0.0f )
 		{
@@ -16106,5 +16172,30 @@ void CAI_BaseNPC::InputAddCond( inputdata_t &inputdata )
 void CAI_BaseNPC::InputRemoveCond( inputdata_t &inputdata )
 {
 	RemoveCond( inputdata.value.Int() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::DropFlag( void )
+{
+	if ( HasItem() )
+	{
+		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( GetItem() );
+		if ( pFlag )
+		{
+			pFlag->Drop( this, true, true );
+			IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
+			if ( event )
+			{
+				event->SetInt( "player", entindex() );
+				event->SetInt( "eventtype", TF_FLAGEVENT_DROPPED );
+				event->SetInt( "priority", 8 );
+
+				gameeventmanager->FireEvent( event );
+			}
+			RemoveGlowEffect();
+		}
+	}
 }
 #endif

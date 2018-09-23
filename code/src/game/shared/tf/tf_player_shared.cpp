@@ -452,8 +452,8 @@ bool CTFPlayerShared::IsCritBoosted( void )
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::IsMiniCritBoosted( void )
 {
-	if ( InCond( TF_COND_ENERGY_BUFF ) ||
-		InCond( TF_COND_NOHEALINGDAMAGEBUFF ) ||
+	if ( InCond( TF_COND_OFFENSEBUFF ) ||
+		InCond( TF_COND_ENERGY_BUFF ) ||
 		InCond( TF_COND_MINICRITBOOSTED_ON_KILL ) )
 		return true;
 
@@ -819,6 +819,10 @@ void CTFPlayerShared::OnConditionAdded( int nCond )
 		OnAddBuff();
 		break;
 
+	case LFE_COND_FLASHLIGHT:
+		OnAddFlashlight();
+		break;
+
 	default:
 		break;
 	}
@@ -964,6 +968,10 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 	case TF_COND_DEFENSEBUFF:
 	case TF_COND_REGENONDAMAGEBUFF:
 		OnRemoveBuff();
+		break;
+
+	case LFE_COND_FLASHLIGHT:
+		OnRemoveFlashlight();
 		break;
 
 	default:
@@ -1870,7 +1878,7 @@ void CTFPlayerShared::OnAddGas( void )
 #ifdef GAME_DLL
 	m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
 #else
-	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", m_pOuter->GetTeamNumber(), true );
+	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", m_pOuter->GetTeamNumber() );
 	m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW ); 
 
 	// set the gas screen overlay
@@ -1971,7 +1979,7 @@ void CTFPlayerShared::OnAddBuff( void )
 	// Start the buff effect
 	if ( !m_pBuffAura )
 	{
-		const char *pszEffectName = ConstructTeamParticle( "soldierbuff_%s_buffed", m_pOuter->GetTeamNumber(), true );
+		const char *pszEffectName = ConstructTeamParticle( "soldierbuff_%s_buffed", m_pOuter->GetTeamNumber() );
 
 		m_pBuffAura = m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
@@ -1995,13 +2003,83 @@ void CTFPlayerShared::OnRemoveBuff( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CTFPlayerShared::OnAddFlashlight( void )
+{
+#ifdef GAME_DLL
+	m_pOuter->AddEffects( EF_DIMLIGHT );
+#else
+	m_pOuter->EmitSound( "HL2Player.FlashlightOn" );
+
+	int iAttachment = 1;
+
+	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
+
+	if( pWeapon )
+	{
+		C_TFWeaponBase *pTFWeapon = dynamic_cast< C_TFWeaponBase* >( pWeapon );
+		if ( pTFWeapon )
+		{
+			iAttachment = pTFWeapon->GetViewmodelAddon() ? pTFWeapon->GetViewmodelAddon()->LookupAttachment( "muzzle" ) : pWeapon->LookupAttachment( "muzzle" );
+		}
+		else
+		{
+			iAttachment = pWeapon->LookupAttachment( "muzzle" );
+		}
+
+		if ( iAttachment < 0 )
+		{
+			iAttachment = pTFWeapon->GetViewmodelAddon() ? pTFWeapon->GetViewmodelAddon()->LookupAttachment( "root" ) : pWeapon->LookupAttachment( "root" );
+		}
+	}
+
+	if ( !m_pOuter->ShouldDrawThisPlayer() ) // in firstperson
+	{
+		C_TFViewModel *pViewModel = dynamic_cast<C_TFViewModel *>( m_pOuter->GetViewModel() );
+
+		if ( pViewModel )
+		{
+			if ( !m_pFlashlightBeam )
+				m_pFlashlightBeam = pViewModel->ParticleProp()->Create( "flashlight_firstperson_", PATTACH_POINT_FOLLOW, iAttachment );
+		}
+	}
+	else if ( !m_pOuter->IsDormant() ) // in thirdperson
+	{
+		C_BaseCombatWeapon *pWeapon = m_pOuter->GetActiveWeapon();
+
+		if( pWeapon )
+		{
+			if ( !m_pFlashlightBeam )
+				m_pFlashlightBeam = pWeapon->ParticleProp()->Create( "flashlight_thirdperson", PATTACH_POINT_FOLLOW, iAttachment );
+		}
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::OnRemoveFlashlight( void )
+{
+#ifdef GAME_DLL
+	m_pOuter->RemoveEffects( EF_DIMLIGHT );
+#else
+	m_pOuter->EmitSound( "HL2Player.FlashlightOff" );
+
+	m_pOuter->ParticleProp()->StopEmission( m_pFlashlightBeam );
+	m_pFlashlightBeam = NULL;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddPowerPlay( void )
 {
 #ifdef GAME_DLL
 	RecalculateChargeEffects();
 	Burn( m_pOuter );
 #else
-	const char *pszEffectName = ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber(), true );
+	const char *pszEffectName = ConstructTeamParticle( "scout_dodge_%s", m_pOuter->GetTeamNumber() );
 	m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "head" );
 #endif
 }
@@ -2426,7 +2504,7 @@ void CTFPlayerShared::OnAddBurning( void )
 	// Start the burning effect
 	if ( !m_pOuter->m_pBurningEffect )
 	{
-		const char *pszEffectName = ConstructTeamParticle( "burningplayer_%s", m_pOuter->GetTeamNumber(), true );
+		const char *pszEffectName = ConstructTeamParticle( "burningplayer_%s", m_pOuter->GetTeamNumber() );
 
 		m_pOuter->m_pBurningEffect = m_pOuter->ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 
@@ -3876,10 +3954,10 @@ void CTFPlayer::TeamFortress_SetSpeed()
 		CALL_ATTRIB_HOOK_FLOAT( maxfbspeed, mult_player_movespeed_active );
 	}
 
-	// 50% speed boost from the power-up.
-	if ( m_Shared.InCond( TF_COND_SPEED_BOOST ) )
+	// speed boost
+	if ( m_Shared.IsSpeedBoosted() )
 	{
-		maxfbspeed *= 1.5f;
+		maxfbspeed *= 1.2f;
 	}
 
 	// Slow us down if we're disguised as a slower class

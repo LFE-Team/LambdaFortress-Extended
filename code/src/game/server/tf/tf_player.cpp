@@ -991,8 +991,7 @@ void CTFPlayer::FlashlightTurnOn( void )
 {
 	if( flashlight.GetInt() > 0 && IsAlive() )
 	{
-		AddEffects( EF_DIMLIGHT );
-		EmitSound( "HL2Player.FlashlightOn" );
+		m_Shared.AddCond( LFE_COND_FLASHLIGHT );
 	}
 }
 
@@ -1001,10 +1000,10 @@ void CTFPlayer::FlashlightTurnOn( void )
 void CTFPlayer::FlashlightTurnOff( void )
 {
 	RemoveEffects( EF_DIMLIGHT );
-	
-	if( IsAlive() )
+
+	if ( IsAlive() )
 	{
-		EmitSound( "HL2Player.FlashlightOff" );
+		m_Shared.RemoveCond( LFE_COND_FLASHLIGHT );
 	}
 }
 
@@ -1073,9 +1072,9 @@ void CTFPlayer::Precache()
 	PrecacheParticleSystem( "cig_smoke" );
 	PrecacheParticleSystem( "speech_mediccall" );
 	PrecacheTeamParticles( "player_recent_teleport_%s" );
-	PrecacheTeamParticles( "particle_nemesis_%s", true );
+	PrecacheTeamParticles( "particle_nemesis_%s" );
 	PrecacheTeamParticles( "spy_start_disguise_%s" );
-	PrecacheTeamParticles( "burningplayer_%s", true );
+	PrecacheTeamParticles( "burningplayer_%s" );
 	PrecacheTeamParticles( "critgun_weaponmodel_%s", true, g_aTeamNamesShort );
 	PrecacheTeamParticles( "critgun_weaponmodel_%s_glow", true, g_aTeamNamesShort );
 	PrecacheTeamParticles( "healthlost_%s", false, g_aTeamNamesShort );
@@ -1088,7 +1087,7 @@ void CTFPlayer::Precache()
 	PrecacheParticleSystem( "water_playerdive" );
 	PrecacheParticleSystem( "water_playeremerge" );
 	PrecacheParticleSystem( "rocketjump_smoke" );
-	PrecacheTeamParticles( "overhealedplayer_%s_pluses", false );
+	PrecacheTeamParticles( "overhealedplayer_%s_pluses" );
 	PrecacheParticleSystem( "speech_typing" );
 
 	PrecacheTeamParticles( "healhuff_%s", false, g_aTeamNamesShort );
@@ -4847,6 +4846,16 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		if ( m_Shared.InCond( TF_COND_AIMING ) )
 		{
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flDamage, spunup_damage_resistance );
+		}
+
+		if ( m_Shared.InCond( TF_COND_DEFENSEBUFF ) )
+		{
+			flDamage = 0.65f;
+
+			if ( ( info.GetDamageType() & DMG_BULLET ) && pInflictor->IsBaseObject() )
+			{
+				flDamage = 0.50f;
+			}
 		}
 	}
 

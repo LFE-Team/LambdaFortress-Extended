@@ -86,12 +86,19 @@ void CFuncFlagAlertZone::InputDisable( inputdata_t &inputdata )
 bool CFuncFlagAlertZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( pEntity );
+	//CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
 	if ( pPlayer && pPlayer->HasItem() )
 	{
 		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pPlayer->GetItem() );
 		if ( pFlag )
 			return true;
 	}
+	//else if ( pNPC && pNPC->HasItem() )
+	//{
+	//	CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pNPC->GetItem() );
+	//	if ( pFlag )
+	//		return true;
+	//}
 	
 	return false;
 }
@@ -99,19 +106,14 @@ bool CFuncFlagAlertZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFuncFlagAlertZone::FlagCaptured( CTFPlayer *pPlayer )
+void CFuncFlagAlertZone::FlagCaptured( CBaseEntity *pPlayer )
 {
-	if ( pPlayer && IsTouching( pPlayer ) )
-	{
-		// Apparently this function is used for giving an achievement in live tf2
-		// however since we don't have that, we'll just leave this function as a stub
-	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagCapturedInAlertZone( CTFPlayer *pPlayer )
+void HandleFlagCapturedInAlertZone( CBaseEntity *pPlayer )
 {
 	for ( int i = 0; i < IFlagAlertZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -162,7 +164,7 @@ void CFuncFlagAlertZone::EndTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFuncFlagAlertZone::FlagPickedUp( CTFPlayer *pPlayer )
+void CFuncFlagAlertZone::FlagPickedUp( CBaseEntity *pPlayer )
 {
 	if ( pPlayer && IsTouching( pPlayer ) )
 	{
@@ -181,7 +183,7 @@ void CFuncFlagAlertZone::FlagPickedUp( CTFPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagPickedUpInAlertZone( CTFPlayer *pPlayer )
+void HandleFlagPickedUpInAlertZone( CBaseEntity *pPlayer )
 {
 	for ( int i = 0; i < IFlagAlertZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -191,13 +193,4 @@ void HandleFlagPickedUpInAlertZone( CTFPlayer *pPlayer )
 			pZone->FlagPickedUp( pPlayer );
 		}
 	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CFuncFlagAlertZone::InputTest(inputdata_t &inputdata)
-{
-	
 }

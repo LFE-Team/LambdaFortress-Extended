@@ -52,7 +52,7 @@ void CTFProjectile_Rocket::Precache()
 {
 	PrecacheModel( ROCKET_MODEL );
 
-	PrecacheTeamParticles( "critical_rocket_%s", true );
+	PrecacheTeamParticles( "critical_rocket_%s" );
 	PrecacheParticleSystem( "rockettrail" );
 
 	BaseClass::Precache();
