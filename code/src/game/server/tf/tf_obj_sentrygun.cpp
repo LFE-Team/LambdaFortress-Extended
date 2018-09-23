@@ -640,8 +640,7 @@ bool CObjectSentrygun::FindTarget()
 	Vector vecSentryOrigin = EyePosition();
 
 	// oh boi it's the sentry stay away from it.
-	//CSoundEnt::InsertSound( ( SOUND_DANGER | SOUND_CONTEXT_REACT_TO_SOURCE | SOUND_CONTEXT_DANGER_APPROACH ), vecSentryOrigin, 128, 3.0 );
-	// CUT BY TRAIN: replaced since npcs can properly attack sentries now.
+	CSoundEnt::InsertSound( SOUND_MOVE_AWAY, vecSentryOrigin, 32, 3.0 );
 
 	// Find the opposing team list.
 	CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );

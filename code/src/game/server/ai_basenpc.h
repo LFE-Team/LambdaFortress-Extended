@@ -620,7 +620,6 @@ public:
 
 	virtual void		CleanupOnDeath( CBaseEntity *pCulprit = NULL, bool bFireDeathOutput = true );
 	virtual void		UpdateOnRemove( void );
-	void				SentryThink(void);
 
 	virtual int			UpdateTransmitState();
 
@@ -2370,6 +2369,8 @@ public:
 	bool HasTheFlag( void );
 
 	void				DropFlag( void );
+
+	void				SearchBuildingThink( void );
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;

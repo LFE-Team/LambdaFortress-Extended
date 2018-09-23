@@ -12573,7 +12573,6 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_bInChoreo = true; // assume so until call to UpdateEfficiency()
 	
 	SetCollisionGroup( COLLISION_GROUP_NPC );
-	SetContextThink(&CAI_BaseNPC::SentryThink, gpGlobals->curtime + 0.1, "sentrycontext");
 
 #ifdef TF_CLASSIC
 	m_nPlayerCond = 0;
@@ -12588,6 +12587,8 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 	m_hItem = NULL;
 
 	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
+
+	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "sentrycontext" );
 #endif
 }
 
@@ -12633,24 +12634,25 @@ void CAI_BaseNPC::UpdateOnRemove(void)
 	BaseClass::UpdateOnRemove();
 }
 
-void CAI_BaseNPC::SentryThink(void)
+void CAI_BaseNPC::SearchBuildingThink( void )
 {
-	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest("obj_sentrygun", GetAbsOrigin(), 512);
+	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest( "obj_sentrygun", GetAbsOrigin(), 512 );
 	if (pSentry && pSentry->GetTeamNumber() != GetTeamNumber())
 	{
-		SetTarget(pSentry);
+		SetTarget( pSentry );
 	}
-	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest("obj_dispenser", GetAbsOrigin(), 512);
+	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest( "obj_dispenser", GetAbsOrigin(), 512 );
 	if (!pSentry && pDispenser && pDispenser->GetTeamNumber() != GetTeamNumber())
 	{
-		SetTarget(pDispenser);
+		SetTarget( pDispenser );
 	}
-	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest("obj_teleporter", GetAbsOrigin(), 512);
+	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest( "obj_teleporter", GetAbsOrigin(), 512 );
 	if (!pSentry && !pDispenser && pTeleporter && pTeleporter->GetTeamNumber() != GetTeamNumber())
 	{
-		SetTarget(pTeleporter);
+		SetTarget( pTeleporter );
 	}
-	SetContextThink(&CAI_BaseNPC::SentryThink, gpGlobals->curtime + 0.1, "sentrycontext");
+
+	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "sentrycontext" );
 }
 
 //-----------------------------------------------------------------------------
