@@ -9748,6 +9748,17 @@
 	"wave"			"vo/taunts/medic_Taunts15.wav"
 }
 
+"Medic.Taunts16"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"0.820"
+	"pitch"			"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_95dB"
+
+	"wave"			"vo/taunts/medic_Taunts16.mp3"
+}
+
 "Medic.Thanks01"
 {
 	"channel"		"CHAN_VOICE"
@@ -15579,7 +15590,7 @@
 	
 	"soundlevel"  "SNDLVL_95dB"
 	
-	"wave"  "vo/sniper_meleedare08.wav"
+	"wave"  "vo/sniper_meleedare08.mp3"
 }
 
 "sniper.MeleeDare09"
@@ -21105,7 +21116,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon04.wav"
+ "wave"  "vo/heavy_SpecialWeapon04.mp3"
 }
  
 "Heavy.SpecialWeapon01"
@@ -21114,7 +21125,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon01.wav"
+ "wave"  "vo/heavy_SpecialWeapon01.mp3"
 }
  
 "Heavy.SpecialWeapon02"
@@ -21123,7 +21134,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon02.wav"
+ "wave"  "vo/heavy_SpecialWeapon02.mp3"
 }
  
 "Heavy.SpecialWeapon03"
@@ -21132,7 +21143,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon03.wav"
+ "wave"  "vo/heavy_SpecialWeapon03.mp3"
 }
  
 "Heavy.SpecialWeapon05"
@@ -21141,7 +21152,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon05.wav"
+ "wave"  "vo/heavy_SpecialWeapon05.mp3"
 }
  
 "Heavy.SpecialWeapon06"
@@ -21150,7 +21161,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon06.wav"
+ "wave"  "vo/heavy_SpecialWeapon06.mp3"
 }
  
 "Heavy.SpecialWeapon07"
@@ -21159,7 +21170,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon07.wav"
+ "wave"  "vo/heavy_SpecialWeapon07.mp3"
 }
  
 "Heavy.SpecialWeapon08"
@@ -21168,7 +21179,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon08.wav"
+ "wave"  "vo/heavy_SpecialWeapon08.mp3"
 }
  
 "Heavy.SpecialWeapon09"
@@ -21177,7 +21188,7 @@
  "volume"  "0.820"
  "pitch"  "PITCH_NORM"
  "soundlevel"  "SNDLVL_95dB"
- "wave"  "vo/heavy_SpecialWeapon09.wav"
+ "wave"  "vo/heavy_SpecialWeapon09.mp3"
 }
   
 "Heavy.SandwichEat"
@@ -24650,7 +24661,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/spy_JarateHit01.wav"
+	"wave"		"vo/spy_JarateHit01.mp3"
 }
 
 "Spy.JarateHit02"
@@ -24659,7 +24670,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/spy_JarateHit02.wav"
+	"wave"		"vo/spy_JarateHit02.mp3"
 }
 
 "Spy.JarateHit03"
@@ -24668,7 +24679,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/spy_JarateHit03.wav"
+	"wave"		"vo/spy_JarateHit03.mp3"
 }
 
 "Spy.JarateHit04"
@@ -24677,7 +24688,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/spy_JarateHit04.wav"
+	"wave"		"vo/spy_JarateHit04.mp3"
 }
 
 "Spy.JarateHit05"
@@ -24686,7 +24697,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/spy_JarateHit05.wav"
+	"wave"		"vo/spy_JarateHit05.mp3"
 }
 
 "Spy.JarateHit06"
@@ -24695,7 +24706,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/spy_JarateHit06.wav"
+	"wave"		"vo/spy_JarateHit06.mp3"
 }
 
 "Spy.MedicFollow01"
@@ -25233,7 +25244,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/sniper_JarateToss01.wav"
+	"wave"		"vo/sniper_JarateToss01.mp3"
 }
 
 "Sniper.JarateToss02"
@@ -25242,7 +25253,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/sniper_JarateToss02.wav"
+	"wave"		"vo/sniper_JarateToss02.mp3"
 }
 
 "Sniper.JarateToss03"
@@ -25251,7 +25262,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/sniper_JarateToss03.wav"
+	"wave"		"vo/sniper_JarateToss03.mp3"
 }
 
 //-----------------------------------------------------------------------------
@@ -28099,7 +28110,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentrymoving01.wav"
+	"wave"		"vo/engineer_sentrymoving01.mp3"
 }
 
 "engineer_sentrymoving02"
@@ -28108,7 +28119,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentrymoving02.wav"
+	"wave"		"vo/engineer_sentrymoving02.mp3"
 }
 
 "engineer_sentrymoving03"
@@ -28117,7 +28128,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentrymoving03.wav"
+	"wave"		"vo/engineer_sentrymoving03.mp3"
 }
 
 "engineer_sentrypacking01"
@@ -28126,7 +28137,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentrypacking01.wav"
+	"wave"		"vo/engineer_sentrypacking01.mp3"
 }
 
 "engineer_sentrypacking02"
@@ -28135,7 +28146,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentrypacking02.wav"
+	"wave"		"vo/engineer_sentrypacking02.mp3"
 }
 
 "engineer_sentrypacking03"
@@ -28144,7 +28155,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentrypacking03.wav"
+	"wave"		"vo/engineer_sentrypacking03.mp3"
 }
 
 "engineer_sentryplanting01"
@@ -28153,7 +28164,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentryplanting01.wav"
+	"wave"		"vo/engineer_sentryplanting01.mp3"
 }
 
 "engineer_sentryplanting02"
@@ -28162,7 +28173,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentryplanting02.wav"
+	"wave"		"vo/engineer_sentryplanting02.mp3"
 }
 
 "engineer_sentryplanting03"
@@ -28171,7 +28182,7 @@
 	"volume"		"1.000"
 	"pitch"		"PITCH_NORM"
 	"soundlevel"		"SNDLVL_95dB"
-	"wave"		"vo/engineer_sentryplanting03.wav"
+	"wave"		"vo/engineer_sentryplanting03.mp3"
 }
 
 "engineer_wranglekills01"
