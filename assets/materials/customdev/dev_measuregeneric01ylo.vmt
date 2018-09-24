@@ -1,7 +1,0 @@
-"LightmappedGeneric"
-{
-	// Original shader: BaseTimesLightmap
-	"$basetexture" "customdev/dev_measuregeneric01ylo"
-	"$surfaceprop" "concrete"
-	"%keywords" "tf"
-}
