@@ -479,6 +479,18 @@ void CTFBaseRocket::Explode( trace_t *pTrace, CBaseEntity *pOther )
 int	CTFBaseRocket::GetDamageType( void )
 {
 	int iDmgType = g_aWeaponDamageTypes[GetWeaponID()];
+
+	// Buff banner mini-crit calculations
+	CTFWeaponBase *pWeapon = ( CTFWeaponBase * )m_hLauncher.Get();
+	if ( pWeapon )
+	{
+		pWeapon->CalcIsAttackMiniCritical();
+		if ( pWeapon->IsCurrentAttackAMiniCrit() )
+		{
+			iDmgType |= DMG_MINICRITICAL;
+		}
+	}
+
 	if ( m_bCritical )
 	{
 		iDmgType |= DMG_CRITICAL;

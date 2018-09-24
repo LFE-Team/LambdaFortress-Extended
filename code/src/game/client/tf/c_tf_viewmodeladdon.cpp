@@ -116,69 +116,10 @@ int C_ViewmodelAttachmentModel::DrawModel( int flags )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: i don't even know if this is the right place to put.
+// Purpose:
 //-----------------------------------------------------------------------------
 void C_ViewmodelAttachmentModel::UpdateExtraWearables( void )
 {
-	// Get the player and active weapon.
-	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pPlayer )
-		return;
-
-	C_TFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
-
-	C_TFWeaponAttachmentModel *pAttachedModel = m_hAttachmentModel.Get();
-
-	if ( pWeapon )
-	{
-		CEconItemView *pItemView = pWeapon->GetItem();
-		CEconItemDefinition *pItemDef = pItemView->GetStaticData();
-
-		if ( pItemDef )
-		{
-			if ( pItemView->GetStaticData() && ( !pItemView->GetStaticData()->lfe_attached_models ) )
-			{
-				if ( pAttachedModel )
-				{
-					if ( pAttachedModel->GetModelIndex() == modelinfo->GetModelIndex( pItemView->GetAttachedDisplayModel() ) )
-					{
-						pAttachedModel->m_nSkin = GetSkin();
-	
-						if ( pPlayer != GetOwner() ) // Spectator fix
-						{
-							pAttachedModel->FollowEntity( this );
-							pAttachedModel->m_nRenderFX = m_nRenderFX;
-							pAttachedModel->UpdateVisibility();
-						}
-						return; // we already have the correct add-on
-					}
-					else
-					{
-						if ( m_hAttachmentModel.Get() )
-						{
-							m_hAttachmentModel->SetModel( "" );
-							m_hAttachmentModel->Remove();
-						}
-					}
-				}
-
-				pAttachedModel = new C_TFWeaponAttachmentModel();
-
-				if ( pAttachedModel->InitializeAsClientEntity( pItemView->GetAttachedDisplayModel(), RENDER_GROUP_VIEW_MODEL_TRANSLUCENT ) == false )
-				{
-					pAttachedModel->Release();
-					return;
-				}
-
-				m_hAttachmentModel = pAttachedModel;
-
-				pAttachedModel->m_nSkin = GetSkin();
-				//pAttachedModel->SetOwner( GetOwner() );
-				pAttachedModel->FollowEntity( this );
-				pAttachedModel->UpdateVisibility();
-			}
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

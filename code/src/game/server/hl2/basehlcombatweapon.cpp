@@ -11,6 +11,9 @@
 #include "game.h"
 #include "in_buttons.h"
 #include "gamestats.h"
+#ifdef TF_CLASSIC
+#include "tf_fx_shared.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -95,7 +98,32 @@ void CHLMachineGun::PrimaryAttack( void )
 	info.m_flDistance = MAX_TRACE_LENGTH;
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
+	#ifndef TF_CLASSIC
 	FireBullets( info );
+	#else
+	// Fire a bullet (ignoring the shooter).
+	Vector vecStart = info.m_vecSrc;
+	Vector vecEnd = vecStart + info.m_vecDirShooting * info.m_flDistance;
+	trace_t trace;
+	UTIL_TraceLine( vecStart, vecEnd, ( MASK_SHOT ), this, COLLISION_GROUP_NONE, &trace );
+
+	// Setup the bullet damage type & roll for crit.
+	int	nDamageType	= DMG_GENERIC;
+	int nCustomDamageType = TF_DMG_CUSTOM_NONE;
+
+	if ( IsCurrentAttackACrit() )
+	{
+		nDamageType |= DMG_CRITICAL;
+	}
+	else if ( IsCurrentAttackAMiniCrit() )
+	{
+		nDamageType |= DMG_MINICRITICAL;
+	}
+
+	CTakeDamageInfo dmgInfo( this, info.m_pAttacker, this, info.m_flDamage, nDamageType, nCustomDamageType );
+	//CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, info.m_vecDirShooting, trace.endpos, 1.0 );	//MATTTODO bullet forces
+	trace.m_pEnt->DispatchTraceAttack( dmgInfo, info.m_vecDirShooting, &trace );
+	#endif
 
 	//Factor in the view kick
 	AddViewKick();

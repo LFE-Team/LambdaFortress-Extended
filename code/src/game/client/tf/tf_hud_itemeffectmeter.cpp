@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
+//========= Copyright ? 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -16,9 +16,9 @@
 #include <vgui/IVGui.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/ProgressBar.h>
+#include <vgui_controls/AnimationController.h>
 #include "engine/IEngineSound.h"
 #include "tf_controls.h"
-#include "tf_weaponbase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -41,7 +41,8 @@ public:
 	virtual void	PerformLayout( void );
 	virtual void	LevelInit( void );
 
-	void			UpdateStatus( void );
+	virtual void	UpdateStatus( void );
+
 	int				GetSlot( void ) { return m_iSlot; }
 	void			SetSlot( int iSlot ) { m_iSlot = iSlot; }
 	void			SetWeapon( C_TFWeaponBase *pWeapon );
@@ -50,6 +51,7 @@ private:
 	ContinuousProgressBar *m_pEffectMeter;
 	CExLabel *m_pEffectMeterLabel;
 
+	bool m_bPlayingAnim;
 	int m_iSlot;
 	CHandle<C_TFWeaponBase> m_hWeapon;
 	float m_flOldCharge;
@@ -63,7 +65,6 @@ CHudItemEffectMeter::CHudItemEffectMeter( Panel *pParent, const char *pElementNa
 	m_pEffectMeter = new ContinuousProgressBar( this, "ItemEffectMeter" );
 	m_pEffectMeterLabel = new CExLabel( this, "ItemEffectMeterLabel", "" );
 	m_iSlot = 0;
-	m_flOldCharge = 1.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -73,6 +74,7 @@ void CHudItemEffectMeter::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
+	// load control settings...
 	LoadControlSettings( "resource/UI/HudItemEffectMeter.res" );
 }
 
@@ -122,11 +124,13 @@ void CHudItemEffectMeter::UpdateStatus( void )
 	{
 		if ( pEntity != m_hWeapon.Get() )
 		{
-			// Weapon changed, reset the label and progress.
 			m_hWeapon = static_cast<C_TFWeaponBase *>( pEntity );
-			m_flOldCharge = m_hWeapon->GetEffectBarProgress();
+			m_flOldCharge = m_hWeapon->GetEffectBarProgress();;
 
 			InvalidateLayout();
+
+			// Reset the bar color
+			m_pEffectMeter->SetFgColor( Color( 255, 255, 255, 255 ) );
 		}
 	}
 	else
@@ -142,70 +146,48 @@ void CHudItemEffectMeter::UpdateStatus( void )
 
 		return;
 	}
-	else
+
+	if ( !IsVisible() )
 	{
-		if ( !IsVisible() )
-			SetVisible( true );
+		SetVisible( true );
 	}
 
 	if ( m_pEffectMeter )
 	{
-		float flCharge = m_hWeapon->GetEffectBarProgress();
+		float flCharge = m_hWeapon->GetEffectBarProgress();;
 		m_pEffectMeter->SetProgress( flCharge );
 		
 		// Play a ding when full charged.
-		if ( m_flOldCharge < 1.0f && flCharge == 1.0f && !m_hWeapon->IsWeapon( TF_WEAPON_INVIS ) )
+		if ( m_flOldCharge < 1.0f && flCharge >= 1.0f && !m_hWeapon->IsWeapon( TF_WEAPON_INVIS ) )
 		{
 			CLocalPlayerFilter filter;
 			C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, "TFPlayer.Recharged" );
+
+			if ( m_hWeapon->IsWeapon( TF_WEAPON_BUFF_ITEM ) )
+			{
+				m_pEffectMeter->SetFgColor( Color( 255, 0, 0, 255 ) );
+			}
 		}
+
+		if ( m_flOldCharge > 0.0f && flCharge == 0.0f && m_hWeapon->IsWeapon( TF_WEAPON_BUFF_ITEM ) )
+		{
+			m_pEffectMeter->SetFgColor( COLOR_WHITE );
+		}
+
+		// FIXME: I can't get the animation working right so I'm commenting this out for now
+
+		/*if ( m_hWeapon->EffectMeterShouldFlash() && !m_bPlayingAnim )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "HudRageCharged" );
+			m_bPlayingAnim = true;
+		}
+		else if ( m_bPlayingAnim )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( this, "HudRageChargedStop" );
+		}*/
 
 		m_flOldCharge = flCharge;
 	}
-
-	/*for ( int i = 0; i < MAX_WEAPONS; i++ )
-	{
-		C_TFWeaponBase *pWeapon = ( C_TFWeaponBase *)pPlayer->GetWeapon( i );
-		if ( !pWeapon )
-			return;
-
-		if ( pPlayer && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX_DRINK || pWeapon->GetWeaponID() == TF_WEAPON_JAR_MILK )
-		{
-			LoadControlSettings( "resource/UI/HudItemEffectMeter_Scout.res" );
-		}
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_SodaPopper.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Cleaver.res" );
-		else if ( pPlayer && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX )
-		{
-			LoadControlSettings( "resource/UI/HudItemEffectMeter_Heavy.res" );
-		}
-		else if ( pPlayer && pWeapon->GetWeaponID() == TF_WEAPON_JAR )
-		{
-			LoadControlSettings( "resource/UI/HudItemEffectMeter_Sniper.res" );
-		}
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_SniperFocus.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Demoman.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_ParticleCannon.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Raygun.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_SpyKnife.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Sapper.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Spy.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Engineer.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Pomson.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Pyro.res" );
-		//LoadControlSettings( "resource/UI/HUDItemEffectMeter_Organs.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_Action.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_KillStreak.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_KartCharge.res" );
-		//LoadControlSettings( "resource/UI/HudItemEffectMeter_PowerupBottle.res" );
-		//LoadControlSettings( "resource/UI/HudRocketPack.res" );
-		else
-		{
-			LoadControlSettings( "resource/UI/HudItemEffectMeter.res" );
-		}
-	}*/
-
-	InvalidateLayout();
 }
 
 
@@ -220,6 +202,7 @@ public:
 	virtual void PerformLayout( void );
 	virtual bool ShouldDraw( void );
 	virtual void OnTick( void );
+	virtual void ApplySchemeSettings( IScheme *scheme );
 
 private:
 	CUtlVector<CHudItemEffectMeter *> m_pEffectBars;
@@ -235,7 +218,7 @@ CHudItemEffects::CHudItemEffects( const char *pElementName ) : CHudElement( pEle
 	Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	// Create effect bars for primary, secondary and melee slots.
+	// Create effect bars for primary, secondary, melee and pda slots.
 	for ( int i = 0; i < TF_PLAYER_WEAPON_COUNT; i++ )
 	{
 		CHudItemEffectMeter *pMeter = new CHudItemEffectMeter( this, "HudItemEffectMeter" );
@@ -251,6 +234,14 @@ CHudItemEffects::CHudItemEffects( const char *pElementName ) : CHudElement( pEle
 CHudItemEffects::~CHudItemEffects()
 {
 	m_pEffectBars.PurgeAndDeleteElements();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CHudItemEffects::ApplySchemeSettings( IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
 }
 
 //-----------------------------------------------------------------------------

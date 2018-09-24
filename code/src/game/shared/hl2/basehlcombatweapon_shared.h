@@ -19,15 +19,8 @@
 class CBaseHLCombatWeapon : public CBaseCombatWeapon
 {
 #if !defined( CLIENT_DLL )
-#ifndef _XBOX
 	DECLARE_DATADESC();
-#else
-protected:
-	DECLARE_DATADESC();
-private:
 #endif
-#endif
-
 	DECLARE_CLASS( CBaseHLCombatWeapon, CBaseCombatWeapon );
 public:
 	DECLARE_NETWORKCLASS();
@@ -62,6 +55,7 @@ public:
 	int				m_iSecondaryAttacks;	// # of secondary attacks performed with this weapon
 #if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
 	void CalcIsAttackCritical( void );
+	void CalcIsAttackMiniCritical( void );
 	virtual bool CalcIsAttackCriticalHelper();
 	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
 	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }

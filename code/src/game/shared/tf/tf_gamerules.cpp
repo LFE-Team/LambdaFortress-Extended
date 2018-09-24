@@ -1634,7 +1634,7 @@ ConVar sk_plr_dmg_grenade( "sk_plr_dmg_grenade","0");		// Very lame that the bas
 bool CTFGameRules::Damage_IsTimeBased( int iDmgType )
 {
 	// Damage types that are time-based.
-	return ( ( iDmgType & ( DMG_PARALYZE | DMG_NERVEGAS | DMG_DROWNRECOVER ) ) != 0 );
+	return ( ( iDmgType & ( DMG_PARALYZE /*| DMG_NERVEGAS*/ | DMG_DROWNRECOVER ) ) != 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -1645,7 +1645,7 @@ bool CTFGameRules::Damage_IsTimeBased( int iDmgType )
 bool CTFGameRules::Damage_ShowOnHUD( int iDmgType )
 {
 	// Damage types that have client HUD art.
-	return ( ( iDmgType & ( DMG_DROWN | DMG_BURN | DMG_NERVEGAS | DMG_SHOCK ) ) != 0 );
+	return ( ( iDmgType & ( DMG_DROWN | DMG_BURN /*| DMG_NERVEGAS*/ | DMG_SHOCK ) ) != 0 );
 }
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1663,7 +1663,7 @@ bool CTFGameRules::Damage_ShouldNotBleed( int iDmgType )
 //-----------------------------------------------------------------------------
 int CTFGameRules::Damage_GetTimeBased( void )
 {
-	int iDamage = ( DMG_PARALYZE | DMG_NERVEGAS | DMG_DROWNRECOVER );
+	int iDamage = ( DMG_PARALYZE /*| DMG_NERVEGAS*/ | DMG_DROWNRECOVER );
 	return iDamage;
 }
 
@@ -1672,7 +1672,7 @@ int CTFGameRules::Damage_GetTimeBased( void )
 //-----------------------------------------------------------------------------
 int CTFGameRules::Damage_GetShowOnHud( void )
 {
-	int iDamage = ( DMG_DROWN | DMG_BURN | DMG_NERVEGAS | DMG_SHOCK );
+	int iDamage = ( DMG_DROWN | DMG_BURN /*| DMG_NERVEGAS*/ | DMG_SHOCK );
 	return iDamage;
 }
 
@@ -1731,15 +1731,6 @@ CTFGameRules::CTFGameRules()
 	TFTeamMgr()->Init();
 
 	ResetMapTime();
-
-	// Create the team managers
-//	for ( int i = 0; i < ARRAYSIZE( teamnames ); i++ )
-//	{
-//		CTeam *pTeam = static_cast<CTeam*>(CreateEntityByName( "tf_team" ));
-//		pTeam->Init( sTeamNames[i], i );
-//
-//		g_Teams.AddToTail( pTeam );
-//	}
 
 	m_flIntermissionEndTime = 0.0f;
 	m_flNextPeriodicThink = 0.0f;
@@ -4515,7 +4506,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		BaseClass::GoToIntermission();
 	}
 
-	bool CTFGameRules::FPlayerCanTakeDamage(CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info)
+	bool CTFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker, const CTakeDamageInfo &info )
 	{
 		// guard against NULL pointers if players disconnect
 		if ( !pPlayer || !pAttacker )
@@ -4526,27 +4517,42 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		{
 			CBaseObject *pObj = ( CBaseObject *)pAttacker;
 
-			if ( pObj->GetBuilder() == pPlayer || pPlayer->GetTeamNumber() != pObj->GetTeamNumber() )
-			{
-				// Builder and enemies
+			if ( pObj->GetBuilder() == pPlayer || !pPlayer->InSameTeam( pObj ) )
 				return true;
-			}
 			else
-			{
-				// Teammates of the builder
 				return false;
-			}
 		}
 
-		return BaseClass::FPlayerCanTakeDamage(pPlayer, pAttacker, info);
+		// if pAttacker is a npc, we can only do damage if pPlayer is not teammate
+		if ( pAttacker->IsNPC() )
+		{
+			CAI_BaseNPC *pNPC = ( CAI_BaseNPC *)pAttacker;
+
+			if ( !pPlayer->InSameTeam( pNPC ) )
+				return true;
+			else
+				return false;
+		}
+
+		return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker, info );
 	}
 
-	int CTFGameRules::PlayerRelationship(CBaseEntity *pPlayer, CBaseEntity *pTarget)
+	int CTFGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 	{
 		if ( IsFriendlyFire() )
 			return GR_NOTTEAMMATE;
 
-		return BaseClass::PlayerRelationship(pPlayer, pTarget);
+		if ( pTarget->IsNPC() )
+		{
+			CAI_BaseNPC *pNPC = ( CAI_BaseNPC *)pTarget;
+
+			if ( !pPlayer->InSameTeam( pNPC ) )
+				return GR_NOTTEAMMATE;
+			else
+				return GR_TEAMMATE;
+		}
+
+		return BaseClass::PlayerRelationship( pPlayer, pTarget );
 	}
 
 	void CTFGameRules::PlayTrainCaptureAlert( CTeamControlPoint *pPoint, bool bFinalPointInMap )
@@ -5236,7 +5242,7 @@ void CTFGameRules::NPCKilled( CAI_BaseNPC *pVictim, const CTakeDamageInfo &info 
 	{
 		pObject = dynamic_cast<CBaseObject *>( pKiller );
 	}
-	if (pObject)
+	if ( pObject )
 	{
 		pObject->IncrementKills();
 
@@ -7280,23 +7286,23 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	}
 
 	// tf_pumpkin_bomb
- 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
+	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
 		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
 		return false;
 
- 	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) &&
+	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) &&
 		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
 		return true;
 
- 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
+	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
 		 ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
 		 return false;
 
- 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
 		 ( collisionGroup0 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) || ( collisionGroup0 == TFCOLLISION_GROUP_ROCKETS ) )
 		 return false;
 
- 	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
+	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
 		 ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
 		 return false;
 

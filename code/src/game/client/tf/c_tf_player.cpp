@@ -4019,6 +4019,9 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 	*/
 	UpdateVisibility();
 
+	// Reset rage
+	m_Shared.ResetRageSystem();
+
 	m_hFirstGib = NULL;
 	m_hSpawnedGibs.Purge();
 }

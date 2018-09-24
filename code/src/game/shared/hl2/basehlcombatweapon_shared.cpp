@@ -460,6 +460,26 @@ const WeaponProficiencyInfo_t *CBaseHLCombatWeapon::GetDefaultProficiencyValues(
 //-----------------------------------------------------------------------------
 // Purpose: Most calls use the prediction seed
 //-----------------------------------------------------------------------------
+void CTFWeaponBase::CalcIsAttackMiniCritical( void)
+{
+	CBaseCombatCharacter *pOwner = GetOwner();
+	CAI_BaseNPC *pNPC = pOwner->MyNPCPointer();
+	if ( !pNPC )
+		return;
+
+	if ( pNPC->IsMiniCritBoosted() || pNPC->InCond( TF_COND_NOHEALINGDAMAGEBUFF ) )
+	{
+		m_bCurrentAttackIsMiniCrit = true;
+	}
+	else
+	{
+		m_bCurrentAttackIsMiniCrit = false;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Most calls use the prediction seed
+//-----------------------------------------------------------------------------
 void CBaseHLCombatWeapon::CalcIsAttackCritical( void )
 {
 	CBaseCombatCharacter *pOwner = GetOwner();
@@ -483,10 +503,6 @@ void CBaseHLCombatWeapon::CalcIsAttackCritical( void )
 	if ( pNPC->IsCritBoosted() )
 	{
 		m_bCurrentAttackIsCrit = true;
-	}
-	else if ( pNPC->IsMiniCritBoosted() )
-	{
-		m_bCurrentAttackIsMiniCrit = true;
 	}
 	else
 	{

@@ -1909,7 +1909,8 @@ void CWeaponPhysCannon::PrimaryAttack(void)
 		{
 			//SecobMod__Information: This line was modified with the classify check. This prevents the primary fire being used on the following friendly NPCs: Dog, Monk, Vortigaunt.
 			if ( pEntity->IsNPC() && !pEntity->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pEntity->MyNPCPointer()->CanBecomeRagdoll() && 
-				pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() && !pEntity->InSameTeam( pOwner ) )
+				pEntity->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pEntity->MyNPCPointer()->IsPlayerAlly() && !pEntity->InSameTeam( pOwner ) &&
+				!pEntity->MyNPCPointer()->IsInvulnerable() && !pEntity->MyNPCPointer()->InCond( TF_COND_PHASE ) )
 			{
 				CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC );
 				CBaseEntity *pRagdoll = CreateServerRagdoll( pEntity->MyNPCPointer(), 0, info, COLLISION_GROUP_INTERACTIVE_DEBRIS, true );
@@ -2127,13 +2128,9 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 	bool bIsMegaPhysCannon = ( IsMegaPhysCannon() || iType == 1 );
 	if ( bIsMegaPhysCannon )
 	{
-		//SecobMod__Information: This prevents the secondary fire being used to grab ragdolls out of certain NPCs: Dog, Monk, Vortigaunt.
-		if (pObject->IsNPC() && (pObject->Classify() == CLASS_PLAYER_ALLY_VITAL) || pObject->ClassMatches("npc_vortigaunt"))
-		{
-			return false;
-		}
-
-		if (pObject->IsNPC() || pObject->IsPlayer() && !pObject->IsEFlagSet(EFL_NO_MEGAPHYSCANNON_RAGDOLL) )
+		if ( pObject->IsNPC() && !pObject->IsEFlagSet( EFL_NO_MEGAPHYSCANNON_RAGDOLL ) && pObject->MyNPCPointer()->CanBecomeRagdoll() && 
+				pObject->MyNPCPointer()->Classify() != CLASS_PLAYER_ALLY_VITAL && !pObject->MyNPCPointer()->IsPlayerAlly() && !pObject->InSameTeam( pOwner ) &&
+				!pObject->MyNPCPointer()->IsInvulnerable() && !pObject->MyNPCPointer()->InCond( TF_COND_PHASE ) && !pObject->ClassMatches("npc_vortigaunt") )
 		{
 			Assert(pObject->MyNPCPointer()->CanBecomeRagdoll());
 			CTakeDamageInfo info( pOwner, pOwner, 1.0f, DMG_GENERIC);

@@ -47,7 +47,11 @@
 #include "weapon_physcannon.h"
 #include "ammodef.h"
 #include "vehicle_base.h"
- 
+#ifdef TF_CLASSIC
+#include "tf_gamerules.h"
+#include "tf_player.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -1376,6 +1380,14 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 			{
 				pPlayer->VelocityPunch( vecVelocityPunch );
 			}
+
+			/*CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+			// Unusual Difficulty will bleed players
+			if ( TFGameRules->IsSkillLevel( 4 ) 
+			{
+				if ( pTFPlayer )
+					pTFPlayer->m_Shared.Bleed( this, NULL, 4.0f );
+			}*/
 			#else
 			pPlayer->ViewPunch( qaViewPunch );
 			pPlayer->VelocityPunch( vecVelocityPunch );

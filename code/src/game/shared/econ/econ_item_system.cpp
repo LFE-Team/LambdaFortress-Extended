@@ -467,7 +467,7 @@ public:
 
 		GET_STRING( pItem, pData, model_player );
 		GET_STRING( pItem, pData, model_world );
-		GET_STRING( pItem, pData, lfe_attached_models );
+		GET_STRING( pItem, pData, extra_wearable );
 
 		GET_INT( pItem, pData, attach_to_hands );
 		GET_BOOL( pItem, pData, act_as_wearable );
@@ -670,8 +670,8 @@ void CEconItemSchema::Precache( void )
 		if ( pItem->model_player[0] != '\0' )
 			CBaseEntity::PrecacheModel( pItem->model_player );
 
-		if ( pItem->lfe_attached_models[0] != '\0' )
-			CBaseEntity::PrecacheModel( pItem->lfe_attached_models );
+		if ( pItem->extra_wearable[0] != '\0' )
+			CBaseEntity::PrecacheModel( pItem->extra_wearable );
 
 		for ( int iClass = 0; iClass < TF_CLASS_COUNT_ALL; iClass++ )
 		{

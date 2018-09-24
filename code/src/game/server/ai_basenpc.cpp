@@ -1001,6 +1001,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	CBaseEntity *pAttacker = info.GetAttacker();
 	//CBaseEntity *pInflictor = info.GetInflictor();
 	CTFWeaponBase *pWeapon = NULL;
+	bool bObject = false;
 
 	if ( inputInfo.GetWeapon() )
 	{
@@ -1010,6 +1011,14 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	{
 		// Assume that player used his currently active weapon.
 		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
+	}
+
+	// If this is a base object get the builder
+	if ( pAttacker->IsBaseObject() )
+	{
+		CBaseObject *pObject = static_cast< CBaseObject * >( pAttacker );
+		pAttacker = pObject->GetBuilder();
+		bObject = true;
 	}
 
 	AddDamagerToHistory( pAttacker );
@@ -1134,6 +1143,12 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		// Notify the damaging weapon.
 		pWeapon->ApplyOnHitAttributes( this, info );
+
+		if ( pTFAttacker )
+		{
+			// Build rage
+			pTFAttacker->m_Shared.SetRageMeter( info.GetDamage() / 6.0f, TF_BUFF_OFFENSE );
+		}
 	}
 
 	// If we're not damaging ourselves, apply randomness
@@ -1269,6 +1284,23 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		info.SetDamage( flDamage );
 	}
 
+	// Vintage Battalion's Backup resists
+	if ( InCond( TF_COND_DEFENSEBUFF ) )
+	{
+		// Battalion's Backup negates all crit damage
+		bitsDamage &= ~( DMG_CRITICAL | DMG_MINICRITICAL );
+ 		float flDamage = info.GetDamage();
+		if ( bObject )
+		{
+			// 50% resistance to sentry damage
+			info.SetDamage( flDamage * 0.50f );
+		}
+		else
+		{
+			// 35% to all other sources
+			info.SetDamage( flDamage * 0.35f );
+		}
+	}
 #endif
 	
 	int ret = BaseClass::OnTakeDamage( info );
@@ -1782,11 +1814,26 @@ void CAI_BaseNPC::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecD
 		( InCond( TF_COND_DISGUISED ) ) )
 		return;
 
+	float flDamage = info.GetDamage();
+ 	if ( InCond( TF_COND_DEFENSEBUFF ) )
+	{
+		// Vintage Battalion's Backup reduces damage so make sure we compensate for that 
+		// so that the knockback isn't affected too much
+ 		if ( pInflictor->IsBaseObject() )
+		{
+			flDamage /= 0.50f;
+		}
+		else
+		{
+			flDamage /= 0.35f;
+		}
+	}
+
 	Vector vecForce;
 	vecForce.Init();
 	if ( pAttacker == this )
 	{
-		vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), NPC_DAMAGE_FORCE_SCALE_SELF );
+		vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), flDamage, NPC_DAMAGE_FORCE_SCALE_SELF );
 
 	}
 	else
@@ -1794,11 +1841,11 @@ void CAI_BaseNPC::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecD
 		// Sentryguns push a lot harder
 		if ( ( info.GetDamageType() & DMG_BULLET ) && pInflictor->IsBaseObject() )
 		{
-			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), 16 );
+			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), flDamage, 16 );
 		}
 		else
 		{
-			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), info.GetDamage(), tf_damageforcescale_other.GetFloat() );
+			vecForce = vecDir * -NPCDamageForce( WorldAlignSize(), flDamage, tf_damageforcescale_other.GetFloat() );
 		}
 	}
 
@@ -12588,7 +12635,7 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 
 	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
 
-	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "sentrycontext" );
+	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "buildingcontext" );
 #endif
 }
 
@@ -12641,18 +12688,20 @@ void CAI_BaseNPC::SearchBuildingThink( void )
 	{
 		SetTarget( pSentry );
 	}
+
 	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest( "obj_dispenser", GetAbsOrigin(), 512 );
 	if (!pSentry && pDispenser && pDispenser->GetTeamNumber() != GetTeamNumber())
 	{
 		SetTarget( pDispenser );
 	}
+
 	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest( "obj_teleporter", GetAbsOrigin(), 512 );
 	if (!pSentry && !pDispenser && pTeleporter && pTeleporter->GetTeamNumber() != GetTeamNumber())
 	{
 		SetTarget( pTeleporter );
 	}
 
-	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "sentrycontext" );
+	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "buildingcontext" );
 }
 
 //-----------------------------------------------------------------------------

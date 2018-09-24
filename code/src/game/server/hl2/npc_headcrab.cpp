@@ -30,9 +30,11 @@
 #include "world.h"
 #include "npc_bullseye.h"
 #include "physics_npc_solver.h"
-#include "tf_gamerules.h"
 #include "decals.h"
-
+#ifdef TF_CLASSIC
+#include "tf_gamerules.h"
+#include "tf_player.h"
+#endif
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -998,6 +1000,12 @@ void CBaseHeadcrab::TouchDamage( CBaseEntity *pOther )
 	CTakeDamageInfo info;
 	CalcDamageInfo( &info );
 	pOther->TakeDamage( info  );
+	/*CTFPlayer *pTFPlayer = ToTFPlayer( pOther );
+	if ( TFGameRules->IsSkillLevel( 4 ) 
+	{
+		if ( pTFPlayer )
+			pTFPlayer->m_Shared.Bleed( this, NULL, 2.0f );
+	}*/
 }
 
 

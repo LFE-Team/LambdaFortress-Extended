@@ -290,6 +290,14 @@ public:
 
 	int GetSequenceForDeath( CBaseAnimating *pAnim, int iDamageCustom );
 
+	// Vintage Banners
+	void UpdateRageBuffsAndRage( void );
+	void SetRageMeter( float flRagePercent, int iBuffType );
+	void ActivateRageBuff( CBaseEntity *pEntity, int iBuffType );
+	void PulseRageBuff( /*CTFPlayerShared::ERageBuffSlot*/ );
+	bool IsRageActive( void ) { return m_bRageActive; }
+	float GetRageProgress( void ) { return m_flEffectBarProgress; }
+	void ResetRageSystem( void );
 private:
 
 	void ImpactWaterTrace( trace_t &trace, const Vector &vecStart );
@@ -405,6 +413,8 @@ private:
 	// Vars that are not networked.
 	OuterClass			*m_pOuter;					// C_TFPlayer or CTFPlayer (client/server).
 
+	bool m_bRageActive;
+
 #ifdef GAME_DLL
 	// Healer handling
 	struct healers_t
@@ -436,6 +446,12 @@ private:
 	float					m_flTauntRemoveTime;
 	float					m_flStunTime;
 	float					m_flPhaseTime;
+
+	// Vintage Banner
+	CNetworkVar( float, m_flEffectBarProgress );
+	float					m_flNextRageCheckTime;
+	float					m_flRageTimeRemaining;
+	int						m_iActiveBuffType;
 
 	float m_flDisguiseCompleteTime;
 

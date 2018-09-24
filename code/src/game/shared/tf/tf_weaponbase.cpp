@@ -751,61 +751,10 @@ void CTFWeaponBase::UpdatePlayerBodygroups( void )
 }
 #ifdef CLIENT_DLL
 //-----------------------------------------------------------------------------
-// Purpose: i don't even know if this is the right place to put.
+// Purpose:
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::UpdateExtraWearables( void )
 {
-	//C_ViewmodelAttachmentModel *pAttachment = GetViewmodelAddon();
-	C_TFWeaponAttachmentModel *pAttachedModel = m_hAttachmentModel.Get();
-
-	if ( m_Item.GetStaticData() && ( !m_Item.GetStaticData()->lfe_attached_models || m_iState == WEAPON_IS_ACTIVE ) )
-	{
-		if ( pAttachedModel )
-		{
-			if ( pAttachedModel->GetModelIndex() == modelinfo->GetModelIndex( m_Item.GetAttachedDisplayModel() ) )
-			{
-				pAttachedModel->m_nSkin = GetSkin();
-	
-				if ( C_BasePlayer::GetLocalPlayer() != GetOwner() ) // Spectator fix
-				{
-					pAttachedModel->FollowEntity( this );
-					pAttachedModel->m_nRenderFX = m_nRenderFX;
-					pAttachedModel->UpdateVisibility();
-				}
-				return; // we already have the correct add-on
-			}
-			else
-			{
-				if ( m_hAttachmentModel.Get() )
-				{
-					m_hAttachmentModel->SetModel( "" );
-					m_hAttachmentModel->Remove();
-				}
-			}
-		}
-
-		pAttachedModel = new C_TFWeaponAttachmentModel();
-
-		if ( pAttachedModel->InitializeAsClientEntity( m_Item.GetAttachedDisplayModel(), RENDER_GROUP_VIEW_MODEL_TRANSLUCENT ) == false )
-		{
-			pAttachedModel->Release();
-			return;
-		}
-
-		m_hAttachmentModel = pAttachedModel;
-
-		pAttachedModel->m_nSkin = GetSkin();
-		//pAttachedModel->SetOwner( GetOwner() );
-		pAttachedModel->FollowEntity( this );
-		pAttachedModel->UpdateVisibility();
-
-		/*
-		if ( pAttachment )
-		{
-			pAttachment->UpdateExtraWearables();
-		}
-		*/
-	}
 }
 #endif
 //-----------------------------------------------------------------------------
@@ -980,6 +929,24 @@ void CTFWeaponBase::SecondaryAttack( void )
 //-----------------------------------------------------------------------------
 // Purpose: Most calls use the prediction seed
 //-----------------------------------------------------------------------------
+void CTFWeaponBase::CalcIsAttackMiniCritical( void)
+{
+	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
+	if ( !pPlayer )
+		return;
+	if ( pPlayer->m_Shared.IsMiniCritBoosted() || pPlayer->m_Shared.InCond( TF_COND_NOHEALINGDAMAGEBUFF ) )
+	{
+		m_bCurrentAttackIsMiniCrit = true;
+	}
+	else
+	{
+		m_bCurrentAttackIsMiniCrit = false;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Most calls use the prediction seed
+//-----------------------------------------------------------------------------
 void CTFWeaponBase::CalcIsAttackCritical( void )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
@@ -1002,10 +969,6 @@ void CTFWeaponBase::CalcIsAttackCritical( void )
 	if ( pPlayer->m_Shared.IsCritBoosted() )
 	{
 		m_bCurrentAttackIsCrit = true;
-	}
-	else if ( pPlayer->m_Shared.IsMiniCritBoosted() || pPlayer->m_Shared.InCond( TF_COND_NOHEALINGDAMAGEBUFF ) )
-	{
-		m_bCurrentAttackIsMiniCrit = true;
 	}
 	else
 	{
@@ -2078,6 +2041,16 @@ void CTFWeaponBase::OnControlStunned( void )
 	SetWeaponVisible( false );
 }
 
+const char *CTFWeaponBase::GetExtraWearableModel( void ) const
+{
+	CEconItemDefinition *pStatic = m_Item.GetStaticData();
+ 	if ( pStatic )
+	{
+		return pStatic->extra_wearable;
+	}
+ 	return "\0";
+}
+
 //=============================================================================
 //
 // TFWeaponBase functions (Server specific).
@@ -2387,14 +2360,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamag
 				pVictim->ApplyAbsVelocityImpulse( vecDir * flKnockbackMult );
 			}
 		}
-	}
-
-	int iBuffType = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pOwner, iBuffType, set_buff_type );
-	if ( iBuffType != 0 )
-	{
-		float flDamage = info.GetDamage();
-		m_flEffectBarRegenTime = gpGlobals->curtime + flDamage;
 	}
 }
 

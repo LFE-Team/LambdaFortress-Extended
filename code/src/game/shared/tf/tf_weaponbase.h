@@ -168,6 +168,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 	void CalcIsAttackCritical( void );
+	void CalcIsAttackMiniCritical( void );
 	virtual bool CalcIsAttackCriticalHelper();
 	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
 	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }
@@ -273,12 +274,16 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual float		GetEffectBarProgress( void );
 	virtual const char	*GetEffectLabelText( void );
 	void				ReduceEffectBarRegenTime( float flTime ) { m_flEffectBarRegenTime -= flTime; }
+	virtual bool		EffectMeterShouldFlash( void ) { return false; }
 
 	void				OnControlStunned( void );
 
 	virtual bool CanInspect( void ) { return false; }
 
 	void		SetParticle( const char* name );
+
+	const char* GetExtraWearableModel( void ) const;
+
 // Server specific.
 #if !defined( CLIENT_DLL )
 

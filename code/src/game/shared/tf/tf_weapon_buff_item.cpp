@@ -1,4 +1,4 @@
-//=========== Copyright © 2018, LFE-Team, Not All rights reserved. ============
+//====== Copyright? 2018, bachingo-TF2Vintage, Not All rights reserved. =======
 //
 // Purpose: 
 //
@@ -16,6 +16,8 @@
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
 #include "particles_new.h"
+#include "tf_wearable.h"
+#include "tf_projectile_arrow.h"
 // Server specific.
 #else
 #include "tf_player.h"
@@ -26,7 +28,13 @@
 #include "tf_gamestats.h"
 #endif
 
-#define TF_BUFF_RADIUS 450.0f
+const char *g_BannerModels[] =
+{
+	"models/weapons/c_models/c_buffbanner/c_buffbanner.mdl", 
+	"models/workshop/weapons/c_models/c_battalion_buffbanner/c_battalion_buffbanner.mdl",
+	"models/workshop_partner/weapons/c_models/c_shogun_warbanner/c_shogun_warbanner.mdl",
+	"models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_parachute.mdl",
+};
 
 //=============================================================================
 //
@@ -38,11 +46,15 @@ IMPLEMENT_NETWORKCLASS_ALIASED( TFBuffItem, DT_WeaponBuffItem )
 
 BEGIN_NETWORK_TABLE( CTFBuffItem, DT_WeaponBuffItem )
 #ifdef CLIENT_DLL
+	RecvPropBool( RECVINFO( m_bBuffUsed ) ),
 #else
+	SendPropBool( SENDINFO( m_bBuffUsed ) ),
 #endif
 END_NETWORK_TABLE()
 
 BEGIN_PREDICTION_DATA( CTFBuffItem )
+#ifdef CLIENT_DLL
+#endif
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( tf_weapon_buff_item, CTFBuffItem );
@@ -56,7 +68,12 @@ END_DATADESC()
 
 CTFBuffItem::CTFBuffItem()
 {
-	m_flEffectBarRegenTime = 0.0;
+	m_flEffectBarRegenTime = 0.0f;
+	UseClientSideAnimation();
+
+#ifdef CLIENT_DLL
+	ListenForGameEvent( "deploy_buff_banner" );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -64,9 +81,50 @@ CTFBuffItem::CTFBuffItem()
 //-----------------------------------------------------------------------------
 void CTFBuffItem::Precache( void )
 {
-	BaseClass::Precache();
 	PrecacheTeamParticles( "soldierbuff_%s_buffed" );
 	PrecacheParticleSystem( "soldierbuff_mvm" );
+
+	for ( int i = 0; i < ARRAYSIZE( g_BannerModels ); i++ )
+	{
+		PrecacheModel( g_BannerModels[i] );
+	}
+	PrecacheModel( "models/weapons/c_models/c_buffpack/c_buffpack.mdl" );
+	PrecacheModel( "models/workshop/weapons/c_models/c_battalion_buffpack/c_battalion_buffpack.mdl" );
+	PrecacheModel( "models/workshop_partner/weapons/c_models/c_shogun_warpack/c_shogun_warpack.mdl" );
+	PrecacheModel( "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack_open.mdl" );
+	PrecacheModel( "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack.mdl" );
+
+	PrecacheScriptSound( "Weapon_BuffBanner.HornRed" );
+	PrecacheScriptSound( "Weapon_BuffBanner.HornBlue" );
+	PrecacheScriptSound( "Weapon_BattalionsBackup.HornRed" );
+	PrecacheScriptSound( "Weapon_BattalionsBackup.HornBlue" );
+	PrecacheScriptSound( "Samurai.Conch" );
+	PrecacheScriptSound( "Weapon_BuffBanner.Flag" );
+
+	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Only holster when the buff isn't used
+//-----------------------------------------------------------------------------
+bool CTFBuffItem::Holster( CBaseCombatWeapon *pSwitchingTo )
+{
+	if ( !m_bBuffUsed )
+	{
+		return BaseClass::Holster( pSwitchingTo );
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Reset the charge meter 
+//-----------------------------------------------------------------------------
+void CTFBuffItem::WeaponReset( void )
+{
+	m_bBuffUsed = false;
+
+	BaseClass::WeaponReset();
 }
 
 // ---------------------------------------------------------------------------- -
@@ -74,159 +132,104 @@ void CTFBuffItem::Precache( void )
 //-----------------------------------------------------------------------------
 void CTFBuffItem::PrimaryAttack( void )
 {
-	// Get the player owning the weapon.
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
-		return;
+	// Rage not ready
+	//if ( !IsFull() )
+		//return;
 
 	if ( !CanAttack() )
 		return;
 
-	//if ( m_flEffectBarRegenTime != InternalGetEffectBarRechargeTime() )
-	//	return;
-
-	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
-
-	pOwner->SetAnimation( PLAYER_ATTACK1 );
-	pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-
-	if ( GetBuffType() == 1 )
-	{
-		if ( pOwner->GetTeamNumber() == TF_TEAM_RED )
-			pOwner->EmitSound( "Weapon_BuffBanner.HornRed" );
-		else if ( pOwner->GetTeamNumber() == TF_TEAM_BLUE )
-			pOwner->EmitSound( "Weapon_BuffBanner.HornBlue" );
-	}
-	else if ( GetBuffType() == 2 )
-	{
-		if ( pOwner->GetTeamNumber() == TF_TEAM_RED )
-			pOwner->EmitSound( "Weapon_BattalionsBackup.HornRed" );
-		else if ( pOwner->GetTeamNumber() == TF_TEAM_BLUE )
-			pOwner->EmitSound( "Weapon_BattalionsBackup.HornBlue" );
-	}
-	else if ( GetBuffType() == 3 )
-	{
-		pOwner->EmitSound( "Samurai.Conch" );
-	}
-
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
-	if ( m_flTimeWeaponIdle > gpGlobals->curtime )
-	{
-#ifdef GAME_DLL 
-		pOwner->SpeakWeaponFire( MP_CONCEPT_PLAYER_BATTLECRY );
-		CTF_GameStats.Event_PlayerFiredWeapon( pOwner, false );
-#endif
-		pOwner->SwitchToNextBestWeapon( this );
-		pOwner->EmitSound( "Weapon_BuffBanner.Flag" );
-
-		IGameEvent *event_buff = gameeventmanager->CreateEvent( "deploy_buff_banner" );
-		if ( event_buff )
-		{
-			event_buff->SetInt( "buff_type", GetBuffType() );
-			event_buff->SetInt( "buff_owner", pOwner->entindex() );
- 			gameeventmanager->FireEvent( event_buff );
-		}
-#ifdef GAME_DLL 
-		CBaseEntity *pEntity = NULL;
-		Vector vecOrigin = pOwner->GetAbsOrigin();
-
-		for ( CEntitySphereQuery sphere( vecOrigin, TF_BUFF_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-		{
-			if ( !pEntity )
-				continue;
-
-			Vector vecHitPoint;
-			pEntity->CollisionProp()->CalcNearestPoint( vecOrigin, &vecHitPoint );
-			Vector vecDir = vecHitPoint - vecOrigin;
-
-			CTFPlayer *pPlayer = ToTFPlayer( pEntity );
-			CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
-
-			if ( vecDir.LengthSqr() < ( TF_BUFF_RADIUS * TF_BUFF_RADIUS ) )
-			{
-				if ( pPlayer )
-				{
-					if ( pPlayer->InSameTeam( pOwner ) )
-					{
-						if ( GetBuffType() == 1 )
-							pPlayer->m_Shared.AddCond( TF_COND_OFFENSEBUFF );
-						else if ( GetBuffType() == 2 )
-							pPlayer->m_Shared.AddCond( TF_COND_DEFENSEBUFF );
-						else if ( GetBuffType() == 3 )
-							pPlayer->m_Shared.AddCond( TF_COND_REGENONDAMAGEBUFF );
-					}
-				}
-
-				if ( pNPC )
-				{
-					if ( pNPC->InSameTeam( pOwner ) )
-					{
-						if ( GetBuffType() == 1 )
-							pNPC->AddCond( TF_COND_OFFENSEBUFF );
-						else if ( GetBuffType() == 2 )
-							pNPC->AddCond( TF_COND_DEFENSEBUFF );
-						else if ( GetBuffType() == 3 )
-							pNPC->AddCond( TF_COND_REGENONDAMAGEBUFF );
-					}
-				}
-			}
-			else
-			{
-				if ( pPlayer )
-				{
-					if ( pPlayer->InSameTeam( pOwner ) )
-					{
-						if ( GetBuffType() == 1 )
-							pPlayer->m_Shared.RemoveCond( TF_COND_OFFENSEBUFF );
-						else if ( GetBuffType() == 2 )
-							pPlayer->m_Shared.RemoveCond( TF_COND_DEFENSEBUFF );
-						else if ( GetBuffType() == 3 )
-							pPlayer->m_Shared.RemoveCond( TF_COND_REGENONDAMAGEBUFF );
-					}
-				}
-
-				if ( pNPC )
-				{
-					if ( pNPC->InSameTeam( pOwner ) )
-					{
-						if ( GetBuffType() == 1 )
-							pNPC->RemoveCond( TF_COND_OFFENSEBUFF );
-						else if ( GetBuffType() == 2 )
-							pNPC->RemoveCond( TF_COND_DEFENSEBUFF );
-						else if ( GetBuffType() == 3 )
-							pNPC->RemoveCond( TF_COND_REGENONDAMAGEBUFF );
-					}
-				}
-			}
-		}
-#endif
-	}
-
-	//m_flEffectBarRegenTime = gpGlobals->curtime + InternalGetEffectBarRechargeTime();
-}
-
-void CTFBuffItem::WeaponReset( void )
-{
-	m_flEffectBarRegenTime = 0.0f;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFBuffItem::CheckEffectBarRegen( void )
-{
 	CTFPlayer *pOwner = GetTFPlayerOwner();
+
 	if ( !pOwner )
 		return;
 
-	if ( m_flEffectBarRegenTime != 0.0f )
+	if ( !m_bBuffUsed && pOwner->m_Shared.GetRageProgress() >= 100.0f )
 	{
-		if ( gpGlobals->curtime >= m_flEffectBarRegenTime )
+		if ( GetTeamNumber() == TF_TEAM_RED )
 		{
-			m_flEffectBarRegenTime = 0.0f;
-			EffectBarRegenFinished();
+			SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 		}
+		else
+		{
+			SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+		}
+
+		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
+
+#ifdef GAME_DLL
+		SetContextThink( &CTFBuffItem::BlowHorn, gpGlobals->curtime + 0.22f, "BlowHorn" );
+#endif
 	}
+}
+
+// ---------------------------------------------------------------------------- -
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFBuffItem::BlowHorn( void )
+{
+	if ( !CanAttack() )
+		return;
+
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+
+	if ( !pOwner || !pOwner->IsAlive() )
+		return;
+
+	int iBuffType = GetBuffType();
+	const char *iszSound = "\0";
+	switch( iBuffType )
+	{
+		case TF_BUFF_OFFENSE:
+			if ( pOwner->GetTeamNumber() == TF_TEAM_RED )
+				iszSound = "Weapon_BuffBanner.HornRed";
+			else
+				iszSound = "Weapon_BuffBanner.HornBlue";
+			break;
+		case TF_BUFF_DEFENSE:
+			if ( pOwner->GetTeamNumber() == TF_TEAM_RED )
+				iszSound = "Weapon_BattalionsBackup.HornRed";
+			else
+				iszSound = "Weapon_BattalionsBackup.HornBlue";
+			break;
+		case TF_BUFF_REGENONDAMAGE:
+			iszSound = "Samurai.Conch";
+			break;
+	};
+	pOwner->EmitSound( iszSound );
+}
+
+// ---------------------------------------------------------------------------- -
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFBuffItem::RaiseFlag( void )
+{
+	if ( !CanAttack() )
+		return;
+
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+
+	if ( !pOwner || !pOwner->IsAlive() )
+		return;
+
+	int iBuffType = GetBuffType();
+
+#ifdef GAME_DLL
+	m_bBuffUsed = false;
+	IGameEvent *event = gameeventmanager->CreateEvent( "deploy_buff_banner" );
+	if ( event )
+	{
+		event->SetInt( "buff_type", iBuffType );
+		event->SetInt( "buff_owner", pOwner->entindex() );
+ 		gameeventmanager->FireEvent( event );
+	}
+
+	pOwner->EmitSound( "Weapon_BuffBanner.Flag" );
+	pOwner->SpeakConceptIfAllowed( MP_CONCEPT_PLAYER_BATTLECRY );
+#endif
+
+	pOwner->m_Shared.ActivateRageBuff( this, iBuffType );
+	pOwner->SwitchToNextBestWeapon( this );
 }
 
 // -----------------------------------------------------------------------------
@@ -238,3 +241,150 @@ int CTFBuffItem::GetBuffType( void )
 	CALL_ATTRIB_HOOK_INT( iBuffType, set_buff_type );
 	return iBuffType;
 }
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+float CTFBuffItem::GetEffectBarProgress( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+
+	if ( pOwner)
+	{
+		return pOwner->m_Shared.GetRageProgress() / 100.0f;
+	}
+
+	return 0.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CTFBuffItem::EffectMeterShouldFlash( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+
+	// Rage meter should flash while draining
+	if ( pOwner && pOwner->m_Shared.IsRageActive() && pOwner->m_Shared.GetRageProgress() < 100.0f )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Make sure the weapon uses the correct animations 
+//-----------------------------------------------------------------------------
+bool CTFBuffItem::SendWeaponAnim( int iActivity )
+{	
+	int iNewActivity = iActivity;
+
+	switch ( iActivity )
+	{
+	case ACT_VM_DRAW:
+		iNewActivity =ACT_ITEM1_VM_DRAW;
+		break;
+	case ACT_VM_HOLSTER:
+		iNewActivity = ACT_ITEM1_VM_HOLSTER;
+		break;
+	case ACT_VM_IDLE:
+		iNewActivity = ACT_ITEM1_VM_IDLE;
+
+		// Do the flag raise animation 
+		if ( m_bBuffUsed )
+		{
+			RaiseFlag();
+			iNewActivity = ACT_RESET;
+		}
+		else
+
+		break;
+	case ACT_VM_PULLBACK:
+		iNewActivity = ACT_ITEM1_VM_PULLBACK;
+		break;
+	case ACT_VM_PRIMARYATTACK:
+		iNewActivity = ACT_ITEM1_VM_PRIMARYATTACK;
+		m_bBuffUsed = true;
+		break;
+	case ACT_VM_SECONDARYATTACK:
+		iNewActivity = ACT_ITEM1_VM_SECONDARYATTACK;
+		m_bBuffUsed = true;
+		break;
+	case ACT_VM_IDLE_TO_LOWERED:
+		iNewActivity = ACT_ITEM1_VM_IDLE_TO_LOWERED;
+		break;
+	case ACT_VM_IDLE_LOWERED:
+		iNewActivity = ACT_ITEM1_VM_IDLE_LOWERED;
+		break;
+	case ACT_VM_LOWERED_TO_IDLE:
+		iNewActivity = ACT_ITEM1_VM_LOWERED_TO_IDLE;
+		break;
+	};
+	
+	return BaseClass::SendWeaponAnim( iNewActivity );
+}
+
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Create the banner addon for the backpack
+//-----------------------------------------------------------------------------
+void C_TFBuffItem::CreateBanner( int iBuffType )
+{
+	C_TFPlayer *pOwner = GetTFPlayerOwner();
+
+	if ( !pOwner || !pOwner->IsAlive() )
+		return;
+
+	C_EconWearable *pWearable = pOwner->GetWearableForLoadoutSlot( TF_LOADOUT_SLOT_SECONDARY );
+
+	// if we don't have a backpack for some reason don't make a banner
+	if ( !pWearable )
+		return;
+
+	// yes I really am using the arrow class as a base
+	// create the flag
+	C_TFProjectile_Arrow *pBanner = new C_TFProjectile_Arrow();
+	if ( pBanner )
+	{
+		pBanner->InitializeAsClientEntity( g_BannerModels[iBuffType - 1], RENDER_GROUP_OPAQUE_ENTITY );
+
+		// Attach the flag to the backpack
+		int bone = pWearable->LookupBone( "bip_spine_3" );
+		if ( bone != -1 )
+			pBanner->AttachEntityToBone( pWearable, bone );
+	}
+}
+
+/*//-----------------------------------------------------------------------------
+// Purpose: Destroy the banner addon for the backpack
+//-----------------------------------------------------------------------------
+void C_TFBuffItem::DestroyBanner( void )
+{
+	C_TFPlayer *pOwner = GetTFPlayerOwner();
+	if ( !pOwner )
+		return;
+	C_EconWearable *pWearable = pOwner->GetWearableForLoadoutSlot( TF_LOADOUT_SLOT_SECONDARY );
+	if ( !pWearable )
+		return;
+	pWearable->DestroyBoneAttachments();
+}*/
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_TFBuffItem::FireGameEvent(IGameEvent *event)
+{
+	if ( V_strcmp( event->GetName(), "deploy_buff_banner" ) == 0 )
+	{
+		int entindex = event->GetInt( "buff_owner" );
+
+		// Make sure the person who deployed owns this weapon
+		if ( UTIL_PlayerByIndex( entindex ) == GetPlayerOwner() )
+		{
+			// Create the banner addon
+			CreateBanner( event->GetInt( "buff_type" ) );
+		}
+	}
+}
+#endif

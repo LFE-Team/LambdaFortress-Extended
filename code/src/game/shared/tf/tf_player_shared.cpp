@@ -18,6 +18,7 @@
 #include "tf_viewmodel.h"
 #include "econ_wearable.h"
 #include "tf_fx_shared.h"
+#include "tf_weapon_buff_item.h"
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -46,6 +47,7 @@
 #include "tf_playerclass.h"
 #include "tf_weapon_builder.h"
 #include "tf_weapon_physcannon.h"
+#include "ai_basenpc.h"
 #endif
 
 ConVar tf_spy_invis_time( "tf_spy_invis_time", "1.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Transition time in and out of spy invisibility", true, 0.1, true, 5.0 );
@@ -54,6 +56,7 @@ ConVar tf_spy_invis_unstealth_time( "tf_spy_invis_unstealth_time", "2.0", FCVAR_
 ConVar tf_spy_max_cloaked_speed( "tf_spy_max_cloaked_speed", "999", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED );	// no cap
 ConVar tf_max_health_boost( "tf_max_health_boost", "1.5", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max health factor that players can be boosted to by healers.", true, 1.0, false, 0 );
 ConVar tf_invuln_time( "tf_invuln_time", "1.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Time it takes for invulnerability to wear off." );
+ConVar tf_soldier_buff_pulses( "tf_soldier_buff_pulses", "10", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Time it takes for buff to wear off." );
 
 #ifdef GAME_DLL
 ConVar tf_boost_drain_time( "tf_boost_drain_time", "15.0", FCVAR_DEVELOPMENTONLY, "Time it takes for a full health boost to drain away from a player.", true, 0.1, false, 0 );
@@ -88,6 +91,8 @@ ConVar sv_showplayerhitboxes( "sv_showplayerhitboxes", "0", FCVAR_REPLICATED, "S
 #define TF_PLAYER_CONDITION_CONTEXT	"TFPlayerConditionContext"
 
 #define MAX_DAMAGE_EVENTS		128
+
+#define TF_BUFF_RADIUS			450.0f
 
 const char *g_pszBDayGibs[22] =
 {
@@ -158,6 +163,7 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
 	RecvPropInt( RECVINFO( m_bInCutScene ) ),
 	RecvPropBool( RECVINFO( m_bGunslinger ) ),
+	RecvPropFloat( RECVINFO( m_flEffectBarProgress ) ),
 	// Spy.
 	RecvPropTime( RECVINFO( m_flInvisChangeCompleteTime ) ),
 	RecvPropInt( RECVINFO( m_nDisguiseTeam ) ),
@@ -185,6 +191,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CTFPlayerShared )
 	DEFINE_PRED_FIELD( m_flInvisChangeCompleteTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iDesiredWeaponID, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iRespawnParticleID, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flEffectBarProgress, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 // Server specific.
@@ -225,6 +232,7 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropInt( SENDINFO( m_iMaxHealth ), 10 ),
 	SendPropInt( SENDINFO( m_bInCutScene ), 1, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bGunslinger ) ),
+	SendPropFloat( SENDINFO( m_flEffectBarProgress ), 11, 0, 0.0f, 100.0f ),
 	// Spy
 	SendPropTime( SENDINFO( m_flInvisChangeCompleteTime ) ),
 	SendPropInt( SENDINFO( m_nDisguiseTeam ), 3, SPROP_UNSIGNED ),
@@ -1385,6 +1393,8 @@ void CTFPlayerShared::ConditionThink( void )
 			m_flPhaseTime = gpGlobals->curtime + 0.25f;
 		}
 	}
+
+	UpdateRageBuffsAndRage();
 }
 
 //-----------------------------------------------------------------------------
@@ -3532,6 +3542,175 @@ float CTFPlayerShared::GetCritMult( void )
 		#endif*/
 
 	return flRemapCritMul;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Update rage buffs
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::UpdateRageBuffsAndRage( void )
+{
+	if ( IsRageActive() )
+	{
+		if ( m_flEffectBarProgress > 0.0f )
+		{
+			if ( gpGlobals->curtime > m_flNextRageCheckTime && m_flRageTimeRemaining > 0.0f )
+			{
+				m_flNextRageCheckTime = gpGlobals->curtime + 1.0f;
+				m_flRageTimeRemaining--;
+				PulseRageBuff();
+			}
+ 			m_flEffectBarProgress -= ( 100.0f / tf_soldier_buff_pulses.GetFloat() ) * gpGlobals->frametime;
+		}
+		else
+		{
+			ResetRageSystem();
+		}
+	}
+}
+
+ //-----------------------------------------------------------------------------
+// Purpose: Set rage meter progress
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::SetRageMeter( float flRagePercent, int iBuffType )
+{
+	if ( !IsRageActive() )
+	{
+		if ( m_pOuter )
+		{
+			CTFBuffItem *pBuffItem = ( CTFBuffItem * )m_pOuter->Weapon_GetSlot( TF_LOADOUT_SLOT_SECONDARY );
+			if ( pBuffItem && pBuffItem->GetBuffType() == iBuffType )
+			{
+				// Only build rage if we're using this type of banner
+				m_flEffectBarProgress = min( m_flEffectBarProgress + flRagePercent, 100.0f );
+			}
+		}
+	}
+}
+ //-----------------------------------------------------------------------------
+// Purpose: Activate rage
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::ActivateRageBuff( CBaseEntity *pEntity, int iBuffType )
+{
+	if ( m_flEffectBarProgress < 100.0f )
+		return;
+ 	m_flNextRageCheckTime = gpGlobals->curtime + 1.0f;
+	m_flRageTimeRemaining = tf_soldier_buff_pulses.GetFloat();
+	m_iActiveBuffType = iBuffType;
+ #ifdef GAME_DLL
+	//*(this + 112) = pEntity;
+ 	if ( m_pOuter )
+	{
+		if ( iBuffType == TF_BUFF_OFFENSE )
+		{
+			m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_PLAYER_BATTLECRY );
+		}
+		else if ( iBuffType == TF_BUFF_DEFENSE )
+		{
+			m_pOuter->SpeakConceptIfAllowed( MP_CONCEPT_PLAYER_INCOMING );
+		}
+	}
+ #endif
+ 	if ( !IsRageActive() )
+	{
+		m_bRageActive = true;
+	}
+ 	PulseRageBuff();
+}
+ //-----------------------------------------------------------------------------
+// Purpose: Give rage buffs to nearby players
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::PulseRageBuff( /*CTFPlayerShared::ERageBuffSlot*/ )
+{
+	// g_SoldierBuffAttributeIDToConditionMap is called here in Live TF2
+#ifdef GAME_DLL
+	CTFPlayer *pOuter = m_pOuter;
+ 	if ( !m_pOuter )
+		return;
+ 	CBaseEntity *pEntity = NULL;
+	Vector vecOrigin = pOuter->GetAbsOrigin();
+ 	for ( CEntitySphereQuery sphere( vecOrigin, TF_BUFF_RADIUS ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+	{
+		if ( !pEntity )
+			continue;
+ 		Vector vecHitPoint;
+		pEntity->CollisionProp()->CalcNearestPoint( vecOrigin, &vecHitPoint );
+		Vector vecDir = vecHitPoint - vecOrigin;
+ 		CTFPlayer *pPlayer = ToTFPlayer( pEntity );
+		CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
+ 		if ( vecDir.LengthSqr() < ( TF_BUFF_RADIUS * TF_BUFF_RADIUS ) )
+		{
+			if ( pPlayer && pPlayer->InSameTeam( pOuter ) )
+			{
+				switch ( m_iActiveBuffType )
+				{
+				case TF_BUFF_OFFENSE:
+					pPlayer->m_Shared.AddCond( TF_COND_OFFENSEBUFF, 1.2f );
+					break;
+				case TF_BUFF_DEFENSE:
+					pPlayer->m_Shared.AddCond( TF_COND_DEFENSEBUFF, 1.2f );
+					break;
+				case TF_BUFF_REGENONDAMAGE:
+					pPlayer->m_Shared.AddCond( TF_COND_REGENONDAMAGEBUFF, 1.2f );
+					break;
+				}
+ 				// Achievements
+				IGameEvent *event = gameeventmanager->CreateEvent( "player_buff" );
+				if ( event )
+				{
+					event->SetInt( "userid", pPlayer->GetUserID() );
+					event->SetInt( "buff_type", m_iActiveBuffType );
+					event->SetInt( "buff_owner", pOuter->entindex() );
+ 					gameeventmanager->FireEvent( event );
+				}
+			}
+			else if ( pNPC && pNPC->InSameTeam( pOuter ) )
+			{
+				switch ( m_iActiveBuffType )
+				{
+				case TF_BUFF_OFFENSE:
+					pNPC->AddCond( TF_COND_OFFENSEBUFF, 1.2f );
+					break;
+				case TF_BUFF_DEFENSE:
+					pNPC->AddCond( TF_COND_DEFENSEBUFF, 1.2f );
+					break;
+				case TF_BUFF_REGENONDAMAGE:
+					pNPC->AddCond( TF_COND_REGENONDAMAGEBUFF, 1.2f );
+					break;
+				}
+				IGameEvent *event = gameeventmanager->CreateEvent( "player_buff" );
+				if ( event )
+				{
+					event->SetInt( "userid", pNPC->entindex() );
+					event->SetInt( "buff_type", m_iActiveBuffType );
+					event->SetInt( "buff_owner", pOuter->entindex() );
+ 					gameeventmanager->FireEvent( event );
+				}
+			}
+		}
+	}
+#endif
+}
+ //-----------------------------------------------------------------------------
+// Purpose: Reset rage variables
+//-----------------------------------------------------------------------------
+void CTFPlayerShared::ResetRageSystem( void )
+{
+	m_flEffectBarProgress = 0.0f;
+	m_flNextRageCheckTime = 0.0f;
+	m_flRageTimeRemaining = 0.0f;
+	m_iActiveBuffType = 0;
+	m_bRageActive = false;
+ #ifdef CLIENT_DLL
+	if ( m_pOuter )
+	{
+		// Remove the banner
+		C_EconWearable *pWearable = m_pOuter->GetWearableForLoadoutSlot( TF_LOADOUT_SLOT_SECONDARY );
+		if ( pWearable )
+		{
+			pWearable->DestroyBoneAttachments();
+		}
+	}
+#endif
 }
 
 #ifdef GAME_DLL
