@@ -462,7 +462,7 @@ void CNPCSimpleTalker::HandleAnimEvent( animevent_t *pEvent )
 		// fall through...
 	case SCRIPT_EVENT_SENTENCE:				// Play a named sentence group
 		ShutUpFriends();
-		PlaySentence( pEvent->options, random->RandomFloat(2.8, 3.4) );
+		PlaySentence( pEvent->options, random->RandomFloat(2.8, 3.4), 1.0f, SNDLVL_TALKING, FindSpeechTarget(AIST_PLAYERS|AIST_NPCS) );
 		//Msg( "script event speak\n");
 		break;
 

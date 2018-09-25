@@ -8,9 +8,17 @@
 #include "cbase.h"
 #include "ammodef.h"
 
+#ifdef GAME_DLL
+#include "nav_mesh.h"
+#include "iservervehicle.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#if defined(GAME_DLL) && defined(USE_NAV_MESH)
+extern ConVar NavObscureRange;
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Switches to the best weapon that is also better than the given weapon.
@@ -458,16 +466,16 @@ bool CBaseCombatCharacter::IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewC
 	if ( IsHiddenByFog( flDistToOther ) )
 		return false;
 
-#ifdef TERROR
+#ifdef USE_NAV_MESH
 	// Check this every time also, it's cheap; check to see if the enemy is in an obscured area.
 	bool bIsInNavObscureRange = ( flDistToOther > NavObscureRange.GetFloat() );
 	if ( bIsInNavObscureRange )
 	{
-		TerrorNavArea *pOtherNavArea = static_cast< TerrorNavArea* >( pBCC->GetLastKnownArea() );
-		if ( !pOtherNavArea || pOtherNavArea->HasSpawnAttributes( TerrorNavArea::SPAWN_OBSCURED ) )
+		CNavArea *pOtherNavArea = pBCC->GetLastKnownArea();
+		if ( pOtherNavArea && pOtherNavArea->IsUnderwater() )
 			return false;
 	}
-#endif // TERROR
+#endif
 #endif
 
 	// Check if we have a cached-off visibility
@@ -480,7 +488,7 @@ bool CBaseCombatCharacter::IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewC
 		bool bThisCanSeeOther = false, bOtherCanSeeThis = false;
 		if ( ComputeLOS( vecEyePosition, vecOtherEyePosition ) )
 		{
-#if defined(GAME_DLL) && defined(TERROR)
+#if defined(GAME_DLL) && defined(USE_NAV_MESH)
 			if ( !bIsInNavObscureRange )
 			{
 				bThisCanSeeOther = true, bOtherCanSeeThis = true;
@@ -490,6 +498,7 @@ bool CBaseCombatCharacter::IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewC
 				bThisCanSeeOther = !ComputeTargetIsInDarkness( vecEyePosition, pBCC->GetLastKnownArea(), vecOtherEyePosition );
 				bOtherCanSeeThis = !ComputeTargetIsInDarkness( vecOtherEyePosition, GetLastKnownArea(), vecEyePosition );
 			}
+
 #else
 			bThisCanSeeOther = true, bOtherCanSeeThis = true;
 #endif
@@ -521,8 +530,25 @@ public:
 			if ( !pEntity )
 				return NULL;
 
+#ifdef GAME_DLL
+			if (m_pPassEnt)
+			{
+				CBaseEntity *pPass = EntityFromEntityHandle(const_cast<IHandleEntity *>(m_pPassEnt));
+				if (pPass->IsCombatCharacter())
+				{
+					if (pPass->MyCombatCharacterPointer()->GetVehicleEntity() == pEntity)
+						return false;
+				}
+			}
+#endif // GAME_DLL
+
 			if ( pEntity->MyCombatCharacterPointer() || pEntity->MyCombatWeaponPointer() )
 				return false;
+
+#ifdef GAME_DLL
+			if (pEntity->GetServerVehicle() && pEntity->GetServerVehicle()->GetPassenger())
+				return false;
+#endif // GAME_DLL
 
 			// Honor BlockLOS - this lets us see through partially-broken doors, etc
 			if ( !pEntity->BlocksLOS() )
@@ -539,17 +565,14 @@ bool CBaseCombatCharacter::ComputeLOS( const Vector &vecEyePosition, const Vecto
 {
 	// We simply can't see because the world is in the way.
 	trace_t result;
-	CTraceFilterNoCombatCharacters traceFilter( NULL, COLLISION_GROUP_NONE );
+	CTraceFilterNoCombatCharacters traceFilter( this, COLLISION_GROUP_NONE );
 	UTIL_TraceLine( vecEyePosition, vecTarget, MASK_OPAQUE | CONTENTS_IGNORE_NODRAW_OPAQUE | CONTENTS_MONSTER, &traceFilter, &result );
 	return ( result.fraction == 1.0f );
 }
 
-#if defined(GAME_DLL) && defined(TERROR)
+#if defined(GAME_DLL)
 bool CBaseCombatCharacter::ComputeTargetIsInDarkness( const Vector &vecEyePosition, CNavArea *pTargetNavArea, const Vector &vecTargetPos ) const
 {
-	if ( GetTeamNumber() != TEAM_SURVIVOR )
-		return false;
-
 	// Check light info
 	const float flMinLightIntensity = 0.1f;
 
@@ -563,11 +586,11 @@ bool CBaseCombatCharacter::ComputeTargetIsInDarkness( const Vector &vecEyePositi
 	VectorNormalize( vecSightDirection );
 
 	trace_t result;
-	UTIL_TraceLine( vecTargetPos, vecTargetPos + vecSightDirection * 32768.0f, MASK_L4D_VISION, &lightingFilter, &result );
+	UTIL_TraceLine( vecTargetPos, vecTargetPos + vecSightDirection * 32768.0f, MASK_OPAQUE, &lightingFilter, &result );
 	if ( ( result.fraction < 1.0f ) && ( ( result.surface.flags & SURF_SKY ) == 0 ) )	
 	{
 		const float flMaxDistance = 100.0f;
-		TerrorNavArea *pFarArea = (TerrorNavArea *)TheNavMesh->GetNearestNavArea( result.endpos, false, flMaxDistance );
+		CNavArea *pFarArea = TheNavMesh->GetNearestNavArea( result.endpos, false, flMaxDistance );
 
 		// Target is in darkness, the wall behind him is too, and we are too far away
 		if ( pFarArea && pFarArea->GetLightIntensity(result.endpos) < flMinLightIntensity )

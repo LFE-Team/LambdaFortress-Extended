@@ -3610,7 +3610,7 @@ bool CAI_BaseNPC::FInAimCone( const Vector &vecSpot )
 
 	float flDot = DotProduct( los, facingDir );
 
-	if (CapabilitiesGet() & bits_CAP_AIM_GUN)
+	if (CapabilitiesGet() & bits_CAP_AIM_GUN && m_poseAim_Yaw != -1)
 	{
 		// FIXME: query current animation for ranges
 		return ( flDot > DOT_30DEGREE );
@@ -9326,7 +9326,14 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 
 	case SCRIPT_EVENT_SOUND_VOICE:
 		{
-			EmitSound( pEvent->options );
+			CPASAttenuationFilter filter(this, pEvent->options);
+
+			EmitSound_t params;
+			params.m_pSoundName = pEvent->options;
+			params.m_bWarnOnDirectWaveReference = false;
+			params.m_nChannel = CHAN_VOICE;
+
+			EmitSound( filter, entindex(), params );
 		}
 		break;
 
@@ -9335,7 +9342,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 			break;
 		// fall through...
 	case SCRIPT_EVENT_SENTENCE:			// Play a named sentence group
-		SENTENCEG_PlayRndSz( edict(), pEvent->options, 1.0, SNDLVL_TALKING, 0, 100 );
+		PlaySentence( pEvent->options, 1.0f, 1.0f, SNDLVL_TALKING );
 		break;
 
 	case SCRIPT_EVENT_FIREEVENT:
@@ -9653,6 +9660,14 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 				if ( GetFlags() & FL_ONGROUND )
 				{
 					EmitSound( "AI_BaseNPC.BodyDrop_Heavy" );
+				}
+				return;
+			}
+			else if (pEvent->event == AE_NPC_BODYDROP_LIGHT)
+			{
+				if (GetFlags() & FL_ONGROUND)
+				{
+					EmitSound("AI_BaseNPC.BodyDrop_Light");
 				}
 				return;
 			}
@@ -11047,6 +11062,9 @@ int CAI_BaseNPC::PlaySentence( const char *pszSentence, float delay, float volum
 		}
 		else
 		{
+			if (pszSentence[0] == '~')
+				pszSentence++;
+
 			sentenceIndex = SENTENCEG_PlayRndSz( edict(), pszSentence, volume, soundlevel, 0, PITCH_NORM );
 		}
 	}
@@ -13583,15 +13601,14 @@ bool CAI_BaseNPC::OnUpcomingPropDoor( AILocalMoveGoal_t *pMoveGoal,
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OpenPropDoorBegin( CBasePropDoor *pDoor )
 {
-	// dvs: not quite working, disabled for now.
-	//opendata_t opendata;
-	//pDoor->GetNPCOpenData(this, opendata);
-	//
-	//if (HaveSequenceForActivity(opendata.eActivity))
-	//{
-	//	SetIdealActivity(opendata.eActivity);
-	//}
-	//else
+	opendata_t opendata;
+	pDoor->GetNPCOpenData(this, opendata);
+
+	if (HaveSequenceForActivity(opendata.eActivity))
+	{
+		SetIdealActivity(opendata.eActivity);
+	}
+	else
 	{
 		// We don't have an appropriate sequence, just open the door magically.
 		OpenPropDoorNow( pDoor );

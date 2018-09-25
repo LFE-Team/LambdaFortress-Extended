@@ -488,7 +488,7 @@ void CNPC_Citizen::Spawn()
 	m_bRPGAvoidPlayer = false;
 
 	m_bShouldPatrol = false;
-	m_iHealth = sk_citizen_health.GetFloat();
+	m_iHealth = (m_Type == CT_REBEL) ? (sk_citizen_health.GetFloat() * 1.5f) : sk_citizen_health.GetFloat();
 	
 	// Are we on a train? Used in trainstation to have NPCs on trains.
 	if ( GetMoveParent() && FClassnameIs( GetMoveParent(), "func_tracktrain" ) )

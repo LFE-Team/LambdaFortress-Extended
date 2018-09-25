@@ -546,7 +546,9 @@ $Project
 				"in_mouse.cpp"										\
 				"mumble.cpp"						\
 				"$SRCDIR\public\renamed_recvtable_compat.cpp"		\
-				"rendertexture.cpp"									
+				"rendertexture.cpp"									\
+				"$SRCDIR\public\phonemeconverter.cpp"				\
+				"$SRCDIR\public\lumpfiles.cpp"								
 				{
 					$Configuration
 					{

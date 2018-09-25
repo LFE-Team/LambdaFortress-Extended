@@ -102,9 +102,13 @@ fgdlib.lib
 code/src/utils/sapi51/Samples/VB/TTSAppVB/ttsapp.RES
 
 *.vcd
-code/src/game/server/Release_tf_coop_extended/vc120.pdb
-code/src/game/client/Release_tf_coop_extended/vc120.pdb
 *.pdb
 *.lib
 *.pdb
 *.sentinel
+code/game/tf_coop_extended/bin/game_shader_dx9.dll
+code/src/game/server/Release_tf_coop_extended/vc120.pdb
+code/src/game/client/Release_tf_coop_extended/vc120.pdb
+code/src/game/server/Release_tf_coop_extended/
+code/src/game/client/Release_tf_coop_extended/
+code/src/materialsystem/stdshaders/Release_dx9_tf_coop_extended/

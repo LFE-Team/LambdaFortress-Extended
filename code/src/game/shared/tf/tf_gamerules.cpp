@@ -5318,6 +5318,9 @@ void CTFGameRules::CreateStandardEntities()
 
 	CRestartGameIssue* pRestartIssue = new CRestartGameIssue("Restartgame");
 	pRestartIssue->Init();
+
+	CChangeLevelIssue* pChangeLevel = new CChangeLevelIssue("ChangeLevel");
+	pChangeLevel->Init();
 }
 
 //-----------------------------------------------------------------------------

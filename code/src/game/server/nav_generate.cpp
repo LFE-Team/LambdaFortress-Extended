@@ -3633,7 +3633,7 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 {
 	double startTime = Plat_FloatTime();
 	static unsigned int s_movedPlayerToArea = 0;	// Last area we moved a player to for lighting calcs
-	static CountdownTimer s_playerSettleTimer;		// Settle time after moving the player for lighting calcs
+	//static CountdownTimer s_playerSettleTimer;		// Settle time after moving the player for lighting calcs
 	static CUtlVector<CNavArea *> s_unlitAreas;
 	static CUtlVector<CNavArea *> s_unlitSeedAreas;
 
@@ -3837,7 +3837,7 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 			Msg( "Finding earliest occupy times...DONE\n" );
 
 #ifdef NAV_ANALYZE_LIGHT_INTENSITY
-			bool shouldSkipLightComputation = ( m_generationMode == GENERATE_INCREMENTAL || engine->IsDedicatedServer() );
+			bool shouldSkipLightComputation = ( m_generationMode == GENERATE_INCREMENTAL /*|| engine->IsDedicatedServer()*/ );
 #else
 			bool shouldSkipLightComputation = true;
 #endif
@@ -3849,7 +3849,7 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 			else
 			{
 				m_generationState = FIND_LIGHT_INTENSITY;
-				s_playerSettleTimer.Invalidate();
+				//s_playerSettleTimer.Invalidate();
 				CNavArea::MakeNewMarker();
 				s_unlitAreas.RemoveAll();
 				FOR_EACH_VEC( TheNavAreas, nit )
@@ -3868,9 +3868,9 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 		{
 			host_thread_mode.SetValue( 0 );	// need non-threaded server for light calcs
 
-			CBasePlayer *host = UTIL_GetListenServerHost();
+			//CBasePlayer *host = UTIL_GetListenServerHost();
 
-			if ( !s_unlitAreas.Count() || !host )
+			if ( !s_unlitAreas.Count() /*|| !host*/ )
 			{
 				Msg( "Finding light intensity...DONE\n" );
 
@@ -3879,8 +3879,8 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 				return true;
 			}
 
-			if ( !s_playerSettleTimer.IsElapsed() )
-				return true; // wait for eyePos to settle
+			//if ( !s_playerSettleTimer.IsElapsed() )
+				//return true; // wait for eyePos to settle
 
 			// Now try to compute lighting for remaining areas
 			int sit = 0;
@@ -3904,12 +3904,12 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 			{
 				if ( s_unlitSeedAreas.Count() )
 				{
-					CNavArea *moveArea = s_unlitSeedAreas[0];
+					//CNavArea *moveArea = s_unlitSeedAreas[0];
 					s_unlitSeedAreas.FastRemove( 0 );
 
 					//Msg( "Moving to new area %d to compute lighting for %d/%d areas\n", moveArea->GetID(), s_unlitAreas.Count(), TheNavAreas.Count() );
 
-					Vector eyePos = moveArea->GetCenter();
+					/*Vector eyePos = moveArea->GetCenter();
 					float height;
 					if ( GetGroundHeight( eyePos, &height ) )
 					{
@@ -3922,7 +3922,7 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 					host->SetAbsOrigin( eyePos );
 					AnalysisProgress( "Finding light intensity...", 100, 100 * (TheNavAreas.Count() - s_unlitAreas.Count()) / TheNavAreas.Count() );
 					s_movedPlayerToArea = moveArea->GetID();
-					s_playerSettleTimer.Start( 0.1f );
+					s_playerSettleTimer.Start( 0.1f );*/
 					return true;
 				}
 				else

@@ -758,6 +758,34 @@ void CVoteSetupDialog::OnItemSelected( vgui::Panel *panel )
 				}
 			}
 #endif	// TF_CLIENT_DLL
+#ifdef TF_CLASSIC_CLIENT
+			// LFE Change difficulty
+			else if ( !V_stricmp( "ChangeDifficulty", pszIssueRaw ) )
+			{
+				if ( m_pVoteParameterList->GetItemCount() == 0 )
+				{
+					KeyValues *pOriginal = new KeyValues( "original" );
+					pOriginal->SetString( "#LFE_VoteChangeDifficulty_Original", "1" );
+					pOriginal->SetInt( "index", 1 );
+					m_pVoteParameterList->AddItem( 1, pOriginal );
+
+					KeyValues *pMedium = new KeyValues( "medium" );
+					pMedium->SetString( "#LFE_VoteChangeDifficulty_Medium", "2" );
+					pMedium->SetInt( "index", 2 );
+					m_pVoteParameterList->AddItem( 2, pMedium );
+
+					KeyValues *pHard = new KeyValues( "hard" );
+					pHard->SetString( "#LFE_VoteChangeDifficulty_Hard", "3" );
+					pHard->SetInt( "index", 3 );
+					m_pVoteParameterList->AddItem( 3, pHard );
+
+					KeyValues *pUnusual = new KeyValues( "unusual" );
+					pUnusual->SetString( "#LFE_VoteChangeDifficulty_Unusual", "4" );
+					pUnusual->SetInt( "index", 4 );
+					m_pVoteParameterList->AddItem( 4, pUnusual );
+				}
+			}
+#endif
 			else
 			{
 				// User selected an issue that doesn't require a parameter - Scrambleteams, Restartgame, etc

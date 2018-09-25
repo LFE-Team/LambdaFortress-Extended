@@ -125,7 +125,7 @@ public:
 
 	const IHandleEntity *GetPassEntity( void ){ return m_pPassEnt;}
 
-private:
+protected:
 	const IHandleEntity *m_pPassEnt;
 	int m_collisionGroup;
 	ShouldHitFunc_t m_pExtraShouldHitCheckFunction;

@@ -407,6 +407,8 @@ public:
 	virtual void OnNavAreaChanged( CNavArea *enteredArea, CNavArea *leftArea ) { }	// invoked (by UpdateLastKnownArea) when we enter a new nav area (or it is reset to NULL)
 	virtual void OnNavAreaRemoved( CNavArea *removedArea );
 
+	virtual bool ComputeTargetIsInDarkness(const Vector &vecEyePosition, CNavArea *pTargetNavArea, const Vector &vecTargetPos) const;
+
 	// -----------------------
 	// Notification from INextBots.
 	// -----------------------

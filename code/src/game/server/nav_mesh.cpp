@@ -46,6 +46,7 @@ ConVar nav_show_func_nav_avoid( "nav_show_func_nav_avoid", "0", FCVAR_GAMEDLL | 
 ConVar nav_show_func_nav_prefer( "nav_show_func_nav_prefer", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Show areas of designer-placed bot preference due to func_nav_prefer entities" );
 ConVar nav_show_func_nav_prerequisite( "nav_show_func_nav_prerequisite", "0", FCVAR_GAMEDLL | FCVAR_CHEAT, "Show areas of designer-placed bot preference due to func_nav_prerequisite entities" );
 ConVar nav_max_vis_delta_list_length( "nav_max_vis_delta_list_length", "64", FCVAR_CHEAT );
+ConVar NavObscureRange("nav_obscure_range", "400", FCVAR_CHEAT);
 
 extern ConVar nav_show_potentially_visible;
 

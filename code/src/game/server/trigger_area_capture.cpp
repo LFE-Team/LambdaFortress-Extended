@@ -103,7 +103,7 @@ void CTriggerAreaCapture::Spawn( void )
 {
 	BaseClass::Spawn();
 
-	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
+	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS );
 
 	InitTrigger();
 	
