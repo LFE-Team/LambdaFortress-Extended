@@ -3287,6 +3287,27 @@ bool CNPC_Manhack::CreateVPhysics( void )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CNPC_Manhack::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	m_hPhysicsAttacker = ToBasePlayer( pDeflectedBy );
+	m_flLastPhysicsInfluenceTime = gpGlobals->curtime;
+
+	StopLoitering();
+
+	m_bHeld = false;
+
+	// There's about to be a massive change in velocity. 
+	// Think immediately so we can do our slice traces, etc.
+	SetNextThink( gpGlobals->curtime + 0.01f );
+
+	// Stall our engine for awhile
+	m_flEngineStallTime = gpGlobals->curtime + 2.0f;
+	SetEyeState( MANHACK_EYE_STATE_STUNNED );
+}
+
+//-----------------------------------------------------------------------------
 //
 // Schedules
 //

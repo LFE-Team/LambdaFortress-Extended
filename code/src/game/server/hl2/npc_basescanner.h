@@ -123,6 +123,9 @@ public:
 	void			InputSetFlightSpeed( inputdata_t &inputdata );
 	void			InputSetDistanceOverride( inputdata_t &inputdata );
 
+#ifdef TF_CLASSIC
+	virtual void	Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
+#endif
 protected:
 	virtual char		*GetEngineSound( void ) { return NULL; }
 	void				PlayFlySound(void);

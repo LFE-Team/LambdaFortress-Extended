@@ -2054,17 +2054,18 @@ int CNPC_Alyx::TranslateSchedule(int scheduleType)
 	case SCHED_IDLE_STAND:
 		return SCHED_ALYX_IDLE_STAND;
 
-#ifdef HL2_EPISODIC
-	case SCHED_RUN_RANDOM:
-		if (GetEnemy() && HasCondition(COND_SEE_ENEMY) && GetActiveWeapon())
-		{
-			// SCHED_RUN_RANDOM is a last ditch effort, it's the bottom of a chain of 
-			// sequential schedule failures. Since this can cause Alyx to freeze up, 
-			// just let her fight if she can. (sjb).
-			return SCHED_RANGE_ATTACK1;
-		}
-		break;
-#endif// HL2_EPISODIC
+	if( hl2_episodic.GetBool() )
+	{
+		case SCHED_RUN_RANDOM:
+			if (GetEnemy() && HasCondition(COND_SEE_ENEMY) && GetActiveWeapon())
+			{
+				// SCHED_RUN_RANDOM is a last ditch effort, it's the bottom of a chain of 
+				// sequential schedule failures. Since this can cause Alyx to freeze up, 
+				// just let her fight if she can. (sjb).
+				return SCHED_RANGE_ATTACK1;
+			}
+			break;
+	}
 	}
 
 	return BaseClass::TranslateSchedule(scheduleType);
@@ -3325,10 +3326,11 @@ bool CNPC_Alyx::PlayerInSpread(const Vector &sourcePos, const Vector &targetPos,
 		if (pPlayer && (!ignoreHatedPlayers || IRelationType(pPlayer) != D_HT))
 		{
 			//If the player is being lifted by a barnacle then go ahead and ignore the player and shoot.
-#ifdef HL2_EPISODIC
-			if (pPlayer->IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE))
-				return false;
-#endif
+			if( hl2_episodic.GetBool() )
+			{
+				if (pPlayer->IsEFlagSet(EFL_IS_BEING_LIFTED_BY_BARNACLE))
+					return false;
+			}
 
 			if (PointInSpread(pPlayer, sourcePos, targetPos, pPlayer->WorldSpaceCenter(), flSpread, maxDistOffCenter))
 				return true;

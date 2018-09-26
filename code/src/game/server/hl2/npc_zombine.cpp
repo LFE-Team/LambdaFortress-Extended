@@ -204,11 +204,7 @@ void CNPC_Zombine::Spawn(void)
 	m_fIsTorso = false;
 	m_fIsHeadless = false;
 
-#ifdef HL2_EPISODIC
-	SetBloodColor(BLOOD_COLOR_ZOMBIE);
-#else
-	SetBloodColor(BLOOD_COLOR_GREEN);
-#endif // HL2_EPISODIC
+	SetBloodColor( BLOOD_COLOR_ZOMBIE );
 
 	m_iHealth = sk_zombie_soldier_health.GetFloat();
 	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)

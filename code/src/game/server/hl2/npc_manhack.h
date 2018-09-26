@@ -175,6 +175,9 @@ public:
 
 	DECLARE_DATADESC();
 
+#ifdef TF_CLASSIC
+	virtual void	Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
+#endif
 private:
 
 	bool IsInEffectiveTargetZone( CBaseEntity *pTarget );

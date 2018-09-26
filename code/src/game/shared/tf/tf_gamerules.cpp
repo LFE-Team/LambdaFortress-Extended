@@ -1920,13 +1920,16 @@ void CTFGameRules::Activate()
 
 	SetMultipleTrains( false );
 
+	if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
+		hl2_episodic.SetValue( 1 );
+
 	if ( lfe_coop.GetBool() || gEntList.FindEntityByClassname( NULL, "lfe_logic_coop" ) &&
 		!gEntList.FindEntityByClassname( NULL, "lfe_logic_blucoop" ))
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
 		lfe_coop.SetValue( 1 );
-		if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
-			hl2_episodic.SetValue( 1 );
+		if ( !IsInHL2EP1Map() || !IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server coop config file\n", NULL );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
 		engine->ServerExecute();
@@ -1937,8 +1940,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_VS );
 		lfe_versus.SetValue( 1 );
-		if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
-			hl2_episodic.SetValue( 1 );
+		if ( !IsInHL2EP1Map() || !IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server versus config file\n", NULL );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
@@ -1949,8 +1952,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
 		lfe_blucoop.SetValue( 1 );
-		if ( IsInHL2EP1Map() || IsInHL2EP2Map() )
-			hl2_episodic.SetValue( 1 );
+		if ( !IsInHL2EP1Map() || !IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server blue coop file\n", NULL );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
@@ -7269,10 +7272,6 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
 		return false;
 
- 	// VintageCollide with nothing
-	/*if ( collisionGroup1 == TFCOLLISION_GROUP_NONE )
- 		return false;*/
-
 	// don't want caltrops and other grenades colliding with each other
 	// caltops getting stuck on other caltrops, etc.)
 	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
@@ -7288,36 +7287,15 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
-	// tf_pumpkin_bomb
-	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) &&
-		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
-		return false;
-
-	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ) &&
-		( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
-		return true;
-
-	if ( ( collisionGroup0 == TF_COLLISIONGROUP_GRENADES ) && 
-		 ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) )
-		 return false;
-
-	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
-		 ( collisionGroup0 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) || ( collisionGroup0 == TFCOLLISION_GROUP_ROCKETS ) )
-		 return false;
-
-	if ( ( collisionGroup1 == TFCOLLISION_GROUP_PUMPKIN_BOMB ) && 
-		 ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_PROJECTILE ) )
-		 return false;
-
 	// Prevent the player movement from colliding with spit globs (caused the player to jump on top of globs while in water)
 	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
 		return false;
 
 	//If collisionGroup0 is not a player then NPC_ACTOR behaves just like an NPC.
-	/*if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
+	if ( collisionGroup1 == COLLISION_GROUP_NPC_ACTOR && collisionGroup0 != COLLISION_GROUP_PLAYER )
 	{
 		collisionGroup1 = COLLISION_GROUP_NPC;
-	}*/
+	}
 
 	// This is only for the super physcannon
 	if ( m_bMegaPhysgun )
@@ -7381,11 +7359,6 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_STRIDER )
 			return false;
-
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
-		collisionGroup0 == TFCOLLISION_GROUP_ARROWS || collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
-		collisionGroup0 == TF_COLLISIONGROUP_GRENADES || collisionGroup0 == TFCOLLISION_GROUP_ROCKETS )
-			return true;
 	}
 
 	// Gunship don't collide with npc or other Gunship
@@ -7393,11 +7366,6 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_GUNSHIP )
 			return false;
-
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER ||
-		collisionGroup0 == TFCOLLISION_GROUP_ARROWS || collisionGroup0 == COLLISION_GROUP_WEAPON || collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
-		collisionGroup0 == TF_COLLISIONGROUP_GRENADES || collisionGroup0 == TFCOLLISION_GROUP_ROCKETS )
-			return true;
 	}
 
 	// weapons and NPCs don't collide
@@ -7645,12 +7613,7 @@ CAmmoDef* GetAmmoDef()
 		// now that the AmmoDef code is behaving correctly.
 		//
 		//=====================================================================
-#ifdef HL2_EPISODIC
 		def.AddAmmoType("StriderMinigun",	DMG_BULLET,					TRACER_LINE,			5, 5, 15, 1.0 * 750 * 12, AMMO_FORCE_DROP_IF_CARRIED ); // hit like a 1.0kg weight at 750 ft/s
-#else
-		def.AddAmmoType("StriderMinigun",	DMG_BULLET,					TRACER_LINE,			5, 15,15, 1.0 * 750 * 12, AMMO_FORCE_DROP_IF_CARRIED ); // hit like a 1.0kg weight at 750 ft/s
-#endif//HL2_EPISODIC
-
 		def.AddAmmoType("StriderMinigunDirect",	DMG_BULLET,				TRACER_LINE,			2, 2, 15, 1.0 * 750 * 12, AMMO_FORCE_DROP_IF_CARRIED ); // hit like a 1.0kg weight at 750 ft/s
 		def.AddAmmoType("HelicopterGun",	DMG_BULLET,					TRACER_LINE_AND_WHIZ,	"sk_npc_dmg_helicopter_to_plr", "sk_npc_dmg_helicopter",	"sk_max_smg1",	BULLET_IMPULSE(400, 1225), AMMO_FORCE_DROP_IF_CARRIED | AMMO_INTERPRET_PLRDAMAGE_AS_DAMAGE_TO_PLAYER );
 		def.AddAmmoType("AR2AltFire",		DMG_DISSOLVE,				TRACER_NONE,			0, 0, "sk_max_ar2_altfire", 0, 0 );

@@ -291,7 +291,7 @@ void CChangeLevelIssue::ListIssueDetails( CBasePlayer *pForWhom )
 	char s[64];
 	if (true)//There should be check or something
 	{
-		V_snprintf(s, sizeof(s), "callvote %s <userID>\n", GetTypeString());
+		V_snprintf(s, sizeof(s), "callvote %s %s\n", GetTypeString(), GetTypeString());
 		ClientPrint( pForWhom, 2, s );
 	}
 }
@@ -373,7 +373,7 @@ bool CChangeLevelIssue::CreateVoteDataFromDetails(const char *s)
 
 void CChangeLevelIssue::ExecuteCommand()
 {
-	engine->ServerCommand( UTIL_VarArgs( "wait 5;changelevel %s\n", m_pzMap ) );
+	engine->ServerCommand( UTIL_VarArgs( "changelevel %s \n", m_pzMap ) );
 }
 
 void CChangeLevelIssue::SetIssueCooldownDuration( float flDuration )

@@ -570,6 +570,26 @@ void CVoteSetupDialog::OnCommand(const char *command)
 				}
 			}
 #endif	// TF_CLIENT_DLL
+			else if ( !V_stricmp( "ChangeDifficulty", szIssueRaw ) )
+			{
+				int nSelectedParam = m_pVoteParameterList->GetSelectedItem();
+				if ( nSelectedParam >= 0 )
+				{
+					// Get selected level
+					int iSelectedParam = m_pVoteParameterList->GetSelectedItem();
+					if ( iSelectedParam >= 0 )
+					{
+						KeyValues *pParameterKeyValues = m_pVoteParameterList->GetItemData( iSelectedParam );
+						if ( pParameterKeyValues )
+						{
+							// Which Level?
+							const char *szLevel = pParameterKeyValues->GetString( "Name" );
+							Q_snprintf( szVoteCommand, sizeof( szVoteCommand ), "callvote %s %s\n;", szIssueRaw, szLevel );
+							engine->ClientCmd( szVoteCommand );
+						}
+					}
+				}
+			}
 			else
 			{
 				// Non-parameter vote.  i.e.  callvote scrambleteams
@@ -765,22 +785,22 @@ void CVoteSetupDialog::OnItemSelected( vgui::Panel *panel )
 				if ( m_pVoteParameterList->GetItemCount() == 0 )
 				{
 					KeyValues *pOriginal = new KeyValues( "original" );
-					pOriginal->SetString( "#LFE_VoteChangeDifficulty_Original", "1" );
+					pOriginal->SetString( "Level", "#LFE_VoteChangeDifficulty_Original" );
 					pOriginal->SetInt( "index", 1 );
 					m_pVoteParameterList->AddItem( 1, pOriginal );
 
 					KeyValues *pMedium = new KeyValues( "medium" );
-					pMedium->SetString( "#LFE_VoteChangeDifficulty_Medium", "2" );
+					pMedium->SetString( "Level", "#LFE_VoteChangeDifficulty_Medium" );
 					pMedium->SetInt( "index", 2 );
 					m_pVoteParameterList->AddItem( 2, pMedium );
 
 					KeyValues *pHard = new KeyValues( "hard" );
-					pHard->SetString( "#LFE_VoteChangeDifficulty_Hard", "3" );
+					pHard->SetString( "Level", "#LFE_VoteChangeDifficulty_Hard" );
 					pHard->SetInt( "index", 3 );
 					m_pVoteParameterList->AddItem( 3, pHard );
 
 					KeyValues *pUnusual = new KeyValues( "unusual" );
-					pUnusual->SetString( "#LFE_VoteChangeDifficulty_Unusual", "4" );
+					pUnusual->SetString( "Level", "#LFE_VoteChangeDifficulty_Unusual" );
 					pUnusual->SetInt( "index", 4 );
 					m_pVoteParameterList->AddItem( 4, pUnusual );
 				}

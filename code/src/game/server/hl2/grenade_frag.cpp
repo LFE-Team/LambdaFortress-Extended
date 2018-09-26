@@ -75,8 +75,8 @@ public:
 
 	void	InputSetTimer( inputdata_t &inputdata );
 
-	CNetworkVar( int, m_iDeflected );
-	CNetworkHandle( CBaseEntity, m_hDeflectOwner );
+	int m_iDeflected;
+	CHandle< CBaseEntity >	m_hDeflectOwner;
 
 	virtual bool			IsDeflectable() { return true; }
 	virtual void			Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
@@ -400,19 +400,9 @@ void CGrenadeFrag::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t r
 	BlipSound();
 	m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FAST_FREQUENCY;
 	m_bHasWarnedAI = true;
-#else
-	if( IsX360() )
-	{
-		// Give 'em a couple of seconds to aim and throw. 
-		SetTimer( 2.0f, 1.0f);
-		BlipSound();
-		m_flNextBlipTime = gpGlobals->curtime + FRAG_GRENADE_BLIP_FAST_FREQUENCY;
-	}
 #endif
 
-#ifdef HL2_EPISODIC
 	SetPunted( true );
-#endif
 
 	BaseClass::OnPhysGunPickup( pPhysGunUser, reason );
 }
@@ -533,12 +523,12 @@ void CGrenadeFrag::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 		pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
 	}
 
-	CBaseCombatCharacter *pBCC = pDeflectedBy->MyCombatCharacterPointer();
-
 	IncremenentDeflected();
 	m_hDeflectOwner = pDeflectedBy;
-	SetThrower( pBCC );
+	SetThrower( ToBaseCombatCharacter( pDeflectedBy ) );
 	ChangeTeam( pDeflectedBy->GetTeamNumber() );
+	//SetScorer( GetThrower() );
+	SetPunted( true );
 }
 
 //-----------------------------------------------------------------------------

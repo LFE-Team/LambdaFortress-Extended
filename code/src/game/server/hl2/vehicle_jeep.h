@@ -68,7 +68,9 @@ public:
 	void			Precache( void );
 	void			Spawn( void ); 
 	void			Activate( void );
+	void			OnRestore( void );
 
+	virtual void	Event_Killed( const CTakeDamageInfo &info );
 	virtual void	CreateServerVehicle( void );
 	virtual Vector	BodyTarget( const Vector &posSrc, bool bNoisy = true );
 	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
@@ -121,7 +123,7 @@ private:
 	void		InputShowHudHint( inputdata_t &inputdata );
 	void		InputStartRemoveTauCannon( inputdata_t &inputdata );
 	void		InputFinishRemoveTauCannon( inputdata_t &inputdata );
-	void	InputFromSpawner(inputdata_t &inputdata);
+	void		InputFromSpawner(inputdata_t &inputdata);
 
 protected:
 
@@ -166,6 +168,8 @@ protected:
 	bool			m_bHasPoop;
 
 	CNetworkVar( bool, m_bHeadlightIsOn );
+	bool			m_bEnableTakeDamage;
+	int				m_nMaxHealth;
 };
 
 #endif // VEHICLE_JEEP_H

@@ -46,9 +46,9 @@ public:
 	void				Think( void );
 	void				AutoRemoveThink(void);
 
-	virtual bool			IsDeflectable() { return true; }
-	virtual void			Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
-	virtual void			IncremenentDeflected( void );
+	virtual bool		IsDeflectable() { return true; }
+	virtual void		Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
+	virtual void		IncremenentDeflected( void );
 
 	int m_iDeflected;
 	CHandle< CBaseEntity >	m_hDeflectOwner;

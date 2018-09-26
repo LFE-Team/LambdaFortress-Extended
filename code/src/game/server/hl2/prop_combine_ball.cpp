@@ -1685,19 +1685,45 @@ void CPropCombineBall::AnimThink( void )
 //-----------------------------------------------------------------------------
 void CPropCombineBall::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 {
-	// Get rocket's speed.
+	SetState( STATE_THROWN );
+	WhizSoundThink();
+
+	m_bHeld = false;
+	m_bLaunched = true;
+
+	if ( m_pGlowTrail )
+	{
+		m_pGlowTrail->TurnOn();
+		m_pGlowTrail->SetRenderColor( 255, 255, 255, 255 );
+	}
+
+	// Get ball's speed.
 	float flSpeed = GetAbsVelocity().Length();
+
+	SetSpeed( flSpeed );
+
+	// Now change ball's direction.
+	pDeflectedBy->GetVectors( &vecDir, NULL, NULL );
 
 	QAngle angForward;
 	VectorAngles( vecDir, angForward );
 
-	// Now change rocket's direction.
-	SetAbsAngles( angForward );
-	SetAbsVelocity( vecDir * flSpeed );
+	// Offset by some small cone
+	angForward[PITCH] += random->RandomInt( -55, 55 );
+	angForward[YAW] += random->RandomInt( -55, 55 );
+
+	AngleVectors( angForward, &vecDir, NULL, NULL );
+
+	vecDir *= GetSpeed();
+
+	VPhysicsGetObject()->SetVelocity( &vecDir, &vec3_origin );
+
+	SetBallAsLaunched();
+	StopAnimating();
 
 	// And change owner.
+	SetPlayerLaunched( ToBasePlayer( pDeflectedBy ) );
 	IncremenentDeflected();
-	SetOwnerEntity( pDeflectedBy );
 	ChangeTeam( pDeflectedBy->GetTeamNumber() );
 	SetScorer( pDeflectedBy );
 }

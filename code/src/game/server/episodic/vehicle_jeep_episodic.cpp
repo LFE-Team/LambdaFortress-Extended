@@ -456,35 +456,34 @@ void CPropJeepEpisodic::EnterVehicle(CBaseCombatCharacter *pPassenger)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::Spawn(void)
 {
-	BaseClass::Spawn();
-
-	SetBlocksLOS(false);
-#ifdef TF_CLASSIC
-	CBasePlayer	*pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
-#else
-	CBasePlayer	*pPlayer = UTIL_GetLocalPlayer();
-#endif
-	if (pPlayer != NULL)
-	{
-		pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
-	}
-
 	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
 	{
+		SetBlocksLOS(false);
+		#ifdef TF_CLASSIC
+			CBasePlayer	*pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
+		#else
+			CBasePlayer	*pPlayer = UTIL_GetLocalPlayer();
+		#endif
+		if (pPlayer != NULL)
+		{
+			pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
+		}
+
+		SetBodygroup(JEEP_HOPPER_BODYGROUP, m_bBusterHopperVisible ? 1 : 0);
+		CreateCargoTrigger();
+
+		// carbar bodygroup is always on
+		SetBodygroup(JEEP_CARBAR_BODYGROUP, 1);
+
+		m_bRadarDetectsEnemies = false;
+
 		m_bHasGun = false;
 	}
 	else
 	{
 		m_bHasGun = true;
 	}
-
-	SetBodygroup(JEEP_HOPPER_BODYGROUP, m_bBusterHopperVisible ? 1 : 0);
-	CreateCargoTrigger();
-
-	// carbar bodygroup is always on
-	SetBodygroup(JEEP_CARBAR_BODYGROUP, 1);
-
-	m_bRadarDetectsEnemies = false;
+	BaseClass::Spawn();
 }
 
 //-----------------------------------------------------------------------------
@@ -1405,7 +1404,7 @@ void CPropJeepEpisodic::CreateHazardLights(void)
 {
 #ifdef TF_CLASSIC
 	// only create lights on jalopy model
-	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	if ( !strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 		return;
 #endif
 

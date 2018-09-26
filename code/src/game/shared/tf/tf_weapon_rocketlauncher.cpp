@@ -137,7 +137,7 @@ void CTFRocketLauncher::CreateMuzzleFlashEffects( C_BaseEntity *pAttachEnt, int 
 
 #endif
 
-extern ConVar lfe_allow_airblast;
+extern ConVar lfe_force_legacy;
 extern ConVar lfe_allow_airblast_physics;
 #ifdef GAME_DLL
 	extern ConVar lfe_debug_airblast_physics_distance;
@@ -263,7 +263,7 @@ void CTFWeaponFlameBall::PrimaryAttack()
 //-----------------------------------------------------------------------------
 void CTFWeaponFlameBall::SecondaryAttack()
 {
-	if ( !lfe_allow_airblast.GetBool() )
+	if ( lfe_force_legacy.GetBool() )
 		return;
 
 	int iNoAirblast = 0;
@@ -380,7 +380,6 @@ void CTFWeaponFlameBall::SecondaryAttack()
 
 			Vector	vecShoveDir = vecDir;
 			vecShoveDir.z = 0.0f;
-			//pAnt->SetCondition( COND_ANTLION_FLIPPED );
 			pAnt->ApplyAbsVelocityImpulse( ( vecShoveDir * random->RandomInt( 50.0f, 100.0f ) ) + Vector(0,0,64.0f) );
 			pAnt->SetGroundEntity( NULL );
 			pAnt->Flip();

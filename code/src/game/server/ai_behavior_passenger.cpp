@@ -864,10 +864,8 @@ void CAI_PassengerBehavior::DetachFromVehicle(void)
 	GetOuter()->SetGroundEntity(NULL);
 	GetOuter()->SetCollisionGroup(COLLISION_GROUP_NPC);
 
-	//SecobMod__IFDEF_Info: We add in this if def solely for people who DO NOT want episode 2 content.
-#ifdef HL2_EPISODIC
-	m_hVehicle->RemovePhysicsChild(GetOuter());
-#endif
+	if( hl2_episodic.GetBool() )
+		m_hVehicle->RemovePhysicsChild(GetOuter());
 }
 
 //-----------------------------------------------------------------------------

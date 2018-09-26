@@ -435,6 +435,7 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 			// we hit the world
 			*pbHitWorld = true;
 
+			pProp = dynamic_cast<CBreakableProp *>( pOther );
 			if ( pProp )
 			{
 				// If we won't be able to break it, don't burn
@@ -448,7 +449,6 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 			}
 
 			OnCollide( pOther );
-			//UTIL_Remove( this );
 		}
 	}
 }
@@ -517,6 +517,7 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
 
 		pOther->DispatchTraceAttack( info, GetAbsVelocity(), &pTrace );
 	}
+
 	ApplyMultiDamage();
 
 	// It's better to ignite NPC here rather than NPC code.

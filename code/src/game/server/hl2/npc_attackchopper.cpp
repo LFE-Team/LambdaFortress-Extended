@@ -37,10 +37,11 @@
 #include "physics_saverestore.h"
 #include "ai_memory.h"
 #include "npc_attackchopper.h"
-
-#ifdef HL2_EPISODIC
 #include "physics_bone_follower.h"
-#endif // HL2_EPISODIC
+
+#ifdef TF_CLASSIC
+#include "tf_gamerules.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -214,6 +215,8 @@ class CGrenadeHelicopter : public CBaseGrenade
 public:
 	DECLARE_CLASS( CGrenadeHelicopter, CBaseGrenade );
 
+	CGrenadeHelicopter( void );
+
 	virtual void Precache( );
 	virtual void Spawn( );
 	virtual void UpdateOnRemove();
@@ -230,7 +233,6 @@ public:
 
 	float GetBombLifetime();
 
-#ifdef HL2_EPISODIC
 	virtual void OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 	virtual void OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t reason );
 	virtual Class_T Classify( void ) {	return CLASS_MISSILE; }
@@ -242,8 +244,13 @@ public:
 	virtual Vector  PhysGunLaunchVelocity( const Vector &forward, float flMass );
 
 	void InputExplodeIn( inputdata_t &inputdata );
-#endif // HL2_EPISODIC
 
+	virtual bool			IsDeflectable() { return true; }
+	virtual void			Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir );
+	virtual void			IncremenentDeflected( void );
+
+	int m_iDeflected;
+	CHandle< CBaseEntity >	m_hDeflectOwner;
 private:
 	// Pow!
 	void DoExplosion( const Vector &vecOrigin, const Vector &vecVelocity );
@@ -263,14 +270,11 @@ private:
 	EHANDLE m_hWarningSprite;
 	bool m_bBlinkerAtTop;
 
-
-#ifdef HL2_EPISODIC
 	float m_flLifetime;
 	EHANDLE	m_hCollisionObject;	// Pointer to object we re-enable collisions with when picked up
 	bool m_bPickedUp;
 	float m_flBlinkFastTime;
 	COutputEvent m_OnPhysGunOnlyPickup;
-#endif // HL2_EPISODIC
 };
 
 
@@ -371,9 +375,7 @@ public:
 	virtual bool	CreateComponents();
 	virtual int		ObjectCaps();
 
-#ifdef HL2_EPISODIC
 	virtual bool	CreateVPhysics( void );
-#endif // HL2_EPISODIC
 
 	virtual void	UpdateOnRemove();
 	virtual void	StopLoopingSounds();
@@ -677,10 +679,8 @@ private:
 		SHOOT_MODE_FAST,
 	};
 
-#ifdef HL2_EPISODIC
 	void InitBoneFollowers( void );
 	CBoneFollowerManager	m_BoneFollowerManager;
-#endif // HL2_EPISODIC
 
 	CAI_Spotlight	m_Spotlight;
 	Vector		m_angGun;
@@ -767,12 +767,10 @@ private:
 	EHANDLE		m_hCrashPoint;
 };
 
-#ifdef HL2_EPISODIC
 static const char *pFollowerBoneNames[] =
 {
 	"Chopper.Body"
 };
-#endif // HL2_EPISODIC
 
 LINK_ENTITY_TO_CLASS( npc_helicopter, CNPC_AttackHelicopter );
 
@@ -781,9 +779,7 @@ BEGIN_DATADESC( CNPC_AttackHelicopter )
 	DEFINE_ENTITYFUNC( FlyTouch ),
 
 	DEFINE_EMBEDDED( m_Spotlight ),
-#ifdef HL2_EPISODIC
 	DEFINE_EMBEDDED( m_BoneFollowerManager ),
-#endif
 	DEFINE_FIELD( m_angGun,				FIELD_VECTOR ),
 	DEFINE_FIELD( m_vecAngAcceleration,	FIELD_VECTOR ),
 	DEFINE_FIELD( m_iAmmoType,			FIELD_INTEGER ),
@@ -1064,9 +1060,8 @@ void CNPC_AttackHelicopter::Spawn( void )
 	
 	SetHullSizeNormal();
 
-#ifdef HL2_EPISODIC
-	CreateVPhysics();
-#endif // HL2_EPISODIC
+	if ( hl2_episodic.GetBool() )
+		CreateVPhysics();
 
 	SetPauseState( PAUSE_NO_PAUSE );
 
@@ -1110,7 +1105,6 @@ void CNPC_AttackHelicopter::Spawn( void )
 	m_hCrashPoint.Set( NULL );
 }
 
-#ifdef HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1119,7 +1113,6 @@ bool CNPC_AttackHelicopter::CreateVPhysics( void )
 	InitBoneFollowers();
 	return BaseClass::CreateVPhysics();
 }
-#endif // HL2_EPISODIC
 
 //------------------------------------------------------------------------------
 // Startup the chopper
@@ -1307,9 +1300,8 @@ void CNPC_AttackHelicopter::UpdateOnRemove()
 		}
 	}
 
-#ifdef HL2_EPISODIC
-	m_BoneFollowerManager.DestroyBoneFollowers();
-#endif // HL2_EPISODIC
+	if ( hl2_episodic.GetBool() )
+		m_BoneFollowerManager.DestroyBoneFollowers();
 }
 
 
@@ -2478,12 +2470,10 @@ void CNPC_AttackHelicopter::ShootAtFacingDirection( const Vector &vBasePos, cons
 		}
 	}
 
-#ifdef HL2_EPISODIC 
 	if( GetEnemy() != NULL )
 	{
 		CSoundEnt::InsertSound( SOUND_DANGER, GetEnemy()->WorldSpaceCenter(), 180.0f, 0.5f, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
 	}
-#endif//HL2_EPISODIC
 
 	DoMuzzleFlash();
 
@@ -2791,16 +2781,17 @@ CGrenadeHelicopter *CNPC_AttackHelicopter::SpawnBombEntity( const Vector &vecPos
 	DispatchSpawn( pGrenade );
 	pGrenade->SetExplodeOnContact( m_bBombsExplodeOnContact );
 
-#ifdef HL2_EPISODIC
 	// Disable collisions with the owner's bone followers while we drop
-	physfollower_t *pFollower = m_BoneFollowerManager.GetBoneFollower( 0 );
-	if ( pFollower )
+	if ( hl2_episodic.GetBool() )
 	{
-		CBaseEntity *pBoneFollower = pFollower->hFollower;
-		PhysDisableEntityCollisions( pBoneFollower, pGrenade );
-		pGrenade->SetCollisionObject( pBoneFollower );
+		physfollower_t *pFollower = m_BoneFollowerManager.GetBoneFollower( 0 );
+		if ( pFollower )
+		{
+			CBaseEntity *pBoneFollower = pFollower->hFollower;
+			PhysDisableEntityCollisions( pBoneFollower, pGrenade );
+			pGrenade->SetCollisionObject( pBoneFollower );
+		}
 	}
-#endif // HL2_EPISODIC
 
 	return pGrenade;
 }
@@ -3642,27 +3633,27 @@ void Chopper_BecomeChunks( CBaseEntity *pChopper )
 	Vector vecForward, vecUp;
 	pChopper->GetVectors( &vecForward, NULL, &vecUp );
 
-#ifdef HL2_EPISODIC
-	CNPC_AttackHelicopter *pAttackHelicopter;
-	pAttackHelicopter = dynamic_cast<CNPC_AttackHelicopter*>(pChopper);
-	if( pAttackHelicopter != NULL )
+	if ( hl2_episodic.GetBool() )
 	{
-		// New for EP2, we may be tailspinning, (crashing) and playing an animation that is spinning
-		// our root bone, which means our model is not facing the way our entity is facing. So we have
-		// to do some attachment point math to get the proper angles to use for computing the relative
-		// positions of the gibs. The attachment points called DAMAGE0 is properly oriented and attached
-		// to the chopper body so we can use its angles.
-		int iAttach = pAttackHelicopter->LookupAttachment( "damage0" );
-		Vector vecAttachPos;
-
-		if( iAttach > -1 )
+		CNPC_AttackHelicopter *pAttackHelicopter;
+		pAttackHelicopter = dynamic_cast<CNPC_AttackHelicopter*>(pChopper);
+		if( pAttackHelicopter != NULL )
 		{
-			pAttackHelicopter->GetAttachment(iAttach, vecAttachPos, vecChunkAngles );
-			AngleVectors( vecChunkAngles, &vecForward, NULL, &vecUp );
+			// New for EP2, we may be tailspinning, (crashing) and playing an animation that is spinning
+			// our root bone, which means our model is not facing the way our entity is facing. So we have
+			// to do some attachment point math to get the proper angles to use for computing the relative
+			// positions of the gibs. The attachment points called DAMAGE0 is properly oriented and attached
+			// to the chopper body so we can use its angles.
+			int iAttach = pAttackHelicopter->LookupAttachment( "damage0" );
+			Vector vecAttachPos;
+
+			if( iAttach > -1 )
+			{
+				pAttackHelicopter->GetAttachment(iAttach, vecAttachPos, vecChunkAngles );
+				AngleVectors( vecChunkAngles, &vecForward, NULL, &vecUp );
+			}
 		}
 	}
-#endif//HL2_EPISODIC
-
 
 	Vector vecChunkPos = pChopper->GetAbsOrigin();
 
@@ -4822,10 +4813,12 @@ void CNPC_AttackHelicopter::Hunt( void )
 		}
 	}
 
-#ifdef HL2_EPISODIC
-	// Update our bone followers
-	m_BoneFollowerManager.UpdateBoneFollowers(this);
-#endif // HL2_EPISODIC
+	if ( hl2_episodic.GetBool() )
+	{
+		// Update our bone followers
+		m_BoneFollowerManager.UpdateBoneFollowers(this);
+	}
+
 }
 
 //-----------------------------------------------------------------------------
@@ -4840,7 +4833,6 @@ void	CNPC_AttackHelicopter::PopulatePoseParameters( void )
 	BaseClass::PopulatePoseParameters();
 }
 
-#ifdef HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -4853,7 +4845,6 @@ void CNPC_AttackHelicopter::InitBoneFollowers( void )
 	// Init our followers
 	m_BoneFollowerManager.InitBoneFollowers( this, ARRAYSIZE(pFollowerBoneNames), pFollowerBoneNames );
 }
-#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 // Where are how should we avoid?
@@ -4968,7 +4959,6 @@ BEGIN_DATADESC( CGrenadeHelicopter )
 	DEFINE_FIELD( m_hWarningSprite,		FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bBlinkerAtTop,		FIELD_BOOLEAN ),
 
-#ifdef HL2_EPISODIC
 	DEFINE_FIELD( m_flLifetime,			FIELD_FLOAT ),
 	DEFINE_FIELD( m_hCollisionObject,	FIELD_EHANDLE ),
 	DEFINE_FIELD( m_bPickedUp,			FIELD_BOOLEAN ),
@@ -4977,7 +4967,6 @@ BEGIN_DATADESC( CGrenadeHelicopter )
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "ExplodeIn", InputExplodeIn ),
 
 	DEFINE_OUTPUT( m_OnPhysGunOnlyPickup, "OnPhysGunOnlyPickup" ),
-#endif // HL2_EPISODIC
 
 	DEFINE_THINKFUNC( ExplodeThink ),
 	DEFINE_THINKFUNC( AnimateThink ),
@@ -4988,6 +4977,12 @@ BEGIN_DATADESC( CGrenadeHelicopter )
 END_DATADESC()
 
 #define SF_HELICOPTER_GRENADE_DUD	(1<<16)	// Will not become active on impact, only when launched via physcannon
+
+CGrenadeHelicopter::CGrenadeHelicopter( void )
+{
+	m_iDeflected = 0;
+	m_hDeflectOwner = NULL;
+}
 
 //------------------------------------------------------------------------------
 // Precache
@@ -5059,15 +5054,13 @@ void CGrenadeHelicopter::Spawn( void )
 	// use a lower gravity for grenades to make them easier to see
 	SetGravity( UTIL_ScaleForGravity( 400 ) );
 
-#ifdef HL2_EPISODIC
-	m_bPickedUp = false;
-	m_flLifetime = BOMB_LIFETIME * 2.0;
-#endif // HL2_EPISODIC
-
 	if ( hl2_episodic.GetBool() )
 	{
 		// Disallow this, we'd rather deal with them as physobjects
 		m_takedamage = DAMAGE_NO;
+
+		m_bPickedUp = false;
+		m_flLifetime = BOMB_LIFETIME * 2.0;
 	}
 	else
 	{
@@ -5105,7 +5098,6 @@ void CGrenadeHelicopter::UpdateOnRemove()
 }
 
 
-#ifdef HL2_EPISODIC
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void CGrenadeHelicopter::InputExplodeIn( inputdata_t &inputdata )
@@ -5122,8 +5114,6 @@ void CGrenadeHelicopter::InputExplodeIn( inputdata_t &inputdata )
 	m_bActivated = false;
 	BecomeActive();
 }
-#endif
-
 
 //------------------------------------------------------------------------------
 // Activate!
@@ -5172,9 +5162,8 @@ void CGrenadeHelicopter::BecomeActive()
 
 	SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + (GetBombLifetime() - 2.0f), s_pWarningBlinkerContext );
 
-#ifdef HL2_EPISODIC
-	m_flBlinkFastTime = gpGlobals->curtime + GetBombLifetime() - 1.0f;
-#endif//HL2_EPISODIC
+	if ( hl2_episodic.GetBool() )
+		m_flBlinkFastTime = gpGlobals->curtime + GetBombLifetime() - 1.0f;
 }
 
 
@@ -5197,33 +5186,7 @@ void CGrenadeHelicopter::RampSoundThink( )
 //------------------------------------------------------------------------------
 void CGrenadeHelicopter::WarningBlinkerThink()
 {
-#ifndef HL2_EPISODIC
-	return;
-#endif
-
-/*
-	if( !m_hWarningSprite.Get() )
-	{
-		Vector up;
-		GetVectors( NULL, NULL, &up );
-
-		// Light isn't on, so create the sprite.
-		m_hWarningSprite = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetAbsOrigin() + up * 10.0f, false );
-		CSprite *pSprite = (CSprite *)m_hWarningSprite.Get();
-
-		if( pSprite != NULL )
-		{
-			pSprite->SetParent( this, LookupAttachment("top") );
-			pSprite->SetTransparency( kRenderTransAdd, 255, 255, 255, 255, kRenderFxNone );
-			pSprite->SetScale( 0.35, 0.0 );
-		}
-
-		m_bBlinkerAtTop = true;
-
-		ResetSequence( LookupActivity( "ACT_ARM" ) );
-	}
-	else
-*/
+	if ( hl2_episodic.GetBool() )
 	{
 		// Just flip it to the other attachment.
 		if( m_bBlinkerAtTop )
@@ -5238,21 +5201,23 @@ void CGrenadeHelicopter::WarningBlinkerThink()
 			m_nSkin = (int)SKIN_DUD;
 			m_bBlinkerAtTop = true;
 		}
-	}
 
-	// Frighten people
-	CSoundEnt::InsertSound ( SOUND_DANGER, WorldSpaceCenter(), g_helicopter_bomb_danger_radius.GetFloat(), 0.2f, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
+		// Frighten people
+		CSoundEnt::InsertSound ( SOUND_DANGER, WorldSpaceCenter(), g_helicopter_bomb_danger_radius.GetFloat(), 0.2f, this, SOUNDENT_CHANNEL_REPEATED_DANGER );
 
-#ifdef HL2_EPISODIC
-	if( gpGlobals->curtime >= m_flBlinkFastTime )
-	{
-		SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + 0.1f, s_pWarningBlinkerContext );
+		if( gpGlobals->curtime >= m_flBlinkFastTime )
+		{
+			SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + 0.1f, s_pWarningBlinkerContext );
+		}
+		else
+		{
+			SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + 0.2f, s_pWarningBlinkerContext );
+		}
 	}
 	else
 	{
-		SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + 0.2f, s_pWarningBlinkerContext );
+		return;
 	}
-#endif//HL2_EPISODIC
 }
 
 //------------------------------------------------------------------------------
@@ -5325,16 +5290,6 @@ void CGrenadeHelicopter::VPhysicsCollision( int index, gamevcollisionevent_t *pE
 	BaseClass::VPhysicsCollision( index, pEvent );
 	BecomeActive();
 
-#ifndef HL2_EPISODIC	// in ep2, don't do this here, do it in Touch()
-	if ( m_bExplodeOnContact )
-	{
-		Vector vecVelocity;
-		GetVelocity( &vecVelocity, NULL );
-		DoExplosion( GetAbsOrigin(), vecVelocity );
-	}
-#endif
-	
-
 	if( hl2_episodic.GetBool() )
 	{
 		float flImpactSpeed = pEvent->preVelocity->Length();
@@ -5343,10 +5298,17 @@ void CGrenadeHelicopter::VPhysicsCollision( int index, gamevcollisionevent_t *pE
 			EmitSound( "NPC_AttackHelicopterGrenade.HardImpact" );
 		}
 	}
+	else // in ep2, don't do this here, do it in Touch()
+	{
+		if ( m_bExplodeOnContact )
+		{
+			Vector vecVelocity;
+			GetVelocity( &vecVelocity, NULL );
+			DoExplosion( GetAbsOrigin(), vecVelocity );
+		}
+	}
 }
 
-
-#if HL2_EPISODIC
 //------------------------------------------------------------------------------
 // double launch velocity for ep2_outland_08
 //------------------------------------------------------------------------------
@@ -5356,18 +5318,15 @@ Vector CGrenadeHelicopter::PhysGunLaunchVelocity( const Vector &forward, float f
 
 	return BaseClass::PhysGunLaunchVelocity(forward,flMass) * sk_helicopter_grenaderadius.GetFloat();
 }
-#endif
-
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 float CGrenadeHelicopter::GetBombLifetime()
 {
-#if HL2_EPISODIC
-	return m_flLifetime;
-#else
-	return BOMB_LIFETIME;
-#endif
+	if( hl2_episodic.GetBool() )
+		return m_flLifetime;
+	else
+		return BOMB_LIFETIME;
 }
 
 
@@ -5383,6 +5342,77 @@ int CGrenadeHelicopter::OnTakeDamage( const CTakeDamageInfo &info )
 	return BaseClass::OnTakeDamage( info );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CGrenadeHelicopter::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
+	if ( pPhysicsObject )
+	{
+		Vector vecOldVelocity, vecVelocity;
+
+		pPhysicsObject->GetVelocity( &vecOldVelocity, NULL );
+
+		float flSpeed = vecOldVelocity.Length();
+
+		vecVelocity = vecDir;
+		vecVelocity *= flSpeed;
+		AngularImpulse angVelocity( ( 600, random->RandomInt( -1200, 1200 ), 0 ) );
+
+		// Now change grenade's direction.
+		pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
+	}
+
+	if( hl2_episodic.GetBool() )
+	{
+		//if ( !m_bPickedUp )
+		//{
+			if( m_hWarningSprite.Get() != NULL )
+			{
+				UTIL_Remove( m_hWarningSprite );
+				m_hWarningSprite.Set(NULL);
+			}
+
+			// Turn on
+			BecomeActive();
+
+			// Change the warning sound to a captured sound.
+			SetContextThink( &CGrenadeHelicopter::RampSoundThink, gpGlobals->curtime + GetBombLifetime() - BOMB_RAMP_SOUND_TIME, s_pRampSoundContext );
+
+			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
+			controller.SoundDestroy( m_pWarnSound );
+
+			CReliableBroadcastRecipientFilter filter;
+			m_pWarnSound = controller.SoundCreate( filter, entindex(), "NPC_AttackHelicopterGrenade.PingCaptured" );
+			controller.Play( m_pWarnSound, 1.0, PITCH_NORM );
+
+			// Reset our counter so the player has more time
+			SetThink( &CGrenadeHelicopter::ExplodeThink );
+			SetNextThink( gpGlobals->curtime + GetBombLifetime() );
+
+			SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + GetBombLifetime() - 2.0f, s_pWarningBlinkerContext );
+
+			m_nSkin = (int)SKIN_REGULAR;
+			m_flBlinkFastTime = gpGlobals->curtime + GetBombLifetime() - 1.0f;
+		//}
+	}
+
+	// Stop us from sparing damage to the helicopter that dropped us
+	IncremenentDeflected();
+	m_hDeflectOwner = pDeflectedBy;
+	SetOwnerEntity( pDeflectedBy );
+	ChangeTeam( pDeflectedBy->GetTeamNumber() );
+	PhysEnableEntityCollisions( this, m_hCollisionObject );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Increment deflects counter
+//-----------------------------------------------------------------------------
+void CGrenadeHelicopter::IncremenentDeflected( void )
+{
+	m_iDeflected++;
+}
 
 //------------------------------------------------------------------------------
 // Pow!
@@ -5425,35 +5455,33 @@ void CGrenadeHelicopter::DoExplosion( const Vector &vecOrigin, const Vector &vec
 //------------------------------------------------------------------------------
 void CGrenadeHelicopter::ExplodeThink(void)
 {
-#ifdef HL2_EPISODIC
-	// remember if we were thrown by player, we can only determine this prior to explosion
-	bool bIsThrownByPlayer = IsThrownByPlayer();
-	int iHealthBefore = 0;
-	// get the health of the helicopter we came from prior to our explosion
-	CNPC_AttackHelicopter *pOwner = dynamic_cast<CNPC_AttackHelicopter *>( GetOriginalThrower() );
-	if ( pOwner )
+	if( hl2_episodic.GetBool() )
 	{
-		iHealthBefore = pOwner->GetHealth();
+		// remember if we were thrown by player, we can only determine this prior to explosion
+		bool bIsThrownByPlayer = IsThrownByPlayer();
+		int iHealthBefore = 0;
+		// get the health of the helicopter we came from prior to our explosion
+		CNPC_AttackHelicopter *pOwner = dynamic_cast<CNPC_AttackHelicopter *>( GetOriginalThrower() );
+		if ( pOwner )
+		{
+			iHealthBefore = pOwner->GetHealth();
+		}
+
+		// if we were thrown by player, look at health of helicopter after explosion and determine if we damaged it
+		if ( bIsThrownByPlayer && pOwner && ( iHealthBefore > 0 ) )
+		{
+			int iHealthAfter = pOwner->GetHealth();
+			if ( iHealthAfter == iHealthBefore )
+			{
+				// The player threw us, we exploded due to timer, and we did not damage the helicopter that fired us.  Send a miss event
+				SendMissEvent();
+			}
+		}
 	}
-#endif // HL2_EPISODIC
 
 	Vector vecVelocity;
 	GetVelocity( &vecVelocity, NULL );
 	DoExplosion( GetAbsOrigin(), vecVelocity );
-
-#ifdef HL2_EPISODIC
-	// if we were thrown by player, look at health of helicopter after explosion and determine if we damaged it
-	if ( bIsThrownByPlayer && pOwner && ( iHealthBefore > 0 ) )
-	{
-		int iHealthAfter = pOwner->GetHealth();
-		if ( iHealthAfter == iHealthBefore )
-		{
-			// The player threw us, we exploded due to timer, and we did not damage the helicopter that fired us.  Send a miss event
-			SendMissEvent();
-		}
-	}
-#endif // HL2_EPISODIC
-
 }
 
 
@@ -5464,7 +5492,6 @@ void CGrenadeHelicopter::ResolveFlyCollisionCustom( trace_t &trace, Vector &vecV
 {
 	ResolveFlyCollisionBounce( trace, vecVelocity, 0.1f );
 }
-
 
 //------------------------------------------------------------------------------
 // Contact grenade, explode when it touches something
@@ -5487,76 +5514,76 @@ void CGrenadeHelicopter::ExplodeConcussion( CBaseEntity *pOther )
 		}
 	}
 
-#ifdef HL2_EPISODIC
-	CBaseEntity *pEntityHit = pOther;
-	if ( pEntityHit->ClassMatches( "phys_bone_follower" ) && pEntityHit->GetOwnerEntity() )
+	if( hl2_episodic.GetBool() )
 	{
-		pEntityHit = pEntityHit->GetOwnerEntity();
-	}
-	if ( ( CLASS_COMBINE_GUNSHIP != pEntityHit->Classify() ) || !pEntityHit->ClassMatches( "npc_helicopter" ) )
-	{
-		// We hit something other than a helicopter.  If the player threw us, send a miss event
-		if ( IsThrownByPlayer() )
+		CBaseEntity *pEntityHit = pOther;
+		if ( pEntityHit->ClassMatches( "phys_bone_follower" ) && pEntityHit->GetOwnerEntity() )
 		{
-			SendMissEvent();
-		}		
+			pEntityHit = pEntityHit->GetOwnerEntity();
+		}
+		if ( ( CLASS_COMBINE_GUNSHIP != pEntityHit->Classify() ) || !pEntityHit->ClassMatches( "npc_helicopter" ) )
+		{
+			// We hit something other than a helicopter.  If the player threw us, send a miss event
+			if ( IsThrownByPlayer() )
+			{
+				SendMissEvent();
+			}		
+		}
 	}
-#endif // HL2_EPISODIC
 
 	Vector vecVelocity;
 	GetVelocity( &vecVelocity, NULL );
 	DoExplosion( GetAbsOrigin(), vecVelocity );
 }
 
-
-#ifdef HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // Purpose: The bomb will act differently when picked up by the player
 //-----------------------------------------------------------------------------
-void CGrenadeHelicopter::OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
+void CGrenadeHelicopter::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason )
 {
-	if ( reason == PICKED_UP_BY_CANNON )
+	if( hl2_episodic.GetBool() )
 	{
-		if ( !m_bPickedUp )
+		if ( reason == PICKED_UP_BY_CANNON )
 		{
-			if( m_hWarningSprite.Get() != NULL )
+			if ( !m_bPickedUp )
 			{
-				UTIL_Remove( m_hWarningSprite );
-				m_hWarningSprite.Set(NULL);
-			}
+				if( m_hWarningSprite.Get() != NULL )
+				{
+					UTIL_Remove( m_hWarningSprite );
+					m_hWarningSprite.Set(NULL);
+				}
 
-			// Turn on
-			BecomeActive();
+				// Turn on
+				BecomeActive();
 
-			// Change the warning sound to a captured sound.
-			SetContextThink( &CGrenadeHelicopter::RampSoundThink, gpGlobals->curtime + GetBombLifetime() - BOMB_RAMP_SOUND_TIME, s_pRampSoundContext );
+				// Change the warning sound to a captured sound.
+				SetContextThink( &CGrenadeHelicopter::RampSoundThink, gpGlobals->curtime + GetBombLifetime() - BOMB_RAMP_SOUND_TIME, s_pRampSoundContext );
 
-			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-			controller.SoundDestroy( m_pWarnSound );
+				CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
+				controller.SoundDestroy( m_pWarnSound );
 
-			CReliableBroadcastRecipientFilter filter;
-			m_pWarnSound = controller.SoundCreate( filter, entindex(), "NPC_AttackHelicopterGrenade.PingCaptured" );
-			controller.Play( m_pWarnSound, 1.0, PITCH_NORM );
+				CReliableBroadcastRecipientFilter filter;
+				m_pWarnSound = controller.SoundCreate( filter, entindex(), "NPC_AttackHelicopterGrenade.PingCaptured" );
+				controller.Play( m_pWarnSound, 1.0, PITCH_NORM );
 
-			// Reset our counter so the player has more time
-			SetThink( &CGrenadeHelicopter::ExplodeThink );
-			SetNextThink( gpGlobals->curtime + GetBombLifetime() );
+				// Reset our counter so the player has more time
+				SetThink( &CGrenadeHelicopter::ExplodeThink );
+				SetNextThink( gpGlobals->curtime + GetBombLifetime() );
 
-			SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + GetBombLifetime() - 2.0f, s_pWarningBlinkerContext );
+				SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + GetBombLifetime() - 2.0f, s_pWarningBlinkerContext );
 
-#ifdef HL2_EPISODIC
-			m_nSkin = (int)SKIN_REGULAR;
-			m_flBlinkFastTime = gpGlobals->curtime + GetBombLifetime() - 1.0f;
-#endif//HL2_EPISODIC
+				m_nSkin = (int)SKIN_REGULAR;
+				m_flBlinkFastTime = gpGlobals->curtime + GetBombLifetime() - 1.0f;
 			
-			// Stop us from sparing damage to the helicopter that dropped us
-			SetOwnerEntity( pPhysGunUser );
-			PhysEnableEntityCollisions( this, m_hCollisionObject );
+				// Stop us from sparing damage to the helicopter that dropped us
+				SetOwnerEntity( pPhysGunUser );
+				PhysEnableEntityCollisions( this, m_hCollisionObject );
 
-			// Don't do this again!
-			m_bPickedUp = true;
+				// Don't do this again!
+				m_bPickedUp = true;
 
-			m_OnPhysGunOnlyPickup.FireOutput( pPhysGunUser, this );
+				m_OnPhysGunOnlyPickup.FireOutput( pPhysGunUser, this );
+			}
 		}
 	}
 
@@ -5589,11 +5616,7 @@ void CGrenadeHelicopter::OnPhysGunDrop( CBasePlayer *pPhysGunUser, PhysGunDrop_t
 bool CGrenadeHelicopter::IsThrownByPlayer()
 {
 	// if player is the owner and we're set to explode on contact, then the player threw this grenade.
-#ifdef TF_CLASSIC
 	return ( ( GetOwnerEntity() == UTIL_GetNearestPlayer( GetAbsOrigin() ) ) && m_bExplodeOnContact );
-#else
-	return ( ( GetOwnerEntity() == UTIL_GetLocalPlayer() ) && m_bExplodeOnContact );
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -5608,8 +5631,6 @@ void CGrenadeHelicopter::SendMissEvent()
 		gameeventmanager->FireEvent( event );
 	}
 }
-
-#endif // HL2_EPISODIC
 
 //-----------------------------------------------------------------------------
 //

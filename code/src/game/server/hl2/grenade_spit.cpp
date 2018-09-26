@@ -332,11 +332,9 @@ void CGrenadeSpit::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 		pPhysicsObject->SetVelocityInstantaneous( &vecVelocity, &angVelocity );
 	}
 
-	CBaseCombatCharacter *pBCC = pDeflectedBy->MyCombatCharacterPointer();
-
 	IncremenentDeflected();
 	m_hDeflectOwner = pDeflectedBy;
-	SetThrower( pBCC );
+	SetThrower( ToBaseCombatCharacter( pDeflectedBy ) );
 	ChangeTeam( pDeflectedBy->GetTeamNumber() );
 }
 

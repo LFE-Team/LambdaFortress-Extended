@@ -70,7 +70,7 @@
 	extern ConVar lfe_muzzlelight;
 #endif
 
-ConVar  lfe_allow_airblast( "lfe_allow_airblast", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast function of the Flamethrower." );
+extern ConVar lfe_force_legacy;
 ConVar  lfe_allow_airblast_physics( "lfe_allow_airblast_physics", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing Physics." );
 #ifdef GAME_DLL
 ConVar	lfe_debug_airblast( "lfe_debug_airblast", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Visualize airblast box." );
@@ -527,7 +527,7 @@ void CTFFlameThrower::PrimaryAttack()
 //-----------------------------------------------------------------------------
 void CTFFlameThrower::SecondaryAttack()
 {
-	if ( !lfe_allow_airblast.GetBool() )
+	if ( lfe_force_legacy.GetBool() )
 		return;
 
 	int iNoAirblast = 0;
@@ -657,7 +657,6 @@ void CTFFlameThrower::SecondaryAttack()
 
 			Vector	vecShoveDir = vecDir;
 			vecShoveDir.z = 0.0f;
-			//pAnt->SetCondition( COND_ANTLION_FLIPPED );
 			pAnt->ApplyAbsVelocityImpulse( ( vecShoveDir * random->RandomInt( 50.0f, 100.0f ) ) + Vector(0,0,64.0f) );
 			pAnt->SetGroundEntity( NULL );
 			pAnt->Flip();

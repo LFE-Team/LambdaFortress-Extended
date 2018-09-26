@@ -33,6 +33,7 @@
 
 #ifdef TF_CLASSIC
 #include "entity_ammopack.h"
+#include "explode.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -148,6 +149,11 @@ BEGIN_DATADESC( CPropJeep )
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableGunSpawner", InputEnableGunSpawner ),
 
 	DEFINE_THINKFUNC( JeepSeagullThink ),
+	
+#ifdef TF_CLASSIC
+	DEFINE_KEYFIELD( m_nMaxHealth, FIELD_INTEGER, "health" ),
+	DEFINE_KEYFIELD( m_bEnableTakeDamage, FIELD_BOOLEAN, "allow_takedamage" ),
+#endif
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST( CPropJeep, DT_PropJeep )
@@ -179,6 +185,10 @@ CPropJeep::CPropJeep( void )
 
 	m_bUnableToFire = true;
 	m_flAmmoCrateCloseTime = 0;
+#ifdef TF_CLASSIC
+	m_bEnableTakeDamage = false;
+	m_nMaxHealth = 125;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -254,12 +264,12 @@ void CPropJeep::Spawn( void )
 	}
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
-	/*
-	if (GetKeyValue("targetname", "airboatfromspawner", -1))
+
+	if ( m_bEnableTakeDamage )
 	{
-		m_bFromSpawner = true;
+		SetMaxHealth( m_nMaxHealth );
+		SetHealth( m_nMaxHealth );
 	}
-	*/
 }
 
 void CPropJeep::InputEnableGunSpawner(inputdata_t &inputdata)
@@ -384,6 +394,19 @@ int CPropJeep::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	return 0;
+}
+
+void CPropJeep::Event_Killed( const CTakeDamageInfo &info )
+{
+	if ( m_bEnableTakeDamage )
+	{
+		// kaBOOM
+		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), 
+			 GetOwnerEntity(), 150, 512, SF_ENVEXPLOSION_NOSPARKS, 100.0f, this, TF_DMG_CUSTOM_PUMPKIN_BOMB );
+			//const EHANDLE *ignoredEntity , Class_T ignoredClass );
+
+		BaseClass::Event_Killed( info );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1738,6 +1761,19 @@ void CPropJeep::InputFinishRemoveTauCannon( inputdata_t &inputdata )
 	// Remove & hide the gun
 	SetBodygroup( 1, false );
 	m_bHasGun = false;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPropJeep::OnRestore( void )
+{
+	IServerVehicle *pServerVehicle = GetServerVehicle();
+	if ( pServerVehicle != NULL )
+	{
+		// Restore the passenger information we're holding on to
+		pServerVehicle->RestorePassengerInfo();
+	}
 }
 
 //========================================================================================================================================

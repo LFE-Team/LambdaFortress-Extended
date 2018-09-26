@@ -1666,6 +1666,22 @@ float CNPC_BaseScanner::GetMaxSpeed()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CNPC_BaseScanner::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
+{
+	m_hPhysicsAttacker = ToBasePlayer( pDeflectedBy );
+	m_flLastPhysicsInfluenceTime = gpGlobals->curtime;
+
+	// There's about to be a massive change in velocity. 
+	// Think immediately to handle changes in m_vCurrentVelocity;
+	SetNextThink( gpGlobals->curtime + 0.01f );
+
+	m_flEngineStallTime = gpGlobals->curtime + 2.0f;
+	ScannerEmitSound( "DiveBomb" );
+}
+
+//-----------------------------------------------------------------------------
 //
 // Schedules
 //
