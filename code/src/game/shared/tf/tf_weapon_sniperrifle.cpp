@@ -314,7 +314,10 @@ void CTFSniperRifle::ItemPostFrame( void )
 		// Don't start charging in the time just after a shot before we unzoom to play rack anim.
 		if ( pPlayer->m_Shared.InCond( TF_COND_AIMING ) && !m_bRezoomAfterShot )
 		{
-			m_flChargedDamage = min( m_flChargedDamage + gpGlobals->frametime * TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC, TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX );
+			float bChargePerSec = TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC;
+			CALL_ATTRIB_HOOK_FLOAT( bChargePerSec, mult_sniper_charge_per_sec );
+
+			m_flChargedDamage = min( m_flChargedDamage + gpGlobals->frametime * bChargePerSec, TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX );
 
 #ifdef CLIENT_DLL
 			if ( m_flChargedDamage >= TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX && !m_bDinged )
@@ -897,8 +900,11 @@ int CSniperDot::DrawModel( int flags )
 	CMatRenderContextPtr pRenderContext( materials );
 	pRenderContext->Bind( m_hSpriteMaterial, this );
 
+	float bChargePerSec = TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC;
+	CALL_ATTRIB_HOOK_FLOAT( bChargePerSec, mult_sniper_charge_per_sec );
+	
 	float flLifeTime = gpGlobals->curtime - m_flChargeStartTime;
-	float flStrength = RemapValClamped( flLifeTime, 0.0, TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX / TF_WEAPON_SNIPERRIFLE_CHARGE_PER_SEC, 0.1, 1.0 );
+	float flStrength = RemapValClamped( flLifeTime, 0.0, TF_WEAPON_SNIPERRIFLE_DAMAGE_MAX / bChargePerSec, 0.1, 1.0 );
 	
 	color32 innercolor = { 255, 255, 255, 255 };
 	color32 outercolor = { 255, 255, 255, 128 };

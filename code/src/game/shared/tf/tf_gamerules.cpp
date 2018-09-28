@@ -5324,6 +5324,9 @@ void CTFGameRules::CreateStandardEntities()
 
 	CChangeLevelIssue* pChangeLevel = new CChangeLevelIssue("ChangeLevel");
 	pChangeLevel->Init();
+
+	CChangeDifficultyIssue* pChangeDifficulty = new CChangeDifficultyIssue("ChangeDifficulty");
+	pChangeDifficulty->Init();
 }
 
 //-----------------------------------------------------------------------------
@@ -7267,6 +7270,22 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return ( collisionGroup0 == COLLISION_GROUP_PLAYER ) || ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) ||
 			   ( collisionGroup0 == COLLISION_GROUP_NPC ) || ( collisionGroup0 == COLLISION_GROUP_NPC_ACTOR );
 
+	// arrows need to collide with players when they hit, but
+	// be ignored by player movement checks
+	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER ) && 
+		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
+		return true;
+
+	// arrows need to collide with npcs when they hit
+	if ( ( collisionGroup0 == COLLISION_GROUP_NPC ||  collisionGroup0 == COLLISION_GROUP_NPC_ACTOR ||  collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB ) && 
+		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
+		return true;
+
+	// Don't stand on arrows
+	if ( ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ) && 
+		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
+		return true;
+
 	// Arrows don't collide with weapon
 	if ( ( collisionGroup0 == COLLISION_GROUP_WEAPON ) || ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS ) && 
 		( collisionGroup1 == TFCOLLISION_GROUP_ARROWS ) )
@@ -7287,6 +7306,13 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		return false;
 	}
 
+	// Players collide with npcs
+	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
+		collisionGroup1 == COLLISION_GROUP_NPC )
+	{
+		return true;
+	}
+
 	// Prevent the player movement from colliding with spit globs (caused the player to jump on top of globs while in water)
 	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT && collisionGroup1 == HL2COLLISION_GROUP_SPIT )
 		return false;
@@ -7302,11 +7328,6 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER )
 			return false;
-	}
-	else
-	{
-		if ( collisionGroup0 == COLLISION_GROUP_INTERACTIVE_DEBRIS && collisionGroup1 == COLLISION_GROUP_PLAYER )
-			return true;
 	}
 
 	// Combine ball don't collide with other combine ball

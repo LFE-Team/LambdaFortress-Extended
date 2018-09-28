@@ -541,6 +541,7 @@ public:
 	// Vintage Gunslinger
 	bool				HasGunslinger( void ) { return m_Shared.m_bGunslinger; }
 
+	virtual int			GetMaxHealth( void ) const;
 private:
 
 	int					GetAutoTeam( void );

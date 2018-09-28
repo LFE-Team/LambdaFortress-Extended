@@ -585,6 +585,27 @@ int CPropAPC::OnTakeDamage( const CTakeDamageInfo &info )
 				ExplodeAndThrowChunk( dmgInfo.GetDamagePosition() );
 			}
 		}
+
+		int iOldHealth = m_iHealth;
+		IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
+		if ( event )
+		{
+			event->SetInt( "victim_index", entindex() );
+			event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
+
+			event->SetInt( "health", max( 0, m_iHealth ) );
+			event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
+			event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+			event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
+
+			CBasePlayer *pPlayer = ToBasePlayer( info.GetAttacker() );
+			event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );
+
+			// HLTV event priority, not transmitted
+			event->SetInt( "priority", 5 );
+
+			gameeventmanager->FireEvent( event );
+		}
 	#ifndef TF_CLASSIC
 	}
 	#endif

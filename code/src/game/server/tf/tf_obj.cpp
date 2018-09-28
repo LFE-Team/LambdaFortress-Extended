@@ -1487,7 +1487,9 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 
 	if ( !IsRedeploying() )
 	{
-		SetHealth( OBJECT_CONSTRUCTION_STARTINGHEALTH );
+		float flBuildingHealth = OBJECT_CONSTRUCTION_STARTINGHEALTH;
+		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flBuildingHealth, mult_engy_building_health );
+		SetHealth( flBuildingHealth );
 	}
 	m_flPercentageConstructed = 0;
 
@@ -1547,7 +1549,9 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 void CBaseObject::BuildingThink( void )
 {
 	// Continue construction
-	Repair( (GetMaxHealth() - OBJECT_CONSTRUCTION_STARTINGHEALTH) / m_flTotalConstructionTime * OBJECT_CONSTRUCTION_INTERVAL );
+	float flBuildingHealth = OBJECT_CONSTRUCTION_STARTINGHEALTH;
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flBuildingHealth, mult_engy_building_health );
+	Repair( (GetMaxHealth() - flBuildingHealth) / m_flTotalConstructionTime * OBJECT_CONSTRUCTION_INTERVAL );
 }
 
 //-----------------------------------------------------------------------------
@@ -1990,7 +1994,9 @@ bool CBaseObject::Repair( float flHealth )
 	if ( IsBuilding() )
 	{
 		// Reduce the construction time by the correct amount for the health passed in
-		float flConstructionTime = flHealth / ((GetMaxHealth() - OBJECT_CONSTRUCTION_STARTINGHEALTH) / m_flTotalConstructionTime);
+		float flBuildingHealth = OBJECT_CONSTRUCTION_STARTINGHEALTH;
+		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetBuilder(), flBuildingHealth, mult_engy_building_health );
+		float flConstructionTime = flHealth / ((GetMaxHealth() - flBuildingHealth) / m_flTotalConstructionTime);
 		m_flConstructionTimeLeft = max( 0, m_flConstructionTimeLeft - flConstructionTime);
 		m_flConstructionTimeLeft = clamp( m_flConstructionTimeLeft, 0.0f, m_flTotalConstructionTime );
 		m_flPercentageConstructed = 1 - (m_flConstructionTimeLeft / m_flTotalConstructionTime);
@@ -2062,9 +2068,6 @@ float CBaseObject::GetConstructionMultiplier( void )
 	// Re-deploy twice as fast.
 	if ( IsRedeploying() )
 		flMultiplier *= 2.0f;
-
-	//CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, sentry_build_rate_multiplier );
-	//CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMultiplier, teleporter_build_rate_multiplier );
 
 	// expire all the old 
 	int i = m_RepairerList.LastInorder();

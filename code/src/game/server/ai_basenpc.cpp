@@ -669,7 +669,8 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	if (FClassnameIs(this, "npc_turret_floor"))
 	{
 	}
-	else if (info.GetAttacker()->GetTeamNumber() == TF_TEAM_RED && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && sv_dynamicnpcs.GetFloat() == 1 && (GetTeamNumber() == TF_TEAM_BLUE || GetTeamNumber() == TF_TEAM_YELLOW || GetTeamNumber() == TF_TEAM_GREEN))
+	else if (info.GetAttacker()->GetTeamNumber() == TF_TEAM_RED && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && 
+			sv_dynamicnpcs.GetFloat() == 1 && (GetTeamNumber() == TF_TEAM_BLUE || GetTeamNumber() == TF_TEAM_YELLOW || GetTeamNumber() == TF_TEAM_GREEN))
 	{
 		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger + 2;
 	}
@@ -2004,7 +2005,28 @@ void CAI_BaseNPC::DoRadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 //-----------------------------------------------------------------------------
 unsigned int CAI_BaseNPC::PhysicsSolidMaskForEntity( void ) const 
 { 
-	return MASK_NPCSOLID;
+	int teamContents = 0;
+
+	switch ( GetTeamNumber() )
+	{
+	case TF_TEAM_RED:
+		teamContents = CONTENTS_BLUETEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+		break;
+
+	case TF_TEAM_BLUE:
+		teamContents = CONTENTS_REDTEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+		break;
+
+	case TF_TEAM_GREEN:
+		teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_YELLOWTEAM;
+		break;
+
+	case TF_TEAM_YELLOW:
+		teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_GREENTEAM;
+		break;
+	}
+
+	return MASK_NPCSOLID | teamContents;
 }
 
 
@@ -11395,17 +11417,28 @@ bool CAI_BaseNPC::ShouldChooseNewEnemy()
 bool CAI_BaseNPC::ShouldCollide(int collisionGroup, int contentsMask) const
 {
 	if (((collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT) && tf_avoidteammates.GetBool()) ||
+		collisionGroup == TFCOLLISION_GROUP_ARROWS ||
 		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
 	{
 		switch (GetTeamNumber())
 		{
 		case TF_TEAM_RED:
-			if (!(contentsMask & CONTENTS_REDTEAM))
+			if ( !( contentsMask & CONTENTS_REDTEAM ) )
 				return false;
 			break;
 
 		case TF_TEAM_BLUE:
-			if (!(contentsMask & CONTENTS_BLUETEAM))
+			if ( !( contentsMask & CONTENTS_BLUETEAM ) )
+				return false;
+			break;
+
+		case TF_TEAM_GREEN:
+			if ( !(contentsMask & CONTENTS_GREENTEAM ) )
+				return false;
+			break;
+
+		case TF_TEAM_YELLOW:
+			if ( !(contentsMask & CONTENTS_YELLOWTEAM ) )
 				return false;
 			break;
 		}
@@ -12699,22 +12732,25 @@ void CAI_BaseNPC::UpdateOnRemove(void)
 	BaseClass::UpdateOnRemove();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 void CAI_BaseNPC::SearchBuildingThink( void )
 {
 	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest( "obj_sentrygun", GetAbsOrigin(), 512 );
-	if (pSentry && pSentry->GetTeamNumber() != GetTeamNumber())
+	if ( pSentry && !InSameTeam( pSentry ) )
 	{
 		SetTarget( pSentry );
 	}
 
 	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest( "obj_dispenser", GetAbsOrigin(), 512 );
-	if (!pSentry && pDispenser && pDispenser->GetTeamNumber() != GetTeamNumber())
+	if ( !pSentry && pDispenser /*&& !pDispenser->IsDisabled() && !pDispenser->HasSapper()*/ && !InSameTeam( pDispenser ) )
 	{
 		SetTarget( pDispenser );
 	}
 
 	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest( "obj_teleporter", GetAbsOrigin(), 512 );
-	if (!pSentry && !pDispenser && pTeleporter && pTeleporter->GetTeamNumber() != GetTeamNumber())
+	if ( !pSentry && !pDispenser && pTeleporter /*&& !pTeleporter->IsDisabled() && !pTeleporter->HasSapper()*/ && !InSameTeam( pTeleporter ) )
 	{
 		SetTarget( pTeleporter );
 	}

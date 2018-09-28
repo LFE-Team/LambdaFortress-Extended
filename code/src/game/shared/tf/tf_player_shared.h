@@ -130,7 +130,7 @@ public:
 	int		GetMaxBuffedHealth( void );
 
 	// Max Health
-	int		GetMaxHealth( void );	
+	int		GetMaxHealth( void );
 	void	SetMaxHealth( int iMaxHealth ) { m_iMaxHealth = iMaxHealth; }
 
 #ifdef CLIENT_DLL

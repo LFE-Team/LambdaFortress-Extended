@@ -75,7 +75,7 @@ const char *CKickIssue::GetDetailsString()
 
 void CKickIssue::OnVoteStarted()
 {
-	const char *pDetails = CBaseIssue::GetDetailsString();
+	const char *pDetails = GetDetailsString();
 	const char *pch;
 	pch = strrchr(pDetails, ' ');
 	if (!pch)
@@ -193,7 +193,7 @@ const char *CRestartGameIssue::GetDetailsString()
 
 void CRestartGameIssue::OnVoteStarted()
 {
-	const char *pDetails = CBaseIssue::GetDetailsString();
+	const char *pDetails = GetDetailsString();
 	const char *pch;
 	pch = strrchr(pDetails, ' ');
 	if (!pch)
@@ -305,7 +305,7 @@ const char *CChangeLevelIssue::GetDetailsString()
 {
 	if (m_iPlayerID > 0 && UTIL_PlayerByIndex(m_iPlayerID - 1))
 	{
-		return m_pzPlayerName;
+		return m_pzMap;
 	}
 	else
 	{
@@ -315,7 +315,7 @@ const char *CChangeLevelIssue::GetDetailsString()
 
 void CChangeLevelIssue::OnVoteStarted()
 {
-	const char *pDetails = CBaseIssue::GetDetailsString();
+	const char *pDetails = GetDetailsString();
 	const char *pch;
 	pch = strrchr(pDetails, ' ');
 	if (!pch)
@@ -439,7 +439,7 @@ const char *CChangeDifficultyIssue::GetDetailsString()
 
 void CChangeDifficultyIssue::OnVoteStarted()
 {
-	const char *pDetails = CBaseIssue::GetDetailsString();
+	const char *pDetails = GetDetailsString();
 	const char *pch;
 	pch = strrchr(pDetails, ' ');
 	if (!pch)

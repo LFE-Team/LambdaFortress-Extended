@@ -820,7 +820,11 @@ void CWeaponMedigun::DrainCharge( void )
 		if ( !pOwner )
 			return;
 
-		float flChargeAmount = gpGlobals->frametime / weapon_medigun_chargerelease_rate.GetFloat();
+		float flUberTime = weapon_medigun_chargerelease_rate.GetFloat();
+		float flAddUberTime = 0.0f;
+		CALL_ATTRIB_HOOK_FLOAT( flAddUberTime, add_uber_time );
+
+		float flChargeAmount = gpGlobals->frametime / flUberTime+flAddUberTime;
 		m_flChargeLevel = max( m_flChargeLevel - flChargeAmount, 0.0 );
 		if ( !m_flChargeLevel )
 		{

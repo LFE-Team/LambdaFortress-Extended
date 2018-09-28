@@ -1594,16 +1594,15 @@ void CTFPlayer::InitClass( void )
 	if( iHealthToAdd != 0 )
 	{
 		SetMaxHealth( GetPlayerClass()->GetMaxHealth() + iHealthToAdd );
+		SetHealth( GetMaxHealth() + iHealthToAdd );
+		m_Shared.SetMaxHealth( GetMaxHealth() + iHealthToAdd );
 	}
 	else
 	{
 		SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
+		SetHealth( GetMaxHealth() );
+		m_Shared.SetMaxHealth( GetMaxHealth() );
 	}
-
-	SetHealth( GetMaxHealth() );
-
-	// Update network variables
-	m_Shared.SetMaxHealth( GetMaxHealth() );
 
 	SetArmorValue( GetPlayerClass()->GetMaxArmor() );
 
@@ -4003,7 +4002,7 @@ int CTFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	else
 	{
 		float flHealthToAdd = flHealth;
-		float flMaxHealth = GetMaxHealth();
+		float flMaxHealth = m_Shared.GetMaxHealth();
 		
 		// don't want to add more than we're allowed to have
 		if ( flHealthToAdd > flMaxHealth - m_iHealth )
@@ -4763,7 +4762,10 @@ void CTFPlayer::DamageEffect(float flDamage, int fDamageType)
 bool CTFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
-		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
+		collisionGroup == TFCOLLISION_GROUP_ARROWS ||
+		collisionGroup == TFCOLLISION_GROUP_ROCKETS ||
+		collisionGroup == COLLISION_GROUP_NPC_ACTOR ||
+		collisionGroup == COLLISION_GROUP_NPC )
 	{
 
 		switch( GetTeamNumber() )
@@ -11017,6 +11019,14 @@ const impactdamagetable_t &CTFPlayer::GetPhysicsImpactDamageTable()
 		return gCappedPlayerImpactDamageTable;
 	
 	return BaseClass::GetPhysicsImpactDamageTable();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: returns max health for this player
+//-----------------------------------------------------------------------------
+int CTFPlayer::GetMaxHealth( void ) const
+{
+	return m_iMaxHealth;
 }
 
 //-----------------------------------------------------------------------------

@@ -539,8 +539,9 @@ void CCaptureFlag::FlagTouch( CBaseEntity *pOther )
 		return;
 
 	// Get the touching player.
+	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( pOther );
 	CTFPlayer *pPlayer = ToTFPlayer( pOther );
-	if ( !pPlayer )
+	if ( !pPlayer || !pNPC )
 		return;
 
 	// Is the touching player about to teleport?
@@ -562,11 +563,6 @@ void CCaptureFlag::FlagTouch( CBaseEntity *pOther )
 
 	// Do not allow the player to pick up multiple flags
 	if ( pPlayer->HasTheFlag() )
-		return;
-
-	// Get the touching npc
-	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( GetPrevOwner() );
-	if ( !pNPC )
 		return;
 
 	// Is the touching npc about to teleport?

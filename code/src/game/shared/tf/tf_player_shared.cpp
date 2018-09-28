@@ -987,9 +987,12 @@ void CTFPlayerShared::OnConditionRemoved( int nCond )
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: returns max bonus health for this player
+//-----------------------------------------------------------------------------
 int CTFPlayerShared::GetMaxBuffedHealth( void )
 {
-	float flBoostMax = m_pOuter->GetMaxHealth() * tf_max_health_boost.GetFloat();
+	float flBoostMax = GetMaxHealth() * tf_max_health_boost.GetFloat();
 
 	CWeaponMedigun *pMedigun = m_pOuter->GetMedigun();
 
@@ -1001,11 +1004,26 @@ int CTFPlayerShared::GetMaxBuffedHealth( void )
 	return iRoundDown;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: returns max health for this player
+//-----------------------------------------------------------------------------
 int CTFPlayerShared::GetMaxHealth( void )
 {
-	return m_iMaxHealth;
+	int iHealthToAdd = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pOuter, iHealthToAdd, add_maxhealth );
+	if( iHealthToAdd != 0 )
+	{
+		return m_iMaxHealth + iHealthToAdd;
+	}
+	else
+	{
+		return m_iMaxHealth;
+	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: returns disguise class max health for this player
+//-----------------------------------------------------------------------------
 int CTFPlayerShared::GetDisguiseMaxBuffedHealth( void )
 {
 	float flBoostMax = GetDisguiseMaxHealth() * tf_max_health_boost.GetFloat();
@@ -1364,7 +1382,24 @@ void CTFPlayerShared::ConditionThink( void )
 	{
 		if ( InCond( TF_COND_STEALTHED ) )
 		{
-			m_flCloakMeter -= gpGlobals->frametime * tf_spy_cloak_consume_rate.GetFloat();
+			float flConsumeRate = tf_spy_cloak_consume_rate.GetFloat();
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pOuter, flConsumeRate, mult_cloak_meter_consume_rate );
+
+			int iType = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pOuter, iType, set_weapon_mode );
+			if ( iType == 1 ) // Dead Ringer
+			{
+				m_flCloakMeter -= gpGlobals->frametime * flConsumeRate;
+			}
+			else if ( iType == 2 ) // Cloak and Dagger
+			{
+				if(  m_pOuter->GetAbsVelocity() != vec3_origin )
+					m_flCloakMeter -= gpGlobals->frametime * flConsumeRate;
+			}
+			else
+			{
+				m_flCloakMeter -= gpGlobals->frametime * flConsumeRate;
+			}
 
 			if ( m_flCloakMeter <= 0.0f )
 			{
@@ -1374,7 +1409,24 @@ void CTFPlayerShared::ConditionThink( void )
 		}
 		else
 		{
-			m_flCloakMeter += gpGlobals->frametime * tf_spy_cloak_regen_rate.GetFloat();
+			float flRegenRate = tf_spy_cloak_regen_rate.GetFloat();
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pOuter, flRegenRate, mult_cloak_meter_regen_rate );
+
+			int iType = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pOuter, iType, set_weapon_mode );
+			if ( iType == 1 ) // Dead Ringer
+			{
+				m_flCloakMeter += gpGlobals->frametime * flRegenRate;
+			}
+			else if ( iType == 2 ) // Cloak and Dagger
+			{
+				if(  m_pOuter->GetAbsVelocity() == vec3_origin )
+					m_flCloakMeter += gpGlobals->frametime * flRegenRate;
+			}
+			else
+			{
+				m_flCloakMeter += gpGlobals->frametime * flRegenRate;
+			}
 
 			if ( m_flCloakMeter >= 100.0f )
 			{
@@ -2146,9 +2198,7 @@ void CTFPlayerShared::RecalculatePlayerBodygroups( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flFlameDuration /*= -1.0f*/ )
 {
-#ifdef CLIENT_DLL
-
-#else
+#ifdef GAME_DLL
 	// Don't bother igniting players who have just been killed by the fire damage.
 	if ( !m_pOuter->IsAlive() )
 		return;
@@ -2195,9 +2245,7 @@ void CTFPlayerShared::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NUL
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flBleedDuration /*= -1.0f*/ )
 {
-#ifdef CLIENT_DLL
-
-#else
+#ifdef GAME_DLL
 	// Don't bother bleeding players who have just been killed by the bleed damage.
 	if ( !m_pOuter->IsAlive() )
 		return;
@@ -2213,7 +2261,6 @@ void CTFPlayerShared::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NU
 
 	if ( flBleedDuration != -1.0f )
 		flBleedTime = flBleedDuration;
-
 
 	m_flBleedRemoveTime = gpGlobals->curtime + flBleedTime;
 
@@ -3594,7 +3641,11 @@ void CTFPlayerShared::ActivateRageBuff( CBaseEntity *pEntity, int iBuffType )
 	if ( m_flEffectBarProgress < 100.0f )
 		return;
  	m_flNextRageCheckTime = gpGlobals->curtime + 1.0f;
-	m_flRageTimeRemaining = tf_soldier_buff_pulses.GetFloat();
+
+	float flBuffDuration = tf_soldier_buff_pulses.GetFloat();
+	float flModBuffDuration = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pOuter, flModBuffDuration, mod_buff_duration );
+	m_flRageTimeRemaining = flBuffDuration+flModBuffDuration;
 	m_iActiveBuffType = iBuffType;
  #ifdef GAME_DLL
 	//*(this + 112) = pEntity;
@@ -3700,7 +3751,7 @@ void CTFPlayerShared::ResetRageSystem( void )
 	m_flRageTimeRemaining = 0.0f;
 	m_iActiveBuffType = 0;
 	m_bRageActive = false;
- #ifdef CLIENT_DLL
+#ifdef CLIENT_DLL
 	if ( m_pOuter )
 	{
 		// Remove the banner

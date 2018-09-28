@@ -393,6 +393,41 @@ int CPropJeep::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		GetDriver()->TakeDamage( info );
 	}
 
+	if ( m_bEnableTakeDamage )
+	{
+		if ( m_iHealth != 0 )
+			return 1;
+
+		m_iHealth -= info.GetDamage();
+		if ( m_iHealth <= 0 )
+		{
+			m_iHealth = 0;
+			Event_Killed( info );
+			return 0;
+		}
+
+		int iOldHealth = m_iHealth;
+		IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
+		if ( event )
+		{
+			event->SetInt( "victim_index", entindex() );
+			event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
+
+			event->SetInt( "health", max( 0, m_iHealth ) );
+			event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
+			event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+			event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
+
+			CBasePlayer *pPlayer = ToBasePlayer( info.GetAttacker() );
+			event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );
+
+			// HLTV event priority, not transmitted
+			event->SetInt( "priority", 5 );
+
+			gameeventmanager->FireEvent( event );
+		}
+	}
+
 	return 0;
 }
 
@@ -402,7 +437,7 @@ void CPropJeep::Event_Killed( const CTakeDamageInfo &info )
 	{
 		// kaBOOM
 		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), 
-			 GetOwnerEntity(), 150, 512, SF_ENVEXPLOSION_NOSPARKS, 100.0f, this, TF_DMG_CUSTOM_PUMPKIN_BOMB );
+			this, 300, 512, SF_ENVEXPLOSION_NOSPARKS, 100.0f, this, TF_DMG_CUSTOM_PUMPKIN_BOMB );
 			//const EHANDLE *ignoredEntity , Class_T ignoredClass );
 
 		BaseClass::Event_Killed( info );

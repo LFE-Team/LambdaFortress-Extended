@@ -237,6 +237,8 @@ void CObjectSapper::SapperThink( void )
 
 	m_flSapperDamageAccumulator -= iDamage;
 
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetBuilder(), iDamage, mult_sapper_damage );
+
 	CTakeDamageInfo info;
 	info.SetDamage( iDamage );
 	info.SetAttacker( this );
@@ -290,7 +292,7 @@ void CObjectSapper::Killed( const CTakeDamageInfo &info )
 int CObjectSapper::GetBaseHealth( void )
 {
 	int iBaseHealth = obj_sapper_health.GetInt();
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), iBaseHealth, mult_sapper_health );
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( GetBuilder(), iBaseHealth, mult_sapper_health );
 	return iBaseHealth;
 }
 

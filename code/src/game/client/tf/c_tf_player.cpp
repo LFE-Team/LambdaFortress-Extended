@@ -1780,11 +1780,16 @@ void C_TFPlayer::UpdateOnRemove( void )
 // Purpose: returns max health for this player
 //-----------------------------------------------------------------------------
 int C_TFPlayer::GetMaxHealth( void ) const
-{	
+{
 	C_TF_PlayerResource *tf_PR = GetTFPlayerResource();
 	if ( tf_PR )
 	{
-		return tf_PR->GetMaxHealth( entindex() );
+		int iHealthToAdd = 0;
+		CALL_ATTRIB_HOOK_INT( iHealthToAdd, add_maxhealth );
+		if( iHealthToAdd != 0 )
+			return tf_PR->GetMaxHealth( entindex() ) + iHealthToAdd;
+		else
+			return tf_PR->GetMaxHealth( entindex() );
 	}
 	return 1;
 }
@@ -3858,7 +3863,10 @@ C_BaseObject *C_TFPlayer::GetObjectOfType( int iObjectType, int iObjectMode )
 bool C_TFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
-		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
+		collisionGroup == TFCOLLISION_GROUP_ARROWS ||
+		collisionGroup == TFCOLLISION_GROUP_ROCKETS ||
+		collisionGroup == COLLISION_GROUP_NPC_ACTOR ||
+		collisionGroup == COLLISION_GROUP_NPC )
 	{
 
 		switch( GetTeamNumber() )

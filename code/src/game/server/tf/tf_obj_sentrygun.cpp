@@ -1120,11 +1120,14 @@ bool CObjectSentrygun::Fire()
 
 		//NDebugOverlay::Cross3D( vecSrc, 10, 255, 0, 0, false, 0.1 );
 
+		int iRate = 1;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetBuilder(), iRate, mult_sentry_firerate );
+
 		FireBulletsInfo_t info;
 
 		info.m_vecSrc = vecSrc;
 		info.m_vecDirShooting = vecAimDir;
-		info.m_iTracerFreq = 1;
+		info.m_iTracerFreq = iRate;
 		info.m_iShots = 1;
 		info.m_pAttacker = GetBuilder();
 		info.m_vecSpread = vec3_origin;

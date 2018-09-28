@@ -97,12 +97,34 @@ C_AI_BaseNPC::C_AI_BaseNPC()
 //-----------------------------------------------------------------------------
 unsigned int C_AI_BaseNPC::PhysicsSolidMaskForEntity( void ) const 
 {
+	int teamContents = 0;
+
+	switch ( GetTeamNumber() )
+	{
+	case TF_TEAM_RED:
+		teamContents = CONTENTS_BLUETEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+		break;
+
+	case TF_TEAM_BLUE:
+		teamContents = CONTENTS_REDTEAM | CONTENTS_GREENTEAM | CONTENTS_YELLOWTEAM;
+		break;
+
+	case TF_TEAM_GREEN:
+		teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_YELLOWTEAM;
+		break;
+
+	case TF_TEAM_YELLOW:
+		teamContents = CONTENTS_REDTEAM | CONTENTS_BLUETEAM | CONTENTS_GREENTEAM;
+		break;
+	}
+
 	// This allows ragdolls to move through npcclip brushes
 	if ( !IsRagdoll() )
 	{
-		return MASK_NPCSOLID; 
+		return MASK_NPCSOLID | teamContents;
 	}
-	return MASK_SOLID;
+
+	return MASK_SOLID | teamContents;
 }
 
 
@@ -635,6 +657,7 @@ extern ConVar	tf_avoidteammates;
 bool C_AI_BaseNPC::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
+		collisionGroup == TFCOLLISION_GROUP_ARROWS ||
 		collisionGroup == TFCOLLISION_GROUP_ROCKETS )
 	{
 

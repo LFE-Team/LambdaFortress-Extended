@@ -1085,7 +1085,10 @@ int CTFWeaponBase::GetMaxClip1( void ) const
 
 	CALL_ATTRIB_HOOK_FLOAT( flMaxClip, mult_clipsize );
 
-	int iMaxClip = (int)( flMaxClip + 0.5f );
+	float flMaxClipUpgrade = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flMaxClipUpgrade, mult_clipsize_upgrade );
+
+	int iMaxClip = (int)( flMaxClip + 0.5f + flMaxClipUpgrade );
 
 	// Round to the nearest integer.
 	return iMaxClip;
@@ -1101,7 +1104,10 @@ int CTFWeaponBase::GetDefaultClip1( void ) const
 	if ( flDefaultClip == WEAPON_NOCLIP )
 		return (int)flDefaultClip;
 
-	int iDefaultClip = (int)( flDefaultClip + 0.5f );
+	float flDefaultClipUpgrade = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flDefaultClipUpgrade, mult_clipsize_upgrade );
+
+	int iDefaultClip = (int)( flDefaultClip + 0.5f + flDefaultClipUpgrade );
 
 	// Round to the nearest integer.
 	return iDefaultClip;
@@ -2011,8 +2017,10 @@ float CTFWeaponBase::GetEffectBarProgress( void )
 	{
 		float flTimeLeft = m_flEffectBarRegenTime - gpGlobals->curtime;
 		float flRechargeTime = InternalGetEffectBarRechargeTime();
+		float flRechargeTimeMod = 0.0f;
+		CALL_ATTRIB_HOOK_FLOAT( flRechargeTimeMod, effectbar_recharge_rate );
 		CALL_ATTRIB_HOOK_FLOAT( flRechargeTime, item_meter_charge_rate );
-		return clamp( ( ( flRechargeTime - flTimeLeft ) / flRechargeTime ), 0.0f, 1.0f );
+		return clamp( ( ( flRechargeTime+flRechargeTimeMod - flTimeLeft ) / flRechargeTime+flRechargeTimeMod ), 0.0f, 1.0f );
 	}
 
 	return 1.0f;

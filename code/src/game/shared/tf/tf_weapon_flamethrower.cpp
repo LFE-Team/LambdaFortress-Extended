@@ -773,9 +773,11 @@ void CTFFlameThrower::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, V
 		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
 		if ( flDot >= 0.8 )
 		{
+			float flPushbackScale = 500;
+			CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
 			// Push enemy players.
 			pVictim->SetGroundEntity( NULL );
-			pVictim->SetAbsVelocity( vecDir * 500 );
+			pVictim->SetAbsVelocity( vecDir * flPushbackScale );
 			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
 			pVictim->SetAirblastState( true );
 
@@ -839,9 +841,11 @@ void CTFFlameThrower::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Ve
 		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
 		if ( flDot >= 0.8 )
 		{
+			float flPushbackScale = 500;
+			CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
 			// Push enemy NPC.
 			pVictim->SetGroundEntity( NULL );
-			pVictim->SetAbsVelocity( vecDir * 500 );
+			pVictim->SetAbsVelocity( vecDir * flPushbackScale );
 			pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
 			pVictim->AddCond( TF_COND_KNOCKED_INTO_AIR, PERMANENT_CONDITION );
 

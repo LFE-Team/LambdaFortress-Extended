@@ -298,8 +298,8 @@ void CTFWeaponBaseGrenadeProj::InitGrenade( const Vector &velocity, const Angula
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_hLauncher.Get(), iNoBounce, grenade_no_bounce );
 	if ( iNoBounce )
 	{
-		SetElasticity( 0.01f );
-		SetFriction( 0.02f );
+		SetElasticity( 0.0f );
+		SetFriction( 1.00f );
 	}
 
 	SetLauncher( pWeapon );
