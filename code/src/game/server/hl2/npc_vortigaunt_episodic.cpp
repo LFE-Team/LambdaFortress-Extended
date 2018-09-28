@@ -19,6 +19,8 @@
 #include "particle_parse.h"
 #include "particle_system.h"
 #include "ai_senses.h"
+#include "tf_gamerules.h"
+#include "tf_player.h"
 
 #include "npc_vortigaunt_episodic.h"
 
@@ -1035,6 +1037,20 @@ void CNPC_Vortigaunt::InputTurnBlack( inputdata_t &data )
 		m_bIsBlack = goBlack;
 	}
 }
+void CNPC_Vortigaunt::TeleportToPlayerThink(void)
+{
+	CBaseEntity *player = ToTFPlayer(gEntList.FindEntityByClassname(NULL, "player"));
+	QAngle vecAngles(0, player->GetAbsAngles().y - 90, 0);
+	Vector vecForward;
+	Vector vecOriginPlayer = player->GetAbsOrigin();
+	Vector velocity = vec3_origin;
+	float DistanceToPlayer = GetAbsOrigin().DistTo(player->GetAbsOrigin());
+	if (this && player && player->GetTeamNumber() == TF_TEAM_RED && m_NPCState != NPC_STATE_SCRIPT && DistanceToPlayer > 1499 && TFGameRules()->IsInHL2EP2Map())
+	{
+		Teleport(&vecOriginPlayer, &vecAngles, &velocity);
+	}
+	SetContextThink(&CNPC_Vortigaunt::TeleportToPlayerThink, gpGlobals->curtime + 0.1, "teleportcontext");
+}
 
 //------------------------------------------------------------------------------
 // Purpose : Translate some activites for the Vortigaunt
@@ -1132,6 +1148,7 @@ void CNPC_Vortigaunt::Spawn( void )
 
 	m_iLeftHandAttachment = LookupAttachment( VORTIGAUNT_LEFT_CLAW );
 	m_iRightHandAttachment = LookupAttachment( VORTIGAUNT_RIGHT_CLAW );
+	SetContextThink(&CNPC_Vortigaunt::TeleportToPlayerThink, gpGlobals->curtime + 0.1, "teleportcontext");
 
 	NPCInit();
 
@@ -2683,7 +2700,7 @@ int CNPC_Vortigaunt::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		return BaseClass::OnTakeDamage_Alive( subInfo );
 	}
 
-	return BaseClass::OnTakeDamage_Alive( info );
+	return BaseClass::OnTakeDamage_Alive( info ) * 0.5;
 }
 
 //-----------------------------------------------------------------------------

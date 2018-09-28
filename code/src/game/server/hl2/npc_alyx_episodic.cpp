@@ -2425,7 +2425,7 @@ int CNPC_Alyx::OnTakeDamage_Alive(const CTakeDamageInfo &info)
 	if (IsInCommentaryMode() && info.GetAttacker() && info.GetAttacker()->IsNPC())
 		return 0;
 
-	int taken = BaseClass::OnTakeDamage_Alive(info);
+	int taken = BaseClass::OnTakeDamage_Alive(info) * 0.5;
 
 #ifdef TF_CLASSIC
 	if ( taken && TFGameRules()->IsAlyxInDarknessMode() && !HasCondition( COND_TALKER_PLAYER_DEAD ) )
