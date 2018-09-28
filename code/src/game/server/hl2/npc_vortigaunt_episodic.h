@@ -99,6 +99,8 @@ public:
 
 	void			DeathSound( const CTakeDamageInfo &info );
 	void			PainSound( const CTakeDamageInfo &info );
+	void			TeleportToPlayerThink(void);
+	bool			bTeleportEnabled;
 	
 	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void	SpeakSentence( int sentType );
@@ -119,6 +121,8 @@ public:
 	void	InputDispel( inputdata_t &data );
 	void	InputBeginCarryNPC( inputdata_t &indputdata );
 	void	InputEndCarryNPC( inputdata_t &indputdata );
+	void	InputEnableTeleport(inputdata_t &inputdata);
+	void	InputDisableTeleport(inputdata_t & inputdata);
 
 	// Health regeneration
 	void	InputEnableHealthRegeneration( inputdata_t &data );
