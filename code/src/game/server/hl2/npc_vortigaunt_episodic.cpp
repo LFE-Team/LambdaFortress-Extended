@@ -146,35 +146,36 @@ enum SquadSlot_T
 //---------------------------------------------------------
 // Save/Restore
 //---------------------------------------------------------
-BEGIN_DATADESC( CNPC_Vortigaunt )
+BEGIN_DATADESC(CNPC_Vortigaunt)
 
-	DEFINE_FIELD( m_eHealState,				FIELD_INTEGER ),
-	DEFINE_FIELD( m_flNextHealTokenTime,	FIELD_TIME ),
-	DEFINE_ARRAY( m_hHandEffect,			FIELD_EHANDLE, 2 ),
-	DEFINE_FIELD( m_flNextHealTime,			FIELD_TIME ),
-	DEFINE_FIELD( m_bPlayerRequestedHeal,	FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flDispelTestTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_flHealHinderedTime,		FIELD_FLOAT ),
-	DEFINE_FIELD( m_nLightningSprite,		FIELD_INTEGER),
-	DEFINE_FIELD( m_fGlowAge,				FIELD_FLOAT),
-	DEFINE_FIELD( m_fGlowChangeTime,		FIELD_TIME),
-	DEFINE_FIELD( m_bGlowTurningOn,			FIELD_BOOLEAN),
-	DEFINE_FIELD( m_nCurGlowIndex,			FIELD_INTEGER),
-	DEFINE_FIELD( m_flNextHealTime,			FIELD_TIME),
-	DEFINE_FIELD( m_flPainTime,				FIELD_TIME),
-	DEFINE_FIELD( m_nextLineFireTime,		FIELD_TIME),
-	DEFINE_KEYFIELD( m_bArmorRechargeEnabled,FIELD_BOOLEAN, "ArmorRechargeEnabled" ),
-	DEFINE_FIELD( m_bForceArmorRecharge,	FIELD_BOOLEAN),
-	DEFINE_FIELD( m_bExtractingBugbait,		FIELD_BOOLEAN),
-	DEFINE_FIELD( m_iLeftHandAttachment,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_iRightHandAttachment,	FIELD_INTEGER ),
-	DEFINE_FIELD( m_hHealTarget,			FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flBlueEndFadeTime,		FIELD_TIME ),
-	DEFINE_FIELD( m_bIsBlue,				FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_bIsBlack,				FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flAimDelay,				FIELD_TIME ),
-	DEFINE_FIELD( m_bCarryingNPC,			FIELD_BOOLEAN ),
-	DEFINE_KEYFIELD( m_bRegenerateHealth,	FIELD_BOOLEAN, "HealthRegenerateEnabled" ),
+DEFINE_FIELD(m_eHealState, FIELD_INTEGER),
+DEFINE_FIELD(m_flNextHealTokenTime, FIELD_TIME),
+DEFINE_ARRAY(m_hHandEffect, FIELD_EHANDLE, 2),
+DEFINE_FIELD(m_flNextHealTime, FIELD_TIME),
+DEFINE_FIELD(m_bPlayerRequestedHeal, FIELD_BOOLEAN),
+DEFINE_FIELD(m_flDispelTestTime, FIELD_TIME),
+DEFINE_FIELD(m_flHealHinderedTime, FIELD_FLOAT),
+DEFINE_FIELD(m_nLightningSprite, FIELD_INTEGER),
+DEFINE_FIELD(m_fGlowAge, FIELD_FLOAT),
+DEFINE_FIELD(m_fGlowChangeTime, FIELD_TIME),
+DEFINE_FIELD(m_bGlowTurningOn, FIELD_BOOLEAN),
+DEFINE_FIELD(m_nCurGlowIndex, FIELD_INTEGER),
+DEFINE_FIELD(m_flNextHealTime, FIELD_TIME),
+DEFINE_FIELD(m_flPainTime, FIELD_TIME),
+DEFINE_FIELD(m_nextLineFireTime, FIELD_TIME),
+DEFINE_KEYFIELD(m_bArmorRechargeEnabled, FIELD_BOOLEAN, "ArmorRechargeEnabled"),
+DEFINE_FIELD(m_bForceArmorRecharge, FIELD_BOOLEAN),
+DEFINE_FIELD(m_bExtractingBugbait, FIELD_BOOLEAN),
+DEFINE_FIELD(m_iLeftHandAttachment, FIELD_INTEGER),
+DEFINE_FIELD(m_iRightHandAttachment, FIELD_INTEGER),
+DEFINE_FIELD(m_hHealTarget, FIELD_EHANDLE),
+DEFINE_FIELD(m_flBlueEndFadeTime, FIELD_TIME),
+DEFINE_FIELD(m_bIsBlue, FIELD_BOOLEAN),
+DEFINE_FIELD(m_bIsBlack, FIELD_BOOLEAN),
+DEFINE_FIELD(m_flAimDelay, FIELD_TIME),
+DEFINE_FIELD(m_bCarryingNPC, FIELD_BOOLEAN),
+DEFINE_KEYFIELD(m_bRegenerateHealth, FIELD_BOOLEAN, "HealthRegenerateEnabled"),
+DEFINE_KEYFIELD(bTeleportEnabled, FIELD_BOOLEAN, "TeleportEnabled"),
 
 	// m_AssaultBehavior	(auto saved by AI)
 	// m_LeadBehavior
@@ -192,6 +193,8 @@ BEGIN_DATADESC( CNPC_Vortigaunt )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"Dispel",				InputDispel ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"BeginCarryNPC",		InputBeginCarryNPC ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"EndCarryNPC",			InputEndCarryNPC ),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableTeleport", InputEnableTeleport),
+	DEFINE_INPUTFUNC(FIELD_VOID, "DisableTeleport", InputDisableTeleport),
 
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "TurnBlue", InputTurnBlue ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "TurnBlack", InputTurnBlack ),
@@ -222,6 +225,7 @@ static bool IsRoller( CBaseEntity *pRoller )
 //-----------------------------------------------------------------------------
 CNPC_Vortigaunt::CNPC_Vortigaunt( void ) : 
 m_bPlayerRequestedHeal( false ),
+bTeleportEnabled(false),
 m_flNextHealTime( 3.0f ), // Let the player settle before we decide to do this
 m_nNumTokensToSpawn( 0 ),
 m_flAimDelay( 0.0f ),
@@ -519,6 +523,16 @@ float CNPC_Vortigaunt::MaxYawSpeed ( void )
 		return 35;
 		break;
 	}
+}
+
+void CNPC_Vortigaunt::InputEnableTeleport(inputdata_t &inputdata)
+{
+	bTeleportEnabled = true;
+}
+
+void CNPC_Vortigaunt::InputDisableTeleport(inputdata_t &inputdata)
+{
+	bTeleportEnabled = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1040,14 +1054,17 @@ void CNPC_Vortigaunt::InputTurnBlack( inputdata_t &data )
 void CNPC_Vortigaunt::TeleportToPlayerThink(void)
 {
 	CBaseEntity *player = ToTFPlayer(gEntList.FindEntityByClassname(NULL, "player"));
-	QAngle vecAngles(0, player->GetAbsAngles().y - 90, 0);
-	Vector vecForward;
-	Vector vecOriginPlayer = player->GetAbsOrigin();
-	Vector velocity = vec3_origin;
-	float DistanceToPlayer = GetAbsOrigin().DistTo(player->GetAbsOrigin());
-	if (this && player && player->GetTeamNumber() == TF_TEAM_RED && m_NPCState != NPC_STATE_SCRIPT && DistanceToPlayer > 1499 && TFGameRules()->IsInHL2EP2Map())
+	if (player)
 	{
-		Teleport(&vecOriginPlayer, &vecAngles, &velocity);
+		QAngle vecAngles(0, player->GetAbsAngles().y - 90, 0);
+		Vector vecForward;
+		Vector vecOriginPlayer = player->GetAbsOrigin();
+		Vector velocity = vec3_origin;
+		float DistanceToPlayer = GetAbsOrigin().DistTo(player->GetAbsOrigin());
+		if ( this && bTeleportEnabled && player && player->GetTeamNumber() == TF_TEAM_RED && m_NPCState != NPC_STATE_SCRIPT && DistanceToPlayer > 1499)
+		{
+			Teleport(&vecOriginPlayer, &vecAngles, &velocity);
+		}
 	}
 	SetContextThink(&CNPC_Vortigaunt::TeleportToPlayerThink, gpGlobals->curtime + 0.1, "teleportcontext");
 }
