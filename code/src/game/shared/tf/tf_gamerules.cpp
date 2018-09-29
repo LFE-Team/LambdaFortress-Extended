@@ -1928,6 +1928,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
 		lfe_coop.SetValue( 1 );
+		if ( !IsInHL2EP1Map() || !IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server coop config file\n", NULL );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
 		engine->ServerExecute();
@@ -1938,6 +1940,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_VS );
 		lfe_versus.SetValue( 1 );
+		if ( !IsInHL2EP1Map() || !IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server versus config file\n", NULL );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
@@ -1948,6 +1952,8 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
 		lfe_blucoop.SetValue( 1 );
+		if ( !IsInHL2EP1Map() || !IsInHL2EP2Map() )
+			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server blue coop file\n", NULL );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
