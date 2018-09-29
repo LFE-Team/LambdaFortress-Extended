@@ -299,7 +299,6 @@ void CTFWeaponBaseGrenadeProj::InitGrenade( const Vector &velocity, const Angula
 	if ( iNoBounce )
 	{
 		SetElasticity( 0.0f );
-		SetFriction( 1.00f );
 	}
 
 	SetLauncher( pWeapon );

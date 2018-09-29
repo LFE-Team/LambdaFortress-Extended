@@ -456,7 +456,7 @@ void CPropJeepEpisodic::EnterVehicle(CBaseCombatCharacter *pPassenger)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::Spawn(void)
 {
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 	{
 		SetBlocksLOS(false);
 		#ifdef TF_CLASSIC
@@ -479,7 +479,7 @@ void CPropJeepEpisodic::Spawn(void)
 
 		m_bHasGun = false;
 	}
-	else
+	else if ( strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
 	{
 		m_bHasGun = true;
 	}
@@ -673,7 +673,7 @@ Vector CPropJeepEpisodic::PhysGunLaunchVelocity(const Vector &forward, float flM
 		return vec3_origin;
 
 	// if we're jeep then stop.
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
 		return vec3_origin;
 
 	Vector vecPuntDir = BaseClass::PhysGunLaunchVelocity(forward, flMass);
@@ -1402,12 +1402,6 @@ void CPropJeepEpisodic::DriveVehicle(float flFrameTime, CUserCmd *ucmd, int iBut
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::CreateHazardLights(void)
 {
-#ifdef TF_CLASSIC
-	// only create lights on jalopy model
-	if ( !strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
-		return;
-#endif
-
 	static const char *s_szAttach[NUM_HAZARD_LIGHTS] =
 	{
 		"rearlight_r",
@@ -1474,7 +1468,15 @@ void CPropJeepEpisodic::ExitVehicle(int nRole)
 {
 	BaseClass::ExitVehicle(nRole);
 
+#ifdef TF_CLASSIC
+	// only create lights on jalopy model
+	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	{
+#endif
 	CreateHazardLights();
+#ifdef TF_CLASSIC
+	}
+#endif
 }
 
 void CPropJeepEpisodic::SetBusterHopperVisibility(bool visible)
@@ -1521,7 +1523,7 @@ void CPropJeepEpisodic::SpawnRadarPanel()
 		return;
 
 	// we don't have radar for jeep
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( !strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 		return;
 
 	const char *pScreenName = "jalopy_radar_panel";

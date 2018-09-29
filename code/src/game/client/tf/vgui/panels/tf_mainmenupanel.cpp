@@ -7,6 +7,8 @@
 #include "tf_notificationmanager.h"
 #include "engine/IEngineSound.h"
 #include "vgui_avatarimage.h"
+#include "tf_gamerules.h"
+#include <KeyValues.h>
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
@@ -70,12 +72,23 @@ void CTFMainMenuPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	LoadControlSettings("resource/UI/main_menu/MainMenuPanel.res");
+
+	KeyValues *pConditions = NULL;
+	if ( TFGameRules() && TFGameRules()->IsHalloween() )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_halloween" );
+	}
+
 	m_pVersionLabel = dynamic_cast<CExLabel *>(FindChildByName("VersionLabel"));
 	m_pNotificationButton = dynamic_cast<CTFAdvButton *>(FindChildByName("NotificationButton"));
 	m_pProfileAvatar = dynamic_cast<CAvatarImagePanel *>(FindChildByName("AvatarImage"));
 	m_pFakeBGImage = dynamic_cast<vgui::ImagePanel *>(FindChildByName("FakeBGImage"));
 
 	SetVersionLabel();
+
+	if ( pConditions )
+		pConditions->deleteThis();
 }	
 
 void CTFMainMenuPanel::PerformLayout()

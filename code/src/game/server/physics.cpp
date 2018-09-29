@@ -428,7 +428,7 @@ IPhysicsObject *PhysCreateWorld( CBaseEntity *pWorld )
 // because they aren't in the game physics world at present
 static bool WheelCollidesWith( IPhysicsObject *pObj, CBaseEntity *pEntity )
 {
-#if defined( INVASION_DLL )
+#if defined( INVASION_DLL ) || defined( TF_CLASSIC )
 	if ( pEntity->GetCollisionGroup() == TFCOLLISION_GROUP_OBJECT )
 		return false;
 #endif

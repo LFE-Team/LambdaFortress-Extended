@@ -92,6 +92,8 @@ ConVar lfe_dev_mark( "lfe_dev_mark", "1", FCVAR_ARCHIVE | FCVAR_USERINFO );
 ConVar cl_npc_speedmod_intime( "cl_npc_speedmod_intime", "0.25", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 ConVar cl_npc_speedmod_outtime( "cl_npc_speedmod_outtime", "1.5", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 
+ConVar cl_pyrovision( "cl_pyrovision", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "Toggle pyrovision for pyro" );
+
 static void OnMercParticleChange( IConVar *var, const char *pOldValue, float flOldValue )
 {
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
@@ -2282,12 +2284,31 @@ void C_TFPlayer::OnPlayerClassChange( void )
 	m_PlayerAnimState->SetRunSpeed( GetPlayerClass()->GetMaxSpeed() );
 	m_PlayerAnimState->SetWalkSpeed( GetPlayerClass()->GetMaxSpeed() * 0.5 );
 
-	// Execute the class cfg
 	if ( IsLocalPlayer() )
 	{
+		// Execute the class cfg
 		char szCommand[128];
 		Q_snprintf( szCommand, sizeof( szCommand ), "exec %s.cfg\n", GetPlayerClass()->GetName() );
 		engine->ExecuteClientCmd( szCommand );
+
+
+		if ( IsPlayerClass( TF_CLASS_PYRO ) )
+		{
+			ConVarRef visionflags( "localplayer_visionflags" );
+			if ( visionflags.GetBool() )
+				visionflags.SetValue("0");
+
+			if ( cl_pyrovision.GetBool() )
+			{
+				visionflags.SetValue("0x01");
+				m_nLocalPlayerVisionFlags = TF_VISION_FILTER_PYRO;
+			}
+			else
+			{
+				visionflags.SetValue("0");
+				m_nLocalPlayerVisionFlags = 0;
+			}
+		}
 	}
 }
 

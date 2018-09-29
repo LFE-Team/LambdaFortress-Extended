@@ -1928,7 +1928,7 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_COOP );
 		lfe_coop.SetValue( 1 );
-		if ( !IsInHL2EP1Map() && !IsInHL2EP2Map() )
+		if ( IsInHL2Map() )
 			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server coop config file\n", NULL );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
@@ -1940,7 +1940,7 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_VS );
 		lfe_versus.SetValue( 1 );
-		if ( !IsInHL2EP1Map() && !IsInHL2EP2Map() )
+		if ( IsInHL2Map() )
 			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server versus config file\n", NULL );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
@@ -1952,7 +1952,7 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_BLUCOOP );
 		lfe_blucoop.SetValue( 1 );
-		if ( !IsInHL2EP1Map() && !IsInHL2EP2Map() )
+		if ( IsInHL2Map() )
 			hl2_episodic.SetValue( 0 );
 		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server blue coop file\n", NULL );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
@@ -5316,17 +5316,17 @@ void CTFGameRules::CreateStandardEntities()
 
 	CBaseEntity::Create("vote_controller", vec3_origin, vec3_angle);
 
-	CKickIssue* pKickIssue = new CKickIssue("Kick");
-	pKickIssue->Init();
+	//CKickIssue* pKickIssue = new CKickIssue("Kick");
+	//pKickIssue->Init();
 
 	CRestartGameIssue* pRestartIssue = new CRestartGameIssue("Restartgame");
 	pRestartIssue->Init();
 
-	CChangeLevelIssue* pChangeLevel = new CChangeLevelIssue("ChangeLevel");
-	pChangeLevel->Init();
+	//CChangeLevelIssue* pChangeLevel = new CChangeLevelIssue("ChangeLevel");
+	//pChangeLevel->Init();
 
-	CChangeDifficultyIssue* pChangeDifficulty = new CChangeDifficultyIssue("ChangeDifficulty");
-	pChangeDifficulty->Init();
+	//CChangeDifficultyIssue* pChangeDifficulty = new CChangeDifficultyIssue("ChangeDifficulty");
+	//pChangeDifficulty->Init();
 }
 
 //-----------------------------------------------------------------------------
@@ -7304,13 +7304,6 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		collisionGroup1 == TFCOLLISION_GROUP_COMBATOBJECT )
 	{
 		return false;
-	}
-
-	// Players collide with npcs
-	if ( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
-		collisionGroup1 == COLLISION_GROUP_NPC )
-	{
-		return true;
 	}
 
 	// Prevent the player movement from colliding with spit globs (caused the player to jump on top of globs while in water)

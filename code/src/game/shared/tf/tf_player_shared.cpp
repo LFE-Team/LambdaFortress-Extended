@@ -2069,9 +2069,8 @@ void CTFPlayerShared::OnAddFlashlight( void )
 {
 #ifdef GAME_DLL
 	m_pOuter->AddEffects( EF_DIMLIGHT );
-#else
 	m_pOuter->EmitSound( "HL2Player.FlashlightOn" );
-
+#else
 	int iAttachment = 1;
 
 	C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
@@ -2124,9 +2123,8 @@ void CTFPlayerShared::OnRemoveFlashlight( void )
 {
 #ifdef GAME_DLL
 	m_pOuter->RemoveEffects( EF_DIMLIGHT );
-#else
 	m_pOuter->EmitSound( "HL2Player.FlashlightOff" );
-
+#else
 	m_pOuter->ParticleProp()->StopEmission( m_pFlashlightBeam );
 	m_pFlashlightBeam = NULL;
 #endif
