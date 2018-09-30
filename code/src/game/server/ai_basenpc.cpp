@@ -12738,19 +12738,19 @@ void CAI_BaseNPC::UpdateOnRemove(void)
 void CAI_BaseNPC::SearchBuildingThink( void )
 {
 	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest( "obj_sentrygun", GetAbsOrigin(), 512 );
-	if ( pSentry && !InSameTeam( pSentry ) )
+	if ( pSentry && !InSameTeam( pSentry ) && m_NPCState != NPC_STATE_SCRIPT )
 	{
 		SetTarget( pSentry );
 	}
 
 	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest( "obj_dispenser", GetAbsOrigin(), 512 );
-	if ( !pSentry && pDispenser /*&& !pDispenser->IsDisabled() && !pDispenser->HasSapper()*/ && !InSameTeam( pDispenser ) )
+	if ( !pSentry && pDispenser /*&& !pDispenser->IsDisabled() && !pDispenser->HasSapper()*/ && !InSameTeam( pDispenser ) && m_NPCState != NPC_STATE_SCRIPT )
 	{
 		SetTarget( pDispenser );
 	}
 
 	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest( "obj_teleporter", GetAbsOrigin(), 512 );
-	if ( !pSentry && !pDispenser && pTeleporter /*&& !pTeleporter->IsDisabled() && !pTeleporter->HasSapper()*/ && !InSameTeam( pTeleporter ) )
+	if ( !pSentry && !pDispenser && pTeleporter /*&& !pTeleporter->IsDisabled() && !pTeleporter->HasSapper()*/ && !InSameTeam( pTeleporter ) && m_NPCState != NPC_STATE_SCRIPT )
 	{
 		SetTarget( pTeleporter );
 	}

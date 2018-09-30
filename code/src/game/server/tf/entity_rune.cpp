@@ -206,21 +206,6 @@ bool CTFRuneTempCrit::MyTouch( CBasePlayer *pPlayer )
 		// Also add this too
 		pTFPlayer->m_Shared.AddCond( TF_COND_RUNE_IMBALANCE, GetEffectDuration() );
 
-		// Give full health
-		int iHealthRestored = pTFPlayer->TakeHealth( pTFPlayer->GetMaxHealth(), DMG_GENERIC );
-
-		if ( iHealthRestored )
-		{
-			IGameEvent *event_healonhit = gameeventmanager->CreateEvent( "player_healonhit" );
-			if ( event_healonhit )
-			{
-				event_healonhit->SetInt( "amount", iHealthRestored );
-				event_healonhit->SetInt( "entindex", pTFPlayer->entindex() );
-
-				gameeventmanager->FireEvent( event_healonhit );
-			}
-		}
-
 		CSingleUserRecipientFilter user( pTFPlayer );
 		user.MakeReliable();
 
@@ -266,21 +251,6 @@ bool CTFRuneTempUber::MyTouch( CBasePlayer *pPlayer )
 		pTFPlayer->m_Shared.AddCond( GetCondition(), GetEffectDuration() );
 		// Also add this too
 		pTFPlayer->m_Shared.AddCond( TF_COND_RUNE_IMBALANCE, GetEffectDuration() );
-
-		// Give full health
-		int iHealthRestored = pTFPlayer->TakeHealth( pTFPlayer->GetMaxHealth(), DMG_GENERIC );
-
-		if ( iHealthRestored )
-		{
-			IGameEvent *event_healonhit = gameeventmanager->CreateEvent( "player_healonhit" );
-			if ( event_healonhit )
-			{
-				event_healonhit->SetInt( "amount", iHealthRestored );
-				event_healonhit->SetInt( "entindex", pTFPlayer->entindex() );
-
-				gameeventmanager->FireEvent( event_healonhit );
-			}
-		}
 
 		CSingleUserRecipientFilter user( pTFPlayer );
 		user.MakeReliable();
