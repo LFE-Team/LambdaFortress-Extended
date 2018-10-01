@@ -4341,13 +4341,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		bitsDamage |= DMG_MINICRITICAL;
 		info.AddDamageType( DMG_MINICRITICAL );
 	}
-	/*
-	if ( pTFAttacker->m_Shared.IsMiniCritBoosted() )
-	{
-		bitsDamage |= DMG_MINICRITICAL;
-		info.AddDamageType( DMG_MINICRITICAL );
-	}
-	*/
+
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
@@ -4602,7 +4596,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	// Vintage  Battalion's Backup resists
+	// Vintage Battalion's Backup resists
 	if ( m_Shared.InCond( TF_COND_DEFENSEBUFF ) )
 	{
 		// Battalion's Backup negates all crit damage
@@ -9872,7 +9866,7 @@ CON_COMMAND_F_COMPLETION( dev_give_weapon, "Give specified weapon. \n for devs",
 	}
 }
 
-CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>", FCVAR_CHEAT )
+CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1ID> <value1> <attribute2ID> <value2> ... <attributeNID> <valueN>", FCVAR_CHEAT )
 {
 	if ( args.ArgC() < 2 )
 		return;
@@ -9949,7 +9943,7 @@ CON_COMMAND_F( give_econ, "Give ECON item with specified ID from item schema.\nF
 	}
 }
 
-CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
+CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1ID> <value1> <attribute2ID> <value2> ... <attributeNID> <valueN>\nBut this command is only for the devs" )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer->IsDeveloper() )
@@ -10026,7 +10020,7 @@ CON_COMMAND( dev_give_econ, "Give ECON item with specified ID from item schema.\
 	}
 }
 
-CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1> <value1> <attribute2> <value2> ... <attributeN> <valueN>\nBut this command is only for the devs" )
+CON_COMMAND( dev_spawn_econ, "Spawn ECON item with specified ID from item schema.\nFormat: <id> <classname> <attribute1ID> <value1> <attribute2ID> <value2> ... <attributeNID> <valueN>\nBut this command is only for the devs" )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer->IsDeveloper() )

@@ -113,4 +113,20 @@ private:
 	int		m_iPowerupCondition;
 };
 
+DECLARE_AUTO_LIST( IInfoPowerupSpawnAutoList );
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+class CTFInfoPowerupSpawn : public CBaseEntity, public IInfoPowerupSpawnAutoList
+{
+public:
+	DECLARE_CLASS( CTFInfoPowerupSpawn, CBaseEntity );
+	DECLARE_DATADESC();
+
+	CTFInfoPowerupSpawn();
+	~CTFInfoPowerupSpawn();
+
+	void	Spawn( void );
+};
 #endif // ENTITY_RUNE_H

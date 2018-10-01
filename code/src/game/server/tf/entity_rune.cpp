@@ -116,6 +116,8 @@ bool CTFRune::MyTouch( CBasePlayer *pPlayer )
 		if ( m_strPickupSound != NULL_STRING )
 			pTFPlayer->EmitSound( STRING( m_strPickupSound ) );
 
+		ClientPrint( pTFPlayer, HUD_PRINTCENTER, "You got the TEST powerup!.\n" );
+
 		bSuccess = true;
 	}
 
@@ -288,4 +290,27 @@ CTFRuneCustom::CTFRuneCustom()
 {	
 	m_iPowerupCondition = TF_COND_INVULNERABLE;
 	m_flEffectDuration = 15.0f;
+}
+
+BEGIN_DATADESC( CTFInfoPowerupSpawn )
+END_DATADESC()
+
+IMPLEMENT_AUTO_LIST( IInfoPowerupSpawnAutoList );
+
+LINK_ENTITY_TO_CLASS( info_powerup_spawn, CTFInfoPowerupSpawn );
+
+//-----------------------------------------------------------------------------
+// Constructor
+//-----------------------------------------------------------------------------
+CTFInfoPowerupSpawn::CTFInfoPowerupSpawn( void )
+{
+}
+
+void CTFInfoPowerupSpawn::Spawn( void )
+{
+	BaseClass::Spawn();
+}
+
+CTFInfoPowerupSpawn::~CTFInfoPowerupSpawn()
+{
 }
