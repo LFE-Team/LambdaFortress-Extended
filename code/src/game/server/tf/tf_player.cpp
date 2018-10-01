@@ -3708,6 +3708,28 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			}
 		}
 	}
+	else if ( FStrEq( pcmd, "dev_cvar" ) )
+	{
+		if ( !IsDeveloper() )
+		{
+			return false;
+		}
+		else 
+		{
+			if ( args.ArgC() == 3 )
+			{
+				const char *pszCvarName = args[1];
+				const char *pszCvarValue = args[2];
+				ConVarRef var( pszCvarName );
+				var.SetValue( pszCvarValue );
+			}
+			else
+			{
+				Warning( "Usage: sm_cvar <cvar> <value>\n" );
+				return true;
+			}
+		}
+	}
 
 	return BaseClass::ClientCommand( args );
 }
