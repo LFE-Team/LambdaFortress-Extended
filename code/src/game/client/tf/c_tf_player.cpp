@@ -3884,7 +3884,6 @@ C_BaseObject *C_TFPlayer::GetObjectOfType( int iObjectType, int iObjectMode )
 bool C_TFPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
 	if ( ( ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT ) && tf_avoidteammates.GetBool() ) ||
-		collisionGroup == TFCOLLISION_GROUP_ARROWS ||
 		collisionGroup == TFCOLLISION_GROUP_ROCKETS ||
 		collisionGroup == COLLISION_GROUP_NPC_ACTOR ||
 		collisionGroup == COLLISION_GROUP_NPC )

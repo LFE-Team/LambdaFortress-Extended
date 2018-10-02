@@ -56,7 +56,7 @@ void CTFGenericBomb::Spawn()
 	SetSolid( SOLID_VPHYSICS );
 	BaseClass::Spawn();
 	m_takedamage = DAMAGE_YES;
-	SetCollisionGroup( TFCOLLISION_GROUP_PUMPKIN_BOMB );
+	//SetCollisionGroup( TFCOLLISION_GROUP_PUMPKIN_BOMB );
 }
 
 int CTFGenericBomb::OnTakeDamage( const CTakeDamageInfo &info )
@@ -185,7 +185,7 @@ void CTFPumpkinBomb::Spawn( void )
 	SetModelName( MAKE_STRING( "models/props_halloween/pumpkin_explode.mdl") );
 	m_iszParticleName = MAKE_STRING( "pumpkin_explode" );
 	m_flDamage = 140.0f;
-	SetCollisionGroup( TFCOLLISION_GROUP_PUMPKIN_BOMB );
+	//SetCollisionGroup( TFCOLLISION_GROUP_PUMPKIN_BOMB );
 	BaseClass::Spawn();
 }
 #endif
