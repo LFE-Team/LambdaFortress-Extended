@@ -12,6 +12,7 @@
 #include "engine/IEngineSound.h"
 #include "tf_gamerules.h"
 #include "ai_basenpc_shared.h"
+#include "tf_revive.h"
 
 #if defined( CLIENT_DLL )
 #include <vgui_controls/Panel.h>
@@ -432,7 +433,6 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 			return true;
 		}
 	}
-
 	else if ( pTarget->IsNPC() )	// See if this is NPC.
  	{
 		CAI_BaseNPC *pNPC = assert_cast<CAI_BaseNPC *>( pTarget );
@@ -445,6 +445,16 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 		{
 			return true;
 		}
+ 	}
+	else if ( pTarget->IsCombatItem() )	// See if this is Revive Marker.
+ 	{
+		CTFReviveMarker *pMarker = assert_cast<CTFReviveMarker *>( pTarget );
+		// We can heal teammates only
+		if ( pMarker->InSameTeam( pOwner ) )
+		{
+			return true;
+		}
+		return true;
  	}
 
 	return false;
@@ -459,7 +469,10 @@ bool CWeaponMedigun::CouldHealTarget( CBaseEntity *pTarget )
 	if ( !pOwner )
 		return false;
 
-	if ( (pTarget->IsPlayer() || pTarget->IsNPC()) && pTarget->IsAlive() && !HealingTarget(pTarget) )
+	if ( (pTarget->IsPlayer() || pTarget->IsNPC() ) && pTarget->IsAlive() && !HealingTarget(pTarget) )
+		return AllowedToHealTarget( pTarget );
+
+	if ( pTarget->IsCombatItem() && !HealingTarget( pTarget ) )
 		return AllowedToHealTarget( pTarget );
 
 	return false;
@@ -501,22 +514,44 @@ void CWeaponMedigun::MaintainTargetInSlot()
 		pOwner->EyeVectors( &vecAiming );
 
 		Vector vecEnd = vecSrc + vecAiming * GetTargetRange();
-		UTIL_TraceLine( vecSrc, vecEnd, (MASK_SHOT & ~CONTENTS_HITBOX), pOwner, DMG_GENERIC, &tr );
+		/*if ( !pTarget->IsCombatItem() )
+		{*/
+			UTIL_TraceLine( vecSrc, vecEnd, (MASK_SHOT & ~CONTENTS_HITBOX), pOwner, DMG_GENERIC, &tr );
 
-		// Still visible?
-		if ( tr.m_pEnt == pTarget )
-			return;
+			// Still visible?
+			if ( tr.m_pEnt == pTarget )
+				return;
 
-		UTIL_TraceLine( vecSrc, vecTargetPoint, MASK_SHOT, &drainFilter, &tr );
+			UTIL_TraceLine( vecSrc, vecTargetPoint, MASK_SHOT, &drainFilter, &tr );
 
-		// Still visible?
-		if (( tr.fraction == 1.0f) || (tr.m_pEnt == pTarget))
-			return;
+			// Still visible?
+			if (( tr.fraction == 1.0f) || (tr.m_pEnt == pTarget))
+				return;
 
-		// If we failed, try the target's eye point as well
-		UTIL_TraceLine( vecSrc, pTarget->EyePosition(), MASK_SHOT, &drainFilter, &tr );
-		if (( tr.fraction == 1.0f) || (tr.m_pEnt == pTarget))
-			return;
+			// If we failed, try the target's eye point as well
+			UTIL_TraceLine( vecSrc, pTarget->EyePosition(), MASK_SHOT, &drainFilter, &tr );
+			if (( tr.fraction == 1.0f) || (tr.m_pEnt == pTarget))
+				return;
+		/*}
+		else
+		{
+			UTIL_TraceLine( vecSrc, vecEnd, (MASK_SHOT & ~CONTENTS_HITBOX), pOwner, DMG_GENERIC, &tr );
+
+			// Still visible?
+			if ( tr.m_pEnt == pTarget )
+				return;
+
+			UTIL_TraceLine( vecSrc, vecTargetPoint, MASK_SHOT, &drainFilter, &tr );
+
+			// Still visible?
+			if (( tr.fraction == 1.0f) || (tr.m_pEnt == pTarget))
+				return;
+
+			// If we failed, try the target's eye point as well
+			UTIL_TraceLine( vecSrc, pTarget->EyePosition(), MASK_SHOT, &drainFilter, &tr );
+			if (( tr.fraction == 1.0f) || (tr.m_pEnt == pTarget))
+				return;
+		}*/
 	}
 
 	// We've lost this guy
@@ -617,19 +652,24 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 	{
 		MaintainTargetInSlot();
 	}
+	else if ( pTarget && pTarget->IsCombatItem() )
+	{
+		MaintainTargetInSlot();
+	}
 	else
 	{	
 		FindNewTargetForSlot();
 	}
 
 	CBaseEntity *pNewTarget = m_hHealingTarget;
-	if ( pNewTarget && pNewTarget->IsAlive() )
+	if ( pNewTarget )
 	{
 		CTFPlayer *pTFPlayer = ToTFPlayer( pNewTarget );
 		CAI_BaseNPC *pNPC = pNewTarget->MyNPCPointer();
 
 #ifdef GAME_DLL
-		if ( pTFPlayer )
+		CTFReviveMarker *pMarker = dynamic_cast<CTFReviveMarker *>( pNewTarget );
+		if ( pTFPlayer && pTFPlayer->IsAlive() )
 		{
 			if ( pTarget != pNewTarget && pNewTarget->IsPlayer() )
 			{
@@ -638,7 +678,7 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 
 			pTFPlayer->m_Shared.RecalculateChargeEffects( false );
 		}
-		else if ( pNPC )
+		else if ( pNPC && pNPC->IsAlive() )
 		{
 			if ( pTarget != pNewTarget && pNewTarget->IsNPC() )
 			{
@@ -646,6 +686,14 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 			}
 
 			pNPC->RecalculateChargeEffects( false );
+		}
+		else if ( pMarker )
+		{
+			if ( pTarget != pNewTarget && pNewTarget->IsCombatItem() )
+			{
+				pMarker->SetContextThink( &CTFReviveMarker::ReviveThink, gpGlobals->curtime + 0.1f, "ReviveThink" );
+				pMarker->RevivePlayer(); // TODO: remove this and made proper healing
+			}
 		}
 
 		if ( m_flReleaseStartedAt && m_flReleaseStartedAt < (gpGlobals->curtime + 0.2) )
@@ -970,6 +1018,11 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 			pNPC->RecalculateChargeEffects( false );
 
 			pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pNPC->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
+		}
+		else if ( m_hHealingTarget->IsCombatItem() )
+		{
+			//CTFReviveMarker *pMarker = assert_cast<CTFReviveMarker *>( m_hHealingTarget );
+			m_hHealingTarget->SetContextThink( NULL, 0, "ReviveThink" );
 		}
 	}
 
@@ -1352,7 +1405,7 @@ void CWeaponMedigun::UpdateEffects( void )
 	pEffectOwner = GetWeaponForEffect();
 
 	// Don't add targets if the medic is dead
-	if ( !pEffectOwner || pFiringPlayer->IsPlayerDead() || !pFiringPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
+	if ( !pEffectOwner || pFiringPlayer->IsPlayerDead() || !pFiringPlayer->IsPlayerClass( TF_CLASS_MEDIC ) || pFiringPlayer->m_Shared.InCond( TF_COND_TAUNTING ) )
 		return;
 
 	// Add our targets
@@ -1366,7 +1419,10 @@ void CWeaponMedigun::UpdateEffects( void )
 		const char *pszEffectName = ConstructTeamParticle( pszFormat, GetTeamNumber() );
 
 		CNewParticleEffect *pEffect = pEffectOwner->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "muzzle" );
-		pEffectOwner->ParticleProp()->AddControlPoint( pEffect, 1, m_hHealingTarget, PATTACH_ABSORIGIN_FOLLOW, NULL, Vector(0,0,50) );
+		if ( !m_hHealingTarget->IsCombatItem() )
+			pEffectOwner->ParticleProp()->AddControlPoint( pEffect, 1, m_hHealingTarget, PATTACH_ABSORIGIN_FOLLOW, NULL, Vector(0,0,50) );
+		else
+			pEffectOwner->ParticleProp()->AddControlPoint( pEffect, 1, m_hHealingTarget, PATTACH_POINT_FOLLOW, "healbeam" );
 
 		m_hHealingTargetEffect.hOwner = pEffectOwner;
 		m_hHealingTargetEffect.pTarget = m_hHealingTarget;

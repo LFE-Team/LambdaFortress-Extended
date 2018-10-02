@@ -567,13 +567,15 @@ $Project "Client (TF)"
 				$File	"$SRCDIR\game\shared\tf\tf_projectile_nail.h"
 				$File	"$SRCDIR\game\shared\tf\tf_shareddefs.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_shareddefs.h"
-				$File	"$SRCDIR\game\shared\tf\tf_usermessages.cpp"	
+				$File	"$SRCDIR\game\shared\tf\tf_usermessages.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_viewmodel.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_viewmodel.h"
 				$File	"$SRCDIR\game\shared\tf\tf_wearable.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_wearable.h"
 				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.cpp"
-				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.h"	
+				$File	"$SRCDIR\game\shared\tf\tf_generic_bomb.h"
+				$File	"$SRCDIR\game\shared\tf\tf_revive.cpp"
+				$File	"$SRCDIR\game\shared\tf\tf_revive.h"
 			}
 		}
 	}

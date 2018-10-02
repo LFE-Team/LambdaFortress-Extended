@@ -342,66 +342,31 @@ void CObjectTeleporter::TeleporterTouch( CBaseEntity *pOther )
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer, bTwoWayTeleporter, bidirectional_teleport );
 
 	// is this an entrance and do we have an exit?
-	if ( bTwoWayTeleporter != 1 )
-	{
-		if ( GetObjectMode() == TELEPORTER_TYPE_ENTRANCE )
-		{		
-			if ( ( m_iState == TELEPORTER_STATE_READY ) )
+	if ( GetObjectMode() == TELEPORTER_TYPE_ENTRANCE || bTwoWayTeleporter > 0 )
+	{		
+		if ( ( m_iState == TELEPORTER_STATE_READY ) )
+		{
+			// are we able to teleport?
+			if ( !PlayerCanBeTeleported( pPlayer ) )
 			{
-				// are we able to teleport?
-				if ( !PlayerCanBeTeleported( pPlayer ) )
+				if ( pPlayer->HasTheFlag() )
 				{
-					if ( pPlayer->HasTheFlag() )
-					{
-						// If they have the flag, print a warning that you can't tele with the flag
-						CSingleUserRecipientFilter filter( pPlayer );
-						TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_NO_TELE_WITH_FLAG );
-					}
-
-					return;
+					// If they have the flag, print a warning that you can't tele with the flag
+					CSingleUserRecipientFilter filter( pPlayer );
+					TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_NO_TELE_WITH_FLAG );
 				}
 
-				// get the velocity of the player touching the teleporter
-				if ( pPlayer->GetAbsVelocity().Length() < 5.0 )
-				{
-					CObjectTeleporter *pDest = GetMatchingTeleporter();
-
-					if ( pDest )
-					{
-						TeleporterSend( pPlayer );
-					}
-				}
+				return;
 			}
-		}
-	}
-	else
-	{
-		if ( GetObjectMode() == TELEPORTER_TYPE_ENTRANCE || GetObjectMode() == TELEPORTER_TYPE_EXIT )
-		{		
-			if ( ( m_iState == TELEPORTER_STATE_READY ) )
+
+			// get the velocity of the player touching the teleporter
+			if ( pPlayer->GetAbsVelocity().Length() < 5.0 )
 			{
-				// are we able to teleport?
-				if ( !PlayerCanBeTeleported( pPlayer ) )
+				CObjectTeleporter *pDest = GetMatchingTeleporter();
+
+				if ( pDest )
 				{
-					if ( pPlayer->HasTheFlag() )
-					{
-						// If they have the flag, print a warning that you can't tele with the flag
-						CSingleUserRecipientFilter filter( pPlayer );
-						TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_NO_TELE_WITH_FLAG );
-					}
-
-					return;
-				}
-
-				// get the velocity of the player touching the teleporter
-				if ( pPlayer->GetAbsVelocity().Length() < 5.0 )
-				{
-					CObjectTeleporter *pDest = GetMatchingTeleporter();
-
-					if ( pDest )
-					{
-						TeleporterSend( pPlayer );
-					}
+					TeleporterSend( pPlayer );
 				}
 			}
 		}
