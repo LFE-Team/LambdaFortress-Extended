@@ -419,7 +419,10 @@ void CPropJeepEpisodic::UpdateOnRemove(void)
 		}
 	}
 
-	DestroyHazardLights();
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	{
+		DestroyHazardLights();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -456,14 +459,10 @@ void CPropJeepEpisodic::EnterVehicle(CBaseCombatCharacter *pPassenger)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::Spawn(void)
 {
-	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 	{
 		SetBlocksLOS(false);
-		#ifdef TF_CLASSIC
-			CBasePlayer	*pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
-		#else
-			CBasePlayer	*pPlayer = UTIL_GetLocalPlayer();
-		#endif
+		CBasePlayer	*pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
 		if (pPlayer != NULL)
 		{
 			pPlayer->m_Local.m_iHideHUD |= HIDEHUD_VEHICLE_CROSSHAIR;
@@ -479,10 +478,11 @@ void CPropJeepEpisodic::Spawn(void)
 
 		m_bHasGun = false;
 	}
-	else if ( strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	else if ( FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
 	{
 		m_bHasGun = true;
 	}
+
 	BaseClass::Spawn();
 }
 
@@ -595,12 +595,15 @@ void CPropJeepEpisodic::InputUnlockExit(inputdata_t &data)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::InputEnableRadar(inputdata_t &data)
 {
-	if (m_bRadarEnabled)
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	{
+		if (m_bRadarEnabled)
 		return; // Already enabled
 
-	SetBodygroup(JEEP_RADAR_BODYGROUP, 1);
+		SetBodygroup(JEEP_RADAR_BODYGROUP, 1);
 
-	SpawnRadarPanel();
+		SpawnRadarPanel();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -608,12 +611,15 @@ void CPropJeepEpisodic::InputEnableRadar(inputdata_t &data)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::InputDisableRadar(inputdata_t &data)
 {
-	if (!m_bRadarEnabled)
-		return; // Already disabled
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	{
+		if (!m_bRadarEnabled)
+			return; // Already disabled
 
-	SetBodygroup(JEEP_RADAR_BODYGROUP, 0);
+		SetBodygroup(JEEP_RADAR_BODYGROUP, 0);
 
-	DestroyRadarPanel();
+		DestroyRadarPanel();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -673,7 +679,7 @@ Vector CPropJeepEpisodic::PhysGunLaunchVelocity(const Vector &forward, float flM
 		return vec3_origin;
 
 	// if we're jeep then stop.
-	if ( strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
 		return vec3_origin;
 
 	Vector vecPuntDir = BaseClass::PhysGunLaunchVelocity(forward, flMass);
@@ -691,7 +697,7 @@ AngularImpulse CPropJeepEpisodic::PhysGunLaunchAngularImpulse(void)
 		return AngularImpulse(0, 300, 0);
 
 	// if we're jeep then stop oh wait
-	//if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	//if ( !FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
 	//	return AngularImpulse(0, 300, 0);
 
 	// Don't spin randomly, always spin reliably
@@ -742,7 +748,7 @@ void CPropJeepEpisodic::CreateCargoTrigger(void)
 void CPropJeepEpisodic::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	// Andrew; don't skip giving ammo with the jeep if we're the buggy
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
 	{
 		BaseClass::Use( pActivator, pCaller, useType, value );
 	}
@@ -1004,7 +1010,7 @@ void CPropJeepEpisodic::UpdateCargoEntry(void)
 		return;
 
 	// we don't have cargo for jeep
-	if ( !strcmp( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( !FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
 		return;
 
 	// If we're past our animation point, then we're already done
@@ -1164,12 +1170,9 @@ CBaseEntity *CPropJeepEpisodic::OnFailedPhysGunPickup(Vector vPhysgunPos)
 	{
 		// Player's forward direction
 		Vector vecPlayerForward;
-		//SecobMod__Information: Fix pPlayer from sp to mp.
-#ifdef TF_CLASSIC
+
 		CBasePlayer *pPlayer = UTIL_GetNearestPlayer( vPhysgunPos );
-#else
-		CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+
 		if (pPlayer == NULL)
 			return NULL;
 
@@ -1468,15 +1471,11 @@ void CPropJeepEpisodic::ExitVehicle(int nRole)
 {
 	BaseClass::ExitVehicle(nRole);
 
-#ifdef TF_CLASSIC
 	// only create lights on jalopy model
-	if ( strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 	{
-#endif
-	CreateHazardLights();
-#ifdef TF_CLASSIC
+		CreateHazardLights();
 	}
-#endif
 }
 
 void CPropJeepEpisodic::SetBusterHopperVisibility(bool visible)
@@ -1520,10 +1519,6 @@ void CPropJeepEpisodic::SpawnRadarPanel()
 
 	int nURAttachmentIndex = pEntityToSpawnOn->LookupAttachment(pOrgUR);
 	if (nURAttachmentIndex <= 0)
-		return;
-
-	// we don't have radar for jeep
-	if ( !strcmp( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 		return;
 
 	const char *pScreenName = "jalopy_radar_panel";

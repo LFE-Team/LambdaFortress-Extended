@@ -71,11 +71,15 @@
 #include "nav_mesh.h"
 #include "tf_fx.h"
 #include "npc_alyx_episodic.h"
+#include "tf_revive.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 #define DAMAGE_FORCE_SCALE_SELF				9
+
+#define TF_REVIVEMARKER_MODEL "models/props_mvm/mvm_revive_tombstone.mdl"
+#define TF_AMMOPACK_MODEL "models/items/ammopack_medium.mdl"
 
 extern bool IsInCommentaryMode( void );
 
@@ -1094,7 +1098,7 @@ void CTFPlayer::Precache()
 	PrecacheParticleSystem( "peejar_drips" );
 	PrecacheParticleSystem( "flashlight_thirdperson" );
 	PrecacheParticleSystem( "flashlight_firstperson_" );
-	PrecacheTeamParticles( "soldierbuff_%s_buffed", false, g_aTeamNamesShort );
+	PrecacheTeamParticles( "soldierbuff_%s_buffed" );
 					 
 	BaseClass::Precache();
 }
@@ -1140,11 +1144,10 @@ void CTFPlayer::PrecachePlayerModels( void )
 		PrecacheModel( "models/effects/bday_hat.mdl" );
 	}
 
-	PrecacheModel( TF_SPY_MASK_MODEL );
-	PrecacheModel( TF_POWERUP_SHIELD_MODEL );
 	PrecacheModel( "models/props_trainyard/bomb_cart_red.mdl" );
 	PrecacheModel( "models/props_trainyard/bomb_cart.mdl" );
-	PrecacheModel( "models/items/ammopack_medium.mdl" );
+	PrecacheModel( TF_AMMOPACK_MODEL );
+	PrecacheModel( TF_REVIVEMARKER_MODEL );
 
 	// Gunslinger
 	PrecacheModel("models/weapons/c_models/c_engineer_gunslinger.mdl");
@@ -1255,6 +1258,13 @@ void CTFPlayer::Spawn()
 		// Nuke our temp spawn spot now that we've used it.
 		UTIL_Remove( m_hTempSpawnSpot );
 		m_hTempSpawnSpot = NULL;
+	}
+
+	if ( m_hReviveSpawnSpot.Get() )
+	{
+		// Nuke our revive marker now that we spawned.
+		UTIL_Remove( m_hReviveSpawnSpot );
+		m_hReviveSpawnSpot = NULL;
 	}
 
 	// Create our off hand viewmodel if necessary
@@ -2367,6 +2377,11 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	if ( m_hTempSpawnSpot )
 	{
 		return ( m_hTempSpawnSpot.Get() );
+	}
+
+	if ( m_hReviveSpawnSpot )
+	{
+		return ( m_hReviveSpawnSpot.Get() );
 	}
 
 	CBaseEntity *pSpot = g_pLastSpawnPoints[ GetTeamNumber() ];
@@ -3726,8 +3741,8 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			else
 			{
 				Warning( "Usage: sm_cvar <cvar> <value>\n" );
-				return true;
 			}
+			return true;
 		}
 	}
 
@@ -5528,7 +5543,10 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	{
 		DropWeapon( GetActiveTFWeapon(), true );
 	}
+
 	DropAmmoPack();
+
+	DropReviveMarker();
 
 	m_Shared.SetDesiredWeaponIndex( -1 );
 	RemoveAllWeapons();
@@ -6184,7 +6202,7 @@ void CTFPlayer::DropWeapon( CTFWeaponBase *pWeapon, bool bKilled /*= false*/ )
 		return;
 
 	// Create dropped weapon entity.
-	CTFDroppedWeapon *pDroppedWeapon = CTFDroppedWeapon::Create( vecPackOrigin, vecPackAngles, this, pWeapon );;
+	CTFDroppedWeapon *pDroppedWeapon = CTFDroppedWeapon::Create( vecPackOrigin, vecPackAngles, this, pWeapon );
 	Assert( pDroppedWeapon );
 
 	if ( pDroppedWeapon )
@@ -6260,6 +6278,15 @@ void CTFPlayer::DropPowerups( void )
 			CTFRune::Create( WorldSpaceCenter(), vec3_angle, this, "item_powerup_rune", m_Shared.GetConditionDuration( nCond ) );
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFPlayer::DropReviveMarker( void )
+{
+	CTFReviveMarker *pMarker = CTFReviveMarker::Create( WorldSpaceCenter(), vec3_angle, this, GetDesiredPlayerClassIndex() );
+	m_hReviveSpawnSpot = pMarker;
 }
 
 //-----------------------------------------------------------------------------

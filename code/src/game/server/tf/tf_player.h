@@ -297,11 +297,12 @@ public:
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 	virtual bool ShouldGib( const CTakeDamageInfo &info );
 
-	// Dropping Ammo
+	// Dropping stuff
 	void DropAmmoPack( void );
 	void DropWeapon( CTFWeaponBase *pWeapon, bool bKilled = false );
 	void DropFakeWeapon( CTFWeaponBase *pWeapon );
 	void DropPowerups( void );
+	void DropReviveMarker( void );
 
 	bool CanDisguise( void );
 	bool CanGoInvisible( void );
@@ -694,6 +695,7 @@ private:
 	float				m_flNextCarryTalkTime;
 
 	EHANDLE				m_hTempSpawnSpot;
+	EHANDLE				m_hReviveSpawnSpot;
 	CNetworkVar( bool, m_bSearchingSpawn )
 
 	int					m_nBlastJumpFlags;
