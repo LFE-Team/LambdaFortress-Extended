@@ -5803,8 +5803,14 @@ int CNPC_Hunter::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// Defend myself. Try to siege attack immediately.
 		m_flTimeNextSiegeTargetAttack = gpGlobals->curtime;
 	}
-	
-	return nRet;
+	if (!info.GetAttacker()->IsPlayer())
+	{
+		return nRet;
+	}
+	else
+	{
+		return BaseClass::OnTakeDamage_Alive(myInfo) * 0.5;
+	}
 }
 
 //-----------------------------------------------------------------------------
