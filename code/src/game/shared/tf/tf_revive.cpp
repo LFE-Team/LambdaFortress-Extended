@@ -115,10 +115,7 @@ void CTFReviveMarker::InitReviveMarker( CTFPlayer *pOwner, int iClass )
 	SetHealth( 1 );
 	SetMaxHealth( pOwner->GetPlayerClass()->GetMaxHealth() );
 	ChangeTeam( pOwner->GetTeamNumber() );
-	SetBodygroup( 0, iClass );
-
-	//variant_t sVariant;
-	//AcceptInput( "SetBodyGroup", this, this, sVariant, iClass );
+	SetBodygroup( 1, iClass );
 
 	ResetSequence( LookupSequence("idle") );
 }
