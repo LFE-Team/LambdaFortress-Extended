@@ -1,12 +1,12 @@
-//======== Copyright LOLOLOL © 2018, ISPuddy, All rights not reserved. ========
+//============== Copyright LFE-TEAM Not All rights reserved. ==================
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================
 
-#ifndef TF_LOADINGSCREEN_H
-#define TF_LOADINGSCREEN_H
+#ifndef TF_LOADINGPROGRESS_H
+#define TF_LOADINGPROGRESS_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -46,25 +46,18 @@ private:
 	vgui::Label		*m_pTipLabel;
 	vgui::Label		*m_pTipText;
 
-#ifdef _X360
-	CTFFooter		*m_pFooter;
-#else
 	vgui::Button *m_pNextTipButton;
 	vgui::Button *m_pCloseButton;
-#endif
 
 	bool m_bInteractive;							// are we in interactive mode
 	bool m_bControlsLoaded;							// have we loaded controls yet
 
 	int m_iTotalSpawns;								// how many spawns of all classes does this player have
 
-#ifdef _X360
-	bool m_bShowBackButton;
-#endif
 };
 
 
 CTFLoadingProgress *GLoadingProgress();
 void DestroyLoadingProgress();
 
-#endif // TF_LOADINGSCREEN_H
+#endif // TF_LOADINGPROGRESS_H

@@ -2671,7 +2671,6 @@ void C_TFPlayer::ThirdPersonSwitch( bool bThirdPerson )
 	// Update any effects affected by camera mode.
 	m_Shared.UpdateCritBoostEffect();
 	UpdateOverhealEffect();
-	//UpdateSpyMask();
 
 	if ( GetViewModel() )
 	{
@@ -4754,40 +4753,11 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 			m_Shared.UpdateCritBoostEffect();
 			UpdateOverhealEffect();
 			UpdateRecentlyTeleportedEffect();
-			//UpdateSpyMask();
 		}
 	}
 	else
 	{
 		BaseClass::FireGameEvent( event );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_TFPlayer::UpdateSpyMask( void )
-{
-	C_TFSpyMask *pMask = m_hSpyMask.Get();
-
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
-		// Create mask if we don't already have one.
-		if ( !pMask )
-		{
-			pMask = C_TFSpyMask::Create( this );		
-			if ( !pMask )
-				return;
-
-			m_hSpyMask = pMask;
-		}
-
-		pMask->UpdateVisibility();
-	}
-	else if ( pMask )
-	{
-		pMask->Release();
-		m_hSpyMask = NULL;
 	}
 }
 

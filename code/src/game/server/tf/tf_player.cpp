@@ -78,7 +78,6 @@
 
 #define DAMAGE_FORCE_SCALE_SELF				9
 
-#define TF_REVIVEMARKER_MODEL "models/props_mvm/mvm_revive_tombstone.mdl"
 #define TF_AMMOPACK_MODEL "models/items/ammopack_medium.mdl"
 
 extern bool IsInCommentaryMode( void );

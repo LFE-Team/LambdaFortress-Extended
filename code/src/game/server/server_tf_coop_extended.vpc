@@ -15,7 +15,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\tf,.\tf,$SRCDIR\game\shared\Multiplayer,$SRCDIR\game\shared\econ,.\hl1,$SRCDIR\game\shared\hl1,.\hl2,$SRCDIR\game\shared\hl2,.\episodic,$SRCDIR\game\shared\episodic,$SRCDIR\thirdparty\open-steamworks\Open Steamworks\"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\tf,.\tf,$SRCDIR\game\shared\Multiplayer,$SRCDIR\game\shared\econ,.\hl1,$SRCDIR\game\shared\hl1,.\hl2,$SRCDIR\game\shared\hl2,.\episodic,$SRCDIR\game\shared\episodic,$SRCDIR\game\server\NextBot\NavMeshEntities"
 		$PreprocessorDefinitions		"$BASE;TF_CLASSIC;GLOWS_ENABLE;HL2_EPISODIC;HL1_DLL;TF2C_AUTHDATA_KEY={0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41};TF2C_AUTHDATA_XOR={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};TF2C_AUTHDATA_BYTE=0x00"
 	}
 }
@@ -411,6 +411,15 @@ $Project "Server (TF)"
 			    $File	"episodic\vehicle_jeep_episodic.h"
 				$File	"episodic\weapon_striderbuster.cpp"
 			    $File	"episodic\weapon_striderbuster.h"
+		}
+
+		$Folder	"Next Generation Bots"
+		{
+			$Folder	"NavMeshEntities"
+			{
+				$File	"NextBot\NavMeshEntities\func_nav_prerequisite.cpp"
+				$File	"NextBot\NavMeshEntities\func_nav_prerequisite.h"
+			}
 		}
 
 		$Folder	"Multiplayer"

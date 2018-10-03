@@ -1,6 +1,6 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//============== Copyright LFE-TEAM Not All rights reserved. ==================//
 //
-// Purpose: 
+// Purpose: medic become super useful
 //
 // $NoKeywords: $
 //=============================================================================//
@@ -15,8 +15,6 @@ BEGIN_NETWORK_TABLE( CTFReviveMarker, DT_TFReviveMarker )
 END_NETWORK_TABLE()
 
 LINK_ENTITY_TO_CLASS( entity_revive_marker, CTFReviveMarker );
-
-#define REVIVEMARKER_MODEL "models/props_mvm/mvm_revive_tombstone.mdl"
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor.
@@ -40,7 +38,7 @@ void CTFReviveMarker::Spawn()
 {
 	BaseClass::Spawn();
 
-	SetModel( REVIVEMARKER_MODEL );
+	SetModel( TF_REVIVEMARKER_MODEL );
 	SetHealth( 0 );
 	AddEffects( EF_NOSHADOW );
 	ResetSequence( LookupSequence("idle") );
@@ -59,7 +57,7 @@ void CTFReviveMarker::Spawn()
 void CTFReviveMarker::Precache()
 {
 	// Precache the player models and gibs.
-	PrecacheModel( REVIVEMARKER_MODEL );
+	PrecacheModel( TF_REVIVEMARKER_MODEL );
 
 	// Precache the player sounds.
 	PrecacheScriptSound( "MVM.PlayerRevived" );

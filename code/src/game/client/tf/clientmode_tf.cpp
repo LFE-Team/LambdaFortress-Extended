@@ -50,7 +50,7 @@
 #include "c_tf_team.h"
 #include "c_tf_playerresource.h"
 
-#include "vgui/lf_loadingprogress.h"
+#include "lfe_loadingprogress.h"
 #include "tf_presence.h"
 
 #if defined( _X360 )

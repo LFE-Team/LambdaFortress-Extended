@@ -628,6 +628,8 @@ const char *g_szProjectileNames[] =
 	"projectile_jar_gas",
 	"projectile_balloffire",
 	// Add new projectiles here.
+	"projectile_hl_frag",
+	"projectile_hl_combineball",
 };
 
 // these map to the projectiles named in g_szProjectileNames
@@ -666,6 +668,9 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_JAR,
 	TF_WEAPON_JAR_GAS,
 	TF_WEAPON_ROCKETLAUNCHER_FIREBALL,
+	// random stuff
+	TF_WEAPON_NONE,
+	TF_WEAPON_NONE,
 };
 
 const char *g_pszHintMessages[] =

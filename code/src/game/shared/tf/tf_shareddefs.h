@@ -471,6 +471,8 @@ enum
 	TF_PROJECTILE_JAR_GAS,
 	TF_PROJECTILE_BALLOFFIRE,
 	// Add new projectiles here.
+	LFE_HL2_PROJECTILE_FRAG,
+	LFE_HL2_PROJECTILE_COMBINEBALL,
 	TF_NUM_PROJECTILES
 };
 
@@ -1023,8 +1025,6 @@ enum
 	LFE_DMG_CUSTOM_PHYSCANNON_MEGA_TERTIARY,
 };
 
-//  TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED
-
 #define TF_JUMP_ROCKET	( 1 << 0 )
 #define TF_JUMP_STICKY	( 1 << 1 )
 #define TF_JUMP_OTHER	( 1 << 2 )
@@ -1498,10 +1498,7 @@ public:
 #define TF_CAMERA_DIST_RIGHT 30
 #define TF_CAMERA_DIST_UP 0
 
-// Player attached models
-#define TF_SPY_MASK_MODEL "models/player/items/spy_mask.mdl"
-#define TF_POWERUP_SHIELD_MODEL "models/items/powerup_merc_shield.mdl"
-
+#define TF_REVIVEMARKER_MODEL "models/props_mvm/mvm_revive_tombstone.mdl"
 
 #define IN_TYPING ( 1 << 31 )
 

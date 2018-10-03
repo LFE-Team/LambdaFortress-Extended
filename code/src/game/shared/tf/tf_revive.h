@@ -1,6 +1,6 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
+//============== Copyright LFE-TEAM Not All rights reserved. ==================//
 //
-// Purpose: the what am i even doing
+// Purpose: medic become super useful
 //
 //
 //=============================================================================//
@@ -29,7 +29,7 @@
 //
 //
 //=============================================================================
-//m_nRevives  ReviveThink MVM.PlayerRevived   speech_revivecall   speech_revivecall_medium    speech_revivecall_hard  mediccall   
+//m_nRevives speech_revivecall   speech_revivecall_medium    speech_revivecall_hard  "mediccall"   
 //revive_player_stopped revive_player_complete revive_player_notify marker_entindex
 class CTFReviveMarker : public CBaseAnimating
 {

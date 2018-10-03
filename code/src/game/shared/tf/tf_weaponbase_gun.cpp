@@ -27,6 +27,8 @@
 	#include "tf_weapon_grenade_mirv.h"
 	#include "te.h"
 	#include "soundent.h"
+	#include "grenade_frag.h"
+	#include "prop_combine_ball.h"
 
 #else	// Client specific.
 
@@ -274,7 +276,17 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 		pProjectile = FireArrow(pPlayer, iProjectile);
 		pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 		break;
-	
+
+	case LFE_HL2_PROJECTILE_COMBINEBALL:
+		pProjectile = FireHLCombineBall( pPlayer, iProjectile );
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		break;
+
+	case LFE_HL2_PROJECTILE_FRAG:
+		pProjectile = FireHLFrag( pPlayer, iProjectile );
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		break;
+
 	case TF_PROJECTILE_NONE:
 	default:
 		// do nothing!
@@ -684,7 +696,7 @@ CBaseEntity *CTFWeaponBaseGun::FireFlare(CTFPlayer *pPlayer)
 //-----------------------------------------------------------------------------
 // Purpose: Fire an Arrow
 //-----------------------------------------------------------------------------
-CBaseEntity *CTFWeaponBaseGun::FireArrow(CTFPlayer *pPlayer, int iType)
+CBaseEntity *CTFWeaponBaseGun::FireArrow( CTFPlayer *pPlayer, int iType )
 {
 	PlayWeaponShootSound();
 
@@ -782,6 +794,62 @@ CBaseEntity *CTFWeaponBaseGun::FireGrenade( CTFPlayer *pPlayer )
 	}
 	return pProjectile;
 
+#endif
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: test on tf weapons
+//-----------------------------------------------------------------------------
+CBaseEntity *CTFWeaponBaseGun::FireHLFrag( CTFPlayer *pPlayer, int iType )
+{
+	PlayWeaponShootSound();
+
+#ifdef GAME_DLL
+	AngularImpulse spin = AngularImpulse( 600, random->RandomInt( -1200, 1200 ), 0 );
+
+	Vector vecForward, vecRight, vecUp;
+	AngleVectors( pPlayer->EyeAngles(), &vecForward, &vecRight, &vecUp );
+
+	// Create grenades here!!
+	// Set the starting position a bit behind the player so the projectile
+	// launches out of the players view
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	vecSrc +=  vecForward * -32.0f + vecRight * 8.0f + vecUp * -6.0f;
+
+	Vector vecVelocity = ( vecForward * GetProjectileSpeed() ) + ( vecUp * 200.0f ) + ( random->RandomFloat( -10.0f, 10.0f ) * vecRight ) +		
+		( random->RandomFloat( -10.0f, 10.0f ) * vecUp );
+
+	return Fraggrenade_Create( vecSrc, vec3_angle, vecVelocity, spin, pPlayer, 3.0f, false );
+#endif
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Fire a rocket
+//-----------------------------------------------------------------------------
+CBaseEntity *CTFWeaponBaseGun::FireHLCombineBall( CTFPlayer *pPlayer, int iType )
+{
+	PlayWeaponShootSound();
+
+	// Server only - create the rocket.
+#ifdef GAME_DLL
+
+	Vector vecSrc;
+	QAngle angForward;
+	Vector vecOffset( 23.5f, 12.0f, -3.0f );
+	if ( pPlayer->GetFlags() & FL_DUCKING )
+	{
+		vecOffset.z = 8.0f;
+	}
+
+	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
+	Vector vecVelocity = vecAiming * 1000.0f;
+
+	GetProjectileFireSetup( pPlayer, vecOffset, &vecSrc, &angForward, false, false );
+	return CreateCombineBall( vecSrc, vecVelocity, 10.0f, 150.0f, 2.0f, pPlayer );
 #endif
 
 	return NULL;

@@ -460,7 +460,7 @@ const WeaponProficiencyInfo_t *CBaseHLCombatWeapon::GetDefaultProficiencyValues(
 //-----------------------------------------------------------------------------
 // Purpose: Most calls use the prediction seed
 //-----------------------------------------------------------------------------
-void CTFWeaponBase::CalcIsAttackMiniCritical( void)
+void CBaseHLCombatWeapon::CalcIsAttackMiniCritical( void)
 {
 	CBaseCombatCharacter *pOwner = GetOwner();
 	CAI_BaseNPC *pNPC = pOwner->MyNPCPointer();

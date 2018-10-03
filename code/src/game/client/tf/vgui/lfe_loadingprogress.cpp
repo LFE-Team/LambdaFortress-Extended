@@ -1,4 +1,4 @@
-//======== Copyright LOLOLOL © 2018, ISPuddy, All rights not reserved. ========
+//============== Copyright LFE-TEAM Not All rights reserved. ==================
 //
 // Purpose: 
 //
@@ -24,7 +24,7 @@
 #include <game/client/iviewport.h>
 #include "tf_tips.h"
 
-#include "lf_loadingprogress.h"
+#include "lfe_loadingprogress.h"
 #include <convar.h>
 #include "fmtstr.h"
 
@@ -74,13 +74,8 @@ CTFLoadingProgress::CTFLoadingProgress() : vgui::EditablePanel( NULL, "TFLoading
 	m_pTipLabel = new vgui::Label( this, "TipLabel", "" );
 	m_pTipText = new vgui::Label( this, "TipText", "" );
 
-#ifdef _X360
-	m_pFooter = new CTFFooter( this, "Footer" );
-	m_bShowBackButton = false;
-#else
 	m_pNextTipButton = new vgui::Button( this, "NextTipButton", "" );	
 	m_pCloseButton = new vgui::Button( this, "CloseButton", "" );	
-#endif
 
 	ListenForGameEvent( "server_spawn" );
 
@@ -92,13 +87,8 @@ CTFLoadingProgress::CTFLoadingProgress() : vgui::EditablePanel( NULL, "TFLoading
 //-----------------------------------------------------------------------------
 void CTFLoadingProgress::ShowModal()
 {
-#ifdef _X360
-	m_bInteractive = false;
-	m_bShowBackButton = true;
-#else
 	// we are in interactive mode, enable controls
 	m_bInteractive = true;
-#endif
 
 	SetParent( enginevgui->GetPanel( PANEL_GAMEUIDLL ) );
 	UpdateDialog();
@@ -142,10 +132,6 @@ void CTFLoadingProgress::OnCommand( const char *command )
 		SetVisible( false );
 		SetParent( (VPANEL) NULL );
 		SetDefaultSelections();
-
-#ifdef _X360
-		m_bShowBackButton = true;
-#endif
 	}
 	else if ( 0 == Q_stricmp( command, "nexttip" ) )
 	{
@@ -238,14 +224,6 @@ void CTFLoadingProgress::UpdateDialog()
 
 	ClearMapLabel();
 
-#ifdef _X360
-	if ( m_pFooter )
-	{
-		m_pFooter->ShowButtonLabel( "nexttip", m_bShowBackButton );
-		m_pFooter->ShowButtonLabel( "back", m_bShowBackButton );
-	}
-#endif
-
 	// update the tip
 	UpdateTip();
 	// show or hide controls depending on if we're interactive or not
@@ -266,19 +244,13 @@ void CTFLoadingProgress::UpdateTip()
 void CTFLoadingProgress::UpdateControls()
 {
 	// show or hide controls depending on what mode we're in
-#ifndef _X360
 	bool bShowPlayerData = ( m_bInteractive || m_iTotalSpawns > 0 );
-#else
-	bool bShowPlayerData = ( m_bInteractive || m_bShowBackButton || m_iTotalSpawns > 0 );
-#endif
 
 	m_pTipText->SetVisible( bShowPlayerData );
 	m_pTipLabel->SetVisible( bShowPlayerData );
 
-#ifndef _X360
 	m_pNextTipButton->SetVisible( m_bInteractive );
 	m_pCloseButton->SetVisible( m_bInteractive );
-#endif
 }
 //-----------------------------------------------------------------------------
 // Purpose: Calculates a fraction and guards from divide by 0.  (Returns 0 if 
@@ -366,10 +338,6 @@ void CTFLoadingProgress::FireGameEvent( IGameEvent *event )
 void CTFLoadingProgress::OnActivate()
 {
 	ClearMapLabel();
-
-#ifdef _X360
-	m_bShowBackButton = false;
-#endif
 
 	UpdateDialog();
 
