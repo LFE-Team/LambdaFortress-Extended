@@ -563,6 +563,9 @@ enum PassengerRole_t
 	VEHICLE_ROLE_NONE = -1,
 
 	VEHICLE_ROLE_DRIVER = 0,	// Only one driver
+	VEHICLE_ROLE_PASSENGER1,	// First Passenger
+	VEHICLE_ROLE_PASSENGER2,	// Second Passsenger
+	VEHICLE_ROLE_PASSENGER3,	// Third Passenger
 	
 	LAST_SHARED_VEHICLE_ROLE,
 };

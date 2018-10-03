@@ -751,10 +751,15 @@ void C_BasePlayer::SetVehicleRole( int nRole )
 {
 	if ( !IsInAVehicle() )
 		return;
-
+#ifndef TF_CLASSIC_CLIENT
 	// HL2 has only a player in a vehicle.
 	if ( nRole > VEHICLE_ROLE_DRIVER )
 		return;
+#else
+	// LFE has FOUR roles in a vehicle.
+	if (nRole > VEHICLE_ROLE_PASSENGER3)
+		return;
+#endif
 
 	char szCmd[64];
 	Q_snprintf( szCmd, sizeof( szCmd ), "vehicleRole %i\n", nRole );

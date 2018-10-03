@@ -1078,6 +1078,42 @@ void CBaseServerVehicle::HandlePassengerEntry( CBaseCombatCharacter *pPassenger,
 
 				pPlayer->GetInVehicle( this, VEHICLE_ROLE_DRIVER );
 			}
+			else if ( pPlayer->CanEnterVehicle( this, VEHICLE_ROLE_PASSENGER1 ) )
+			{
+				// Setup the "enter" vehicle sequence and skip the animation if it isn't present.
+				pAnimating->SetCycle( 0 );
+				pAnimating->m_flAnimTime = gpGlobals->curtime;
+				pAnimating->ResetSequence( iEntryAnim );
+				pAnimating->ResetClientsideFrame();
+				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
+				GetDrivableVehicle()->SetVehicleEntryAnim( true );
+
+				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER1 );
+			}
+			else if ( pPlayer->CanEnterVehicle( this, VEHICLE_ROLE_PASSENGER2 ) )
+			{
+				// Setup the "enter" vehicle sequence and skip the animation if it isn't present.
+				pAnimating->SetCycle( 0 );
+				pAnimating->m_flAnimTime = gpGlobals->curtime;
+				pAnimating->ResetSequence( iEntryAnim );
+				pAnimating->ResetClientsideFrame();
+				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
+				GetDrivableVehicle()->SetVehicleEntryAnim( true );
+
+				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER2 );
+			}
+			else if ( pPlayer->CanEnterVehicle( this, VEHICLE_ROLE_PASSENGER3 ) )
+			{
+				// Setup the "enter" vehicle sequence and skip the animation if it isn't present.
+				pAnimating->SetCycle( 0 );
+				pAnimating->m_flAnimTime = gpGlobals->curtime;
+				pAnimating->ResetSequence( iEntryAnim );
+				pAnimating->ResetClientsideFrame();
+				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
+				GetDrivableVehicle()->SetVehicleEntryAnim( true );
+
+				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER3 );
+			}
 		}
 	}
 	else

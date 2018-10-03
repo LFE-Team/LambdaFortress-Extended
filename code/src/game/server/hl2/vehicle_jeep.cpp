@@ -1933,7 +1933,7 @@ void CJeepFourWheelServerVehicle::HandlePassengerEntry( CBaseCombatCharacter *pP
 
 				pPlayer->GetInVehicle( this, VEHICLE_ROLE_DRIVER );
 			}
-			else if ( pPlayer->CanEnterVehicle( this, VEHICLE_ROLE_PASSENGER ) )
+			else if ( pPlayer->CanEnterVehicle( this, VEHICLE_ROLE_PASSENGER1 ) )
 			{
 				// Setup the "enter" vehicle sequence and skip the animation if it isn't present.
 				pAnimating->SetCycle( 0 );
@@ -1943,7 +1943,7 @@ void CJeepFourWheelServerVehicle::HandlePassengerEntry( CBaseCombatCharacter *pP
 				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
 				GetDrivableVehicle()->SetVehicleEntryAnim( true );
 
-				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER );
+				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER1 );
 			}
 		}
 	}
