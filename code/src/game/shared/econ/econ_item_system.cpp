@@ -320,6 +320,10 @@ public:
 			if ( !V_stricmp( pVisualData->GetName(), "player_bodygroups" ) )
 			{
 				GET_VALUES_FAST_BOOL( pVisuals->player_bodygroups, pVisualData );
+			}
+			else if ( !V_stricmp( pVisualData->GetName(), "player_poseparam" ) )
+			{
+				GET_VALUES_FAST_BOOL( pVisuals->player_poseparam, pVisualData );
 			}/*
 			else if ( !V_stricmp( pVisualData->GetName(), "attached_models" ) )
 			{

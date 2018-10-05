@@ -71,7 +71,6 @@
 #include "nav_mesh.h"
 #include "tf_fx.h"
 #include "npc_alyx_episodic.h"
-#include "tf_revive.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -2378,10 +2377,10 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 		return ( m_hTempSpawnSpot.Get() );
 	}
 
-	if ( m_hReviveSpawnSpot )
+	/*if ( m_hReviveSpawnSpot.Get() )
 	{
 		return ( m_hReviveSpawnSpot.Get() );
-	}
+	}*/
 
 	CBaseEntity *pSpot = g_pLastSpawnPoints[ GetTeamNumber() ];
 	const char *pSpawnPointName = "";
@@ -5544,7 +5543,10 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	DropAmmoPack();
 
-	DropReviveMarker();
+	if ( TFGameRules() && TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()  )
+	{
+		DropReviveMarker();
+	}
 
 	m_Shared.SetDesiredWeaponIndex( -1 );
 	RemoveAllWeapons();
@@ -6605,7 +6607,7 @@ void CTFPlayer::StateEnterWELCOME( void )
 
 	PhysObjectSleep();
 
-	if ( TFGameRules() && TFGameRules()->IsCoOp() && lfe_debug_transition.GetFloat() == 1 )
+	if ( TFGameRules() && TFGameRules()->IsAnyCoOp() && lfe_debug_transition.GetFloat() == 1 )
 	{
 		unsigned short index = g_TFPlayerTransitions.Find( GetSteamIDAsUInt64() );
 		if ( index != g_TFPlayerTransitions.InvalidIndex() )

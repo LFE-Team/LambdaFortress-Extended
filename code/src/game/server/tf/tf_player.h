@@ -17,6 +17,7 @@
 #include "ihasattributes.h"
 #include "hl_movedata.h"
 #include "hl2_player.h"
+#include "tf_revive.h"
 
 class CTFPlayer;
 class CTFTeam;
@@ -28,6 +29,8 @@ class CBaseObject;
 class CTFWeaponBase;
 class CIntroViewpoint;
 class CLogicPlayerProxy;
+class CTFReviveMarker;
+
 //=============================================================================
 //
 // Player State Information
@@ -695,7 +698,7 @@ private:
 	float				m_flNextCarryTalkTime;
 
 	EHANDLE				m_hTempSpawnSpot;
-	EHANDLE				m_hReviveSpawnSpot;
+	CHandle<CTFReviveMarker> m_hReviveSpawnSpot;
 	CNetworkVar( bool, m_bSearchingSpawn )
 
 	int					m_nBlastJumpFlags;

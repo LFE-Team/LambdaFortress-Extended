@@ -195,6 +195,7 @@ public:
 
 public:
 	CUtlDict< bool, unsigned short > player_bodygroups;
+	CUtlDict< bool, unsigned short > player_poseparam;
 	CUtlMap< int, int > animation_replacement;
 	CUtlDict< const char*, unsigned short > playback_activity;
 	CUtlDict< const char*, unsigned short > attached_models;

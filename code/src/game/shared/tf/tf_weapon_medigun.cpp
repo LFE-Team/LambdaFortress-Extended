@@ -691,7 +691,7 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 		{
 			if ( pTarget != pNewTarget && pNewTarget->IsCombatItem() )
 			{
-				pMarker->SetContextThink( &CTFReviveMarker::ReviveThink, gpGlobals->curtime + 0.1f, "ReviveThink" );
+				//pMarker->ReviveThink();
 				pMarker->RevivePlayer(); // TODO: remove this and made proper healing
 			}
 		}

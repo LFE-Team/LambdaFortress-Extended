@@ -15,6 +15,7 @@
 #include "tf_hud_statpanel.h"
 #include "vgui_avatarimage.h"
 #include "c_ai_basenpc.h"
+#include "tf_revive.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -175,11 +176,15 @@ bool CTargetID::ShouldDraw( void )
 					( bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber() ) ||
 					( pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && !pPlayer->m_Shared.IsStealthed() ) );
 			}
-			else if ( pEnt->IsBaseObject() && (pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) || pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR) )
+			else if ( pEnt->IsBaseObject() && (pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) || pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR ) )
 			{
 				bReturn = true;
 			}
 			else if ( pEnt->IsNPC() )
+			{
+				bReturn = ( pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) );
+			}
+			else if ( pEnt->IsCombatItem() )
 			{
 				bReturn = ( pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || pLocalTFPlayer->InSameTeam( pEnt ) || pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) );
 			}
@@ -274,6 +279,7 @@ void CTargetID::UpdateID( void )
 		int iMaxBuffedHealth = 0;
 		int iColorNum = TEAM_UNASSIGNED;
 		C_TFPlayer *pAvatarPlayer = NULL;
+		wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
 
 		// Some entities we always want to check, cause the text may change
 		// even while we're looking at it
@@ -281,7 +287,6 @@ void CTargetID::UpdateID( void )
 		if ( IsPlayerIndex( m_iTargetEntIndex ) )
 		{
 			const char *printFormatString = NULL;
-			wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
 			bool bDisguisedTarget = false;
 			bool bDisguisedEnemy = false;
 
@@ -369,7 +374,7 @@ void CTargetID::UpdateID( void )
 				// Spy can see enemy's health.
 				printFormatString = "#TF_playerid_diffteam";
 				bShowHealth = true;
-			}			
+			}
 
 			if ( bShowHealth )
 			{
@@ -438,6 +443,27 @@ void CTargetID::UpdateID( void )
 				iMaxBuffedHealth = pNPC->GetMaxBuffedHealth();
 				iColorNum = pNPC->GetTeamNumber();
 			}
+			else if ( pEnt->IsCombatItem() )
+			{
+				const char *printFormatString = NULL;
+				C_TFReviveMarker *pMarker = assert_cast<CTFReviveMarker *>( pEnt );
+				C_TFPlayer *pOwner = static_cast<C_TFPlayer*>( pMarker->GetOwnerEntity() );
+				g_pVGuiLocalize->ConvertANSIToUnicode( pOwner->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
+				bShowHealth = true;
+				flHealth = pMarker->GetHealth();
+				flMaxHealth = pMarker->GetMaxHealth();
+				iColorNum = pOwner->GetTeamNumber();
+
+				if ( printFormatString )
+				{
+					wchar_t *pszPrepend = GetPrepend();
+					if ( !pszPrepend || !pszPrepend[0] )
+					{
+						pszPrepend = L"";
+					}
+					g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 2, pszPrepend, wszPlayerName );
+				}
+			}
 		}
 
 		// Setup health icon
@@ -452,7 +478,7 @@ void CTargetID::UpdateID( void )
 		m_pBGPanel->SetBGImage( iColorNum );
 
 		// Setup avatar
-		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer && m_pAvatar )
+		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer && !g_PR->IsFakePlayer( m_iTargetEntIndex ) && m_pAvatar )
 		{
 			if ( !m_pAvatar->IsVisible() )
 				m_pAvatar->SetVisible( true );

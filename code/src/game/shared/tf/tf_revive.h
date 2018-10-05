@@ -29,7 +29,7 @@
 //
 //
 //=============================================================================
-//m_nRevives speech_revivecall   speech_revivecall_medium    speech_revivecall_hard  "mediccall"   
+//m_nRevives speech_revivecall   speech_revivecall_medium    speech_revivecall_hard
 //revive_player_stopped revive_player_complete revive_player_notify marker_entindex
 class CTFReviveMarker : public CBaseAnimating
 {
@@ -45,13 +45,19 @@ public:
 
 	virtual bool	IsCombatItem( void ) const { return true; }
 
-	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
+	virtual	bool	ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void			ReviveThink( void );
-#ifdef GAME_DLL
-	void			InitReviveMarker( CTFPlayer *pOwner, int iClass );
-	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
+
+	void			InitReviveMarker( CBaseEntity *pOwner, int iClass );
 	void			RevivePlayer( void );
+#ifdef GAME_DLL
+	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	static CTFReviveMarker *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, int iClass );
+#else
+	void CreateReviveMeEffect( void );
+
+	// Medic callout particle effect
+	CNewParticleEffect	*m_pReviveMeEffect;
 #endif
 };
 
