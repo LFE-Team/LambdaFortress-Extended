@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "tf_weapon_bottle.h"
 #include "decals.h"
+#include "tf_viewmodel.h"
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -40,9 +41,12 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS( tf_weapon_bottle, CTFBottle );
 PRECACHE_WEAPON_REGISTER( tf_weapon_bottle );
 
-#define TF_BOTTLE_SWITCHGROUP 1
-#define TF_BOTTLE_NOTBROKEN 0
-#define TF_BOTTLE_BROKEN 1
+#define TF_BOTTLE_SWITCHGROUP	1
+#define TF_BOTTLE_NOTBROKEN		0
+#define TF_BOTTLE_BROKEN		1
+
+#define TF_BOTTLE_MODEL			"models/weapons/c_models/c_bottle/c_bottle.mdl"
+#define TF_BOTTLE_MODEL_BROKEN	"models/weapons/c_models/c_bottle/c_bottle_broken.mdl"
 
 //=============================================================================
 //
@@ -56,12 +60,43 @@ CTFBottle::CTFBottle()
 {
 }
 
+const char *CTFBottle::GetWorldModel() const
+{
+	if ( m_bBroken == true )
+	{
+		return TF_BOTTLE_MODEL_BROKEN;
+	}
+	
+	return BaseClass::GetWorldModel();
+}
+
+void CTFBottle::Precache()
+{
+	BaseClass::Precache();
+	
+	PrecacheModel( TF_BOTTLE_MODEL );
+	PrecacheModel( TF_BOTTLE_MODEL_BROKEN );
+}
+
 void CTFBottle::WeaponReset( void )
 {
 	BaseClass::WeaponReset();
 
 	m_bBroken = false;
 }
+
+#ifdef CLIENT_DLL
+int CTFBottle::GetWorldModelIndex()
+{
+	if ( !modelinfo ) {
+		return BaseClass::GetWorldModelIndex();
+	}
+
+	int index = modelinfo->GetModelIndex( m_bBroken == true ? TF_BOTTLE_MODEL_BROKEN : TF_BOTTLE_MODEL );
+	m_iWorldModelIndex = index;
+	return index;
+}
+#endif
 
 bool CTFBottle::DefaultDeploy( char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt )
 {
@@ -86,15 +121,13 @@ void CTFBottle::SwitchBodyGroups( void )
 
 	SetBodygroup( TF_BOTTLE_SWITCHGROUP, iState );
 
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwner() );
-
-	if ( pTFPlayer && pTFPlayer->GetActiveWeapon() == this )
+#ifdef CLIENT_DLL
+	C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+	if ( pAttach )
 	{
-		if ( pTFPlayer->GetViewModel() )
-		{
-			pTFPlayer->GetViewModel()->SetBodygroup( TF_BOTTLE_SWITCHGROUP, iState );
-		}
+		pAttach->SetModel( iState == 1 ? TF_BOTTLE_MODEL_BROKEN : TF_BOTTLE_MODEL );
 	}
+#endif
 }
 
 void CTFBottle::Smack( void )

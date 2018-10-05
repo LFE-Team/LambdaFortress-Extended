@@ -30,12 +30,17 @@ public:
 
 	CTFBottle();
 	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_BOTTLE; }
-
+	virtual const char *GetWorldModel() const;
+	virtual void		Precache();
 	virtual void		Smack( void );
 	virtual void		WeaponReset( void );
 	virtual bool		DefaultDeploy( char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt );
 
 	virtual void		SwitchBodyGroups( void );
+
+#ifdef CLIENT_DLL
+	virtual int			GetWorldModelIndex();
+#endif
 
 protected:
 

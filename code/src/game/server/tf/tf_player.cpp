@@ -7180,6 +7180,8 @@ void CTFPlayer::CheatImpulseCommands( int iImpulse )
 					}
 				}
 
+				m_Shared.m_flEffectBarProgress = 100.0f;
+
 				gEvilImpulse101 = false;
 			}
 		}
