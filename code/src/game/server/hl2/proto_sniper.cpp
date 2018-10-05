@@ -1286,6 +1286,7 @@ void CProtoSniper::AddOldDecoy( CBaseEntity *pDecoy )
 #define SNIPER_MAX_INFLICTOR_DIST	15.0f * 12.0f // 15 feet.
 int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
+	/*
 	if( !m_fEnabled )
 	{
 		// As good as not existing.
@@ -1327,8 +1328,9 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		newInfo.SetDamage( m_iHealth );
 	}
+	*/
 
-	return CAI_BaseNPC::OnTakeDamage_Alive( newInfo );
+	return CAI_BaseNPC::OnTakeDamage_Alive(info);
 }
 
 //-----------------------------------------------------------------------------
