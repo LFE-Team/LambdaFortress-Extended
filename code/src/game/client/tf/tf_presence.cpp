@@ -168,7 +168,7 @@ bool CTFRichPresence::NeedToUpdate()
 void CTFRichPresence::Reset()
 {
 	Q_memset( &m_sDiscordRichPresence, 0, sizeof( m_sDiscordRichPresence ) );
-	m_sDiscordRichPresence.state = "In-Menu";
+	m_sDiscordRichPresence.state = "";
 	m_sDiscordRichPresence.details = "Main Menu";
 	m_sDiscordRichPresence.endTimestamp;
 

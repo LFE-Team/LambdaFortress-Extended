@@ -113,7 +113,8 @@ void CTFMedicCallerPanel::GetCallerPosition( const Vector &vecDelta, float flRad
 //-----------------------------------------------------------------------------
 void CTFMedicCallerPanel::OnTick( void )
 {
-	if ( !m_hPlayer || !m_hPlayer->IsAlive() || gpGlobals->curtime > m_flRemoveAt )
+	C_TFPlayer *pTFPlayer = ToTFPlayer( m_hPlayer );
+	if ( !pTFPlayer || !pTFPlayer->IsAlive() || gpGlobals->curtime > m_flRemoveAt )
 	{
 		MarkForDeletion();
 		return;
@@ -125,15 +126,15 @@ void CTFMedicCallerPanel::OnTick( void )
 	if ( pLocalTFPlayer )
 	{
 		CBaseEntity *pHealTarget = pLocalTFPlayer->MedicGetHealTarget();
-		if ( (pHealTarget && pHealTarget == m_hPlayer) || pLocalTFPlayer->IsAlive() == false )
+		if ( (pHealTarget && pHealTarget == pTFPlayer) || pLocalTFPlayer->IsAlive() == false )
 		{
 			MarkForDeletion();
 			return;
 		}
 
 		// If we're pointing to an enemy spy and they are no longer disguised, remove ourselves
-		if ( m_hPlayer->IsPlayerClass( TF_CLASS_SPY ) && 
-			!( m_hPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && m_hPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber() ) )
+		if ( pTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && 
+			!( pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pTFPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber() ) )
 		{
 			MarkForDeletion();
 			return;
@@ -146,13 +147,14 @@ void CTFMedicCallerPanel::OnTick( void )
 //-----------------------------------------------------------------------------
 void CTFMedicCallerPanel::PaintBackground( void )
 {
+	C_TFPlayer *pTFPlayer = ToTFPlayer( m_hPlayer );
 	// If the local player has started healing this guy, remove it too.
 	//Also don't draw it if we're dead.
 	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( !pLocalTFPlayer )
 		return;
 
-	if ( !m_hPlayer || m_hPlayer->IsDormant() )
+	if ( !pTFPlayer || pTFPlayer->IsDormant() )
 	{
 		SetAlpha(0);
 		return;
@@ -283,7 +285,7 @@ void CTFMedicCallerPanel::Paint( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFMedicCallerPanel::SetPlayer( C_TFPlayer *pPlayer, float flDuration, Vector &vecOffset )
+void CTFMedicCallerPanel::SetPlayer( C_BaseEntity *pPlayer, float flDuration, Vector &vecOffset )
 {
 	m_hPlayer = pPlayer;
 	m_flRemoveAt = gpGlobals->curtime + flDuration;
@@ -293,7 +295,7 @@ void CTFMedicCallerPanel::SetPlayer( C_TFPlayer *pPlayer, float flDuration, Vect
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFMedicCallerPanel::AddMedicCaller( C_TFPlayer *pPlayer, float flDuration, Vector &vecOffset )
+void CTFMedicCallerPanel::AddMedicCaller( C_BaseEntity *pPlayer, float flDuration, Vector &vecOffset )
 {
 	CTFMedicCallerPanel *pCaller = new CTFMedicCallerPanel( g_pClientMode->GetViewport(), "MedicCallerPanel" );
 	vgui::SETUP_PANEL(pCaller);

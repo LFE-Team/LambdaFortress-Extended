@@ -129,11 +129,11 @@ void CTFReviveMarker::InitReviveMarker( CBaseEntity *pOwner, int iClass )
 	SetHealth( 1 );
 	SetMaxHealth( pPlayer->GetPlayerClass()->GetMaxHealth() );
 	ChangeTeam( pPlayer->GetTeamNumber() );
-	SetBodygroup( FindBodygroupByName( "class" ), iClass );
 
 	ResetSequence( LookupSequence("idle") );
 	#else
 	CreateReviveMeEffect();
+	SetBodygroup( FindBodygroupByName( "class" ), iClass );
 	#endif
 }
 
@@ -170,12 +170,11 @@ void CTFReviveMarker::ReviveThink( void )
 //-----------------------------------------------------------------------------
 void C_TFReviveMarker::CreateReviveMeEffect( void )
 {
-	/*C_TFPlayer *pLocalPlayer = GetLocalTFPlayer();
+	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
 	// Only show the bubble to teammates and players who are on the our disguise team.
-	if ( GetTeamNumber() != pLocalPlayer->GetTeamNumber() &&
-		!( m_Shared.InCond( TF_COND_DISGUISED ) && m_Shared.GetDisguiseTeam() == pLocalPlayer->GetTeamNumber() ) )
-		return;*/
+	if ( GetTeamNumber() != pLocalPlayer->GetTeamNumber() )
+		return;
 
 	if ( m_pReviveMeEffect )
 	{
@@ -192,7 +191,7 @@ void C_TFReviveMarker::CreateReviveMeEffect( void )
 	}*/
 
 	// If the local player is a medic, add this player to our list of medic callers
-	/*if ( pLocalPlayer && pLocalPlayer->IsPlayerClass( TF_CLASS_MEDIC ) && pLocalPlayer->IsAlive() == true )
+	if ( pLocalPlayer && pLocalPlayer->IsPlayerClass( TF_CLASS_MEDIC ) && pLocalPlayer->IsAlive() == true )
 	{
 		Vector vecPos;
 		if ( GetAttachmentLocal( LookupAttachment( "mediccall" ), vecPos ) )
@@ -200,6 +199,6 @@ void C_TFReviveMarker::CreateReviveMeEffect( void )
 			vecPos += Vector(0,0,18);	// Particle effect is 18 units above the attachment
 			CTFMedicCallerPanel::AddMedicCaller( this, 5.0, vecPos );
 		}
-	}*/
+	}
 }
 #endif

@@ -42,14 +42,14 @@ public:
 	virtual void Paint( void );
 
 	void	GetCallerPosition( const Vector &vecDelta, float flRadius, float *xpos, float *ypos, float *flRotation );
-	void	SetPlayer( C_TFPlayer *pPlayer, float flDuration, Vector &vecOffset );
-	static void AddMedicCaller( C_TFPlayer *pPlayer, float flDuration, Vector &vecOffset );
+	void	SetPlayer( C_BaseEntity *pPlayer, float flDuration, Vector &vecOffset );
+	static void AddMedicCaller( C_BaseEntity *pPlayer, float flDuration, Vector &vecOffset );
 
 private:
 	IMaterial		*m_pArrowMaterial;
 	float			m_flRemoveAt;
 	Vector			m_vecOffset;
-	CHandle<C_TFPlayer> m_hPlayer;
+	CHandle<C_BaseEntity> m_hPlayer;
 	int				m_iDrawArrow;
 	bool			m_bOnscreen;
 };
