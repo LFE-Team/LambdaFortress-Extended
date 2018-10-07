@@ -29,6 +29,8 @@
 	#include "soundent.h"
 	#include "grenade_frag.h"
 	#include "prop_combine_ball.h"
+	#include "grenade_ar2.h"
+	#include "grenade_spit.h"
 
 #else	// Client specific.
 
@@ -277,13 +279,23 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 		pPlayer->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_PRIMARY);
 		break;
 
+	case LFE_HL2_PROJECTILE_FRAG:
+		pProjectile = FireHLFrag( pPlayer, iProjectile );
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		break;
+
 	case LFE_HL2_PROJECTILE_COMBINEBALL:
 		pProjectile = FireHLCombineBall( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
 
-	case LFE_HL2_PROJECTILE_FRAG:
-		pProjectile = FireHLFrag( pPlayer, iProjectile );
+	case LFE_HL2_PROJECTILE_AR2:
+		pProjectile = FireHLAR2Grenade( pPlayer, iProjectile );
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		break;
+
+	case LFE_HL2_PROJECTILE_SPIT:
+		pProjectile = FireHLSpit( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
 
@@ -828,7 +840,7 @@ CBaseEntity *CTFWeaponBaseGun::FireHLFrag( CTFPlayer *pPlayer, int iType )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Fire a rocket
+// Purpose:
 //-----------------------------------------------------------------------------
 CBaseEntity *CTFWeaponBaseGun::FireHLCombineBall( CTFPlayer *pPlayer, int iType )
 {
@@ -850,6 +862,75 @@ CBaseEntity *CTFWeaponBaseGun::FireHLCombineBall( CTFPlayer *pPlayer, int iType 
 
 	GetProjectileFireSetup( pPlayer, vecOffset, &vecSrc, &angForward, false, false );
 	return CreateCombineBall( vecSrc, vecVelocity, 10.0f, 150.0f, 2.0f, pPlayer );
+#endif
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBaseEntity *CTFWeaponBaseGun::FireHLAR2Grenade( CTFPlayer *pPlayer, int iType )
+{
+	PlayWeaponShootSound();
+
+#ifdef GAME_DLL
+	//pPlayer->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAGS_NONE );
+
+	float flDamageMult = 100.0f;
+	CALL_ATTRIB_HOOK_FLOAT(flDamageMult, mult_dmg);
+
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector	vecThrow;
+	// Don't autoaim on grenade tosses
+	AngleVectors( pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow );
+	VectorScale( vecThrow, 1000.0f, vecThrow );
+
+	QAngle angles;
+	VectorAngles( vecThrow, angles );
+	CGrenadeAR2 *pGrenade = (CGrenadeAR2*)Create( "grenade_ar2", vecSrc, angles, pPlayer );
+	pGrenade->SetAbsVelocity( vecThrow );
+
+	pGrenade->SetLocalAngularVelocity( RandomAngle( -400, 400 ) );
+	pGrenade->SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE ); 
+	pGrenade->SetThrower( GetOwner() );
+	pGrenade->SetDamage( flDamageMult );
+	
+	return pGrenade;
+#endif
+
+	return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+CBaseEntity *CTFWeaponBaseGun::FireHLSpit( CTFPlayer *pPlayer, int iType )
+{
+	PlayWeaponShootSound();
+
+#ifdef GAME_DLL
+	Vector vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector	vecThrow;
+	// Don't autoaim on grenade tosses
+	AngleVectors( pPlayer->EyeAngles() + pPlayer->GetPunchAngle(), &vecThrow );
+	VectorScale( vecThrow, 1000.0f, vecThrow );
+
+	QAngle angles;
+	VectorAngles( vecThrow, angles );
+	CGrenadeSpit *pGrenade = (CGrenadeSpit*)Create( "grenade_spit", vecSrc, angles, pPlayer );
+	pGrenade->SetThrower( GetOwner() );
+	pGrenade->ApplyAbsVelocityImpulse( ( vecThrow + RandomVector( -0.035f, 0.035f ) ) /* flVelocity*/ );
+	pGrenade->SetSpitSize( random->RandomInt( SPIT_SMALL, SPIT_MEDIUM ) );
+
+	/*QAngle angles( random->RandomFloat( -250, -500 ),
+				random->RandomFloat( -250, -500 ),
+				random->RandomFloat( -250, -500 ) );*/
+		
+	//VectorAngles( vecVelocity, angles );
+	pGrenade->SetLocalAngularVelocity( angles );
+
+	return pGrenade;
 #endif
 
 	return NULL;

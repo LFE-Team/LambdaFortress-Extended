@@ -147,6 +147,40 @@ const char *g_aPlayerClassNames_NonLocalized[] =
 	"Engineer",
 };
 
+const char *g_aRawPlayerClassNamesShort[] =
+{
+	"undefined",
+	"scout",
+	"sniper",
+	"soldier",
+	"demo",
+	"medic",
+	"heavy",
+	"pyro",
+	"spy",
+	"engineer",
+	"civilian",
+	"",
+	"random"
+};
+
+const char *g_aRawPlayerClassNames[] =
+{
+	"undefined",
+	"scout",
+	"sniper",
+	"soldier",
+	"demoman",
+	"medic",
+	"heavyweapons",
+	"pyro",
+	"spy",
+	"engineer",
+	"civilian",
+	"",
+	"random"
+};
+
 //-----------------------------------------------------------------------------
 // Gametypes.
 //-----------------------------------------------------------------------------
@@ -628,8 +662,10 @@ const char *g_szProjectileNames[] =
 	"projectile_jar_gas",
 	"projectile_balloffire",
 	// Add new projectiles here.
-	"projectile_hl_frag",
-	"projectile_hl_combineball",
+	"projectile_hl2_frag",
+	"projectile_hl2_combineball",
+	"projectile_hl2_ar2",
+	"projectile_hl2_spit",
 };
 
 // these map to the projectiles named in g_szProjectileNames
@@ -669,6 +705,8 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_JAR_GAS,
 	TF_WEAPON_ROCKETLAUNCHER_FIREBALL,
 	// random stuff
+	TF_WEAPON_NONE,
+	TF_WEAPON_NONE,
 	TF_WEAPON_NONE,
 	TF_WEAPON_NONE,
 };

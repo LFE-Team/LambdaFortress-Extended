@@ -66,6 +66,8 @@ protected:
 	CTFImagePanel			*m_pBGPanel;
 	CTFSpectatorGUIHealth	*m_pTargetHealth;
 
+	vgui::EditablePanel		*m_pMoveableSubPanel;
+
 	int m_iRenderPriority;
 
 	CPanelAnimationVarAliasType( int, m_iAvatarOffset, "avatar_offset", "0", "proportional_int" );

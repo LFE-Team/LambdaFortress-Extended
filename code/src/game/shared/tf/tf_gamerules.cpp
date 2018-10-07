@@ -7340,11 +7340,11 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	}
 
  	// Npcs and Players don't collide with headcrab (not really)
-	if ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB )
+	/*if ( collisionGroup1 == HL2COLLISION_GROUP_HEADCRAB )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_HEADCRAB )
 			return false;
-	}
+	}*/
 
  	// Strider don't collide with npc or other strider
 	if ( collisionGroup1 == HL2COLLISION_GROUP_STRIDER )

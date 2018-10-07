@@ -149,6 +149,9 @@ enum
 extern const char *g_aPlayerClassNames[];				// localized class names
 extern const char *g_aPlayerClassNames_NonLocalized[];	// non-localized class names
 
+extern const char *g_aRawPlayerClassNamesShort[];	// raw short class mames
+extern const char *g_aRawPlayerClassNames[];	// raw class names
+
 extern const char *g_aPlayerClassEmblems[];
 extern const char *g_aPlayerClassEmblemsDead[];
 
@@ -473,6 +476,8 @@ enum
 	// Add new projectiles here.
 	LFE_HL2_PROJECTILE_FRAG,
 	LFE_HL2_PROJECTILE_COMBINEBALL,
+	LFE_HL2_PROJECTILE_AR2,
+	LFE_HL2_PROJECTILE_SPIT,
 	TF_NUM_PROJECTILES
 };
 

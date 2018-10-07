@@ -89,6 +89,8 @@ void CTargetID::ApplySchemeSettings( vgui::IScheme *scheme )
 	m_cSpecColor = scheme->GetColor( "TeamSpec", Color( 255, 160, 0, 255 ) );
 	m_hFont = scheme->GetFont( "TargetID", true );
 
+	m_pMoveableSubPanel = dynamic_cast<EditablePanel *>(FindChildByName("MoveableSubPanel"));
+
 	//SetPaintBackgroundEnabled( true );
 	//SetBgColor( Color( 0, 0, 0, 90 ) );
 }
@@ -228,8 +230,8 @@ void CTargetID::PerformLayout( void )
 
 	if ( m_pBGPanel )
 	{
-		m_pBGPanel->SetSize( iWidth, GetTall() * 0.8 );
-		m_pBGPanel->SetPos( 0, 9 );
+		m_pBGPanel->SetSize( iWidth, GetTall() * 1.0 );
+		m_pBGPanel->SetPos( 0, 2 );
 		m_pBGPanel->SetAlpha( tf_hud_target_id_alpha.GetFloat() );
 	}
 };
@@ -314,12 +316,14 @@ void CTargetID::UpdateID( void )
 			// offset the name if avatars are enabled
 			if ( tf_hud_target_id_show_avatars.GetBool() && !g_PR->IsFakePlayer( m_iTargetEntIndex ) )
 			{
-				m_pTargetNameLabel->SetTextInset( 32, 0 );
+				m_pTargetNameLabel->SetTextInset( 40, 2 );
+				m_pTargetDataLabel->SetTextInset( 40, 0 );
 			}
 			else
 			{
 				// don't show avatars on undisguised bots
-				m_pTargetNameLabel->SetTextInset( 0, 0 );
+				m_pTargetNameLabel->SetTextInset( 40, 2 );
+				m_pTargetDataLabel->SetTextInset( 40, 0 );
 			}
 
 			if ( bDisguisedTarget )
@@ -362,7 +366,7 @@ void CTargetID::UpdateID( void )
 				wszChargeLevel[ARRAYSIZE( wszChargeLevel ) - 1] = '\0';
 				g_pVGuiLocalize->ConstructString( sDataString, sizeof( sDataString ), g_pVGuiLocalize->Find( "#TF_playerid_mediccharge" ), 1, wszChargeLevel );
 			}
-			
+
 			if ( !pPlayer->IsEnemyPlayer() ||
 				( bDisguisedEnemy && pPlayer->m_Shared.GetDisguiseTeam() == pLocalTFPlayer->GetTeamNumber() ) )
 			{
@@ -410,6 +414,9 @@ void CTargetID::UpdateID( void )
 				}
 				g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 2, pszPrepend, wszPlayerName );
 			}
+
+			if ( m_pMoveableSubPanel->IsVisible() )
+				m_pMoveableSubPanel->SetVisible( false );
 		}
 		else	
 		{
@@ -431,6 +438,17 @@ void CTargetID::UpdateID( void )
 				{
 					pAvatarPlayer = pBuilder;
 				}
+
+				if ( pLocalTFPlayer->CanPickupBuilding( pObj ) )
+				{
+					if ( !m_pMoveableSubPanel->IsVisible() )
+						m_pMoveableSubPanel->SetVisible( true );
+				}
+				else
+				{
+					if ( m_pMoveableSubPanel->IsVisible() )
+						m_pMoveableSubPanel->SetVisible( false );
+				}
 			}
 			else if ( pEnt->IsNPC() )
 			{
@@ -442,6 +460,9 @@ void CTargetID::UpdateID( void )
 				flMaxHealth = pNPC->GetMaxHealth();
 				iMaxBuffedHealth = pNPC->GetMaxBuffedHealth();
 				iColorNum = pNPC->GetTeamNumber();
+
+				if ( m_pMoveableSubPanel->IsVisible() )
+					m_pMoveableSubPanel->SetVisible( false );
 			}
 			else if ( pEnt->IsCombatItem() )
 			{
@@ -463,6 +484,9 @@ void CTargetID::UpdateID( void )
 					}
 					g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 2, pszPrepend, wszPlayerName );
 				}
+
+				if ( m_pMoveableSubPanel->IsVisible() )
+					m_pMoveableSubPanel->SetVisible( false );
 			}
 		}
 
@@ -478,7 +502,7 @@ void CTargetID::UpdateID( void )
 		m_pBGPanel->SetBGImage( iColorNum );
 
 		// Setup avatar
-		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer && !g_PR->IsFakePlayer( m_iTargetEntIndex ) && m_pAvatar )
+		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer /*&& !g_PR->IsFakePlayer( m_iTargetEntIndex )*/ && m_pAvatar )
 		{
 			if ( !m_pAvatar->IsVisible() )
 				m_pAvatar->SetVisible( true );
@@ -487,7 +511,8 @@ void CTargetID::UpdateID( void )
 			m_pAvatar->SetPlayer( pAvatarPlayer );
 			m_pAvatar->SetShouldDrawFriendIcon( false );
 
-			m_pTargetNameLabel->SetTextInset( m_iAvatarOffset, 0 );
+			m_pTargetNameLabel->SetTextInset( m_iAvatarOffset, 2 );
+			m_pTargetDataLabel->SetTextInset( m_iAvatarOffset, 0 );
 		}
 		else
 		{
@@ -497,7 +522,8 @@ void CTargetID::UpdateID( void )
 				m_pAvatar->SetVisible( false );
 			}
 
-			m_pTargetNameLabel->SetTextInset( 0, 0 );
+			m_pTargetNameLabel->SetTextInset( 40, 2 );
+			m_pTargetDataLabel->SetTextInset( 40, 0 );
 		}
 
 		int iNameW, iDataW, iIgnored;
