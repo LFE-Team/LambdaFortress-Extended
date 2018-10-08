@@ -73,6 +73,10 @@ CExImageButton::CExImageButton( Panel *parent, const char *name, const char *tex
 	m_clrArmed = Color( 0, 0, 0, 0 );
 	m_clrSelected = Color( 0, 0, 0, 0 );
 	m_pSubImage = new vgui::ImagePanel( this, "SubImage" );
+
+	Q_strncpy(m_pszImageDefaultName, "", sizeof(m_pszImageDefaultName));
+	Q_strncpy(m_pszImageArmedName, "", sizeof(m_pszImageArmedName));
+	Q_strncpy(m_pszImageSelectedName, "", sizeof(m_pszImageSelectedName));
 }
  //-----------------------------------------------------------------------------
 // Purpose: 
@@ -83,7 +87,20 @@ CExImageButton::CExImageButton( Panel *parent, const char *name, const wchar_t *
 	m_clrArmed = Color( 0, 0, 0, 0 );
 	m_clrSelected = Color( 0, 0, 0, 0 );
 	m_pSubImage = new vgui::ImagePanel( this, "SubImage" );
+
+	Q_strncpy(m_pszImageDefaultName, "", sizeof(m_pszImageDefaultName));
+	Q_strncpy(m_pszImageArmedName, "", sizeof(m_pszImageArmedName));
+	Q_strncpy(m_pszImageSelectedName, "", sizeof(m_pszImageSelectedName));
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CExImageButton::~CExImageButton()
+{
+	delete m_pSubImage;
+}
+
  //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -149,7 +166,7 @@ void CExImageButton::SetArmed( bool state )
  		char* image = m_pszImageDefaultName;
 		if ( IsArmed() )
 			image = m_pszImageArmedName;
-		if ( image )
+		else
 			m_pSubImage->SetImage(image);
 	}
 }

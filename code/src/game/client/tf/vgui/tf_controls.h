@@ -52,6 +52,7 @@ public:
 	DECLARE_CLASS_SIMPLE( CExImageButton, CExButton );
  	CExImageButton( vgui::Panel *parent, const char *name, const char *text );
 	CExImageButton( vgui::Panel *parent, const char *name, const wchar_t *wszText );
+	virtual ~CExImageButton();
  	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void SetArmed( bool state );
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );

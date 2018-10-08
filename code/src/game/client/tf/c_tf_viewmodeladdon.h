@@ -7,8 +7,6 @@
 #ifndef C_TF_VIEWMODELENT_H
 #define C_TF_VIEWMODELENT_H
 
-#include "cbase.h"
-#include "c_baseanimating.h"
 #include "c_baseviewmodel.h"
 #include "c_playerattachedmodel.h"
 
@@ -22,6 +20,7 @@ public:
 	virtual bool InitializeAsClientEntity( const char *pszModelName, RenderGroup_t renderGroup );
 
 	virtual int	InternalDrawModel( int flags );
+	virtual bool OnPostInternalDrawModel( ClientModelRenderInfo_t *pInfo );
 	virtual int	DrawModel( int flags );
 	virtual int DrawOverriddenViewmodel( int flags );
 	virtual void StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask );

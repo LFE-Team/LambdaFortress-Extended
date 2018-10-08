@@ -12,6 +12,7 @@
 #include "tf_player.h"
 #else
 #include "c_tf_player.h"
+#include "model_types.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -106,6 +107,16 @@ bool CEconEntity::OnFireEvent( C_BaseViewModel *pViewModel, const Vector& origin
 void CEconEntity::ViewModelAttachmentBlending( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask )
 {
 	// NUB
+}
+
+bool CEconEntity::OnInternalDrawModel( ClientModelRenderInfo_t *pInfo )
+{
+	if ( BaseClass::OnInternalDrawModel( pInfo ) )
+	{
+		DrawEconEntityAttachedModels( this, this, pInfo, 1 );
+		return true;
+	}
+ 	return false;
 }
 
 #endif
@@ -224,3 +235,55 @@ void CEconEntity::UpdateOnRemove( void )
 	ReapplyProvision();
 	BaseClass::UpdateOnRemove();
 }
+
+#ifdef CLIENT_DLL
+void DrawEconEntityAttachedModels( C_BaseAnimating *pAnimating, C_EconEntity *pEconEntity, ClientModelRenderInfo_t const *pInfo, int iModelType )
+{
+	/*if ( pAnimating && pEconEntity && pInfo )
+	{
+		if ( pEconEntity->HasItemDefinition() )
+		{
+			CEconItemDefinition *pItemDef = pEconEntity->GetItem()->GetStaticData();
+			if ( pItemDef )
+			{
+				EconItemVisuals *pVisuals = pItemDef->GetVisuals( pEconEntity->GetTeamNumber() );
+				if ( pVisuals )
+				{
+					const char *pszModelName = NULL;
+					for ( int i = 0; i < pVisuals->attached_models.Count(); i++ )
+					{
+						switch ( iModelType )
+						{
+						case 1:
+							if ( pVisuals->attached_models[i].world_model == 1 )
+							{
+								pszModelName = pVisuals->attached_models[i].model;
+							}
+							break;
+						case 2:
+							if ( pVisuals->attached_models[i].view_model == 1 )
+							{
+								pszModelName = pVisuals->attached_models[i].model;
+							}
+							break;
+						};
+					}
+ 					if ( pszModelName != NULL )
+					{
+						ClientModelRenderInfo_t *pNewInfo = new ClientModelRenderInfo_t( *pInfo );
+						model_t *model = (model_t *)engine->LoadModel( pszModelName );
+						pNewInfo->pModel = model;
+ 						pNewInfo->pModelToWorld = &pNewInfo->modelToWorld;
+						// Turns the origin + angles into a matrix
+						AngleMatrix( pNewInfo->angles, pNewInfo->origin, pNewInfo->modelToWorld );
+ 						DrawModelState_t state;
+						matrix3x4_t *pBoneToWorld = NULL;
+						bool bMarkAsDrawn = modelrender->DrawModelSetup( *pNewInfo, &state, NULL, &pBoneToWorld );
+						pAnimating->DoInternalDrawModel( pNewInfo, ( bMarkAsDrawn && ( pNewInfo->flags & STUDIO_RENDER ) ) ? &state : NULL, pBoneToWorld );
+					}
+				}
+			}
+		}
+	}*/
+}
+#endif

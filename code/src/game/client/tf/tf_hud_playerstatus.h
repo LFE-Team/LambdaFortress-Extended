@@ -57,9 +57,10 @@ private:
 	float				m_flNextThink;
 
 	CTFClassImage		*m_pClassImage;
-	CTFClassImage		*m_pClassImageBG;
+	CTFImagePanel		*m_pClassImageBG;
 	CTFImagePanel		*m_pSpyImage; // used when spies are disguised
 	CTFImagePanel		*m_pSpyOutlineImage;
+	CTFImagePanel		*m_pClassModelPanelBG;
 
 	int					m_nTeam;
 	int					m_nClass;

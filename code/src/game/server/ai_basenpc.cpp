@@ -1299,7 +1299,7 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		else
 		{
 			// 35% to all other sources
-			info.SetDamage( flDamage * 0.35f );
+			info.SetDamage( flDamage * 0.65f );
 		}
 	}
 #endif
@@ -1826,7 +1826,7 @@ void CAI_BaseNPC::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecD
 		}
 		else
 		{
-			flDamage /= 0.35f;
+			flDamage /= 0.65f;
 		}
 	}
 

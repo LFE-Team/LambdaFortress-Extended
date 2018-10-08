@@ -695,6 +695,9 @@ private:
 	float				m_flTauntAttackTime;
 	int					m_iTauntAttack;
 
+	// Gunslinger taunt
+	short				m_nTauntDamageCount;
+
 	float				m_flNextCarryTalkTime;
 
 	EHANDLE				m_hTempSpawnSpot;

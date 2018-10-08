@@ -152,19 +152,20 @@ CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox_Drink, tf_weapon_lunchbox_drink )
 bool CTFLunchBox_Drink::Deploy( void )
 {
 #ifdef CLIENT_DLL
-	int iType = 0;
-	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
-	if ( iType == 0 ) // it's a bonk
+	ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
+
+	CEconItemDefinition *pStatic = m_Item.GetStaticData();
+	if ( pStatic )
 	{
-		ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
-	}
-	else if ( iType == 1 )
-	{ // it's a bonk again
-		ParticleProp()->Create( "energydrink_splash", PATTACH_ABSORIGIN_FOLLOW );
-	} // it's a cola
-	else if ( iType == 2 )
-	{
-		ParticleProp()->Create( "energydrink_cola_splash", PATTACH_ABSORIGIN_FOLLOW );
+		EconItemVisuals *pVisuals =	pStatic->GetVisuals( GetTeamNumber() );
+		if ( pVisuals )
+		{
+			const char *pszCustomEffectName = pVisuals->custom_particlesystem;
+			if ( pszCustomEffectName[0] != '\0' )
+			{
+				ParticleProp()->Create( pszCustomEffectName, PATTACH_ABSORIGIN_FOLLOW );
+			}
+		}
 	}
 #endif
 

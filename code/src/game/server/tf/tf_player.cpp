@@ -1597,20 +1597,9 @@ void CTFPlayer::Regenerate( void )
 void CTFPlayer::InitClass( void )
 {
 	// Set initial health and armor based on class.
-	int iHealthToAdd = 0;
-	CALL_ATTRIB_HOOK_INT( iHealthToAdd, add_maxhealth );
-	if( iHealthToAdd != 0 )
-	{
-		SetMaxHealth( GetPlayerClass()->GetMaxHealth() + iHealthToAdd );
-		SetHealth( GetMaxHealth() + iHealthToAdd );
-		m_Shared.SetMaxHealth( GetMaxHealth() + iHealthToAdd );
-	}
-	else
-	{
-		SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
-		SetHealth( GetMaxHealth() );
-		m_Shared.SetMaxHealth( GetMaxHealth() );
-	}
+	SetMaxHealth( GetPlayerClass()->GetMaxHealth() );
+	SetHealth( GetMaxHealth() );
+	m_Shared.SetMaxHealth( GetMaxHealth() );
 
 	SetArmorValue( GetPlayerClass()->GetMaxArmor() );
 
@@ -1795,13 +1784,14 @@ void CTFPlayer::GiveDefaultItems()
 			pObject->DetonateObject();
 			SwitchToNextBestWeapon( GetActiveWeapon() );
 		}
- 		// destroy any planted buildings
+ 		// Check if we have any planted buildings
  		for ( int i = GetObjectCount()-1; i >= 0; i-- )
  		{
  			CBaseObject *obj = GetObject( i );
  			Assert( obj );
  
- 			if ( obj )
+			// Destroy our sentry if we have one up
+			if ( obj && obj->GetType() == OBJ_SENTRYGUN )
  			{
  				obj->DetonateObject();
  			}		
@@ -4037,7 +4027,7 @@ int CTFPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	else
 	{
 		float flHealthToAdd = flHealth;
-		float flMaxHealth = m_Shared.GetMaxHealth();
+		float flMaxHealth = GetMaxHealth();
 		
 		// don't want to add more than we're allowed to have
 		if ( flHealthToAdd > flMaxHealth - m_iHealth )
@@ -4645,7 +4635,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		else
 		{
 			// 35% to all other sources
-			info.SetDamage( flDamage * 0.35f );
+			info.SetDamage( flDamage * 0.65f );
 		}
 	}
 
@@ -5068,7 +5058,7 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector &vecDir
 		}
 		else
 		{
-			flDamage /= 0.35f;
+			flDamage /= 0.65f;
 		}
 	}
 
@@ -8495,7 +8485,7 @@ void CTFPlayer::Taunt( void )
 			SetAbsVelocity( vec3_origin );
 		}
 
-		if ( Q_stricmp( szResponse, "scenes/player/medic/low/taunt03.vcd" ) == 0 )
+		if ( V_stricmp( szResponse, "scenes/player/medic/low/taunt03.vcd" ) == 0 )
 		{
 			EmitSound( "Taunt.MedicViolin" );
 		}
@@ -8521,43 +8511,38 @@ void CTFPlayer::Taunt( void )
 			};
 		}
 
-		else if ( Q_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
+		if ( V_stricmp( szResponse, "scenes/player/pyro/low/taunt02.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
 			m_iTauntAttack = TAUNTATK_PYRO_HADOUKEN;
 		}
-		else if ( Q_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
+		else if ( V_stricmp( szResponse, "scenes/player/heavy/low/taunt03_v1.vcd" ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_HEAVY_HIGH_NOON;
 		}
-		else if ( Q_stricmp( szResponse, "scenes/player/spy/low/taunt03_v1.vcd" ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/spy/low/taunt03", 29 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
 			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
 		}
-		else if ( Q_stricmp( szResponse, "scenes/player/spy/low/taunt03_v2.vcd" ) == 0 )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 1.8f;
-			m_iTauntAttack = TAUNTATK_SPY_FENCING_SLASH_A;
-		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/sniper/low/taunt04", 32 ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/sniper/low/taunt04", 32 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 0.85f;
 			m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_IMPALE;
 		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/medic/low/taunt08.vcd", 32 ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/medic/low/taunt08.vcd", 32 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 2.2f;
 			m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_IMPALE;
 		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/medic/low/taunt06.vcd", 32 ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/medic/low/taunt06.vcd", 32 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 0.35;
 			m_iTauntAttack = TAUNTATK_MEDIC_INHALE;
 			DispatchParticleEffect( ConstructTeamParticle( "healhuff_%s", GetTeamNumber(), false, g_aTeamNamesShort ), PATTACH_POINT_FOLLOW, this, "eyes" );
 		}
-		else if ( Q_strnicmp( szResponse, "scenes/player/scout/low/taunt05_v1.vcd", 32 ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/scout/low/taunt05_v1.vcd", 32 ) == 0 )
 		{
 			m_flTauntAttackTime = gpGlobals->curtime + 4.03f;
 			m_iTauntAttack = TAUNTATK_SCOUT_GRAND_SLAM;
@@ -8577,9 +8562,9 @@ void CTFPlayer::Taunt( void )
 			m_flTauntAttackTime = gpGlobals->curtime + 2.0f;
 			m_iTauntAttack = TAUNTATK_PYRO_SCORCHSHOT;
 		}
-		else if ( V_stricmp( szResponse, "scenes/player/engineer/low/taunt09.vcd" ) == 0 )
+		else if ( V_strnicmp( szResponse, "scenes/player/engineer/low/taunt09.vcd", 32 ) == 0 )
 		{
-			m_flTauntAttackTime = gpGlobals->curtime + 1.0f;
+			m_flTauntAttackTime = gpGlobals->curtime + 3.2f;
 			m_iTauntAttack = TAUNTATK_ENGINEER_ARM_IMPALE;
 		}
 		else if ( V_stricmp( szResponse, "scenes/player/demoman/low/taunt09.vcd" ) == 0 )
@@ -8804,6 +8789,9 @@ void CTFPlayer::DoTauntAttack( void )
 		case TAUNTATK_SNIPER_ARROW_STAB_KILL:
 		case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
 		case TAUNTATK_MEDIC_UBERSLICE_KILL:
+		case TAUNTATK_ENGINEER_ARM_IMPALE:
+		case TAUNTATK_ENGINEER_ARM_BLEND:
+		case TAUNTATK_ENGINEER_ARM_KILL:
 		{
 			// Trace a bit ahead.
 			Vector vecSrc, vecShotDir, vecEnd;
@@ -8823,7 +8811,7 @@ void CTFPlayer::DoTauntAttack( void )
 				if ( pPlayer && !InSameTeam( pPlayer ) )
 				{
 					// First hit stuns, next hit kills.
-					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE );
+					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || iTauntType == TAUNTATK_ENGINEER_ARM_IMPALE || iTauntType == TAUNTATK_ENGINEER_ARM_BLEND );
 					Vector vecForce, vecDamagePos;
 
 					if ( bStun )
@@ -8839,16 +8827,25 @@ void CTFPlayer::DoTauntAttack( void )
 					}
 
 					float flDamage = bStun ? 1.0f : 500.0f;
-					int nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
+					int nDamageType = ( iTauntType == TAUNTATK_ENGINEER_ARM_KILL ) ? DMG_BLAST : DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
 					int iCustomDamage = 0;
-					if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_SNIPER_ARROW_STAB_KILL )
+
+					switch ( iTauntType )
 					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
-					}
-					else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
-					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
-					}
+						case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
+						case TAUNTATK_SNIPER_ARROW_STAB_KILL:
+							iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
+							break;
+						case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
+						case TAUNTATK_MEDIC_UBERSLICE_KILL:
+							iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
+							break;
+						case TAUNTATK_ENGINEER_ARM_IMPALE:
+						case TAUNTATK_ENGINEER_ARM_BLEND:
+						case TAUNTATK_ENGINEER_ARM_KILL:
+							iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL;
+							break;
+					};
 
 					vecDamagePos = tr.endpos;
 
@@ -8862,11 +8859,10 @@ void CTFPlayer::DoTauntAttack( void )
 					CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iCustomDamage );
 					pPlayer->TakeDamage( info );
 				}
-
-				if ( pNPC && !InSameTeam( pNPC ) )
+				else if ( pNPC && !InSameTeam( pNPC ) )
 				{
 					// First hit stuns, next hit kills.
-					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE );
+					bool bStun = ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || iTauntType == TAUNTATK_ENGINEER_ARM_IMPALE || iTauntType == TAUNTATK_ENGINEER_ARM_BLEND );
 					Vector vecForce, vecDamagePos;
 
 					if ( bStun )
@@ -8882,23 +8878,32 @@ void CTFPlayer::DoTauntAttack( void )
 					}
 
 					float flDamage = bStun ? 1.0f : 500.0f;
-					int nDamageType = DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
+					int nDamageType = ( iTauntType == TAUNTATK_ENGINEER_ARM_KILL ) ? DMG_BLAST : DMG_SLASH | DMG_PREVENT_PHYSICS_FORCE;
 					int iCustomDamage = 0;
-					if ( iTauntType == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntType == TAUNTATK_SNIPER_ARROW_STAB_KILL )
+
+					switch ( iTauntType )
 					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
-					}
-					else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_IMPALE || iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
-					{
-						iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
-					}
+						case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
+						case TAUNTATK_SNIPER_ARROW_STAB_KILL:
+							iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB;
+							break;
+						case TAUNTATK_MEDIC_UBERSLICE_IMPALE:
+						case TAUNTATK_MEDIC_UBERSLICE_KILL:
+							iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_UBERSLICE;
+							break;
+						case TAUNTATK_ENGINEER_ARM_IMPALE:
+						case TAUNTATK_ENGINEER_ARM_BLEND:
+						case TAUNTATK_ENGINEER_ARM_KILL:
+							iCustomDamage = TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL;
+							break;
+					};
 
 					vecDamagePos = tr.endpos;
 
 					if ( bStun )
 					{
 						// Stun the NPC.
-						pNPC->SetPlaybackRate( 0.0f );
+						pNPC->SetPlaybackRate( 0.01f );
 					}
 				
 					CTakeDamageInfo info( this, this, GetActiveTFWeapon(), vecForce, vecDamagePos, flDamage, nDamageType, iCustomDamage );
@@ -8915,12 +8920,32 @@ void CTFPlayer::DoTauntAttack( void )
 					m_flTauntAttackTime = gpGlobals->curtime + 0.75f;
 					m_iTauntAttack = TAUNTATK_MEDIC_UBERSLICE_KILL;
 				}
-
+				else if ( iTauntType == TAUNTATK_ENGINEER_ARM_IMPALE )
+				{
+					// Reset the damage counter
+					m_nTauntDamageCount = 0;
+ 					m_flTauntAttackTime = gpGlobals->curtime + 0.05f;
+					m_iTauntAttack = TAUNTATK_ENGINEER_ARM_BLEND;
+				}
+				else if ( iTauntType == TAUNTATK_ENGINEER_ARM_BLEND )
+				{
+					// Increment the damage counter
+					m_nTauntDamageCount++;
+ 					m_flTauntAttackTime = gpGlobals->curtime + 0.05f;
+ 					if ( m_nTauntDamageCount == 13 )
+					{
+						m_iTauntAttack = TAUNTATK_ENGINEER_ARM_KILL;
+					}
+					else
+					{
+						m_iTauntAttack = TAUNTATK_ENGINEER_ARM_BLEND;
+					}
+				}
 				else if ( iTauntType == TAUNTATK_MEDIC_UBERSLICE_KILL )
 				{
 					CWeaponMedigun *pMedigun = GetMedigun();
 
-					if (pMedigun)
+					if ( pMedigun )
 					{
 						// Successful kills gain +50% ubercharge
 						pMedigun->AddCharge( 0.50 );
@@ -11070,7 +11095,16 @@ const impactdamagetable_t &CTFPlayer::GetPhysicsImpactDamageTable()
 //-----------------------------------------------------------------------------
 int CTFPlayer::GetMaxHealth( void ) const
 {
-	return m_iMaxHealth;
+	int iHealthToAdd = 0;
+	CALL_ATTRIB_HOOK_INT( iHealthToAdd, add_maxhealth );
+	if( iHealthToAdd != 0 )
+	{
+		return m_iMaxHealth + iHealthToAdd;
+	}
+	else
+	{
+		return m_iMaxHealth;
+	}
 }
 
 //-----------------------------------------------------------------------------

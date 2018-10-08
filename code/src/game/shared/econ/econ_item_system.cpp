@@ -324,11 +324,20 @@ public:
 			else if ( !V_stricmp( pVisualData->GetName(), "player_poseparam" ) )
 			{
 				GET_VALUES_FAST_BOOL( pVisuals->player_poseparam, pVisualData );
-			}/*
-			else if ( !V_stricmp( pVisualData->GetName(), "attached_models" ) )
+			}
+			else if ( !V_stricmp( pVisualData->GetName(), "attached_model" ) )
 			{
-				GET_VALUES_FAST_STRING( pVisuals->attached_models, pVisualData );
-			}*/
+				attachedmodel_t attached_model;
+				attached_model.view_model = pVisualData->GetInt( "view_model" );
+				attached_model.world_model = pVisualData->GetInt( "world_model" );
+				V_strncpy( attached_model.model, pVisualData->GetString( "model" ), sizeof( attached_model.model ) );
+				V_strncpy( attached_model.attachment, pVisualData->GetString( "attachment" ), sizeof( attached_model.attachment ) );
+ 				pVisuals->attached_models.AddToTail( attached_model );
+			}
+			else if ( !V_strcmp( pVisualData->GetName(), "custom_particlesystem" ) )
+			{
+				V_strncpy( pVisuals->custom_particlesystem, pVisualData->GetString( "system" ), sizeof( pVisuals->custom_particlesystem ) );
+			}
 			else if ( !V_stricmp( pVisualData->GetName(), "animation_replacement" ) )
 			{
 				for ( KeyValues *pKeyData = pVisualData->GetFirstSubKey(); pKeyData != NULL; pKeyData = pKeyData->GetNextKey() )
@@ -698,10 +707,21 @@ void CEconItemSchema::Precache( void )
 				if ( pVisuals->aWeaponSounds[i][0] != '\0' )
 					CBaseEntity::PrecacheScriptSound( pVisuals->aWeaponSounds[i] );
 			}
-/*
-			if ( pVisuals->attached_models[0] != '\0' )
-				CBaseEntity::PrecacheModel( pItem->attached_models );
-*/
+
+			// Precache attachments.
+			for ( int i = 0; i < pVisuals->attached_models.Count(); i++ )
+			{
+				const char *pszModel = pVisuals->attached_models[i].model;
+				if ( pszModel != '\0' )
+					CBaseEntity::PrecacheModel( pszModel );
+			}
+
+			// Precache custom particles
+			const char *pszParticle = pVisuals->custom_particlesystem;
+			if ( pszParticle[0] != '\0' )
+			{
+				PrecacheParticleSystem( pszParticle );
+			}
 		}
 
 		// Cache all attrbute names.

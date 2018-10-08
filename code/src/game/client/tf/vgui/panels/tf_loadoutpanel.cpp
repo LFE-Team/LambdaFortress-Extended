@@ -563,6 +563,8 @@ void CTFLoadoutPanel::UpdateModelWeapons( void )
 				}
 			}
 		}
+
+		//m_pClassModelPanel->SetPoseParameterByName( "r_hand_grip", 16.0f );
 	}
 
 	// Set the animation.

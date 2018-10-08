@@ -589,13 +589,12 @@ int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
 	if( tr.fraction == 1.0 || !tr.m_pEnt )
 	{
 
-#ifdef HL2_EPISODIC
-
-		// If our trace was unobstructed but we were shooting 
-		if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
-			return COND_CAN_MELEE_ATTACK1;
-
-#endif // HL2_EPISODIC
+		if ( hl2_episodic.GetBool() )
+		{
+			// If our trace was unobstructed but we were shooting 
+			if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
+				return COND_CAN_MELEE_ATTACK1;
+		}
 
 		// This attack would miss completely. Trick the zombie into moving around some more.
 		return COND_TOO_FAR_TO_ATTACK;
@@ -635,19 +634,18 @@ int CNPC_BaseZombie::MeleeAttack1Conditions ( float flDot, float flDist )
 		}
 	}
 
-#ifdef HL2_EPISODIC
-
-	if ( !tr.m_pEnt->IsWorld() && GetEnemy() && GetEnemy()->GetGroundEntity() == tr.m_pEnt )
+	if ( hl2_episodic.GetBool() )
 	{
-		//Try to swat whatever the player is standing on instead of acting like a dill.
-		return COND_CAN_MELEE_ATTACK1;
+		if ( !tr.m_pEnt->IsWorld() && GetEnemy() && GetEnemy()->GetGroundEntity() == tr.m_pEnt )
+		{
+			//Try to swat whatever the player is standing on instead of acting like a dill.
+			return COND_CAN_MELEE_ATTACK1;
+		}
+
+		// Bullseyes are given some grace on if they can be hit
+		if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
+			return COND_CAN_MELEE_ATTACK1;
 	}
-
-	// Bullseyes are given some grace on if they can be hit
-	if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
-		return COND_CAN_MELEE_ATTACK1;
-
-#endif // HL2_EPISODIC
 
 	// Move around some more
 	return COND_TOO_FAR_TO_ATTACK;
@@ -1843,13 +1841,11 @@ void CNPC_BaseZombie::BuildScheduleTestBits( void )
 		ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
 		ClearCustomInterruptCondition( COND_HEAVY_DAMAGE );
 	}
-#ifndef HL2_EPISODIC
-	else if ( m_flNextFlinch >= gpGlobals->curtime )
+	else if ( m_flNextFlinch >= gpGlobals->curtime && !hl2_episodic.GetBool() )
 	{
 		ClearCustomInterruptCondition( COND_LIGHT_DAMAGE );
 		ClearCustomInterruptCondition( COND_HEAVY_DAMAGE );
 	}
-#endif // !HL2_EPISODIC
 
 	// Everything should be interrupted if we get killed.
 	SetCustomInterruptCondition( COND_ZOMBIE_RELEASECRAB );
@@ -2189,10 +2185,11 @@ void CNPC_BaseZombie::StartTask( const Task_t *pTask )
 
 	case TASK_ZOMBIE_WAIT_POST_MELEE:
 		{
-#ifndef HL2_EPISODIC
-			TaskComplete();
-			return;
-#endif
+			if ( !hl2_episodic.GetBool() )
+			{
+				TaskComplete();
+				return;
+			}
 
 			// Don't wait when attacking the player
 			if ( GetEnemy() && GetEnemy()->IsPlayer() )

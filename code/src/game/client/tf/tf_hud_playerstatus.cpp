@@ -29,6 +29,7 @@ using namespace vgui;
 
 extern ConVar tf_max_health_boost;
 
+ConVar cl_hud_playerclass_use_playermodel( "cl_hud_playerclass_use_playermodel", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "Use player model in player class HUD." );
 
 static char *g_szBlueClassImages[] = 
 { 
@@ -66,13 +67,13 @@ static char *g_szRedClassImages[] =
 CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : EditablePanel( parent, name )
 {
 	m_pClassImage = new CTFClassImage( this, "PlayerStatusClassImage" );
-	//m_pClassImageBG = new CTFClassImage(this, "PlayerStatusClassImageBG");
+	m_pClassImageBG = new CTFImagePanel(this, "PlayerStatusClassImageBG");
 	m_pSpyImage = new CTFImagePanel( this, "PlayerStatusSpyImage" );
 	m_pSpyOutlineImage = new CTFImagePanel( this, "PlayerStatusSpyOutlineImage" );
 
 	// This is used by retail TF2 to display the characters as models instead of images
 	//m_pClassModelPanel = new CTFPlayerModelPanel(this, "classmodelpanel");
-	//m_pClassModelPanelBG = new CTFImagePanel(this, "classmodelpanelBG");
+	m_pClassModelPanelBG = new CTFImagePanel( this, "classmodelpanelBG" );
 	// It's activated using cl_hud_playerclass_use_playermodel. The description for it is
 	// "Use player model in player class HUD."
 
@@ -191,6 +192,23 @@ void CTFHudPlayerClass::OnThink()
 						m_pClassImage->SetClass( m_nTeam, m_nClass, iCloakState );
 					}
 				}
+			}
+
+			if ( cl_hud_playerclass_use_playermodel.GetBool() )
+			{
+				if ( m_pClassImageBG->IsVisible() )
+					m_pClassImageBG->SetVisible( false );
+
+				if ( !m_pClassModelPanelBG->IsVisible() )
+					m_pClassModelPanelBG->SetVisible( true );
+			}
+			else
+			{
+				if ( !m_pClassImageBG->IsVisible() )
+					m_pClassImageBG->SetVisible( true );
+
+				if ( m_pClassModelPanelBG->IsVisible() )
+					m_pClassModelPanelBG->SetVisible( false );
 			}
 		}
 
@@ -314,7 +332,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 
 	// bleeds
 	m_pHealthBleedImage = new ImagePanel( this, "PlayerStatusBleedImage" );
-	//m_pHealthBleedImage = dynamic_cast< ImagePanel * >(FindChildByName("PlayerStatusBleedImage"));
 	m_pHealthHookBleedImage = new ImagePanel( this, "PlayerStatusHookBleedImage" );
 
 	// conds
@@ -585,6 +602,11 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 			{
 				if ( !m_pHealthSoldierOffenseBuff->IsVisible() )
 					m_pHealthSoldierOffenseBuff->SetVisible( true );
+
+				if ( pPlayer->GetTeamNumber() == TF_TEAM_RED )
+					m_pHealthSoldierOffenseBuff->SetImage( "../Effects/soldier_buff_offense_red" );
+				else
+					m_pHealthSoldierOffenseBuff->SetImage( "../Effects/soldier_buff_offense_blue" );
 			}
 			else
 			{
@@ -596,6 +618,11 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 			{
 				if ( !m_pHealthSoldierDefenseBuff->IsVisible() )
 					m_pHealthSoldierDefenseBuff->SetVisible( true );
+
+				if ( pPlayer->GetTeamNumber() == TF_TEAM_RED )
+					m_pHealthSoldierDefenseBuff->SetImage( "../Effects/soldier_buff_defense_red" );
+				else
+					m_pHealthSoldierDefenseBuff->SetImage( "../Effects/soldier_buff_defense_blue" );
 			}
 			else
 			{
@@ -607,6 +634,11 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 			{
 				if ( !m_pHealthSoldierHealOnHitBuff->IsVisible() )
 					m_pHealthSoldierHealOnHitBuff->SetVisible( true );
+
+				if ( pPlayer->GetTeamNumber() == TF_TEAM_RED )
+					m_pHealthSoldierHealOnHitBuff->SetImage( "../Effects/soldier_buff_healonhit_red" );
+				else
+					m_pHealthSoldierHealOnHitBuff->SetImage( "../Effects/soldier_buff_healonhit_blue" );
 			}
 			else
 			{

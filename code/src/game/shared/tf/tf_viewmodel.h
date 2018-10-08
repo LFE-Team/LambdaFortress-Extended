@@ -89,6 +89,8 @@ public:
 
 	virtual void			FireEvent( const Vector& origin, const QAngle& angles, int event, const char *options );
 
+	virtual bool			OnPostInternalDrawModel( ClientModelRenderInfo_t *pInfo );
+
 	virtual C_BaseEntity	*GetItemTintColorOwner( void ) { return GetOwner(); }
 
 #endif
