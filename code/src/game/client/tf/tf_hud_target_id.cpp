@@ -464,7 +464,7 @@ void CTargetID::UpdateID( void )
 				if ( m_pMoveableSubPanel->IsVisible() )
 					m_pMoveableSubPanel->SetVisible( false );
 			}
-			else if ( pEnt->IsCombatItem() )
+			else if ( pEnt->IsCombatItem() /*&& pEnt->IsVisibleToTargetID()*/ )
 			{
 				const char *printFormatString = NULL;
 				C_TFReviveMarker *pMarker = assert_cast<CTFReviveMarker *>( pEnt );
@@ -502,7 +502,7 @@ void CTargetID::UpdateID( void )
 		m_pBGPanel->SetBGImage( iColorNum );
 
 		// Setup avatar
-		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer /*&& !g_PR->IsFakePlayer( m_iTargetEntIndex )*/ && m_pAvatar )
+		if ( tf_hud_target_id_show_avatars.GetBool() && pAvatarPlayer && !g_PR->IsFakePlayer( m_iTargetEntIndex ) && m_pAvatar )
 		{
 			if ( !m_pAvatar->IsVisible() )
 				m_pAvatar->SetVisible( true );
