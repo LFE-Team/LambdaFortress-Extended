@@ -28,7 +28,6 @@
 #include "c_team_objectiveresource.h"
 #include "tf_hud_flagstatus.h"
 #include "tf_hud_objectivestatus.h"
-#include "tf_hud_deathmatchstatus.h"
 #include "tf_spectatorgui.h"
 #include "teamplayroundbased_gamerules.h"
 #include "tf_gamerules.h"

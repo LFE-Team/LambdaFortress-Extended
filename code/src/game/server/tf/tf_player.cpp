@@ -1097,7 +1097,9 @@ void CTFPlayer::Precache()
 	PrecacheParticleSystem( "flashlight_thirdperson" );
 	PrecacheParticleSystem( "flashlight_firstperson_" );
 	PrecacheTeamParticles( "soldierbuff_%s_buffed" );
-					 
+
+	PrecacheScriptSound( "MVM.PlayerRevived" );
+
 	BaseClass::Precache();
 }
 
@@ -6275,6 +6277,9 @@ void CTFPlayer::DropPowerups( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::DropReviveMarker( void )
 {
+	if ( m_Shared.IsLoser() )
+		return;
+
 	CTFReviveMarker *pMarker = CTFReviveMarker::Create( WorldSpaceCenter(), vec3_angle, this, GetDesiredPlayerClassIndex() );
 	m_hReviveSpawnSpot = pMarker;
 }

@@ -3887,7 +3887,6 @@ IMaterial *CWeaponInvisProxy::GetMaterial()
 }
 
 EXPOSE_INTERFACE( CWeaponInvisProxy, IMaterialProxy, "weapon_invis" IMATERIAL_PROXY_INTERFACE_VERSION );
-
 #endif // CLIENT_DLL
 
 CTFWeaponInfo *GetTFWeaponInfo( int iWeapon )

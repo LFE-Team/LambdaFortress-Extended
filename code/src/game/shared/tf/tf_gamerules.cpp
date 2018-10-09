@@ -7335,7 +7335,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
  	// Npcs and Players don't collide with birds
 	if ( collisionGroup1 == HL2COLLISION_GROUP_CROW )
 	{
-		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_CROW )
+		if ( collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup0 == COLLISION_GROUP_NPC || collisionGroup0 == HL2COLLISION_GROUP_CROW )
 			return false;
 	}
 
