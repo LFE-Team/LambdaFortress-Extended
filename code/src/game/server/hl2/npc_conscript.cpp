@@ -467,9 +467,12 @@ void CNPC_Conscript::HandleAnimEvent( animevent_t *pEvent )
 //=========================================================
 void CNPC_Conscript::Spawn()
 {
-	if ( sv_hl2_beta.GetFloat() == 1 )
+	if (sv_hl2_beta.GetFloat() == 0)
 	{
-		
+		UTIL_Remove(this);
+		return;
+	}
+
 	Precache( );
 	SetModel( STRING( GetModelName() ));
 
@@ -523,9 +526,6 @@ void CNPC_Conscript::Spawn()
 	{
 		m_bIsFemale = false;
 	}
-
-
-
 
 	if (FClassnameIs(this, "npc_conscriptred")) //LF:E 
 	{
