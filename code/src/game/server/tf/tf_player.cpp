@@ -10219,6 +10219,7 @@ uint64 powerplay_ids[] =
 	76561198080213691 ^ powerplaymask,		// alex
 	76561198031570068 ^ powerplaymask,		// leakdealer
 	76561198033171144 ^ powerplaymask,		// agent agrimar
+    76561198013541469 ^ powerplaymask,		// ficool2
 };
 
 //-----------------------------------------------------------------------------

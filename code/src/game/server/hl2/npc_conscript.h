@@ -22,6 +22,17 @@
 
 //#if 0
 #include "npc_talker.h"
+#include "ai_basenpc.h"
+#include "ai_basehumanoid.h"
+#include "ai_behavior.h"
+#include "ai_behavior_assault.h"
+#include "ai_behavior_standoff.h"
+#include "ai_behavior_follow.h"
+#include "ai_behavior_functank.h"
+#include "ai_behavior_rappel.h"
+#include "ai_behavior_actbusy.h"
+#include "ai_sentence.h"
+#include "ai_baseactor.h"
 
 //=========================================================
 //	>> CNPC_Conscript
@@ -54,6 +65,8 @@ public:
 	Activity		NPC_TranslateActivity( Activity eNewActivity );
 	WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
 
+	EHANDLE m_hPhysicsEnt;
+
 	// Override these to set behavior
 	virtual int		TranslateSchedule( int scheduleType );
 	virtual int		SelectSchedule( void );
@@ -63,6 +76,8 @@ public:
 	
 	void			TalkInit( void );
 
+	bool			CreateBehaviors();
+
 	void			TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 
 	bool			m_fGunDrawn;
@@ -71,7 +86,15 @@ public:
 	float			m_nextLineFireTime;
 	bool			m_lastAttackCheck;
 	bool			m_bInBarnacleMouth;
+	bool			m_bIsFemale;
+	int				m_iPersonality;
 
+	CAI_ActBusyBehavior			m_ActBusyBehavior;
+
+	bool FindNearestPhysicsObject( int iMaxMass );
+	virtual bool CanSwatPhysicsObjects( void ) { return true; }
+	float DistToPhysicsEnt( void );
+	int GetSwatActivity( void );
 
 	//=========================================================
 	// Conscript Tasks
@@ -91,10 +114,14 @@ public:
 		SCHED_CONSCRIPT_FACE_TARGET,
 		SCHED_CONSCRIPT_STAND,
 		SCHED_CONSCRIPT_AIM,
+		SCHED_CONSCRIPT_FIRE_RPG,
+		SCHED_CONSCRIPT_ESTABLISH_RPG_LINE_OF_FIRE,
+		SCHED_CONSCRIPT_SUPPRESSINGFIRE,
 		SCHED_CONSCRIPT_BARNACLE_HIT,
 		SCHED_CONSCRIPT_BARNACLE_PULL,
 		SCHED_CONSCRIPT_BARNACLE_CHOMP,
 		SCHED_CONSCRIPT_BARNACLE_CHEW,
+		SCHED_CONSCRIPT_CAUTIOUS_TAKECOVER,
 	};
 
 

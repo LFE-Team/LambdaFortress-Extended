@@ -2,11 +2,25 @@
 //=========================================================
 // monster template
 //=========================================================
-// UNDONE: Holster weapon?
 
 
 //Stacker/Nullen - TODO: Make them go back to following the player after combat if player made him follow before initiating combat
+
 //Stacker/Nullen - TODO #2: Give citizen medics the ability to heal them
+
+//Stacker/Nullen - TODO #3: Fix bug where npc_maker'd conscripts appear as ERROR signs if sk_conscript_model is set to "Random"
+//--------------------------Current workaround: Just use template npc_conscripts and npc_template_makers
+
+//Stacker/Nullen - TODO #4: AI personality system ( Cautious, Balanced, & Aggressive) Affects how likely they are to take cover, maneuver, & attack
+//--------------------------IMPLEMENTED AND FULLY WORKING!
+
+
+//Stacker/Nullen - TODO #5: Fix this god awful scheduling problem that just started happening 
+//-------------------------FIXED! Looks like NPCs with this outdated format don't like custom schedules being overriden with other custom ones
+//Note for the future: CUSTOM SCHEDULES BEING TRANSLATED TO OTHER CUSTOM SCHEDULES IS A BIG FUCKING NO-NO!
+
+
+//Stacker/Nullen - TODO #6: Implement gender-specific voice lines/sentences
 
 #include	"cbase.h"
 
@@ -18,20 +32,35 @@
 #include	"basecombatweapon.h"
 #include	"soundent.h"
 #include	"NPCEvent.h"
+#include	"props.h"
+#include	"npc_conscript.h"
+#include	"activitylist.h"
+
+#include "AI_Interactions.h"
+#include "ai_navigator.h"
+#include "ai_motor.h"
+#include "ai_squadslot.h"
+#include "ai_squad.h"
+#include "ai_route.h"
+#include "ai_tacticalservices.h"
 #include	"AI_Hull.h"
 #include	"AI_Node.h"
 #include	"AI_Network.h"
 #include	"ai_hint.h"
-#include	"player.h"
-#include	"npc_conscript.h"
-#include	"activitylist.h"
-#include "AI_Interactions.h"
+
+#include "basegrenade_shared.h"
+#include "grenade_frag.h"
+
+
 #include "IEffects.h"
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
 
 ConVar	sk_conscript_health( "sk_conscript_health","100");
-ConVar	sk_conscript_model( "sk_conscript_model", "models/conscript.mdl" );
+ConVar	sk_conscript_model( "sk_conscript_model", "random" );
+ConVar	sk_conscript_hostile_model("sk_conscript_hostile_model", "random" ); //Not actually functional yet
+ConVar	sk_conscript_ff_retaliation( "sk_conscript_ff_retaliation", "0"); //FULLY WORKING!
+ConVar	sk_conscript_personality_colors( "sk_conscript_personality_colors", "0"); //FULLY WORKING!
 
 
 #define CONSCRIPT_MAD 		"CONSCRIPT_MAD"
@@ -50,10 +79,37 @@ ConVar	sk_conscript_model( "sk_conscript_model", "models/conscript.mdl" );
 #define CONSCRIPT_DIE2		"CONSCRIPT_DIE2"
 #define CONSCRIPT_DIE3		"CONSCRIPT_DIE3"
 
+#define CONSCRIPT_SKIN_DEFAULT		0
+#define CONSCRIPT_SKIN_HOSTILE		1
+#define CONSCRIPT_SKIN_WASTELAND		2
+
+#define CONSCRIPT_PERSONALITY_BALANCED		 10
+#define CONSCRIPT_PERSONALITY_CAUTIOUS		 20
+#define CONSCRIPT_PERSONALITY_AGGRESSIVE     30
+
 //=========================================================
 // Combine activities
 //=========================================================
 int	ACT_CONSCRIPT_AIM;
+int	ACT_IDLE_AR1;
+int	ACT_RUN_AR1;
+int	ACT_IDLE_AR2;
+int	ACT_IDLE_ANGRY_AR1;
+int	ACT_CONSCRIPT_IDLE_ANGRY_SMG1;
+int	ACT_CONSCRIPT_SHOOT_AR1;
+int	ACT_CONSCRIPT_SHOOT_SNIPER_RIFLE;
+int	ACT_CONSCRIPT_SHOOT_SMG1;
+int	ACT_CONSCRIPT_RUN_SMG1;
+int	ACT_CONSCRIPT_WALK_SMG1;
+int	ACT_CONSCRIPT_WALK_PISTOL;
+int	ACT_CONSCRIPT_WALK_AR1;
+int	ACT_CONSCRIPT_IDLE_SMG1;
+int ACT_CONSCRIPT_IDLE_RPG;
+int ACT_CONSCRIPT_LOAD_RPG;
+int ACT_CONSCRIPT_IDLE_SHOTGUN;
+int ACT_CONSCRIPT_WALK_SHOTGUN;
+int ACT_CONSCRIPT_RUN_SHOTGUN;
+int ACT_CONSCRIPT_RELOAD_SMG1;
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -63,6 +119,7 @@ int	ACT_CONSCRIPT_AIM;
 #define		CONSCRIPT_AE_DRAW		( 2 )
 #define		CONSCRIPT_AE_SHOOT		( 3 )
 #define		CONSCRIPT_AE_HOLSTER	( 4 )
+#define		CONSCRIPT_AE_SWATITEM	( 11 )
 
 #define		CONSCRIPT_BODY_GUNHOLSTERED	0
 #define		CONSCRIPT_BODY_GUNDRAWN		1
@@ -84,18 +141,43 @@ void CNPC_Conscript::InitCustomSchedules(void)
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_FACE_TARGET);
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_STAND);
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_AIM);
+	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_FIRE_RPG);
+	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_ESTABLISH_RPG_LINE_OF_FIRE);
+	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_SUPPRESSINGFIRE);
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_HIT);
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_PULL);
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_CHOMP);
 	ADD_CUSTOM_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_CHEW);
+	ADD_CUSTOM_SCHEDULE(CNPC_Conscript, SCHED_CONSCRIPT_CAUTIOUS_TAKECOVER);
 
 	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_AIM);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_IDLE_AR1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_IDLE_AR2);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_IDLE_SMG1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_RUN_AR1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_SHOOT_AR1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_SHOOT_SMG1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_SHOOT_SNIPER_RIFLE);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_RUN_SMG1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_WALK_SMG1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_WALK_PISTOL);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_WALK_AR1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_LOAD_RPG);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_RELOAD_SMG1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_IDLE_ANGRY_AR1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_IDLE_ANGRY_SMG1);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_IDLE_SHOTGUN);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_WALK_SHOTGUN);
+	ADD_CUSTOM_ACTIVITY(CNPC_Combine,	ACT_CONSCRIPT_RUN_SHOTGUN);
 
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_FOLLOW);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_DRAW);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_FACE_TARGET);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_STAND);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_AIM);
+	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_FIRE_RPG);
+	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_ESTABLISH_RPG_LINE_OF_FIRE);
+	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_SUPPRESSINGFIRE);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_HIT);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_PULL);
 	AI_LOAD_SCHEDULE(CNPC_Conscript,	SCHED_CONSCRIPT_BARNACLE_CHOMP);
@@ -103,6 +185,8 @@ void CNPC_Conscript::InitCustomSchedules(void)
 }
 
 LINK_ENTITY_TO_CLASS( npc_conscript, CNPC_Conscript );
+LINK_ENTITY_TO_CLASS( npc_conscriptred, CNPC_Conscript ); //LF:E 
+//LINK_ENTITY_TO_CLASS( npc_conscript_wasteland, CNPC_Conscript ); 
 IMPLEMENT_CUSTOM_AI( npc_conscript, CNPC_Conscript );
 
 //---------------------------------------------------------
@@ -116,6 +200,8 @@ BEGIN_DATADESC( CNPC_Conscript )
 	DEFINE_FIELD( m_nextLineFireTime,	FIELD_TIME ),
 	DEFINE_FIELD( m_lastAttackCheck,	FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bInBarnacleMouth,	FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_hPhysicsEnt, FIELD_EHANDLE ),
+	DEFINE_KEYFIELD(m_iPersonality, FIELD_INTEGER, "AIPersonality"),
 
 END_DATADESC()
 
@@ -131,7 +217,7 @@ void CNPC_Conscript::RunTask( const Task_t *pTask )
 	case TASK_RANGE_ATTACK1:
 		if (GetEnemy() != NULL && (GetEnemy()->IsPlayer()))
 		{
-			m_flPlaybackRate = 1.5;
+			m_flPlaybackRate = 1.0;
 		}
 		BaseClass::RunTask( pTask );
 		break;
@@ -141,29 +227,94 @@ void CNPC_Conscript::RunTask( const Task_t *pTask )
 	}
 }
 
+bool CNPC_Conscript::CreateBehaviors()
+{
+		AddBehavior( &m_ActBusyBehavior ); //Doesn't work, there's probably more I need to add here -Stacker
+
+		return BaseClass::CreateBehaviors();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-Activity CNPC_Conscript::NPC_TranslateActivity( Activity eNewActivity )  
-//To  DL'ers: Comment this block out if you don't want them to limp when critically injured
+Activity CNPC_Conscript::NPC_TranslateActivity( Activity eNewActivity )  //MESSY, MESSY, MESSY! LOOK AWAY IF YOU KNOW WHAT'S GOOD FOR YOU!!!! -Stacker
 {
-		if (m_iHealth <= 15 && eNewActivity == ACT_RUN)
+
+		if ( m_NPCState == NPC_STATE_COMBAT && eNewActivity == ACT_IDLE )
 		{
-			// limp!
-			return ACT_WALK_HURT;
+			return ACT_IDLE_ANGRY;
 		}
 
+		//Override anims for new ones
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_CONSCRIPT_IDLE_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_IDLE_ANGRY ) { return (Activity)ACT_CONSCRIPT_IDLE_ANGRY_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_CONSCRIPT_RUN_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_RANGE_ATTACK_SMG1 ) { return (Activity)ACT_CONSCRIPT_SHOOT_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_RELOAD ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_RELOAD_SMG1 ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg1" ) && eNewActivity == ACT_IDLE_ANGRY_SMG1 ) { return (Activity)ACT_CONSCRIPT_IDLE_ANGRY_SMG1; }
 
-		if (m_iHealth <= 15 && eNewActivity == ACT_WALK ) 
-		{
-			// limp!
-			return ACT_WALK_HURT;
-		}
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_CONSCRIPT_IDLE_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_CONSCRIPT_RUN_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_RANGE_ATTACK_SMG1 ) { return (Activity)ACT_CONSCRIPT_SHOOT_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_RELOAD ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_RELOAD_SMG1 ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_IDLE_ANGRY ) { return (Activity)ACT_CONSCRIPT_IDLE_ANGRY_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_smg2" ) && eNewActivity == ACT_IDLE_ANGRY_SMG1 ) { return (Activity)ACT_CONSCRIPT_IDLE_ANGRY_SMG1; }
 		
-	
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_CONSCRIPT_IDLE_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_CONSCRIPT_RUN_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_RANGE_ATTACK_SMG1 ) { return (Activity)ACT_CONSCRIPT_SHOOT_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_RELOAD ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_RELOAD_SMG1 ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_IDLE_ANGRY ) { return (Activity)ACT_CONSCRIPT_IDLE_ANGRY_SMG1; }
+		if( Weapon_OwnsThisType( "weapon_tommygun" ) && eNewActivity == ACT_IDLE_ANGRY_SMG1 ) { return (Activity)ACT_CONSCRIPT_IDLE_ANGRY_SMG1; }
+
+		if( Weapon_OwnsThisType( "weapon_ar2" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_IDLE_AR2; }
+
+		if( Weapon_OwnsThisType( "weapon_oicw" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_IDLE_AR2; }
+
+		if( Weapon_OwnsThisType( "weapon_shotgun" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_CONSCRIPT_IDLE_SHOTGUN; }
+		if( Weapon_OwnsThisType( "weapon_shotgun" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_SHOTGUN; }
+		if( Weapon_OwnsThisType( "weapon_shotgun" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_CONSCRIPT_RUN_SHOTGUN; }
+
+		if( Weapon_OwnsThisType( "weapon_dbarrel" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_CONSCRIPT_IDLE_SHOTGUN; }
+		if( Weapon_OwnsThisType( "weapon_dbarrel" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_SHOTGUN; }
+		if( Weapon_OwnsThisType( "weapon_dbarrel" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_CONSCRIPT_RUN_SHOTGUN; }
+		if( Weapon_OwnsThisType( "weapon_dbarrel" ) && eNewActivity == ACT_RELOAD_SHOTGUN ) { return (Activity)ACT_CONSCRIPT_RELOAD_SMG1; }
+
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_IDLE_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_RUN_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_RANGE_ATTACK_AR2 ) { return (Activity)ACT_CONSCRIPT_SHOOT_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_RANGE_ATTACK1 ) { return (Activity)ACT_CONSCRIPT_SHOOT_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_IDLE_ANGRY ) { return (Activity)ACT_IDLE_ANGRY_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_IDLE_ANGRY_SMG1 ) { return (Activity)ACT_IDLE_ANGRY_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_AR1; }
+		if( Weapon_OwnsThisType( "weapon_ar1" ) && eNewActivity == ACT_RELOAD_SMG1 ) { return (Activity)ACT_RELOAD; }
+
+		if( Weapon_OwnsThisType( "weapon_sniperrifle" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_IDLE_AR1; }
+		if( Weapon_OwnsThisType( "weapon_sniperrifle" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_AR1; }
+		if( Weapon_OwnsThisType( "weapon_sniperrifle" ) && eNewActivity == ACT_RANGE_ATTACK_AR2 ) { return (Activity)ACT_CONSCRIPT_SHOOT_SNIPER_RIFLE; }
+
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_RANGE_ATTACK1 ) { return (Activity)ACT_CONSCRIPT_SHOOT_AR1; }
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_RANGE_ATTACK_AR2 ) { return (Activity)ACT_CONSCRIPT_SHOOT_AR1; }
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_IDLE_ANGRY ) { return (Activity)ACT_IDLE_ANGRY_AR1; }
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_IDLE_ANGRY_SMG1 ) { return (Activity)ACT_IDLE_ANGRY_AR1; }
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_IDLE ) { return (Activity)ACT_IDLE_AR1; }
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_RUN_AR1; }
+		if( Weapon_OwnsThisType( "weapon_hmg1" ) && eNewActivity == ACT_WALK ) { return (Activity)ACT_CONSCRIPT_WALK_AR1; }
+
+		if( Weapon_OwnsThisType( "weapon_annabelle" ) && eNewActivity == ACT_RANGE_ATTACK_SHOTGUN ) { return (Activity)ACT_CONSCRIPT_SHOOT_SNIPER_RIFLE; }
+
+		if( Weapon_OwnsThisType( "weapon_garand" ) && eNewActivity == ACT_RANGE_ATTACK_SHOTGUN ) { return (Activity)ACT_CONSCRIPT_SHOOT_SNIPER_RIFLE; }
+		if( Weapon_OwnsThisType( "weapon_garand" ) && eNewActivity == ACT_RUN ) { return (Activity)ACT_RUN_AR1; }
+
 	return eNewActivity;
 
 	return BaseClass::NPC_TranslateActivity( eNewActivity );
@@ -182,6 +333,7 @@ int CNPC_Conscript::GetSoundInterests ( void)
 			SOUND_MEAT		|
 			SOUND_GARBAGE	|
 			SOUND_DANGER	|
+			SOUND_BUGBAIT	|
 			SOUND_PLAYER;
 }
 
@@ -190,10 +342,23 @@ int CNPC_Conscript::GetSoundInterests ( void)
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-Class_T	CNPC_Conscript::Classify ( void )
+Class_T	CNPC_Conscript::Classify(void)
 {
-	return	CLASS_COMBINE;
+	if (FClassnameIs(this, "npc_conscript"))
+	{
+		return	CLASS_COMBINE; //LF:E
+	}
+	else (FClassnameIs(this, "npc_conscriptred")); //LF:E 
+	{
+		return	CLASS_PLAYER_ALLY;
+	}
 }
+
+	/*if (FClassnameIs(this, "npc_conscript_wasteland")) //For the Coast chapters & Airex Warzone
+	{
+		return	CLASS_TEAM1; //Only hostile temporarily, will change to CLASS_CONSCRIPT
+		//10-8-2018: NOTE TO DOWNLOADERS: You really, really, really want to change this if you don't have a CLASS_TEAM1 defined in gamerules
+	}*/  
 
 //=========================================================
 // ALertSound - barney says "Freeze!"
@@ -258,6 +423,7 @@ void CNPC_Conscript::ConscriptFirePistol ( void )
 //=========================================================
 void CNPC_Conscript::HandleAnimEvent( animevent_t *pEvent )
 {
+
 	switch( pEvent->event )
 	{
 	case CONSCRIPT_AE_RELOAD:
@@ -289,6 +455,8 @@ void CNPC_Conscript::HandleAnimEvent( animevent_t *pEvent )
 		m_fGunDrawn = false;
 		break;
 
+
+
 	default:
 		BaseClass::HandleAnimEvent( pEvent );
 	}
@@ -299,42 +467,102 @@ void CNPC_Conscript::HandleAnimEvent( animevent_t *pEvent )
 //=========================================================
 void CNPC_Conscript::Spawn()
 {
-	if ( sv_hl2_beta.GetFloat() == 1 )
+	Precache( );
+	SetModel( STRING( GetModelName() ));
+
+
+	SetHullType(HULL_HUMAN);
+	SetHullSizeNormal();
+
+	SetSolid( SOLID_BBOX );
+	AddSolidFlags( FSOLID_NOT_STANDABLE );
+	SetMoveType( MOVETYPE_STEP );
+	SetBloodColor( BLOOD_COLOR_RED );
+	m_iHealth			= sk_conscript_health.GetFloat();
+	SetViewOffset( Vector ( 0, 0, 50 ) );// position of the eyes relative to monster's origin.
+	m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
+	m_NPCState			= NPC_STATE_NONE;
+
+	m_nBody			= 0; // gun in holster
+	m_fGunDrawn			= false;
+	m_bInBarnacleMouth	= false;
+
+
+	m_nextLineFireTime	= 0;
+
+	m_HackedGunPos		= Vector ( 0, 0, 55 );
+
+	CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB | bits_CAP_NO_HIT_PLAYER | bits_CAP_FRIENDLY_DMG_IMMUNE | bits_CAP_ANIMATEDFACE );
+	CapabilitiesAdd	( bits_CAP_USE_WEAPONS | bits_CAP_SQUAD | bits_CAP_DOORS_GROUP );
+	CapabilitiesAdd	( bits_CAP_DUCK );			// In reloading and cover
+	NPCInit();
+	SetUse( &CNPCSimpleTalker::FollowerUse );
+
+	//Had to do this awful hack because a model's eyes don't scale with it if scaled via .qc. Thanks a lot, Failve! -Stacker
+	const char *pModelName = STRING( GetModelName() ); 	
+	if( !Q_stricmp( pModelName, "models/conscripts/female_01.mdl" ) ) { SetModelScale (0.97); }
+	if( !Q_stricmp( pModelName, "models/conscripts/female_02.mdl" ) ) { SetModelScale (0.97); }
+	if( !Q_stricmp( pModelName, "models/conscripts/female_03.mdl" ) ) { SetModelScale (0.97); }
+	if( !Q_stricmp( pModelName, "models/conscripts/female_04.mdl" ) ) { SetModelScale (0.97); }
+	if( !Q_stricmp( pModelName, "models/conscripts/female_06.mdl" ) ) { SetModelScale (0.97); }
+	if( !Q_stricmp( pModelName, "models/conscripts/female_07.mdl" ) ) { SetModelScale (0.97); }
+
+
+
+
+	string_t iszModelName = BaseClass::GetModelName();
+
+	if (!Q_strnicmp(STRING(iszModelName), "models/conscripts/female", 13))
 	{
-		Precache( );
-
-		SetModel( "models/conscript.mdl" );
-		SetHullType(HULL_HUMAN);
-		SetHullSizeNormal();
-
-		SetSolid( SOLID_BBOX );
-		AddSolidFlags( FSOLID_NOT_STANDABLE );
-		SetMoveType( MOVETYPE_STEP );
-		SetBloodColor( BLOOD_COLOR_RED );
-		m_iHealth			= sk_conscript_health.GetFloat();
-		SetViewOffset( Vector ( 0, 0, 50 ) );// position of the eyes relative to monster's origin.
-		m_flFieldOfView		= VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so npc will notice player and say hello
-		m_NPCState			= NPC_STATE_NONE;
-
-		m_nBody			= 0; // gun in holster
-		m_fGunDrawn			= false;
-		m_bInBarnacleMouth	= false;
-
-		m_nextLineFireTime	= 0;
-
-		m_HackedGunPos		= Vector ( 0, 0, 55 );
-
-		CapabilitiesAdd( bits_CAP_TURN_HEAD | bits_CAP_MOVE_GROUND | bits_CAP_MOVE_JUMP | bits_CAP_MOVE_CLIMB | bits_CAP_NO_HIT_PLAYER | bits_CAP_FRIENDLY_DMG_IMMUNE | bits_CAP_ANIMATEDFACE );
-		CapabilitiesAdd	( bits_CAP_USE_WEAPONS | bits_CAP_SQUAD );
-		CapabilitiesAdd	( bits_CAP_DUCK );			// In reloading and cover
-
-		NPCInit();
-		SetUse( &CNPCSimpleTalker::FollowerUse );
+		m_bIsFemale = true; //Use female voice lines if set to true (Not yet implemented)
 	}
 	else
 	{
-		Remove();
+		m_bIsFemale = false;
 	}
+
+
+
+
+	if (FClassnameIs(this, "npc_conscriptred")) //LF:E 
+	{
+	    SetModel( "models/conscript_red.mdl" );
+	}
+
+	/*if (FClassnameIs(this, "npc_conscript_wasteland")) 
+	{
+		m_nSkin = CONSCRIPT_SKIN_WASTELAND; //Use wasteland-themed outfit
+	}*/ 
+
+	if (m_iPersonality == 0)
+	{
+		int pmin = 1;
+		int pmax = 3;
+		double scaled = (double)rand()/RAND_MAX;
+		int r = (pmax - pmin +1)*scaled + pmin;
+
+		if (r == 1)	{ m_iPersonality = CONSCRIPT_PERSONALITY_BALANCED; }
+		if (r == 2)	{ m_iPersonality = CONSCRIPT_PERSONALITY_CAUTIOUS; }
+		if (r == 3)	{ m_iPersonality = CONSCRIPT_PERSONALITY_AGGRESSIVE; }
+	}
+
+if ( sk_conscript_personality_colors.GetInt() != 0 )
+{
+	if (m_iPersonality == CONSCRIPT_PERSONALITY_BALANCED )
+	{
+		SetRenderColor( 255, 255, 0, 255);
+	}
+
+	if (m_iPersonality == CONSCRIPT_PERSONALITY_CAUTIOUS )
+	{
+		SetRenderColor( 0, 0, 255, 255);
+	}
+
+	if (m_iPersonality == CONSCRIPT_PERSONALITY_AGGRESSIVE )
+	{
+		SetRenderColor( 255, 0, 0, 255);
+	}
+}
 }
 
 //=========================================================
@@ -343,7 +571,56 @@ void CNPC_Conscript::Spawn()
 void CNPC_Conscript::Precache()
 {
 	engine->PrecacheModel("models/conscript.mdl");
+	engine->PrecacheModel("models/conscript_red.mdl"); //LF:E
 	engine->PrecacheModel( sk_conscript_model.GetString() );
+	engine->PrecacheModel("models/conscripts/male_01.mdl");
+	engine->PrecacheModel("models/conscripts/male_02.mdl");
+	engine->PrecacheModel("models/conscripts/male_03.mdl");
+	engine->PrecacheModel("models/conscripts/male_04.mdl");
+	engine->PrecacheModel("models/conscripts/male_05.mdl");
+	engine->PrecacheModel("models/conscripts/male_06.mdl");
+	engine->PrecacheModel("models/conscripts/male_07.mdl");
+	engine->PrecacheModel("models/conscripts/male_08.mdl");
+	engine->PrecacheModel("models/conscripts/male_09.mdl");
+	engine->PrecacheModel("models/conscripts/female_01.mdl");
+	engine->PrecacheModel("models/conscripts/female_02.mdl");
+	engine->PrecacheModel("models/conscripts/female_03.mdl");
+	engine->PrecacheModel("models/conscripts/female_04.mdl");
+	engine->PrecacheModel("models/conscripts/female_06.mdl");
+	engine->PrecacheModel("models/conscripts/female_07.mdl");
+	engine->PrecacheModel("random"); //Evil fucking hack
+
+	const char *pModelName = STRING( GetModelName() ); 	
+	if( !Q_stricmp( pModelName, "random" ) )
+	{
+			int min = 1;
+			int max = 15;
+			double scaled = (double)rand()/RAND_MAX;
+			int r = (max - min +1)*scaled + min;
+	
+			if		(r == 1)	{ SetModel( "models/conscripts/male_01.mdl"); }
+			else if (r == 2)	{ SetModel( "models/conscripts/female_01.mdl"); }
+			else if (r == 3)	{ SetModel( "models/conscripts/male_02.mdl"); }
+			else if (r == 4)	{ SetModel( "models/conscripts/female_02.mdl"); }
+			else if (r == 5)	{ SetModel( "models/conscripts/male_03.mdl"); }
+			else if (r == 6)	{ SetModel( "models/conscripts/female_03.mdl"); }
+			else if (r == 7)	{ SetModel( "models/conscripts/male_04.mdl"); }
+			else if (r == 8)	{ SetModel( "models/conscripts/female_04.mdl"); }
+			else if (r == 9)	{ SetModel( "models/conscripts/male_05.mdl"); }
+			else if (r == 10)	{ SetModel( "models/conscripts/female_06.mdl"); }
+			else if (r == 11)	{ SetModel( "models/conscripts/male_06.mdl"); }
+			else if (r == 12)	{ SetModel( "models/conscripts/female_07.mdl"); }
+			else if (r == 13)	{ SetModel( "models/conscripts/male_07.mdl"); }
+			else if (r == 14)	{ SetModel( "models/conscripts/male_08.mdl"); }
+			else if (r == 15)	{ SetModel( "models/conscripts/male_09.mdl"); }
+	}
+
+	if( !GetModelName() ) //revert to user-defined model (or the new models if set to "random") if no model is given
+	{
+		SetModelName( MAKE_STRING( sk_conscript_model.GetString() ) );
+	}
+
+	engine->PrecacheModel( STRING( GetModelName() ) );
 
 	enginesound->PrecacheSound("barney/ba_pain1.wav");
 	enginesound->PrecacheSound("barney/ba_pain2.wav");
@@ -420,10 +697,19 @@ int	CNPC_Conscript::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 				Remember( bits_MEMORY_PROVOKED );
 
+
 				// Allowed to hit the player now!
 				CapabilitiesRemove(bits_CAP_NO_HIT_PLAYER);
 
 				StopFollowing();
+				if ( sk_conscript_ff_retaliation.GetInt() != 0 ) //Only retaliate against the player if ff_retaliation is set to 1
+				{
+					AddRelationship( "player D_HT 1",	NULL ); 
+				}
+				else
+				{
+					return ret;
+				}
 			}
 			else
 			{
@@ -592,9 +878,28 @@ int CNPC_Conscript::TranslateSchedule( int scheduleType )
 			break;
 
 		}
+	case SCHED_RANGE_ATTACK1:
+		{
+			if( Weapon_OwnsThisType( "weapon_rpg" ) )
+			{
+				return SCHED_CONSCRIPT_FIRE_RPG;
+				break;
+			}
+		}
+
+	case SCHED_ESTABLISH_LINE_OF_FIRE:
+		{
+			if( Weapon_OwnsThisType( "weapon_rpg" ) )
+			{
+				return SCHED_CONSCRIPT_ESTABLISH_RPG_LINE_OF_FIRE;
+			}
+			break;
+		}
+
 	case SCHED_FAIL_ESTABLISH_LINE_OF_FIRE:
 		{
-			return SCHED_CONSCRIPT_AIM;
+			//return SCHED_CONSCRIPT_AIM;
+			return SCHED_COMBAT_SWEEP;
 			break;
 		}
 	}
@@ -615,6 +920,12 @@ int CNPC_Conscript::SelectSchedule ( void )
 		{
 			return SCHED_TAKE_COVER_FROM_BEST_SOUND;
 		}
+		if( HasCondition( COND_HEAR_BUGBAIT ) )
+		{
+			return SCHED_INVESTIGATE_SOUND;
+		}
+
+
 		if ( HasCondition( COND_ENEMY_DEAD ) && IsOkToCombatSpeak() )
 		{
 			Speak( CONSCRIPT_KILL );
@@ -634,7 +945,8 @@ int CNPC_Conscript::SelectSchedule ( void )
 			}
 		}
 	case NPC_STATE_COMBAT:
-		{
+		{ //inb4 "haha yes look at this brainlet, he is not using cases!" -Stacker
+
 // dead enemy
 			if ( HasCondition( COND_ENEMY_DEAD ) )
 			{
@@ -642,6 +954,186 @@ int CNPC_Conscript::SelectSchedule ( void )
 				return BaseClass::SelectSchedule();
 			}
 
+			if (HasCondition(COND_REPEATED_DAMAGE))
+			{
+				int iPercent = random->RandomInt(0, 99);
+
+				if (m_iPersonality == CONSCRIPT_PERSONALITY_BALANCED)
+				{
+
+					if (iPercent <= 25 && GetEnemy() != NULL)
+					{
+						return SCHED_TAKE_COVER_FROM_ENEMY;
+					}
+					else
+					{
+						return SCHED_SMALL_FLINCH;
+					}
+				}
+
+				if (m_iPersonality == CONSCRIPT_PERSONALITY_CAUTIOUS) //twice as likely to take cover
+				{
+
+					if (iPercent <= 50 && GetEnemy() != NULL)
+					{
+						return SCHED_TAKE_COVER_FROM_ENEMY;
+					}
+					else
+					{
+						return SCHED_SMALL_FLINCH;
+					}
+				}
+
+				if ( m_iPersonality == CONSCRIPT_PERSONALITY_AGGRESSIVE) //gets pissed off
+				{
+
+					if (iPercent <= 65 && GetEnemy() != NULL)
+					{
+						return SCHED_CHASE_ENEMY;
+					}
+					else
+					{
+						return SCHED_SMALL_FLINCH;
+					}
+				}
+			}
+
+			if (HasCondition(COND_NEW_ENEMY)) //Comment out or delete the Msgs here unless you like your dev console getting spammed -Stacker
+			{
+				int iPercent = random->RandomInt(0, 99);
+
+				if ( m_iPersonality == CONSCRIPT_PERSONALITY_BALANCED)
+				{
+				if (iPercent <= 25 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (balanced): CHOSE FALLBACK!\n");
+						return SCHED_RUN_FROM_ENEMY_FALLBACK;
+					}
+					else if (iPercent <= 50 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (balanced): CHOSE TO TAKE COVER!\n");
+						return SCHED_TAKE_COVER_FROM_ENEMY;
+					}
+					else if (iPercent >= 75 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (balanced): CHOSE ESTABLISH LOF!\n");
+						return SCHED_ESTABLISH_LINE_OF_FIRE;
+					}
+				}
+
+				if ( m_iPersonality == CONSCRIPT_PERSONALITY_CAUTIOUS)
+				{
+				if (iPercent <= 30 && GetEnemy() != NULL)
+					{
+						Msg("CONSCRIPT (cautious): CHOSE TO TAKE COVER!\n");
+						return SCHED_TAKE_COVER_FROM_ENEMY;
+					}
+					else if (iPercent <= 75 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (cautious): CHOSE CAUTIOUS TAKECOVER!\n");
+						return SCHED_CONSCRIPT_CAUTIOUS_TAKECOVER;
+					}
+					else if (iPercent >= 25 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (cautious): CHOSE ESTABLISH LOF!\n");
+						return SCHED_ESTABLISH_LINE_OF_FIRE;
+					}
+				}
+
+				if  (m_iPersonality == CONSCRIPT_PERSONALITY_AGGRESSIVE) //More likely to chase enemy/establish LOF
+				{
+				if (iPercent <= 50 && GetEnemy() != NULL)
+					{
+						Msg("CONSCRIPT (aggressive): CHOSE CHASE ENEMY!\n");
+						return SCHED_CHASE_ENEMY;
+					}
+					else if (iPercent <= 15 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (aggressive): CHOSE TO TAKE COVER!\n");
+						return SCHED_TAKE_COVER_FROM_ENEMY;
+					}
+					else if (iPercent >= 75 && GetEnemy() != NULL) 
+					{
+						Msg("CONSCRIPT (aggressive): CHOSE ESTABLISH LOF!\n");
+						return SCHED_ESTABLISH_LINE_OF_FIRE;
+					}
+				}
+
+
+			}
+
+			if (HasCondition(COND_ENEMY_OCCLUDED))
+			{
+				int iPercent = random->RandomInt(0, 99);
+
+				if ( m_iPersonality == CONSCRIPT_PERSONALITY_BALANCED ) //Voicelines here are commented out due to not being implemented yet -Stacker
+				{
+					if (iPercent <= 30 && GetEnemy() != NULL)
+					{
+						return SCHED_ESTABLISH_LINE_OF_FIRE;
+						Msg("CONSCRIPT: I'M PICKING ESTABLISH LOF AGAINST OCCLUDED ENEMY!\n");
+						//Speak ( CONSCRIPT_GOINGAFTER);
+					}
+					else if (iPercent <= 60 && GetEnemy() != NULL)
+					{
+						return SCHED_CONSCRIPT_SUPPRESSINGFIRE;
+						Msg("CONSCRIPT: I'M PICKING SUPPRESSING FIRE AGAINST OCCLUDED ENEMY!\n");
+						//Speak (CONSCRIPT_SUPPRESS);
+					}
+					else if (iPercent <= 40 && GetEnemy() != NULL)
+					{
+						return SCHED_STANDOFF;
+						Msg("CONSCRIPT: I'M PICKING STANDOFF AGAINST OCCLUDED ENEMY!\n");
+						//Speak (CONSCRIPT_TAUNT);
+					}
+				}
+
+				if (m_iPersonality == CONSCRIPT_PERSONALITY_CAUTIOUS) //more likely to use suppressing fire/standoff
+				{
+					if (iPercent <= 10 && GetEnemy() != NULL)
+					{
+						return SCHED_ESTABLISH_LINE_OF_FIRE;
+						Msg("CONSCRIPT (cautious): I'M PICKING ESTABLISH LOF AGAINST OCCLUDED ENEMY!\n");
+						//Speak ( CONSCRIPT_GOINGAFTER);
+					}
+					else if (iPercent <= 60 && GetEnemy() != NULL)
+					{
+						return SCHED_CONSCRIPT_SUPPRESSINGFIRE;
+						Msg("CONSCRIPT (cautious): I'M PICKING SUPPRESSING FIRE AGAINST OCCLUDED ENEMY!\n");
+						//Speak (CONSCRIPT_SUPPRESS);
+					}
+					else if (iPercent <= 30 && GetEnemy() != NULL)
+					{
+						return SCHED_STANDOFF;
+						Msg("CONSCRIPT (cautious): I'M PICKING STANDOFF AGAINST OCCLUDED ENEMY!\n");
+						//Speak (CONSCRIPT_TAUNT);
+					}
+				}
+
+				if ( m_iPersonality == CONSCRIPT_PERSONALITY_AGGRESSIVE )//more likely to go after occluded enemies
+				{
+					if (iPercent <= 50 && GetEnemy() != NULL)
+					{
+						return SCHED_ESTABLISH_LINE_OF_FIRE;
+						Msg("CONSCRIPT (aggressive): I'M PICKING ESTABLISH LOF AGAINST OCCLUDED ENEMY!\n");
+						//Speak ( CONSCRIPT_GOINGAFTER);
+					}
+					else if (iPercent <= 20 && GetEnemy() != NULL)
+					{
+						return SCHED_CONSCRIPT_SUPPRESSINGFIRE;
+						Msg("CONSCRIPT (aggressive): I'M PICKING SUPPRESSING FIRE AGAINST OCCLUDED ENEMY!\n");
+						//Speak (CONSCRIPT_SUPPRESS);
+					}
+					else if (iPercent <= 30 && GetEnemy() != NULL)
+					{
+						return SCHED_CHASE_ENEMY;
+						Msg("CONSCRIPT (aggressive): I'M GOING AFTER OCCLUDED ENEMY!\n");
+						//Speak (CONSCRIPT_TAUNT);
+					}
+				}
+			
+			}
+			
 			// always act surprized with a new enemy
 			if ( HasCondition( COND_NEW_ENEMY ) && HasCondition( COND_LIGHT_DAMAGE) )
 				return SCHED_SMALL_FLINCH;
@@ -697,6 +1189,25 @@ int CNPC_Conscript::SelectSchedule ( void )
 				}
 			}
 
+			if ( HasCondition( COND_WEAPON_BLOCKED_BY_FRIEND ))
+			{
+				if ( IsOkToCombatSpeak() && m_nextLineFireTime	< gpGlobals->curtime)
+				{
+					Speak( CONSCRIPT_LINE_FIRE );
+					m_nextLineFireTime = gpGlobals->curtime + 3.0f;
+				}
+
+				// Run to a new location or stand and aim
+				if (random->RandomInt(0,2) == 0)
+				{
+					return SCHED_ESTABLISH_LINE_OF_FIRE;
+				}
+				else
+				{
+					return SCHED_CONSCRIPT_AIM;
+				}
+			}
+
 			// -------------------------------------------
 			// If I'm in cover and I don't have a line of
 			// sight to my enemy, wait randomly before attacking
@@ -706,12 +1217,37 @@ int CNPC_Conscript::SelectSchedule ( void )
 		break;
 
 	case NPC_STATE_ALERT:	
+		{
+			if( HasCondition(COND_LIGHT_DAMAGE) || HasCondition(COND_HEAVY_DAMAGE) )
+			{
+				AI_EnemyInfo_t *pDanger = GetEnemies()->GetDangerMemory();
+				if( pDanger && FInViewCone(pDanger->vLastKnownLocation) && !BaseClass::FVisible(pDanger->vLastKnownLocation) )
+				{
+					// I've been hurt, I'm facing the danger, but I don't see it, so move from this position.
+					return SCHED_TAKE_COVER_FROM_ORIGIN;
+				}
+			}
+
+	
+			if( HasCondition( COND_HEAR_COMBAT ) )
+			{
+				CSound *pSound = GetBestSound();
+
+				if( pSound && pSound->IsSoundType( SOUND_COMBAT ) )
+				{
+					return SCHED_INVESTIGATE_SOUND;
+				}
+			}
+
+
+		}
 	case NPC_STATE_IDLE:
 		if ( HasCondition(COND_LIGHT_DAMAGE) || HasCondition(COND_HEAVY_DAMAGE))
 		{
 			// flinch if hurt
 			return SCHED_SMALL_FLINCH;
 		}
+
 
 	
 		// try to say something about smells
@@ -794,14 +1330,14 @@ WeaponProficiency_t CNPC_Conscript::CalcWeaponProficiency( CBaseCombatWeapon *pW
 		return WEAPON_PROFICIENCY_VERY_GOOD;
 	}
 
-	if( FClassnameIs( pWeapon, "weapon_dbarrel" ) ) //Gotta have perfect proficiency with the double shotgun
+	if( FClassnameIs( pWeapon, "weapon_dbarrel" ) || FClassnameIs( pWeapon, "weapon_shotgun" ) ) //Gotta have perfect proficiency with the shotguns or they'll be useless
 	{
 		return WEAPON_PROFICIENCY_PERFECT;
 	}
 
 	else
 	{
-		return WEAPON_PROFICIENCY_VERY_GOOD;
+		return WEAPON_PROFICIENCY_GOOD;
 	}
 
 	return BaseClass::CalcWeaponProficiency( pWeapon );
@@ -900,6 +1436,47 @@ AI_DEFINE_SCHEDULE
 	"		COND_PROVOKED"
 );
 
+
+AI_DEFINE_SCHEDULE
+(
+	SCHED_CONSCRIPT_ESTABLISH_RPG_LINE_OF_FIRE,
+
+	"	Tasks "
+	"		TASK_SET_FAIL_SCHEDULE			SCHEDULE:SCHED_ESTABLISH_LINE_OF_FIRE_FALLBACK"
+	"		TASK_GET_PATH_TO_ENEMY_LOS		0"
+	"		TASK_SPEAK_SENTENCE				1"
+	"		TASK_RUN_PATH					0"
+	"		TASK_WAIT_FOR_MOVEMENT			0"
+	"		TASK_SET_SCHEDULE				SCHEDULE:SCHED_CONSCRIPT_FIRE_RPG"
+	""
+	"	Interrupts "
+	"		COND_NEW_ENEMY"
+	"		COND_ENEMY_DEAD"
+	"		COND_LOST_ENEMY"
+	"		COND_CAN_RANGE_ATTACK1"
+	"		COND_CAN_MELEE_ATTACK1"
+	"		COND_CAN_RANGE_ATTACK2"
+	"		COND_CAN_MELEE_ATTACK2"
+	"		COND_HEAR_DANGER"
+);
+
+AI_DEFINE_SCHEDULE
+(
+	SCHED_CONSCRIPT_FIRE_RPG,
+
+	"	Tasks"
+	"		TASK_STOP_MOVING			0"
+	"		TASK_FACE_ENEMY				0"
+	"		TASK_ANNOUNCE_ATTACK		1"	// 1 = primary attack
+	"		TASK_PLAY_SEQUENCE_FACE_ENEMY	ACTIVITY:ACT_CONSCRIPT_LOAD_RPG"
+	"		TASK_WAIT_RANDOM			0.75"
+	"		TASK_PLAY_SEQUENCE			ACTIVITY:ACT_RANGE_ATTACK1"
+	""
+	"	Interrupts"
+	""
+	"	COND_ENEMY_DEAD"
+);
+
 //=========================================================
 // > SCHED_CONSCRIPT_STAND
 //=========================================================
@@ -963,6 +1540,71 @@ AI_DEFINE_SCHEDULE
 	"		 TASK_SET_SCHEDULE			SCHEDULE:SCHED_CONSCRIPT_BARNACLE_CHEW"
 	""
 	"	Interrupts"
+);
+
+AI_DEFINE_SCHEDULE
+(
+    SCHED_CONSCRIPT_SUPPRESSINGFIRE,
+ 
+    "   Tasks"
+    "   TASK_STOP_MOVING    0"
+    "   TASK_GET_PATH_TO_ENEMY_LKP_LOS  0"
+	"	TASK_RUN_PATH				0"
+	"	TASK_WAIT_FOR_MOVEMENT		0"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    ""
+    "   Interrupts"
+    "       COND_WEAPON_BLOCKED_BY_FRIEND"
+     "      COND_ENEMY_DEAD"
+    "       COND_LIGHT_DAMAGE"
+    "       COND_HEAVY_DAMAGE"
+    "       COND_NO_PRIMARY_AMMO"
+     "      COND_HEAR_DANGER"
+     "      COND_HEAR_MOVE_AWAY"
+);
+
+AI_DEFINE_SCHEDULE
+(
+	SCHED_CONSCRIPT_CAUTIOUS_TAKECOVER,
+
+	"   Tasks"
+	"   TASK_STOP_MOVING    0"
+    "   TASK_GET_PATH_TO_ENEMY_LOS  0"
+	"	TASK_RUN_PATH				0"
+	"	TASK_WAIT_FOR_MOVEMENT		0"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+    "   TASK_RANGE_ATTACK1  0"
+    "   TASK_WAIT_RANDOM    0.15"
+	"	TASK_FIND_FAR_NODE_COVER_FROM_ENEMY 0"
+	""
+    "   Interrupts"
+    "       COND_WEAPON_BLOCKED_BY_FRIEND"
+     "      COND_ENEMY_DEAD"
+    "       COND_LIGHT_DAMAGE"
+    "       COND_HEAVY_DAMAGE"
+    "       COND_NO_PRIMARY_AMMO"
+     "      COND_HEAR_DANGER"
+     "      COND_HEAR_MOVE_AWAY"
+	
+			
+			
 );
 
 //=========================================================
