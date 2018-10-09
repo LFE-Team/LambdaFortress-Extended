@@ -467,6 +467,9 @@ void CNPC_Conscript::HandleAnimEvent( animevent_t *pEvent )
 //=========================================================
 void CNPC_Conscript::Spawn()
 {
+	if ( sv_hl2_beta.GetFloat() == 1 )
+	{
+		
 	Precache( );
 	SetModel( STRING( GetModelName() ));
 
