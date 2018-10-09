@@ -741,6 +741,7 @@ void CTFLogicVehicleSpawner::Think(void)
 }
 void CTFLogicVehicleSpawner::InputRemoveVehicles(inputdata_t &inputdata)
 {
+	//this feature should and will be rewritten.
 	CBaseEntity *pAirboats = gEntList.FindEntityByName(NULL, "airboatfromspawner");
 	CBaseEntity *pAirboatsProtected = gEntList.FindEntityByName(NULL, "airboatfromspawner_protected");
 	if (pAirboats)
@@ -765,11 +766,15 @@ void CTFLogicVehicleSpawner::InputRemoveVehicles(inputdata_t &inputdata)
 }
 void CTFLogicVehicleSpawner::SpawnVehicle(void)
 {
+	//TODO: replace max vehicles with the number of players on red
 	variant_t sVariant;
 #ifdef GAME_DLL
+	bool bCanSpawn;
+	bCanSpawn = false;
 	if (m_bEnabled && iSpawnedVehicles != iMaxVehicles)
 	{
 		//CBaseEntity *pAirboats = gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat");
+		/*
 		CBaseEntity *pAirboats = gEntList.FindEntityByName(NULL, "airboatfromspawner");
 		CBaseEntity *pJeeps2 = gEntList.FindEntityByName(NULL, "jeepfromspawner");
 		if (pAirboats)
@@ -789,7 +794,30 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				iSpawnedVehicles = iSpawnedVehicles - 1;
 			}
 		}
+		*/
+		CBaseEntity *pNearestVehicleSpawned = gEntList.FindEntityByClassnameNearest("prop_vehicle_jeep", GetAbsOrigin(), 1024);
+		CBaseEntity *pNearestPly = ToTFPlayer(gEntList.FindEntityByClassnameNearest("player", GetAbsOrigin(), 64));
 		if (iVehicleNum == 1)
+		{
+			//pNearestVehicleSpawned = gEntList.FindEntityByClassnameNearest("prop_vehicle_airboat", GetAbsOrigin(), 999999);
+			pNearestVehicleSpawned = gEntList.FindEntityByClassnameNearest("prop_vehicle_airboat", GetAbsOrigin(), 1024);
+		}
+		else if (iVehicleNum == 2 || iVehicleNum == 3)
+		{
+			//pNearestVehicleSpawned = gEntList.FindEntityByClassnameNearest("prop_vehicle_jeep", GetAbsOrigin(), 999999);
+			pNearestVehicleSpawned = gEntList.FindEntityByClassnameNearest("prop_vehicle_jeep", GetAbsOrigin(), 1024);
+		}
+		//float DistSpawnerToNearestPly = GetAbsOrigin().DistTo(pNearestPly->GetAbsOrigin());
+		//if (pNearestVehicleSpawned && DistVehToSpawner > 1024)
+		if (!pNearestVehicleSpawned && !pNearestPly)
+		{
+			bCanSpawn = true;
+		}
+		else
+		{
+			bCanSpawn = false;
+		}
+		if (iVehicleNum == 1 && bCanSpawn)
 		{
 			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_airboat", -1);
 			if (pBoat)
@@ -822,7 +850,7 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				}
 			}
 		}
-		else if (iVehicleNum == 2)
+		else if (iVehicleNum == 2 && bCanSpawn)
 		{
 			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_jeep", -1);
 			if (pBoat)
@@ -855,7 +883,7 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				}
 			}
 		}
-		else if (iVehicleNum == 3)
+		else if (iVehicleNum == 3 && bCanSpawn)
 		{
 			CBaseEntity *pBoat = CreateEntityByName("prop_vehicle_jeep", -1);
 			if (pBoat)
@@ -884,7 +912,10 @@ void CTFLogicVehicleSpawner::SpawnVehicle(void)
 				pBoat->AcceptInput("FromSpawner", NULL, NULL, sVariant, NULL);
 			}
 		}
-		iSpawnedVehicles = iSpawnedVehicles + 1;
+		if (bCanSpawn)
+		{
+			iSpawnedVehicles = iSpawnedVehicles + 1;
+		}
 	}
 #endif
 }
