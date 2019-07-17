@@ -49,6 +49,9 @@ LINK_ENTITY_TO_CLASS( func_forcefield, CFuncForceField );
 BEGIN_DATADESC( CFuncForceField )
 END_DATADESC()
 
+IMPLEMENT_SERVERCLASS_ST( CFuncForceField, DT_FuncForceField )
+END_SEND_TABLE()
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

@@ -383,10 +383,6 @@ void CNPC_Alyx::Precache()
 	PrecacheScriptSound("npc_alyx.die");
 	PrecacheModel(STRING(GetModelName()));
 	PrecacheModel("models/alyx_emptool_prop.mdl");
-	PrecacheModel("models/hl2/alyx.mdl");
-	PrecacheModel("models/ep1/alyx.mdl");
-	PrecacheModel("models/ep2/alyx.mdl");
-
 
 	// For hacking
 	PrecacheScriptSound("DoSpark");
@@ -467,52 +463,10 @@ void CNPC_Alyx::SelectModel()
 {
 	// Alyx is allowed to use multiple models, because she appears in the pod.
 	// She defaults to her normal model.
-	const char *szModel = STRING(GetModelName());
+	const char *szModel = STRING( GetModelName() );
 	if (!szModel || !*szModel)
 	{
-		SetModelName(AllocPooledString("models/alyx.mdl"));
-
-	}
-	char szMapName[256];
-	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
-	Q_strlower(szMapName);
-
-	if( !Q_strnicmp( szMapName, "d1_trainstation", 15 ) )
-	{
-		// hl2 model
-		PrecacheModel("models/hl2/alyx.mdl");
-		SetModel("models/hl2/alyx.mdl");
-	}
-	else if( !Q_strnicmp( szMapName,"ep1_citadel_04", 14 ) )
-	{
-		// ep1 model
-		PrecacheModel("models/ep1/alyx.mdl");
-		SetModel("models/ep1/alyx.mdl");
-	}
-	else if( !Q_strnicmp( szMapName,"ep1_c17_00", 10 ) )
-	{
-		PrecacheModel("models/ep1/alyx.mdl");
-		SetModel("models/ep1/alyx.mdl");
-	}
-	else if( !Q_strnicmp( szMapName,"d3_breen_01", 11 ) )
-	{
-		PrecacheModel("models/hl2/alyx.mdl");
-		SetModel("models/hl2/alyx.mdl");
-	}
-	else if( !Q_strnicmp( szMapName,"d1_eli", 6 ) )
-	{
-		PrecacheModel("models/hl2/alyx.mdl");
-		SetModel("models/hl2/alyx.mdl");
-	}
-	else if( !Q_strnicmp( szMapName,"ep1_c17_01a", 10 ) )
-	{
-		PrecacheModel("models/ep1/alyx.mdl");
-		SetModel("models/ep1/alyx.mdl");
-	}
-	else if( !Q_strnicmp( szMapName,"ep1_citadel_00", 18 ) )
-	{
-		PrecacheModel("models/ep1/alyx.mdl");
-		SetModel("models/ep1/alyx.mdl");
+		SetModelName( AllocPooledString("models/alyx.mdl") );
 	}
 }
 

@@ -21,6 +21,8 @@
 #include "ai_senses.h"
 #include "tf_gamerules.h"
 #include "tf_player.h"
+#include "entity_ammopack.h"
+#include "entity_healthkit.h"
 
 #include "npc_vortigaunt_episodic.h"
 
@@ -1061,7 +1063,7 @@ void CNPC_Vortigaunt::TeleportToPlayerThink(void)
 		Vector vecOriginPlayer = player->GetAbsOrigin();
 		Vector velocity = vec3_origin;
 		float DistanceToPlayer = GetAbsOrigin().DistTo(player->GetAbsOrigin());
-		if ( this && bTeleportEnabled && player && player->GetTeamNumber() == TF_TEAM_RED && m_NPCState != NPC_STATE_SCRIPT && DistanceToPlayer > 1499)
+		if ( this && bTeleportEnabled && player && player->GetTeamNumber() == TF_TEAM_RED && m_NPCState != NPC_STATE_SCRIPT && DistanceToPlayer > 1499 && player->GetGroundEntity() != NULL)
 		{
 			Teleport(&vecOriginPlayer, &vecAngles, &velocity);
 		}
@@ -3306,10 +3308,16 @@ void CVortigauntChargeToken::SeekTouch( CBaseEntity	*pOther )
 	EmitSound( "NPC_Vortigaunt.SuitOn" );
 
 	// Charge the suit's armor
-	if ( pPlayer->ArmorValue() < sk_vortigaunt_armor_charge.GetInt() )
-	{
-		pPlayer->IncrementArmorValue( sk_vortigaunt_armor_charge_per_token.GetInt()+random->RandomInt( -1, 1 ), sk_vortigaunt_armor_charge.GetInt() );
-	}
+	//if ( pPlayer->ArmorValue() < sk_vortigaunt_armor_charge.GetInt() )
+	//{
+		CTFPlayer *pTFPlayer = ToTFPlayer(pPlayer);
+		//pPlayer->IncrementArmorValue( sk_vortigaunt_armor_charge_per_token.GetInt()+random->RandomInt( -1, 1 ), sk_vortigaunt_armor_charge.GetInt() );
+		int iHealthRestored = 0;
+		int iHealthToAdd = pPlayer->GetMaxHealth() * PackRatios[POWERUP_TINY];
+
+		iHealthToAdd = clamp(iHealthToAdd, 0, pTFPlayer->m_Shared.GetMaxBuffedHealth() - pTFPlayer->GetHealth());
+		iHealthRestored = pPlayer->TakeHealth(iHealthToAdd, DMG_IGNORE_MAXHEALTH);
+	//}
 
 	// Stay attached to the thing we hit as we fade away
 	SetSolidFlags( FSOLID_NOT_SOLID );

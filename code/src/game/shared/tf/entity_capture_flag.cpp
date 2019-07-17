@@ -18,7 +18,6 @@
 #include "hud_numericdisplay.h"
 #include "tf_imagepanel.h"
 #include "c_tf_player.h"
-#include "c_ai_basenpc.h"
 #include "c_tf_team.h"
 #include "tf_hud_objectivestatus.h"
 #include "view.h"
@@ -30,7 +29,6 @@ ConVar cl_flag_return_size( "cl_flag_return_size", "20", FCVAR_CHEAT );
 
 #else
 #include "tf_player.h"
-#include "ai_basenpc.h"
 #include "tf_team.h"
 #include "tf_objective_resource.h"
 #include "tf_gamestats.h"
@@ -496,8 +494,8 @@ void CCaptureFlag::FlagTouch( CBaseEntity *pOther )
 		return;
 	}
 
-	// The the touch from a live player or npc.
-	if ( !pOther->IsPlayer() || !pOther->IsNPC() || !pOther->IsAlive() )
+	// The the touch from a live player.
+	if ( !pOther->IsPlayer() || !pOther->IsAlive() )
 	{
 		return;
 	}
@@ -539,10 +537,11 @@ void CCaptureFlag::FlagTouch( CBaseEntity *pOther )
 		return;
 
 	// Get the touching player.
-	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( pOther );
 	CTFPlayer *pPlayer = ToTFPlayer( pOther );
-	if ( !pOther )
+	if ( !pPlayer )
+	{
 		return;
+	}
 
 	// Is the touching player about to teleport?
 	if ( pPlayer->m_Shared.InCond( TF_COND_SELECTED_TO_TELEPORT ) )
@@ -565,30 +564,14 @@ void CCaptureFlag::FlagTouch( CBaseEntity *pOther )
 	if ( pPlayer->HasTheFlag() )
 		return;
 
-	// Is the touching npc about to teleport?
-	if ( pNPC->InCond( TF_COND_SELECTED_TO_TELEPORT ) )
-		return;
-
-	// Don't let invulnerable npcs pickup flags
-	if ( pNPC->IsInvulnerable() )
-		return;
-	
-	// Don't let bonked npcs pickup flags
-	if ( pNPC->InCond( TF_COND_PHASE ) )
-		return;
-
-	// Do not allow the npc to pick up multiple flags
-	if ( pNPC->HasTheFlag() )
-		return;
-
 	// Pick up the flag.
-	PickUp( pOther, true );
+	PickUp( pPlayer, true );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
+void CCaptureFlag::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 {
 	// Is the flag enabled?
 	if ( IsDisabled() )
@@ -596,7 +579,6 @@ void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 
 	if ( !TFGameRules()->FlagsMayBeCapped() )
 		return;
-
 
 #ifdef GAME_DLL
 	if ( !m_bAllowOwnerPickup )
@@ -607,61 +589,38 @@ void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 		}
 	}
 #endif
+
+	// Check whether we have a weapon that's prohibiting us from picking the flag up
+	if ( !pPlayer->IsAllowedToPickUpFlag() )
+		return;
+
 	// Call into the base class pickup.
 	BaseClass::PickUp( pPlayer, false );
 
 	m_nSkin = GetIntelSkin(GetTeamNumber(), true);
 
+	pPlayer->TeamFortress_SetSpeed();
+
 #ifdef GAME_DLL
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
 
-	if ( pTFPlayer )
+	pPlayer->AddGlowEffect();
+	
+	// Update the parent to set the correct place on the model to attach the flag.
+	int iAttachment = pPlayer->LookupAttachment( "flag" );
+	if( iAttachment != -1 )
 	{
-		// Check whether we have a weapon that's prohibiting us from picking the flag up
-		if ( !pTFPlayer->IsAllowedToPickUpFlag() )
-			return;
-
-		pTFPlayer->TeamFortress_SetSpeed();
-		
-		// Remove the player's disguse if they're a spy
-		if ( pTFPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_SPY )
-		{
-			if ( pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) ||
-			pTFPlayer->m_Shared.InCond( TF_COND_DISGUISING ))
-			{
-				pTFPlayer->m_Shared.RemoveDisguise();
-			}
-		}
-
-		pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_FLAGPICKUP );
-
-		pTFPlayer->AddGlowEffect();
-
-		// Update the parent to set the correct place on the model to attach the flag.
-		int iAttachment = pTFPlayer->LookupAttachment( "flag" );
-		if( iAttachment != -1 )
-		{
-			SetParent( pTFPlayer, iAttachment );
-			SetLocalOrigin( vec3_origin );
-			SetLocalAngles( vec3_angle );
-		}
+		SetParent( pPlayer, iAttachment );
+		SetLocalOrigin( vec3_origin );
+		SetLocalAngles( vec3_angle );
 	}
-	else if ( pNPC )
+
+	// Remove the player's disguse if they're a spy
+	if ( pPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_SPY )
 	{
-		// Check whether we have a weapon that's prohibiting us from picking the flag up
-		if ( !pNPC->IsAllowedToPickUpFlag() )
-			return;
-
-		pNPC->AddGlowEffect();
-
-		// Update the parent to set the correct place on the model to attach the flag.
-		int iAttachment = pNPC->LookupAttachment( "root" );
-		if( iAttachment != -1 )
+		if ( pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) ||
+			pPlayer->m_Shared.InCond( TF_COND_DISGUISING ))
 		{
-			SetParent( pNPC, iAttachment );
-			SetLocalOrigin( vec3_origin );
-			SetLocalAngles( vec3_angle );
+			pPlayer->m_Shared.RemoveDisguise();
 		}
 	}
 
@@ -688,7 +647,7 @@ void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 				EmitSound( filter, entindex(), TF_CTF_TEAM_STOLEN );
 
 				// exclude the guy who just picked it up
-				filter.RemoveRecipient( pTFPlayer );
+				filter.RemoveRecipient( pPlayer );
 
 				TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_ENEMY_FLAG_TAKEN );
 			}
@@ -697,7 +656,7 @@ void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 	else if ( m_nGameType == TF_FLAGTYPE_ATTACK_DEFEND )
 	{
 		// Handle messages to the screen.
-		TFTeamMgr()->PlayerCenterPrint( pTFPlayer, "#TF_AD_TakeFlagToPoint" );
+		TFTeamMgr()->PlayerCenterPrint( pPlayer, "#TF_AD_TakeFlagToPoint" );
 
 		for ( int iTeam = TF_TEAM_RED; iTeam < TF_TEAM_COUNT; ++iTeam )
 		{
@@ -716,8 +675,8 @@ void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 	else if ( m_nGameType == TF_FLAGTYPE_INVADE )
 	{
 		// Handle messages to the screen.
-		TFTeamMgr()->PlayerCenterPrint( pTFPlayer, "#TF_Invade_PlayerPickup" );
-		TFTeamMgr()->PlayerTeamCenterPrint( pTFPlayer, "#TF_Invade_PlayerTeamPickup" );
+		TFTeamMgr()->PlayerCenterPrint( pPlayer, "#TF_Invade_PlayerPickup" );
+		TFTeamMgr()->PlayerTeamCenterPrint( pPlayer, "#TF_Invade_PlayerTeamPickup" );
 
 		for ( int iTeam = TF_TEAM_RED; iTeam < TF_TEAM_COUNT; ++iTeam )
 		{
@@ -752,6 +711,8 @@ void CCaptureFlag::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 		event->SetInt( "priority", 8 );
 		gameeventmanager->FireEvent( event );
 	}
+
+	pPlayer->SpeakConceptIfAllowed( MP_CONCEPT_FLAGPICKUP );
 
 	// Output.
 	m_outputOnPickUp.FireOutput( this, this );
@@ -801,15 +762,13 @@ void CCaptureFlag::DestroyReturnIcon( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
+void CCaptureFlag::Capture( CTFPlayer *pPlayer, int nCapturePoint )
 {
 	// Is the flag enabled?
 	if ( IsDisabled() )
 		return;
 
 #ifdef GAME_DLL
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
 
 	if ( m_nGameType == TF_FLAGTYPE_CTF )
 	{
@@ -855,7 +814,7 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 		}
 
 		// Reward the player
-		CTF_GameStats.Event_PlayerCapturedPoint( pTFPlayer );
+		CTF_GameStats.Event_PlayerCapturedPoint( pPlayer );
 
 		// Reward the team
 		if ( tf_flag_caps_per_round.GetInt() > 0 )
@@ -873,8 +832,8 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 		Q_snprintf( szNumber, sizeof(szNumber), "%d", nCapturePoint );
 
 		// Handle messages to the screen.
-		TFTeamMgr()->PlayerCenterPrint( pTFPlayer, "#TF_AD_YouSecuredPoint", szNumber );
-		TFTeamMgr()->PlayerTeamCenterPrint( pTFPlayer, "TF_AD_AttackersSecuredPoint", szNumber );
+		TFTeamMgr()->PlayerCenterPrint( pPlayer, "#TF_AD_YouSecuredPoint", szNumber );
+		TFTeamMgr()->PlayerTeamCenterPrint( pPlayer, "TF_AD_AttackersSecuredPoint", szNumber );
 		for ( int iTeam = TF_TEAM_RED; iTeam < TF_TEAM_COUNT; ++iTeam )
 		{
 			if ( iTeam != pPlayer->GetTeamNumber() )
@@ -896,15 +855,15 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 		EmitSound( filter, entindex(), TF_AD_CAPTURED_SOUND );
 
 		// Reward the player
-		pTFPlayer->IncrementFragCount( TF_AD_CAPTURED_FRAGS );
+		pPlayer->IncrementFragCount( TF_AD_CAPTURED_FRAGS );
 
 		// TFTODO:: Reward the team	
 	}
 	else if ( m_nGameType == TF_FLAGTYPE_INVADE )
 	{
 		// Handle messages to the screen.
-		TFTeamMgr()->PlayerCenterPrint( pTFPlayer, "#TF_Invade_PlayerCapture" );
-		TFTeamMgr()->PlayerTeamCenterPrint( pTFPlayer, "#TF_Invade_PlayerTeamCapture" );
+		TFTeamMgr()->PlayerCenterPrint( pPlayer, "#TF_Invade_PlayerCapture" );
+		TFTeamMgr()->PlayerTeamCenterPrint( pPlayer, "#TF_Invade_PlayerTeamCapture" );
 
 		for ( int iTeam = TF_TEAM_RED; iTeam < TF_TEAM_COUNT; ++iTeam )
 		{
@@ -923,7 +882,7 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 		}
 
 		// Reward the player
-		pTFPlayer->IncrementFragCount( TF_INVADE_CAPTURED_FRAGS );
+		pPlayer->IncrementFragCount( TF_INVADE_CAPTURED_FRAGS );
 
 		// Reward the team
 		TFTeamMgr()->AddTeamScore( pPlayer->GetTeamNumber(), TF_INVADE_CAPTURED_TEAM_FRAGS );
@@ -957,21 +916,14 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 
 	Reset();
 
-	if ( pTFPlayer )
-	{
-		pTFPlayer->TeamFortress_SetSpeed();
-		pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_FLAGCAPTURED );
-		pTFPlayer->RemoveGlowEffect();
-	}
-	else if ( pNPC )
-	{
-		pNPC->RemoveGlowEffect();
-	}
+	pPlayer->TeamFortress_SetSpeed();
+	pPlayer->SpeakConceptIfAllowed( MP_CONCEPT_FLAGCAPTURED );
+	pPlayer->RemoveGlowEffect();
 	
 	// Output.
 	m_outputOnCapture.FireOutput( this, this );
 
-	switch ( pPlayer->GetTeamNumber() )
+	switch (pPlayer->GetTeamNumber())
 	{
 	case TF_TEAM_RED:
 		m_outputOnCapTeam1.FireOutput(this, this);
@@ -988,7 +940,7 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 	if ( TFGameRules()->InStalemate() )
 	{
 		// whoever capped the flag is the winner, give them enough caps to win
-		CTFTeam *pTeam = pTFPlayer->GetTFTeam();
+		CTFTeam *pTeam = pPlayer->GetTFTeam();
 		if ( !pTeam )
 			return;
 
@@ -1005,7 +957,7 @@ void CCaptureFlag::Capture( CBaseEntity *pPlayer, int nCapturePoint )
 //-----------------------------------------------------------------------------
 // Purpose: A player drops the flag.
 //-----------------------------------------------------------------------------
-void CCaptureFlag::Drop( CBaseEntity *pPlayer, bool bVisible,  bool bThrown /*= false*/, bool bMessage /*= true*/ )
+void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= false*/, bool bMessage /*= true*/ )
 {
 	// Is the flag enabled?
 	if ( IsDisabled() )
@@ -1014,14 +966,11 @@ void CCaptureFlag::Drop( CBaseEntity *pPlayer, bool bVisible,  bool bThrown /*= 
 	// Call into the base class drop.
 	BaseClass::Drop( pPlayer, bVisible );
 
+	pPlayer->TeamFortress_SetSpeed();
+
 #ifdef GAME_DLL
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
 
-	pTFPlayer->TeamFortress_SetSpeed();
-
-	pTFPlayer->RemoveGlowEffect();
-	pNPC->RemoveGlowEffect();
+	pPlayer->RemoveGlowEffect();
 
 	if ( bThrown )
 	{
@@ -1066,8 +1015,8 @@ void CCaptureFlag::Drop( CBaseEntity *pPlayer, bool bVisible,  bool bThrown /*= 
 		if ( bMessage  )
 		{
 			// Handle messages to the screen.
-			TFTeamMgr()->PlayerCenterPrint( pTFPlayer, "#TF_Invade_PlayerFlagDrop" );
-			TFTeamMgr()->PlayerTeamCenterPrint( pTFPlayer, "#TF_Invade_FlagDrop" );
+			TFTeamMgr()->PlayerCenterPrint( pPlayer, "#TF_Invade_PlayerFlagDrop" );
+			TFTeamMgr()->PlayerTeamCenterPrint( pPlayer, "#TF_Invade_FlagDrop" );
 
 			for ( int iTeam = TF_TEAM_RED; iTeam < TF_TEAM_COUNT; ++iTeam )
 			{
@@ -1276,8 +1225,7 @@ void CCaptureFlag::ManageSpriteTrail( void )
 			if ( GetPrevOwner() /*&& GetPrevOwner() != CBasePlayer::GetLocalPlayer() */ )
 			{
 				char pEffectName[512];
-				CTFPlayer *pPlayer = ToTFPlayer( GetPrevOwner() );
-				CAI_BaseNPC *pNPC = GetPrevOwner()->MyNPCPointer();
+				CTFPlayer *pPlayer = ToTFPlayer(GetPrevOwner());
 				if ( pPlayer )
 				{
 					if ( pPlayer->GetAbsVelocity().Length() >= pPlayer->MaxSpeed() * 0.5f )
@@ -1285,25 +1233,6 @@ void CCaptureFlag::ManageSpriteTrail( void )
 						if ( m_pGlowTrail == NULL )
 						{
 							GetTrailEffect( pPlayer->GetTeamNumber(), pEffectName, sizeof( pEffectName ) );
-							m_pGlowTrail = CSpriteTrail::SpriteTrailCreate( pEffectName, GetLocalOrigin(), false );
-							m_pGlowTrail->FollowEntity( this );
-							m_pGlowTrail->SetTransparency( kRenderTransAlpha, -1, -1, -1, 96, 0 );
-							m_pGlowTrail->SetBrightness( 96 );
-							m_pGlowTrail->SetStartWidth( 32.0 );
-							m_pGlowTrail->SetTextureResolution( 0.010416667 );
-							m_pGlowTrail->SetLifeTime( 0.69999999 );
-							m_pGlowTrail->SetTransmit( false );
-							m_pGlowTrail->SetParent( this );
-						}
-					}
-				}
-				else if ( pNPC )
-				{
-					if ( pNPC->GetAbsVelocity() != vec3_origin  )
-					{
-						if ( m_pGlowTrail == NULL )
-						{
-							GetTrailEffect( pNPC->GetTeamNumber(), pEffectName, sizeof( pEffectName ) );
 							m_pGlowTrail = CSpriteTrail::SpriteTrailCreate( pEffectName, GetLocalOrigin(), false );
 							m_pGlowTrail->FollowEntity( this );
 							m_pGlowTrail->SetTransparency( kRenderTransAlpha, -1, -1, -1, 96, 0 );
@@ -1374,19 +1303,12 @@ void CCaptureFlag::InputDisable( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CCaptureFlag::InputRoundActivate( inputdata_t &inputdata )
 {
-	CTFPlayer *pPlayer = ToTFPlayer( GetPrevOwner() );
-	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( GetPrevOwner() );
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPrevOwner.Get() );
 
 	// If the player has a capture flag, drop it.
 	if ( pPlayer && pPlayer->HasItem() && ( pPlayer->GetItem() == this ) )
 	{
 		Drop( pPlayer, true, false, false );
-	}
-
-	// If the npc has a capture flag, drop it.
-	if ( pNPC && pNPC->HasItem() && ( pNPC->GetItem() == this ) )
-	{
-		Drop( pNPC, true, false, false );
 	}
 
 	Reset();
@@ -1394,19 +1316,12 @@ void CCaptureFlag::InputRoundActivate( inputdata_t &inputdata )
 
 void CCaptureFlag::InputForceReset( inputdata_t &inputdata )
 {
-	CTFPlayer *pPlayer = ToTFPlayer( GetPrevOwner() );
-	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( GetPrevOwner() );
+	CTFPlayer *pPlayer = ToTFPlayer( m_hPrevOwner.Get() );
 
 	// If the player has a capture flag, drop it.
 	if ( pPlayer && pPlayer->HasItem() && ( pPlayer->GetItem() == this ) )
 	{
 		Drop( pPlayer, true, false, false );
-	}
-
-	// If the npc has a capture flag, drop it.
-	if ( pNPC && pNPC->HasItem() && ( pNPC->GetItem() == this ) )
-	{
-		Drop( pNPC, true, false, false );
 	}
 
 	Reset();
@@ -1448,29 +1363,10 @@ void CCaptureFlag::ManageTrailEffects( void )
 		if ( GetPrevOwner() && (m_nUseTrailEffect == 1 || m_nUseTrailEffect == 2) )
 		{
 			CTFPlayer *pPlayer = ToTFPlayer( GetPrevOwner() );
-			CAI_BaseNPC *pNPC = GetPrevOwner()->MyNPCPointer();
-	
+
 			if ( pPlayer )
 			{
 				if ( pPlayer->GetAbsVelocity().Length() >= pPlayer->MaxSpeed() * 0.5f )
-				{
-					if ( m_pPaperTrailEffect == NULL )
-					{
-						m_pPaperTrailEffect = ParticleProp()->Create( m_szPaperEffect, PATTACH_ABSORIGIN_FOLLOW );
-					}
-				}
-				else
-				{
-					if ( m_pPaperTrailEffect )
-					{
-						ParticleProp()->StopEmission( m_pPaperTrailEffect );
-						m_pPaperTrailEffect = NULL;
-					}
-				}
-			}
-			else if ( pNPC )
-			{
-				if ( pNPC->GetAbsVelocity() != vec3_origin  )
 				{
 					if ( m_pPaperTrailEffect == NULL )
 					{

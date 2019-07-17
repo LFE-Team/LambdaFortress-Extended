@@ -660,7 +660,7 @@ $Project
 
 	}
 
-	$Folder	"MP3" [$WIN32||$POSIX]
+	$Folder	"MP3" [$WIN32]
 	{
 		$File	"mp3player.cpp"
 		$File	"mp3player.h"
@@ -1241,7 +1241,7 @@ $Project
 	
 	$Folder	"Link Libraries"
 	{
-		$Lib 		discord-rpc
+		$ImpLib 	discord-rpc [$WIN32]
 		$Lib		bitmap
 		$Lib		choreoobjects
 		$Lib		dmxloader

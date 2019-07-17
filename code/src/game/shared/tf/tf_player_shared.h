@@ -90,7 +90,7 @@ public:
 	typedef CTFPlayer OuterClass;
 
 #endif
-	
+
 	DECLARE_EMBEDDED_NETWORKVAR()
 	DECLARE_CLASS_NOBASE( CTFPlayerShared );
 
@@ -109,7 +109,8 @@ public:
 	void	AddCond( int nCond, float flDuration = PERMANENT_CONDITION );
 	void	RemoveCond( int nCond );
 	bool	InCond( int nCond );
-	void	RemoveAllCond( CTFPlayer *pPlayer );
+	//bool	WasInCond( int nCond ) const
+	void	RemoveAllCond( void );
 	void	OnConditionAdded( int nCond );
 	void	OnConditionRemoved( int nCond );
 	void	ConditionThink( void );
@@ -147,6 +148,7 @@ public:
 	void	CompleteDisguise( void );
 	void	RemoveDisguise( void );
 	void	FindDisguiseTarget( void );
+	void	SetOffHandWatch(void);
 	int		GetDisguiseTeam( void )				{ return m_nDisguiseTeam; }
 	int		GetDisguiseClass( void ) 			{ return m_nDisguiseClass; }
 	int		GetMaskClass( void )				{ return m_nMaskClass; }
@@ -194,7 +196,7 @@ public:
 	int		GetNumHealers( void ) { return m_nNumHealers; }
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
-	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
+	void	MakeBleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
 	void	StunPlayer( float flDuration, CTFPlayer *pStunner );
 
 #ifdef GAME_DLL
@@ -205,6 +207,7 @@ public:
 	CNewParticleEffect *m_pWarp;
 	CNewParticleEffect *m_pSpeedTrails;
 	CNewParticleEffect *m_pBuffAura;
+	CNewParticleEffect *m_pSapped;
 	CNewParticleEffect *m_pFlashlightBeam;
 #endif
 
@@ -317,12 +320,14 @@ private:
 	void OnAddPhase( void );
 	void OnAddSpeedBoost( void );
 	void OnAddUrine( void );
-	void OnAddMilk( void );
-	void OnAddGas( void );
+	void OnAddMadMilk( void );
+	void OnAddCondGas( void );
 	void OnAddTeamGlows( void );
 	void OnAddBleeding( void );
 	void OnAddRune( void );
 	void OnAddBuff( void );
+	void OnAddFeignDeath( void );
+	void OnAddSapped( void );
 	void OnAddFlashlight( void );
 
 	void OnAddPowerPlay( void );
@@ -343,15 +348,19 @@ private:
 	void OnRemovePhase( void );
 	void OnRemoveSpeedBoost( void );
 	void OnRemoveUrine( void );
-	void OnRemoveMilk( void );
-	void OnRemoveGas( void );
+	void OnRemoveMadMilk( void );
+	void OnRemoveCondGas( void );
 	void OnRemoveTeamGlows( void );
 	void OnRemoveBleeding( void );
 	void OnRemoveRune( void );
 	void OnRemoveBuff( void );
+	void OnRemoveFeignDeath( void );
+	void OnRemoveSapped( void );
 	void OnRemoveFlashlight( void );
 
 	void OnRemovePowerPlay( void );
+
+	void AddTempCritBonus( float flDuration = PERMANENT_CONDITION );
 
 	float GetCritMult( void );
 
@@ -366,7 +375,8 @@ private:
 	void  SetChargeEffect( medigun_charge_types chargeType, bool bShouldCharge, bool bInstantRemove, const MedigunEffects_t &chargeEffect, float flRemoveTime, CTFPlayer *pProvider );
 	void  TestAndExpireChargeEffect( medigun_charge_types chargeType );
 #endif
-
+public:
+	CNetworkVar( bool, m_bFeignDeathReady );
 private:
 
 	// Vars that are networked.
@@ -517,7 +527,7 @@ private:
 	bool m_bWasCritBoosted;
 	bool m_bWasMiniCritBoosted;
 #endif
-};			   
+};
 
 #define TF_DEATH_DOMINATION				0x0001	// killer is dominating victim
 #define TF_DEATH_ASSISTER_DOMINATION	0x0002	// assister is dominating victim

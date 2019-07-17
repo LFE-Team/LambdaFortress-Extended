@@ -103,6 +103,9 @@ void CPropVehicle::Spawn( )
 	SetNextThink( gpGlobals->curtime );
 
 	m_vecSmoothedVelocity.Init();
+
+	// set to hl2's gravity
+	SetGravity( UTIL_ScaleForGravity( 600 ) );
 }
 
 // this allows reloading the script variables from disk over an existing vehicle state

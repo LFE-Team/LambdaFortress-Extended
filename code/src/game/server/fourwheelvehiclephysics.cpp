@@ -19,6 +19,8 @@
 #include "te_effect_dispatch.h"
 #include "particle_parse.h"
 
+#include "tf_player.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -721,17 +723,30 @@ bool CFourWheelVehiclePhysics::Think()
 
 	m_pVehicle->Update( gpGlobals->frametime, m_controls);
 
+	CBaseEntity *pDriver = m_pOuterServerVehicle->GetDriver();
+	CTFPlayer *pPlayerDriver = dynamic_cast<CTFPlayer*>( pDriver );
+
 	// boost sounds
 	if( IsBoosting() && !m_bLastBoost )
 	{
 		m_bLastBoost = true;
 		m_turboTimer = gpGlobals->curtime + 2.75f;		// min duration for turbo sound
+
+		if( pDriver && pDriver->IsPlayer() )
+		{
+			pPlayerDriver->m_Shared.AddCond( TF_COND_SPEED_BOOST, 2.50 );
+		}
 	}
 	else if( !IsBoosting() && m_bLastBoost )
 	{
 		if ( gpGlobals->curtime >= m_turboTimer )
 		{
 			m_bLastBoost = false;
+		}
+
+		if( pDriver && pDriver->IsPlayer() )
+		{
+			pPlayerDriver->m_Shared.RemoveCond( TF_COND_SPEED_BOOST );
 		}
 	}
 
@@ -824,6 +839,7 @@ bool CFourWheelVehiclePhysics::VPhysicsUpdate( IPhysicsObject *pPhysics )
 			VectorITransform( m_wheelPosition[i], m_pOuter->EntityToWorldTransform(), tmp );
 			SetPoseParameter( m_poseParameters[VEH_FL_WHEEL_HEIGHT + i], (m_wheelBaseHeight[i] - tmp.z) / m_wheelTotalHeight[i] );
 			SetPoseParameter( m_poseParameters[VEH_FL_WHEEL_SPIN + i], -m_wheelRotation[i].z );
+
 			return false;
 		}
 	}
@@ -1405,10 +1421,13 @@ bool CFourWheelVehiclePhysics::IsBoosting( void )
 {
 	const vehicleparams_t *pVehicleParams = &m_pVehicle->GetVehicleParams();
 	const vehicle_operatingparams_t *pVehicleOperating = &m_pVehicle->GetOperatingParams();
+
 	if ( pVehicleParams && pVehicleOperating )
 	{	
 		if ( ( pVehicleOperating->boostDelay - pVehicleParams->engine.boostDelay ) > 0.0f )
+		{
 			return true;
+		}
 	}
 
 	return false;

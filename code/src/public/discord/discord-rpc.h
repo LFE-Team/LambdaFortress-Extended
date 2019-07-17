@@ -60,6 +60,8 @@ extern "C" {
 #define DISCORD_REPLY_YES 1
 #define DISCORD_REPLY_IGNORE 2
 
+#ifdef _WIN32
+
 	DISCORD_EXPORT void Discord_Initialize(const char* applicationId,
 		DiscordEventHandlers* handlers,
 		int autoRegister,
@@ -77,6 +79,18 @@ extern "C" {
 	DISCORD_EXPORT void Discord_UpdatePresence(const DiscordRichPresence* presence);
 
 	DISCORD_EXPORT void Discord_Respond(const char* userid, /* DISCORD_REPLY_ */ int reply);
+	
+#else
+    // just cheat if we aren't on windows
+    
+    static void Discord_Initialize(const char* applicationId, DiscordEventHandlers* handlers, int autoRegister, const char* optionalSteamId) {};
+    static void Discord_Shutdown() {};
+    static void Discord_RunCallbacks() {};
+    static void Discord_UpdatePresence(const DiscordRichPresence* presence) {};
+    static void Discord_Respond(const char* userid, int reply) {};
+    
+#endif
+	
 
 #ifdef __cplusplus
 } /* extern "C" */

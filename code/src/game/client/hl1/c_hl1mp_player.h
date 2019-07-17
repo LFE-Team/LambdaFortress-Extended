@@ -123,7 +123,7 @@ inline C_HL1MP_Player *ToHL1MPPlayer( CBaseEntity *pEntity )
 	if ( !pEntity || !pEntity->IsPlayer() )
 		return NULL;
 
-	return dynamic_cast<C_HL1MP_Player*>( pEntity );
+	return static_cast<C_HL1MP_Player*>( pEntity );
 }
 
 

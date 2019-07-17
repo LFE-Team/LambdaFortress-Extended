@@ -15,17 +15,17 @@
 //#include "c_baseplayer.h"
 //#include "c_te_effect_dispatch.h"
 
-// memdbgon must be the last include file in a .cpp file!!!
-//#include "tier0/memdbgon.h"
+#include "c_vehicle_passenger.h"
+
 
 //=============================================================================
 //
 // Client-side Jeep Class
 //
-class C_PropJeep : public C_PropVehicleDriveable
+class C_PropJeep : public C_PropVehiclePassenger
 {
 
-	DECLARE_CLASS( C_PropJeep, C_PropVehicleDriveable );
+	DECLARE_CLASS( C_PropJeep, C_PropVehiclePassenger );
 
 public:
 

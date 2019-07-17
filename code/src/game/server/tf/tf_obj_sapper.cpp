@@ -79,7 +79,6 @@ void CObjectSapper::Spawn()
 
 	m_takedamage = DAMAGE_YES;
 	m_iHealth = GetBaseHealth();
-	//float flSapRadius = 200.0;
 
 	SetType( OBJ_ATTACHMENT_SAPPER );
 

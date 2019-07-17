@@ -27,7 +27,7 @@ private:
 	void SetCameraByName(const char *szName);
 	void ReleaseCameraLink();
 
-	EHANDLE m_hInfoCameraLink;
+	CNetworkHandle(CBaseEntity, m_hInfoCameraLink);
 };
 
 // automatically hooks in the system's callbacks
@@ -45,6 +45,7 @@ LINK_ENTITY_TO_CLASS( func_monitor, CFuncMonitor );
 
 
 IMPLEMENT_SERVERCLASS_ST( CFuncMonitor, DT_FuncMonitor )
+SendPropEHandle(SENDINFO(m_hInfoCameraLink)),
 END_SEND_TABLE()
 
 

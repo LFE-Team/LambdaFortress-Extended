@@ -11,7 +11,7 @@
 #endif
 
 #include "cbase.h"
-#include "Base_PlayerAnimState.h"
+#include "base_playeranimstate.h"
 
 // Shared header file for players
 #if defined( CLIENT_DLL )

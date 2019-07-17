@@ -1340,9 +1340,7 @@ void CBaseEntity::Activate( void )
 		AddContext( m_iszResponseContext.ToCStr() );
 	}
 
-#ifdef HL1_DLL
-	ValidateEntityConnections();
-#endif //HL1_DLL
+	//ValidateEntityConnections();
 }
 
 ////////////////////////////  old CBaseEntity stuff ///////////////////////////////////
@@ -2790,13 +2788,14 @@ bool CBaseEntity::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **p
 	if ( pEntity->GetFlags() & FL_NOTARGET )
 		return false;
 
-#if HL1_DLL
-	// FIXME: only block LOS through opaque water
-	// don't look through water
-	if ((m_nWaterLevel != 3 && pEntity->m_nWaterLevel == 3) 
-		|| (m_nWaterLevel == 3 && pEntity->m_nWaterLevel == 0))
-		return false;
-#endif
+	if(TFGameRules()->IsInHL1Map())
+	{
+		// FIXME: only block LOS through opaque water
+		// don't look through water
+		if ((m_nWaterLevel != 3 && pEntity->m_nWaterLevel == 3) 
+			|| (m_nWaterLevel == 3 && pEntity->m_nWaterLevel == 0))
+			return false;
+	}
 
 	Vector vecLookerOrigin = EyePosition();//look through the caller's 'eyes'
 	Vector vecTargetOrigin = pEntity->EyePosition();
@@ -2856,18 +2855,17 @@ bool CBaseEntity::FVisible( CBaseEntity *pEntity, int traceMask, CBaseEntity **p
 //=========================================================
 bool CBaseEntity::FVisible( const Vector &vecTarget, int traceMask, CBaseEntity **ppBlocker )
 {
-#if HL1_DLL
+	if(TFGameRules()->IsInHL1Map())
+	{
+		// don't look through water
+		// FIXME: only block LOS through opaque water
+		bool inWater = ( UTIL_PointContents( vecTarget ) & (CONTENTS_SLIME|CONTENTS_WATER) ) ? true : false;
+
+		// Don't allow it if we're straddling two areas
+		if ( ( m_nWaterLevel == 3 && !inWater ) || ( m_nWaterLevel != 3 && inWater ) )
+			return false;
+	}
 	
-	// don't look through water
-	// FIXME: only block LOS through opaque water
-	bool inWater = ( UTIL_PointContents( vecTarget ) & (CONTENTS_SLIME|CONTENTS_WATER) ) ? true : false;
-
-	// Don't allow it if we're straddling two areas
-	if ( ( m_nWaterLevel == 3 && !inWater ) || ( m_nWaterLevel != 3 && inWater ) )
-		return false;
-
-#endif 
-
 	trace_t tr;
 	Vector vecLookerOrigin = EyePosition();// look through the caller's 'eyes'
 
@@ -7346,7 +7344,7 @@ void CC_Ent_Create( const CCommand& args )
 	}
 
 	// Don't allow regular users to create point_servercommand entities for the same reason as blocking ent_fire
-	/*if ( !Q_stricmp( args[1], "point_servercommand" ) )
+	if ( !Q_stricmp( args[1], "point_servercommand" ) )
 	{
 		if ( engine->IsDedicatedServer() )
 		{
@@ -7361,7 +7359,7 @@ void CC_Ent_Create( const CCommand& args )
 			if ( pPlayer != pHostPlayer )
 				return;
 		}
-	}*/
+	}
 
 	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
 	CBaseEntity::SetAllowPrecache( true );

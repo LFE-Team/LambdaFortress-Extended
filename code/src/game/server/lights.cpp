@@ -233,13 +233,19 @@ LINK_ENTITY_TO_CLASS( light_spot, CLight );
 LINK_ENTITY_TO_CLASS( light_glspot, CLight );
 
 
-class CEnvLight : public CLight
+class CEnvLight : public CServerOnlyPointEntity
 {
 public:
-	DECLARE_CLASS( CEnvLight, CLight );
+	DECLARE_CLASS( CEnvLight, CServerOnlyPointEntity );
 
-	bool	KeyValue( const char *szKeyName, const char *szValue ); 
-	void	Spawn( void );
+	bool	KeyValue( const char *szKeyName, const char *szValue );
+	//void	Spawn( void );
+	void	Activate(void);
+
+private:
+	float m_vecLight[4];
+	float m_vecAmbientLight[4];
+	float m_fLightPitch;
 };
 
 LINK_ENTITY_TO_CLASS( light_environment, CEnvLight );
@@ -249,17 +255,55 @@ bool CEnvLight::KeyValue( const char *szKeyName, const char *szValue )
 	if (FStrEq(szKeyName, "_light"))
 	{
 		// nothing
+		UTIL_StringToFloatArray(m_vecLight, 4, szValue);
 	}
 	else
 	{
-		return BaseClass::KeyValue( szKeyName, szValue );
+		if (FStrEq(szKeyName, "pitch"))
+		{
+			m_fLightPitch = atof(szValue);
+		}
+		else if (FStrEq(szKeyName, "_ambient"))
+		{
+			UTIL_StringToFloatArray(m_vecAmbientLight, 4, szValue);
+		}
+		return BaseClass::KeyValue(szKeyName, szValue);
 	}
 
 	return true;
 }
 
 
-void CEnvLight::Spawn( void )
+/*void CEnvLight::Spawn( void )
 {
 	BaseClass::Spawn( );
+}*/
+
+void CEnvLight::Activate(void)
+{
+	BaseClass::Activate();
+
+	CBaseEntity *pSunLight = gEntList.FindEntityByClassname( NULL, "sunlight_shadow_control" );
+	if ( !pSunLight )
+	{
+		pSunLight = CreateEntityByName("sunlight_shadow_control");
+		if (pSunLight)
+		{
+			const QAngle &vecAngles = GetAbsAngles();
+			pSunLight->SetName( AllocPooledString ( "sunlight_shadow_control" ) );
+			pSunLight->KeyValue( "color", UTIL_VarArgs( "%f %f %f 2", m_vecLight[0], m_vecLight[1], m_vecLight[2] ));
+			//pSunLight->KeyValue( "texturename", "effects/flashlight001" );
+			pSunLight->KeyValue( "distance", "10000" );
+			pSunLight->KeyValue( "nearz", "1024" );
+			pSunLight->KeyValue( "northoffset", "165" );
+			pSunLight->KeyValue( "enableshadows", "1" );
+			pSunLight->KeyValue( "colortransitiontime", "0.5" );
+			//pSunLight->KeyValue( "ambient", UTIL_VarArgs("%f %f %f %f", m_vecAmbientLight[0], m_vecAmbientLight[1], m_vecAmbientLight[2], m_vecAmbientLight[3]) );
+			pSunLight->KeyValue( "spawnflags", "0" );
+			pSunLight->KeyValue( "angles", UTIL_VarArgs("%f %f %f", -m_fLightPitch, vecAngles.y, vecAngles.z) );
+			DispatchSpawn( pSunLight );
+		}
+	}
+
+	UTIL_Remove(this);
 }

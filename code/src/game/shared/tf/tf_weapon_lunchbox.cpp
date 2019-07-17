@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//====== Copyright ? 1996-2005, Valve Corporation, All rights reserved. =======
 //
 // Purpose: 
 //
@@ -9,7 +9,6 @@
 #ifdef GAME_DLL
 #include "tf_player.h"
 #include "tf_powerup.h"
-#include "entity_healthkit.h"
 #else
 #include "c_tf_player.h"
 #include "c_tf_viewmodeladdon.h"
@@ -18,6 +17,9 @@
 CREATE_SIMPLE_WEAPON_TABLE( TFLunchBox, tf_weapon_lunchbox )
 
 #define TF_SANDVICH_PLATE_MODEL "models/items/plate.mdl"
+#define SANDVICH_BODYGROUP_BITE 0
+#define SANDVICH_STATE_BITTEN 1
+#define SANDVICH_STATE_NORMAL 0
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -28,23 +30,11 @@ void CTFLunchBox::PrimaryAttack( void )
 	if ( !pOwner )
 		return;
 
-	if (pOwner->GetGroundEntity() != NULL)
-	{
 #ifdef GAME_DLL
-		if ( pOwner->GetWaterLevel() < WL_Waist )
-		{
-			pOwner->Taunt();
-
-			//ApplyBiteEffects();
-			if ( pOwner->GetHealth() < pOwner->GetMaxHealth() )
-			{
-				pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
-				pOwner->SwitchToNextBestWeapon(this);
-				StartEffectBarRegen();
-			}
-		}
+	pOwner->Taunt();
 #endif
-	}
+	m_bBitten = true;
+	SwitchBodyGroups();
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 }
@@ -77,9 +67,12 @@ void CTFLunchBox::SecondaryAttack( void )
 	// A bit below the eye position.
 	vecSrc.z -= 8.0f;
 
-	CHealthKitMedium *pPowerup = static_cast<CHealthKitMedium *>( CBaseEntity::Create( "item_healthkit_medium", vecSrc, vec3_angle, pOwner ) );
+	CTFPowerup *pPowerup = static_cast<CTFPowerup *>( CBaseEntity::Create( "item_healthkit_medium", vecSrc, vec3_angle, pOwner ) );
 	if ( !pPowerup )
 		return;
+
+	// Don't collide with the player owner for the first portion of its life
+	pPowerup->m_flNextCollideTime = gpGlobals->curtime + 0.5f;
 
 	pPowerup->SetModel( TF_SANDVICH_PLATE_MODEL );
 	UTIL_SetSize( pPowerup, -Vector( 17, 17, 10 ), Vector( 17, 17, 10 ) );
@@ -100,8 +93,40 @@ void CTFLunchBox::SecondaryAttack( void )
 	pOwner->SwitchToNextBestWeapon( this );
 
 	StartEffectBarRegen();
+}
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFLunchBox::DepleteAmmo( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+	if ( !pOwner )
+		return;
+
+	if ( pOwner->HealthFraction() >= 1.0f )
+		return;
+
+	// Switch away from it immediately, don't want it to stick around.
+	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	pOwner->SwitchToNextBestWeapon( this );
+
+	StartEffectBarRegen();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Update the sandvich bite effects
+//-----------------------------------------------------------------------------
+void CTFLunchBox::SwitchBodyGroups( void )
+{
+#ifndef GAME_DLL
+	C_ViewmodelAttachmentModel *pAttach = GetViewmodelAddon();
+	if ( pAttach )
+	{
+		int iState = m_bBitten ? SANDVICH_STATE_BITTEN : SANDVICH_STATE_NORMAL;
+		pAttach->SetBodygroup( SANDVICH_BODYGROUP_BITE, iState );
+	}
+#endif
 }
 
 #ifdef GAME_DLL
@@ -114,28 +139,24 @@ void CTFLunchBox::Precache( void )
 	UTIL_PrecacheOther( "item_healthkit_medium" );
 	PrecacheModel( TF_SANDVICH_PLATE_MODEL );
 
-	PrecacheParticleSystem( "sandwich_fx" );
-
 	BaseClass::Precache();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFLunchBox::ApplyBiteEffects( void )
+void CTFLunchBox::ApplyBiteEffects( bool bHurt )
 {
-	// Heal 80 HP per second for a total 300 HP because this is sandvich not banana.
+	if ( !bHurt )
+		return;
+
+	// Heal 25% of the player's max health per second for a total of 100%.
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 
 	if ( pOwner )
 	{
-		pOwner->TakeHealth( 80, DMG_GENERIC );
-		//pOwner->TakeHealth( 120, DMG_GENERIC );
-		//pOwner->SpeakConceptIfAllowed( MP_CONCEPT_ATE_FOOD );
+		pOwner->TakeHealth( ( GetTFPlayerOwner()->GetMaxHealth() ) / 4, DMG_GENERIC );
 	}
-#ifdef CLIENT_DLL
-	ParticleProp()->Create( "sandwich_fx", PATTACH_ABSORIGIN_FOLLOW );
-#endif
 }
 
 #endif
@@ -179,28 +200,13 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 {
 	CTFPlayer *pOwner = GetTFPlayerOwner();
 	if ( !pOwner )
-	{
 		return;
-	}
 
-	if (pOwner->GetGroundEntity() != NULL)
-	{
-		if ( pOwner->GetWaterLevel() < WL_Waist )
-		{
 #ifdef GAME_DLL
-			pOwner->Taunt();
-			
+	pOwner->Taunt();
 #endif
 
-			// Switch away from it immediately, don't want it to stick around.
-			pOwner->RemoveAmmo(1, m_iPrimaryAmmoType);
-			pOwner->SwitchToNextBestWeapon(this);
-
-			StartEffectBarRegen();
-		}
-
-		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
-	}
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.5f;
 }
 
 //-----------------------------------------------------------------------------
@@ -209,6 +215,22 @@ void CTFLunchBox_Drink::PrimaryAttack( void )
 void CTFLunchBox_Drink::SecondaryAttack( void )
 {
 	BaseClass::BaseClass::SecondaryAttack();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFLunchBox_Drink::DepleteAmmo( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+	if ( !pOwner )
+		return;
+
+	// Switch away from it immediately, don't want it to stick around.
+	pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+	pOwner->SwitchToNextBestWeapon( this );
+
+	StartEffectBarRegen();
 }
 
 #ifdef GAME_DLL

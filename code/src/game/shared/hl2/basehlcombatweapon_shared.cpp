@@ -22,14 +22,18 @@ IMPLEMENT_NETWORKCLASS_ALIASED( BaseHLCombatWeapon , DT_BaseHLCombatWeapon )
 BEGIN_NETWORK_TABLE( CBaseHLCombatWeapon , DT_BaseHLCombatWeapon )
 #if !defined( CLIENT_DLL )
 //	SendPropInt( SENDINFO( m_bReflectViewModelAnimations ), 1, SPROP_UNSIGNED ),
+	SendPropTime( SENDINFO( m_flLastFireTime ) )
 #else
 //	RecvPropInt( RECVINFO( m_bReflectViewModelAnimations ) ),
+	RecvPropTime( RECVINFO( m_flLastFireTime ) )
 #endif
 END_NETWORK_TABLE()
 
-ConVar lfe_hl2_weapon_criticals( "lfe_hl2_weapon_criticals", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled on hl2 weapons." );
-
+ConVar lfe_hl2_weapon_criticals( "lfe_hl2_weapon_criticals", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Whether or not random crits are enabled on hl2 weapons." );
+ConVar lfe_hl2_weapon_criticals_melee( "lfe_hl2_weapon_criticals_melee", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Controls random crits for melee attack.\n0 - Melee attack do not randomly crit. \n1 - Melee attack can randomly crit only if lfe_hl2_weapon_criticals is also enabled. \n2 - Melee attack can always randomly crit regardless of the lfe_hl2_weapon_criticals setting.", true, 0, true, 2 );
 #ifdef GAME_DLL
+ConVar  lfe_hl2_weapon_use_tf_bullet("lfe_hl2_weapon_use_tf_bullet", "1", FCVAR_CHEAT | FCVAR_REPLICATED, "Make HL2 Weapons use TF2's bullet." );
+
 extern ConVar tf_debug_criticals;
 #endif
 
@@ -53,11 +57,14 @@ END_DATADESC()
 #endif
 
 BEGIN_PREDICTION_DATA( CBaseHLCombatWeapon )
+#ifdef CLIENT_DLL
+	DEFINE_PRED_FIELD_TOL( m_flLastFireTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
+#endif
 END_PREDICTION_DATA()
 
 ConVar sk_auto_reload_time( "sk_auto_reload_time", "3", FCVAR_REPLICATED );
 
-#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
+#if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 // -----------------------------------------------------------------------------
 // Purpose: Constructor.
 // -----------------------------------------------------------------------------
@@ -69,6 +76,17 @@ CBaseHLCombatWeapon::CBaseHLCombatWeapon()
 	m_bCurrentAttackIsCrit = false;
 	m_iCurrentSeed = -1;
 	m_flLastFireTime = 0.0f;
+}
+
+// -----------------------------------------------------------------------------
+// Purpose:
+// -----------------------------------------------------------------------------
+void CBaseHLCombatWeapon::Spawn()
+{
+	// Base class spawn.
+	BaseClass::Spawn();
+
+	m_szTracerName[0] = '\0';
 }
 #endif
 
@@ -456,7 +474,7 @@ const WeaponProficiencyInfo_t *CBaseHLCombatWeapon::GetDefaultProficiencyValues(
 
 #endif
 
-#if defined( TF_CLASSIC_CLIENT ) && defined( TF_CLASSIC )
+#if defined( TF_CLASSIC ) || defined( TF_CLASSIC_CLIENT )
 //-----------------------------------------------------------------------------
 // Purpose: Most calls use the prediction seed
 //-----------------------------------------------------------------------------
@@ -516,6 +534,7 @@ void CBaseHLCombatWeapon::CalcIsAttackCritical( void )
 //-----------------------------------------------------------------------------
 bool CBaseHLCombatWeapon::CalcIsAttackCriticalHelper()
 {
+#ifdef GAME_DLL
 	CBaseCombatCharacter *pOwner = GetOwner();
 	CAI_BaseNPC *pNPC = pOwner->MyNPCPointer();
 	if ( !pNPC )
@@ -525,10 +544,11 @@ bool CBaseHLCombatWeapon::CalcIsAttackCriticalHelper()
 	if ( !lfe_hl2_weapon_criticals.GetBool() )
 		return false;
 
-	float flPlayerCritMult = pNPC->GetCritMult();
-	/*
-	if ( m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_bUseRapidFireCrits )
+	float flNPCCritMult = pNPC->GetCritMult();
+#endif
+	if ( CanCritRapidFire() )
 	{
+#ifdef GAME_DLL
 		if ( m_flCritTime > gpGlobals->curtime )
 			return true;
 		// only perform one crit check per second for rapid fire weapons
@@ -537,8 +557,8 @@ bool CBaseHLCombatWeapon::CalcIsAttackCriticalHelper()
 		m_flLastCritCheckTime = gpGlobals->curtime;
 
 		// get the total crit chance (ratio of total shots fired we want to be crits)
-		float flTotalCritChance = TF_DAMAGE_CRIT_CHANCE_RAPID * flPlayerCritMult;
-		CALL_ATTRIB_HOOK_FLOAT( flTotalCritChance, mult_crit_chance );
+		float flTotalCritChance = TF_DAMAGE_CRIT_CHANCE_RAPID * flNPCCritMult;
+		//CALL_ATTRIB_HOOK_FLOAT( flTotalCritChance, mult_crit_chance );
 
 		// If the chance is 0, just bail.
 		if ( flTotalCritChance == 0.0f )
@@ -546,56 +566,28 @@ bool CBaseHLCombatWeapon::CalcIsAttackCriticalHelper()
 
 		flTotalCritChance = clamp( flTotalCritChance, 0.01f, 0.99f );
 		// get the fixed amount of time that we start firing crit shots for	
-		float flCritDuration = TF_DAMAGE_CRIT_DURATION_RAPID;
+		float flCritDuration = LFE_DAMAGE_NPC_CRIT_DURATION_RAPID;
 		// calculate the amount of time, on average, that we want to NOT fire crit shots for in order to achive the total crit chance we want
 		float flNonCritDuration = ( flCritDuration / flTotalCritChance ) - flCritDuration;
 		// calculate the chance per second of non-crit fire that we should transition into critting such that on average we achieve the total crit chance we want
 		float flStartCritChance = 1 / flNonCritDuration;
 
-#ifdef GAME_DLL
+
 		if ( tf_debug_criticals.GetBool() )
 		{
-			Msg( "Rolling crit: %.02f%% chance... ", flTotalCritChance * 100.0f );
+			Msg( "%s : Rolling crit: %.02f%% chance... ", pNPC->GetClassname(), flTotalCritChance * 100.0f );
 		}
 #endif
-
+		bool bSuccess = false;
+#ifdef GAME_DLL
 		// see if we should start firing crit shots
-		bool bSuccess = RandomInt( 0, WEAPON_RANDOM_RANGE - 1 ) <= ( flStartCritChance * WEAPON_RANDOM_RANGE );
+		bSuccess = ( RandomInt( 0, WEAPON_RANDOM_RANGE - 1 ) <= ( flStartCritChance * WEAPON_RANDOM_RANGE ) );
 
 		if ( bSuccess )
 		{
-			m_flCritTime = gpGlobals->curtime + TF_DAMAGE_CRIT_DURATION_RAPID;
+			m_flCritTime = gpGlobals->curtime + flCritDuration;
 		}
 
-#ifdef GAME_DLL
-		if ( tf_debug_criticals.GetBool() )
-		{
-			Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
-		}
-#endif
-
-		return false;
-	}
-	else
-	{*/
-		// single-shot weapon, just use random pct per shot
-		float flCritChance = TF_DAMAGE_CRIT_CHANCE * flPlayerCritMult;
-		//CALL_ATTRIB_HOOK_FLOAT( flCritChance, mult_crit_chance );
-
-		// If the chance is 0, just bail.
-		if ( flCritChance == 0.0f )
-			return false;
-
-#ifdef GAME_DLL
-		if ( tf_debug_criticals.GetBool() )
-		{
-			Msg( "Rolling crit: %.02f%% chance... ", flCritChance * 100.0f );
-		}
-#endif
-
-		bool bSuccess = ( RandomInt( 0.0, WEAPON_RANDOM_RANGE - 1 ) < flCritChance * WEAPON_RANDOM_RANGE );
-
-#ifdef GAME_DLL
 		if ( tf_debug_criticals.GetBool() )
 		{
 			Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
@@ -603,6 +595,56 @@ bool CBaseHLCombatWeapon::CalcIsAttackCriticalHelper()
 #endif
 
 		return bSuccess;
-	//}
+	}
+	else
+	{
+#ifdef GAME_DLL
+		// single-shot weapon, just use random pct per shot
+		float flCritChance = TF_DAMAGE_CRIT_CHANCE * flNPCCritMult;
+		//CALL_ATTRIB_HOOK_FLOAT( flCritChance, mult_crit_chance );
+
+		// If the chance is 0, just bail.
+		if ( flCritChance == 0.0f )
+			return false;
+
+		if ( tf_debug_criticals.GetBool() )
+		{
+			Msg( "%s : Rolling crit: %.02f%% chance... ", pNPC->GetClassname(), flCritChance * 100.0f );
+		}
+#endif
+		bool bSuccess = false;
+#ifdef GAME_DLL
+		bSuccess = ( RandomInt( 0.0, WEAPON_RANDOM_RANGE - 1 ) < flCritChance * WEAPON_RANDOM_RANGE );
+
+		
+		if ( tf_debug_criticals.GetBool() )
+		{
+			Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
+		}
+#endif
+		return bSuccess;
+	}
+	
+}
+
+extern ConVar tf_useparticletracers;
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+const char *CBaseHLCombatWeapon::GetTracerType( void )
+{
+	if ( tf_useparticletracers.GetBool() )
+	{
+		if ( GetOwner() && !m_szTracerName[0] )
+		{
+			const char *pszTeamName = GetTeamParticleName( GetOwner()->GetTeamNumber() );
+			V_snprintf( m_szTracerName, MAX_TRACER_NAME, "bullet_pistol_tracer01_%s", pszTeamName );
+		}
+
+		return m_szTracerName;
+	}
+
+	return BaseClass::GetTracerType();
 }
 #endif

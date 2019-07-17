@@ -24,6 +24,7 @@
 	#include "tf_weapon_grenade_pipebomb.h"
 	#include "tf_weapon_grenade_stickybomb.h"
 	#include "tf_projectile_flare.h"
+	#include "tf_projectile_dragons_fury.h"
 	#include "tf_weapon_grenade_mirv.h"
 	#include "te.h"
 	#include "soundent.h"
@@ -227,7 +228,6 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 		break;
 
 	case TF_PROJECTILE_ROCKET:
-	case TF_PROJECTILE_BALLOFFIRE:
 		pProjectile = FireRocket( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
@@ -379,7 +379,7 @@ public:
 	{
 		CBaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
 
-		if ( pEntity->IsPlayer() && pEntity->GetTeamNumber() == m_iIgnoreTeam )
+		if ( pEntity->IsPlayer() || pEntity->IsNPC() && pEntity->GetTeamNumber() == m_iIgnoreTeam )
 		{
 			return false;
 		}
@@ -543,9 +543,6 @@ CBaseEntity *CTFWeaponBaseGun::FireRocket( CTFPlayer *pPlayer, int iType )
 	{
 	case TF_PROJECTILE_ROCKET:
 		pProjectile = CTFProjectile_Rocket::Create( this, vecSrc, angForward, pPlayer, pPlayer );
-		break;
-	case TF_PROJECTILE_BALLOFFIRE:
-		pProjectile = CTFProjectile_BallOfFire::Create( this, vecSrc, angForward, pPlayer, pPlayer );
 		break;
 	default:
 		Assert( false );

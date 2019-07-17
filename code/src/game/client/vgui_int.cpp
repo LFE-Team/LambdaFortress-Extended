@@ -232,7 +232,7 @@ void VGui_CreateGlobalPanels( void )
 	netgraphpanel->Create( toolParent );
 	debugoverlaypanel->Create( gameToolParent );
 
-#ifndef _X360
+#if !defined( _X360 ) && defined( _WIN32 )
 	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
 #endif
@@ -245,7 +245,7 @@ void VGui_Shutdown()
 {
 	VGUI_DestroyClientDLLRootPanel();
 
-#ifndef _X360
+#if !defined( _X360 ) && defined( _WIN32 )
 	MP3Player_Destroy();
 #endif
 

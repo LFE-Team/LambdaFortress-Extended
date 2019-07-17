@@ -17,6 +17,7 @@
 #include "tf_player.h"
 #include "tf_powerup.h"
 #include "tf_weaponbase.h"
+#include "tf_weapon_invis.h"
 
 #define TF_AMMOPACK_PICKUP_SOUND	"AmmoPack.Touch"
 #endif
@@ -33,12 +34,30 @@ bool ITEM_GiveTFAmmo(CBasePlayer *pPlayer, float flCount, bool bSuppressSound = 
 	if (!pTFPlayer)
 		return false;
 
-	for (int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++)
+	for ( int i = TF_AMMO_PRIMARY; i <= TF_AMMO_METAL; i++ )
 	{
 		int iMaxAmmo = pTFPlayer->GetPlayerClass()->GetData()->m_aAmmoMax[i];
 
-		if (pTFPlayer->GiveAmmo(ceil(iMaxAmmo * flCount), i, true))
+		if ( pTFPlayer->GiveAmmo( ceil(iMaxAmmo * flCount), i, true ) )
 		{
+			bSuccess = true;
+		}
+	}
+
+	int iNoItems = 0;
+	int iCloakWhenCloaked = 0;
+	float flReducedCloakFromAmmo = 0;
+	CTFWeaponInvis *pInvis = static_cast<CTFWeaponInvis*>( pTFPlayer->Weapon_OwnsThisID( TF_WEAPON_INVIS ) );
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pInvis, iNoItems, mod_cloak_no_regen_from_items );
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pInvis, iCloakWhenCloaked, NoCloakWhenCloaked );
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pInvis, flReducedCloakFromAmmo, ReducedCloakFromAmmo );
+
+	float flCloak = pTFPlayer->m_Shared.GetSpyCloakMeter();
+	if ( flCloak < 100.0f )
+	{
+		if ( !pTFPlayer->m_Shared.InCond( TF_COND_STEALTHED ) && iCloakWhenCloaked != 1 || iNoItems != 1 )
+		{
+			pTFPlayer->m_Shared.SetSpyCloakMeter( min( 100.0f, flCloak + min( 100.0f, flReducedCloakFromAmmo ) * flCount ) );
 			bSuccess = true;
 		}
 	}
@@ -70,12 +89,12 @@ public:
 		BaseClass::Precache();
 	}
 
-	bool MyTouch(CBasePlayer *pPlayer)
+	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		if (ITEM_GiveTFAmmo(pPlayer, PackRatios[GetPowerupSize()]))
+		if ( ITEM_GiveTFAmmo( pPlayer, PackRatios[GetPowerupSize()]) )
 		{
-			CSingleUserRecipientFilter filter(pPlayer);
-			EmitSound(filter, entindex(), TF_AMMOPACK_PICKUP_SOUND);
+			CSingleUserRecipientFilter filter( pPlayer );
+			EmitSound( filter, entindex(), TF_AMMOPACK_PICKUP_SOUND );
 			return true;
 		}
 

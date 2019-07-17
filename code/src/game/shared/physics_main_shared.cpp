@@ -18,6 +18,7 @@
 #include "igamesystem.h"
 #include "utlmultilist.h"
 #include "tier1/callqueue.h"
+#include "tf_gamerules.h"
 
 #ifdef PORTAL
 	#include "portal_util_shared.h"
@@ -1365,9 +1366,8 @@ int CBaseEntity::PhysicsClipVelocity( const Vector& in, const Vector& normal, Ve
 //-----------------------------------------------------------------------------
 void CBaseEntity::ResolveFlyCollisionBounce( trace_t &trace, Vector &vecVelocity, float flMinTotalElasticity )
 {
-#ifdef HL1_DLL
-	flMinTotalElasticity = 0.3f;
-#endif//HL1_DLL
+	if(TFGameRules()->IsInHL1Map())
+		flMinTotalElasticity = 0.3f;
 
 	// Get the impact surface's elasticity.
 	float flSurfaceElasticity;

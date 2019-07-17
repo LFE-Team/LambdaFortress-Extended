@@ -39,6 +39,7 @@ public:
 	virtual void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason );
 
+	virtual bool IsDeflectable( void ) { return true; }
 protected:
 	virtual void OnBreak( const Vector &vecVelocity, const AngularImpulse &angVel, CBaseEntity *pBreaker );
 

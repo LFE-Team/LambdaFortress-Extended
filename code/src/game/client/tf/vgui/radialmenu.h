@@ -8,7 +8,8 @@
 #endif
 
 #include <vgui_controls/EditablePanel.h>
-//#include "asw_hudelement.h"
+#include "hud.h"
+#include "hudelement.h"
 
 #define PANEL_RADIAL_MENU			"RadialMenu"
 

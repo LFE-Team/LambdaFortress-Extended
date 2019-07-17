@@ -41,6 +41,7 @@
 #include "particle_parse.h"
 #include "tf_fx.h"
 #include "world.h"
+#include "ai_basenpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1078,7 +1079,7 @@ bool CBaseObject::FindNearestBuildPoint( CBaseEntity *pEntity, CBasePlayer *pBui
 {
 	bool bFoundPoint = false;
 
-	IHasBuildPoints *pBPInterface = dynamic_cast<IHasBuildPoints*>(pEntity);
+	IHasBuildPoints *pBPInterface = dynamic_cast<IHasBuildPoints*>( pEntity );
 	Assert( pBPInterface );
 
 	// Any empty buildpoints?
@@ -1132,144 +1133,69 @@ bool CBaseObject::FindNearestBuildPoint( CBaseEntity *pEntity, CBasePlayer *pBui
 	return bFoundPoint;
 }
 
-/*
-class CTraceFilterIgnorePlayers : public CTraceFilterSimple
-{
-public:
-	// It does have a base, but we'll never network anything below here..
-	DECLARE_CLASS( CTraceFilterIgnorePlayers, CTraceFilterSimple );
-
-	CTraceFilterIgnorePlayers( const IHandleEntity *passentity, int collisionGroup )
-		: CTraceFilterSimple( passentity, collisionGroup )
-	{
-	}
-
-	virtual bool ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
-	{
-		CBaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
-
-		if ( pEntity->IsPlayer() )
-		{
-			return false;
-		}
-
-		return true;
-	}
-};
-
 //-----------------------------------------------------------------------------
-// Purpose: Test around this build position to make sure it does not block a path
+// Purpose: Find the nearest buildpoint on the specified entity
 //-----------------------------------------------------------------------------
-bool CBaseObject::TestPositionForPlayerBlock( Vector vecBuildOrigin, CBasePlayer *pPlayer )
+bool CBaseObject::FindBuildPointOnPlayer( CTFPlayer *pPlayer, CBasePlayer *pBuilder, float &flNearestPoint, Vector &vecNearestBuildPoint )
 {
-	// find out the status of the 8 regions around this position
-	int i;
-	bool bNodeVisited[8];
-	bool bNodeClear[8];
+	bool bFoundPoint = false;
 
-	// The first zone that is clear of obstructions
-	int iFirstClear = -1;
+	int iAttachment = pPlayer->LookupAttachment( "head" );
 
-	Vector vHalfPlayerDims = (VEC_HULL_MAX - VEC_HULL_MIN) * 0.5f;
+	// Close to this point?
+	Vector vecBPOrigin;
+	QAngle vecBPAngles;
 
-	Vector vBuildDims = m_vecBuildMaxs - m_vecBuildMins;
-	Vector vHalfBuildDims = vBuildDims * 0.5;
+	float flDist = (vecBPOrigin - pBuilder->GetAbsOrigin()).Length();
 
-	 
-	// the locations of the 8 test positions
-	// boxes are adjacent to the object box and are at least as large as 
-	// a player to ensure that a player can pass this location
-
-	//	0  1  2
-	//	7  X  3
-	//	6  5  4
-
-	static int iPositions[8][2] = 
+	// if this is closer, or is the first one in our view, check it out
+	if ( flDist < min(flNearestPoint, GetMaxSnapDistance( iAttachment )) )
 	{
-		{ -1, -1 },
-		{ 0, -1 },
-		{ 1, -1 },
-		{ 1, 0 },
-		{ 1, 1 },
-		{ 0, 1 },
-		{ -1, 1 },
-		{ -1, 0 }
-	};
+		flNearestPoint = flDist;
+		vecNearestBuildPoint = vecBPOrigin;
+		m_hBuiltOnEntity = pPlayer;
+		m_iBuiltOnPoint = iAttachment;
 
-	CTraceFilterIgnorePlayers traceFilter( this, COLLISION_GROUP_NONE );
+		// Set our angles to the buildpoint's angles
+		SetAbsAngles( vecBPAngles );
 
-	for ( i=0;i<8;i++ )
-	{
-		// mark them all as unvisited
-		bNodeVisited[i] = false;
-
-		Vector vecTest = vecBuildOrigin;		
-		vecTest.x += ( iPositions[i][0] * ( vHalfBuildDims.x + vHalfPlayerDims.x ) );
-		vecTest.y += ( iPositions[i][1] * ( vHalfBuildDims.y + vHalfPlayerDims.y ) );
-
-		trace_t trace;
-		UTIL_TraceHull( vecTest, vecTest, VEC_HULL_MIN, VEC_HULL_MAX, MASK_SOLID_BRUSHONLY, &traceFilter, &trace );
-
-		bNodeClear[i] = ( trace.fraction == 1 && trace.allsolid != 1 && (trace.startsolid != 1) );
-
-		// NDebugOverlay::Box( vecTest, VEC_HULL_MIN, VEC_HULL_MAX, bNodeClear[i] ? 0 : 255, bNodeClear[i] ? 255 : 0, 0, 20, 0.1 );
-
-		// Store off the first clear location
-		if ( iFirstClear < 0 && bNodeClear[i] )
-		{
-			iFirstClear = i;
-		}
+		bFoundPoint = true;
 	}
 
-	if ( iFirstClear < 0 )
-	{
-		// no clear space
-		return false;
-	}
-
-	// visit all nodes that are adjacent
-	RecursiveTestBuildSpace( iFirstClear, bNodeClear, bNodeVisited );
-
-	// if we still have unvisited nodes, return false
-	// unvisited nodes means that one or more nodes was unreachable from our start position
-	// ie, two places the player might want to traverse but would not be able to if we built here
-	for ( i=0;i<8;i++ )
-	{
-		if ( bNodeVisited[i] == false && bNodeClear[i] == true )
-		{
-			return false;
-		}
-	}
-
-	return true;
+	return bFoundPoint;
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Test around the build position, one quadrant at a time
+// Purpose: Find the nearest buildpoint on the specified entity
 //-----------------------------------------------------------------------------
-void CBaseObject::RecursiveTestBuildSpace( int iNode, bool *bNodeClear, bool *bNodeVisited )
+bool CBaseObject::FindBuildPointOnNPC( CAI_BaseNPC *pNPC, CBasePlayer *pBuilder, float &flNearestPoint, Vector &vecNearestBuildPoint )
 {
-	// if the node is visited already
-	if ( bNodeVisited[iNode] == true )
-		return;
+	bool bFoundPoint = false;
 
-	// if the test node is blocked
-	if ( bNodeClear[iNode] == false )
-		return;
+	int iAttachment = pNPC->LookupAttachment( "root" );
 
-	bNodeVisited[iNode] = true;
+	// Close to this point?
+	Vector vecBPOrigin;
+	QAngle vecBPAngles;
 
-	int iLeftNode = iNode - 1;
-	if ( iLeftNode < 0 )
-		iLeftNode = 7;
+	float flDist = (vecBPOrigin - pBuilder->GetAbsOrigin()).Length();
 
-	RecursiveTestBuildSpace( iLeftNode, bNodeClear, bNodeVisited );
+	// if this is closer, or is the first one in our view, check it out
+	if ( flDist < min(flNearestPoint, GetMaxSnapDistance( iAttachment )) )
+	{
+		flNearestPoint = flDist;
+		vecNearestBuildPoint = vecBPOrigin;
+		m_hBuiltOnEntity = pNPC;
+		m_iBuiltOnPoint = iAttachment;
 
-	int iRightNode = ( iNode + 1 ) % 8;
+		// Set our angles to the buildpoint's angles
+		SetAbsAngles( vecBPAngles );
 
-	RecursiveTestBuildSpace( iRightNode, bNodeClear, bNodeVisited );
+		bFoundPoint = true;
+	}
+
+	return bFoundPoint;
 }
-*/
 
 //-----------------------------------------------------------------------------
 // Purpose: Move the placement model to the current position. Return false if it's an invalid position
@@ -1299,11 +1225,8 @@ bool CBaseObject::FindSnapToBuildPos( CBaseObject *pObject /*= NULL*/ )
 		return false;
 
 	CTFPlayer *pPlayer = GetOwner();
-
 	if ( !pPlayer )
-	{
 		return false;
-	}
 
 	bool bSnappedToPoint = false;
 	bool bShouldAttachToParent = false;
@@ -1312,7 +1235,6 @@ bool CBaseObject::FindSnapToBuildPos( CBaseObject *pObject /*= NULL*/ )
 
 	// See if there are any nearby build positions to snap to
 	float flNearestPoint = 9999;
-	int i;
 
 	bool bHostileAttachment = IsHostileUpgrade();
 	int iMyTeam = GetTeamNumber();
@@ -1353,13 +1275,42 @@ bool CBaseObject::FindSnapToBuildPos( CBaseObject *pObject /*= NULL*/ )
 				continue;
 
 			// look for nearby buildpoints on other objects
-			for ( i = 0; i < pTeam->GetNumObjects(); i++ )
+			for ( int iObject = 0; iObject < pTeam->GetNumObjects(); iObject++ )
 			{
-				CBaseObject *pTempObject = pTeam->GetObject( i );
-				Assert( pTempObject );
+				CBaseObject *pTempObject = pTeam->GetObject( iObject );
+				//Assert( pTempObject );
 				if ( pTempObject && !pTempObject->IsPlacing() )
 				{
 					if ( FindNearestBuildPoint( pTempObject, pPlayer, flNearestPoint, vecNearestBuildPoint ) )
+					{
+						bSnappedToPoint = true;
+						bShouldAttachToParent = true;
+					}
+				}
+			}
+
+			for (int iPlayer = 0; iPlayer < pTeam->GetNumPlayers(); iPlayer++)
+			{
+				CBasePlayer *pTargetPlayer = pTeam->GetPlayer( iPlayer );
+				//Assert( pTargetPlayer );
+				if ( pTargetPlayer && pTargetPlayer->IsConnected() && pTargetPlayer->IsAlive() )
+				{
+					if ( FindBuildPointOnPlayer( (CTFPlayer*)pTargetPlayer, pPlayer, flNearestPoint, vecNearestBuildPoint ) )
+					{
+						bSnappedToPoint = true;
+						bShouldAttachToParent = true;
+					}
+				}
+			}
+
+			// look for nearby buildpoints on npcs
+			for ( int iNPC = 0; iNPC < pTeam->GetNumNPCs(); iNPC++ )
+			{
+				CAI_BaseNPC *pNPC = pTeam->GetNPC( iNPC );
+				//Assert( pNPC );
+				if ( pNPC && pNPC->IsAlive() )
+				{
+					if ( FindBuildPointOnNPC( pNPC, pPlayer, flNearestPoint, vecNearestBuildPoint ) )
 					{
 						bSnappedToPoint = true;
 						bShouldAttachToParent = true;
@@ -2083,6 +2034,9 @@ float CBaseObject::GetConstructionMultiplier( void )
 		{
 			// Each player hitting it builds twice as fast
 			flMultiplier *= 2.0;
+
+			// Check if this weapon has a build modifier
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( UTIL_PlayerByIndex( m_RepairerList.Key( iThis ) ), flMultiplier, mult_construction_value );
 		}
 	}
 
@@ -2718,7 +2672,6 @@ void CBaseObject::DetermineAnimation( void )
 //-----------------------------------------------------------------------------
 // Purpose: Attach this object to the specified object
 //-----------------------------------------------------------------------------
-
 void CBaseObject::AttachObjectToObject( CBaseEntity *pEntity, int iPoint, Vector &vecOrigin )
 {
 	m_hBuiltOnEntity = pEntity;
@@ -3055,7 +3008,7 @@ void CBaseObject::FallThink ( void )
 	// which is the case when creating currencypacks in MvM
 	if ( !( GetFlags() & FL_ONGROUND ) )
 	{
-		if (!GetAbsVelocity().Length() && GetMoveType() == MOVETYPE_FLYGRAVITY )
+		if (!GetAbsVelocity().Length() && GetMoveType() == MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_BOUNCE)
 		{
 			// Mr. Game, meet Mr. Hammer.  Mr. Hammer, meet the uncooperative Mr. Physics.
 			// Mr. Physics really doesn't want to give our friend the FL_ONGROUND flag.

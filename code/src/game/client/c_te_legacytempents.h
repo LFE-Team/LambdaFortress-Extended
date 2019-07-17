@@ -149,10 +149,10 @@ private:
 	struct model_t			*m_pShells[3];
 	struct model_t			*m_pSpriteCombineFlash[2];
 
-#ifdef HL1_CLIENT_DLL
+//#ifdef HL1_CLIENT_DLL
 	struct model_t			*m_pHL1Shell;
 	struct model_t			*m_pHL1ShotgunShell;
-#endif
+//#endif
 
 #if defined( CSTRIKE_DLL ) || defined ( SDK_DLL )
 	struct model_t			*m_pCS_9MMShell;

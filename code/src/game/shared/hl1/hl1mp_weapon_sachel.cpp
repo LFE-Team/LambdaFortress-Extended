@@ -6,7 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "hl1_basecombatweapon_shared.h"
 //#include "basecombatweapon.h"
 //#include "basecombatcharacter.h"

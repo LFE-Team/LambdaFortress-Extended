@@ -41,6 +41,24 @@
 
 #define	MEGACANNON_MODEL "models/weapons/v_superphyscannon.mdl"
 #define	MEGACANNON_SKIN	1
+#define PHYSCANNON_MODEL_SCOUT "models/weapons/v_physcannon_scout.mdl"
+#define PHYSCANNON_MODEL_SOLDIER "models/weapons/v_physcannon_soldier.mdl"
+#define PHYSCANNON_MODEL_PYRO "models/weapons/v_physcannon_pyro.mdl"
+#define PHYSCANNON_MODEL_DEMO "models/weapons/v_physcannon_demoman.mdl"
+#define PHYSCANNON_MODEL_HEAVY "models/weapons/v_physcannon_heavy.mdl"
+#define PHYSCANNON_MODEL_ENGINEER "models/weapons/v_physcannon_engineer.mdl"
+#define PHYSCANNON_MODEL_MEDIC "models/weapons/v_physcannon_medic.mdl"
+#define PHYSCANNON_MODEL_SNIPER "models/weapons/v_physcannon_sniper.mdl"
+#define PHYSCANNON_MODEL_SPY "models/weapons/v_physcannon_spy.mdl"
+#define MEGACANNON_MODEL_SCOUT "models/weapons/v_superphyscannon_scout.mdl"
+#define MEGACANNON_MODEL_SOLDIER "models/weapons/v_superphyscannon_soldier.mdl"
+#define MEGACANNON_MODEL_PYRO "models/weapons/v_superphyscannon_pyro.mdl"
+#define MEGACANNON_MODEL_DEMO "models/weapons/v_superphyscannon_demoman.mdl"
+#define MEGACANNON_MODEL_HEAVY "models/weapons/v_superphyscannon_heavy.mdl"
+#define MEGACANNON_MODEL_ENGINEER "models/weapons/v_superphyscannon_engineer.mdl"
+#define MEGACANNON_MODEL_MEDIC "models/weapons/v_superphyscannon_medic.mdl"
+#define MEGACANNON_MODEL_SNIPER "models/weapons/v_superphyscannon_sniper.mdl"
+#define MEGACANNON_MODEL_SPY "models/weapons/v_superphyscannon_spy.mdl"
 
 #ifdef CLIENT_DLL
 #define CWeaponPhysCannon C_WeaponPhysCannon
@@ -299,7 +317,8 @@ public:
 	virtual void SetViewModel( void );
 	virtual const char *GetShootSound( int iIndex ) const;
 
-	virtual void 			DefaultTouch( CBaseEntity *pOther );
+	virtual void 	DefaultTouch( CBaseEntity *pOther );
+	virtual void	OnPickedUp( CBaseCombatCharacter *pNewOwner );
 #ifndef CLIENT_DLL
 	CNetworkQAngle	( m_attachedAnglesPlayerSpace );
 #else
@@ -313,6 +332,10 @@ public:
 	EHANDLE m_hOldAttachedObject;
 
 	CNetworkVar( float, m_flNextTertiaryAttack );					// soonest time ItemPostFrame will call TertiaryAttack
+
+	virtual bool	HasChargeBar( void );
+	virtual float	InternalGetEffectBarRechargeTime( void );
+	virtual const char	*GetEffectLabelText( void ) { return "#TF_Charge"; }
 protected:
 	enum FindObjectResult_t
 	{

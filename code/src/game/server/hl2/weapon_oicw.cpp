@@ -7,22 +7,23 @@
 
 #include "cbase.h"
 #include "basecombatweapon.h"
-#include "NPCevent.h"
+#include "npcevent.h"
 #include "basecombatcharacter.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "player.h"
-#include "weapon_OICW.h"
+#include "weapon_oicw.h"
 #include "grenade_ar2.h"
 #include "gamerules.h"
 #include "game.h"
 #include "in_buttons.h"
-#include "AI_Memory.h"
+#include "ai_memory.h"
 #include "shake.h"
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/imesh.h"
 #include "materialsystem/imaterialvar.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
 
 //extern ConVar    sk_plr_dmg_ar2_grenade;	
 extern ConVar    sk_plr_dmg_smg1_grenade;	
@@ -209,8 +210,30 @@ void CWeaponOICW::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 			CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 			ASSERT( npc != NULL );
 			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-			WeaponSound(SINGLE_NPC);
-			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+			WeaponSound( SINGLE_NPC );
+			if ( IsCurrentAttackACrit() )
+				EmitSound( "Weapon_Fist.MissCrit" );
+			if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+			{
+				CalcIsAttackCritical();
+				CalcIsAttackMiniCritical();
+
+				FX_NPCFireBullets(
+					pOperator->entindex(),
+					vecShootOrigin,
+					vecShootDir,
+					TF_WEAPON_SMG,
+					TF_WEAPON_PRIMARY_MODE,
+					CBaseEntity::GetPredictionRandomSeed() & 255,
+					GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+					1,
+					3,
+					IsCurrentAttackACrit() );
+			}
+			else
+			{
+				pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+			}
 			pOperator->DoMuzzleFlash();
 
 		//	m_iClip1 = m_iClip1 - 1;
@@ -390,10 +413,32 @@ void CWeaponOICW::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bU
 	}
 
 	WeaponSoundRealtime( SINGLE_NPC );
+	if ( IsCurrentAttackACrit() )
+		EmitSound( "Weapon_Fist.MissCrit" );
 
 	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
 
-	pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+	{
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		FX_NPCFireBullets(
+			pOperator->entindex(),
+			vecShootOrigin,
+			vecShootDir,
+			TF_WEAPON_PISTOL,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+			1,
+			3,
+			IsCurrentAttackACrit() );
+	}
+	else
+	{
+		pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+	}
 
 	// NOTENOTE: This is overriden on the client-side
 	 pOperator->DoMuzzleFlash();

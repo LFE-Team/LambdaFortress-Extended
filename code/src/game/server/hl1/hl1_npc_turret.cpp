@@ -6,18 +6,18 @@
 //
 //=============================================================================//
 #include	"cbase.h"
-#include	"AI_Default.h"
-#include	"AI_Task.h"
-#include	"AI_Schedule.h"
-#include	"AI_Node.h"
-#include	"AI_Hull.h"
-#include	"AI_Hint.h"
-#include	"AI_Route.h"
-#include	"AI_Senses.h"
+#include	"ai_default.h"
+#include	"ai_task.h"
+#include	"ai_schedule.h"
+#include	"ai_node.h"
+#include	"ai_hull.h"
+#include	"ai_hint.h"
+#include	"ai_route.h"
+#include	"ai_senses.h"
 #include	"soundent.h"
 #include	"game.h"
-#include	"NPCEvent.h"
-#include	"EntityList.h"
+#include	"npcevent.h"
+#include	"entitylist.h"
 #include	"activitylist.h"
 #include	"animation.h"
 #include	"basecombatweapon.h"
@@ -140,7 +140,7 @@ public:
 	//DEFINE_CUSTOM_AI;
 	DECLARE_DATADESC();
 
-	typedef CAI_BaseNPC BaseClass;
+	//typedef CAI_BaseNPC BaseClass;
 };
 
 BEGIN_DATADESC( CNPC_BaseTurret )

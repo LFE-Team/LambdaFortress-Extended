@@ -15,7 +15,6 @@
 #include "controls/tf_advbutton.h"
 #include "controls/tf_advpanellistpanel.h"
 #include "controls/tf_advcheckbutton.h"
-#include "controls/tf_advbutton.h"
 #include "controls/tf_scriptobject.h"
 #include "filesystem.h"
 
@@ -41,7 +40,6 @@ using namespace vgui;
 #define OPTIONS_DIR "cfg"
 #define DEFAULT_OPTIONS_FILE OPTIONS_DIR "/user_default.scr"
 #define OPTIONS_FILE OPTIONS_DIR "/user.scr"
-#define TEST_FILE OPTIONS_DIR "/user_test.scr"
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -59,17 +57,18 @@ CTFOptionsAdvancedPanel::~CTFOptionsAdvancedPanel()
 	delete m_pDescription;
 }
 
-
 bool CTFOptionsAdvancedPanel::Init()
 {
 	BaseClass::Init();
 
-	m_pListPanel = new CPanelListPanel(this, "PanelListPanel");
+	m_pListPanel = new CPanelListPanel( this, "PanelListPanel" );
 	m_pList = NULL;
 
-	m_pDescription = new CInfoDescription(m_pListPanel);
-	m_pDescription->InitFromFile(DEFAULT_OPTIONS_FILE);
-	m_pDescription->TransferCurrentValues(NULL);
+	m_pDescription = new CInfoDescription( m_pListPanel );
+	m_pDescription->InitFromFile( DEFAULT_OPTIONS_FILE );
+
+	m_pDescription->InitFromFile( OPTIONS_FILE );
+	m_pDescription->TransferCurrentValues( NULL );
 
 	return true;
 }
@@ -207,14 +206,12 @@ void CTFOptionsAdvancedPanel::CreateControls()
 	CTFAdvSlider *pScroll;
 	Label *pTitle;
 	CScriptListItem *pListItem;
-	
+
 	HFont hFont = GETSCHEME()->GetFont( m_pListPanel->GetFontString(), true );
 
 	Panel *objParent = m_pListPanel;
 	while (pObj)
 	{
-		//Msg("\nAdded: %s %s %f %f %i\n", pObj->prompt, pObj->cvarname, pObj->fcurValue, pObj->fcurValue, pObj->type);
-		
 		if (pObj->type == O_OBSOLETE)
 		{
 			pObj = pObj->pNext;
@@ -242,6 +239,7 @@ void CTFOptionsAdvancedPanel::CreateControls()
 		case O_NUMBER:
 			pEdit = new TextEntry(pCtrl, "DescTextEntry");
 			pEdit->MakeReadyForUse();
+			pEdit->SetFont( hFont );
 
 			pEdit->InsertString(pObj->curValue);
 
@@ -338,6 +336,20 @@ void CTFOptionsAdvancedPanel::CreateControls()
 void CTFOptionsAdvancedPanel::DestroyControls()
 {
 	BaseClass::DestroyControls();
+
+	/*mpcontrol_t *p, *n;
+
+	p = m_pList;
+	while ( p )
+	{
+		n = p->next;
+		//
+		delete p->pControl;
+		delete p->pPrompt;
+		delete p;
+		p = n;
+	}*/
+
 	m_pList = NULL;
 }
 
@@ -357,12 +369,12 @@ void CTFOptionsAdvancedPanel::SaveValues()
 		// Add settings to config.cfg
 		m_pDescription->WriteToConfig();
 
-		g_pFullFileSystem->CreateDirHierarchy(OPTIONS_DIR);
-		fp = g_pFullFileSystem->Open(OPTIONS_FILE, "wb");
-		if (fp)
+		g_pFullFileSystem->CreateDirHierarchy( OPTIONS_DIR );
+		fp = g_pFullFileSystem->Open( OPTIONS_FILE, "wb" );
+		if ( fp )
 		{
-			m_pDescription->WriteToScriptFile(fp);
-			g_pFullFileSystem->Close(fp);
+			m_pDescription->WriteToScriptFile( fp );
+			g_pFullFileSystem->Close( fp );
 		}
 	}
 }
@@ -424,7 +436,7 @@ void CInfoDescription::WriteScriptHeader(FileHandle_t fp)
 	tm newtime;
 	VCRHook_LocalTime(&newtime);
 
-	g_pFullFileSystem->FPrintf(fp, (char *)getHint());
+	g_pFullFileSystem->FPrintf( fp, (char *)getHint() );
 
 	// Write out the comment and Cvar Info:
 	g_pFullFileSystem->FPrintf(fp, "// Half-Life User Info Configuration Layout Script (stores last settings chosen, too)\r\n");

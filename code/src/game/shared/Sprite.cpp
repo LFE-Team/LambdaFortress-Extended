@@ -134,7 +134,7 @@ BEGIN_NETWORK_TABLE( CSprite, DT_Sprite )
 	SendPropInt( SENDINFO(m_nAttachment ), 8 ),
 	SendPropFloat( SENDINFO(m_flScaleTime ), 0,	SPROP_NOSCALE ),
 
-#ifdef HL2_DLL
+#if defined( HL2_DLL ) || defined( TF_CLASSIC )
 	SendPropFloat( SENDINFO(m_flSpriteScale ), 0,	SPROP_NOSCALE),
 #else
 	SendPropFloat( SENDINFO(m_flSpriteScale ), 8,	SPROP_ROUNDUP,	0.0f,	MAX_SPRITE_SCALE),

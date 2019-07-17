@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "basehlcombatweapon.h"
-#include "NPCevent.h"
+#include "npcevent.h"
 #include "basecombatcharacter.h"
 #include "ai_basenpc.h"
 #include "player.h"
@@ -15,6 +15,9 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+extern ConVar    sk_plr_dmg_smg1;
 
 class CWeaponSMG2 : public CHLSelectFireMachineGun
 {
@@ -33,6 +36,8 @@ public:
 
 	float			GetFireRate( void ) { return 0.1f; }
 	int				CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
+
+	virtual bool	CanCritRapidFire()		{ return true; }
 
 	DECLARE_ACTTABLE();
 };
@@ -92,8 +97,31 @@ void CWeaponSMG2::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatChar
 			ASSERT( npc != NULL );
 			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
 
-			WeaponSound(SINGLE_NPC);
-			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+			WeaponSound( SINGLE_NPC );
+			if ( IsCurrentAttackACrit() )
+				EmitSound( "Weapon_Fist.MissCrit" );
+
+			if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+			{
+				CalcIsAttackCritical();
+				CalcIsAttackMiniCritical();
+
+				FX_NPCFireBullets(
+					pOperator->entindex(),
+					vecShootOrigin,
+					vecShootDir,
+					TF_WEAPON_SMG,
+					TF_WEAPON_PRIMARY_MODE,
+					CBaseEntity::GetPredictionRandomSeed() & 255,
+					GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+					1,
+					sk_npc_dmg_smg1.GetInt(),
+					IsCurrentAttackACrit() );
+			}
+			else
+			{
+				pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+			}
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 		}

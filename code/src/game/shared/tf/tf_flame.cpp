@@ -427,14 +427,6 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 				return;
 			}
 
-			// if there is nothing solid in the way, damage the entity
-			OnCollide( pOther );
-		}
-		else
-		{
-			// we hit the world
-			*pbHitWorld = true;
-
 			pProp = dynamic_cast<CBreakableProp *>( pOther );
 			if ( pProp )
 			{
@@ -447,6 +439,13 @@ void CTFFlameEntity::CheckCollision( CBaseEntity *pOther, bool *pbHitWorld )
 					return;
 				}
 			}
+			// if there is nothing solid in the way, damage the entity
+			OnCollide( pOther );
+		}
+		else
+		{
+			// we hit the world
+			*pbHitWorld = true;
 
 			OnCollide( pOther );
 		}
@@ -470,8 +469,8 @@ void CTFFlameEntity::OnCollide( CBaseEntity *pOther )
  	}
 	else
 	{
-		// make damage ramp down from 100% to 60% from half the max dist to the max dist
-		flMultiplier = RemapValClamped( flDistance, tf_flamethrower_maxdamagedist.GetFloat()/2, tf_flamethrower_maxdamagedist.GetFloat(), 1.0, 0.6 );
+		// make damage ramp down from 100% to 50% from half the max dist to the max dist
+		flMultiplier = RemapValClamped( flDistance, tf_flamethrower_maxdamagedist.GetFloat()/2, tf_flamethrower_maxdamagedist.GetFloat(), 1.0, 0.5 );
 	}
 
 	float flDamage = m_flDmgAmount * flMultiplier;

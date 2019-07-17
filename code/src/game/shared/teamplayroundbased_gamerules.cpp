@@ -1814,7 +1814,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 
 		if ( !bFoundLiveOne )
 		{
-			TFGameRules()->iDirectorAnger = 0;
+			TFGameRules()->SetDirectorAnger( 0 );
 			// The live team has won. 
 			bool bMasterHandled = false;
 			if ( !m_bForceMapReset )
@@ -3528,6 +3528,10 @@ void CTeamplayRoundBasedRules::PlayWinSong( int team )
 		{
 			if ( i == team )
 			{
+				#if defined (TF_DLL) || defined (TF_CLIENT_DLL) || defined (TF_CLASSIC) || defined (TF_CLASSIC_CLIENT)
+				if ( TFGameRules() && TFGameRules()->IsAnyCoOpGameRunning() )
+					return;
+				#endif
 				BroadcastSound( i, WinSongName( i ) );
 			}
 			else

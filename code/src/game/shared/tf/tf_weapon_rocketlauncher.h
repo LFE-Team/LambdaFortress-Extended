@@ -17,7 +17,6 @@
 #define CTFRocketLauncher C_TFRocketLauncher
 #define CTFRocketLauncher_DirectHit C_TFRocketLauncher_DirectHit
 #define CTFRocketLauncher_AirStrike C_TFRocketLauncher_AirStrike
-#define CTFWeaponFlameBall C_TFWeaponFlameBall
 #endif
 
 //=============================================================================
@@ -104,48 +103,6 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER; }
-};
-
-class CTFWeaponFlameBall : public CTFRocketLauncher
-{
-public:
-	DECLARE_CLASS( CTFWeaponFlameBall, CTFRocketLauncher );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	CTFWeaponFlameBall();
-	~CTFWeaponFlameBall();
-
-	virtual void	Spawn( void );
-	virtual void	Precache( void );
-
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_ROCKETLAUNCHER_FIREBALL; }
-
-	virtual void	PrimaryAttack();
-	virtual void	SecondaryAttack();
-
-	virtual CBaseEntity *FireProjectile( CTFPlayer *pPlayer );
-	virtual void	ItemPostFrame( void );
-	virtual bool	DefaultReload( int iClipSize1, int iClipSize2, int iActivity );
-
-	virtual void	GetProjectileFireSetup( CTFPlayer *pPlayer, Vector vecOffset, Vector *vecSrc, QAngle *angForward, bool bHitTeammates = true, bool bUseHitboxes = false );
-#ifdef GAME_DLL
-	virtual void	DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir );
-	virtual void	DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, Vector &vecDir );
-	virtual void	DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Vector &vecDir );
-	virtual void	DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir );
-
-	void			SetHitTarget( void );
-	void			HitTargetThink( void );
-#else
-	virtual void		OnDataChanged( DataUpdateType_t updateType );
-	virtual bool		Deploy( void );
-	void				UpdatePoseParam( void );
-#endif
-private:
-
-	CNetworkVar( bool, m_bHitTarget );
-
 };
 
 #endif // TF_WEAPON_ROCKETLAUNCHER_H

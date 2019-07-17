@@ -26,6 +26,7 @@
 #include "tf_optionsaudiopanel.h"
 #include "tf_optionsvideopanel.h"
 #include "tf_optionsadvancedpanel.h"
+#include "lfe_optionsvguipanel.h"
 
 using namespace vgui;
 
@@ -51,13 +52,19 @@ bool CTFOptionsDialog::Init()
 {
 	BaseClass::Init();
 
-	m_pPanels.SetSize(PANEL_COUNT);
-	AddPanel(new CTFOptionsAdvancedPanel(this, "MultiplayerOptions"), PANEL_ADV);
-	AddPanel(new CTFOptionsMousePanel(this, "MouseOptions"), PANEL_MOUSE);
-	AddPanel(new CTFOptionsKeyboardPanel(this, "KeyboardOptions"), PANEL_KEYBOARD);
-	AddPanel(new CTFOptionsAudioPanel(this, "AudioOptions"), PANEL_AUDIO);
-	AddPanel(new CTFOptionsVideoPanel(this, "VideoOptions"), PANEL_VIDEO);
-	m_pOptionsCurrent = PANEL_ADV;
+	int width, height;
+	surface()->GetScreenSize(width, height);
+	SetSize(width, height);
+	SetPos(0, 0);
+
+	m_pPanels.SetSize(OPTION_PANEL_COUNT);
+	AddPanel(new CTFOptionsAdvancedPanel(this, "MultiplayerOptions"), OPTION_PANEL_ADV);
+	AddPanel(new CTFOptionsMousePanel(this, "MouseOptions"), OPTION_PANEL_MOUSE);
+	AddPanel(new CTFOptionsKeyboardPanel(this, "KeyboardOptions"), OPTION_PANEL_KEYBOARD);
+	AddPanel(new CTFOptionsAudioPanel(this, "AudioOptions"), OPTION_PANEL_AUDIO);
+	AddPanel(new CTFOptionsVideoPanel(this, "VideoOptions"), OPTION_PANEL_VIDEO);
+	AddPanel(new CTFOptionsVGUIPanel(this, "VGUIOptions"), OPTION_PANEL_VGUI);
+	m_pOptionsCurrent = OPTION_PANEL_ADV;
 	return true;
 }
 
@@ -77,7 +84,7 @@ void CTFOptionsDialog::SetCurrentPanel(OptionPanel pCurrentPanel)
 	GetPanel(pCurrentPanel)->Show();
 	m_pOptionsCurrent = pCurrentPanel;
 
-	dynamic_cast<CTFAdvButton *>(FindChildByName("Defaults"))->SetVisible((pCurrentPanel == PANEL_KEYBOARD));
+	dynamic_cast<CTFAdvButton *>(FindChildByName("Defaults"))->SetVisible((pCurrentPanel == OPTION_PANEL_KEYBOARD));
 }
 
 CTFDialogPanelBase*	CTFOptionsDialog::GetPanel(int iPanel)
@@ -98,7 +105,7 @@ void CTFOptionsDialog::Show()
 	BaseClass::Show();
 	GetPanel(m_pOptionsCurrent)->Show();
 
-	for (int i = 0; i < PANEL_COUNT; i++)
+	for (int i = 0; i < OPTION_PANEL_COUNT; i++)
 		GetPanel(i)->OnCreateControls();
 };
 
@@ -107,7 +114,7 @@ void CTFOptionsDialog::Hide()
 	BaseClass::Hide();
 	GetPanel(m_pOptionsCurrent)->Hide();
 
-	for (int i = 0; i < PANEL_COUNT; i++)
+	for (int i = 0; i < OPTION_PANEL_COUNT; i++)
 		GetPanel(i)->OnDestroyControls();
 };
 
@@ -131,23 +138,27 @@ void CTFOptionsDialog::OnCommand(const char* command)
 	}
 	else if (!Q_strcmp(command, "newoptionsadv"))
 	{
-		SetCurrentPanel(PANEL_ADV);
+		SetCurrentPanel(OPTION_PANEL_ADV);
 	}
 	else if (!Q_strcmp(command, "newoptionsmouse"))
 	{
-		SetCurrentPanel(PANEL_MOUSE);
+		SetCurrentPanel(OPTION_PANEL_MOUSE);
 	}
 	else if (!Q_strcmp(command, "newoptionskeyboard"))
 	{
-		SetCurrentPanel(PANEL_KEYBOARD);
+		SetCurrentPanel(OPTION_PANEL_KEYBOARD);
 	}
 	else if (!Q_strcmp(command, "newoptionsaudio"))
 	{
-		SetCurrentPanel(PANEL_AUDIO);
+		SetCurrentPanel(OPTION_PANEL_AUDIO);
 	}
 	else if (!Q_strcmp(command, "newoptionsvideo"))
 	{
-		SetCurrentPanel(PANEL_VIDEO);
+		SetCurrentPanel(OPTION_PANEL_VIDEO);
+	}
+	else if (!Q_strcmp(command, "newoptionsvgui"))
+	{
+		SetCurrentPanel(OPTION_PANEL_VGUI);
 	}
 	else
 	{
@@ -169,7 +180,7 @@ void CTFOptionsDialog::OnOkPressed()
 //-----------------------------------------------------------------------------
 void CTFOptionsDialog::OnApplyPressed()
 {
-	for (int i = 0; i < PANEL_COUNT; i++)
+	for (int i = 0; i < OPTION_PANEL_COUNT; i++)
 		GetPanel(i)->OnApplyChanges();
 }
 
@@ -178,7 +189,7 @@ void CTFOptionsDialog::OnApplyPressed()
 //-----------------------------------------------------------------------------
 void CTFOptionsDialog::OnCancelPressed()
 {
-	for (int i = 0; i < PANEL_COUNT; i++)
+	for (int i = 0; i < OPTION_PANEL_COUNT; i++)
 		GetPanel(i)->OnResetData();
 	Hide();
 	MAINMENU_ROOT->ShowPanel( CURRENT_MENU );
@@ -190,7 +201,7 @@ void CTFOptionsDialog::OnCancelPressed()
 //-----------------------------------------------------------------------------
 void CTFOptionsDialog::OnDefaultPressed()
 {
-	for (int i = 0; i < PANEL_COUNT; i++)
+	for (int i = 0; i < OPTION_PANEL_COUNT; i++)
 		GetPanel(i)->OnSetDefaults();
 }
 

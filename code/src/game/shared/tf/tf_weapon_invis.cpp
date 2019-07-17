@@ -82,12 +82,39 @@ bool CTFWeaponInvis::Deploy( void )
 	return b;
 }
 
+bool CTFWeaponInvis::HasFeignDeath( void )
+{
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( iType == 1 )
+		return true;
+
+	return false;
+}
+
+bool CTFWeaponInvis::HasMotionCloak( void )
+{
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( iType == 2 )
+		return true;
+
+	return false;
+}
+
 bool CTFWeaponInvis::Holster( CBaseCombatWeapon *pSwitchingTo )
 { 
 	bool bHolster = BaseClass::Holster( pSwitchingTo );
 
 	// far in the future
-	SetWeaponIdleTime( gpGlobals->curtime + 10 );
+	if ( HasFeignDeath() )
+	{
+		SetWeaponIdleTime( gpGlobals->curtime + 99999 );
+	}
+	else
+	{
+		SetWeaponIdleTime( gpGlobals->curtime + 10 );
+	}
 
 	return bHolster;
 }
@@ -100,6 +127,16 @@ void CTFWeaponInvis::SecondaryAttack( void )
 void CTFWeaponInvis::ItemBusyFrame( void )
 {
 	// do nothing
+}
+
+const char* CTFWeaponInvis::GetEffectLabelText( void ) 
+{
+	if ( HasFeignDeath() )
+		return "#TF_Feign"; 
+	else if ( HasMotionCloak() )
+		return "#TF_CloakDagger"; 
+	else
+		return "#TF_Cloak"; 
 }
 
 float CTFWeaponInvis::GetEffectBarProgress( void )

@@ -9,10 +9,15 @@
 #include "vgui_avatarimage.h"
 #include "tf_gamerules.h"
 #include <KeyValues.h>
+#include "panels/lfe_genericconfirmation.h"
+#include "panels/tf_optionsdialog.h"
+#include "tier0/icommandline.h"
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#define APPID_TF2 440
 
 #define BLOG_URL ""
 //#define BLOG_URL "https://discordapp.com/channels/427017307835858944/449233158546784266/?nolinks=1&noheader=1&nofooter=1&fillwrapper=1"
@@ -23,6 +28,9 @@ static void OnBlogToggle(IConVar *var, const char *pOldValue, float flOldValue)
 }
 ConVar lfe_mainmenu_music("lfe_mainmenu_music", "1", FCVAR_ARCHIVE, "Toggle music in the main menu");
 ConVar lfe_mainmenu_showblog("lfe_mainmenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnBlogToggle);
+
+ConVar lfe_ui_confirmation_quit("lfe_ui_confirmation_quit", "1", FCVAR_ARCHIVE, "Toggle quit confirmation");
+ConVar lfe_ui_confirmation_disconnect("lfe_ui_confirmation_disconnect", "1", FCVAR_ARCHIVE, "Toggle disconnect confirmation");
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -59,7 +67,6 @@ bool CTFMainMenuPanel::Init()
 	m_pProfileAvatar = NULL;
 	m_pFakeBGImage = NULL;
 	m_pBlogPanel = new CTFBlogPanel(this, "BlogPanel");
-	m_pServerlistPanel = new CTFServerlistPanel(this, "ServerlistPanel");
 
 	bInMenu = true;
 	bInGame = false;
@@ -71,14 +78,19 @@ void CTFMainMenuPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
-	LoadControlSettings("resource/UI/main_menu/MainMenuPanel.res");
-
 	KeyValues *pConditions = NULL;
 	if ( TFGameRules() && TFGameRules()->IsHalloween() )
 	{
 		pConditions = new KeyValues( "conditions" );
 		AddSubKeyNamed( pConditions, "if_halloween" );
 	}
+	else if ( TFGameRules() && TFGameRules()->IsSmissmas() )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_smissmas" );
+	}
+
+	LoadControlSettings( "resource/UI/main_menu/MainMenuPanel.res", NULL, NULL, pConditions );
 
 	m_pVersionLabel = dynamic_cast<CExLabel *>(FindChildByName("VersionLabel"));
 	m_pNotificationButton = dynamic_cast<CTFAdvButton *>(FindChildByName("NotificationButton"));
@@ -144,27 +156,66 @@ void CTFMainMenuPanel::OnCommand(const char* command)
 {
 	if (!Q_strcmp(command, "newquit"))
 	{
-		MAINMENU_ROOT->ShowPanel(QUIT_MENU);
+		if ( lfe_ui_confirmation_quit.GetBool() )
+		{
+			CTFGenericConfirmation* confirmation = GET_MAINMENUPANEL(CTFGenericConfirmation);
+
+			CTFGenericConfirmation::Data_t data;
+
+			data.pWindowTitle = "#MMenu_PromptQuit_Title";
+			data.pMessageText = "#MMenu_PromptQuit_Body";
+
+			data.bOkButtonEnabled = true;
+			data.pfnOkCallback = &ConfirmQuit;
+			data.pOkButtonText = "#TF_Quit_Title";
+			data.bCancelButtonEnabled = true;
+
+			confirmation->SetUsageData(data);
+			MAINMENU_ROOT->ShowPanel(CONFIRMATION_MENU);
+
+			if ( UI_IsDebug() )
+				Msg( "[GAMEUI] MAIN_MENU + CONFIRMATION_MENU\n");
+		}
+		else
+		{
+			engine->ClientCmd( "quit" );
+		}
 	}
 	else if (!Q_strcmp(command, "newoptionsdialog"))
 	{
 		MAINMENU_ROOT->ShowPanel(OPTIONSDIALOG_MENU);
+		GET_MAINMENUPANEL(CTFOptionsDialog)->SetCurrentPanel(OPTION_PANEL_ADV);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] MAIN_MENU -> OPTIONSDIALOG_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newcreategame"))
 	{
 		MAINMENU_ROOT->ShowPanel(CREATESERVER_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] MAIN_MENU -> CREATESERVER_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newloadout"))
 	{
 		MAINMENU_ROOT->ShowPanel(LOADOUT_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] MAIN_MENU -> LOADOUT_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newstats"))
 	{
 		MAINMENU_ROOT->ShowPanel(STATSUMMARY_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] MAIN_MENU -> STATSUMMARY_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newcredits"))
 	{
 		MAINMENU_ROOT->ShowPanel(CREDIT_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] MAIN_MENU -> CREDIT_MENU\n");
 	}
 	else if (!Q_strcmp(command, "checkversion"))
 	{
@@ -199,7 +250,7 @@ void CTFMainMenuPanel::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (lfe_mainmenu_music.GetBool() && !bInGameLayout)
+	if ( lfe_mainmenu_music.GetBool() && !bInGameLayout && !CommandLine()->FindParm( "-nostartupsound" ) )
 	{
 		if ((m_psMusicStatus == MUSIC_FIND || m_psMusicStatus == MUSIC_STOP_FIND) && !enginesound->IsSoundStillPlaying(m_nSongGuid))
 		{
@@ -239,6 +290,41 @@ void CTFMainMenuPanel::OnThink()
 	{
 		m_pFakeBGImage->SetVisible(false);
 	}
+
+	// check if user had required game
+	if ( steamapicontext->SteamApps() )
+	{
+		if ( !steamapicontext->SteamApps()->BIsAppInstalled( APPID_TF2 ) )
+		{
+			CTFGenericConfirmation* confirmation = GET_MAINMENUPANEL(CTFGenericConfirmation);
+			CTFGenericConfirmation::Data_t data;
+
+			data.pWindowTitle = "#LFE_Warning_Title";
+			data.pMessageText = "#LFE_Warning_InstallTF2";
+			data.bOkButtonEnabled = true;
+			data.pfnOkCallback = &ConfirmQuit;
+			data.pOkButtonText = "#TF_Quit_Title";
+			data.bCancelButtonEnabled = true;
+			data.pCancelButtonText = "#LFE_Ignore";
+
+			confirmation->SetUsageData(data);
+			MAINMENU_ROOT->ShowPanel(CONFIRMATION_MENU);
+		}
+	}
+
+	// hide all panel
+	//MAINMENU_ROOT->HidePanel(SHADEBACKGROUND_MENU);
+	MAINMENU_ROOT->HidePanel(LOADOUT_MENU);
+	/*MAINMENU_ROOT->HidePanel(NOTIFICATION_MENU);
+	MAINMENU_ROOT->HidePanel(CREDIT_MENU);
+	MAINMENU_ROOT->HidePanel(OPTIONSDIALOG_MENU);
+	MAINMENU_ROOT->HidePanel(CREATESERVER_MENU);
+	MAINMENU_ROOT->HidePanel(STATSUMMARY_MENU);
+	MAINMENU_ROOT->HidePanel(TOOLTIP_MENU);
+	MAINMENU_ROOT->HidePanel(ITEMTOOLTIP_MENU);
+
+	// always show blog
+	//ShowBlogPanel();*/
 };
 
 void CTFMainMenuPanel::Show()
@@ -311,14 +397,14 @@ void CTFMainMenuPanel::SetVersionLabel()  //GetVersionString
 	}
 };
 
-void CTFMainMenuPanel::GetRandomMusic(char *pszBuf, int iBufLength)
+void CTFMainMenuPanel::GetRandomMusic( char *pszBuf, int iBufLength )
 {
-	Assert(iBufLength);
+	Assert( iBufLength );
 
 	char szPath[MAX_PATH];
 
 	// Check that there's music available
-	if (!g_pFullFileSystem->FileExists("sound/ui/gamestartup1.mp3"))
+	if ( !g_pFullFileSystem->FileExists( "sound/ui/gamestartup1.mp3", "MOD" ) )
 	{
 		Assert(false);
 		*pszBuf = '\0';
@@ -328,22 +414,17 @@ void CTFMainMenuPanel::GetRandomMusic(char *pszBuf, int iBufLength)
 	int iLastTrack = 0;
 	do
 	{
-		Q_snprintf(szPath, sizeof(szPath), "sound/ui/gamestartup%d.mp3", ++iLastTrack);
-	} while (g_pFullFileSystem->FileExists(szPath));
+		Q_snprintf( szPath, sizeof( szPath ), "sound/ui/gamestartup%d.mp3", ++iLastTrack );
+	} while ( g_pFullFileSystem->FileExists( szPath, "MOD" ) );
 
 	// Pick a random one
-	Q_snprintf(szPath, sizeof(szPath), "ui/gamestartup%d.mp3", RandomInt(1, iLastTrack - 1));
-	Q_strncpy(pszBuf, szPath, iBufLength);
+	Q_snprintf( szPath, sizeof( szPath ), "ui/gamestartup%d.mp3", RandomInt( 1, iLastTrack - 1 ) );
+	Q_strncpy( pszBuf, szPath, iBufLength );
 }
 
-void CTFMainMenuPanel::SetServerlistSize(int size)
+void CTFMainMenuPanel::ConfirmQuit()
 {
-	m_pServerlistPanel->SetServerlistSize(size);
-}
-
-void CTFMainMenuPanel::UpdateServerInfo()
-{
-	m_pServerlistPanel->UpdateServerInfo();
+	engine->ClientCmd( "quit" );
 }
 
 //-----------------------------------------------------------------------------
@@ -384,243 +465,3 @@ void CTFBlogPanel::LoadBlogPost(const char* URL)
 		m_pHTMLPanel->OpenURL(URL, NULL);
 	}
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CTFServerlistPanel::CTFServerlistPanel(vgui::Panel* parent, const char *panelName) : CTFMenuPanelBase(parent, panelName)
-{
-	m_iSize = 0;
-	m_pServerList = new vgui::SectionedListPanel(this, "ServerList");
-	m_pConnectButton = new CTFAdvButton(this, "ConnectButton", "Connect");
-	m_pListSlider = new CTFAdvSlider(this, "ListSlider", "");
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-CTFServerlistPanel::~CTFServerlistPanel()
-{
-}
-
-void CTFServerlistPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
-{
-	BaseClass::ApplySchemeSettings(pScheme);
-
-	LoadControlSettings("resource/UI/main_menu/ServerlistPanel.res");
-
-	m_pServerList->RemoveAll();
-	m_pServerList->RemoveAllSections();
-	m_pServerList->SetSectionFgColor(0, Color(255, 255, 255, 255));
-	m_pServerList->SetBgColor(Color(0, 0, 0, 0));
-	m_pServerList->SetBorder(NULL);
-	m_pServerList->AddSection(0, "Servers", ServerSortFunc);
-	m_pServerList->AddColumnToSection(0, "Name", "Servers", SectionedListPanel::COLUMN_BRIGHT, m_iServerWidth);
-	m_pServerList->AddColumnToSection(0, "Players", "Players", SectionedListPanel::COLUMN_BRIGHT, m_iPlayersWidth);
-	m_pServerList->AddColumnToSection(0, "Ping", "Ping", SectionedListPanel::COLUMN_BRIGHT, m_iPingWidth);
-	m_pServerList->AddColumnToSection(0, "Map", "Map", SectionedListPanel::COLUMN_BRIGHT, m_iMapWidth);
-	m_pServerList->SetSectionAlwaysVisible(0, true);
-	m_pServerList->GetScrollBar()->UseImages("", "", "", ""); //hack to hide the scrollbar
-
-	m_pConnectButton->SetVisible(false);
-	UpdateServerInfo();
-}
-
-void CTFServerlistPanel::PerformLayout()
-{
-	BaseClass::PerformLayout();
-}
-
-void CTFServerlistPanel::OnThink()
-{
-	m_pServerList->ClearSelection();
-	m_pListSlider->SetVisible(false);
-	m_pConnectButton->SetVisible(false);
-
-	if (!IsCursorOver())
-		return;
-
-	m_pListSlider->SetValue(m_pServerList->GetScrollBar()->GetValue());
-
-	for (int i = 0; i < m_pServerList->GetItemCount(); i++)
-	{
-		int _x, _y;
-		m_pServerList->GetPos(_x, _y);
-		int x, y, wide, tall;
-		m_pServerList->GetItemBounds(i, x, y, wide, tall);
-		int cx, cy;
-		surface()->SurfaceGetCursorPos(cx, cy);
-		m_pServerList->ScreenToLocal(cx, cy);
-
-		if (cx > x && cx < x + wide && cy > y && cy < y + tall)
-		{
-			m_pServerList->SetSelectedItem(i);
-			int by = y + _y;
-			m_pConnectButton->SetPos(m_iServerWidth + m_iPlayersWidth + m_iPingWidth, by);
-			m_pConnectButton->SetVisible(true);
-			m_pListSlider->SetVisible(true);
-
-			char szCommand[128];
-			Q_snprintf(szCommand, sizeof(szCommand), "connect %s", m_pServerList->GetItemData(i)->GetString("ServerIP", ""));
-			m_pConnectButton->SetCommandString(szCommand);
-		}
-	}
-}
-
-void CTFServerlistPanel::OnCommand(const char* command)
-{
-	if (!Q_strcmp(command, "scrolled"))
-	{
-		m_pServerList->GetScrollBar()->SetValue(m_pListSlider->GetValue());
-	}
-	else
-	{
-		BaseClass::OnCommand(command);
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Used for sorting servers
-//-----------------------------------------------------------------------------
-bool CTFServerlistPanel::ServerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2)
-{
-	KeyValues *it1 = list->GetItemData(itemID1);
-	KeyValues *it2 = list->GetItemData(itemID2);
-	Assert(it1 && it2);
-
-	int v1 = it1->GetInt("CurPlayers");
-	int v2 = it2->GetInt("CurPlayers");
-	if (v1 > v2)
-		return true;
-	else if (v1 < v2)
-		return false;
-
-	/*
-	int iOff1 = it1->GetBool("Official");
-	int iOff2 = it2->GetBool("Official");
-	if (iOff1 && !iOff2)
-		return true;
-	else if (!iOff1 && iOff2)
-		return false;
-	*/
-
-	int iPing1 = it1->GetInt("Ping");
-	if (iPing1 == 0)
-		return false;
-	int iPing2 = it2->GetInt("Ping");
-	return (iPing1 < iPing2);
-}
-
-void CTFServerlistPanel::SetServerlistSize(int size) 
-{
-	m_iSize = size;
-};
-
-void CTFServerlistPanel::UpdateServerInfo()
-{
-	m_pServerList->RemoveAll();
-	HFont Font = GETSCHEME()->GetFont("FontStoreOriginalPrice", true);
-
-	for (int i = 0; i < m_iSize; i++)
-	{
-		gameserveritem_t m_Server = GetNotificationManager()->GetServerInfo(i);		
-		if (m_Server.m_steamID.GetAccountID() == 0)
-			continue;
-
-		bool bOfficial = GetNotificationManager()->IsOfficialServer(i);
-		if (!bOfficial)
-			continue;
-
-		char szServerName[128];
-		char szServerIP[32];
-		char szServerPlayers[16];
-		int szServerCurPlayers;
-		int szServerPing;
-		char szServerMap[32];
-
-		Q_snprintf(szServerName, sizeof(szServerName), "%s", m_Server.GetName());
-		Q_snprintf(szServerIP, sizeof(szServerIP), "%s", m_Server.m_NetAdr.GetQueryAddressString());
-		Q_snprintf(szServerPlayers, sizeof(szServerPlayers), "%i/%i", m_Server.m_nPlayers, m_Server.m_nMaxPlayers);
-		szServerCurPlayers = m_Server.m_nPlayers;
-		szServerPing = m_Server.m_nPing;
-		Q_snprintf(szServerMap, sizeof(szServerMap), "%s", m_Server.m_szMap);
-
-		KeyValues *curitem = new KeyValues("data");
-
-		curitem->SetString("Name", szServerName);
-		curitem->SetString("ServerIP", szServerIP);
-		curitem->SetString("Players", szServerPlayers);
-		curitem->SetInt("Ping", szServerPing);
-		curitem->SetInt("CurPlayers", szServerCurPlayers);
-		curitem->SetString("Map", szServerMap);
-		//curitem->SetBool("Official", bOfficial);		
-
-		int itemID = m_pServerList->AddItem(0, curitem);
-		/*
-		if (bOfficial)
-			m_pServerList->SetItemFgColor(itemID, GETSCHEME()->GetColor("TeamYellow", Color(255, 255, 255, 255)));
-		else
-			m_pServerList->SetItemFgColor(itemID, GETSCHEME()->GetColor("AdvTextDefault", Color(255, 255, 255, 255)));
-		*/
-		m_pServerList->SetItemFont(itemID, Font);
-		curitem->deleteThis();
-	}
-
-	if (m_pServerList->GetItemCount() > 0)
-	{
-		SetVisible(true);
-	}
-	else
-	{
-		SetVisible(false);
-	}
-
-	int min, max;
-	m_pServerList->InvalidateLayout(1, 0);
-	m_pServerList->GetScrollBar()->GetRange(min, max);
-	m_pListSlider->SetRange(min, max - m_pServerList->GetScrollBar()->GetButton(0)->GetTall() * 4);
-}
-
-//-----------------------------------------------------------------------------
-// LF:E Credits panel
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CTFCreditsPanel::CTFCreditsPanel( vgui::Panel* parent, const char *panelName ) : CTFDialogPanelBase( parent, panelName )
-{
-	m_pText = new CExRichText( this, "CreditText" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-CTFCreditsPanel::~CTFCreditsPanel()
-{
-
-}
-
-void CTFCreditsPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
-{
-	BaseClass::ApplySchemeSettings(pScheme);
-	LoadControlSettings("resource/UI/main_menu/CreditsPanel.res");
-}
-
-void CTFCreditsPanel::OnCommand(const char* command)
-{
-	BaseClass::OnCommand( command );
-}
-
-
-void CTFCreditsPanel::Show()
-{
-	BaseClass::Show();
-	MAINMENU_ROOT->HidePanel(CURRENT_MENU);
-	MAINMENU_ROOT->HidePanel(NOTIFICATION_MENU);
-	MAINMENU_ROOT->ShowPanel(SHADEBACKGROUND_MENU);
-};
-
-void CTFCreditsPanel::Hide()
-{
-	BaseClass::Hide();
-	MAINMENU_ROOT->ShowPanel(CURRENT_MENU);
-	MAINMENU_ROOT->HidePanel(SHADEBACKGROUND_MENU);
-};

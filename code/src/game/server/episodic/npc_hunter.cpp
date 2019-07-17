@@ -941,7 +941,20 @@ void Hunter_ApplyChargeDamage( CBaseEntity *pHunter, CBaseEntity *pTarget, float
 	Vector vecForce = attackDir * ImpulseScale( 75, 700 );
 
 	// Deal the damage
-	CTakeDamageInfo	info( pHunter, pHunter, vecForce, offset, flDamage, DMG_CLUB );
+	CAI_BaseNPC *pTheHunter = dynamic_cast<CAI_BaseNPC*>(pHunter);
+	pTheHunter->CalcIsAttackCritical();
+	pTheHunter->CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_CLUB;
+	if ( pTheHunter->IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( pTheHunter->IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+	CTakeDamageInfo	info( pHunter, pHunter, vecForce, offset, flDamage, iDmgType );
 	pTarget->TakeDamage( info );
 }
 
@@ -5118,7 +5131,16 @@ CBaseEntity *CNPC_Hunter::MeleeAttack( float flDist, int iDamage, QAngle &qaView
 	vecMins.z = vecMins.x;
 	vecMaxs.z = vecMaxs.x;
 
-	CBaseEntity *pHurt = CheckTraceHullAttack( flDist, vecMins, vecMaxs, iDamage, DMG_SLASH );
+	int iDmgType = DMG_SLASH;
+	if ( IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+	CBaseEntity *pHurt = CheckTraceHullAttack( flDist, vecMins, vecMaxs, iDamage, iDmgType );
 
 	if ( pHurt )
 	{
@@ -5184,7 +5206,7 @@ CBaseEntity *CNPC_Hunter::MeleeAttack( float flDist, int iDamage, QAngle &qaView
 							CBreakableProp *pBreak = dynamic_cast<CBreakableProp*>(pHurt);
 							if ( pBreak )
 							{
-								CTakeDamageInfo info( this, this, sk_hunter_dmg_one_slash.GetFloat(), DMG_SLASH );
+								CTakeDamageInfo info( this, this, sk_hunter_dmg_one_slash.GetFloat(), iDmgType );
 								pBreak->Break( this, info );
 							}
 						}

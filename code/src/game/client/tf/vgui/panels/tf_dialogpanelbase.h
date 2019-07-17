@@ -29,6 +29,12 @@ public:
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
 	virtual void AddShortcut(const char *sCode, const char *sCommand){ m_cShotcutKeys.Insert(sCode, sCommand); };
 
+	virtual void SetMap(const char *name) { };
+	virtual bool IsRandomMapSelected() { return false; }
+	virtual const char *GetMapName() { return NULL; }
+	virtual int GetMaxPlayers() { return 1; }
+	virtual const char *GetPassword() { return NULL; }
+	virtual const char *GetHostName() { return NULL; }
 protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void PerformLayout();

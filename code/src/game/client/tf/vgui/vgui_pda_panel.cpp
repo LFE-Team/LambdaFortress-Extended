@@ -18,6 +18,8 @@
 #include <vgui_controls/RadioButton.h>
 #include "clientmode.h"
 #include <vgui_controls/ProgressBar.h>
+#include <vgui_controls/CircularProgressBar.h>
+#include "tf_weapon_invis.h"
 
 using namespace vgui;
 
@@ -188,9 +190,8 @@ DECLARE_VGUI_SCREEN_FACTORY( CPDAPanel_Spy_Invis, "pda_panel_spy_invis" );
 CPDAPanel_Spy_Invis::CPDAPanel_Spy_Invis( vgui::Panel *parent, const char *panelName )
 : CPDAPanel( parent, "CPDAPanel_Spy_Invis" ) 
 {
-	vgui::ivgui()->AddTickSignal( GetVPanel() );
-
-	m_pInvisProgress = new ProgressBar( this, "InvisProgress" );
+		vgui::ivgui()->AddTickSignal(GetVPanel());
+		m_pInvisProgress = new ProgressBar(this, "InvisProgress");
 }
 
 //-----------------------------------------------------------------------------
@@ -204,12 +205,26 @@ void CPDAPanel_Spy_Invis::OnTick( void )
 		return;
 
 	C_TFPlayer *pPlayer = ToTFPlayer( pInvisWeapon->GetOwner() );
-
+	if (!pPlayer || pPlayer && !pPlayer->IsAlive())
+		return;
+	CircularProgressBar *m_pInvisProgressCheck = dynamic_cast<CircularProgressBar*>(m_pInvisProgress);
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pInvisWeapon, iType, set_weapon_mode );
+	if ( iType == 1 && !m_pInvisProgressCheck && pPlayer && pPlayer->IsAlive() )
+	{
+		CircularProgressBar *m_pInvisProgress2;
+		m_pInvisProgress2 = new CircularProgressBar(this, "InvisProgress");
+		m_pInvisProgress2->SetFgImage("pocket_watch_fg");
+		m_pInvisProgress2->SetBgImage("pocket_watch_bg");
+		m_pInvisProgress2->SetSize(m_pInvisProgress->GetWide() + 9, m_pInvisProgress->GetTall() + 18);
+		m_pInvisProgress2->SetPos(m_pInvisProgress2->GetXPos() + 26, m_pInvisProgress2->GetYPos() - 5);
+		m_pInvisProgress = m_pInvisProgress2;
+	}
 	if ( pPlayer && !pPlayer->IsDormant() )
 	{
-		if ( m_pInvisProgress )
+		if (m_pInvisProgress)
 		{
-			m_pInvisProgress->SetProgress( pPlayer->m_Shared.GetSpyCloakMeter() / 100.0f );
+			m_pInvisProgress->SetProgress(pPlayer->m_Shared.GetSpyCloakMeter() / 100.0f);
 		}
 	}	
 }

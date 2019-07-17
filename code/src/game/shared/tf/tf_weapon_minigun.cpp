@@ -829,9 +829,6 @@ float CTFMinigun::GetBarrelRotation( void )
 //-----------------------------------------------------------------------------
 void CTFMinigun::CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles )
 {
-	// Stop reload from fucing states up -tf2vintage
-	pCmd->buttons &= ~IN_RELOAD;
-
 	// Prevent jumping while firing
 	if ( m_iWeaponState != AC_STATE_IDLE )
 	{

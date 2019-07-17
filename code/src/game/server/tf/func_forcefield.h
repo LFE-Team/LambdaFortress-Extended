@@ -23,6 +23,7 @@ class CFuncForceField : public CFuncBrush, public IFuncForceFieldAutoList
 	DECLARE_CLASS( CFuncForceField, CFuncBrush );
 public:
 	DECLARE_DATADESC();
+	DECLARE_SERVERCLASS();
 
 	virtual void Spawn( void );
 

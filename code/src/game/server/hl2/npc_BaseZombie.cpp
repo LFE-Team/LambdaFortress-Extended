@@ -1326,18 +1326,31 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 	vecMins.z = vecMins.x;
 	vecMaxs.z = vecMaxs.x;
 
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_SLASH;
+	if ( IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+
 	CBaseEntity *pHurt = NULL;
 	if ( GetEnemy() && GetEnemy()->Classify() == CLASS_BULLSEYE )
 	{ 
 		// We always hit bullseyes we're targeting
 		pHurt = GetEnemy();
-		CTakeDamageInfo info( this, this, vec3_origin, GetAbsOrigin(), iDamage, DMG_SLASH );
+		CTakeDamageInfo info( this, this, vec3_origin, GetAbsOrigin(), iDamage, iDmgType );
 		pHurt->TakeDamage( info );
 	}
 	else 
 	{
 		// Try to hit them with a trace
-		pHurt = CheckTraceHullAttack( flDist, vecMins, vecMaxs, iDamage, DMG_SLASH );
+		pHurt = CheckTraceHullAttack( flDist, vecMins, vecMaxs, iDamage, iDmgType );
 	}
 
 	if ( pDriver && iDriverInitialHealth != pDriver->GetHealth() )
@@ -1354,7 +1367,7 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 
 		vForce *= 5 * 24;
 
-		CTakeDamageInfo info( this, this, vForce, GetAbsOrigin(), iDamage, DMG_SLASH );
+		CTakeDamageInfo info( this, this, vForce, GetAbsOrigin(), iDamage, iDmgType );
 		pHurt->TakeDamage( info );
 
 		pHurt = m_hPhysicsEnt;
@@ -1379,13 +1392,13 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 				pPlayer->VelocityPunch( vecVelocityPunch );
 			}
 
-			/*CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+			CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 			// Unusual Difficulty will bleed players
-			if ( TFGameRules->IsSkillLevel( 4 ) 
+			if ( TFGameRules()->IsSkillLevel( SKILL_UNUSUAL ) )
 			{
 				if ( pTFPlayer )
-					pTFPlayer->m_Shared.Bleed( this, NULL, 4.0f );
-			}*/
+					pTFPlayer->m_Shared.MakeBleed( NULL, NULL, 4.0f );
+			}
 			#else
 			pPlayer->ViewPunch( qaViewPunch );
 			pPlayer->VelocityPunch( vecVelocityPunch );

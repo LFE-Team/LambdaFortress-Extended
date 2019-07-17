@@ -103,3 +103,18 @@ int C_TF_PlayerResource::GetCountForPlayerClass( int iTeam, int iClass, bool bEx
 
 	return count;
 }
+
+float C_TF_PlayerResource::GetHealthPercent()
+{
+	float max_health = 0;
+	float health = 0;
+	for ( int i = 1; i <= MAX_PLAYERS; i++ )
+	{
+		max_health = GetMaxHealth( i );
+		if ( max_health <= 0 )
+			return 0;
+
+		health = GetHealth( i );
+	}
+	return clamp(health / max_health, 0.0f, 1.0f);
+}

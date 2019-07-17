@@ -694,12 +694,12 @@ void CWeaponStriderBuster::Detonate( void )
 //-----------------------------------------------------------------------------
 int CWeaponStriderBuster::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	// If we're attached, any damage from the player AND building makes us trigger
+	// If we're attached, any damage from the player makes us trigger
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pAttacker = info.GetAttacker();
-	bool bInflictorIsPlayer = ( pInflictor != NULL && pInflictor->IsPlayer() || pInflictor->IsBaseObject() );
-	bool bAttackerIsPlayer = ( pAttacker != NULL && pAttacker->IsPlayer() || pInflictor->IsBaseObject() );
-
+	bool bInflictorIsPlayer = ( pInflictor != NULL && pInflictor->IsPlayer() );
+	bool bAttackerIsPlayer = ( pAttacker != NULL && pAttacker->IsPlayer() );
+	
 	if ( GetParent() && GetParent()->ClassMatches( g_iszVehicle ) )
 	{
 		return 0;

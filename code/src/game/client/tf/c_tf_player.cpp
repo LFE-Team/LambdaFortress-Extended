@@ -255,6 +255,7 @@ private:
 	bool  m_bFadingOut;
 	bool  m_bGib;
 	bool  m_bBurning;
+	bool  m_bFeignDeath;
 	bool  m_bOnGround;
 	float m_flInvisibilityLevel;
 	float m_flUncloakCompleteTime;
@@ -273,6 +274,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_TFRagdoll, DT_TFRagdoll, CTFRagdoll )
 	RecvPropInt( RECVINFO( m_nForceBone ) ),
 	RecvPropBool( RECVINFO( m_bGib ) ),
 	RecvPropBool( RECVINFO( m_bBurning ) ),
+	RecvPropBool( RECVINFO( m_bFeignDeath ) ),
 	RecvPropBool( RECVINFO( m_bOnGround ) ),
 	RecvPropFloat( RECVINFO( m_flInvisibilityLevel ) ),
 	RecvPropInt( RECVINFO( m_iDamageCustom ) ),
@@ -291,6 +293,7 @@ C_TFRagdoll::C_TFRagdoll()
 	m_bFadingOut = false;
 	m_bGib = false;
 	m_bBurning = false;
+	m_bFeignDeath = false;
 	m_bOnGround = false;
 	m_flInvisibilityLevel = 0.0f;
 	m_flUncloakCompleteTime = 0.0f;
@@ -1296,15 +1299,7 @@ public:
 				!pPlayer->IsEnemyPlayer() ||
 				pPlayer->GetTeamNumber() == pPlayer->m_Shared.GetDisguiseTeam() )
 			{
-				switch ( pPlayer->GetTeamNumber() )
-				{
-				case TF_TEAM_RED:
 					vecColor = Vector( 50, 2, 50 );
-					break;
-				case TF_TEAM_BLUE:
-					vecColor = Vector( 50, 2, 50 );
-					break;
-				}
 			}
 		}/*
 		else if ( pNPC && pNPC->IsCritBoosted() )
@@ -1577,6 +1572,23 @@ IMaterial *CInvisProxy::GetMaterial()
 EXPOSE_INTERFACE(CInvisProxy, IMaterialProxy, "invis" IMATERIAL_PROXY_INTERFACE_VERSION);
 
 //-----------------------------------------------------------------------------
+// Purpose: Stub class for the WeaponSkin material proxy used by live TF2
+//-----------------------------------------------------------------------------
+class CWeaponSkinProxy : public CResultProxy
+{
+public:
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+	{
+		return true;
+	}
+	void OnBind( void *pC_BaseEntity )
+	{
+	}
+};
+
+EXPOSE_INTERFACE( CWeaponSkinProxy, IMaterialProxy, "WeaponSkin" IMATERIAL_PROXY_INTERFACE_VERSION );
+
+//-----------------------------------------------------------------------------
 // Purpose: RecvProxy that converts the Player's object UtlVector to entindexes
 //-----------------------------------------------------------------------------
 void RecvProxy_PlayerObjectList( const CRecvProxyData *pData, void *pStruct, void *pOut )
@@ -1610,6 +1622,9 @@ BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFLocalPlayerExclusive )
 
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 //	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropInt( RECVINFO( m_iSquadMemberCount ) ),
+	RecvPropInt( RECVINFO( m_iSquadMedicCount ) ),
+	RecvPropBool( RECVINFO( m_fSquadInFollowMode ) ),
 	RecvPropEHandle( RECVINFO( m_hLadder ) ),
 
 END_RECV_TABLE()
@@ -1724,6 +1739,10 @@ C_TFPlayer::C_TFPlayer() :
 	{
 		scissor.SetValue("0");
 	}
+
+	m_iSquadMemberCount = 0;
+	m_iSquadMedicCount = 0;
+	m_fSquadInFollowMode = false;
 }
 
 C_TFPlayer::~C_TFPlayer()
@@ -1765,7 +1784,7 @@ void C_TFPlayer::UpdateOnRemove( void )
 	ParticleProp()->OwnerSetDormantTo( true );
 	ParticleProp()->StopParticlesInvolving( this );
 
-	m_Shared.RemoveAllCond( this );
+	m_Shared.RemoveAllCond();
 
 	m_Shared.UpdateCritBoostEffect( true );
 
@@ -2914,6 +2933,7 @@ void C_TFPlayer::AvoidPlayers( CUserCmd *pCmd )
 
 	C_TFPlayer *pIntersectPlayer = NULL;
 	CBaseObject *pIntersectObject = NULL;
+	C_AI_BaseNPC *pIntersectNPC = NULL;
 	float flAvoidRadius = 0.0f;
 
 	Vector vecAvoidCenter, vecAvoidMin, vecAvoidMax;
@@ -3004,8 +3024,53 @@ void C_TFPlayer::AvoidPlayers( CUserCmd *pCmd )
 		}
 	}
 
-	// Anything to avoid?
+	// We didn't find a player or object - look for npc to avoid.
 	if ( !pIntersectPlayer && !pIntersectObject )
+	{
+		for ( int iPlayer = 0; iPlayer < nAvoidPlayerCount; ++iPlayer )
+		{	
+			// Stop when we found an intersecting npc.
+			if ( pIntersectNPC )
+				break;
+
+			C_TFTeam *pTeam = (C_TFTeam*)GetTeam();
+
+			for ( int iNPC = 0; iNPC < pTeam->GetNumNPCs(); ++iNPC )
+			{
+				C_AI_BaseNPC *pAvoidNPC = pTeam->GetNPC( iNPC );
+				if ( !pAvoidNPC )
+					continue;
+
+				// Check to see if the object is dormant.
+				if ( pAvoidNPC->IsDormant() )
+					continue;
+
+				// Is the object solid.
+				if ( pAvoidNPC->IsSolidFlagSet( FSOLID_NOT_SOLID ) )
+					continue;
+
+				// If we shouldn't avoid it, see if we intersect it.
+				//if ( pAvoidNPC->ShouldPlayersAvoid() )
+				//{
+					vecAvoidCenter = pAvoidNPC->WorldSpaceCenter();
+					vecAvoidMin = pAvoidNPC->WorldAlignMins();
+					vecAvoidMax = pAvoidNPC->WorldAlignMaxs();
+					VectorAdd( vecAvoidMin, vecAvoidCenter, vecAvoidMin );
+					VectorAdd( vecAvoidMax, vecAvoidCenter, vecAvoidMax );
+
+					if ( IsBoxIntersectingBox( vecTFPlayerMin, vecTFPlayerMax, vecAvoidMin, vecAvoidMax ) )
+					{
+						// Need to avoid this object.
+						pIntersectNPC = pAvoidNPC;
+						break;
+					}
+				//}
+			}
+		}
+	}
+
+	// Anything to avoid?
+	if ( !pIntersectPlayer && !pIntersectObject && !pIntersectNPC )
 	{
 		m_Shared.SetSeparation( false );
 		m_Shared.SetSeparationVelocity( vec3_origin );
@@ -3025,8 +3090,16 @@ void C_TFPlayer::AvoidPlayers( CUserCmd *pCmd )
 
 		flAvoidRadius = vRad.Length();
 	}
-	// Avoid a object.
-	else
+	else if ( pIntersectNPC )
+	{
+		VectorSubtract( pIntersectNPC->WorldSpaceCenter(), vecTFPlayerCenter, vecDelta );
+
+		Vector vRad = pIntersectNPC->WorldAlignMaxs() - pIntersectNPC->WorldAlignMins();
+		vRad.z = 0;
+
+		flAvoidRadius = vRad.Length();
+	}
+	else	// Avoid an object.
 	{
 		VectorSubtract( pIntersectObject->WorldSpaceCenter(), vecTFPlayerCenter, vecDelta );
 
@@ -3984,14 +4057,10 @@ void C_TFPlayer::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 							const Vector& decalCenter, int hitbox, int decalIndex, bool doTrace, trace_t& tr, int maxLODToDecal )
 {
 	if ( m_Shared.IsStealthed() )
-	{
 		return;
-	}
 
 	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
 		return;
-	}
 
 	if ( m_Shared.IsInvulnerable() )
 	{ 
@@ -4001,11 +4070,12 @@ void C_TFPlayer::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		return;
 	}
 
+	if ( m_Shared.InCond( TF_COND_PHASE ) )
+		return;
+
 	// don't decal from inside the player
 	if ( tr.startsolid )
-	{
 		return;
-	}
 
 	BaseClass::AddDecal( rayStart, rayEnd, decalCenter, hitbox, decalIndex, doTrace, tr, maxLODToDecal );
 }
@@ -4915,7 +4985,6 @@ bool C_TFPlayer::ShouldReceiveProjectedTextures( int flags )
 
 void C_TFPlayer::UpdateFlashlight()
 {
-	// Should we add a new tf cond for flashlight?
 	if ( IsEffectActive( EF_DIMLIGHT ) )
 	{
 		if (!m_pFlashlight)
@@ -4937,6 +5006,7 @@ void C_TFPlayer::UpdateFlashlight()
 		Vector vec_origin = EyePosition();
 		QAngle ang_FlashlightAngle = EyeAngles();
 		int iDist = TF_FLASHLIGHT_DISTANCE;
+
  		if ( GetActiveTFWeapon() )
 		{
 			C_TFWeaponBase *pActiveWpn = GetActiveTFWeapon();
@@ -4947,6 +5017,21 @@ void C_TFPlayer::UpdateFlashlight()
 
 				if ( iAttachment > 0 )
 					pAttachment->GetAttachment( iAttachment, vec_origin, ang_FlashlightAngle );
+				else
+				{
+					Vector aimFwd;
+					AngleVectors( ang_FlashlightAngle, &aimFwd );
+					vec_origin += aimFwd * ( VEC_HULL_MAX ).Length2D();
+				}
+
+				iDist = 0;
+			}
+			else
+			{
+				int iAttachment = pActiveWpn->LookupAttachment( "muzzle" );
+
+				if ( iAttachment > 0 )
+					pActiveWpn->GetAttachment( iAttachment, vec_origin, ang_FlashlightAngle );
 				else
 				{
 					Vector aimFwd;

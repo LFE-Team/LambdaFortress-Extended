@@ -32,6 +32,7 @@ public:
 
 	int GetCountForPlayerClass( int iTeam, int iClass, bool bExcludeLocalPlayer = false );
 
+	float GetHealthPercent();
 protected:
 	int GetArrayValue( int iIndex, int *pArray, int defaultVal );
 

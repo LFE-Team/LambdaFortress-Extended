@@ -1023,7 +1023,7 @@ void UTIL_ScreenShakeObject( CBaseEntity *pEnt, const Vector &center, float ampl
 		{
 			localAmplitude = amplitude;
 		}
-		else if ((pPlayer->GetFlags() & FL_ONGROUND) && (pPlayer->GetGroundEntity()->GetRootMoveParent() == pHighestParent))
+		else if (pPlayer && (pPlayer->GetFlags() & FL_ONGROUND) && (pPlayer->GetGroundEntity()->GetRootMoveParent() == pHighestParent))
 		{
 			// If the player is standing on the object, use maximum amplitude
 			localAmplitude = amplitude;

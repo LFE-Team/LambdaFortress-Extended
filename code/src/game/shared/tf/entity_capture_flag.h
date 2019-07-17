@@ -223,9 +223,9 @@ public:
 
 #endif
 
-	void			Capture( CBaseEntity *pPlayer, int nCapturePoint );
-	virtual void	PickUp( CBaseEntity *pPlayer, bool bInvisible );
-	virtual void	Drop( CBaseEntity *pPlayer, bool bVisible, bool bThrown = false, bool bMessage = true );
+	void			Capture( CTFPlayer *pPlayer, int nCapturePoint );
+	virtual void	PickUp( CTFPlayer *pPlayer, bool bInvisible );
+	virtual void	Drop( CTFPlayer *pPlayer, bool bVisible, bool bThrown = false, bool bMessage = true );
 
 	int				GetGameType( void ){ return m_nGameType; }
 

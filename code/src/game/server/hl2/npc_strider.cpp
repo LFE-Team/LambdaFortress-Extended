@@ -442,7 +442,15 @@ void CNPC_Strider::Precache()
 {
 	if ( !GetModelName() )
 	{
-		SetModelName( MAKE_STRING( "models/combine_strider.mdl" ) );
+		//SMOD if we're EP1 or HL2 use a different model (damn you Valve!)
+		if (!Q_strnicmp(STRING(gpGlobals->mapname), "ep1", 3))
+			SetModelName(AllocPooledString("models/combine_striep1.mdl"));
+		if (!Q_strnicmp(STRING(gpGlobals->mapname), "d3", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "d2", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "d1", 2))
+			SetModelName(AllocPooledString("models/combine_strihl2.mdl"));
+		else if (CBaseEntity::GetModelName() == NULL_STRING)
+			SetModelName(MAKE_STRING("models/combine_strider.mdl"));
+		else
+			SetModelName(CBaseEntity::GetModelName());
 	}
 
 	PrecacheModel( STRING( GetModelName() ) );

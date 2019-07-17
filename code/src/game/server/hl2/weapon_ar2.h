@@ -65,6 +65,7 @@ public:
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 
+	virtual bool	CanCritRapidFire()		{ return true; }
 protected:
 
 	float					m_flDelayedFire;

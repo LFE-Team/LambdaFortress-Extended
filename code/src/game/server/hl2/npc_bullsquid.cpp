@@ -7,11 +7,11 @@
 
 #include "cbase.h"
 #include "game.h"
-#include "AI_Default.h"
-#include "AI_Schedule.h"
-#include "AI_Hull.h"
-#include "AI_Navigator.h"
-#include "AI_Motor.h"
+#include "ai_default.h"
+#include "ai_schedule.h"
+#include "ai_hull.h"
+#include "ai_navigator.h"
+#include "ai_motor.h"
 #include "ai_squad.h"
 #include "npc_bullsquid.h"
 #include "npcevent.h"
@@ -30,8 +30,8 @@
 #include "engine/IEngineSound.h"
 #include "movevars_shared.h"
 
-#include "AI_Hint.h"
-#include "AI_Senses.h"
+#include "ai_hint.h"
+#include "ai_senses.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -90,10 +90,10 @@ int	g_interactionBullsquidThrow		= 0;
 
 LINK_ENTITY_TO_CLASS( npc_bullsquid, CNPC_Bullsquid );
 
-int ACT_SQUID_EXCITED;
-int ACT_SQUID_EAT;
-int ACT_SQUID_DETECT_SCENT;
-int ACT_SQUID_INSPECT_FLOOR;
+extern int ACT_SQUID_EXCITED;
+extern int ACT_SQUID_EAT;
+extern int ACT_SQUID_DETECT_SCENT;
+extern int ACT_SQUID_INSPECT_FLOOR;
 
 
 //---------------------------------------------------------
@@ -116,32 +116,39 @@ END_DATADESC()
 //=========================================================
 void CNPC_Bullsquid::Spawn()
 {
-	Precache( );
+	if ( sv_hl2_beta.GetBool() )
+	{
+		Precache();
 
-	SetModel( "models/bullsquid.mdl");
-	SetHullType(HULL_WIDE_SHORT);
-	SetHullSizeNormal();
+		SetModel( "models/bullsquid_leak.mdl");
+		SetHullType(HULL_WIDE_SHORT);
+		SetHullSizeNormal();
 
-	SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_NOT_STANDABLE );
-	SetMoveType( MOVETYPE_STEP );
-	m_bloodColor		= BLOOD_COLOR_GREEN;
-	
-	SetRenderColor( 255, 255, 255, 255 );
-	
-	m_iHealth			= sk_bullsquid_health.GetFloat();
-	m_flFieldOfView		= 0.2;// indicates the width of this monster's forward view cone ( as a dotproduct result )
-	m_NPCState			= NPC_STATE_NONE;
-	
-	CapabilitiesClear();
-	CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_INNATE_MELEE_ATTACK2 );
-	
-	m_fCanThreatDisplay	= TRUE;
-	m_flNextSpitTime = gpGlobals->curtime;
+		SetSolid( SOLID_BBOX );
+		AddSolidFlags( FSOLID_NOT_STANDABLE );
+		SetMoveType( MOVETYPE_STEP );
+		SetBloodColor( BLOOD_COLOR_GREEN );
 
-	NPCInit();
+		SetRenderColor( 255, 255, 255, 255 );
 
-	m_flDistTooFar		= 784;
+		m_iHealth			= sk_bullsquid_health.GetFloat();
+		m_flFieldOfView		= 0.2;// indicates the width of this monster's forward view cone ( as a dotproduct result )
+		m_NPCState			= NPC_STATE_NONE;
+
+		CapabilitiesClear();
+		CapabilitiesAdd( bits_CAP_MOVE_GROUND | bits_CAP_INNATE_RANGE_ATTACK1 | bits_CAP_INNATE_MELEE_ATTACK1 | bits_CAP_INNATE_MELEE_ATTACK2 );
+		
+		m_fCanThreatDisplay	= true;
+		m_flNextSpitTime = gpGlobals->curtime;
+
+		NPCInit();
+
+		m_flDistTooFar		= 784;
+	}
+	else
+	{
+		UTIL_Remove( this );
+	}
 }
 
 //=========================================================
@@ -149,8 +156,8 @@ void CNPC_Bullsquid::Spawn()
 //=========================================================
 void CNPC_Bullsquid::Precache()
 {
-	PrecacheModel( "models/bullsquid.mdl" );
-	m_nSquidSpitSprite = PrecacheModel("sprites/greenspit1.vmt");// client side spittle.
+	PrecacheModel( "models/bullsquid_leak.mdl" );
+	//m_nSquidSpitSprite = PrecacheModel("sprites/greenspit1.vmt");// client side spittle.
 
 	UTIL_PrecacheOther( "grenade_spit" );
 
@@ -161,6 +168,9 @@ void CNPC_Bullsquid::Precache()
 	PrecacheScriptSound( "NPC_Bullsquid.Attack1" );
 	PrecacheScriptSound( "NPC_Bullsquid.Growl" );
 	PrecacheScriptSound( "NPC_Bullsquid.TailWhip");
+
+	PrecacheScriptSound( "NPC_Antlion.PoisonShoot" );
+	PrecacheScriptSound( "NPC_Antlion.PoisonBall" );
 
 	BaseClass::Precache();
 }

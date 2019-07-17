@@ -987,7 +987,20 @@ void CBaseHeadcrab::LeapTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 int CBaseHeadcrab::CalcDamageInfo( CTakeDamageInfo *pInfo )
 {
-	pInfo->Set( this, this, sk_headcrab_melee_dmg.GetFloat(), DMG_SLASH );
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_SLASH;
+	if ( IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+
+	pInfo->Set( this, this, sk_headcrab_melee_dmg.GetFloat(), iDmgType );
 	CalculateMeleeDamageForce( pInfo, GetAbsVelocity(), GetAbsOrigin() );
 	return pInfo->GetDamage();
 }
@@ -999,13 +1012,13 @@ void CBaseHeadcrab::TouchDamage( CBaseEntity *pOther )
 {
 	CTakeDamageInfo info;
 	CalcDamageInfo( &info );
-	pOther->TakeDamage( info  );
-	/*CTFPlayer *pTFPlayer = ToTFPlayer( pOther );
-	if ( TFGameRules->IsSkillLevel( 4 ) 
+	pOther->TakeDamage( info );
+	CTFPlayer *pTFPlayer = ToTFPlayer( pOther );
+	if ( TFGameRules()->IsSkillLevel( SKILL_UNUSUAL ) )
 	{
 		if ( pTFPlayer )
-			pTFPlayer->m_Shared.Bleed( this, NULL, 2.0f );
-	}*/
+			pTFPlayer->m_Shared.MakeBleed( NULL, NULL, 2.0f );
+	}
 }
 
 

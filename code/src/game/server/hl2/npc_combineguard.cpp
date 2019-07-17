@@ -11,29 +11,29 @@
 
 
 #include "cbase.h"
-#include "AI_Task.h"
-#include "AI_Default.h"
-#include "AI_Schedule.h"
-#include "AI_Hull.h"
-#include "AI_Motor.h"
-#include "AI_Memory.h"
+#include "ai_task.h"
+#include "ai_default.h"
+#include "ai_schedule.h"
+#include "ai_hull.h"
+#include "ai_motor.h"
+#include "ai_memory.h"
 #include "npc_combine.h"
 #include "physics.h"
 #include "bitstring.h"
 #include "activitylist.h"
 #include "game.h"
-#include "NPCEvent.h"
-#include "Player.h"
-#include "EntityList.h"
-#include "AI_Interactions.h"
+#include "npcevent.h"
+#include "player.h"
+#include "entitylist.h"
+#include "ai_interactions.h"
 #include "soundent.h"
-#include "Gib.h"
+#include "gib.h"
 #include "shake.h"
 #include "ammodef.h"
 #include "Sprite.h"
 #include "explode.h"
 #include "grenade_homer.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "soundenvelope.h"
 #include "IEffects.h"
 #include "vstdlib/random.h"
@@ -216,7 +216,7 @@ void CNPC_CombineGuard::Precache( void )
 
 void CNPC_CombineGuard::Spawn( void )
 {
-	if ( sv_hl2_beta.GetFloat() == 1 || TFGameRules()->iDirectorAnger == 100 && sv_dynamicnpcs.GetFloat() == 1 )
+	if (sv_hl2_beta.GetBool() || TFGameRules()->m_iDirectorAnger == 100 && sv_dynamicnpcs.GetBool())
 	{
 		Precache();
 
@@ -262,7 +262,7 @@ void CNPC_CombineGuard::Spawn( void )
 	}
 	else
 	{
-		Remove();
+		UTIL_Remove( this );
 	}
 }
 

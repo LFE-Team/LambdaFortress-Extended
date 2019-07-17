@@ -30,6 +30,7 @@ public:
 	void Spawn( void );
 	void Precache( void );
 	Class_T	Classify ( void );
+	Disposition_t IRelationType(CBaseEntity *pTarget);
 
 	void AlertSound( void );
 	void IdleSound( void );
@@ -68,16 +69,18 @@ public:
 
 	void HandleAnimEvent( animevent_t *pEvent );
 
+	int m_iVoicePitch;
+	int m_iBravery;
 
 	DEFINE_CUSTOM_AI;
 	DECLARE_DATADESC();
 
 private:
-	int m_iVoicePitch;
+	bool		PlayerIsCriminal( void );
+
+
 	int	  m_iBeams;
 	int	  m_iNoise;
-
-	int m_iBravery;
 
 	CBeam *m_pBeam[CREMATOR_MAX_BEAMS];
 	CBeam *m_hNoise[CREMATOR_MAX_NOISE];

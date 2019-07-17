@@ -1,6 +1,8 @@
 #include "cbase.h"
 #include "tf_menupanelbase.h"
 #include "tf_mainmenu.h"
+#include "controls/tf_advbutton.h"
+#include "controls/lfe_flyoutmenu.h"
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
@@ -55,7 +57,40 @@ void CTFMenuPanelBase::PerformLayout()
 
 void CTFMenuPanelBase::OnCommand(const char* command)
 {
-	engine->ExecuteClientCmd(command);
+	bool bOpeningFlyout = false;
+
+	const char *pchCommand = command;
+
+	// does this command match a flyout menu?
+	FlyoutMenu *flyout = dynamic_cast< FlyoutMenu* >( FindChildByName( pchCommand ) );
+	if ( flyout )
+	{
+		bOpeningFlyout = true;
+
+		// If so, enumerate the buttons on the menu and find the button that issues this command.
+		// (No other way to determine which button got pressed; no notion of "current" button on PC.)
+		for ( int iChild = 0; iChild < GetChildCount(); iChild++ )
+		{
+			CTFAdvButton *pTFButton = dynamic_cast<CTFAdvButton *>( GetChild( iChild ) );
+			if ( pTFButton && pTFButton->GetCommandString() && !Q_strcmp( pTFButton->GetCommandString(), command ) )
+			{
+				pTFButton->NavigateFrom();
+				// open the menu next to the button that got clicked
+				flyout->OpenMenu( pTFButton );
+				flyout->SetListener( this );
+				break;
+			}
+		}
+	}
+	else
+	{
+		engine->ExecuteClientCmd(command);
+	}
+
+	if( !bOpeningFlyout )
+	{
+		FlyoutMenu::CloseActiveMenu(); //due to unpredictability of mouse navigation over keyboard, we should just close any flyouts that may still be open anywhere.
+	}
 }
 
 void CTFMenuPanelBase::OnTick()

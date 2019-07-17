@@ -160,6 +160,8 @@ class CTFWeaponBase : public CBaseCombatWeapon
 #endif
 	bool IsViewModelFlipped( void );
 
+	virtual void DepleteAmmo( void ) {} // accessor for consumables
+
 	virtual void ReapplyProvision( void );
 	virtual void OnActiveStateChanged( int iOldState );
 	virtual void UpdateOnRemove( void );
@@ -222,6 +224,9 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	static acttable_t s_acttableMeleeAllClass[];
 	static acttable_t s_acttableSecondary2[];
 	static acttable_t s_acttablePrimary2[];
+	static acttable_t s_acttableItem3[];
+	static acttable_t s_acttableItem4[];
+	static acttable_t s_acttablePhysgun[];
 	static viewmodel_acttable_t s_viewmodelacttable[];
 
 #ifdef GAME_DLL
@@ -275,6 +280,7 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual const char	*GetEffectLabelText( void );
 	void				ReduceEffectBarRegenTime( float flTime ) { m_flEffectBarRegenTime -= flTime; }
 	virtual bool		EffectMeterShouldFlash( void ) { return false; }
+	virtual void		OnResourceMeterFilled( void ) {}
 
 	void				OnControlStunned( void );
 
@@ -301,11 +307,15 @@ class CTFWeaponBase : public CBaseCombatWeapon
 	virtual const Vector& GetBulletSpread();
 
 	// On hit effects.
-	void ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
-	void ApplyPostHitEffects( const CTakeDamageInfo &info, CBaseEntity *pVictim );
-	void ApplyOnInjuredAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
+	virtual void ApplyOnHitAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info );
+	virtual void ApplyPostHitEffects( const CTakeDamageInfo &info, CBaseEntity *pVictim );
+	virtual void ApplyOnInjuredAttributes( CBaseEntity *pOwner, const CTakeDamageInfo &info );
+	virtual void OnPlayerKill( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
-	void	Knockback( void );
+	virtual void	DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir );
+	virtual void	DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, Vector &vecDir );
+	virtual void	DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Vector &vecDir );		// blast npcs
+	virtual void	DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir ); // end of the gravity gun primary function
 // Client specific.
 #else
 

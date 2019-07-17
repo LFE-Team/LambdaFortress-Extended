@@ -116,6 +116,7 @@ private:
 	bool	m_bAddingCargo;
 	bool	m_bBlink;
 
+	float	m_flCargoWaitTime; // We need to wait a bit before we create the cargo trigger
 	float	m_flCargoStartTime;	// Time when the cargo was first added to the vehicle (used for animating into hold)
 	float	m_flNextAvoidBroadcastTime; // Next time we'll warn entity to move out of us
 

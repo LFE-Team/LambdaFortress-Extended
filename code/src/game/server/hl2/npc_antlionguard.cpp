@@ -1574,7 +1574,16 @@ public:
 
 			float	flDamage = ( pEntity->IsPlayer() ) ? sk_antlionguard_dmg_shove.GetFloat() : 250;;
 
-			CTakeDamageInfo info( m_pAttacker, m_pAttacker, flDamage, DMG_CRUSH );
+			int iDmgType = DMG_CRUSH;
+			if ( m_pAttacker->IsCurrentAttackACrit() )
+			{
+				iDmgType |= DMG_CRITICAL;
+			}
+			if ( m_pAttacker->IsCurrentAttackAMiniCrit() )
+			{
+				iDmgType |= DMG_MINICRITICAL;
+			}
+			CTakeDamageInfo info( m_pAttacker, m_pAttacker, flDamage, iDmgType );
 			CalculateMeleeDamageForce( &info, attackDir, info.GetAttacker()->WorldSpaceCenter(), 4.0f );
 
 			CBaseCombatCharacter *pVictimBCC = pEntity->MyCombatCharacterPointer();
@@ -2576,7 +2585,20 @@ void ApplyChargeDamage( CBaseEntity *pAntlionGuard, CBaseEntity *pTarget, float 
 
 	// Deal the damage
 #ifdef TF_CLASSIC
-	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, DMG_CLUB | DMG_CRITICAL );
+	CNPC_AntlionGuard *pTheAntlionGuard = dynamic_cast<CNPC_AntlionGuard*>(pAntlionGuard);
+	pTheAntlionGuard->CalcIsAttackCritical();
+	pTheAntlionGuard->CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_CLUB;
+	if ( pTheAntlionGuard->IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( pTheAntlionGuard->IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, iDmgType );
 #else
 	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, DMG_CLUB );
 #endif
@@ -2584,9 +2606,9 @@ void ApplyChargeDamage( CBaseEntity *pAntlionGuard, CBaseEntity *pTarget, float 
 
 #if HL2_EPISODIC
 	// If I am a cavern guard attacking the player, and he still lives, then poison him too.
-	Assert( dynamic_cast<CNPC_AntlionGuard *>(pAntlionGuard) );
+	//Assert( dynamic_cast<CNPC_AntlionGuard *>(pAntlionGuard) );
 
-	if ( static_cast<CNPC_AntlionGuard *>(pAntlionGuard)->IsInCavern() && pTarget->IsPlayer() && pTarget->IsAlive() && pTarget->m_iHealth > ANTLIONGUARD_POISON_TO)
+	if ( pTheAntlionGuard->IsInCavern() && pTarget->IsPlayer() && pTarget->IsAlive() && pTarget->m_iHealth > ANTLIONGUARD_POISON_TO)
 	{
 		// That didn't finish them. Take them down to one point with poison damage. It'll heal.
 		pTarget->TakeDamage( CTakeDamageInfo( pAntlionGuard, pAntlionGuard, pTarget->m_iHealth - ANTLIONGUARD_POISON_TO, DMG_POISON ) );

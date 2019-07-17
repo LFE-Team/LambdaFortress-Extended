@@ -192,15 +192,16 @@ private:
 	// Sapper on me
 	bool	m_bHasSapper;
 #endif
+public:
+	void			Toggle( void );
+	void			Enable( void );
+	void			Disable( void );
 protected:
 
 	virtual bool	PreThink( turretState_e state );
 	virtual void	Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict = false );
 	virtual void	SetEyeState( eyeState_t state );
 	void			Ping( void );	
-	void			Toggle( void );
-	void			Enable( void );
-	void			Disable( void );
 	void			SpinUp( void );
 	void			SpinDown( void );
 

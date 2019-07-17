@@ -11,7 +11,7 @@
 #define HL1_AI_BASENPC_H
 
 #pragma warning(push)
-#include <set>
+//#include <set>
 #pragma warning(pop)
 
 #ifdef _WIN32
@@ -20,7 +20,7 @@
 
 
 #include "ai_basenpc.h"
-#include "AI_Motor.h"
+#include "ai_motor.h"
 //=============================================================================
 // >> CHL1NPCTalker
 //=============================================================================

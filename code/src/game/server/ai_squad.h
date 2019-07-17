@@ -146,6 +146,8 @@ public:
 		}
 	}
 
+	void					SetPlayerCommander(CBasePlayer *pPlayer) { m_hPlayerCommander.Set(pPlayer); }
+	CBasePlayer	*			GetPlayerCommander() { return m_hPlayerCommander.Get(); }
 
 private:
 	void OccupySlot( CBaseEntity *pEnemy, int i );
@@ -191,6 +193,8 @@ private:
 	CVarBitVec	m_squadSlotsUsed;							// What squad slots are filled?
 
 #endif
+
+	CHandle<CBasePlayer>							m_hPlayerCommander;
 
 	//---------------------------------
 public:

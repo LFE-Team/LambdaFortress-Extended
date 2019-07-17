@@ -12,6 +12,7 @@
 #include "basemodelpanel.h"
 #include "panels/tf_dialogpanelbase.h"
 #include "inputsystem/iinputsystem.h"
+#include "lfe_flyoutmenu.h"
 
 using namespace vgui;
 
@@ -55,6 +56,7 @@ void CTFAdvButton::ApplySettings(KeyValues *inResourceData)
 	BaseClass::ApplySettings(inResourceData);
 
 	m_bScaleImage = inResourceData->GetBool("scaleImage", true);
+	m_bGlowing = inResourceData->GetBool("glowing", false);
 
 	InvalidateLayout(false, true); // force ApplySchemeSettings to run
 }
@@ -182,9 +184,11 @@ void CTFAdvButton::SendAnimation(MouseState flag)
 	if ( m_pButton->IsSelected() && m_bSelected )
 		return;
 
-	bool bAnimation = ( ( m_pButton->m_fXShift == 0 && m_pButton->m_fYShift == 0 ) ? false : true );
+	bool bAnimation = ( ( m_pButton->m_fXShift == 0 && m_pButton->m_fYShift == 0 && m_pButton->m_fXShiftImage == 0 && m_pButton->m_fYShiftImage == 0 ) ? false : true );
 	AnimationController::PublicValue_t p_AnimLeave(0, 0);
+	//AnimationController::PublicValue_t p_AnimImageLeave( GetXPos(), GetYPos() );
 	AnimationController::PublicValue_t p_AnimHover( m_pButton->m_fXShift, m_pButton->m_fYShift );
+	//AnimationController::PublicValue_t p_AnimImageHover( GetXPos() + m_pButton->m_fXShiftImage, GetYPos() + m_pButton->m_fYShiftImage );
 	switch (flag)
 	{
 	//We can add additional stuff like animation here
@@ -195,11 +199,13 @@ void CTFAdvButton::SendAnimation(MouseState flag)
 		pButtonImage->SetDrawColor(GETSCHEME()->GetColor(pImageColorArmed, Color(255, 255, 255, 255)));
 		if (bAnimation)
 			vgui::GetAnimationController()->RunAnimationCommand( m_pButton, "Position", p_AnimHover, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
+			//vgui::GetAnimationController()->RunAnimationCommand( pButtonImage, "Position", p_AnimImageHover, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
 		break;
 	case MOUSE_EXITED:
 		pButtonImage->SetDrawColor(GETSCHEME()->GetColor(pImageColorSelected, Color(255, 255, 255, 255)));
 		if (bAnimation)
 			vgui::GetAnimationController()->RunAnimationCommand( m_pButton, "Position", p_AnimLeave, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
+			//vgui::GetAnimationController()->RunAnimationCommand( pButtonImage, "Position", p_AnimImageLeave, 0.0f, 0.1f, vgui::AnimationController::INTERPOLATOR_LINEAR, NULL );
 		break;
 	case MOUSE_PRESSED:
 		pButtonImage->SetDrawColor(GETSCHEME()->GetColor(pImageColorDepressed, Color(255, 255, 255, 255)));
@@ -218,6 +224,8 @@ CTFButton::CTFButton(vgui::Panel *parent, const char *panelName, const char *tex
 	iState = MOUSE_DEFAULT;
 	m_fXShift = 0.0;
 	m_fYShift = 0.0;
+	m_fXShiftImage = 0.0;
+	m_fYShiftImage = 0.0;
 }
 
 void CTFButton::ApplySettings(KeyValues *inResourceData)
@@ -226,6 +234,8 @@ void CTFButton::ApplySettings(KeyValues *inResourceData)
 
 	m_fXShift = inResourceData->GetFloat("xshift", 0.0);
 	m_fYShift = inResourceData->GetFloat("yshift", 0.0);
+	m_fXShiftImage = inResourceData->GetFloat("xshiftimage", 0.0);
+	m_fYShiftImage = inResourceData->GetFloat("yshiftimage", 0.0);
 
 	SetArmedSound( "ui/buttonrollover.wav" );
 	SetDepressedSound( "ui/buttonclick.wav" );
@@ -302,6 +312,19 @@ void CTFButton::OnMousePressed(vgui::MouseCode code)
 	{
 		SetMouseEnteredState(MOUSE_PRESSED);
 	}
+	else if( code == MOUSE_RIGHT )
+	{
+		FlyoutMenu::CloseActiveMenu( this );
+	}
+	else
+	{
+		if( (code == MOUSE_LEFT) && (IsEnabled() == false) && (dynamic_cast<FlyoutMenu *>( GetParent() ) == NULL) )
+		{
+			//when trying to use an inactive item that isn't part of a flyout. Close any open flyouts.
+			FlyoutMenu::CloseActiveMenu( this );
+		}
+		RequestFocus( 0 );			
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -335,4 +358,21 @@ void CTFButton::SetMouseEnteredState(MouseState flag)
 	BaseClass::SetMouseEnteredState(flag);
 	if (m_pParent->IsEnabled())
 		m_pParent->SendAnimation(flag);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CExImageButton::CExImageButton(vgui::Panel *parent, const char *panelName, const char *text) : CTFAdvButton(parent, panelName, text)
+{
+	m_pButton = new CTFButton( this, "SubButton", text );
+	Init();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destructor
+//-----------------------------------------------------------------------------
+CExImageButton::~CExImageButton()
+{
+	delete m_pButton;
 }

@@ -40,9 +40,9 @@
 // NVNT turret recoil
 #include "haptics/haptic_utils.h"
 
-#ifdef HL2_DLL
-#include "hl2_player.h"
-#endif //HL2_DLL
+#ifdef TF_CLASSIC
+#include "tf_player.h"
+#endif //TF_CLASSIC
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1075,7 +1075,10 @@ bool CFuncTank::StartControl( CBaseCombatCharacter *pController )
 	// Holster player/npc weapon
 	if ( m_hController->GetActiveWeapon() )
 	{
-		m_hController->GetActiveWeapon()->Holster();
+		if ( m_hController->IsNPC() )
+			m_hController->GetActiveWeapon()->Holster();
+		else
+			m_hController->GetActiveWeapon()->Lower();
 	}
 
 	// Set the controller's position to be the use position.
@@ -1115,6 +1118,18 @@ void CFuncTank::StopControl()
 	if ( m_hController->GetActiveWeapon() )
 	{
 		m_hController->GetActiveWeapon()->Deploy();
+
+		CTFPlayer *pTFPlayer = ToTFPlayer( m_hController.Get() );
+		if ( pTFPlayer )
+		{
+			if ( pTFPlayer->GetActiveTFWeapon() )
+			{
+				if ( !pTFPlayer->GetActiveTFWeapon()->ReadyIgnoreSequence() )
+				{
+					pTFPlayer->SwitchToNextBestWeapon( NULL );
+				}
+			}
+		}
 	}
 
 	if ( m_hController->IsPlayer() )
@@ -1683,6 +1698,18 @@ void CFuncTank::Think( void )
 	else
 	{
 		StopRotSound();
+	}
+	if (m_hController && m_hController->IsPlayer())
+	{
+		CTFPlayer *pPlayer = ToTFPlayer(m_hController);
+		if (pPlayer && pPlayer->m_Shared.InCond(TF_COND_STEALTHED))
+		{
+			StopControl();
+		}
+		if (pPlayer && pPlayer->m_Shared.InCond(TF_COND_DISGUISED))
+		{
+			pPlayer->RemoveDisguise();
+		}
 	}
 
 	FuncTankPostThink();

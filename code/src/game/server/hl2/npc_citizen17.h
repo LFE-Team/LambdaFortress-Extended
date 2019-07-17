@@ -131,6 +131,7 @@ public:
 	void			TaskFail( AI_TaskFailureCode_t code );
 
 	void 			PickupItem( CBaseEntity *pItem );
+	void			RemoveHealCooldown(void);
 
 	void 			SimpleUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 
@@ -155,6 +156,7 @@ public:
 	void 			OnChangeActiveWeapon( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon );
 
 	bool			ShouldLookForBetterWeapon();
+	float			m_flTimeNextHealStare;	// Next time I'm allowed to heal a player who is staring at me.
 
 
 	//---------------------------------
@@ -167,7 +169,7 @@ public:
 	//---------------------------------
 	bool 			IsCommandable();
 	bool			IsPlayerAlly( CBasePlayer *pPlayer = NULL );
-	bool			CanJoinPlayerSquad();
+	virtual bool	CanJoinPlayerSquad ( CBasePlayer *pPlayer = NULL );
 	bool			WasInPlayerSquad();
 	bool			HaveCommandGoal() const;
 	bool			IsCommandMoving();
@@ -181,9 +183,10 @@ public:
 	void 			CommanderUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	bool			ShouldSpeakRadio( CBaseEntity *pListener );
 	void			OnMoveToCommandGoalFailed();
-	void			AddToPlayerSquad();
+	void			AddToPlayerSquad( CBasePlayer *pPlayer );
 	void			RemoveFromPlayerSquad();
-	void 			TogglePlayerSquadState();
+	void 			TogglePlayerSquadState( CBasePlayer *pPlayer );
+	virtual string_t GetPlayerSquadName() const;
 	void			UpdatePlayerSquad();
 	static int __cdecl PlayerSquadCandidateSortFunc( const SquadCandidate_t *, const SquadCandidate_t * );
 	void 			FixupPlayerSquad();
@@ -195,7 +198,8 @@ public:
 	void			AddInsignia();
 	void			RemoveInsignia();
 	bool			SpeakCommandResponse( AIConcept_t concept, const char *modifiers = NULL );
-	
+
+	virtual bool	ShouldAutosquad() { return false; }
 	//---------------------------------
 	// Scanner interaction
 	//---------------------------------
@@ -315,7 +319,6 @@ private:
 	static CSimpleSimTimer gm_PlayerSquadEvaluateTimer;
 
 	float			m_flTimePlayerStare;	// The game time at which the player started staring at me.
-	float			m_flTimeNextHealStare;	// Next time I'm allowed to heal a player who is staring at me.
 
 	//-----------------------------------------------------
 	//	Outputs
@@ -338,6 +341,8 @@ private:
 	//-----------------------------------------------------
 	
 	DECLARE_DATADESC();
+protected:
+	bool			m_bAutoSquadPreventDoubleAdd;
 #ifdef _XBOX
 protected:
 #endif

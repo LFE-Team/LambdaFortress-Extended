@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-//========= Copyright ? 1996-2005, Valve Corporation, All rights reserved. ============//
-=======
 //========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
->>>>>>> 823493f39c40f3ff6a203256e17e24b93e7cbd4b
 //
 // Purpose:		Satchel charge
 //
@@ -10,7 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "hl1_basecombatweapon_shared.h"
 //#include "basecombatweapon.h"
 //#include "basecombatcharacter.h"

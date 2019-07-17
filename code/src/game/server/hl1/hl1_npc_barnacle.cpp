@@ -8,10 +8,10 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "hl1_NPC_Barnacle.h"
-#include "NPCEvent.h"
+#include "hl1_npc_barnacle.h"
+#include "npcevent.h"
 #include "gib.h"
-#include "AI_Default.h"
+#include "ai_default.h"
 #include "activitylist.h"
 #include "hl2_player.h"
 #include "vstdlib/random.h"
@@ -33,9 +33,9 @@ static int ACT_EAT = 0;
 // Interactions
 //-----------------------------------------------------------------------------
 #ifdef HL1_DLL
-int	g_interactionBarnacleVictimDangle	= 0;
-int	g_interactionBarnacleVictimReleased	= 0;
-int	g_interactionBarnacleVictimGrab		= 0;
+int	g_interactionHL1BarnacleVictimDangle	= 0;
+int	g_interactionHL1BarnacleVictimReleased	= 0;
+int	g_interactionHL1BarnacleVictimGrab		= 0;
 #endif
 LINK_ENTITY_TO_CLASS( monster_barnacle, CNPC_HL1Barnacle );
 IMPLEMENT_CUSTOM_AI( monster_barnacle, CNPC_HL1Barnacle );
@@ -51,9 +51,9 @@ void CNPC_HL1Barnacle::InitCustomSchedules(void)
 
 	ADD_CUSTOM_ACTIVITY(CNPC_HL1Barnacle, ACT_EAT);
 #ifdef HL1_DLL
-	g_interactionBarnacleVictimDangle	= CBaseCombatCharacter::GetInteractionID();
-	g_interactionBarnacleVictimReleased	= CBaseCombatCharacter::GetInteractionID();
-	g_interactionBarnacleVictimGrab		= CBaseCombatCharacter::GetInteractionID();	
+	g_interactionHL1BarnacleVictimDangle	= CBaseCombatCharacter::GetInteractionID();
+	g_interactionHL1BarnacleVictimReleased	= CBaseCombatCharacter::GetInteractionID();
+	g_interactionHL1BarnacleVictimGrab		= CBaseCombatCharacter::GetInteractionID();	
 #endif
 }
 
@@ -242,7 +242,7 @@ void CNPC_HL1Barnacle::BarnacleThink ( void )
 						
 				if ( pVictim )
 				{
-					pVictim->DispatchInteraction( g_interactionBarnacleVictimDangle, NULL, this );
+					pVictim->DispatchInteraction( g_interactionHL1BarnacleVictimDangle, NULL, this );
 					SetActivity ( (Activity)ACT_EAT );
 				}
 			}
@@ -260,7 +260,7 @@ void CNPC_HL1Barnacle::BarnacleThink ( void )
 
 				if( pEnemy->MyCombatCharacterPointer() )
 				{
-					pEnemy->MyCombatCharacterPointer()->DispatchInteraction( g_interactionBarnacleVictimReleased, NULL, this );
+					pEnemy->MyCombatCharacterPointer()->DispatchInteraction( g_interactionHL1BarnacleVictimReleased, NULL, this );
 				}
 
 				// Ignore touches long enough to let the victim move away.
@@ -298,7 +298,7 @@ void CNPC_HL1Barnacle::BarnacleThink ( void )
 
 				if ( pVictim )
 				{
-					pVictim->DispatchInteraction( g_interactionBarnacleVictimDangle, NULL, this );
+					pVictim->DispatchInteraction( g_interactionHL1BarnacleVictimDangle, NULL, this );
 				}
 			}
 		}
@@ -350,7 +350,7 @@ void CNPC_HL1Barnacle::BarnacleThink ( void )
 			// FIXME: humans should return neck position
 			Vector vecGrabPos = pTouchEnt->GetAbsOrigin();
 
-			if ( pBCC && pBCC->DispatchInteraction( g_interactionBarnacleVictimGrab, &vecGrabPos, this ) )
+			if ( pBCC && pBCC->DispatchInteraction( g_interactionHL1BarnacleVictimGrab, &vecGrabPos, this ) )
 			{
 				CPASAttenuationFilter filter( this );
 				EmitSound( filter, entindex(), "Barnacle.Alert" );
@@ -410,7 +410,7 @@ void CNPC_HL1Barnacle::Event_Killed( const CTakeDamageInfo &info )
 
 		if ( pVictim )
 		{
-			pVictim->DispatchInteraction( g_interactionBarnacleVictimReleased, NULL, this );
+			pVictim->DispatchInteraction( g_interactionHL1BarnacleVictimReleased, NULL, this );
 		}
 	}
 

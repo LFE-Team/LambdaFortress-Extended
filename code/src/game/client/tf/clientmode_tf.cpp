@@ -14,7 +14,8 @@
 #include "clientmode_tf.h"
 #include "cdll_client_int.h"
 #include "iinput.h"
-#include "vgui/ISurface.h"
+#include <vgui/IInput.h>
+#include <vgui/ISurface.h>
 #include "vgui/IPanel.h"
 #include "GameUI/IGameUI.h"
 #include <vgui_controls/AnimationController.h>
@@ -53,6 +54,7 @@
 #include "lfe_loadingprogress.h"
 #include "tf_presence.h"
 
+#include "c_basehlplayer.h"
 #if defined( _X360 )
 #include "tf_clientscoreboard.h"
 #endif
@@ -228,6 +230,41 @@ ClientModeTFNormal* GetClientModeTFNormal()
 	return static_cast< ClientModeTFNormal* >( GetClientModeNormal() );
 }
 
+// asw - let us drive the fixed camera position around
+static bool s_bFixedInputActive = false;
+static int s_nOldCursor[2] = {0, 0};
+void ASW_Handle_Fixed_Input( bool active )
+{
+	if ( s_bFixedInputActive ^ active )
+	{
+		if ( s_bFixedInputActive && !active )
+		{
+			// Restore mouse
+			vgui::input()->SetCursorPos( s_nOldCursor[0], s_nOldCursor[1] );
+		}
+		else
+		{
+			// todO: set the initial fixed vectors here..
+			vgui::input()->GetCursorPos( s_nOldCursor[0], s_nOldCursor[1] );
+		}
+	}
+
+	if ( active )
+	{
+		int mx, my;
+		int dx, dy;
+
+		vgui::input()->GetCursorPos( mx, my );
+
+		dx = mx - s_nOldCursor[0];
+		dy = my - s_nOldCursor[1];
+
+		vgui::input()->SetCursorPos( s_nOldCursor[0], s_nOldCursor[1] );
+	}
+
+	s_bFixedInputActive = active;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Fixes some bugs from base class.
 //-----------------------------------------------------------------------------
@@ -291,6 +328,8 @@ void ClientModeTFNormal::OverrideView( CViewSetup *pSetup )
 		pSetup->m_OrthoRight = w;
 		pSetup->m_OrthoBottom = h;
 	}
+
+	ASW_Handle_Fixed_Input( vgui::input()->IsKeyDown( KEY_LSHIFT ) && vgui::input()->IsMouseDown( MOUSE_LEFT ) );
 }
 
 extern ConVar v_viewmodel_fov;
@@ -508,3 +547,28 @@ int ClientModeTFNormal::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, 
 
 	return BaseClass::HandleSpectatorKeyInput( down, keynum, pszCurrentBinding );
 }
+
+void ClientModeTFNormal::OnColorCorrectionWeightsReset( void )
+{
+	C_ColorCorrection *pNewColorCorrection = NULL;
+	C_ColorCorrection *pOldColorCorrection = m_pCurrentColorCorrection;
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( pPlayer )
+	{
+		pNewColorCorrection = pPlayer->GetActiveColorCorrection();
+	}
+
+ 	// Only blend between environmental color corrections if there is no failure/infested-induced color correction
+	if ( pNewColorCorrection != pOldColorCorrection )
+	{
+		if ( pOldColorCorrection )
+		{
+			pOldColorCorrection->EnableOnClient( false );
+		}
+		if ( pNewColorCorrection )
+		{
+			pNewColorCorrection->EnableOnClient( true, pOldColorCorrection == NULL );
+		}
+		m_pCurrentColorCorrection = pNewColorCorrection;
+	}
+} 

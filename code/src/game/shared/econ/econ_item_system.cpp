@@ -712,7 +712,7 @@ void CEconItemSchema::Precache( void )
 			for ( int i = 0; i < pVisuals->attached_models.Count(); i++ )
 			{
 				const char *pszModel = pVisuals->attached_models[i].model;
-				if ( pszModel != '\0' )
+				if ( pszModel[0] != '\0' )
 					CBaseEntity::PrecacheModel( pszModel );
 			}
 

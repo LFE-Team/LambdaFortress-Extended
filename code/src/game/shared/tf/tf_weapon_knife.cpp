@@ -87,6 +87,11 @@ void CTFKnife::PrimaryAttack( void )
 	if ( !CanAttack() )
 		return;
 
+	if (!pPlayer)
+	{
+		return;
+	}
+
 	// Set the weapon usage mode - primary, secondary.
 	m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
 
@@ -150,10 +155,10 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 {
 	float flBaseDamage = BaseClass::GetMeleeDamage( pTarget, iCustomDamage );
 
-	CTFPlayer *pOwner = GetTFPlayerOwner();
+	//CTFPlayer *pOwner = GetTFPlayerOwner();
 
-	if ( pOwner && pTarget->IsPlayer() || pTarget->IsNPC() )
-	{
+	//if ( pOwner && pTarget && (pTarget->IsPlayer() || pTarget->IsNPC() ) )
+	//{
 		// Since Swing and Smack are done in the same frame now we don't need to run additional checks anymore.
 		if ( m_iWeaponMode == TF_WEAPON_SECONDARY_MODE && m_hBackstabVictim.Get() == pTarget )
 		{
@@ -164,7 +169,7 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDamage )
 			// Declare a backstab.
 			iCustomDamage = TF_DMG_CUSTOM_BACKSTAB;
 		}
-	}
+	//}
 
 	return flBaseDamage;
 }

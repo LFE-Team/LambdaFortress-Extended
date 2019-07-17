@@ -28,6 +28,8 @@
 #include "vgui_controls/Controls.h"
 #include "vgui/ISurface.h"
 
+#include "c_vehicle_passenger.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 

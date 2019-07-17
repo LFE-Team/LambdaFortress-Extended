@@ -7,16 +7,19 @@
 #include "tf_fx_shared.h"
 #include "tf_weaponbase.h"
 #include "takedamageinfo.h"
+#include "basehlcombatweapon_shared.h"
 
 // Client specific.
 #ifdef CLIENT_DLL
 #include "fx_impact.h"
 #include "c_te_effect_dispatch.h"
+#include "c_ai_basenpc.h"
 // Server specific.
 #else
 #include "tf_fx.h"
 #include "ilagcompensationmanager.h"
 #include "te_effect_dispatch.h"
+#include "ai_basenpc.h"
 #endif
 
 ConVar tf_use_fixed_weaponspreads( "tf_use_fixed_weaponspreads", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "If set to 1, weapons that fire multiple pellets per shot will use a non-random pellet distribution." );
@@ -312,6 +315,150 @@ void FX_FireBullets( int iPlayer, const Vector &vecOrigin, const QAngle &vecAngl
 #if !defined (CLIENT_DLL)
 	lagcompensation->FinishLagCompensation( pPlayer );
 #endif
+
+	EndGroupingSounds();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: This runs on both the client and the server.  On the server, it 
+// only does the damage calculations.  On the client, it does all the effects.
+//-----------------------------------------------------------------------------
+void FX_NPCFireBullets( int iNPC, const Vector &vecOrigin, const Vector &vecAngles,
+					 int iWeapon, int iMode, int iSeed, float flSpread, int iShot, float flDamage /* = -1.0f */, bool bCritical /* = false*/ )
+{
+	bool bDoEffects = false;
+
+#ifdef CLIENT_DLL
+	C_AI_BaseNPC *pNPC = dynamic_cast<C_AI_BaseNPC *>( ClientEntityList().GetBaseEntity( iNPC ) );
+#else
+	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( GetContainingEntity( INDEXENT(iNPC) ) );
+#endif
+	if ( !pNPC )
+		return;
+
+// Client specific.
+#ifdef CLIENT_DLL
+	bDoEffects = true;
+
+	//FX_WeaponSound( pNPC->entindex(), SINGLE, vecOrigin, pWeaponInfo );
+// Server specific.
+#else
+	QAngle angShootDir;
+	VectorAngles( vecAngles, angShootDir );
+
+	// If this is server code, send the effect over to client as temp entity and 
+	// dispatch one message for all the bullet impacts and sounds.
+	TE_FireBullets( pNPC->entindex(), vecOrigin, angShootDir, iWeapon, iMode, iSeed, flSpread, bCritical );
+
+#endif
+
+	CBaseHLCombatWeapon *pWeapon = dynamic_cast<CBaseHLCombatWeapon *>( pNPC->GetActiveWeapon() );
+
+	// Fire bullets, calculate impacts & effects.
+	StartGroupingSounds();
+
+	// Initialize the static firing information.
+	FireBulletsInfo_t fireInfo;
+	fireInfo.m_vecSrc = vecOrigin;
+	if ( flDamage < 0.0f )
+		fireInfo.m_flDamage = 3;
+	else
+		fireInfo.m_flDamage = static_cast<int>(flDamage);
+
+	fireInfo.m_flDistance = MAX_TRACE_LENGTH;
+	fireInfo.m_iShots = iShot;
+	//fireInfo.m_vecSpread.Init( flSpread, flSpread, 0.0f );
+	fireInfo.m_vecSpread = vec3_origin;
+	fireInfo.m_iAmmoType = pWeapon->m_iPrimaryAmmoType;
+
+	// Setup the bullet damage type & roll for crit.
+	int	nDamageType	= DMG_GENERIC;
+	int nCustomDamageType = TF_DMG_CUSTOM_NONE;
+	bool bBuckshot = false;
+	if ( pWeapon )
+	{
+		nDamageType	= pWeapon->GetDamageType();
+		if ( pWeapon->IsCurrentAttackACrit() || bCritical )
+		{
+			nDamageType |= DMG_CRITICAL;
+		}
+		else if ( pWeapon->IsCurrentAttackAMiniCrit() )
+		{
+			nDamageType |= DMG_MINICRITICAL;
+		}
+
+		nCustomDamageType = pWeapon->GetCustomDamageType();
+		bBuckshot = ( nDamageType & DMG_BUCKSHOT ) != 0;
+	}
+
+	fireInfo.m_iTracerFreq = 2;
+
+	// Reset multi-damage structures.
+	ClearMultiDamage();
+
+	int nBulletsPerShot = 1;
+
+	// Only shotguns should get fixed spread pattern.
+	bool bFixedSpread = false;
+
+	if ( bBuckshot && nBulletsPerShot > 1 )
+	{
+		bFixedSpread = tf_use_fixed_weaponspreads.GetBool();
+	}
+
+	for ( int iBullet = 0; iBullet < nBulletsPerShot; ++iBullet )
+	{
+		// Initialize random system with this seed.
+		RandomSeed( iSeed );	
+
+		float x = 0.0f;
+		float y = 0.0f;
+
+		// Determine if the first bullet should be perfectly accurate.
+		bool bPerfectAccuracy = false;
+
+		if ( pWeapon && iBullet == 0 )
+		{
+			float flFireInterval = gpGlobals->curtime - pWeapon->GetLastFireTime();
+			if ( nBulletsPerShot == 1 )
+				bPerfectAccuracy = flFireInterval > 1.25f;
+			else
+				bPerfectAccuracy = flFireInterval > 0.25f;
+		}
+
+		// See if we're using pre-determined spread pattern.
+		if ( bFixedSpread )
+		{
+			int iIndex = iBullet;
+			while ( iIndex > 9 )
+			{
+				iIndex -= 10;
+			}
+
+			x = 0.5f * g_vecFixedWpnSpreadPellets[iIndex].x;
+			y = 0.5f * g_vecFixedWpnSpreadPellets[iIndex].y;
+		}
+
+		// Apply random spread if none of the above conditions are true.
+		if ( !bPerfectAccuracy && !bFixedSpread )
+		{
+			// Get circular gaussian spread.
+			x = RandomFloat( -0.5, 0.5 ) + RandomFloat( -0.5, 0.5 );
+			y = RandomFloat( -0.5, 0.5 ) + RandomFloat( -0.5, 0.5 );
+		}
+
+		// Initialize the varialbe firing information.
+		fireInfo.m_vecDirShooting = vecAngles;
+
+		// Fire a bullet.
+		pNPC->FireBullet( fireInfo, bDoEffects, nDamageType, nCustomDamageType );
+
+		// Use new seed for next bullet.
+		++iSeed; 
+	}
+
+	// Apply damage if any.
+	ApplyMultiDamage();
 
 	EndGroupingSounds();
 }

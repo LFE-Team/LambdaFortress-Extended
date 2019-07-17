@@ -11,6 +11,7 @@
 #endif
 
 #include "vehicle_base.h"
+#include "vehicle_passenger.h"
 
 #define JEEP_WHEEL_COUNT	4
 extern BOOL m_bFromSpawner;
@@ -30,10 +31,10 @@ struct JeepWaterData_t
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CPropJeep : public CPropVehicleDriveable
+class CPropJeep : public CPropVehiclePassenger
 {
 public:
-	DECLARE_CLASS( CPropJeep, CPropVehicleDriveable );
+	DECLARE_CLASS( CPropJeep, CPropVehiclePassenger );
 
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();

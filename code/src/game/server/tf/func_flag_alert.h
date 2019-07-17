@@ -32,14 +32,15 @@ public:
 
 	bool	EntityIsFlagCarrier( CBaseEntity *pEntity );
 
-	void	FlagCaptured( CBaseEntity *pPlayer );
-	void	FlagPickedUp( CBaseEntity *pPlayer );
+	void	FlagCaptured( CTFPlayer *pPlayer );
+	void	FlagPickedUp( CTFPlayer *pPlayer );
 
 	bool	IsDisabled( void ) { return m_bDisabled; };
 
 	// Input handlers
 	virtual void	InputEnable( inputdata_t &inputdata );
 	virtual void	InputDisable( inputdata_t &inputdata );
+	virtual void	InputTest( inputdata_t &inputdata );
 
 private:
 	bool	m_bDisabled;
@@ -50,8 +51,8 @@ private:
 	COutputEvent m_OnTriggeredByTeam2; // Sent when a blue flag carrier first touches the zone.
 };
 
-void HandleFlagPickedUpInAlertZone( CBaseEntity *pPlayer );
-void HandleFlagCapturedInAlertZone( CBaseEntity *pPlayer );
+void HandleFlagPickedUpInAlertZone( CTFPlayer *pPlayer );
+void HandleFlagCapturedInAlertZone( CTFPlayer *pPlayer );
 
 #endif // FUNC_FLAG_ALERT_H
 

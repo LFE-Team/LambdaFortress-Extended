@@ -124,7 +124,6 @@ void C_TFProjectile_Rocket::CreateLightEffects( void )
 			dl->die = gpGlobals->curtime + 0.01f;
 			dl->radius = 340.f;
 			dl->decay = 512.0f;
-			dl->style = 0;
 
 			tempents->RocketFlare( GetAbsOrigin() );
 		}

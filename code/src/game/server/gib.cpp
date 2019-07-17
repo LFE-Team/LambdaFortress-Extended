@@ -15,6 +15,7 @@
 #include "vstdlib/random.h"
 #include "ai_utils.h"
 #include "EntityFlame.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -599,10 +600,11 @@ void CGib::Spawn( const char *szGibModel )
 
 	SetModel( szGibModel );
 
-#ifdef HL1_DLL
-	SetElasticity( 1.0 );
-	UTIL_SetSize( this, vec3_origin, vec3_origin );
-#endif//HL1_DLL
+	if(TFGameRules()->IsInHL1Map())
+	{
+		SetElasticity( 1.0 );
+		UTIL_SetSize( this, vec3_origin, vec3_origin );
+	}
 
 	SetNextThink( gpGlobals->curtime + 4 );
 	m_lifeTime = 25;

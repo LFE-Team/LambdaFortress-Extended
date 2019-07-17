@@ -27,6 +27,7 @@
 #include "igamesystem.h"
 #include "KeyValues.h"
 #include "filesystem.h"
+#include "tf_gamerules.h"
 
 #ifdef PORTAL
 #include "portal_gamerules.h"
@@ -45,12 +46,8 @@
 #define AMBIENT_GENERIC_UPDATE_RATE	5	// update at 5hz
 #define AMBIENT_GENERIC_THINK_DELAY ( 1.0f / float( AMBIENT_GENERIC_UPDATE_RATE ) )
 
-#ifdef HL1_DLL
 ConVar hl1_ref_db_distance( "hl1_ref_db_distance", "18.0" );
-#define	REFERENCE_dB_DISTANCE	hl1_ref_db_distance.GetFloat()
-#else
 #define REFERENCE_dB_DISTANCE	36.0
-#endif//HL1_DLL
 
 static soundlevel_t ComputeSoundlevel( float radius, bool playEverywhere )
 {
@@ -60,7 +57,7 @@ static soundlevel_t ComputeSoundlevel( float radius, bool playEverywhere )
 	{
 		// attenuation is set to a distance, compute falloff
 
-		float dB_loss = 20 * log10( radius / REFERENCE_dB_DISTANCE );
+		float dB_loss = 20 * log10( radius / (TFGameRules()->IsInHL1Map() ? hl1_ref_db_distance.GetFloat() : REFERENCE_dB_DISTANCE) );
 
 		soundlevel = (soundlevel_t)(int)(40 + dB_loss); // sound at 40dB at reference distance
 	}

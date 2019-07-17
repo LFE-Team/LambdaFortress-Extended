@@ -205,7 +205,7 @@ void CAI_PassengerBehavior::AddPhysicsPush(float force)
 //-----------------------------------------------------------------------------
 bool CAI_PassengerBehavior::IsPassengerHostile(void)
 {
-	CBaseEntity *pPlayer = AI_GetSinglePlayer();
+	CBaseEntity *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() );
 
 	// If the player hates or fears the passenger, they're hostile
 	if (GetOuter()->IRelationType(pPlayer) == D_HT || GetOuter()->IRelationType(pPlayer) == D_FR)

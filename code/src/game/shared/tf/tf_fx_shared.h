@@ -29,4 +29,7 @@ void FX_TFTracer( const char *pszTracerEffectName, const Vector &vecStart, const
 void FX_FireBullets( int iPlayer, const Vector &vecOrigin, const QAngle &vecAngles,
 					 int iWeapon, int iMode, int iSeed, float flSpread, float flDamage = -1.0f, bool bCritical = false );
 
+void FX_NPCFireBullets( int iNPC, const Vector &vecOrigin, const Vector &vecAngles,
+					 int iWeapon, int iMode, int iSeed, float flSpread, int iShot, float flDamage = -1.0f, bool bCritical = false );
+
 #endif // TF_FX_SHARED_H

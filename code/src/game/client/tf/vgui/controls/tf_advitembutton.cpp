@@ -86,7 +86,7 @@ void CTFAdvItemButton::SendAnimation(MouseState flag)
 	}
 }
 
-void CTFAdvItemButton::SetItemDefinition(CEconItemDefinition *pItemData)
+void CTFAdvItemButton::SetItemDefinition( CEconItemDefinition *pItemData )
 {
 	m_pItemDefinition = pItemData;
 
@@ -95,7 +95,8 @@ void CTFAdvItemButton::SetItemDefinition(CEconItemDefinition *pItemData)
 	SetImage( szIcon );
 
 	m_pButton->SetText( pItemData->GenerateLocalizedFullItemName() );
-
+	m_pButton->SetFont( GETSCHEME()->GetFont( "ItemFontNameSmall", true ) );
+	
 	m_pButton->SetDepressedSound( pItemData->mouse_pressed_sound );
 	m_pButton->SetReleasedSound( NULL );
 }

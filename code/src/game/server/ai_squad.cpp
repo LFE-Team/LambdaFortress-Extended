@@ -148,6 +148,7 @@ BEGIN_SIMPLE_DATADESC( CAI_Squad )
 #else
 	DEFINE_EMBEDDED( m_squadSlotsUsed ),
 #endif
+	DEFINE_FIELD( m_hPlayerCommander, FIELD_EHANDLE ),
 
 END_DATADESC()
 

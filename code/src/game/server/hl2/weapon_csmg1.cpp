@@ -6,14 +6,14 @@
 
 #include "cbase.h"
 #include "basehlcombatweapon.h"
-#include "NPCevent.h"
+#include "npcevent.h"
 #include "basecombatcharacter.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "player.h"
 #include "game.h"
 #include "in_buttons.h"
 #include "grenade_ar2.h"
-#include "AI_Memory.h"
+#include "ai_memory.h"
 #include "soundent.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
@@ -22,6 +22,8 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
 
 ConVar sk_csmg1_npc_damage("sk_csmg1_npc_damage","2");
 ConVar sk_csmg1_player_damage("sk_csmg1_player_damage","2");
@@ -83,6 +85,8 @@ public:
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir );
 	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+
+	virtual bool	CanCritRapidFire()		{ return true; }
 
 	DECLARE_ACTTABLE();
 
@@ -202,24 +206,47 @@ void CWeaponCSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector
 {
 	// FIXME: use the returned number of bullets to account for >10hz firerate
 	WeaponSoundRealtime( SINGLE_NPC );
+	if ( IsCurrentAttackACrit() )
+		EmitSound( "Weapon_Fist.MissCrit" );
 
 	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
 	Vector vColor(0,0,255);
 	//NDebugOverlay::Line( vecShootOrigin, vecShootOrigin + (vecShootDir * 4000.0f), vColor.x, vColor.y, vColor.z, true, .5 );
-	FireBulletsInfo_t info;
-	info.m_iShots = 1;
-	info.m_vecSrc = vecShootOrigin;
-	info.m_vecDirShooting = vecShootDir;
-	info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
-	info.m_flDistance = MAX_TRACE_LENGTH;
-	info.m_iAmmoType = m_iPrimaryAmmoType;
-	info.m_iTracerFreq = 2;
-	info.m_flDamage = sk_csmg1_npc_damage.GetInt();
-	//info.m_pAttacker = pAttacker;
-	//info.m_nFlags = bFirstShotAccurate ? FIRE_BULLETS_FIRST_SHOT_ACCURATE : 0;
-	//info.m_bPrimaryAttack = bPrimaryAttack;
 
-	pOperator->FireBullets( info );
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+	{
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		FX_NPCFireBullets(
+			pOperator->entindex(),
+			vecShootOrigin,
+			vecShootDir,
+			TF_WEAPON_SMG,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+			1,
+			sk_csmg1_npc_damage.GetInt(),
+			IsCurrentAttackACrit() );
+	}
+	else
+	{
+		FireBulletsInfo_t info;
+		info.m_iShots = 1;
+		info.m_vecSrc = vecShootOrigin;
+		info.m_vecDirShooting = vecShootDir;
+		info.m_vecSpread = VECTOR_CONE_PRECALCULATED;
+		info.m_flDistance = MAX_TRACE_LENGTH;
+		info.m_iAmmoType = m_iPrimaryAmmoType;
+		info.m_iTracerFreq = 2;
+		info.m_flDamage = sk_csmg1_npc_damage.GetInt();
+		//info.m_pAttacker = pAttacker;
+		//info.m_nFlags = bFirstShotAccurate ? FIRE_BULLETS_FIRST_SHOT_ACCURATE : 0;
+		//info.m_bPrimaryAttack = bPrimaryAttack;
+
+		pOperator->FireBullets( info );
+	}
 
 
 	pOperator->DoMuzzleFlash();

@@ -18,6 +18,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+extern ConVar sk_npc_dmg_buckshot;
 extern ConVar sk_auto_reload_time;
 
 class CWeaponAnnabelle : public CBaseHLCombatWeapon
@@ -60,6 +62,8 @@ public:
 	virtual float			GetMaxRestTime() { return 1.5; }
 
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+
+	virtual const char	*GetTracerType( void );
 
 	DECLARE_ACTTABLE();
 
@@ -121,11 +125,35 @@ void CWeaponAnnabelle::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseComba
 			CAI_BaseNPC *npc = pOperator->MyNPCPointer();
 			ASSERT( npc != NULL );
 			WeaponSound( SINGLE_NPC );
+			if ( IsCurrentAttackACrit() )
+				EmitSound( "Weapon_Fist.MissCrit" );
+
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 
 			vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
-			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+			
+			if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+			{
+				CalcIsAttackCritical();
+				CalcIsAttackMiniCritical();
+
+				FX_NPCFireBullets(
+					pOperator->entindex(),
+					vecShootOrigin,
+					vecShootDir,
+					TF_WEAPON_SHOTGUN_PRIMARY,
+					TF_WEAPON_PRIMARY_MODE,
+					CBaseEntity::GetPredictionRandomSeed() & 255,
+					GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+					1,
+					sk_npc_dmg_buckshot.GetInt(),
+					IsCurrentAttackACrit() );
+			}
+			else
+			{
+				pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+			}
 		}
 		break;
 
@@ -347,4 +375,24 @@ CWeaponAnnabelle::CWeaponAnnabelle( void )
 	m_fMaxRange1		= 500;
 	m_fMinRange2		= 0.0;
 	m_fMaxRange2		= 200;
+}
+
+extern ConVar tf_useparticletracers;
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+const char *CWeaponAnnabelle::GetTracerType( void )
+{
+	if ( tf_useparticletracers.GetBool() )
+	{
+		if ( GetOwner() && !m_szTracerName[0] )
+		{
+			const char *pszTeamName = GetTeamParticleName( GetOwner()->GetTeamNumber() );
+			V_snprintf( m_szTracerName, MAX_TRACER_NAME, "bullet_shotgun_tracer01_%s", pszTeamName );
+		}
+
+		return m_szTracerName;
+	}
+
+	return BaseClass::GetTracerType();
 }

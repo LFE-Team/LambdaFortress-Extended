@@ -343,22 +343,24 @@ void CNPC_EnemyFinder::StartNPC ( void )
 	AddSpawnFlags(SF_NPC_FALL_TO_GROUND);	// this prevents CAI_BaseNPC from slamming the finder to 
 											// the ground just because it's not MOVETYPE_FLY
 	BaseClass::StartNPC();
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	if ( m_PlayerFreePass.GetParams().duration > 0.1 ) 
-	{
-		m_PlayerFreePass.SetPassTarget( UTIL_GetNearestPlayer( GetAbsOrigin() ) ); 
-#else
-	if ( AI_IsSinglePlayer() && m_PlayerFreePass.GetParams().duration > 0.1 )
-	{
-		m_PlayerFreePass.SetPassTarget( UTIL_PlayerByIndex(1) );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-		AI_FreePassParams_t freePassParams = m_PlayerFreePass.GetParams();
 
-		freePassParams.coverDist = 120;
-		freePassParams.peekEyeDist = 1.75;
-		freePassParams.peekEyeDistZ = 4;
+	if ( m_PlayerFreePass.GetParams().duration > 0.1 )
+	{
+        // Also include all players
+	    for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	    {
+		    CBasePlayer	*pPlayer = UTIL_PlayerByIndex( i );
+		    if ( !pPlayer )
+			    continue;
 
-		m_PlayerFreePass.SetParams( freePassParams );
+			m_PlayerFreePass.SetPassTarget( pPlayer );
+
+			AI_FreePassParams_t freePassParams = m_PlayerFreePass.GetParams();
+			freePassParams.coverDist = 120;
+			freePassParams.peekEyeDist = 1.75;
+			freePassParams.peekEyeDistZ = 4;
+			m_PlayerFreePass.SetParams( freePassParams );
+		}
 	}
 
 	if (!m_nStartOn)
@@ -419,24 +421,27 @@ bool CNPC_EnemyFinder::ShouldAlwaysThink()
 {
 	if ( BaseClass::ShouldAlwaysThink() )
 		return true;
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer( GetAbsOrigin() ); 
-#else
-	CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-	if ( pPlayer && IRelationType( pPlayer ) == D_HT )
-	{
-		float playerDistSqr = GetAbsOrigin().DistToSqr( pPlayer->GetAbsOrigin() );
 
-		if ( !m_flMaxSearchDist || playerDistSqr <= Square(m_flMaxSearchDist) )
-		{
-			if ( !FBitSet( m_spawnflags, SF_ENEMY_FINDER_CHECK_VIS) )
-				return true;
-				
-			if ( playerDistSqr <= Square( 50 * 12 ) )
-				return true;
-		}
-	}
+	// Also include all players
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CBasePlayer	*pPlayer = UTIL_PlayerByIndex( i );
+		if ( !pPlayer )
+			continue;
+
+	    if ( pPlayer && IRelationType( pPlayer ) == D_HT )
+	    {
+		    float playerDistSqr = GetAbsOrigin().DistToSqr( pPlayer->GetAbsOrigin() );
+ 		    if ( !m_flMaxSearchDist || playerDistSqr <= Square(m_flMaxSearchDist) )
+		    {
+			    if ( !FBitSet( m_spawnflags, SF_ENEMY_FINDER_CHECK_VIS) )
+				    return true;
+
+			    if ( playerDistSqr <= Square( 50 * 12 ) )
+				    return true;
+		    }
+	    }
+    }
 	
 	return false;
 }

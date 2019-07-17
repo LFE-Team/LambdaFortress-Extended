@@ -1,4 +1,3 @@
-
 //=========================================================
 // monster template
 //=========================================================
@@ -31,33 +30,33 @@
 #include	"scripted.h"
 #include	"basecombatweapon.h"
 #include	"soundent.h"
-#include	"NPCEvent.h"
+#include	"npcevent.h"
 #include	"props.h"
 #include	"npc_conscript.h"
 #include	"activitylist.h"
 
-#include "AI_Interactions.h"
-#include "ai_navigator.h"
-#include "ai_motor.h"
-#include "ai_squadslot.h"
-#include "ai_squad.h"
-#include "ai_route.h"
-#include "ai_tacticalservices.h"
-#include	"AI_Hull.h"
-#include	"AI_Node.h"
-#include	"AI_Network.h"
+#include 	"ai_interactions.h"
+#include 	"ai_navigator.h"
+#include 	"ai_motor.h"
+#include 	"ai_squadslot.h"
+#include 	"ai_squad.h"
+#include 	"ai_route.h"
+#include 	"ai_tacticalservices.h"
+#include	"ai_hull.h"
+#include	"ai_node.h"
+#include	"ai_network.h"
 #include	"ai_hint.h"
 
-#include "basegrenade_shared.h"
-#include "grenade_frag.h"
+#include 	"basegrenade_shared.h"
+#include 	"grenade_frag.h"
 
 
-#include "IEffects.h"
-#include "vstdlib/random.h"
-#include "engine/IEngineSound.h"
+#include 	"IEffects.h"
+#include 	"vstdlib/random.h"
+#include 	"engine/IEngineSound.h"
 
 ConVar	sk_conscript_health( "sk_conscript_health","100");
-ConVar	sk_conscript_model( "sk_conscript_model", "random" );
+//ConVar	sk_conscript_model( "sk_conscript_model", "random" );
 ConVar	sk_conscript_hostile_model("sk_conscript_hostile_model", "random" ); //Not actually functional yet
 ConVar	sk_conscript_ff_retaliation( "sk_conscript_ff_retaliation", "0"); //FULLY WORKING!
 ConVar	sk_conscript_personality_colors( "sk_conscript_personality_colors", "0"); //FULLY WORKING!
@@ -467,15 +466,11 @@ void CNPC_Conscript::HandleAnimEvent( animevent_t *pEvent )
 //=========================================================
 void CNPC_Conscript::Spawn()
 {
-	if (sv_hl2_beta.GetFloat() == 0)
-	{
-		UTIL_Remove(this);
-		return;
-	}
-
+	if ( sv_hl2_beta.GetBool() )
+    {
+		
 	Precache( );
-	SetModel( STRING( GetModelName() ));
-
+	SetModel( "models/conscript.mdl" );
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
@@ -503,9 +498,16 @@ void CNPC_Conscript::Spawn()
 	CapabilitiesAdd	( bits_CAP_DUCK );			// In reloading and cover
 	NPCInit();
 	SetUse( &CNPCSimpleTalker::FollowerUse );
+	
+	BaseClass::Spawn();
+	}
+	else
+	{
+		UTIL_Remove( this );
+	}
 
 	//Had to do this awful hack because a model's eyes don't scale with it if scaled via .qc. Thanks a lot, Failve! -Stacker
-	const char *pModelName = STRING( GetModelName() ); 	
+	/*const char *pModelName = STRING( GetModelName() ); 	
 	if( !Q_stricmp( pModelName, "models/conscripts/female_01.mdl" ) ) { SetModelScale (0.97); }
 	if( !Q_stricmp( pModelName, "models/conscripts/female_02.mdl" ) ) { SetModelScale (0.97); }
 	if( !Q_stricmp( pModelName, "models/conscripts/female_03.mdl" ) ) { SetModelScale (0.97); }
@@ -525,10 +527,11 @@ void CNPC_Conscript::Spawn()
 	else
 	{
 		m_bIsFemale = false;
-	}
+	}*/
 
 	if (FClassnameIs(this, "npc_conscriptred")) //LF:E 
 	{
+		PrecacheModel("models/conscript_red.mdl"); //LF:E
 	    SetModel( "models/conscript_red.mdl" );
 	}
 
@@ -549,23 +552,23 @@ void CNPC_Conscript::Spawn()
 		if (r == 3)	{ m_iPersonality = CONSCRIPT_PERSONALITY_AGGRESSIVE; }
 	}
 
-if ( sk_conscript_personality_colors.GetInt() != 0 )
-{
-	if (m_iPersonality == CONSCRIPT_PERSONALITY_BALANCED )
+	if ( sk_conscript_personality_colors.GetInt() != 0 )
 	{
-		SetRenderColor( 255, 255, 0, 255);
-	}
+		if (m_iPersonality == CONSCRIPT_PERSONALITY_BALANCED )
+		{
+			SetRenderColor( 255, 255, 0, 255);
+		}
 
-	if (m_iPersonality == CONSCRIPT_PERSONALITY_CAUTIOUS )
-	{
-		SetRenderColor( 0, 0, 255, 255);
-	}
+		if (m_iPersonality == CONSCRIPT_PERSONALITY_CAUTIOUS )
+		{
+			SetRenderColor( 0, 0, 255, 255);
+		}
 
-	if (m_iPersonality == CONSCRIPT_PERSONALITY_AGGRESSIVE )
-	{
-		SetRenderColor( 255, 0, 0, 255);
+		if (m_iPersonality == CONSCRIPT_PERSONALITY_AGGRESSIVE )
+		{
+			SetRenderColor( 255, 0, 0, 255);
+		}
 	}
-}
 }
 
 //=========================================================
@@ -573,27 +576,26 @@ if ( sk_conscript_personality_colors.GetInt() != 0 )
 //=========================================================
 void CNPC_Conscript::Precache()
 {
-	engine->PrecacheModel("models/conscript.mdl");
-	engine->PrecacheModel("models/conscript_red.mdl"); //LF:E
-	engine->PrecacheModel( sk_conscript_model.GetString() );
-	engine->PrecacheModel("models/conscripts/male_01.mdl");
-	engine->PrecacheModel("models/conscripts/male_02.mdl");
-	engine->PrecacheModel("models/conscripts/male_03.mdl");
-	engine->PrecacheModel("models/conscripts/male_04.mdl");
-	engine->PrecacheModel("models/conscripts/male_05.mdl");
-	engine->PrecacheModel("models/conscripts/male_06.mdl");
-	engine->PrecacheModel("models/conscripts/male_07.mdl");
-	engine->PrecacheModel("models/conscripts/male_08.mdl");
-	engine->PrecacheModel("models/conscripts/male_09.mdl");
-	engine->PrecacheModel("models/conscripts/female_01.mdl");
-	engine->PrecacheModel("models/conscripts/female_02.mdl");
-	engine->PrecacheModel("models/conscripts/female_03.mdl");
-	engine->PrecacheModel("models/conscripts/female_04.mdl");
-	engine->PrecacheModel("models/conscripts/female_06.mdl");
-	engine->PrecacheModel("models/conscripts/female_07.mdl");
-	engine->PrecacheModel("random"); //Evil fucking hack
+	PrecacheModel("models/conscript.mdl");
+	//PrecacheModel( sk_conscript_model.GetString() );
+	PrecacheModel("models/conscripts/male_01.mdl");
+	PrecacheModel("models/conscripts/male_02.mdl");
+	PrecacheModel("models/conscripts/male_03.mdl");
+	PrecacheModel("models/conscripts/male_04.mdl");
+	PrecacheModel("models/conscripts/male_05.mdl");
+	PrecacheModel("models/conscripts/male_06.mdl");
+	PrecacheModel("models/conscripts/male_07.mdl");
+	PrecacheModel("models/conscripts/male_08.mdl");
+	PrecacheModel("models/conscripts/male_09.mdl");
+	PrecacheModel("models/conscripts/female_01.mdl");
+	PrecacheModel("models/conscripts/female_02.mdl");
+	PrecacheModel("models/conscripts/female_03.mdl");
+	PrecacheModel("models/conscripts/female_04.mdl");
+	PrecacheModel("models/conscripts/female_06.mdl");
+	PrecacheModel("models/conscripts/female_07.mdl");
+	//PrecacheModel("random"); //Evil fucking hack
 
-	const char *pModelName = STRING( GetModelName() ); 	
+	/*const char *pModelName = STRING( GetModelName() ); 	
 	if( !Q_stricmp( pModelName, "random" ) )
 	{
 			int min = 1;
@@ -623,17 +625,17 @@ void CNPC_Conscript::Precache()
 		SetModelName( MAKE_STRING( sk_conscript_model.GetString() ) );
 	}
 
-	engine->PrecacheModel( STRING( GetModelName() ) );
+	PrecacheModel( STRING( GetModelName() ) );*/
 
-	enginesound->PrecacheSound("barney/ba_pain1.wav");
-	enginesound->PrecacheSound("barney/ba_pain2.wav");
-	enginesound->PrecacheSound("barney/ba_pain3.wav");
+	PrecacheSound("barney/ba_pain1.wav");
+	PrecacheSound("barney/ba_pain2.wav");
+	PrecacheSound("barney/ba_pain3.wav");
 
-	enginesound->PrecacheSound("barney/ba_die1.wav");
-	enginesound->PrecacheSound("barney/ba_die2.wav");
-	enginesound->PrecacheSound("barney/ba_die3.wav");
-	
-	enginesound->PrecacheSound("barney/ba_close.wav");
+	PrecacheSound("barney/ba_die1.wav");
+	PrecacheSound("barney/ba_die2.wav");
+	PrecacheSound("barney/ba_die3.wav");
+
+	PrecacheSound("barney/ba_close.wav");
 
 	// every new barney must call this, otherwise
 	// when a level is loaded, nobody will talk (time is reset to 0)

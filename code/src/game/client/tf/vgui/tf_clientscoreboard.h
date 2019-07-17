@@ -81,7 +81,9 @@ private:
 	int							m_iImageNemesis;
 	int							m_iClassEmblem[TF_CLASS_COUNT_ALL];
 	int							m_iClassEmblemDead[TF_CLASS_COUNT_ALL];
-	
+	int							m_iImagePing;
+	int							m_iImagePingBot;
+
 	CPanelAnimationVarAliasType( int, m_iStatusWidth, "status_width", "12", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iNemesisWidth, "nemesis_width", "20", "proportional_int" );
 };

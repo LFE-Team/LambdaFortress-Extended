@@ -736,7 +736,7 @@ void CNPC_FloorTurret::SuppressThink( void )
 	HackFindEnemy();
 
 	//If we've acquired an enemy, start firing at it
-	if ( !GetEnemy() )
+	if ( GetEnemy() )
 	{
 		SetThink( &CNPC_FloorTurret::ActiveThink );
 		return;
@@ -1141,6 +1141,10 @@ void CNPC_FloorTurret::AutoSearchThink( void )
 //-----------------------------------------------------------------------------
 void CNPC_FloorTurret::Shoot( const Vector &vecSrc, const Vector &vecDirToEnemy, bool bStrict )
 {
+	if (HasSapper())
+	{
+		return;
+	}
 	FireBulletsInfo_t info;
 
 	if ( !bStrict && GetEnemy() != NULL )
@@ -2201,13 +2205,16 @@ void CNPC_FloorTurret::SetDisabled( bool bDisabled )
 {
 	if ( bDisabled && !m_bEnabled )
 	{
-		SetThink( &CNPC_FloorTurret::DisabledThink );
-		SetEyeState( TURRET_EYE_DISABLED );
+		Disable();
+
+		CTakeDamageInfo	info;
+		info.SetDamage( 1 );
+		info.SetDamageType( DMG_CRUSH );
+		Event_Killed( info );
 	}
 	else if ( !bDisabled && m_bEnabled )
 	{
-		SetThink( &CNPC_FloorTurret::AutoSearchThink );
-		SetEyeState( TURRET_EYE_DORMANT );
+		Enable();
 	}
 
 	m_bEnabled = bDisabled;

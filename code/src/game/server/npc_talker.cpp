@@ -10,6 +10,7 @@
 #include "npc_talker.h"
 #include "npcevent.h"
 #include "scriptevent.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -871,10 +872,8 @@ int CNPCSimpleTalker::SelectNonCombatSpeechSchedule()
 //-----------------------------------------------------------------------------
 bool CNPCSimpleTalker::CanSayHello( void )
 {
-#ifndef HL1_DLL
-	if ( Classify() == CLASS_PLAYER_ALLY_VITAL )
+	if ( !TFGameRules()->IsInHL1Map() && Classify() == CLASS_PLAYER_ALLY_VITAL )
 		return false;
-#endif
 	
 	if ( GetSpeechFilter() && GetSpeechFilter()->NeverSayHello() )
 		return false;

@@ -18,35 +18,30 @@
 #include "ai_basenpc.h"
 #include "ai_memory.h"
 
-#include "cbase.h"
 #include "beam_shared.h"
-#include "basehlcombatweapon.h"
-#include "basecombatcharacter.h"
-#include "player.h"
-#include "te_particlesystem.h"
 #include "game.h"
-#include "AI_Default.h"
-#include "AI_Schedule.h"
-#include "AI_Hull.h"
-#include "AI_Route.h"
-#include "AI_Squad.h"
-#include "AI_Task.h"
-#include "AI_Node.h"
-#include "AI_Hint.h"
-#include "AI_SquadSlot.h"
-#include "AI_Motor.h"
-#include "NPCEvent.h"
+#include "ai_default.h"
+#include "ai_schedule.h"
+#include "ai_hull.h"
+#include "ai_route.h"
+#include "ai_squad.h"
+#include "ai_task.h"
+#include "ai_node.h"
+#include "ai_hint.h"
+#include "ai_squadslot.h"
+#include "ai_motor.h"
+#include "npcevent.h"
 #include "gib.h"
-#include "AI_Interactions.h"
+#include "ai_interactions.h"
 #include "ndebugoverlay.h"
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
-#include "NPC_Cremator.h"
+#include "npc_cremator.h"
 #include "soundent.h"
-#include "player.h"
 #include "IEffects.h"
 #include "basecombatweapon.h"
-#include "soundemittersystem/isoundemittersystembase.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
+#include "globalstate.h"
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -102,7 +97,7 @@ int ACT_WALK_DEPLOYED;
 //=========================================================
 void CNPC_Cremator::Spawn()
 {
-	if ( sv_hl2_beta.GetFloat() == 1 )
+	if ( sv_hl2_beta.GetBool() )
 	{
 		Precache( );
 
@@ -137,7 +132,7 @@ void CNPC_Cremator::Spawn()
 	}
 	else
 	{
-		Remove();
+		UTIL_Remove( this );
 	}
 }
 
@@ -174,6 +169,42 @@ void CNPC_Cremator::Precache()
 Class_T	CNPC_Cremator::Classify ( void )
 {
 	return	CLASS_COMBINE;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CNPC_Cremator::PlayerIsCriminal( void )
+{
+	if ( GlobalEntity_GetState( "gordon_precriminal" ) == GLOBAL_ON )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Overridden because if the player is a criminal, we hate them.
+// Input  : pTarget - Entity with which to determine relationship.
+// Output : Returns relationship value.
+//-----------------------------------------------------------------------------
+Disposition_t CNPC_Cremator::IRelationType( CBaseEntity *pTarget )
+{
+	Disposition_t disp = BaseClass::IRelationType(pTarget);
+
+	if ( pTarget == NULL )
+		return disp;
+
+	// If the player's not a criminal, then we don't necessary hate him
+	if ( pTarget->Classify() == CLASS_PLAYER )
+	{
+		if ( !PlayerIsCriminal() && (disp == D_HT) )
+		{
+			return D_NU;
+		}
+	}
+
+	return disp;
 }
 
 void CNPC_Cremator::CallForHelp( char *szClassname, float flDist, CBaseEntity * pEnemy, Vector &vecLocation )

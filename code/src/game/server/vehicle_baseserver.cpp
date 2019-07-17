@@ -228,7 +228,7 @@ CBaseEntity	*CBaseServerVehicle::GetDriver( void )
 //-----------------------------------------------------------------------------
 CBaseCombatCharacter *CBaseServerVehicle::GetPassenger( int nRole ) 
 { 
-	Assert( nRole == VEHICLE_ROLE_DRIVER ); 
+	//Assert( nRole == VEHICLE_ROLE_DRIVER ); 
 	CBaseEntity *pDriver = GetDrivableVehicle()->GetDriver();
 
 	if ( pDriver == NULL )
@@ -443,7 +443,7 @@ const PassengerSeatAnims_t *CBaseServerVehicle::NPC_GetPassengerSeatAnims( CBase
 void CBaseServerVehicle::SetPassenger( int nRole, CBaseCombatCharacter *pPassenger )
 {
 	// Baseclass only handles vehicles with a single passenger
-	Assert( nRole == VEHICLE_ROLE_DRIVER ); 
+	//Assert( nRole == VEHICLE_ROLE_DRIVER ); 
 
 	if ( pPassenger != NULL && pPassenger->IsPlayer() == false )
 	{
@@ -513,7 +513,7 @@ void CBaseServerVehicle::SetPassenger( int nRole, CBaseCombatCharacter *pPasseng
 //-----------------------------------------------------------------------------
 void CBaseServerVehicle::GetPassengerSeatPoint( int nRole, Vector *pPoint, QAngle *pAngles )
 {
-	Assert( nRole == VEHICLE_ROLE_DRIVER ); 
+	//Assert( nRole == VEHICLE_ROLE_DRIVER ); 
 
 	CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(m_pVehicle);
 	if ( pAnimating )
@@ -592,7 +592,7 @@ bool CBaseServerVehicle::CheckExitPoint( float yaw, int distance, Vector *pEndPo
 //-----------------------------------------------------------------------------
 bool CBaseServerVehicle::GetPassengerExitPoint( int nRole, Vector *pExitPoint, QAngle *pAngles )
 { 
-	Assert( nRole == VEHICLE_ROLE_DRIVER ); 
+	//Assert( nRole == VEHICLE_ROLE_DRIVER ); 
 
 	// First, see if we've got an attachment point
 	CBaseAnimating *pAnimating = dynamic_cast<CBaseAnimating *>(m_pVehicle);
@@ -1086,7 +1086,7 @@ void CBaseServerVehicle::HandlePassengerEntry( CBaseCombatCharacter *pPassenger,
 				pAnimating->ResetSequence( iEntryAnim );
 				pAnimating->ResetClientsideFrame();
 				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
-				GetDrivableVehicle()->SetVehicleEntryAnim( true );
+				GetDrivableVehicle()->SetVehicleEntryAnim( false );
 
 				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER1 );
 			}
@@ -1098,7 +1098,7 @@ void CBaseServerVehicle::HandlePassengerEntry( CBaseCombatCharacter *pPassenger,
 				pAnimating->ResetSequence( iEntryAnim );
 				pAnimating->ResetClientsideFrame();
 				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
-				GetDrivableVehicle()->SetVehicleEntryAnim( true );
+				GetDrivableVehicle()->SetVehicleEntryAnim( false );
 
 				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER2 );
 			}
@@ -1110,7 +1110,7 @@ void CBaseServerVehicle::HandlePassengerEntry( CBaseCombatCharacter *pPassenger,
 				pAnimating->ResetSequence( iEntryAnim );
 				pAnimating->ResetClientsideFrame();
 				pAnimating->InvalidateBoneCache();	// This is necessary because we need to query attachment points this frame for blending!
-				GetDrivableVehicle()->SetVehicleEntryAnim( true );
+				GetDrivableVehicle()->SetVehicleEntryAnim( false );
 
 				pPlayer->GetInVehicle( this, VEHICLE_ROLE_PASSENGER3 );
 			}
@@ -1551,7 +1551,7 @@ void CBaseServerVehicle::HandleEntryExitFinish( bool bExitAnimOn, bool bResetAni
 //-----------------------------------------------------------------------------
 void CBaseServerVehicle::GetVehicleViewPosition( int nRole, Vector *pAbsOrigin, QAngle *pAbsAngles, float *pFOV /*= NULL*/ )
 {
-	Assert( nRole == VEHICLE_ROLE_DRIVER );
+	//Assert( nRole == VEHICLE_ROLE_DRIVER );
 	CBaseCombatCharacter *pPassenger = GetPassenger( VEHICLE_ROLE_DRIVER );
 	Assert( pPassenger );
 

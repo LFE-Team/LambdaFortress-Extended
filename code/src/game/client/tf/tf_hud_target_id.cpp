@@ -33,6 +33,7 @@ ConVar tf_hud_target_id_alpha( "tf_hud_target_id_alpha", "100", FCVAR_ARCHIVE , 
 ConVar tf_hud_target_id_show_avatars( "tf_hud_target_id_show_avatars", "0", FCVAR_ARCHIVE, "Show avatars on player target ids" );
 ConVar tf_hud_target_id_show_building_avatars( "tf_hud_target_id_show_building_avatars", "0", FCVAR_ARCHIVE, "If tf_hud_target_id_show_avatars is enabled, show avatars on building target ids" );
 
+ConVar tf_hud_target_id_text_y( "tf_hud_target_id_text_y", "8", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "delet this" );
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -316,14 +317,20 @@ void CTargetID::UpdateID( void )
 			// offset the name if avatars are enabled
 			if ( tf_hud_target_id_show_avatars.GetBool() && !g_PR->IsFakePlayer( m_iTargetEntIndex ) )
 			{
-				m_pTargetNameLabel->SetTextInset( 40, 2 );
 				m_pTargetDataLabel->SetTextInset( 40, 0 );
+				if ( m_pTargetDataLabel->IsVisible() )
+					m_pTargetNameLabel->SetTextInset( 40, 2 );
+				else
+					m_pTargetNameLabel->SetTextInset( 40, tf_hud_target_id_text_y.GetInt() );
 			}
 			else
 			{
 				// don't show avatars on undisguised bots
-				m_pTargetNameLabel->SetTextInset( 40, 2 );
 				m_pTargetDataLabel->SetTextInset( 40, 0 );
+				if ( m_pTargetDataLabel->IsVisible() )
+					m_pTargetNameLabel->SetTextInset( 40, 2 );
+				else
+					m_pTargetNameLabel->SetTextInset( 40, tf_hud_target_id_text_y.GetInt() );
 			}
 
 			if ( bDisguisedTarget )
@@ -395,7 +402,7 @@ void CTargetID::UpdateID( void )
 					else
 					{
 						flHealth = (float)pPlayer->GetHealth();
-						flMaxHealth = tf_PR->GetMaxHealth( m_iTargetEntIndex );
+						flMaxHealth = pPlayer->GetMaxHealth();
 						iMaxBuffedHealth = pPlayer->m_Shared.GetMaxBuffedHealth();
 					}
 				}
@@ -464,16 +471,16 @@ void CTargetID::UpdateID( void )
 				if ( m_pMoveableSubPanel->IsVisible() )
 					m_pMoveableSubPanel->SetVisible( false );
 			}
-			else if ( pEnt->IsCombatItem() /*&& pEnt->IsVisibleToTargetID()*/ )
+			else if ( pEnt->IsCombatItem() && pEnt->IsVisibleToTargetID() )
 			{
 				const char *printFormatString = NULL;
 				C_TFReviveMarker *pMarker = assert_cast<CTFReviveMarker *>( pEnt );
-				C_TFPlayer *pOwner = static_cast<C_TFPlayer*>( pMarker->GetOwnerEntity() );
-				g_pVGuiLocalize->ConvertANSIToUnicode( pOwner->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
+				g_pVGuiLocalize->ConvertANSIToUnicode( pMarker->m_hOwner->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
 				bShowHealth = true;
 				flHealth = pMarker->GetHealth();
 				flMaxHealth = pMarker->GetMaxHealth();
-				iColorNum = pOwner->GetTeamNumber();
+				iColorNum = pMarker->m_hOwner->GetTeamNumber();
+				pAvatarPlayer = pMarker->m_hOwner;
 
 				if ( printFormatString )
 				{
@@ -511,8 +518,11 @@ void CTargetID::UpdateID( void )
 			m_pAvatar->SetPlayer( pAvatarPlayer );
 			m_pAvatar->SetShouldDrawFriendIcon( false );
 
-			m_pTargetNameLabel->SetTextInset( m_iAvatarOffset, 2 );
 			m_pTargetDataLabel->SetTextInset( m_iAvatarOffset, 0 );
+			if ( m_pTargetDataLabel->IsVisible() )
+				m_pTargetNameLabel->SetTextInset( m_iAvatarOffset, 2 );
+			else
+				m_pTargetNameLabel->SetTextInset( m_iAvatarOffset, tf_hud_target_id_text_y.GetInt() );
 		}
 		else
 		{
@@ -522,8 +532,11 @@ void CTargetID::UpdateID( void )
 				m_pAvatar->SetVisible( false );
 			}
 
-			m_pTargetNameLabel->SetTextInset( 40, 2 );
 			m_pTargetDataLabel->SetTextInset( 40, 0 );
+			if ( m_pTargetDataLabel->IsVisible() )
+				m_pTargetNameLabel->SetTextInset( 40, 2 );
+			else
+				m_pTargetNameLabel->SetTextInset( 40, tf_hud_target_id_text_y.GetInt() );
 		}
 
 		int iNameW, iDataW, iIgnored;

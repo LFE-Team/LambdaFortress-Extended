@@ -13,6 +13,7 @@
 #include "tier1/strtools.h"
 #include "buttons.h"
 #include "eventqueue.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -864,11 +865,11 @@ void CRotButton::Spawn( void )
 
 	SetMoveType( MOVETYPE_PUSH );
 	
-#ifdef HL1_DLL
-	SetSolid( SOLID_BSP );
-#else
-	SetSolid( SOLID_VPHYSICS );
-#endif
+	if(TFGameRules()->IsInHL1Map())
+		SetSolid( SOLID_BSP );
+	else
+		SetSolid( SOLID_VPHYSICS );
+	
 	if ( HasSpawnFlags( SF_ROTBUTTON_NOTSOLID ) )
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );
@@ -1040,12 +1041,12 @@ void CMomentaryRotButton::Spawn( void )
 		m_lastUsed	= 0;
 		UpdateTarget(0,this);
 	}
-
-#ifdef HL1_DLL
-	SetSolid( SOLID_BSP );
-#else
-	SetSolid( SOLID_VPHYSICS );
-#endif
+	
+	if(TFGameRules()->IsInHL1Map())
+		SetSolid( SOLID_BSP );
+	else
+		SetSolid( SOLID_VPHYSICS );
+	
 	if (HasSpawnFlags(SF_ROTBUTTON_NOTSOLID))
 	{
 		AddEFlags( EFL_USE_PARTITION_WHEN_NOT_SOLID );

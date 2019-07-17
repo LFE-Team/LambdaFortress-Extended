@@ -460,42 +460,7 @@ void CNPC_Dog::Spawn( void )
 	BaseClass::Spawn();
 
 	SetModel( "models/dog.mdl" );
-	char szMapName[256];
-	Q_strncpy(szMapName, STRING(gpGlobals->mapname), sizeof(szMapName) );
-	Q_strlower(szMapName);
-
-	if( !Q_strnicmp( szMapName, "d1", 2 ) )
-	{
-		// Streetwar scanners are claw scanners
-		PrecacheModel("models/hl2/dog.mdl");
-		SetModel("models/hl2/dog.mdl");
-	}
-
-	else if( !Q_strnicmp( szMapName, "d2", 2 ) )
-	{
-		// Streetwar scanners are claw scanners
-		PrecacheModel("models/hl2/dog.mdl");
-		SetModel("models/hl2/dog.mdl");
-	}
-	else if( !Q_strnicmp( szMapName, "d3", 2 ) )
-	{
-		// Streetwar scanners are claw scanners
-		PrecacheModel("models/hl2/dog.mdl");
-		SetModel("models/hl2/dog.mdl");
-	}
-	else if( !Q_strnicmp( szMapName, "ep1", 3 ) )
-	{
-		// Streetwar scanners are claw scanners
-		PrecacheModel("models/ep1/dog.mdl");
-		SetModel("models/ep1/dog.mdl");
-	}
-	else if( !Q_strnicmp( szMapName, "ep2", 3 ) )
-	{
-		// Streetwar scanners are claw scanners
-		PrecacheModel("models/ep2/dog.mdl");
-		SetModel("models/ep2/dog.mdl");
-	}
-
+	
 	SetHullType( HULL_WIDE_HUMAN );
 	SetHullSizeNormal();
 
@@ -678,9 +643,6 @@ void CNPC_Dog::PullObject( bool bMantain )
 void CNPC_Dog::Precache( void )
 {
 	PrecacheModel( "models/dog.mdl" );
-	PrecacheModel("models/hl2/dog.mdl");
-	PrecacheModel("models/ep1/dog.mdl");
-	PrecacheModel("models/ep2/dog.mdl");
 	
 	PrecacheScriptSound( "Weapon_PhysCannon.Launch" );
 

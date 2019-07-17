@@ -11,6 +11,7 @@
 #include "model_types.h"
 #include "IEffects.h"
 #include "util_shared.h"
+#include "tf_gamerules.h"
 
 #if !defined( CLIENT_DLL )
 #include "ndebugoverlay.h"
@@ -779,18 +780,19 @@ void CBeam::BeamDamage( trace_t *ptr )
 			Vector dir = ptr->endpos - GetAbsOrigin();
 			VectorNormalize( dir );
 			int nDamageType = DMG_ENERGYBEAM;
-
-#ifndef HL1_DLL
-			if (m_nDissolveType == 0)
+			
+			if(!TFGameRules()->IsInHL1Map())
 			{
-				nDamageType = DMG_DISSOLVE;
+				if (m_nDissolveType == 0)
+				{
+					nDamageType = DMG_DISSOLVE;
+				}
+				else if ( m_nDissolveType > 0 )
+				{
+					nDamageType = DMG_DISSOLVE | DMG_SHOCK; 
+				}
 			}
-			else if ( m_nDissolveType > 0 )
-			{
-				nDamageType = DMG_DISSOLVE | DMG_SHOCK; 
-			}
-#endif
-
+			
 			CTakeDamageInfo info( this, this, m_flDamage * (gpGlobals->curtime - m_flFireTime), nDamageType );
 			CalculateMeleeDamageForce( &info, dir, ptr->endpos );
 			pHit->DispatchTraceAttack( info, dir, ptr );

@@ -207,7 +207,7 @@ void CNPC_Zombine::Spawn(void)
 	SetBloodColor( BLOOD_COLOR_ZOMBIE );
 
 	m_iHealth = sk_zombie_soldier_health.GetFloat();
-	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+	if (TFGameRules()->m_iDirectorAnger > 49 && sv_dynamicnpcs.GetBool())
 	{
 		m_iHealth = sk_zombie_soldier_health.GetFloat() * 1.5;
 	}

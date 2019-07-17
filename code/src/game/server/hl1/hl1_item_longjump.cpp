@@ -10,7 +10,7 @@
 #include "gamerules.h"
 #include "items.h"
 #include "hl1_items.h"
-#include "hl1_player.h"
+#include "tf_player.h"
 
 
 class CItemLongJump : public CHL1Item
@@ -32,25 +32,20 @@ public:
 	}
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
-		CHL1_Player *pHL1Player = (CHL1_Player*)pPlayer;
+		CTFPlayer *pTFPlayer = (CTFPlayer*)pPlayer;
 
+		pTFPlayer->m_bHasLongJump = true;// player now has longjump module
+		CreateEntityByName("lfe_logic_longjump", -1);
 
-		if ( pHL1Player->IsSuitEquipped() )
-		{
-			pHL1Player->m_bHasLongJump = true;// player now has longjump module
-			CreateEntityByName("lfe_logic_longjump", -1);
+		CSingleUserRecipientFilter user( pTFPlayer );
+		user.MakeReliable();
 
-			CSingleUserRecipientFilter user( pHL1Player );
-			user.MakeReliable();
+		UserMessageBegin( user, "ItemPickup" );
+			WRITE_STRING( STRING(m_iClassname) );
+		MessageEnd();
 
-			UserMessageBegin( user, "ItemPickup" );
-				WRITE_STRING( STRING(m_iClassname) );
-			MessageEnd();
-
-			UTIL_EmitSoundSuit( pHL1Player->edict(), "!HEV_A1" );	// Play the longjump sound UNDONE: Kelly? correct sound?
-			return true;		
-		}
-		return false;
+		UTIL_EmitSoundSuit( pTFPlayer->edict(), "!HEV_A1" );	// Play the longjump sound UNDONE: Kelly? correct sound?
+		return true;
 	}
 };
 

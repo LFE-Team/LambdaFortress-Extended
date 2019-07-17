@@ -14,7 +14,7 @@
 #include "debugoverlay_shared.h"
 #include "baseobject_shared.h"
 #include "particle_parse.h"
-#include "baseobject_shared.h"
+#include "ai_basenpc_shared.h"
 #include "coordsize.h"
 #include "func_ladder.h"
 
@@ -28,13 +28,14 @@
 #else
 	#include "tf_player.h"
 	#include "team.h"
+	#include "env_player_surface_trigger.h"
 #endif
 
 ConVar	tf_maxspeed( "tf_maxspeed", "400", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_CHEAT  | FCVAR_DEVELOPMENTONLY);
 ConVar	tf_showspeed( "tf_showspeed", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_avoidteammates( "tf_avoidteammates", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_avoidteammates_pushaway( "tf_avoidteammates_pushaway", "1", FCVAR_REPLICATED, "Whether or not teammates push each other away when occupying the same space" );
-ConVar  tf_solidobjects( "tf_solidobjects", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  tf_solidobjects( "tf_solidobjects", "1", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar	tf_clamp_back_speed( "tf_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar  tf_clamp_back_speed_min( "tf_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_clamp_airducks( "tf_clamp_airducks", "1", FCVAR_REPLICATED );
@@ -1217,6 +1218,30 @@ void CTFGameMovement::CategorizePosition( void )
 		}
 		SetGroundEntity( &trace );
 	}
+	
+#ifndef CLIENT_DLL
+
+	//Adrian: vehicle code handles for us.
+	if ( player->IsInAVehicle() == false && player->GetTeamNumber() == TF_STORY_TEAM )
+	{
+		// If our gamematerial has changed, tell any player surface triggers that are watching
+		IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
+		surfacedata_t *pSurfaceProp = physprops->GetSurfaceData( trace.surface.surfaceProps );
+		char cCurrGameMaterial = pSurfaceProp->game.material;
+		if ( !player->GetGroundEntity() )
+		{
+			cCurrGameMaterial = 0;
+		}
+
+		// Changed?
+		if ( player->m_chPreviousTextureType != cCurrGameMaterial )
+		{
+			CEnvPlayerSurfaceTrigger::SetPlayerSurface( player, cCurrGameMaterial );
+		}
+
+		player->m_chPreviousTextureType = cCurrGameMaterial;
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -2146,16 +2171,7 @@ bool CTFGameMovement::ContinueForcedMove()
 //-----------------------------------------------------------------------------
 bool CTFGameMovement::OnLadder( trace_t &trace )
 {
-	if (BaseClass::OnLadder(trace))
-	{
-		return true;
-	}
-	else if (GetLadder() != NULL)
-	{
-		return true;
-	}
-
-	return false;
+	return ( GetLadder() != NULL ) ? true : BaseClass::OnLadder( trace );
 }
 
 //-----------------------------------------------------------------------------
@@ -2402,9 +2418,10 @@ void CTFGameMovement::FullLadderMove()
 
 #if !defined( CLIENT_DLL )
 	CFuncLadder *ladder = GetLadder();
-	Assert( ladder );
+	//Assert( ladder );
 	if ( !ladder )
 	{
+		BaseClass::FullLadderMove();
 		return;
 	}
 
@@ -2761,11 +2778,10 @@ bool CTFGameMovement::CheckLadderAutoMount( CFuncLadder *ladder, const Vector& b
 //-----------------------------------------------------------------------------
 bool CTFGameMovement::LadderMove( void )
 {
-
 	if ( player->GetMoveType() == MOVETYPE_NOCLIP )
 	{
 		SetLadder( NULL );
-		return false;
+		return BaseClass::LadderMove();
 	}
 
 	// If being forced to mount/dismount continue to act like we are on the ladder
@@ -2910,7 +2926,7 @@ bool CTFGameMovement::LadderMove( void )
 		{
 			mv->m_vecVelocity.z = mv->m_vecVelocity.z + 50;
 		}
-		return false;
+		return BaseClass::LadderMove();
 	}
 
 	if ( forwardSpeed != 0 || rightSpeed != 0 )
@@ -2942,7 +2958,7 @@ bool CTFGameMovement::LadderMove( void )
 			player->SetMoveType( MOVETYPE_WALK );
 			// Remove from ladder
 			SetLadder( NULL );
-			return false;
+			return BaseClass::LadderMove();
 		}
 
 		bool ishorizontal = fabs( topPosition.z - bottomPosition.z ) < 64.0f ? true : false;

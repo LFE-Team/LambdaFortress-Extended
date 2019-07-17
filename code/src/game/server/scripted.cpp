@@ -24,6 +24,7 @@
 #include "animation.h"
 #include "scripted.h"
 #include "entitylist.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -148,14 +149,16 @@ void CAI_ScriptedSequence::ScriptEntityCancel( CBaseEntity *pentCine, bool bPret
 
 				// We have to save off the flags here, because the NPC's m_hCine is cleared in CineCleanup()
 				int iSavedFlags = (pTarget->m_hCine ? pTarget->m_hCine->m_savedFlags : 0);
-
-#ifdef HL1_DLL
-				//if we didn't have FL_FLY before the script, remove it
-				// for some reason hl2 doesn't have to do this *before* 
-				// restoring the position ( which checks FL_FLY ) in CineCleanup
-				// Let's not risk breaking anything at this stage and just remove it.
-				pCineTarget->FixFlyFlag( pTarget, iSavedFlags );
-#endif
+				
+				if(TFGameRules()->IsInHL1Map())
+				{
+					//if we didn't have FL_FLY before the script, remove it
+					// for some reason hl2 doesn't have to do this *before* 
+					// restoring the position ( which checks FL_FLY ) in CineCleanup
+					// Let's not risk breaking anything at this stage and just remove it.
+					pCineTarget->FixFlyFlag( pTarget, iSavedFlags );
+				}
+				
 				// do it now				
 				pTarget->CineCleanup( );
 				pCineTarget->FixScriptNPCSchedule( pTarget, iSavedFlags );

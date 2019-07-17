@@ -58,11 +58,12 @@ public:
 	virtual int		HudElementKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
 	virtual int		HandleSpectatorKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
 	
-private:
-	
-	//	void	UpdateSpectatorMode( void );
+	virtual void	OnColorCorrectionWeightsReset( void );
+	virtual float	GetColorCorrectionScale( void ) const { return 1.0f; }
+	virtual void	ClearCurrentColorCorrection() { m_pCurrentColorCorrection = NULL; }
 
 private:
+	CHandle<C_ColorCorrection> m_pCurrentColorCorrection;
 
 	CHudMenuEngyBuild *m_pMenuEngyBuild;
 	CHudMenuEngyDestroy *m_pMenuEngyDestroy;

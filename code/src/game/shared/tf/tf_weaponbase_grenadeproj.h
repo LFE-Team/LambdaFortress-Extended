@@ -114,6 +114,8 @@ public:
 
 	virtual void			BlipSound( void ) { }
 	void					SetNextBlipTime( float flTime ) { m_flNextBlipTime = flTime; }
+
+	Class_T Classify( void ) { return CLASS_MISSILE; }
 protected:
 	void					DrawRadius( float flRadius );
 

@@ -88,6 +88,8 @@ void CHLHealthKit::Precache( void )
 bool CHLHealthKit::MyTouch( CBasePlayer *pPlayer )
 {
 #ifdef TF_CLASSIC
+	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+
 	if ( pPlayer->TakeHealth( ceil(pPlayer->GetMaxHealth() * (sk_healthkit.GetFloat() / 100)), DMG_GENERIC ) )
 	{
 		CSingleUserRecipientFilter user( pPlayer );
@@ -99,8 +101,6 @@ bool CHLHealthKit::MyTouch( CBasePlayer *pPlayer )
 
 		EmitSound( user, entindex(), "HealthKit.Touch" );
 
-		CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-
 		Assert( pTFPlayer );
 
 		// Healthkits also contain a fire blanket.
@@ -108,6 +108,19 @@ bool CHLHealthKit::MyTouch( CBasePlayer *pPlayer )
 		{
 			pTFPlayer->m_Shared.RemoveCond( TF_COND_BURNING );		
 		}
+
+		return true;
+	}
+	else if ( pTFPlayer->IsPlayerClass( TF_CLASS_MEDIC ) && pTFPlayer->GetMaxHealth() == pTFPlayer->GetMaxHealth() )
+	{
+		CSingleUserRecipientFilter user( pPlayer );
+		user.MakeReliable();
+
+		UserMessageBegin( user, "ItemPickup" );
+			WRITE_STRING( GetClassname() );
+		MessageEnd();
+
+		EmitSound( user, entindex(), "HealthKit.Touch" );
 
 		CWeaponMedigun *pMedigun = pTFPlayer->GetMedigun();
 		if ( pMedigun )
@@ -166,6 +179,7 @@ public:
 	bool MyTouch( CBasePlayer *pPlayer )
 	{
 #ifdef TF_CLASSIC
+		CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 		if ( pPlayer->TakeHealth( ceil(pPlayer->GetMaxHealth() * (sk_healthvial.GetFloat() / 100)), DMG_GENERIC ) )
 		{
 			CSingleUserRecipientFilter user( pPlayer );
@@ -177,8 +191,6 @@ public:
 
 			EmitSound( user, entindex(), "HealthKit.Touch" );
 
-			CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-
 			Assert( pTFPlayer );
 
 			// Healthkits also contain a fire blanket.
@@ -186,6 +198,25 @@ public:
 			{
 				pTFPlayer->m_Shared.RemoveCond( TF_COND_BURNING );		
 			}
+
+			CWeaponMedigun *pMedigun = pTFPlayer->GetMedigun();
+			if ( pMedigun )
+			{
+				pMedigun->AddCharge( 0.01 );
+			}
+
+			return true;
+		}
+		else if ( pTFPlayer->IsPlayerClass( TF_CLASS_MEDIC ) && pTFPlayer->GetMaxHealth() == pTFPlayer->GetMaxHealth() )
+		{
+			CSingleUserRecipientFilter user( pPlayer );
+			user.MakeReliable();
+
+			UserMessageBegin( user, "ItemPickup" );
+				WRITE_STRING( GetClassname() );
+			MessageEnd();
+
+			EmitSound( user, entindex(), "HealthKit.Touch" );
 
 			CWeaponMedigun *pMedigun = pTFPlayer->GetMedigun();
 			if ( pMedigun )

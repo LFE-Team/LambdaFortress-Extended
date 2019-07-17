@@ -109,7 +109,7 @@ public:
 	virtual void		LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 
 	// Combats
-	virtual void		TraceAttack(const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator);
+	virtual void		TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual int			TakeHealth( float flHealth, int bitsDamageType );
 	virtual	void		Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 	virtual void		Event_Killed( const CTakeDamageInfo &info );
@@ -290,21 +290,24 @@ public:
 
 	void TeleportEffect( void );
 	void RemoveTeleportEffect( void );
+	void CallForNPCMedic(void);
 	bool IsAllowedToPickUpFlag( void );
 	bool HasTheFlag( void );
+	//bool HasTheFlag( ETFFlagType flagtype, int ?? );
 
 	// Death & Ragdolls.
 	virtual void CreateRagdollEntity( void );
-	void CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, float flInvisLevel, int iDamageCustom );
+	void CreateRagdollEntity( bool bGib, bool bBurning, bool bOnGround, float flInvisLevel, int iDamageCustom, bool bFake );
 	void DestroyRagdoll( void );
+	//void CreateFeignDeathRagdoll( const CTakeDamageInfo &info, bool ?, bool ?, bool ?)
+	//bool FeignDeath( const CTakeDamageInfo &info );
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 	virtual bool ShouldGib( const CTakeDamageInfo &info );
 
 	// Dropping stuff
 	void DropAmmoPack( void );
 	void DropWeapon( CTFWeaponBase *pWeapon, bool bKilled = false );
-	void DropFakeWeapon( CTFWeaponBase *pWeapon );
-	void DropPowerups( void );
+	void DropRune( void );
 	void DropReviveMarker( void );
 
 	bool CanDisguise( void );
@@ -411,6 +414,8 @@ public:
 		CC_SEND,
 	};
 
+	virtual CAI_Squad	*GetPlayerSquad() { return m_pPlayerAISquad; }
+	virtual CAI_Squad	*GetPlayerSquad() const { return m_pPlayerAISquad; }
 	virtual void CommanderMode();
 	void CommanderUpdate();
 	void CommanderExecute( CommanderCommand_t command = CC_TOGGLE );
@@ -447,6 +452,11 @@ public:
 	CSoundPatch *m_sndWaterSplashes;
 
 	const impactdamagetable_t &GetPhysicsImpactDamageTable();
+
+	void			ApplyAbsVelocityImpulse( const Vector &vecImpulse );
+	virtual void	ApplyGenericPushbackImpulse( const Vector &vecDir );
+
+	void		FeignDeath( const CTakeDamageInfo &info );
 public:
 
 	CNetworkVector( m_vecPlayerColor );
@@ -546,6 +556,16 @@ public:
 	bool				HasGunslinger( void ) { return m_Shared.m_bGunslinger; }
 
 	virtual int			GetMaxHealth( void ) const;
+
+	float				GetDesiredHeadScale( void );
+	float				GetDesiredTorsoScale( void );
+	float				GetDesiredHandScale( void );
+	float				GetHeadScaleSpeed( void );
+	float				GetTorsoScaleSpeed( void );
+	float				GetHandScaleSpeed( void );
+	float				m_flHeadScale;
+	float				m_flTorsoScale;
+	float				m_flHandScale;
 private:
 
 	int					GetAutoTeam( void );
@@ -609,6 +629,12 @@ private:
 	bool				GetResponseSceneFromConcept( int iConcept, char *chSceneBuffer, int numSceneBufferBytes );
 
 	bool				CommanderExecuteOne( CAI_BaseNPC *pNpc, const commandgoal_t &goal, CAI_BaseNPC **Allies, int numAllies );
+
+	void				AddCustomAttribute( char const *pAttribute, float flValue /*, float *pValue?*/ );
+	//void				UpdateCustomAttributes( void );
+	void				RemoveCustomAttribute( char const *pAttribute );
+
+	//void				RemovePlayerAttributes( bool bRemove? );
 private:
 	// Map introductions
 	int					m_iIntroStep;

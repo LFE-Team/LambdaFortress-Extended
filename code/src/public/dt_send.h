@@ -624,6 +624,9 @@ void SendProxy_Int32ToInt32		( const SendProp *pProp, const void *pStruct, const
 #ifdef SUPPORTS_INT64
 void SendProxy_Int64ToInt64		( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 #endif
+//sunlightshadowctrl
+void SendProxy_Color32ToInt32(const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
+//
 void SendProxy_StringToString	( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
 // pData is the address of a data table.

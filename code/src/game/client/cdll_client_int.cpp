@@ -348,6 +348,33 @@ class IClientPurchaseInterfaceV2 *g_pClientPurchaseInterface = (class IClientPur
 
 static ConVar *g_pcv_ThreadMode = NULL;
 
+//sunlightshadowctrl
+static CUtlRBTree< const char *, int > g_Hacks(0, 0, DefLessFunc(char const *));
+
+CHackForGetLocalPlayerAccessAllowedGuard::CHackForGetLocalPlayerAccessAllowedGuard(char const *pszContext, bool bOldState)
+{
+	if (bOldState)
+	{
+		m_bChanged = false;
+		return;
+	}
+
+	m_bChanged = true;
+	m_pszContext = pszContext;
+	if (g_Hacks.Find(pszContext) == g_Hacks.InvalidIndex())
+	{
+		g_Hacks.Insert(pszContext);
+	}
+	m_bSaveGetLocalPlayerAllowed = true;
+}
+
+CHackForGetLocalPlayerAccessAllowedGuard::~CHackForGetLocalPlayerAccessAllowedGuard()
+{
+	if (!m_bChanged)
+		return;
+}
+//
+
 //-----------------------------------------------------------------------------
 // Purpose: interface for gameui to modify voice bans
 //-----------------------------------------------------------------------------
@@ -1094,6 +1121,9 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 #ifdef TF_CLASSIC_CLIENT
 	g_discordrpc.Init();
+
+	// force tf2 lang load
+	g_pVGuiLocalize->AddFile( "resource/tf_%language%.txt" , "GAME", true );
 #endif
 	return true;
 }
@@ -2046,8 +2076,14 @@ void ProcessOnDataChangedEvents()
 		*pEvent->m_pStoredEvent = -1;
 
 		// Send the event.
-		IClientNetworkable *pNetworkable = pEvent->m_pEntity;
-		pNetworkable->OnDataChanged( pEvent->m_UpdateType );
+		if (pEvent)
+		{
+			IClientNetworkable *pNetworkable = pEvent->m_pEntity;
+			if (pNetworkable)
+			{
+				pNetworkable->OnDataChanged(pEvent->m_UpdateType);
+			}
+		}
 	}
 
 	g_DataChangedEvents.Purge();

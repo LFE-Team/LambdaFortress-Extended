@@ -31,6 +31,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+extern ConVar sk_npc_dmg_ar2;
+
 ConVar sk_weapon_ar2_alt_fire_radius( "sk_weapon_ar2_alt_fire_radius", "10" );
 ConVar sk_weapon_ar2_alt_fire_duration( "sk_weapon_ar2_alt_fire_duration", "2" );
 ConVar sk_weapon_ar2_alt_fire_mass( "sk_weapon_ar2_alt_fire_mass", "150" );
@@ -341,10 +344,32 @@ void CWeaponAR2::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUs
 	}
 
 	WeaponSoundRealtime( SINGLE_NPC );
+	if ( IsCurrentAttackACrit() )
+		EmitSound( "Weapon_Fist.MissCrit" );
 
 	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
 
-	pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+	{
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		FX_NPCFireBullets(
+			pOperator->entindex(),
+			vecShootOrigin,
+			vecShootDir,
+			TF_WEAPON_PISTOL,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+			1,
+			sk_npc_dmg_ar2.GetInt(),
+			IsCurrentAttackACrit() );
+	}
+	else
+	{
+		pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+	}
 
 	// NOTENOTE: This is overriden on the client-side
 	// pOperator->DoMuzzleFlash();

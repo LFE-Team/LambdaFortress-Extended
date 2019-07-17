@@ -37,6 +37,8 @@ enum MouseState
 #define DEPRESSED_COLOR		"AdvTextDepressed"
 #define DEFAULT_FONT		"MenuSmallFont"
 #define DEFAULT_IMAGE		""
+#define ARMED_IMAGE			""
+#define DEPRESSED_IMAGE		""
 #define EMPTY_STRING		""
 #define GETSCHEME()			scheme()->GetIScheme(GetScheme())
 #define pSelectedBG			(!m_bSelected ? pDefaultBG : pArmedBG) 
@@ -94,6 +96,8 @@ protected:
 	char			pSelectedColor[64];
 	char			m_szCommand[64];
 	char			pDefaultButtonImage[64];
+	char			pArmedButtonImage[64];
+	char			pDepressedButtonImage[64];
 	char			pImageColorDefault[64];
 	char			pImageColorArmed[64];
 	char			pImageColorDepressed[64];
@@ -101,6 +105,11 @@ protected:
 
 	ImagePanel		*pButtonImage;
 	float			m_fImageWidth;
+
+public:
+	void SetImageDefault(const char *sImage);
+	void SetImageArmed(const char *sImage);
+	void SetImageSelected(const char *sImage);
 };
 
 //-----------------------------------------------------------------------------

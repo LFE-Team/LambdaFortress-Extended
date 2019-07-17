@@ -115,6 +115,9 @@ BEGIN_DATADESC( CBaseCombatCharacter )
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "KilledNPC", InputKilledNPC ),
 
+	DEFINE_UTLVECTOR( m_hTriggerFogList, FIELD_EHANDLE ),
+	DEFINE_FIELD( m_hLastFogTrigger, FIELD_EHANDLE ),
+
 END_DATADESC()
 
 
@@ -242,16 +245,15 @@ bool CBaseCombatCharacter::HasHumanGibs( void )
 		 myClass == CLASS_PLAYER )	
 		 return true;
 
-#elif defined( HL1_DLL )
-	Class_T myClass = Classify();
+/*#elif defined( HL1_DLL )
+	//Class_T myClass = Classify();
 	if (	myClass == CLASS_HUMAN_MILITARY		||
 			myClass == CLASS_PLAYER_ALLY		||
-			myClass == CLASS_HUMAN_PASSIVE		||
-			myClass == CLASS_PLAYER )
+			myClass == CLASS_HUMAN_PASSIVE )
 	{
 		return true;
-	}
-
+	}*/
+	
 #elif defined( CSPORT_DLL )
 	Class_T myClass = Classify();
 	if (	 myClass == CLASS_PLAYER )	
@@ -290,8 +292,8 @@ bool CBaseCombatCharacter::HasAlienGibs( void )
 		 return true;
 	}
 
-#elif defined( HL1_DLL )
-	Class_T myClass = Classify();
+/*#elif defined( HL1_DLL )
+	//Class_T myClass = Classify();
 	if ( myClass == CLASS_ALIEN_MILITARY ||
 		 myClass == CLASS_ALIEN_MONSTER	||
 		 myClass == CLASS_INSECT  ||
@@ -300,6 +302,8 @@ bool CBaseCombatCharacter::HasAlienGibs( void )
 	{
 		return true;
 	}
+//#endif*/
+
 #elif defined( TF_CLASSIC )
 	Class_T myClass = Classify();
 	if ( myClass == CLASS_BARNACLE		 || 
@@ -3332,7 +3336,7 @@ CBaseEntity *CBaseCombatCharacter::FindMissTarget( void )
 	CBaseEntity *pMissCandidates[ MAX_MISS_CANDIDATES ];
 	int numMissCandidates = 0;
 
-	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+	//CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	CBaseEntity *pEnts[256];
 	Vector		radius( 100, 100, 100);
 	Vector		vecSource = GetAbsOrigin();
@@ -3345,8 +3349,8 @@ CBaseEntity *CBaseCombatCharacter::FindMissTarget( void )
 			continue;
 
 		// New rule for this system. Don't shoot what the player won't see.
-		if ( pPlayer && !pPlayer->FInViewCone( pEnts[ i ] ) )
-			continue;
+		//if ( pPlayer && !pPlayer->FInViewCone( pEnts[ i ] ) )
+		//	continue;
 
 		if ( numMissCandidates >= MAX_MISS_CANDIDATES )
 			break;
@@ -3398,6 +3402,50 @@ void CBaseCombatCharacter::DoMuzzleFlash()
 	{
 		BaseClass::DoMuzzleFlash();
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: track the last trigger_fog touched by this character
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::OnFogTriggerStartTouch( CBaseEntity *fogTrigger )
+{
+	m_hTriggerFogList.AddToHead( fogTrigger );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: track the last trigger_fog touched by this character
+//-----------------------------------------------------------------------------
+void CBaseCombatCharacter::OnFogTriggerEndTouch( CBaseEntity *fogTrigger )
+{
+	m_hTriggerFogList.FindAndRemove( fogTrigger );
+}
+ //-----------------------------------------------------------------------------
+// Purpose: track the last trigger_fog touched by this character
+//-----------------------------------------------------------------------------
+CBaseEntity *CBaseCombatCharacter::GetFogTrigger( void )
+{
+	float bestDist = 999999.0f;
+	CBaseEntity *bestTrigger = NULL;
+
+ 	for ( int i = 0; i<m_hTriggerFogList.Count(); ++i )
+	{
+		CBaseEntity *fogTrigger = m_hTriggerFogList[i];
+		if ( fogTrigger != NULL )
+		{
+			float dist = WorldSpaceCenter().DistTo( fogTrigger->WorldSpaceCenter() );
+			if ( dist < bestDist )
+			{
+				bestDist = dist;
+				bestTrigger = fogTrigger;
+			}
+		}
+	}
+
+ 	if ( bestTrigger )
+	{
+		m_hLastFogTrigger = bestTrigger;
+	}
+
+ 	return m_hLastFogTrigger;
 }
 
 //-----------------------------------------------------------------------------
@@ -3458,7 +3506,7 @@ float CBaseCombatCharacter::GetFogObscuredRatio( CBaseEntity *target ) const
 //-----------------------------------------------------------------------------
 float CBaseCombatCharacter::GetFogObscuredRatio( float range ) const
 {
-/* TODO: Get global fog from map somehow since nav mesh fog is gone
+//* TODO: Get global fog from map somehow since nav mesh fog is gone
 	fogparams_t fog;
 	GetFogParams( &fog );
 
@@ -3474,10 +3522,18 @@ float CBaseCombatCharacter::GetFogObscuredRatio( float range ) const
 	float ratio = (range - fog.start) / (fog.end - fog.start);
 	ratio = MIN( ratio, fog.maxdensity );
 	return ratio;
-*/
-	return 0.0f;
+//*/
+	//return 0.0f;
 }
 
+extern bool GetWorldFogParams( CBaseCombatCharacter *character, fogparams_t &fog );
+
+bool CBaseCombatCharacter::GetFogParams( fogparams_t *fog ) const
+{
+	if ( !fog )
+		return false;
+ 	return GetWorldFogParams( const_cast< CBaseCombatCharacter * >( this ), *fog );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Invoke this to update our last known nav area 

@@ -1,4 +1,4 @@
-//======= Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//======= Copyright ? 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: CTF Flag Alert trigger.
 //
@@ -35,7 +35,7 @@ void CFuncFlagAlertZone::Spawn( void )
 {
 	BaseClass::Spawn();
 
-	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS );
+	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
 
 	InitTrigger();
 
@@ -86,19 +86,12 @@ void CFuncFlagAlertZone::InputDisable( inputdata_t &inputdata )
 bool CFuncFlagAlertZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( pEntity );
-	//CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
 	if ( pPlayer && pPlayer->HasItem() )
 	{
 		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pPlayer->GetItem() );
 		if ( pFlag )
 			return true;
 	}
-	//else if ( pNPC && pNPC->HasItem() )
-	//{
-	//	CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pNPC->GetItem() );
-	//	if ( pFlag )
-	//		return true;
-	//}
 	
 	return false;
 }
@@ -106,14 +99,19 @@ bool CFuncFlagAlertZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFuncFlagAlertZone::FlagCaptured( CBaseEntity *pPlayer )
+void CFuncFlagAlertZone::FlagCaptured( CTFPlayer *pPlayer )
 {
+	if ( pPlayer && IsTouching( pPlayer ) )
+	{
+		// Apparently this function is used for giving an achievement in live tf2
+		// however since we don't have that, we'll just leave this function as a stub
+	}
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagCapturedInAlertZone( CBaseEntity *pPlayer )
+void HandleFlagCapturedInAlertZone( CTFPlayer *pPlayer )
 {
 	for ( int i = 0; i < IFlagAlertZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -164,7 +162,7 @@ void CFuncFlagAlertZone::EndTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFuncFlagAlertZone::FlagPickedUp( CBaseEntity *pPlayer )
+void CFuncFlagAlertZone::FlagPickedUp( CTFPlayer *pPlayer )
 {
 	if ( pPlayer && IsTouching( pPlayer ) )
 	{
@@ -183,7 +181,7 @@ void CFuncFlagAlertZone::FlagPickedUp( CBaseEntity *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagPickedUpInAlertZone( CBaseEntity *pPlayer )
+void HandleFlagPickedUpInAlertZone( CTFPlayer *pPlayer )
 {
 	for ( int i = 0; i < IFlagAlertZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -193,4 +191,13 @@ void HandleFlagPickedUpInAlertZone( CBaseEntity *pPlayer )
 			pZone->FlagPickedUp( pPlayer );
 		}
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CFuncFlagAlertZone::InputTest(inputdata_t &inputdata)
+{
+	
 }

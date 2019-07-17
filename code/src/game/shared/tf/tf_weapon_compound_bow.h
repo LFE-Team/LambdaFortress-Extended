@@ -52,7 +52,9 @@ public:
 
 	void			LightArrow( void );
 	void			Extinguish( void );
-	void			FireArrow( void );	
+	void			FireArrow( void );
+
+	virtual bool	CanReload( void ) { return false; }
 
 #ifdef CLIENT_DLL
 	void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );

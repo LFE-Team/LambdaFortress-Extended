@@ -8,7 +8,6 @@
 #include "team_train_watcher.h"
 #include "trigger_area_capture.h"
 #include "player.h"
-#include "ai_basenpc.h"
 #include "teamplay_gamerules.h"
 #include "team.h"
 #include "team_objectiveresource.h"
@@ -103,7 +102,7 @@ void CTriggerAreaCapture::Spawn( void )
 {
 	BaseClass::Spawn();
 
-	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS );
+	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
 
 	InitTrigger();
 	
@@ -277,8 +276,8 @@ void CTriggerAreaCapture::AreaTouch( CBaseEntity *pOther )
 	if ( !TeamplayGameRules()->PointsMayBeCaptured() )
 		return;
 
-	// dont touch for non-alive, non-players or non-npcs
-	if( !pOther->IsPlayer() || !pOther->IsNPC() || !pOther->IsAlive() )
+	// dont touch for non-alive or non-players
+	if( !pOther->IsPlayer() || !pOther->IsAlive() )
 		return;
 
 	// make sure this point is in the round being played (if we're playing one)
@@ -345,7 +344,7 @@ void CTriggerAreaCapture::CaptureThink( void )
 	Assert( GetNumberOfTeams() <= MAX_CAPTURE_TEAMS );
 	int iNumPlayers[MAX_CAPTURE_TEAMS];
 	int iNumBlockablePlayers[MAX_CAPTURE_TEAMS]; // Players in the zone who can't cap, but can block / pause caps
-	CBaseEntity *pFirstPlayerTouching[MAX_CAPTURE_TEAMS];
+	CBaseMultiplayerPlayer *pFirstPlayerTouching[MAX_CAPTURE_TEAMS];
 	for ( int i = FIRST_GAME_TEAM; i < GetNumberOfTeams(); i++ )
 	{
 		iNumPlayers[i] = 0;
@@ -394,44 +393,6 @@ void CTriggerAreaCapture::CaptureThink( void )
 
 						iNumPlayers[iTeam] += TeamplayGameRules()->GetCaptureValueForPlayer( pPlayer );
 						pPlayer->SetLastObjectiveTime( gpGlobals->curtime );
-					}
-				}
-			}
-			else if ( ent && ent->IsNPC() )
-			{
-				CAI_BaseNPC *pNPC = ent->MyNPCPointer();
-				if ( pNPC->IsAlive() )
-				{	
-					int iTeam = pNPC->GetTeamNumber();
-
-					// If a team's not allowed to cap a point, don't count players in it at all
-					if ( !TeamplayGameRules()->TeamMayCapturePoint( iTeam, m_hPoint->GetPointIndex() ) )
-						continue;
-
-					if ( !TeamplayGameRules()->PlayerMayCapturePoint( pNPC, m_hPoint->GetPointIndex() ) )
-					{
-						if ( TeamplayGameRules()->PlayerMayBlockPoint( pNPC, m_hPoint->GetPointIndex() ) )
-						{
-							if ( iNumPlayers[iTeam] == 0 && iNumBlockablePlayers[iTeam] == 0 )
-							{
-								pFirstPlayerTouching[iTeam] = pNPC;
-							}
-
-							iNumBlockablePlayers[iTeam] += TeamplayGameRules()->GetCaptureValueForPlayer( pNPC );
-							pNPC->SetLastObjectiveTime( gpGlobals->curtime );
-						}
-						continue;
-					}
-
-					if ( iTeam >= FIRST_GAME_TEAM )
-					{
-						if ( iNumPlayers[iTeam] == 0 && iNumBlockablePlayers[iTeam] == 0 )
-						{
-							pFirstPlayerTouching[iTeam] = pNPC;
-						}
-
-						iNumPlayers[iTeam] += TeamplayGameRules()->GetCaptureValueForPlayer( pNPC );
-						pNPC->SetLastObjectiveTime( gpGlobals->curtime );
 					}
 				}
 			}
@@ -551,7 +512,7 @@ void CTriggerAreaCapture::CaptureThink( void )
 				// find the first player that is not on the capturing team
 				// they have just broken a cap and should be rewarded		
 				// tell the player the capture attempt number, for checking later
-				CBaseEntity *pBlockingPlayer = NULL;
+				CBaseMultiplayerPlayer *pBlockingPlayer = NULL;
 				for ( int i = FIRST_GAME_TEAM; i < GetNumberOfTeams(); i++ )
 				{
 					if ( m_nCapturingTeam == i )
@@ -888,10 +849,8 @@ void CTriggerAreaCapture::GetNumCappingPlayers( int team, int &numcappers, int *
 		if ( ent )
 		{
 			CBaseMultiplayerPlayer *player = ToBaseMultiplayerPlayer(ent);
-			CAI_BaseNPC *npc = ent->MyNPCPointer();
 
-			// need to make sure disguised spies aren't included in the list of capping players
-			if ( IsTouching( player ) || IsTouching( player ) && ( player->GetTeamNumber() == team || npc->GetTeamNumber() == team ) ) 
+			if ( IsTouching( player ) && ( player->GetTeamNumber() == team ) ) // need to make sure disguised spies aren't included in the list of capping players
 			{
 				if ( numcappers < MAX_AREA_CAPPERS-1 )
 				{
@@ -1169,7 +1128,7 @@ void CTriggerAreaCapture::InputSetControlPoint( inputdata_t &inputdata )
 	for ( int i = 0; i < m_hTouchingEntities.Count(); i++ )
 	{
 		CBaseEntity *ent = m_hTouchingEntities[i];
-		if ( ent && ent->IsPlayer() || ent->IsNPC() )
+		if ( ent && ent->IsPlayer() )
 		{
 			EndTouch( ent );
 			StartTouch( ent );
@@ -1182,7 +1141,7 @@ void CTriggerAreaCapture::InputSetControlPoint( inputdata_t &inputdata )
 // return FALSE if the player is not in this area
 // return TRUE otherwise ( eg player is in area, but his death does not cause break )
 //-----------------------------------------------------------------------------
-bool CTriggerAreaCapture::CheckIfDeathCausesBlock( CBaseEntity *pVictim, CBaseEntity *pKiller )
+bool CTriggerAreaCapture::CheckIfDeathCausesBlock( CBaseMultiplayerPlayer *pVictim, CBaseMultiplayerPlayer *pKiller )
 {
 	if ( !pVictim || !pKiller )
 		return false;

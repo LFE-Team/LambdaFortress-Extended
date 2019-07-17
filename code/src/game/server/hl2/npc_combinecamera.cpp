@@ -1088,7 +1088,11 @@ void CNPC_CombineCamera::DeathThink()
 		
 		g_pEffects->Sparks(pos);
 
-		SetActivity((Activity) ACT_COMBINE_CAMERA_CLOSE);
+#ifdef TF_CLASSIC
+		// don't do this in d1_trainstation_02 because it will look weird
+		if( !FStrEq(STRING(gpGlobals->mapname), "d1_trainstation_02" ) )
+			SetActivity( (Activity) ACT_COMBINE_CAMERA_CLOSE );
+#endif
 	}
 
 	StudioFrameAdvance();

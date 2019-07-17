@@ -9,15 +9,17 @@
 #include "panels/tf_notificationpanel.h"
 #include "panels/tf_shadebackgroundpanel.h"
 #include "panels/tf_optionsdialog.h"
-#include "panels/lf_createmultiplayergame.h"
-#include "panels/tf_quitdialogpanel.h"
+#include "panels/lfe_createmultiplayergamedialog.h"
+#include "panels/lfe_genericconfirmation.h"
 #include "panels/tf_statsummarydialog.h"
 #include "panels/tf_tooltippanel.h"
 #include "panels/tf_itemtooltippanel.h"
+#include "panels/lfe_creditspanel.h"
 #include "engine/IEngineSound.h"
 #include "tf_hud_statpanel.h"
 #include "tf_notificationmanager.h"
 #include "tier0/icommandline.h"
+#include "modinfo.h"
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
@@ -56,6 +58,12 @@ CON_COMMAND( showloadout, "Show loadout screen (new)" )
 	MAINMENU_ROOT->ShowPanel(LOADOUT_MENU, true);
 }
 
+ConVar ui_gameui_debug( "ui_gameui_debug", "0" );
+int UI_IsDebug()
+{
+	return (*(int *)(&ui_gameui_debug)) ? ui_gameui_debug.GetInt() : 0;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -85,9 +93,9 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	AddMenuPanel(new CTFLoadoutPanel(this, "CTFLoadoutPanel"), LOADOUT_MENU);
 	AddMenuPanel(new CTFNotificationPanel(this, "CTFNotificationPanel"), NOTIFICATION_MENU);
 	AddMenuPanel(new CTFShadeBackgroundPanel(this, "CTFShadeBackgroundPanel"), SHADEBACKGROUND_MENU);
-	AddMenuPanel(new CTFQuitDialogPanel(this, "CTFQuitDialogPanel"), QUIT_MENU);
+	AddMenuPanel(new CTFGenericConfirmation(this, "CTFGenericConfirmation"), CONFIRMATION_MENU);
 	AddMenuPanel(new CTFOptionsDialog(this, "CTFOptionsDialog"), OPTIONSDIALOG_MENU);
-	AddMenuPanel(new CTFCreateMultiplayerGame(this, "CTFCreateMultiplayerGame"), CREATESERVER_MENU);
+	AddMenuPanel(new CTFCreateMultiplayerGameDialog(this, "CTFCreateMultiplayerGameDialog"), CREATESERVER_MENU);
 	AddMenuPanel(new CTFCreditsPanel(this, "CTFCreditsPanel"), CREDIT_MENU);
 	AddMenuPanel(new CTFStatsSummaryDialog(this, "CTFStatsSummaryDialog"), STATSUMMARY_MENU);
 	AddMenuPanel(new CTFToolTipPanel(this, "CTFToolTipPanel"), TOOLTIP_MENU);
@@ -99,7 +107,7 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	HidePanel(SHADEBACKGROUND_MENU);
 	HidePanel(LOADOUT_MENU);
 	HidePanel(NOTIFICATION_MENU);
-	HidePanel(QUIT_MENU);
+	HidePanel(CONFIRMATION_MENU);
 	HidePanel(CREDIT_MENU);
 	HidePanel(OPTIONSDIALOG_MENU);
 	HidePanel(CREATESERVER_MENU);
@@ -111,6 +119,9 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 	m_iStopGameStartupSound = 2;
 	m_iUpdateLayout = 1;
 
+	// load mod info
+	ModInfo().LoadCurrentGameInfo();
+
 	vgui::ivgui()->AddTickSignal(GetVPanel());
 }
 
@@ -119,6 +130,7 @@ CTFMainMenu::CTFMainMenu(VPANEL parent) : vgui::EditablePanel(NULL, "MainMenu")
 //-----------------------------------------------------------------------------
 CTFMainMenu::~CTFMainMenu()
 {
+	ModInfo().FreeModInfo();
 	m_pPanels.RemoveAll();
 	gameui = NULL;
 	g_GameUIDLL.Unload();
@@ -303,8 +315,8 @@ void CTFMainMenu::PaintBackground()
 
 bool CTFMainMenu::InGame()
 {
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && IsVisible())
+	//C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if ( /*pPlayer && IsVisible()*/ engine->IsConnected() )
 	{
 		return true;
 	}
@@ -347,14 +359,4 @@ void CTFMainMenu::OnNotificationUpdate()
 	GET_MAINMENUPANEL(CTFNotificationPanel)->OnNotificationUpdate();
 	GET_MAINMENUPANEL(CTFMainMenuPanel)->OnNotificationUpdate();
 	GET_MAINMENUPANEL(CTFPauseMenuPanel)->OnNotificationUpdate();
-}
-
-void CTFMainMenu::SetServerlistSize(int size)
-{
-	GET_MAINMENUPANEL(CTFMainMenuPanel)->SetServerlistSize(size);
-}
-
-void CTFMainMenu::OnServerInfoUpdate()
-{
-	GET_MAINMENUPANEL(CTFMainMenuPanel)->UpdateServerInfo();
 }

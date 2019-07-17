@@ -65,7 +65,7 @@ string_t	s_iszShotgunSynthClassname;
 //-----------------------------------------------------------------------------
 // Interactions
 //-----------------------------------------------------------------------------
-int	g_interactionCombineBash		= 0; // melee bash attack
+int	g_interactionCombineSynthBash		= 0; // melee bash attack
 
 //=========================================================
 // Combines's Anim Events Go Here
@@ -2447,7 +2447,7 @@ void CNPC_CombineSynth::HandleAnimEvent( animevent_t *pEvent )
 					Vector forward, up;
 					AngleVectors( GetLocalAngles(), &forward, NULL, &up );
 
-					if ( !pBCC->DispatchInteraction( g_interactionCombineBash, NULL, this ) )
+					if ( !pBCC->DispatchInteraction( g_interactionCombineSynthBash, NULL, this ) )
 					{
 						if ( pBCC->IsPlayer() )
 						{
@@ -3321,7 +3321,7 @@ DECLARE_CONDITION( COND_COMBINE_SYNTH_DROP_GRENADE )
 DECLARE_CONDITION( COND_COMBINE_SYNTH_ON_FIRE )
 DECLARE_CONDITION( COND_COMBINE_SYNTH_ATTACK_SLOT_AVAILABLE )
 
-DECLARE_INTERACTION( g_interactionCombineBash );
+DECLARE_INTERACTION( g_interactionCombineSynthBash );
 
 //=========================================================
 // SCHED_COMBINE_SYNTH_TAKE_COVER_FROM_BEST_SOUND

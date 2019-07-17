@@ -26,6 +26,7 @@
 #include "collisionutils.h"
 #include "iservervehicle.h"
 #include "func_break.h"
+#include "tf_gamerules.h"
 
 #ifdef HL2MP
 	#include "hl2mp_gamerules.h"
@@ -62,12 +63,12 @@ void W_Precache(void)
 
 
 
-#ifdef HL1_DLL
+//#ifdef HL1_DLL
 	g_sModelIndexWExplosion = CBaseEntity::PrecacheModel ("sprites/WXplo1.vmt");// underwater fireball
 	g_sModelIndexBloodSpray = CBaseEntity::PrecacheModel ("sprites/bloodspray.vmt"); // initial blood
 	g_sModelIndexBloodDrop = CBaseEntity::PrecacheModel ("sprites/blood.vmt"); // splattered blood 
 	g_sModelIndexLaserDot = CBaseEntity::PrecacheModel("sprites/laserdot.vmt");
-#endif // HL1_DLL
+//#endif // HL1_DLL
 
 #ifndef TF_DLL
 	g_sModelIndexFireball = CBaseEntity::PrecacheModel ("sprites/zerogxplode.vmt");// fireball

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -57,7 +57,7 @@ public:
 	void	SUB_StartLVFadeOut( float delay = 10.0f, bool bNotSolid = true );
 	void	SUB_LVFadeOut( void  );
 
-	NPC_STATE CNPC_HL1Barney::SelectIdealState ( void );
+	NPC_STATE SelectIdealState ( void );
 
 	bool	m_fGunDrawn;
 	float	m_flPainTime;

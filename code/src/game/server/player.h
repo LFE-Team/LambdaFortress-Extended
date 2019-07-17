@@ -18,11 +18,15 @@
 #include "hintsystem.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "util_shared.h"
+#include "colorcorrection.h"
+#include "env_tonemap_controller.h"
 
 #if defined USES_ECON_ITEMS
 #include "game_item_schema.h"
 #include "econ_item_view.h"
 #endif
+
+class CAI_Squad;
 
 // For queuing and processing usercmds
 class CCommandContext
@@ -253,6 +257,9 @@ public:
 	// IPlayerInfo passthrough (because we can't do multiple inheritance)
 	IPlayerInfo *GetPlayerInfo() { return &m_PlayerInfo; }
 	IBotController *GetBotController() { return &m_PlayerInfo; }
+
+	virtual CAI_Squad	*GetPlayerSquad() { return nullptr; }
+	virtual CAI_Squad	*GetPlayerSquad() const { return nullptr; }
 
 	virtual void			SetModel( const char *szModelName );
 	void					SetBodyPitch( float flPitch );
@@ -622,6 +629,8 @@ public:
 	//void					PlayWearableAnimsForPlaybackEvent( wearableanimplayback_t iPlayback ); Commented until we get wearableanimplayback_t -danielmm8888
 #endif
 
+	void					UpdateFXVolume( void );
+
 public:
 	// Player Physics Shadow
 	void					SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName );
@@ -840,6 +849,13 @@ public:
 	CNetworkVarEmbedded( CAttributeList,	m_AttributeList );
 #endif
 
+	CNetworkHandle( CColorCorrection, m_hColorCorrectionCtrl );		// active FXVolume color correction
+	void InitColorCorrectionController( void );
+	void InputSetColorCorrectionController( inputdata_t &inputdata );
+ 	void OnTonemapTriggerStartTouch( CTonemapTrigger *pTonemapTrigger );
+	void OnTonemapTriggerEndTouch( CTonemapTrigger *pTonemapTrigger );
+	CUtlVector< CHandle< CTonemapTrigger > > m_hTriggerTonemapList;
+
 	void InitFogController( void );
 	void InputSetFogController( inputdata_t &inputdata );
 
@@ -983,6 +999,9 @@ protected:
 	float					m_fDelay;			// replay delay in seconds
 	float					m_fReplayEnd;		// time to stop replay mode
 	int						m_iReplayEntity;	// follow this entity in replay
+
+	virtual void UpdateTonemapController( void );
+	CNetworkHandle( CBaseEntity, m_hTonemapController );
 
 private:
 	void HandleFuncTrain();

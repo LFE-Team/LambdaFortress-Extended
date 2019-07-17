@@ -112,8 +112,13 @@ END_DATADESC()
 //-----------------------------------------------------------------------------
 void CNPC_Barney::SelectModel()
 {
-	SetModelName( AllocPooledString( BARNEY_MODEL ) );
-
+    //SMOD: Barney has 2 models, one for default and 1 for episodic, so actually respect this value here
+	if (!Q_strnicmp(STRING(gpGlobals->mapname), "ep1", 3) || !Q_strnicmp(STRING(gpGlobals->mapname), "ep2", 3))
+		SetModelName(AllocPooledString("models/barney_ep2.mdl"));
+	else if (CBaseEntity::GetModelName() == NULL_STRING)
+		SetModelName(AllocPooledString("models/barney.mdl"));
+	else
+		SetModelName(CBaseEntity::GetModelName());
 }
 
 //-----------------------------------------------------------------------------

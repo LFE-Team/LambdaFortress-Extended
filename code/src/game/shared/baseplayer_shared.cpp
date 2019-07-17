@@ -47,6 +47,7 @@
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "decals.h"
 #include "obstacle_pushaway.h"
+#include "tf_gamerules.h"
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
 #endif
@@ -1081,9 +1082,9 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	useableContents = MASK_NPCSOLID_BRUSHONLY | MASK_OPAQUE_AND_NPCS;
 #endif
 
-#ifdef HL1_DLL
-	useableContents = MASK_SOLID;
-#endif
+	if (TFGameRules()->IsInHL1Map())
+		useableContents = MASK_SOLID;
+
 #ifndef CLIENT_DLL
 	CBaseEntity *pFoundByTrace = NULL;
 #endif
@@ -2075,7 +2076,8 @@ bool fogparams_t::operator !=( const fogparams_t& other ) const
 		this->startLerpTo != other.startLerpTo ||
 		this->endLerpTo != other.endLerpTo ||
 		this->lerptime != other.lerptime ||
-		this->duration != other.duration )
+		this->duration != other.duration ||
+		this->HDRColorScale != other.HDRColorScale )
 		return true;
 
 	return false;

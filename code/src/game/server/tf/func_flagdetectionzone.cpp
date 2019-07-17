@@ -1,4 +1,4 @@
-//======= Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//======= Copyright ? 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: CTF Flag detection trigger.
 //
@@ -39,7 +39,7 @@ void CFlagDetectionZone::Spawn( void )
 {
 	BaseClass::Spawn();
 
-	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS );
+	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
 
 	InitTrigger();
 
@@ -90,17 +90,9 @@ void CFlagDetectionZone::InputDisable( inputdata_t &inputdata )
 bool CFlagDetectionZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 {
 	CTFPlayer *pPlayer = ToTFPlayer( pEntity );
-	CAI_BaseNPC *pNPC = pEntity->MyNPCPointer();
 	if ( pPlayer && pPlayer->HasItem() )
 	{
 		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pPlayer->GetItem() );
-		if ( pFlag )
-			return true;
-	}
-
-	if ( pNPC && pNPC->HasItem() )
-	{
-		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( pNPC->GetItem() );
 		if ( pFlag )
 			return true;
 	}
@@ -111,32 +103,23 @@ bool CFlagDetectionZone::EntityIsFlagCarrier( CBaseEntity *pEntity )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::FlagCaptured( CBaseEntity *pPlayer )
+void CFlagDetectionZone::FlagCaptured( CTFPlayer *pPlayer )
 {
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
-
 	// I have no idea why
 	if ( !Q_strcmp( gpGlobals->mapname.ToCStr(), "sd_doomsday" ) )
 		return;
 
-	if ( pTFPlayer && IsTouching( pTFPlayer ) )
+	if ( pPlayer && IsTouching( pPlayer ) )
 	{
 		// Apparently this function is used for giving an achievement in live tf2
 		// however since we don't have that, we'll just leave this function as a stub
 	}
-
-	if ( pNPC && IsTouching( pNPC ) )
-	{
-		// same as above
-	}
-
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagCapturedInDetectionZone( CBaseEntity *pPlayer )
+void HandleFlagCapturedInDetectionZone( CTFPlayer *pPlayer )
 {
 	for ( int i = 0; i < IFlagDetectionZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -151,19 +134,19 @@ void HandleFlagCapturedInDetectionZone( CBaseEntity *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::FlagDropped( CBaseEntity *pPlayer )
+void CFlagDetectionZone::FlagDropped( CTFPlayer *pPlayer )
 {
 	if ( pPlayer && IsTouching( pPlayer ) )
 	{
 		m_outOnDroppedFlag.FireOutput( this, this);
 		m_outOnEndTouchFlag.FireOutput( this, this );
-	}
+	};
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagDroppedInDetectionZone( CBaseEntity *pPlayer )
+void HandleFlagDroppedInDetectionZone( CTFPlayer *pPlayer )
 {
 	for ( int i = 0; i < IFlagDetectionZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -216,7 +199,7 @@ void CFlagDetectionZone::EndTouch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CFlagDetectionZone::FlagPickedUp( CBaseEntity *pPlayer )
+void CFlagDetectionZone::FlagPickedUp( CTFPlayer *pPlayer )
 {
 	if ( pPlayer && IsTouching( pPlayer ) )
 	{
@@ -228,7 +211,7 @@ void CFlagDetectionZone::FlagPickedUp( CBaseEntity *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void HandleFlagPickedUpInDetectionZone( CBaseEntity *pPlayer )
+void HandleFlagPickedUpInDetectionZone( CTFPlayer *pPlayer )
 {
 	for ( int i = 0; i < IFlagDetectionZoneAutoList::AutoList().Count(); i++ )
 	{
@@ -244,6 +227,7 @@ void HandleFlagPickedUpInDetectionZone( CBaseEntity *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-//void CFlagDetectionZone::InputTest(inputdata_t &inputdata)
-//{
-//}
+void CFlagDetectionZone::InputTest(inputdata_t &inputdata)
+{
+	
+}

@@ -133,6 +133,32 @@ const char *g_aPlayerClassEmblemsDead[] =
 	"../hud/leaderboard_class_engineer_d",
 };
 
+const char *g_aPlayerClassEmblemsAlt[] =
+{
+	"../vgui/class_icons/class_icon_orange_scout",
+	"../vgui/class_icons/class_icon_orange_sniper",
+	"../vgui/class_icons/class_icon_orange_soldier",
+	"../vgui/class_icons/class_icon_orange_demo",
+	"../vgui/class_icons/class_icon_orange_medic",
+	"../vgui/class_icons/class_icon_orange_heavy",
+	"../vgui/class_icons/class_icon_orange_pyro",
+	"../vgui/class_icons/class_icon_orange_spy",
+	"../vgui/class_icons/class_icon_orange_engineer",
+};
+
+const char *g_aPlayerClassEmblemsAltDead[] =
+{
+	"../vgui/class_icons/class_icon_orange_scout_d",
+	"../vgui/class_icons/class_icon_orange_sniper_d",
+	"../vgui/class_icons/class_icon_orange_soldier_d",
+	"../vgui/class_icons/class_icon_orange_demo_d",
+	"../vgui/class_icons/class_icon_orange_medic_d",
+	"../vgui/class_icons/class_icon_orange_heavy_d",
+	"../vgui/class_icons/class_icon_orange_pyro_d",
+	"../vgui/class_icons/class_icon_orange_spy_d",
+	"../vgui/class_icons/class_icon_orange_engineer_d",
+};
+
 const char *g_aPlayerClassNames_NonLocalized[] =
 {
 	"Undefined",
@@ -363,7 +389,7 @@ static pszWpnEntTranslationListEntry pszWpnEntTranslationList[] =
 	"tf_weapon_physcannon",			// Sniper
 	"tf_weapon_physcannon",			// Soldier
 	"tf_weapon_physcannon",			// Demoman
-	"tf_weapon_physcannon",			// Medic
+	"tf_weapon_physcannon_secondary",	// Medic
 	"tf_weapon_physcannon",			// Heavy
 	"tf_weapon_physcannon",			// Pyro
 	"tf_weapon_physcannon_secondary",	// Spy
@@ -1188,3 +1214,217 @@ float g_flDispenserHealRates[] =
 	15.0,
 	20.0
 };
+
+const char *g_pszTFBreadModels[] =
+{
+	"models/weapons/c_models/c_bread/c_bread_baguette.mdl",
+	"models/weapons/c_models/c_bread/c_bread_burnt.mdl",
+	"models/weapons/c_models/c_bread/c_bread_cinnamon.mdl",
+	"models/weapons/c_models/c_bread/c_bread_cornbread.mdl",
+	"models/weapons/c_models/c_bread/c_bread_crumpet.mdl",
+	"models/weapons/c_models/c_bread/c_bread_plainloaf.mdl",
+	"models/weapons/c_models/c_bread/c_bread_pretzel.mdl",
+	"models/weapons/c_models/c_bread/c_bread_ration.mdl",
+	"models/weapons/c_models/c_bread/c_bread_russianblack.mdl",
+};
+
+const char *g_pszClassModels[TF_CLASS_COUNT_ALL] =
+{
+	"",
+	"models/player/scout.mdl",
+	"models/player/sniper.mdl",
+	"models/player/soldier.mdl",
+	"models/player/demo.mdl",
+	"models/player/medic.mdl",
+	"models/player/heavy.mdl",
+	"models/player/pyro.mdl",
+	"models/player/spy.mdl",
+	"models/player/engineer.mdl",
+};
+
+const char *g_pszRobotClassModels[TF_CLASS_COUNT_ALL] =
+{
+	"",
+	"models/bots/scout/bot_scout.mdl",
+	"models/bots/sniper/bot_sniper.mdl",
+	"models/bots/soldier/bot_soldier.mdl",
+	"models/bots/demo/bot_demo.mdl",
+	"models/bots/medic/bot_medic.mdl",
+	"models/bots/heavy/bot_heavy.mdl",
+	"models/bots/pyro/bot_pyro.mdl",
+	"models/bots/spy/bot_spy.mdl",
+	"models/bots/engineer/bot_engineer.mdl",
+};
+
+const char *g_pszRobotBossClassModels[TF_CLASS_COUNT_ALL] =
+{
+	"",
+	"models/bots/scout_boss/bot_scout_boss.mdl.mdl",
+	"models/bots/sniper/bot_sniper.mdl",
+	"models/bots/soldier_boss/bot_soldier_boss.mdl",
+	"models/bots/demo_boss/bot_demo_boss.mdl",
+	"models/bots/medic/bot_medic.mdl",
+	"models/bots/heavy_boss/bot_heavy_boss.mdl",
+	"models/bots/pyro_boss/bot_pyro_boss.mdl",
+	"models/bots/scout/bot_spy.mdl",
+	"models/bots/scout/bot_engineer.mdl",
+};
+
+//-----------------------------------------------------------------------------
+// ETFConds char.
+//-----------------------------------------------------------------------------
+const char *g_aTFCondNames[] =
+{
+	"TF_COND_AIMING",
+	"TF_COND_ZOOMED",
+	"TF_COND_DISGUISING",
+	"TF_COND_DISGUISED",
+	"TF_COND_STEALTHED",
+	"TF_COND_INVULNERABLE",
+	"TF_COND_TELEPORTED",
+	"TF_COND_TAUNTING",
+	"TF_COND_INVULNERABLE_WEARINGOFF",
+	"TF_COND_STEALTHED_BLINK",
+	"TF_COND_SELECTED_TO_TELEPORT",
+	"TF_COND_CRITBOOSTED",
+	"TF_COND_TMPDAMAGEBONUS",
+	"TF_COND_FEIGN_DEATH",
+	"TF_COND_PHASE",
+	"TF_COND_STUNNED",
+	"TF_COND_OFFENSEBUFF",
+	"TF_COND_SHIELD_CHARGE",
+	"TF_COND_DEMO_BUFF",
+	"TF_COND_ENERGY_BUFF",
+	"TF_COND_RADIUSHEAL",
+	"TF_COND_HEALTH_BUFF",
+	"TF_COND_BURNING",
+	"TF_COND_HEALTH_OVERHEALED",
+	"TF_COND_URINE",
+	"TF_COND_BLEEDING",
+	"TF_COND_DEFENSEBUFF",
+	"TF_COND_MAD_MILK",
+	"TF_COND_MEGAHEAL",
+	"TF_COND_REGENONDAMAGEBUFF",
+	"TF_COND_MARKEDFORDEATH",
+	"TF_COND_NOHEALINGDAMAGEBUFF",
+	"TF_COND_SPEED_BOOST",
+	"TF_COND_CRITBOOSTED_PUMPKIN",
+	"TF_COND_CRITBOOSTED_USER_BUFF",
+	"TF_COND_CRITBOOSTED_DEMO_CHARGE",
+	"TF_COND_SODAPOPPER_HYPE",
+	"TF_COND_CRITBOOSTED_FIRST_BLOOD",
+	"TF_COND_CRITBOOSTED_BONUS_TIME",
+	"TF_COND_CRITBOOSTED_CTF_CAPTURE",
+	"TF_COND_CRITBOOSTED_ON_KILL",
+	"TF_COND_CANNOT_SWITCH_FROM_MELEE",
+	"TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK",
+	"TF_COND_REPROGRAMMED",
+	"TF_COND_CRITBOOSTED_RAGE_BUFF",
+	"TF_COND_DEFENSEBUFF_HIGH",
+	"TF_COND_SNIPERCHARGE_RAGE_BUFF",
+	"TF_COND_DISGUISE_WEARINGOFF",
+	"TF_COND_MARKEDFORDEATH_SILENT",
+	"TF_COND_DISGUISED_AS_DISPENSER",
+	"TF_COND_SAPPED",
+	"TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGE",
+	"TF_COND_INVULNERABLE_USER_BUFF",
+	"TF_COND_HALLOWEEN_BOMB_HEAD",
+	"TF_COND_HALLOWEEN_THRILLER",
+	"TF_COND_RADIUSHEAL_ON_DAMAGE",
+	"TF_COND_CRITBOOSTED_CARD_EFFECT",
+	"TF_COND_INVULNERABLE_CARD_EFFECT",
+	"TF_COND_MEDIGUN_UBER_BULLET_RESIST",
+	"TF_COND_MEDIGUN_UBER_BLAST_RESIST",
+	"TF_COND_MEDIGUN_UBER_FIRE_RESIST",
+	"TF_COND_MEDIGUN_SMALL_BULLET_RESIST",
+	"TF_COND_MEDIGUN_SMALL_BLAST_RESIST",
+	"TF_COND_MEDIGUN_SMALL_FIRE_RESIST",
+	"TF_COND_STEALTHED_USER_BUFF",
+	"TF_COND_MEDIGUN_DEBUFF",
+	"TF_COND_STEALTHED_USER_BUFF_FADING",
+	"TF_COND_BULLET_IMMUNE",
+	"TF_COND_BLAST_IMMUNE",
+	"TF_COND_FIRE_IMMUNE",
+	"TF_COND_PREVENT_DEATH",
+	"TF_COND_MVM_BOT_STUN_RADIOWAVE",
+	"TF_COND_HALLOWEEN_SPEED_BOOST",
+	"TF_COND_HALLOWEEN_QUICK_HEAL",
+	"TF_COND_HALLOWEEN_GIANT",
+	"TF_COND_HALLOWEEN_TINY",
+	"TF_COND_HALLOWEEN_IN_HELL",
+	"TF_COND_HALLOWEEN_GHOST_MODE",
+	"TF_COND_MINICRITBOOSTED_ON_KILL",
+	"TF_COND_OBSCURED_SMOKE",
+	"TF_COND_PARACHUTE_ACTIVE",
+	"TF_COND_BLASTJUMPING",
+	"TF_COND_HALLOWEEN_KART",
+	"TF_COND_HALLOWEEN_KART_DASH",
+	"TF_COND_BALLOON_HEAD",
+	"TF_COND_MELEE_ONLY",
+	"TF_COND_SWIMMING_CURSE",
+	"TF_COND_FREEZE_INPUT",
+	"TF_COND_HALLOWEEN_KART_CAGE",
+	"TF_COND_DONOTUSE_0",
+	"TF_COND_RUNE_STRENGTH",
+	"TF_COND_RUNE_HASTE",
+	"TF_COND_RUNE_REGEN",
+	"TF_COND_RUNE_RESIST",
+	"TF_COND_RUNE_VAMPIRE",
+	"TF_COND_RUNE_WARLOCK",
+	"TF_COND_RUNE_PRECISION",
+	"TF_COND_RUNE_AGILITY",
+	"TF_COND_GRAPPLINGHOOK",
+	"TF_COND_GRAPPLINGHOOK_SAFEFALL",
+	"TF_COND_GRAPPLINGHOOK_LATCHED",
+	"TF_COND_GRAPPLINGHOOK_BLEEDING",
+	"TF_COND_AFTERBURN_IMMUNE",
+	"TF_COND_RUNE_KNOCKOUT",
+	"TF_COND_RUNE_IMBALANCE",
+	"TF_COND_CRITBOOSTED_RUNE_TEMP",
+	"TF_COND_PASSTIME_INTERCEPTION",
+	"TF_COND_SWIMMING_NO_EFFECTS",
+	"TF_COND_PURGATORY",
+	"TF_COND_RUNE_KING",
+	"TF_COND_RUNE_PLAGUE",
+	"TF_COND_RUNE_SUPERNOVA",
+	"TF_COND_PLAGUE",
+	"TF_COND_KING_BUFFED",
+	"TF_COND_TEAM_GLOWS",
+	"TF_COND_KNOCKED_INTO_AIR",
+	"TF_COND_COMPETITIVE_WINNER",
+	"TF_COND_COMPETITIVE_LOSER",
+	"TF_COND_HEALING_DEBUFF",
+	"TF_COND_PASSTIME_PENALTY_DEBUFF",
+	"TF_COND_GRAPPLED_TO_PLAYER",
+	"TF_COND_GRAPPLED_BY_PLAYER",
+	"TF_COND_PARACHUTE_DEPLOYED",
+	"TF_COND_GAS",
+	"TF_COND_BURNING_PYRO",
+	"TF_COND_ROCKETPACK",
+	"TF_COND_LOST_FOOTING",
+	"TF_COND_AIR_CURRENT",
+
+	// New conds
+	"TF_COND_SLOWED",
+	"LFE_COND_FLASHLIGHT",
+	"LFE_COND_LOW_GRAVITY",
+
+
+	"TF_COND_LAST",	// end marker, do not add below here
+};
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+int GetTFCondId( const char *pszTFCondName )
+{
+	assert( ARRAYSIZE( g_aTFCondNames ) == ( TF_COND_LAST + 1 ) );
+
+	for ( int iTFCond = 0; iTFCond < ARRAYSIZE( g_aTFCondNames ); ++iTFCond )
+	{
+		if ( !Q_stricmp( pszTFCondName, g_aTFCondNames[iTFCond] ) )
+			return iTFCond;
+	}
+
+	return TF_COND_AIMING;
+}

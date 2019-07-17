@@ -68,6 +68,7 @@ public:
 	virtual bool	Deploy( void );
 	virtual void	Drop( const Vector &velocity );
 
+	virtual bool	CanCritRapidFire()		{ return true; }
 protected:
 
 	void			Zoom( void );

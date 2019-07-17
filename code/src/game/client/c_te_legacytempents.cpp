@@ -2407,10 +2407,10 @@ void CTempEnts::LevelInit()
 	m_pShells[2] = (model_t *) engine->LoadModel( "models/weapons/shotgun_shell.mdl" );
 #endif
 
-#ifdef HL1_CLIENT_DLL
+//#ifdef HL1_CLIENT_DLL
 	m_pHL1Shell			= (model_t *)engine->LoadModel( "models/shell.mdl" );
 	m_pHL1ShotgunShell	= (model_t *)engine->LoadModel( "models/shotgunshell.mdl" );
-#endif
+//#endif
 
 #if defined( CSTRIKE_DLL ) || defined ( SDK_DLL )
 	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/Shells/shell_9mm.mdl" );
@@ -2444,10 +2444,10 @@ void CTempEnts::Init (void)
 	m_pShells[1] = NULL;
 	m_pShells[2] = NULL;
 
-#ifdef HL1_CLIENT_DLL
+//#ifdef HL1_CLIENT_DLL
 	m_pHL1Shell			= NULL;
 	m_pHL1ShotgunShell	= NULL;
-#endif
+//#endif
 
 #if defined( CSTRIKE_DLL ) || defined ( SDK_DLL )
 	m_pCS_9MMShell		= NULL;
@@ -3273,7 +3273,7 @@ void CTempEnts::HL1EjectBrass( const Vector &vecPosition, const QAngle &angAngle
 {
 	const model_t *pModel = NULL;
 
-#ifdef HL1_CLIENT_DLL
+//#ifdef HL1_CLIENT_DLL
 	switch ( nType )
 	{
 	case 0:
@@ -3284,7 +3284,7 @@ void CTempEnts::HL1EjectBrass( const Vector &vecPosition, const QAngle &angAngle
 		pModel = m_pHL1ShotgunShell;
 		break;
 	}
-#endif
+//#endif
 	if ( pModel == NULL )
 		return;
 

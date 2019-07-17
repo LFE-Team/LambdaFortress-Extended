@@ -13,6 +13,7 @@
 
 #include "cbase.h"
 #include "entityoutput.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -32,13 +33,14 @@ public:
 
 	virtual int BloodColor( void ) { return DONT_BLEED; }
 
-#if defined( HL2_DLL ) && defined( TF_CLASSIC )
-	virtual Class_T Classify( void ) { return CLASS_MILITARY; }
-#elif defined( HL1_DLL )
-	virtual Class_T Classify( void ) { return CLASS_MACHINE; }
-#else
-	virtual Class_T Classify( void ) { return CLASS_NONE; }
-#endif
+	virtual Class_T Classify( void )
+	{
+		if(TFGameRules()->IsInHL1Map())
+			return CLASS_MACHINE;
+
+		return CLASS_MILITARY;
+	}
+	
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 	virtual Vector BodyTarget( const Vector &posSrc, bool bNoisy = true ) { return GetAbsOrigin(); }
 

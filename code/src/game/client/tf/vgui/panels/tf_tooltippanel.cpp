@@ -125,6 +125,6 @@ void CTFToolTipPanel::AdjustToolTipSize( void )
 		m_pText->GetTextImage()->GetContentSize( wide, tall );
 
 		m_pText->SetTall( tall );
-		SetSize( x * 2 + wide, y * 2 + tall );
+		SetSize( x * 4 + wide, y * 4 + tall );
 	}
 }

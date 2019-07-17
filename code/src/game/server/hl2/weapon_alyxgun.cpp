@@ -14,6 +14,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+extern ConVar sk_npc_dmg_alyxgun;
+
 IMPLEMENT_SERVERCLASS_ST(CWeaponAlyxGun, DT_WeaponAlyxGun)
 END_SEND_TABLE()
 
@@ -223,14 +226,36 @@ void CWeaponAlyxGun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 	}
 
 	WeaponSound( SINGLE_NPC );
+	if ( IsCurrentAttackACrit() )
+		EmitSound( "Weapon_Fist.MissCrit" );
 
-	if( hl2_episodic.GetBool() )
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
 	{
-		pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1 );
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		FX_NPCFireBullets(
+			pOperator->entindex(),
+			vecShootOrigin,
+			vecShootDir,
+			TF_WEAPON_PISTOL,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+			1,
+			sk_npc_dmg_alyxgun.GetInt(),
+			IsCurrentAttackACrit() );
 	}
 	else
 	{
-		pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+		if( hl2_episodic.GetBool() )
+		{
+			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 1 );
+		}
+		else
+		{
+			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+		}
 	}
 
 	pOperator->DoMuzzleFlash();

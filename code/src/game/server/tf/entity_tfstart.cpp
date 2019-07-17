@@ -14,6 +14,16 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define SF_TEAMSPAWN_SCOUT		1
+#define SF_TEAMSPAWN_SNIPER		2
+#define SF_TEAMSPAWN_SOLDIER	4
+#define SF_TEAMSPAWN_DEMOMAN	8
+#define SF_TEAMSPAWN_MEDIC		16
+#define SF_TEAMSPAWN_HEAVY		32
+#define SF_TEAMSPAWN_PYRO		64
+#define SF_TEAMSPAWN_SPY		128
+#define SF_TEAMSPAWN_ENGINEER	256
+
 //=============================================================================
 //
 // CTFTeamSpawn tables.

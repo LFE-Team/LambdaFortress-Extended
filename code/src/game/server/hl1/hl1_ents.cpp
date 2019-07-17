@@ -5,10 +5,10 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "trains.h"
 #include "ndebugoverlay.h"
-#include "EntityList.h"
+#include "entitylist.h"
 #include "engine/IEngineSound.h"
 #include "hl1_ents.h"
 #include "doors.h"
@@ -18,7 +18,7 @@
 #include "globalstate.h"
 #include "soundscape.h"
 #include "buttons.h"
-#include "sprite.h"
+#include "Sprite.h"
 #include "actanimating.h"
 #include "npcevent.h"
 #include "func_break.h"

@@ -67,3 +67,75 @@ void CTFShotgun::UpdatePunchAngles( CTFPlayer *pPlayer )
 	angle.x -= SharedRandomInt( "ShotgunPunchAngle", ( flPunchAngle - 1 ), ( flPunchAngle + 1 ) );
 	pPlayer->SetPunchAngle( angle );
 }
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+bool CTFScatterGun::HasKnockback( void )
+{
+	int iSGKnockback = 0;
+	CALL_ATTRIB_HOOK_INT( iSGKnockback, set_scattergun_has_knockback );
+	if ( iSGKnockback )
+		return true;
+
+	return false;
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+bool CTFScatterGun::Reload( void )
+{
+	BaseClass::Reload();
+
+	if ( HasKnockback() )
+	{
+		m_bReloadsSingly = false;
+		return true;
+	}
+	else
+	{
+		m_bReloadsSingly = true;
+		return true;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Reload has finished.
+//-----------------------------------------------------------------------------
+void CTFScatterGun::FinishReload( void )
+{
+	CTFPlayer *pOwner = GetTFPlayerOwner();
+
+	if ( pOwner )
+	{
+		// If I use primary clips, reload primary
+		if ( UsesClipsForAmmo1() )
+		{
+			int primary	= MIN( GetMaxClip1() - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));	
+			m_iClip1 += primary;
+			pOwner->RemoveAmmo( primary, m_iPrimaryAmmoType);
+		}
+
+		// If I use secondary clips, reload secondary
+		if ( UsesClipsForAmmo2() )
+		{
+			int secondary = MIN( GetMaxClip2() - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
+			m_iClip2 += secondary;
+			pOwner->RemoveAmmo( secondary, m_iSecondaryAmmoType );
+		}
+
+		if ( m_bReloadsSingly )
+		{
+			m_bInReload = false;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Fire a bullet!
+//-----------------------------------------------------------------------------
+void CTFScatterGun::FireBullet( CTFPlayer *pPlayer )
+{
+	BaseClass::FireBullet( pPlayer );
+}

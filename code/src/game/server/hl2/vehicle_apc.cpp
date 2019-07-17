@@ -55,6 +55,11 @@ extern short g_sModelIndexFireball; // Echh...
 
 ConVar sk_apc_health( "sk_apc_health", "750" );
 
+#ifdef TF_CLASSIC
+extern ConVar tf_damage_disablespread;
+extern ConVar tf_damage_range;
+extern ConVar tf_damage_lineardist;
+#endif
 
 #define APC_MAX_CHUNKS	3
 static const char *s_pChunkModelName[APC_MAX_CHUNKS] = 
@@ -555,60 +560,216 @@ int CPropAPC::OnTakeDamage( const CTakeDamageInfo &info )
 	}
 
 	CTakeDamageInfo dmgInfo = info;
-	#ifndef TF_CLASSIC
-	if ( dmgInfo.GetDamageType() & (DMG_BLAST | DMG_AIRBOAT) )
+
+	CBaseEntity *pAttacker = dmgInfo.GetAttacker();
+	//CBaseEntity *pInflictor = dmgInfo.GetInflictor();
+	CTFWeaponBase *pWeapon = NULL;
+
+	if ( dmgInfo.GetWeapon() )
 	{
-	#endif
-		int nPrevHealth = GetHealth();
-
-		m_iHealth -= dmgInfo.GetDamage();
-		if ( m_iHealth <= 0 )
-		{
-			m_iHealth = 0;
-			Event_Killed( dmgInfo );
-			return 0;
-		}
-
-		// Chain
-//		BaseClass::OnTakeDamage( dmgInfo );
-
-		// Spawn damage effects
-		if ( nPrevHealth != GetHealth() )
-		{
-			if ( ShouldTriggerDamageEffect( nPrevHealth, MAX_SMOKE_TRAILS ) )
-			{
-				AddSmokeTrail( dmgInfo.GetDamagePosition() );
-			}
-
-			if ( ShouldTriggerDamageEffect( nPrevHealth, MAX_EXPLOSIONS ) )
-			{
-				ExplodeAndThrowChunk( dmgInfo.GetDamagePosition() );
-			}
-		}
-
-		int iOldHealth = m_iHealth;
-		IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
-		if ( event )
-		{
-			event->SetInt( "victim_index", entindex() );
-			event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
-
-			event->SetInt( "health", max( 0, m_iHealth ) );
-			event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
-			event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
-			event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
-
-			CBasePlayer *pPlayer = ToBasePlayer( info.GetAttacker() );
-			event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );
-
-			// HLTV event priority, not transmitted
-			event->SetInt( "priority", 5 );
-
-			gameeventmanager->FireEvent( event );
-		}
-	#ifndef TF_CLASSIC
+		pWeapon = dynamic_cast<CTFWeaponBase *>( dmgInfo.GetWeapon() );
 	}
-	#endif
+	else if ( pAttacker && pAttacker->IsPlayer() )
+	{
+		// Assume that player used his currently active weapon.
+		pWeapon = ToTFPlayer( pAttacker )->GetActiveTFWeapon();
+	}
+
+	//AddDamagerToHistory( pAttacker );
+
+	int bitsDamage = dmgInfo.GetDamageType();
+
+	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
+
+	// Handle on-hit effects.
+	if ( pWeapon && pAttacker != this )
+	{
+		int nCritWhileAirborne = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
+
+		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		{
+			bitsDamage |= DMG_CRITICAL;
+			dmgInfo.AddDamageType( DMG_CRITICAL );
+		}
+
+		int nMiniCritWhileAirborne = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritWhileAirborne, crit_while_airborne );
+
+		if ( nMiniCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		{
+			bitsDamage |= DMG_MINICRITICAL;
+			dmgInfo.AddDamageType( DMG_MINICRITICAL );
+		}
+
+		// Notify the damaging weapon.
+		pWeapon->ApplyOnHitAttributes( this, dmgInfo );
+
+		if ( pTFAttacker )
+		{
+			// Build rage
+			pTFAttacker->m_Shared.SetRageMeter( dmgInfo.GetDamage() / 6.0f, TF_BUFF_OFFENSE );
+		}
+	}
+
+	// If we're not damaging ourselves, apply randomness
+	if ( pAttacker != this && !( bitsDamage & ( DMG_DROWN | DMG_FALL ) ) ) 
+	{
+		float flDamage = dmgInfo.GetDamage();
+		if ( bitsDamage & DMG_CRITICAL )
+		{
+			if ( IsAlive() )
+			{
+				flDamage = dmgInfo.GetDamage() * TF_DAMAGE_CRIT_MULTIPLIER;
+
+				// Show the attacker
+				if ( pAttacker && pAttacker->IsPlayer() )
+				{
+					CEffectData	data;
+					data.m_nHitBox = GetParticleSystemIndex( "crit_text" );
+					data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+					data.m_vAngles = vec3_angle;
+					data.m_nEntIndex = 0;
+
+					CSingleUserRecipientFilter filter( (CBasePlayer*) pAttacker );
+					te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+					EmitSound_t params;
+					params.m_flSoundTime = 0;
+					params.m_pSoundName = "TFPlayer.CritHit";
+					EmitSound( filter, pAttacker->entindex(), params );
+				}
+			}
+		}
+		else if ( bitsDamage & DMG_MINICRITICAL )
+		{
+			if ( IsAlive() )
+			{
+				flDamage = dmgInfo.GetDamage() * TF_DAMAGE_MINICRIT_MULTIPLIER;
+
+				// Show the attacker, unless the target is a disguised spy
+				if ( pAttacker && pAttacker->IsPlayer() )
+				{
+					CEffectData	data;
+					data.m_nHitBox = GetParticleSystemIndex( "minicrit_text" );
+					data.m_vOrigin = WorldSpaceCenter() + Vector(0,0,32);
+					data.m_vAngles = vec3_angle;
+					data.m_nEntIndex = 0;
+
+					CSingleUserRecipientFilter filter( (CBasePlayer*)pAttacker );
+					te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+					EmitSound_t params;
+					params.m_flSoundTime = 0;
+					params.m_pSoundName = "TFPlayer.CritHitMini";
+					EmitSound( filter, pAttacker->entindex(), params );
+				}
+			}
+		}
+		else
+		{
+			float flRandomDamage = dmgInfo.GetDamage() * tf_damage_range.GetFloat();
+			if ( tf_damage_lineardist.GetBool() )
+			{
+				float flBaseDamage = dmgInfo.GetDamage() - flRandomDamage;
+				flDamage = flBaseDamage + RandomFloat( 0, flRandomDamage * 2 );
+			}
+			else
+			{
+				float flMin = 0.4;
+				float flMax = 0.6;
+				float flCenter = 0.5;
+
+				if ( bitsDamage & DMG_USEDISTANCEMOD )
+				{
+					float flDistance = max( 1.0, ( WorldSpaceCenter() - pAttacker->WorldSpaceCenter() ).Length() );
+					float flOptimalDistance = 512.0;
+
+					flCenter = RemapValClamped( flDistance / flOptimalDistance, 0.0, 2.0, 1.0, 0.0 );
+					if ( bitsDamage & DMG_NOCLOSEDISTANCEMOD )
+					{
+						if ( flCenter > 0.5 )
+						{
+							// Reduce the damage bonus at close range
+							flCenter = RemapVal( flCenter, 0.5, 1.0, 0.5, 0.65 );
+						}
+					}
+					flMin = max( 0.0, flCenter - 0.1 );
+					flMax = min( 1.0, flCenter + 0.1 );
+				}
+
+				//Msg("Range: %.2f - %.2f\n", flMin, flMax );
+				float flRandomVal;
+
+				if ( tf_damage_disablespread.GetBool() )
+				{
+					flRandomVal = flCenter;
+				}
+				else
+				{
+					flRandomVal = RandomFloat( flMin, flMax );
+				}
+
+				float flOut = SimpleSplineRemapValClamped( flRandomVal, 0, 1, -flRandomDamage, flRandomDamage );
+				flDamage = dmgInfo.GetDamage() + flOut;
+			}
+		}
+		dmgInfo.SetDamage( flDamage );
+	}
+
+	if ( pTFAttacker )
+	{
+		pTFAttacker->RecordDamageEvent( info, (m_iHealth <= 0) );
+	}
+
+	int nPrevHealth = GetHealth();
+
+	m_iHealth -= dmgInfo.GetDamage();
+	if ( m_iHealth <= 0 )
+	{
+		m_iHealth = 0;
+		Event_Killed( dmgInfo );
+		return 0;
+	}
+
+	// Chain
+//	BaseClass::OnTakeDamage( dmgInfo );
+
+	// Spawn damage effects
+	if ( nPrevHealth != GetHealth() )
+	{
+		if ( ShouldTriggerDamageEffect( nPrevHealth, MAX_SMOKE_TRAILS ) )
+		{
+			AddSmokeTrail( dmgInfo.GetDamagePosition() );
+		}
+
+		if ( ShouldTriggerDamageEffect( nPrevHealth, MAX_EXPLOSIONS ) )
+		{
+			ExplodeAndThrowChunk( dmgInfo.GetDamagePosition() );
+		}
+	}
+
+	int iOldHealth = m_iHealth;
+	IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
+	if ( event )
+	{
+		event->SetInt( "victim_index", entindex() );
+		event->SetInt( "attacker_index", info.GetAttacker() ? info.GetAttacker()->entindex() : 0 );
+
+		event->SetInt( "health", max( 0, m_iHealth ) );
+		event->SetInt( "damageamount", ( iOldHealth - m_iHealth ) );
+		event->SetBool( "crit", ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
+		event->SetBool( "minicrit", ( info.GetDamageType() & DMG_MINICRITICAL ) != 0 );
+
+		CBasePlayer *pPlayer = ToBasePlayer( pAttacker );
+		event->SetInt( "attacker", pPlayer ? pPlayer->GetUserID() : 0 );
+
+		// HLTV event priority, not transmitted
+		event->SetInt( "priority", 5 );
+
+		gameeventmanager->FireEvent( event );
+	}
+
 	return 1;
 }
 

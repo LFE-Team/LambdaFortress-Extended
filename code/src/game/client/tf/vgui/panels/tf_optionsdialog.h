@@ -16,13 +16,14 @@
 
 enum OptionPanel
 {
-	PANEL_ADV,
-	PANEL_MOUSE,
-	PANEL_KEYBOARD,
-	PANEL_AUDIO,
-	PANEL_VIDEO,
+	OPTION_PANEL_ADV,
+	OPTION_PANEL_MOUSE,
+	OPTION_PANEL_KEYBOARD,
+	OPTION_PANEL_AUDIO,
+	OPTION_PANEL_VIDEO,
+	OPTION_PANEL_VGUI,
 
-	PANEL_COUNT
+	OPTION_PANEL_COUNT
 };
 
 //-----------------------------------------------------------------------------
@@ -49,8 +50,9 @@ public:
 	MESSAGE_FUNC(OnGameUIHidden, "GameUIHidden");	// called when the GameUI is hidden
 
 	virtual void OnKeyCodeTyped(vgui::KeyCode code);
-private:
+
 	void SetCurrentPanel(OptionPanel pCurrentPanel);
+private:
 	void AddPanel(CTFDialogPanelBase *m_pPanel, int iPanel);
 	CTFDialogPanelBase*				GetPanel(int iPanel);
 	CUtlVector<CTFDialogPanelBase*>	m_pPanels;

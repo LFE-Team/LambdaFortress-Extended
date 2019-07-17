@@ -2531,7 +2531,19 @@ void CNPC_Combine::HandleAnimEvent( animevent_t *pEvent )
 							pHurt->ApplyAbsVelocityImpulse( forward * 100 + up * 50 );
 						}
 
-						CTakeDamageInfo info( this, this, m_nKickDamage, DMG_CLUB );
+						CalcIsAttackCritical();
+						CalcIsAttackMiniCritical();
+
+						int iDmgType = DMG_CLUB;
+						if ( IsCurrentAttackACrit() )
+						{
+							iDmgType |= DMG_CRITICAL;
+						}
+						if ( IsCurrentAttackAMiniCrit() )
+						{
+							iDmgType |= DMG_MINICRITICAL;
+						}
+						CTakeDamageInfo info( this, this, m_nKickDamage, iDmgType );
 						CalculateMeleeDamageForce( &info, forward, pBCC->GetAbsOrigin() );
 						pBCC->TakeDamage( info );
 

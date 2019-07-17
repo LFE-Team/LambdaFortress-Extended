@@ -6,20 +6,22 @@
 #include "steam/steam_api.h"
 #include "tf_hud_statpanel.h"
 
+extern int UI_IsDebug();
+
 enum MenuPanel //position in this enum = zpos on the screen
 {
 	NONE_MENU,
 	BACKGROUND_MENU,
 	MAIN_MENU,
 	PAUSE_MENU,
-	SHADEBACKGROUND_MENU, //add popup/additional menus below:		
+	SHADEBACKGROUND_MENU, //add popup/additional menus below:
+	CONFIRMATION_MENU,
 	LOADOUT_MENU,
 	STATSUMMARY_MENU,
 	NOTIFICATION_MENU,
 	OPTIONSDIALOG_MENU,
 	CREATESERVER_MENU,
 	CREDIT_MENU,
-	QUIT_MENU,
 	TOOLTIP_MENU,
 	ITEMTOOLTIP_MENU,
 	COUNT_MENU,
@@ -66,9 +68,6 @@ public:
 	virtual void ShowItemToolTip(CEconItemDefinition *pItemData);
 	virtual void HideItemToolTip();
 	virtual void OnNotificationUpdate();
-	virtual void SetServerlistSize(int size);
-	virtual void OnServerInfoUpdate();
-
 private:
 	CUtlVector<CTFMenuPanelBase*>		m_pPanels;
 	void								AddMenuPanel(CTFMenuPanelBase *m_pPanel, int iPanel);

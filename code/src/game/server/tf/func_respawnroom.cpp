@@ -98,7 +98,7 @@ CFuncRespawnRoom::CFuncRespawnRoom()
 //-----------------------------------------------------------------------------
 void CFuncRespawnRoom::Spawn( void )
 {
-	AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS | SF_TRIGGER_ALLOW_NPCS );
+	AddSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS);
 
 	BaseClass::Spawn();
 	InitTrigger();

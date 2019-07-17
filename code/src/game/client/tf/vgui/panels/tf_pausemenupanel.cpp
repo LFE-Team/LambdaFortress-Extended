@@ -7,6 +7,8 @@
 #include "tf_notificationmanager.h"
 #include "engine/IEngineSound.h"
 #include "vgui_avatarimage.h"
+#include "panels/lfe_genericconfirmation.h"
+#include "panels/tf_optionsdialog.h"
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
@@ -21,6 +23,9 @@ static void OnPauseBlogToggle(IConVar *var, const char *pOldValue, float flOldVa
 }
 ConVar lfe_pausemenu_music("lfe_pausemenu_music", "0", FCVAR_ARCHIVE, "Toggle music in the pause menu");
 ConVar lfe_pausemenu_showblog("lfe_pausemenu_showblog", "0", FCVAR_ARCHIVE, "Toggle blog in the main menu", OnPauseBlogToggle);
+
+extern ConVar lfe_ui_confirmation_quit;
+extern ConVar lfe_ui_confirmation_disconnect;
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -55,7 +60,6 @@ bool CTFPauseMenuPanel::Init()
 	m_pNotificationButton = NULL;
 	m_pProfileAvatar = NULL;
 	m_pBlogPanel = new CTFBlogPanel(this, "BlogPanel");
-	m_pServerlistPanel = new CTFServerlistPanel(this, "ServerlistPanel");
 
 	m_pNotificationButton = NULL;
 	bInMenu = false;
@@ -112,27 +116,92 @@ void CTFPauseMenuPanel::OnCommand(const char* command)
 {
 	if (!Q_strcmp(command, "newquit"))
 	{
-		MAINMENU_ROOT->ShowPanel(QUIT_MENU);
+		if ( lfe_ui_confirmation_quit.GetBool() )
+		{
+			CTFGenericConfirmation* confirmation = GET_MAINMENUPANEL(CTFGenericConfirmation);
+
+			CTFGenericConfirmation::Data_t data;
+
+			data.pWindowTitle = "#MMenu_PromptQuit_Title";
+			data.pMessageText = "#MMenu_PromptQuit_Body";
+
+			data.bOkButtonEnabled = true;
+			data.pfnOkCallback = &ConfirmQuit;
+			data.pOkButtonText = "#TF_Quit_Title";
+			data.bCancelButtonEnabled = true;
+
+			confirmation->SetUsageData(data);
+			MAINMENU_ROOT->ShowPanel(CONFIRMATION_MENU);
+
+			if ( UI_IsDebug() )
+				Msg( "[GAMEUI] PAUSE_MENU + CONFIRMATION_MENU\n");
+		}
+		else
+		{
+			engine->ClientCmd( "quit" );
+		}
+	}
+	else if (!Q_strcmp(command, "newdisconnect"))
+	{
+		if ( lfe_ui_confirmation_disconnect.GetBool() )
+		{
+			CTFGenericConfirmation* confirmation = GET_MAINMENUPANEL(CTFGenericConfirmation);
+
+			CTFGenericConfirmation::Data_t data;
+
+			data.pWindowTitle = "#TF_MM_Disconnect_Title";
+			data.pMessageText = "#TF_MM_Disconnect";
+
+			data.bOkButtonEnabled = true;
+			data.pfnOkCallback = &ConfirmDisconnect;
+			data.bCancelButtonEnabled = true;
+
+			confirmation->SetUsageData(data);
+			MAINMENU_ROOT->ShowPanel(CONFIRMATION_MENU);
+
+			if ( UI_IsDebug() )
+				Msg( "[GAMEUI] PAUSE_MENU + CONFIRMATION_MENU\n");
+		}
+		else
+		{
+			engine->ClientCmd( "disconnect" );
+		}
 	}
 	else if (!Q_strcmp(command, "newoptionsdialog"))
 	{
 		MAINMENU_ROOT->ShowPanel(OPTIONSDIALOG_MENU);
+		GET_MAINMENUPANEL(CTFOptionsDialog)->SetCurrentPanel(OPTION_PANEL_ADV);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] PAUSE_MENU -> OPTIONSDIALOG_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newcreategame"))
 	{
 		MAINMENU_ROOT->ShowPanel(CREATESERVER_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] PAUSE_MENU -> CREATESERVER_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newloadout"))
 	{
 		MAINMENU_ROOT->ShowPanel(LOADOUT_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] PAUSE_MENU -> LOADOUT_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newstats"))
 	{
 		MAINMENU_ROOT->ShowPanel(STATSUMMARY_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] PAUSE_MENU -> STATSUMMARY_MENU\n");
 	}
 	else if (!Q_strcmp(command, "newcredits"))
 	{
 		MAINMENU_ROOT->ShowPanel(CREDIT_MENU);
+
+		if ( UI_IsDebug() )
+			Msg( "[GAMEUI] PAUSE_MENU -> CREDIT_MENU\n");
 	}
 	else if (!Q_strcmp(command, "checkversion"))
 	{
@@ -260,12 +329,12 @@ void CTFPauseMenuPanel::SetVersionLabel()  //GetVersionString
 
 void CTFPauseMenuPanel::GetRandomMusic(char *pszBuf, int iBufLength)
 {
-	Assert(iBufLength);
+	Assert( iBufLength );
 
 	char szPath[MAX_PATH];
 
 	// Check that there's music available
-	if (!g_pFullFileSystem->FileExists("sound/ui/gamestartup1.mp3"))
+	if ( !g_pFullFileSystem->FileExists( "sound/ui/gamestartup1.mp3", "MOD" ) )
 	{
 		Assert(false);
 		*pszBuf = '\0';
@@ -275,20 +344,24 @@ void CTFPauseMenuPanel::GetRandomMusic(char *pszBuf, int iBufLength)
 	int iLastTrack = 0;
 	do
 	{
-		Q_snprintf(szPath, sizeof(szPath), "sound/ui/gamestartup%d.mp3", ++iLastTrack);
-	} while (g_pFullFileSystem->FileExists(szPath));
+		Q_snprintf( szPath, sizeof( szPath ), "sound/ui/gamestartup%d.mp3", ++iLastTrack );
+	} while ( g_pFullFileSystem->FileExists( szPath, "MOD" ) );
 
 	// Pick a random one
-	Q_snprintf(szPath, sizeof(szPath), "ui/gamestartup%d.mp3", RandomInt(1, iLastTrack - 1));
-	Q_strncpy(pszBuf, szPath, iBufLength);
+	Q_snprintf( szPath, sizeof( szPath ), "ui/gamestartup%d.mp3", RandomInt( 1, iLastTrack - 1 ) );
+	Q_strncpy( pszBuf, szPath, iBufLength );
 }
 
-void CTFPauseMenuPanel::SetServerlistSize(int size)
+void CTFPauseMenuPanel::ConfirmQuit()
 {
-	m_pServerlistPanel->SetServerlistSize(size);
+	engine->ClientCmd( "quit" );
 }
 
-void CTFPauseMenuPanel::UpdateServerInfo()
+void CTFPauseMenuPanel::ConfirmDisconnect()
 {
-	m_pServerlistPanel->UpdateServerInfo();
+	COM_TimestampedLog( "Exit Game" );
+
+	engine->ExecuteClientCmd( "disconnect" );
+
+	MAINMENU_ROOT->HidePanel(CONFIRMATION_MENU);
 }

@@ -14,21 +14,21 @@
 
 #include	"cbase.h"
 #include	"beam_shared.h"
-#include	"AI_Default.h"
-#include	"AI_Task.h"
-#include	"AI_Schedule.h"
-#include	"AI_Node.h"
-#include	"AI_Hull.h"
-#include	"AI_Hint.h"
-#include	"AI_Route.h"
-#include	"AI_Squad.h"
-#include	"AI_SquadSlot.h"
-#include	"AI_Motor.h"
+#include	"ai_default.h"
+#include	"ai_task.h"
+#include	"ai_schedule.h"
+#include	"ai_node.h"
+#include	"ai_hull.h"
+#include	"ai_hint.h"
+#include	"ai_route.h"
+#include	"ai_squad.h"
+#include	"ai_squadslot.h"
+#include	"ai_motor.h"
 #include	"hl1_npc_hgrunt.h"
 #include	"soundent.h"
 #include	"game.h"
-#include	"NPCEvent.h"
-#include	"EntityList.h"
+#include	"npcevent.h"
+#include	"entitylist.h"
 #include	"activitylist.h"
 #include	"animation.h"
 #include	"engine/IEngineSound.h"
@@ -121,8 +121,6 @@ enum
 } HGRUNT_SENTENCE_TYPES;
 
 LINK_ENTITY_TO_CLASS(monster_human_grunt, CNPC_HGrunt);
-LINK_ENTITY_TO_CLASS(monster_human_grunt_red, CNPC_HGrunt);
-LINK_ENTITY_TO_CLASS(monster_human_grunt_blue, CNPC_HGrunt);
 
 //=========================================================
 // monster-specific schedule types
@@ -234,17 +232,6 @@ void CNPC_HGrunt::Spawn()
 	{
 		PrecacheModel("models/hl1port/hgruntbs.mdl");
         SetModel("models/hl1port/hgruntbs.mdl");			
-	}
-
-	if (FClassnameIs(this, "monster_human_grunt_red"))
-	{		
-        PrecacheModel("models/hgrunt_red.mdl");
-		SetModel("models/hgrunt_red.mdl");
-	}
-	else if (FClassnameIs(this, "monster_human_grunt_blue"))
-	{		
-        PrecacheModel("models/hgrunt_blue.mdl");
-		SetModel("models/hgrunt_blue.mdl");
 	}
 
 	SetHullType(HULL_HUMAN);
@@ -458,14 +445,7 @@ void CNPC_HGrunt::PrescheduleThink(void)
 
 Class_T	CNPC_HGrunt::Classify(void)
 {
-	if (FClassnameIs(this, "monster_human_grunt_red"))
-	{
-		return CLASS_PLAYER_ALLY;
-	}
-	else (FClassnameIs(this, "monster_human_grunt_blue"));
-	{
-		return CLASS_HUMAN_MILITARY;
-	}
+	return CLASS_HUMAN_MILITARY;
 }
 
 //=========================================================

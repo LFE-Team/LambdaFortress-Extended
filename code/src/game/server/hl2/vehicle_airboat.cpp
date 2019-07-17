@@ -23,6 +23,9 @@
 #include "vphysics/constraints.h"
 #include "world.h"
 #include "rumble_shared.h"
+
+#include "vehicle_passenger.h"
+
 // NVNT for airboat weapon fire
 #include "haptics/haptic_utils.h"
 // memdbgon must be the last include file in a .cpp file!!!
@@ -684,7 +687,7 @@ void CPropAirboat::OnRestore()
 //-----------------------------------------------------------------------------
 void CPropAirboat::EnterVehicle( CBaseCombatCharacter *pPlayer )
 {
-	BaseClass::EnterVehicle( pPlayer );
+	BaseClass::EnterVehicle( ToBasePlayer( pPlayer ) );
 
 	//EnablePlayerBlocker( false );
 
@@ -730,7 +733,7 @@ void CPropAirboat::PreExitVehicle( CBaseCombatCharacter *pPlayer, int nRole )
 		}
 	}
 
-	BaseClass::PreExitVehicle( pPlayer, nRole );
+	BaseClass::PreExitVehicle( ToBasePlayer( pPlayer ), nRole );
 }
 
 

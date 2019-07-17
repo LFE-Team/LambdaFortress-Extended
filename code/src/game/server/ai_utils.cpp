@@ -11,6 +11,7 @@
 #include "ai_senses.h"
 #include "ai_moveprobe.h"
 #include "vphysics/object_hash.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -547,15 +548,16 @@ bool CTraceFilterNav::ShouldHitEntity( IHandleEntity *pHandleEntity, int content
 
 	if ( m_pProber->GetMoveProbe()->ShouldBrushBeIgnored( pEntity ) == true )
 		return false;
-
-#ifdef HL1_DLL 
-	if ( ( contentsMask & CONTENTS_MOVEABLE ) == 0 )
+	
+	if(TFGameRules()->IsInHL1Map())
 	{
-		if ( pEntity->ClassMatches( "func_pushable" ) )
-			return false;
+		if ( ( contentsMask & CONTENTS_MOVEABLE ) == 0 )
+		{
+			if ( pEntity->ClassMatches( "func_pushable" ) )
+				return false;
+		}
 	}
-#endif
-
+	
 	if ( m_bIgnoreTransientEntities && (pEntity->IsPlayer() || pEntity->IsNPC() ) )
 		return false;
 

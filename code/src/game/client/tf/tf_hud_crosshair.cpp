@@ -114,14 +114,13 @@ void CHudTFCrosshair::Paint()
 		return;
 
 	const char *crosshairfile = cl_crosshair_file.GetString();
+	CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
+
+	if ( !pWeapon )
+		return;
 
 	if ( crosshairfile[0] == '\0' )
 	{
-		CTFWeaponBase *pWeapon = pPlayer->GetActiveTFWeapon();
-
-		if ( !pWeapon )
-			return;
-
 		m_pCrosshair = pWeapon->GetWpnData().iconCrosshair;
 		BaseClass::Paint();
 		return;
@@ -173,6 +172,19 @@ void CHudTFCrosshair::Paint()
 		GetHudSize( screenWide, screenTall );
 
 		int iWidth, iHeight;
+
+		// Vintage Ambassador crosshair scaling
+		float flCrosshairScale = 1.0f;
+		if ( pWeapon->GetWeaponID() == TF_WEAPON_REVOLVER )
+		{
+			int iMode = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iMode, set_weapon_mode );
+			if ( iMode == 1 )
+			{
+				float flFireInterval = min( gpGlobals->curtime - pWeapon->GetLastFireTime(), 1.25f );
+				flCrosshairScale = clamp( ( flFireInterval / 1.25f ), 0.334, 1.0f );
+			}
+		}
 
 		iWidth = iHeight = cl_crosshair_scale.GetInt();
 		int iX = (int)( x + 0.5f );

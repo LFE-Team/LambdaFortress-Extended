@@ -61,10 +61,9 @@ extern Activity ACT_WALK_MARCH;
 //-----------------------------------------------------------------------------
 void CNPC_CombineS::Spawn( void )
 {
-	//char* Value[260];
 	Precache();
 	SetModel( STRING( GetModelName() ) );
-	if (TFGameRules()->iDirectorAnger > 74 && sv_dynamicnpcs.GetFloat() == 1)
+	if (TFGameRules()->m_iDirectorAnger > 74 && sv_dynamicnpcs.GetBool())
 	{
 		PrecacheModel("models/combine_super_soldier.mdl");
 		PrecacheModel("models/combine_super_soldier_ep2.mdl");
@@ -79,7 +78,7 @@ void CNPC_CombineS::Spawn( void )
 		SetHealth( sk_combine_guard_health.GetFloat() );
 		SetMaxHealth( sk_combine_guard_health.GetFloat() );
 		SetKickDamage( sk_combine_guard_kick.GetFloat() );
-		if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+		if (TFGameRules()->m_iDirectorAnger > 49 && sv_dynamicnpcs.GetBool())
 		{
 			SetMaxHealth(sk_combine_guard_health.GetFloat() * 1.5);
 		}
@@ -89,7 +88,7 @@ void CNPC_CombineS::Spawn( void )
 		SetHealth( sk_combine_s_health.GetFloat() );
 		SetMaxHealth( sk_combine_s_health.GetFloat() );
 		SetKickDamage( sk_combine_s_kick.GetFloat() );
-		if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+		if (TFGameRules()->m_iDirectorAnger > 49 && sv_dynamicnpcs.GetBool())
 		{
 			SetMaxHealth(sk_combine_s_health.GetFloat() * 1.5);
 		}
@@ -114,12 +113,12 @@ void CNPC_CombineS::Spawn( void )
 		SetModel("models/combine_soldier_ep2.mdl");
 	}
 	/*
-	if (GetKeyValue("additionalequipment", "weapon_smg1", 11) && TFGameRules()->iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
+	if (GetKeyValue("additionalequipment", "weapon_smg1", 11) && TFGameRules()->m_iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
 	{
 		KeyValue("additionalequipment", "weapon_ar2");
 	}
 	*/
-	if (!HasShotgun() && TFGameRules()->iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
+	if (!HasShotgun() && TFGameRules()->m_iDirectorAnger > 24 && sv_dynamicnpcs.GetBool())
 	{
 		KeyValue("additionalequipment", "weapon_ar2");
 	}
@@ -268,7 +267,7 @@ int CNPC_CombineS::SelectSchedule ( void )
 
 void CNPC_CombineS::SpeedThink(void)
 {
-	if (sv_dynamicnpcs.GetFloat() == 1 && TFGameRules()->iDirectorAnger > 49)
+	if (sv_dynamicnpcs.GetBool() && TFGameRules()->m_iDirectorAnger > 49)
 	{
 		SetPlaybackRate(1.5f);
 	}

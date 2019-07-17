@@ -26,6 +26,8 @@ public:
 	void	ClientThink();
 	void	UpdateGlowEffect();
 
+	virtual bool	IsVisibleToTargetID( void ) const { return false; }
+
 private:
 	CGlowObject *m_pGlowEffect;
 	bool m_bShouldGlow;

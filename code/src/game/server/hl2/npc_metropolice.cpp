@@ -652,11 +652,11 @@ void CNPC_MetroPolice::Spawn( void )
 	{
 		m_iHealth = sk_metropolice_simple_health.GetFloat();
 	}
-	if (TFGameRules()->iDirectorAnger > 24 && sv_dynamicnpcs.GetFloat() == 1)
+	if (TFGameRules()->m_iDirectorAnger > 24 && sv_dynamicnpcs.GetBool())
 	{
 		m_iHealth = sk_metropolice_health.GetFloat() * 1.5;
 	}
-	if (TFGameRules()->iDirectorAnger > 49 && sv_dynamicnpcs.GetFloat() == 1)
+	if (TFGameRules()->m_iDirectorAnger > 49 && sv_dynamicnpcs.GetBool())
 	{
 		KeyValue("additionalequipment", "weapon_smg1");
 	}
@@ -751,7 +751,7 @@ void CNPC_MetroPolice::Spawn( void )
 //-----------------------------------------------------------------------------
 void CNPC_MetroPolice::SpeedThink(void)
 {
-	if (sv_dynamicnpcs.GetFloat() == 1 && TFGameRules()->iDirectorAnger > 49)
+	if (sv_dynamicnpcs.GetBool() && TFGameRules()->m_iDirectorAnger > 49)
 	{
 		SetPlaybackRate(1.5f);
 	}

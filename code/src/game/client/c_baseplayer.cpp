@@ -49,6 +49,7 @@
 #include "steam/steam_api.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
+#include "clientmode_tf.h"
 
 #if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
 #include "econ_wearable.h"
@@ -190,6 +191,7 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	RecvPropFloat( RECVINFO( m_skybox3d.fog.start ) ),
 	RecvPropFloat( RECVINFO( m_skybox3d.fog.end ) ),
 	RecvPropFloat( RECVINFO( m_skybox3d.fog.maxdensity ) ),
+	RecvPropFloat( RECVINFO( m_skybox3d.fog.HDRColorScale ) ),
 
 	// fog data
 	RecvPropEHandle( RECVINFO( m_PlayerFog.m_hCtrl ) ),
@@ -247,6 +249,8 @@ END_RECV_TABLE()
 
 		RecvPropInt			( RECVINFO( m_nWaterLevel ) ),
 		RecvPropFloat		( RECVINFO( m_flLaggedMovementValue )),
+	
+		RecvPropEHandle		( RECVINFO( m_hTonemapController ) ),
 
 	END_RECV_TABLE()
 
@@ -299,6 +303,8 @@ END_RECV_TABLE()
 #if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC_CLIENT )
 		RecvPropUtlVector( RECVINFO_UTLVECTOR( m_hMyWearables ), MAX_WEARABLES_SENT_FROM_SERVER,	RecvPropEHandle(NULL, 0, 0) ),
 #endif
+
+		RecvPropEHandle	( RECVINFO( m_hColorCorrectionCtrl ) ),
 
 	END_RECV_TABLE()
 
@@ -965,9 +971,9 @@ void C_BasePlayer::OnRestore()
 	if ( IsLocalPlayer() )
 	{
 		// debounce the attack key, for if it was used for restore
-		input->ClearInputButton( IN_ATTACK | IN_ATTACK2 );
+		::input->ClearInputButton( IN_ATTACK | IN_ATTACK2 );
 		// GetButtonBits() has to be called for the above to take effect
-		input->GetButtonBits( 0 );
+		::input->GetButtonBits( 0 );
 	}
 
 	// For ammo history icons to current value so they don't flash on level transtions
@@ -1022,6 +1028,11 @@ void C_BasePlayer::OnDataChanged( DataUpdateType_t updateType )
 		if ( m_hOldFogController != m_Local.m_PlayerFog.m_hCtrl )
 		{
 			FogControllerChanged( updateType == DATA_UPDATE_CREATED );
+		}
+
+		if ( updateType == DATA_UPDATE_CREATED )
+		{
+			static_cast< ClientModeTFNormal* >( g_pClientMode )->OnColorCorrectionWeightsReset();
 		}
 	}
 }
@@ -1170,7 +1181,7 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		if ( joy_autosprint.GetBool() )
 #endif
 		{
-			if ( input->KeyState( &in_joyspeed ) != 0.0f )
+			if ( ::input->KeyState( &in_joyspeed ) != 0.0f )
 			{
 				pCmd->buttons |= IN_SPEED;
 			}
@@ -1895,7 +1906,7 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 	int ObserverMode = pLocalPlayer->GetObserverMode();
 	if ( ( ObserverMode == OBS_MODE_NONE ) || ( ObserverMode == OBS_MODE_IN_EYE ) )
 	{
-		return !input->CAM_IsThirdPerson() && ( !ToolsEnabled() || !ToolFramework_IsThirdPersonCamera() );
+		return !::input->CAM_IsThirdPerson() && ( !ToolsEnabled() || !ToolFramework_IsThirdPersonCamera() );
 	}
 
 	// Not looking at the local player, e.g. in a replay in third person mode or freelook.
@@ -2993,7 +3004,13 @@ void C_BasePlayer::BuildFirstPersonMeathookTransformations( CStudioHdr *hdr, Vec
 	}
 }
 
-
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+C_ColorCorrection* C_BasePlayer::GetActiveColorCorrection() const
+{
+	return m_hColorCorrectionCtrl.Get();
+}
 
 void CC_DumpClientSoundscapeData( const CCommand& args )
 {

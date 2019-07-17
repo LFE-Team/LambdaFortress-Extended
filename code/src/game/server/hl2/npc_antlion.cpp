@@ -654,19 +654,32 @@ void CNPC_Antlion::Event_Killed( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CNPC_Antlion::MeleeAttack( float distance, float damage, QAngle &viewPunch, Vector &shove )
 {
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_SLASH;
+	if ( IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+ 	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+
 	Vector vecForceDir;
 
 	// Always hurt bullseyes for now
 	if ( ( GetEnemy() != NULL ) && ( GetEnemy()->Classify() == CLASS_BULLSEYE ) )
 	{
 		vecForceDir = (GetEnemy()->GetAbsOrigin() - GetAbsOrigin());
-		CTakeDamageInfo info( this, this, damage, DMG_SLASH );
+		CTakeDamageInfo info( this, this, damage, iDmgType );
 		CalculateMeleeDamageForce( &info, vecForceDir, GetEnemy()->GetAbsOrigin() );
 		GetEnemy()->TakeDamage( info );
 		return;
 	}
 
-	CBaseEntity *pHurt = CheckTraceHullAttack( distance, -Vector(16,16,32), Vector(16,16,32), damage, DMG_SLASH, 5.0f );
+	CBaseEntity *pHurt = CheckTraceHullAttack( distance, -Vector(16,16,32), Vector(16,16,32), damage, iDmgType, 5.0f );
 
 	if ( pHurt )
 	{
@@ -675,7 +688,7 @@ void CNPC_Antlion::MeleeAttack( float distance, float damage, QAngle &viewPunch,
 		//FIXME: Until the interaction is setup, kill combine soldiers in one hit -- jdw
 		if ( FClassnameIs( pHurt, "npc_combine_s" ) )
 		{
-			CTakeDamageInfo	dmgInfo( this, this, pHurt->m_iHealth+25, DMG_SLASH );
+			CTakeDamageInfo	dmgInfo( this, this, pHurt->m_iHealth+25, iDmgType );
 			CalculateMeleeDamageForce( &dmgInfo, vecForceDir, pHurt->GetAbsOrigin() );
 			pHurt->TakeDamage( dmgInfo );
 			return;
@@ -4058,59 +4071,66 @@ bool CNPC_Antlion::CorpseGib( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CNPC_Antlion::Touch( CBaseEntity *pOther )
 {
-	//See if the touching entity is a vehicle
-	CBasePlayer *pPlayer = ToBasePlayer( AI_GetSinglePlayer() );
-	
-	// FIXME: Technically we'll want to check to see if a vehicle has touched us with the player OR NPC driver
-
-	if ( pPlayer && pPlayer->IsInAVehicle() )
+    // Also include all players
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
-		IServerVehicle	*pVehicle = pPlayer->GetVehicle();
-		CBaseEntity *pVehicleEnt = pVehicle->GetVehicleEnt();
+		CBasePlayer	*pPlayer = UTIL_PlayerByIndex( i );
 
-		if ( pVehicleEnt == pOther )
-		{
-			CPropVehicleDriveable	*pDrivableVehicle = dynamic_cast<CPropVehicleDriveable *>( pVehicleEnt );
+		if ( !pPlayer )
+			continue;
 
-			if ( pDrivableVehicle != NULL )
-			{
-				//Get tossed!
-				Vector	vecShoveDir = pOther->GetAbsVelocity();
-				Vector	vecTargetDir = GetAbsOrigin() - pOther->GetAbsOrigin();
-				
-				VectorNormalize( vecShoveDir );
-				VectorNormalize( vecTargetDir );
+	    //See if the touching entity is a vehicle
+	    //CBasePlayer *pPlayer = ToBasePlayer( AI_GetSinglePlayer() );
 
-				bool bBurrowingOut = IsCurSchedule( SCHED_ANTLION_BURROW_OUT );
+	    // FIXME: Technically we'll want to check to see if a vehicle has touched us with the player OR NPC driver
 
-				if ( ( ( pDrivableVehicle->m_nRPM > 75 ) && DotProduct( vecShoveDir, vecTargetDir ) <= 0 ) || bBurrowingOut == true )
-				{
-					if ( IsFlipped() || bBurrowingOut == true )
-					{
-						float flDamage = m_iHealth;
-
-						if ( random->RandomInt( 0, 10 ) > 4 )
-							 flDamage += 25;
-									
-						CTakeDamageInfo	dmgInfo( pVehicleEnt, pPlayer, flDamage, DMG_VEHICLE );
+		if ( pPlayer && pPlayer->IsInAVehicle() )
+	    {
+		    IServerVehicle	*pVehicle = pPlayer->GetVehicle();
+		    CBaseEntity *pVehicleEnt = pVehicle->GetVehicleEnt();
+ 		    if ( pVehicleEnt == pOther )
+		    {
+			    CPropVehicleDriveable	*pDrivableVehicle = dynamic_cast<CPropVehicleDriveable *>( pVehicleEnt );
+ 			    if ( pDrivableVehicle != NULL )
+			    {
+				    //Get tossed!
+				    Vector	vecShoveDir = pOther->GetAbsVelocity();
+				    Vector	vecTargetDir = GetAbsOrigin() - pOther->GetAbsOrigin();
 					
-						CalculateMeleeDamageForce( &dmgInfo, vecShoveDir, pOther->GetAbsOrigin() );
-						TakeDamage( dmgInfo );
-					}
-					else
+					VectorNormalize( vecShoveDir );
+					VectorNormalize( vecTargetDir );
+
+					bool bBurrowingOut = IsCurSchedule( SCHED_ANTLION_BURROW_OUT );
+
+					if ( ( ( pDrivableVehicle->m_nRPM > 75 ) && DotProduct( vecShoveDir, vecTargetDir ) <= 0 ) || bBurrowingOut == true )
 					{
-						// We're being shoved
-						CTakeDamageInfo	dmgInfo( pVehicleEnt, pPlayer, 0, DMG_VEHICLE );
-						PainSound( dmgInfo );
+						if ( IsFlipped() || bBurrowingOut == true )
+						{
+							float flDamage = m_iHealth;
 
-						SetCondition( COND_ANTLION_FLIPPED );
+							if ( random->RandomInt( 0, 10 ) > 4 )
+								 flDamage += 25;
+										
+							CTakeDamageInfo	dmgInfo( pVehicleEnt, pPlayer, flDamage, DMG_VEHICLE );
+						
+							CalculateMeleeDamageForce( &dmgInfo, vecShoveDir, pOther->GetAbsOrigin() );
+							TakeDamage( dmgInfo );
+						}
+						else
+						{
+							// We're being shoved
+							CTakeDamageInfo	dmgInfo( pVehicleEnt, pPlayer, 0, DMG_VEHICLE );
+							PainSound( dmgInfo );
 
-						vecTargetDir[2] = 0.0f;
+							SetCondition( COND_ANTLION_FLIPPED );
 
-						ApplyAbsVelocityImpulse( ( vecTargetDir * 250.0f ) + Vector(0,0,64.0f) );
-						SetGroundEntity( NULL );
+							vecTargetDir[2] = 0.0f;
 
-						CSoundEnt::InsertSound( SOUND_PHYSICS_DANGER, GetAbsOrigin(), 256, 0.5f, this );
+							ApplyAbsVelocityImpulse( ( vecTargetDir * 250.0f ) + Vector(0,0,64.0f) );
+							SetGroundEntity( NULL );
+
+							CSoundEnt::InsertSound( SOUND_PHYSICS_DANGER, GetAbsOrigin(), 256, 0.5f, this );
+						}
 					}
 				}
 			}
@@ -4124,7 +4144,20 @@ void CNPC_Antlion::Touch( CBaseEntity *pOther )
 #ifdef HL2_EPISODIC 
 	if ( GetActivity() == ACT_GLIDE && IsValidEnemy( pOther ) && !m_bHasDoneAirAttack )
 	{
-		CTakeDamageInfo	dmgInfo( this, this, sk_antlion_air_attack_dmg.GetInt(), DMG_SLASH );
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		int iDmgType = DMG_SLASH;
+		if ( IsCurrentAttackACrit() )
+		{
+			iDmgType |= DMG_CRITICAL;
+		}
+		if ( IsCurrentAttackAMiniCrit() )
+		{
+			iDmgType |= DMG_MINICRITICAL;
+		}
+
+		CTakeDamageInfo	dmgInfo( this, this, sk_antlion_air_attack_dmg.GetInt(), iDmgType );
 
 		CalculateMeleeDamageForce( &dmgInfo, Vector( 0, 0, 1 ), GetAbsOrigin() );
 		pOther->TakeDamage( dmgInfo );

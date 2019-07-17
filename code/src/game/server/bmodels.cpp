@@ -12,6 +12,7 @@
 #include "engine/IEngineSound.h"
 #include "globals.h"
 #include "filters.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -192,6 +193,8 @@ public:
 	void Spawn();
 	bool CreateVPhysics( void );
 
+	bool ForceVPhysicsCollide( CBaseEntity *pEntity );
+			
 	void InputEnable( inputdata_t &data );
 	void InputDisable( inputdata_t &data );
 
@@ -209,27 +212,38 @@ LINK_ENTITY_TO_CLASS( func_vehicleclip, CFuncVehicleClip );
 
 void CFuncVehicleClip::Spawn()
 {
-
 	SetLocalAngles( vec3_angle );
 	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
+	SetSolid( SOLID_VPHYSICS );
+	AddSolidFlags( FSOLID_NOT_SOLID );
 	SetModel( STRING( GetModelName() ) );
-	
+
 	// It's part of the world
-	AddFlag( FL_WORLDBRUSH );
-
-	CreateVPhysics();
-
-	AddEffects( EF_NODRAW );		// make entity invisible
+	//AddFlag( FL_WORLDBRUSH );
 
 	SetCollisionGroup( COLLISION_GROUP_VEHICLE_CLIP );
+	AddEffects( EF_NODRAW );		// make entity invisible
+	CreateVPhysics();
 }
 
 bool CFuncVehicleClip::CreateVPhysics( void )
 {
-	SetSolid( SOLID_BSP );
+	//SetSolid( SOLID_BSP );
 	VPhysicsInitStatic();
 
 	return true;
+}
+
+bool CFuncVehicleClip::ForceVPhysicsCollide( CBaseEntity *pEntity )
+{
+	if ( FClassnameIs( pEntity, "prop_vehicle_airboat" ) )
+		return true;
+	else if ( FClassnameIs( pEntity, "prop_vehicle_jeep" ) )
+		return true;
+	else
+		return false;
+	
+	return false;
 }
 
 void CFuncVehicleClip::InputEnable( inputdata_t &data )
@@ -811,17 +825,15 @@ void CFuncRotating::HurtTouch ( CBaseEntity *pOther )
 	// calculate damage based on rotation speed
 	m_flBlockDamage = GetLocalAngularVelocity().Length() / 10;
 
-#ifdef HL1_DLL
-	if( m_flBlockDamage > 0 )
-#endif
-	{
-		pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
+	if( TFGameRules()->IsInHL1Map() && m_flBlockDamage <= 0 )
+		return;
+
+	pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
 	
-		Vector vecNewVelocity = pOther->GetAbsOrigin() - WorldSpaceCenter();
-		VectorNormalize(vecNewVelocity);
-		vecNewVelocity *= m_flBlockDamage;
-		pOther->SetAbsVelocity( vecNewVelocity );
-	}
+	Vector vecNewVelocity = pOther->GetAbsOrigin() - WorldSpaceCenter();
+	VectorNormalize(vecNewVelocity);
+	vecNewVelocity *= m_flBlockDamage;
+	pOther->SetAbsVelocity( vecNewVelocity );
 }
 
 
@@ -1337,10 +1349,10 @@ void CFuncRotating::InputToggle( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CFuncRotating::Blocked( CBaseEntity *pOther )
 {
-#ifdef HL1_DLL
-	if( m_flBlockDamage > 0 )
-#endif
-		pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
+	if( TFGameRules()->IsInHL1Map() && m_flBlockDamage <= 0 )
+		return;
+
+	pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
 }
 
 

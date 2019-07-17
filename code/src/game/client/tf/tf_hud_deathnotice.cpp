@@ -133,8 +133,8 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 	bool bPlayerDeath = EventIsPlayerDeath( pszEventName );
 	bool bIsObjectDestroyed = FStrEq( pszEventName, "object_destroyed" );
 	bool bNPCDeath = FStrEq( pszEventName, "npc_death" );
-
-	if ( bPlayerDeath || bIsObjectDestroyed || bNPCDeath )
+	bool bFeignDeath = FStrEq(pszEventName, "player_feigndeath");
+	if ( bPlayerDeath || bIsObjectDestroyed || bNPCDeath || bFeignDeath )
 	{
 		int iCustomDamage = event->GetInt( "customkill" );
 		int iLocalPlayerIndex = GetLocalPlayerIndex();

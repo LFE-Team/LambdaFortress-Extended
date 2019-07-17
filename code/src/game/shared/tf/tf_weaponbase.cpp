@@ -11,12 +11,13 @@
 #include "tf_gamerules.h"
 #include "eventlist.h"
 #include "tf_viewmodel.h"
-
+#include "effect_dispatch_data.h"
 // Server specific.
 #if !defined( CLIENT_DLL )
 #include "tf_player.h"
 #include "tf_team.h"
 #include "ai_basenpc.h"
+#include "tf_gamestats.h"
 // Client specific.
 #else
 #include "vgui/ISurface.h"
@@ -28,7 +29,6 @@
 #include "clientmode_tf.h"
 #include "r_efx.h"
 #include "dlight.h"
-#include "effect_dispatch_data.h"
 #include "c_te_effect_dispatch.h"
 #include "toolframework_client.h"
 #include "c_env_projectedtexture.h"
@@ -50,6 +50,23 @@ ConVar tf_weapon_criticals( "tf_weapon_criticals", "1", FCVAR_NOTIFY | FCVAR_REP
 
 #ifdef GAME_DLL
 ConVar tf_debug_criticals( "tf_debug_criticals", "0", FCVAR_CHEAT );
+
+ConVar  lfe_allow_airblast_physics( "lfe_allow_airblast_physics", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable/Disable the Airblast pushing Physics." );
+ConVar  lfe_airblast_physics_force( "lfe_airblast_physics_force", "1000", FCVAR_CHEAT | FCVAR_REPLICATED, "How strongly to push away from the player?" );
+
+ConVar  tf_airblast_cray( "tf_airblast_cray", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Use alternate cray airblast logic globally" );
+ConVar  tf_airblast_cray_debug( "tf_airblast_cray_debug", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Enable debugging overlays & output for cray airblast.  Value is length of time to show debug overlays in seconds." );
+ConVar  tf_airblast_cray_ground_minz( "tf_airblast_cray_ground_minz", "100", FCVAR_CHEAT | FCVAR_REPLICATED, "If set, cray airblast ensures the target has this minimum Z velocity after reflections and impulse have been applied. Set to 268.3281572999747 for exact old airblast Z behavior." );
+ConVar  tf_airblast_cray_ground_reflect( "tf_airblast_cray_ground_reflect", "1", FCVAR_CHEAT | FCVAR_REPLICATED, "If set, cray airblast reflects any airblast power directed into the ground off of it, to prevent ground-stuck and provide a bit more control over up-vs-forward vectoring" );
+ConVar  tf_airblast_cray_lose_footing_duration( "tf_airblast_cray_lose_footing_duration", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "How long the player should be unable to regain their footing after being airblast, separate from air-control stun." );
+ConVar  tf_airblast_cray_pitch_control( "tf_airblast_cray_pitch_control", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "If set, allow controlling the pitch of the airblast, in addition to the yaw." );
+ConVar  tf_airblast_cray_power( "tf_airblast_cray_power", "600", FCVAR_CHEAT | FCVAR_REPLICATED, "Amount of force cray airblast should apply unconditionally. Set to 0 to only perform player momentum reflection." );
+ConVar  tf_airblast_cray_power_relative( "tf_airblast_cray_power_relative", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "If set, the blast power power also inherits from the blast's forward momentum." );
+ConVar  tf_airblast_cray_reflect_coeff( "tf_airblast_cray_reflect_coeff", "2", FCVAR_CHEAT | FCVAR_REPLICATED, "The coefficient of reflective power cray airblast employs.  0   - No reflective powers  0-1 - Cancel out some/all incoming velocity  1-2 - Reflect some/all incoming velocity outwards  2+  - Reflect incoming velocity outwards and then some " );
+ConVar  tf_airblast_cray_reflect_cost_coeff( "tf_airblast_cray_reflect_cost_coeff", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "What portion of power used for reflection is removed from the push effect. Note that reflecting incoming momentum requires 2x the momentum - to first neutralize and then reverse it.  Setting this to 1 means that a target running towards the blast at more than 50% blast-speed would have a net pushback half that of a stationary target, since half the power was used to negate their incoming momentum. A value of 0.5 would mean that running towards the blast would not be beneficial vs being still, while values " );
+ConVar  tf_airblast_cray_reflect_relative( "tf_airblast_cray_reflect_relative", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "If set, the relative, rather than absolute, target velocity is considered for reflection." );
+ConVar  tf_airblast_cray_stun_amount( "tf_airblast_cray_stun_amount", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Amount of control loss to apply if stun_duration is set." );
+ConVar  tf_airblast_cray_stun_duration( "tf_airblast_cray_stun_duration", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "If set, apply this duration of stun when initially hit by an airblast.  Does not apply to repeated airblasts." );
 #endif
 
 //=============================================================================
@@ -733,6 +750,8 @@ bool CTFWeaponBase::Deploy( void )
 				}
 			}
 		}
+
+		SetWeaponVisible( true );
 	}
 
 	return bDeploy;
@@ -877,15 +896,6 @@ void CTFWeaponBase::PrimaryAttack( void )
 		return;
 
 	BaseClass::PrimaryAttack();
-
-	int iSGKnockback = 0;
-	CALL_ATTRIB_HOOK_INT( iSGKnockback, set_scattergun_has_knockback );
-	if ( iSGKnockback )
-	{
-		#ifdef GAME_DLL
-		Knockback();
-		#endif
-	}
 
 	// Due to cl_autoreload we can now interrupt ANY reload.
 	AbortReload();
@@ -1145,6 +1155,10 @@ bool CTFWeaponBase::Reload( void )
 		return false;
 
 	CTFPlayer *pOwner = GetTFPlayerOwner();
+
+	// Can't reload while using dead ringer
+	if ( pOwner->m_Shared.m_bFeignDeathReady )
+		return false;
 
 	// Can't reload while cloaked.
 	if ( pOwner->m_Shared.InCond( TF_COND_STEALTHED ) )
@@ -1968,6 +1982,8 @@ void CTFWeaponBase::EffectBarRegenFinished( void )
 	pOwner->GiveAmmo( 1, m_iPrimaryAmmoType, true, TF_AMMO_SOURCE_RESUPPLY );
 #endif
 
+	OnResourceMeterFilled();
+
 	// Keep recharging until we're full on ammo.
 #ifdef GAME_DLL
 	if ( pOwner->GetAmmoCount( m_iPrimaryAmmoType ) < pOwner->GetMaxAmmo( m_iPrimaryAmmoType ) )
@@ -2381,34 +2397,15 @@ void CTFWeaponBase::ApplyPostHitEffects( const CTakeDamageInfo &info, CBaseEntit
 //-----------------------------------------------------------------------------
 // Purpose:
 // ----------------------------------------------------------------------------
-void CTFWeaponBase::ApplyOnInjuredAttributes( CBaseEntity *pVictim, const CTakeDamageInfo &info )
+void CTFWeaponBase::ApplyOnInjuredAttributes( CBaseEntity *pOwner, const CTakeDamageInfo &info )
 {
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: i think it's for force-a-nature
+// Purpose:
 // ----------------------------------------------------------------------------
-void CTFWeaponBase::Knockback( void )
+void CTFWeaponBase::OnPlayerKill( CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( !pOwner )
-		return;
-
-	Vector vecDir;
-	QAngle angDir = pOwner->EyeAngles();
-	AngleVectors( angDir, &vecDir );
-	QAngle angPushDir = angDir;
-
-	// Push them at least 45 degrees up.
-	angPushDir[PITCH] = min( -45, angPushDir[PITCH] );
-
-	AngleVectors( angPushDir, &vecDir );
-
-	//If not on ground, then don't make them fly!
-	if ( pOwner && !( pOwner->GetFlags() & FL_ONGROUND ) )
-	{
-		pOwner->ApplyAbsVelocityImpulse( vecDir * 300 );
-	}
 }
 #else
 
@@ -2769,10 +2766,10 @@ acttable_t CTFWeaponBase::s_acttablePrimary[] =
 	{ ACT_MP_GRENADE2_IDLE, ACT_MP_PRIMARY_GRENADE2_IDLE, false },
 	{ ACT_MP_GRENADE2_ATTACK, ACT_MP_PRIMARY_GRENADE2_ATTACK, false },
 
-	{ ACT_MP_ATTACK_STAND_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_CROUCH_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_SWIM_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_AIRWALK_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
+	{ ACT_MP_ATTACK_STAND_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_CROUCH_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_SWIM_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_AIRWALK_GRENADE,ACT_MP_ATTACK_STAND_GRENADE,	false },
 
 	{ ACT_MP_GESTURE_VC_HANDMOUTH, ACT_MP_GESTURE_VC_HANDMOUTH_PRIMARY, false },
 	{ ACT_MP_GESTURE_VC_FINGERPOINT, ACT_MP_GESTURE_VC_FINGERPOINT_PRIMARY, false },
@@ -2824,10 +2821,10 @@ acttable_t CTFWeaponBase::s_acttableSecondary[] =
 	{ ACT_MP_GRENADE2_IDLE, ACT_MP_SECONDARY_GRENADE2_IDLE, false },
 	{ ACT_MP_GRENADE2_ATTACK, ACT_MP_SECONDARY_GRENADE2_ATTACK, false },
 
-	{ ACT_MP_ATTACK_STAND_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_CROUCH_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_SWIM_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_AIRWALK_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
+	{ ACT_MP_ATTACK_STAND_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_CROUCH_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_SWIM_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_AIRWALK_GRENADE,ACT_MP_ATTACK_STAND_GRENADE,	false },
 
 	{ ACT_MP_GESTURE_VC_HANDMOUTH, ACT_MP_GESTURE_VC_HANDMOUTH_SECONDARY, false },
 	{ ACT_MP_GESTURE_VC_FINGERPOINT, ACT_MP_GESTURE_VC_FINGERPOINT_SECONDARY, false },
@@ -2981,6 +2978,9 @@ acttable_t CTFWeaponBase::s_acttableItem1[] =
 	{ ACT_MP_GESTURE_VC_THUMBSUP, ACT_MP_GESTURE_VC_THUMBSUP_ITEM1, false },
 	{ ACT_MP_GESTURE_VC_NODYES, ACT_MP_GESTURE_VC_NODYES_ITEM1, false },
 	{ ACT_MP_GESTURE_VC_NODNO, ACT_MP_GESTURE_VC_NODNO_ITEM1, false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE_DEPLOYED, ACT_MP_ATTACK_STAND_PRIMARY_DEPLOYED_ITEM1, false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE_DEPLOYED, ACT_MP_ATTACK_CROUCH_PRIMARY_DEPLOYED_ITEM1, false },
 };
 
 acttable_t CTFWeaponBase::s_acttableItem2[] =
@@ -3127,10 +3127,10 @@ acttable_t CTFWeaponBase::s_acttableSecondary2[] =
 	{ ACT_MP_RELOAD_AIRWALK_LOOP, ACT_MP_RELOAD_AIRWALK_SECONDARY2_LOOP, false },
 	{ ACT_MP_RELOAD_AIRWALK_END, ACT_MP_RELOAD_AIRWALK_SECONDARY2_END, false },
 
-	{ ACT_MP_ATTACK_STAND_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_CROUCH_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_SWIM_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_AIRWALK_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
+	{ ACT_MP_ATTACK_STAND_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_CROUCH_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_SWIM_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_AIRWALK_GRENADE,ACT_MP_ATTACK_STAND_GRENADE,	false },
 
 	{ ACT_MP_GESTURE_VC_HANDMOUTH, ACT_MP_GESTURE_VC_HANDMOUTH_SECONDARY, false },
 	{ ACT_MP_GESTURE_VC_FINGERPOINT, ACT_MP_GESTURE_VC_FINGERPOINT_SECONDARY, false },
@@ -3181,10 +3181,10 @@ acttable_t CTFWeaponBase::s_acttablePrimary2[] =
 	{ ACT_MP_RELOAD_AIRWALK_LOOP, ACT_MP_RELOAD_AIRWALK_PRIMARY_LOOP_ALT, false },
 	{ ACT_MP_RELOAD_AIRWALK_END, ACT_MP_RELOAD_AIRWALK_PRIMARY_END_ALT, false },
 
-	{ ACT_MP_ATTACK_STAND_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_CROUCH_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_SWIM_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
-	{ ACT_MP_ATTACK_AIRWALK_GRENADE, ACT_MP_ATTACK_STAND_GRENADE, false },
+	{ ACT_MP_ATTACK_STAND_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_CROUCH_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_SWIM_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_AIRWALK_GRENADE,ACT_MP_ATTACK_STAND_GRENADE,	false },
 
 	{ ACT_MP_GESTURE_VC_HANDMOUTH, ACT_MP_GESTURE_VC_HANDMOUTH_PRIMARY, false },
 	{ ACT_MP_GESTURE_VC_FINGERPOINT, ACT_MP_GESTURE_VC_FINGERPOINT_PRIMARY, false },
@@ -3192,6 +3192,150 @@ acttable_t CTFWeaponBase::s_acttablePrimary2[] =
 	{ ACT_MP_GESTURE_VC_THUMBSUP, ACT_MP_GESTURE_VC_THUMBSUP_PRIMARY, false },
 	{ ACT_MP_GESTURE_VC_NODYES, ACT_MP_GESTURE_VC_NODYES_PRIMARY, false },
 	{ ACT_MP_GESTURE_VC_NODNO, ACT_MP_GESTURE_VC_NODNO_PRIMARY, false },
+};
+
+acttable_t CTFWeaponBase::s_acttableItem3[] =
+{
+	{ ACT_MP_STAND_IDLE,	ACT_MP_STAND_ITEM3,		false },
+	{ ACT_MP_CROUCH_IDLE,	ACT_MP_CROUCH_ITEM3,	false },
+	{ ACT_MP_RUN,			ACT_MP_RUN_ITEM3,		false },
+	{ ACT_MP_WALK,			ACT_MP_WALK_ITEM3,		false },
+	{ ACT_MP_AIRWALK,		ACT_MP_AIRWALK_ITEM3,	false },
+	{ ACT_MP_CROUCHWALK,	ACT_MP_CROUCHWALK_ITEM3,false },
+	{ ACT_MP_JUMP,			ACT_MP_JUMP_ITEM3,		false },
+	{ ACT_MP_JUMP_START,	ACT_MP_JUMP_START_ITEM3,false },
+	{ ACT_MP_JUMP_FLOAT,	ACT_MP_JUMP_FLOAT_ITEM3,false },
+	{ ACT_MP_JUMP_LAND,		ACT_MP_JUMP_LAND_ITEM3,	false },
+	{ ACT_MP_SWIM,			ACT_MP_SWIM_ITEM3,		false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,		ACT_MP_ATTACK_STAND_ITEM3,			false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,		ACT_MP_ATTACK_CROUCH_ITEM3,			false },
+	{ ACT_MP_ATTACK_SWIM_PRIMARYFIRE,		ACT_MP_ATTACK_SWIM_ITEM3,			false },
+	{ ACT_MP_ATTACK_AIRWALK_PRIMARYFIRE,	ACT_MP_ATTACK_AIRWALK_ITEM3,		false },
+	{ ACT_MP_ATTACK_STAND_SECONDARYFIRE,	ACT_MP_ATTACK_STAND_ITEM3_SECONDARY,false },
+	{ ACT_MP_ATTACK_CROUCH_SECONDARYFIRE,	ACT_MP_ATTACK_CROUCH_ITEM3_SECONDARY,false },
+	{ ACT_MP_ATTACK_SWIM_SECONDARYFIRE,		ACT_MP_ATTACK_SWIM_ITEM3,			false },
+	{ ACT_MP_ATTACK_AIRWALK_SECONDARYFIRE,	ACT_MP_ATTACK_AIRWALK_ITEM3,		false },
+
+	{ ACT_MP_DEPLOYED,				ACT_MP_DEPLOYED_ITEM3,				false },
+	{ ACT_MP_DEPLOYED_IDLE,			ACT_MP_DEPLOYED_IDLE_ITEM3,			false },
+	{ ACT_MP_CROUCH_DEPLOYED,		ACT_MP_CROUCHWALK_DEPLOYED_ITEM3,	false },
+	{ ACT_MP_CROUCH_DEPLOYED_IDLE,	ACT_MP_CROUCH_DEPLOYED_IDLE_ITEM3,	false },
+
+	{ ACT_MP_GESTURE_FLINCH,		ACT_MP_GESTURE_FLINCH_ITEM1,	false },
+
+	{ ACT_MP_GRENADE1_DRAW,			ACT_MP_PRIMARY_GRENADE1_DRAW,	false },
+	{ ACT_MP_GRENADE1_IDLE,			ACT_MP_PRIMARY_GRENADE1_IDLE,	false },
+	{ ACT_MP_GRENADE1_ATTACK,		ACT_MP_PRIMARY_GRENADE1_ATTACK,	false },
+	{ ACT_MP_GRENADE2_DRAW,			ACT_MP_PRIMARY_GRENADE2_DRAW,	false },
+	{ ACT_MP_GRENADE2_IDLE,			ACT_MP_PRIMARY_GRENADE2_IDLE,	false },
+	{ ACT_MP_GRENADE2_ATTACK,		ACT_MP_PRIMARY_GRENADE2_ATTACK, false },
+
+	{ ACT_MP_GESTURE_VC_HANDMOUTH,	ACT_MP_GESTURE_VC_HANDMOUTH_ITEM1,	false },
+	{ ACT_MP_GESTURE_VC_FINGERPOINT,ACT_MP_GESTURE_VC_FINGERPOINT_ITEM1,false },
+	{ ACT_MP_GESTURE_VC_FISTPUMP,	ACT_MP_GESTURE_VC_FISTPUMP_ITEM1,	false },
+	{ ACT_MP_GESTURE_VC_THUMBSUP,	ACT_MP_GESTURE_VC_THUMBSUP_ITEM1,	false },
+	{ ACT_MP_GESTURE_VC_NODYES,		ACT_MP_GESTURE_VC_NODYES_ITEM1,		false },
+	{ ACT_MP_GESTURE_VC_NODNO,		ACT_MP_GESTURE_VC_NODNO_ITEM1,		false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE_DEPLOYED,		ACT_MP_ATTACK_STAND_PRIMARY_DEPLOYED_ITEM3,		false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE_DEPLOYED,	ACT_MP_ATTACK_CROUCH_PRIMARY_DEPLOYED_ITEM3,	false },
+};
+
+acttable_t CTFWeaponBase::s_acttableItem4[] =
+{
+	{ ACT_MP_STAND_IDLE,	ACT_MP_STAND_ITEM4,		false },
+	{ ACT_MP_CROUCH_IDLE,	ACT_MP_CROUCH_ITEM4,	false },
+	{ ACT_MP_RUN,			ACT_MP_RUN_ITEM4,		false },
+	{ ACT_MP_WALK,			ACT_MP_WALK_ITEM4,		false },
+	{ ACT_MP_AIRWALK,		ACT_MP_AIRWALK_ITEM4,	false },
+	{ ACT_MP_CROUCHWALK,	ACT_MP_CROUCHWALK_ITEM4,false },
+	{ ACT_MP_JUMP,			ACT_MP_JUMP_ITEM4,		false },
+	{ ACT_MP_JUMP_START,	ACT_MP_JUMP_START_ITEM4,false },
+	{ ACT_MP_JUMP_FLOAT,	ACT_MP_JUMP_FLOAT_ITEM4,false },
+	{ ACT_MP_JUMP_LAND,		ACT_MP_JUMP_LAND_ITEM4,	false },
+	{ ACT_MP_SWIM,			ACT_MP_SWIM_ITEM4,		false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,		ACT_MP_ATTACK_STAND_ITEM4,			false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,		ACT_MP_ATTACK_CROUCH_ITEM4,			false },
+	{ ACT_MP_ATTACK_SWIM_PRIMARYFIRE,		ACT_MP_ATTACK_SWIM_ITEM4,			false },
+	{ ACT_MP_ATTACK_AIRWALK_PRIMARYFIRE,	ACT_MP_ATTACK_AIRWALK_ITEM4,		false },
+	{ ACT_MP_ATTACK_STAND_SECONDARYFIRE,	ACT_MP_ATTACK_STAND_ITEM4_SECONDARY,false },
+	{ ACT_MP_ATTACK_CROUCH_SECONDARYFIRE,	ACT_MP_ATTACK_CROUCH_ITEM4_SECONDARY,false },
+	{ ACT_MP_ATTACK_SWIM_SECONDARYFIRE,		ACT_MP_ATTACK_SWIM_ITEM4,			false },
+	{ ACT_MP_ATTACK_AIRWALK_SECONDARYFIRE,	ACT_MP_ATTACK_AIRWALK_ITEM4,		false },
+
+	{ ACT_MP_DEPLOYED,				ACT_MP_DEPLOYED_ITEM4,				false },
+	{ ACT_MP_DEPLOYED_IDLE,			ACT_MP_DEPLOYED_IDLE_ITEM4,			false },
+	{ ACT_MP_CROUCH_DEPLOYED,		ACT_MP_CROUCHWALK_DEPLOYED_ITEM4,	false },
+	{ ACT_MP_CROUCH_DEPLOYED_IDLE,	ACT_MP_CROUCH_DEPLOYED_IDLE_ITEM4,	false },
+
+	{ ACT_MP_GESTURE_FLINCH,		ACT_MP_GESTURE_FLINCH_ITEM1,	false },
+
+	{ ACT_MP_GRENADE1_DRAW,			ACT_MP_PRIMARY_GRENADE1_DRAW,	false },
+	{ ACT_MP_GRENADE1_IDLE,			ACT_MP_PRIMARY_GRENADE1_IDLE,	false },
+	{ ACT_MP_GRENADE1_ATTACK,		ACT_MP_PRIMARY_GRENADE1_ATTACK,	false },
+	{ ACT_MP_GRENADE2_DRAW,			ACT_MP_PRIMARY_GRENADE2_DRAW,	false },
+	{ ACT_MP_GRENADE2_IDLE,			ACT_MP_PRIMARY_GRENADE2_IDLE,	false },
+	{ ACT_MP_GRENADE2_ATTACK,		ACT_MP_PRIMARY_GRENADE2_ATTACK, false },
+
+	{ ACT_MP_GESTURE_VC_HANDMOUTH,	ACT_MP_GESTURE_VC_HANDMOUTH_ITEM1,	false },
+	{ ACT_MP_GESTURE_VC_FINGERPOINT,ACT_MP_GESTURE_VC_FINGERPOINT_ITEM1,false },
+	{ ACT_MP_GESTURE_VC_FISTPUMP,	ACT_MP_GESTURE_VC_FISTPUMP_ITEM1,	false },
+	{ ACT_MP_GESTURE_VC_THUMBSUP,	ACT_MP_GESTURE_VC_THUMBSUP_ITEM1,	false },
+	{ ACT_MP_GESTURE_VC_NODYES,		ACT_MP_GESTURE_VC_NODYES_ITEM1,		false },
+	{ ACT_MP_GESTURE_VC_NODNO,		ACT_MP_GESTURE_VC_NODNO_ITEM1,		false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE_DEPLOYED,		ACT_MP_ATTACK_STAND_PRIMARY_DEPLOYED_ITEM4,		false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE_DEPLOYED,	ACT_MP_ATTACK_CROUCH_PRIMARY_DEPLOYED_ITEM4,	false },
+};
+
+acttable_t CTFWeaponBase::s_acttablePhysgun[] =
+{
+	{ ACT_MP_STAND_IDLE,		ACT_LFE_STAND_PHYSGUN,				false },
+	{ ACT_MP_CROUCH_IDLE,		ACT_LFE_CROUCH_PHYSGUN,				false },
+	{ ACT_MP_DEPLOYED,			ACT_LFE_DEPLOYED_PHYSGUN,			false },
+	{ ACT_MP_CROUCH_DEPLOYED,	ACT_LFE_CROUCHWALK_DEPLOYED,		false },
+	{ ACT_MP_RUN,				ACT_LFE_RUN_PHYSGUN,				false },
+	{ ACT_MP_WALK,				ACT_LFE_WALK_PHYSGUN,				false },
+	{ ACT_MP_AIRWALK,			ACT_LFE_AIRWALK_PHYSGUN,			false },
+	{ ACT_MP_CROUCHWALK,		ACT_LFE_CROUCHWALK_PHYSGUN,			false },
+	{ ACT_MP_JUMP,				ACT_LFE_JUMP_PHYSGUN,				false },
+	{ ACT_MP_JUMP_START,		ACT_LFE_JUMP_START_PHYSGUN,			false },
+	{ ACT_MP_JUMP_FLOAT,		ACT_LFE_JUMP_FLOAT_PHYSGUN,			false },
+	{ ACT_MP_JUMP_LAND,			ACT_LFE_JUMP_LAND_PHYSGUN,			false },
+	{ ACT_MP_SWIM,				ACT_LFE_SWIM_PHYSGUN,				false },
+	{ ACT_MP_SWIM_DEPLOYED,		ACT_LFE_SWIM_DEPLOYED_PHYSGUN,		false },
+	//{ ACT_MP_DEPLOYED,		ACT_LFE_DEPLOYED_PHYSGUN,			false },
+	{ ACT_MP_DOUBLEJUMP_CROUCH, ACT_LFE_DOUBLEJUMP_CROUCH_PHYSGUN,	false },
+
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,				ACT_LFE_ATTACK_STAND_PHYSGUN,			false },
+	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE_DEPLOYED,		ACT_LFE_ATTACK_STAND_PHYSGUN_DEPLOYED,	false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,				ACT_LFE_ATTACK_CROUCH_PHYSGUN,			false },
+	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE_DEPLOYED,	ACT_LFE_ATTACK_CROUCH_PHYSGUN_DEPLOYED,	false },
+	{ ACT_MP_ATTACK_SWIM_PRIMARYFIRE,				ACT_LFE_ATTACK_SWIM_PHYSGUN,			false },
+	{ ACT_MP_ATTACK_AIRWALK_PRIMARYFIRE,			ACT_LFE_ATTACK_AIRWALK_PHYSGUN,			false },
+
+	{ ACT_MP_GESTURE_FLINCH,		ACT_LFE_GESTURE_FLINCH_PHYSGUN,	false },
+
+	{ ACT_MP_GRENADE1_DRAW,			ACT_MP_PRIMARY_GRENADE1_DRAW,	false },
+	{ ACT_MP_GRENADE1_IDLE,			ACT_MP_PRIMARY_GRENADE1_IDLE,	false },
+	{ ACT_MP_GRENADE1_ATTACK,		ACT_MP_PRIMARY_GRENADE1_ATTACK,	false },
+	{ ACT_MP_GRENADE2_DRAW,			ACT_MP_PRIMARY_GRENADE2_DRAW,	false },
+	{ ACT_MP_GRENADE2_IDLE,			ACT_MP_PRIMARY_GRENADE2_IDLE,	false },
+	{ ACT_MP_GRENADE2_ATTACK,		ACT_MP_PRIMARY_GRENADE2_ATTACK, false },
+
+	{ ACT_MP_ATTACK_STAND_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_CROUCH_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_SWIM_GRENADE,	ACT_MP_ATTACK_STAND_GRENADE,	false },
+	{ ACT_MP_ATTACK_AIRWALK_GRENADE,ACT_MP_ATTACK_STAND_GRENADE,	false },
+
+	{ ACT_MP_GESTURE_VC_HANDMOUTH,	ACT_LFE_GESTURE_VC_HANDMOUTH_PHYSGUN, 	false },
+	{ ACT_MP_GESTURE_VC_FINGERPOINT,ACT_LFE_GESTURE_VC_FINGERPOINT_PHYSGUN,	false },
+	{ ACT_MP_GESTURE_VC_FISTPUMP,	ACT_LFE_GESTURE_VC_FISTPUMP_PHYSGUN,	false },
+	{ ACT_MP_GESTURE_VC_THUMBSUP,	ACT_LFE_GESTURE_VC_THUMBSUP_PHYSGUN, 	false },
+	{ ACT_MP_GESTURE_VC_NODYES,		ACT_LFE_GESTURE_VC_NODYES_PHYSGUN,		false },
+	{ ACT_MP_GESTURE_VC_NODNO,		ACT_LFE_GESTURE_VC_NODNO_PHYSGUN,		false },
 };
 
 viewmodel_acttable_t CTFWeaponBase::s_viewmodelacttable[] =
@@ -3309,6 +3453,7 @@ viewmodel_acttable_t CTFWeaponBase::s_viewmodelacttable[] =
 	{ ACT_BACKSTAB_VM_UP,			ACT_ITEM1_BACKSTAB_VM_UP,				TF_WPN_TYPE_ITEM1 },
 	{ ACT_BACKSTAB_VM_DOWN,			ACT_ITEM1_BACKSTAB_VM_DOWN,				TF_WPN_TYPE_ITEM1 },
 	{ ACT_BACKSTAB_VM_IDLE,			ACT_ITEM1_BACKSTAB_VM_IDLE,				TF_WPN_TYPE_ITEM1 },
+	{ ACT_VM_DRAW,					ACT_MELEE_VM_ITEM1_DRAW,				TF_WPN_TYPE_ITEM1 },
 	{ ACT_MELEE_VM_STUN,			ACT_MELEE_VM_ITEM2_STUN,				TF_WPN_TYPE_ITEM2 },
 	{ ACT_VM_DRAW,					ACT_ITEM2_VM_DRAW,						TF_WPN_TYPE_ITEM2 },
 	{ ACT_VM_HOLSTER,				ACT_ITEM2_VM_HOLSTER,					TF_WPN_TYPE_ITEM2 },
@@ -3329,7 +3474,6 @@ viewmodel_acttable_t CTFWeaponBase::s_viewmodelacttable[] =
 	{ ACT_BACKSTAB_VM_UP,			ACT_ITEM2_BACKSTAB_VM_UP,				TF_WPN_TYPE_ITEM2 },
 	{ ACT_BACKSTAB_VM_DOWN,			ACT_ITEM2_BACKSTAB_VM_DOWN,				TF_WPN_TYPE_ITEM2 },
 	{ ACT_BACKSTAB_VM_IDLE,			ACT_ITEM2_BACKSTAB_VM_IDLE,				TF_WPN_TYPE_ITEM2 },
-	{ ACT_MELEE_VM_STUN,			ACT_MELEE_VM_ITEM2_STUN,				TF_WPN_TYPE_ITEM2 },
 	{ ACT_MP_ATTACK_STAND_PREFIRE,	ACT_ITEM2_ATTACK_STAND_PREFIRE,			TF_WPN_TYPE_ITEM2 },
 	{ ACT_MP_ATTACK_STAND_POSTFIRE,	ACT_ITEM2_ATTACK_STAND_POSTFIRE,		TF_WPN_TYPE_ITEM2 },
 	{ ACT_MP_ATTACK_STAND_STARTFIRE,ACT_ITEM2_ATTACK_STAND_STARTFIRE,		TF_WPN_TYPE_ITEM2 },
@@ -3337,6 +3481,53 @@ viewmodel_acttable_t CTFWeaponBase::s_viewmodelacttable[] =
 	{ ACT_MP_ATTACK_CROUCH_POSTFIRE,ACT_ITEM2_ATTACK_CROUCH_POSTFIRE,		TF_WPN_TYPE_ITEM2 },
 	{ ACT_MP_ATTACK_SWIM_PREFIRE,	ACT_ITEM2_ATTACK_SWIM_PREFIRE,			TF_WPN_TYPE_ITEM2 },
 	{ ACT_MP_ATTACK_SWIM_POSTFIRE,	ACT_ITEM2_ATTACK_SWIM_POSTFIRE,			TF_WPN_TYPE_ITEM2 },
+	{ ACT_MELEE_VM_STUN,			ACT_MELEE_VM_ITEM2_STUN,				TF_WPN_TYPE_ITEM2 },
+	{ ACT_VM_DRAW,					ACT_ITEM3_VM_DRAW,						TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_HOLSTER,				ACT_ITEM3_VM_HOLSTER,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_IDLE,					ACT_ITEM3_VM_IDLE,						TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_PULLBACK,				ACT_ITEM3_VM_PULLBACK,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_PRIMARYATTACK,			ACT_ITEM3_VM_PRIMARYATTACK,				TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_SECONDARYATTACK,		ACT_ITEM3_VM_SECONDARYATTACK,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_RELOAD,				ACT_ITEM3_VM_RELOAD,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_DRYFIRE,				ACT_ITEM3_VM_DRYFIRE,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_IDLE_TO_LOWERED,		ACT_ITEM3_VM_IDLE_TO_LOWERED,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_IDLE_LOWERED,			ACT_ITEM3_VM_IDLE_LOWERED,				TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_LOWERED_TO_IDLE, 		ACT_ITEM3_VM_LOWERED_TO_IDLE,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_IDLE_2,				ACT_ITEM3_VM_IDLE_2,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_IDLE_3,				ACT_ITEM3_VM_IDLE_3,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_LOWERED_TO_IDLE,		ACT_ITEM3_VM_LOWERED_TO_IDLE,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_HITCENTER, 			ACT_ITEM3_VM_HITCENTER,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_SWINGHARD,				ACT_ITEM3_VM_SWINGHARD,					TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_STAND_PREFIRE,	ACT_ITEM3_ATTACK_STAND_PREFIRE,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_STAND_POSTFIRE,	ACT_ITEM3_ATTACK_STAND_POSTFIRE,		TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_STAND_STARTFIRE,ACT_ITEM3_ATTACK_STAND_STARTFIRE,		TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_CROUCH_PREFIRE,	ACT_ITEM3_ATTACK_CROUCH_PREFIRE,		TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_CROUCH_POSTFIRE,ACT_ITEM3_ATTACK_CROUCH_POSTFIRE,		TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_SWIM_PREFIRE,	ACT_ITEM3_ATTACK_SWIM_PREFIRE,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_MP_ATTACK_SWIM_POSTFIRE,	ACT_ITEM3_ATTACK_SWIM_POSTFIRE,			TF_WPN_TYPE_ITEM3 },
+	{ ACT_VM_DRAW,					ACT_ITEM4_VM_DRAW,						TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_HOLSTER,				ACT_ITEM4_VM_HOLSTER,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_IDLE,					ACT_ITEM4_VM_IDLE,						TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_PULLBACK,				ACT_ITEM4_VM_PULLBACK,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_PRIMARYATTACK,			ACT_ITEM4_VM_PRIMARYATTACK,				TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_SECONDARYATTACK,		ACT_ITEM4_VM_SECONDARYATTACK,			TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_RELOAD,				ACT_ITEM4_VM_RELOAD,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_DRYFIRE,				ACT_ITEM4_VM_DRYFIRE,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_IDLE_TO_LOWERED,		ACT_ITEM4_VM_IDLE_TO_LOWERED,			TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_IDLE_LOWERED,			ACT_ITEM4_VM_IDLE_LOWERED,				TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_LOWERED_TO_IDLE, 		ACT_ITEM4_VM_LOWERED_TO_IDLE,			TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_IDLE_2,				ACT_ITEM4_VM_IDLE_2,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_IDLE_3,				ACT_ITEM4_VM_IDLE_3,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_LOWERED_TO_IDLE,		ACT_ITEM4_VM_LOWERED_TO_IDLE,			TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_HITCENTER, 			ACT_ITEM4_VM_HITCENTER,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_VM_SWINGHARD,				ACT_ITEM4_VM_SWINGHARD,					TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_STAND_PREFIRE,	ACT_ITEM4_ATTACK_STAND_PREFIRE,			TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_STAND_POSTFIRE,	ACT_ITEM4_ATTACK_STAND_POSTFIRE,		TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_STAND_STARTFIRE,ACT_ITEM4_ATTACK_STAND_STARTFIRE,		TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_CROUCH_PREFIRE,	ACT_ITEM4_ATTACK_CROUCH_PREFIRE,		TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_CROUCH_POSTFIRE,ACT_ITEM4_ATTACK_CROUCH_POSTFIRE,		TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_SWIM_PREFIRE,	ACT_ITEM4_ATTACK_SWIM_PREFIRE,			TF_WPN_TYPE_ITEM4 },
+	{ ACT_MP_ATTACK_SWIM_POSTFIRE,	ACT_ITEM4_ATTACK_SWIM_POSTFIRE,			TF_WPN_TYPE_ITEM4 },
 	{ ACT_VM_DRAW,					ACT_MELEE_ALLCLASS_VM_DRAW,				TF_WPN_TYPE_MELEE_ALLCLASS },
 	{ ACT_VM_HOLSTER,				ACT_MELEE_ALLCLASS_VM_HOLSTER,			TF_WPN_TYPE_MELEE_ALLCLASS },
 	{ ACT_VM_IDLE,					ACT_MELEE_ALLCLASS_VM_IDLE,				TF_WPN_TYPE_MELEE_ALLCLASS },
@@ -3368,9 +3559,9 @@ viewmodel_acttable_t CTFWeaponBase::s_viewmodelacttable[] =
 	{ ACT_VM_IDLE,					ACT_PRIMARY_VM_IDLE,					TF_WPN_TYPE_PRIMARY2 },
 	{ ACT_VM_PULLBACK,				ACT_PRIMARY_VM_PULLBACK,				TF_WPN_TYPE_PRIMARY2 },
 	{ ACT_VM_PRIMARYATTACK,			ACT_PRIMARY_VM_PRIMARYATTACK,			TF_WPN_TYPE_PRIMARY2 },
-	{ ACT_VM_RELOAD,				ACT_PRIMARY_VM_RELOAD_2,				TF_WPN_TYPE_PRIMARY2 },
-	{ ACT_RELOAD_START,				ACT_PRIMARY_RELOAD_START_2,				TF_WPN_TYPE_PRIMARY2 },
-	{ ACT_RELOAD_FINISH,			ACT_PRIMARY_RELOAD_FINISH_2,			TF_WPN_TYPE_PRIMARY2 },
+	//{ ACT_VM_RELOAD,				ACT_PRIMARY_VM_RELOAD_2,				TF_WPN_TYPE_PRIMARY2 },
+	//{ ACT_RELOAD_START,				ACT_PRIMARY_RELOAD_START_2,				TF_WPN_TYPE_PRIMARY2 },
+	//{ ACT_RELOAD_FINISH,			ACT_PRIMARY_RELOAD_FINISH_2,			TF_WPN_TYPE_PRIMARY2 },
 	{ ACT_VM_DRYFIRE,				ACT_PRIMARY_VM_DRYFIRE,					TF_WPN_TYPE_PRIMARY2 },
 	{ ACT_VM_IDLE_TO_LOWERED,		ACT_PRIMARY_VM_IDLE_TO_LOWERED,			TF_WPN_TYPE_PRIMARY2 },
 	{ ACT_VM_IDLE_LOWERED,			ACT_PRIMARY_VM_IDLE_LOWERED, 			TF_WPN_TYPE_PRIMARY2 },
@@ -3379,6 +3570,26 @@ viewmodel_acttable_t CTFWeaponBase::s_viewmodelacttable[] =
 	//{ ACT_PRIMARY_RELOAD_START,		ACT_PRIMARY_RELOAD_START_3, 		TF_WPN_TYPE_PRIMARY2 },
 	//{ ACT_PRIMARY_RELOAD_FINISH,		ACT_PRIMARY_RELOAD_FINISH_3, 		TF_WPN_TYPE_PRIMARY2 },
 	//{ ACT_PRIMARY_VM_PRIMARYATTACK,	ACT_PRIMARY_VM_PRIMARYATTACK_3, TF_WPN_TYPE_PRIMARY2 },
+	{ ACT_VM_DRAW,					ACT_LFE_PHYSGUN_VM_DRAW,				LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_HOLSTER, 				ACT_LFE_PHYSGUN_VM_HOLSTER,				LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_IDLE, 					ACT_LFE_PHYSGUN_VM_IDLE, 				LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_PULLBACK,				ACT_LFE_PHYSGUN_VM_PULLBACK, 			LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_PRIMARYATTACK,			ACT_LFE_PHYSGUN_VM_PRIMARYATTACK, 		LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_SECONDARYATTACK,		ACT_LFE_PHYSGUN_VM_SECONDARYATTACK, 	LFE_WPN_TYPE_PHYSGUN },
+	//{ ACT_VM_RELOAD,				ACT_LFE_PHYSGUN_VM_RELOAD, 				LFE_WPN_TYPE_PHYSGUN },
+	//{ ACT_RELOAD_START,				ACT_LFE_PHYSGUN_RELOAD_START, 			LFE_WPN_TYPE_PHYSGUN },
+	//{ ACT_RELOAD_FINISH,			ACT_LFE_PHYSGUN_RELOAD_FINISH, 			LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_DRYFIRE,				ACT_LFE_PHYSGUN_VM_DRYFIRE, 			LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_IDLE_TO_LOWERED,		ACT_LFE_PHYSGUN_VM_IDLE_TO_LOWERED, 	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_IDLE_LOWERED,			ACT_LFE_PHYSGUN_VM_IDLE_LOWERED,		LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_VM_LOWERED_TO_IDLE,		ACT_LFE_PHYSGUN_VM_LOWERED_TO_IDLE,		LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_STAND_PREFIRE,	ACT_LFE_PHYSGUN_ATTACK_STAND_PREFIRE,	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_STAND_POSTFIRE,	ACT_LFE_PHYSGUN_ATTACK_STAND_POSTFIRE,	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_STAND_STARTFIRE,ACT_LFE_PHYSGUN_ATTACK_STAND_STARTFIRE,	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_CROUCH_PREFIRE,	ACT_LFE_PHYSGUN_ATTACK_CROUCH_PREFIRE,	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_CROUCH_POSTFIRE,ACT_LFE_PHYSGUN_ATTACK_CROUCH_POSTFIRE,	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_SWIM_PREFIRE,	ACT_LFE_PHYSGUN_ATTACK_SWIM_PREFIRE,	LFE_WPN_TYPE_PHYSGUN },
+	{ ACT_MP_ATTACK_SWIM_POSTFIRE,	ACT_LFE_PHYSGUN_ATTACK_SWIM_POSTFIRE,	LFE_WPN_TYPE_PHYSGUN },
 };
 
 
@@ -3432,12 +3643,16 @@ acttable_t *CTFWeaponBase::ActivityList( int &iActivityCount )
 		iActivityCount = ARRAYSIZE( s_acttablePrimary2 );
 		break;
 	case TF_WPN_TYPE_ITEM3:
-		pTable = s_acttableItem1;
-		iActivityCount = ARRAYSIZE( s_acttableItem1 );
+		pTable = s_acttableItem3;
+		iActivityCount = ARRAYSIZE( s_acttableItem3 );
 		break;
 	case TF_WPN_TYPE_ITEM4:
-		pTable = s_acttableItem2;
-		iActivityCount = ARRAYSIZE( s_acttableItem2 );
+		pTable = s_acttableItem4;
+		iActivityCount = ARRAYSIZE( s_acttableItem4 );
+		break;
+	case LFE_WPN_TYPE_PHYSGUN:
+		pTable = s_acttablePhysgun;
+		iActivityCount = ARRAYSIZE( s_acttablePhysgun );
 		break;
 	}
 
@@ -3888,6 +4103,341 @@ IMaterial *CWeaponInvisProxy::GetMaterial()
 
 EXPOSE_INTERFACE( CWeaponInvisProxy, IMaterialProxy, "weapon_invis" IMATERIAL_PROXY_INTERFACE_VERSION );
 #endif // CLIENT_DLL
+
+#ifdef GAME_DLL
+void CTFWeaponBase::DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir )
+{
+	if ( !TFGameRules() )
+		return;
+
+	if ( ( pEntity->GetTeamNumber() == pAttacker->GetTeamNumber() ) && !TFGameRules()->IsFriendlyFire() )
+		return;
+
+	pEntity->Deflected( pAttacker, vecDir );
+	pEntity->EmitSound( "Weapon_FlameThrower.AirBurstAttackDeflect" );
+
+
+	CEffectData	data;
+	data.m_nHitBox = GetParticleSystemIndex( "deflect_fx" );
+	data.m_vOrigin = pEntity->GetAbsOrigin();
+	data.m_vAngles = vec3_angle;
+	data.m_nEntIndex = 0;
+
+	CPVSFilter filter( GetAbsOrigin() );
+	te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+}
+
+void CTFWeaponBase::DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, Vector &vecDir )
+{
+	if ( !pVictim )
+		return;
+
+	int nPushbackDisabled = 0;
+	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
+
+	if ( pVictim->InSameTeam( pAttacker ) && !TFGameRules()->IsFriendlyFire() )
+	{
+		if ( pVictim->m_Shared.InCond( TF_COND_BURNING ) )
+		{
+			// Extinguish teammates.
+			pVictim->m_Shared.RemoveCond( TF_COND_BURNING );
+			pVictim->EmitSound( "TFPlayer.FlameOut" );
+
+			float flExReHp = 0.0f;
+			CALL_ATTRIB_HOOK_FLOAT( flExReHp, extinguish_restores_health );
+
+			if ( flExReHp )
+			{
+				int iHealthRestored = pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
+
+				if ( iHealthRestored )
+				{
+					IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
+
+					if ( event )
+					{
+						event->SetInt( "amount", iHealthRestored );
+						event->SetInt( "entindex", pAttacker->entindex() );
+
+						gameeventmanager->FireEvent( event );
+					}
+				}
+			}
+	
+			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
+		}
+	}
+	else if ( nPushbackDisabled != 1 )
+	{
+		// Don't push players if they're too far off to the side. Ignore Z.
+		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
+
+		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
+		VectorNormalize( vecVictimDir2D );
+	
+		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
+		VectorNormalize( vecDir2D );
+
+		if ( tf_airblast_cray_debug.GetBool() )
+		{
+			NDebugOverlay::VertArrow(pAttacker->WorldSpaceCenter(), pAttacker->WorldSpaceCenter() + (100.0f * vecDir),
+				3.0f, 0, 0, 50, 255, true, 5.0f);
+			NDebugOverlay::EntityTextAtPosition(pAttacker->WorldSpaceCenter() + (100.0f * vecDir), -1,
+				"xhair", 5.0f, 255, 255, 255 );
+			
+			NDebugOverlay::VertArrow(pAttacker->WorldSpaceCenter(), pAttacker->WorldSpaceCenter() + (100.0f * vecVictimDir.Normalized()),
+				3.0f, 0, 50, 0, 255, true, 5.0f);
+			NDebugOverlay::EntityTextAtPosition(pAttacker->WorldSpaceCenter() + (100.0f * vecVictimDir.Normalized()), -1,
+				"delta-WSC", 5.0f, 255, 255, 255 );
+		}
+
+		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
+		if ( flDot >= 0.8 )
+		{
+			if ( tf_airblast_cray.GetBool() )
+			{
+				float flPushbackScale = tf_airblast_cray_power.GetFloat();
+				float flVerticalPushbackScale = 0;
+				CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
+				CALL_ATTRIB_HOOK_FLOAT( flVerticalPushbackScale, airblast_vertical_pushback_scale );
+
+				// Push enemy players.
+				pVictim->ApplyGenericPushbackImpulse( vecDir * flPushbackScale );
+				pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+
+				if ( tf_airblast_cray_debug.GetBool() )
+				{
+					Vector vA = pVictim->WorldSpaceCenter();
+					Vector vB = vA + ((flPushbackScale          * vecVictimDir.Normalized()) / 3.0f);
+					Vector vC = vB + ((flVerticalPushbackScale	* Vector(0.0f, 0.0f, 1.0f)) / 3.0f);
+
+					NDebugOverlay::VertArrow(vA, vB, 3.0f, 50, 0, 0, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vA + vB) / 2.0f, 0, "Delta-WSC", 5.0f, 255, 255, 255);
+					NDebugOverlay::EntityTextAtPosition((vA + vB) / 2.0f, 1, "Impulse", 5.0f, 255, 255, 255);
+					
+					NDebugOverlay::VertArrow(vB, vC, 3.0f, 50, 50, 0, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vB + vC) / 2.0f, 0, "Vertical", 5.0f, 255, 255, 255);
+					NDebugOverlay::EntityTextAtPosition((vB + vC) / 2.0f, 1, "Impulse", 5.0f, 255, 255, 255);
+					
+					NDebugOverlay::VertArrow(vA, vC, 3.0f, 50, 50, 50, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vA + vC) / 2.0f, 0, "Vector Sum", 5.0f, 255, 255, 255);
+				}
+			}
+			else
+			{
+				float flPushbackScale = 500;
+				CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
+				// Push enemy players.
+				pVictim->SetGroundEntity( NULL );
+				pVictim->SetAbsVelocity( vecDir * flPushbackScale );
+				pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+				pVictim->SetAirblastState( true );
+			}
+
+			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
+			pVictim->AddDamagerToHistory( pAttacker );
+		}
+	}
+}
+
+void CTFWeaponBase::DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Vector &vecDir )
+{
+	if ( !pVictim )
+		return;
+
+	int nPushbackDisabled = 0;
+	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
+
+	if ( pVictim->InSameTeam( pAttacker ) && !TFGameRules()->IsHL1FriendlyFire() )
+	{
+		if ( pVictim->IsOnFire() )
+		{
+			// we should calling Extinguish instead of RemoveCond for npcs.
+			pVictim->Extinguish();
+			pVictim->EmitSound( "TFPlayer.FlameOut" );
+
+			float flExReHp = 0.0f;
+			CALL_ATTRIB_HOOK_FLOAT( flExReHp, extinguish_restores_health );
+
+			if ( flExReHp )
+			{
+				int iHealthRestored = pAttacker->TakeHealth( flExReHp, DMG_GENERIC );
+
+				if ( iHealthRestored )
+				{
+					IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
+
+					if ( event )
+					{
+						event->SetInt( "amount", iHealthRestored );
+						event->SetInt( "entindex", pAttacker->entindex() );
+
+						gameeventmanager->FireEvent( event );
+					}
+				}
+			}
+
+			CTF_GameStats.Event_PlayerAwardBonusPoints( pAttacker, pVictim, 1 );
+		}
+	}
+	else if ( nPushbackDisabled != 1 )
+	{
+		// Don't push npcs if they're too far off to the side. Ignore Z.
+		Vector vecVictimDir = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
+
+		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
+		VectorNormalize( vecVictimDir2D );
+
+		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
+		VectorNormalize( vecDir2D );
+
+		if ( tf_airblast_cray_debug.GetBool() )
+		{
+			NDebugOverlay::VertArrow(pAttacker->WorldSpaceCenter(), pAttacker->WorldSpaceCenter() + (100.0f * vecDir),
+				3.0f, 0, 0, 50, 255, true, 5.0f);
+			NDebugOverlay::EntityTextAtPosition(pAttacker->WorldSpaceCenter() + (100.0f * vecDir), -1,
+				"xhair", 5.0f, 255, 255, 255 );
+			
+			NDebugOverlay::VertArrow(pAttacker->WorldSpaceCenter(), pAttacker->WorldSpaceCenter() + (100.0f * vecVictimDir.Normalized()),
+				3.0f, 0, 50, 0, 255, true, 5.0f);
+			NDebugOverlay::EntityTextAtPosition(pAttacker->WorldSpaceCenter() + (100.0f * vecVictimDir.Normalized()), -1,
+				"delta-WSC", 5.0f, 255, 255, 255 );
+		}
+
+		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
+		if ( flDot >= 0.8 )
+		{
+			if ( tf_airblast_cray.GetBool() )
+			{
+				float flPushbackScale = tf_airblast_cray_power.GetFloat();
+				CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
+				// Push enemy NPC.
+				pVictim->ApplyGenericPushbackImpulse( vecDir * flPushbackScale );
+				pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+			}
+			else
+			{
+				float flPushbackScale = 500;
+				float flVerticalPushbackScale = 0;
+				CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
+				CALL_ATTRIB_HOOK_FLOAT( flVerticalPushbackScale, airblast_vertical_pushback_scale );
+				// Push enemy NPC.
+				pVictim->SetGroundEntity( NULL );
+				pVictim->SetAbsVelocity( vecDir * flPushbackScale );
+				pVictim->EmitSound( "TFPlayer.AirBlastImpact" );
+				pVictim->AddCond( TF_COND_KNOCKED_INTO_AIR );
+
+				if ( tf_airblast_cray_debug.GetBool() )
+				{
+					Vector vA = pVictim->WorldSpaceCenter();
+					Vector vB = vA + ((flPushbackScale          * vecVictimDir.Normalized()) / 3.0f);
+					Vector vC = vB + ((flVerticalPushbackScale	* Vector(0.0f, 0.0f, 1.0f)) / 3.0f);
+
+					NDebugOverlay::VertArrow(vA, vB, 3.0f, 50, 0, 0, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vA + vB) / 2.0f, 0, "Delta-WSC", 5.0f, 255, 255, 255);
+					NDebugOverlay::EntityTextAtPosition((vA + vB) / 2.0f, 1, "Impulse", 5.0f, 255, 255, 255);
+					
+					NDebugOverlay::VertArrow(vB, vC, 3.0f, 50, 50, 0, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vB + vC) / 2.0f, 0, "Vertical", 5.0f, 255, 255, 255);
+					NDebugOverlay::EntityTextAtPosition((vB + vC) / 2.0f, 1, "Impulse", 5.0f, 255, 255, 255);
+					
+					NDebugOverlay::VertArrow(vA, vC, 3.0f, 50, 50, 50, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vA + vC) / 2.0f, 0, "Vector Sum", 5.0f, 255, 255, 255);
+				}
+			}
+
+			// Add pusher as recent damager so he can get a kill credit for pushing a player to his death.
+			pVictim->AddDamagerToHistory( pAttacker );
+		}
+		pVictim->Deflected( pAttacker, vecDir );
+	}
+}
+
+void CTFWeaponBase::DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir )
+{
+	int nPushbackDisabled = 0;
+	CALL_ATTRIB_HOOK_INT( nPushbackDisabled, airblast_pushback_disabled );
+
+	if ( lfe_allow_airblast_physics.GetBool() && nPushbackDisabled != 1 )
+	{
+		// Don't push physics if they're too far off to the side. Ignore Z.
+		Vector vecVictimDir = pEntity->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
+
+		Vector vecVictimDir2D( vecVictimDir.x, vecVictimDir.y, 0.0f );
+		VectorNormalize( vecVictimDir2D );
+
+		Vector vecDir2D( vecDir.x, vecDir.y, 0.0f );
+		VectorNormalize( vecDir2D );
+
+		//float flFalloff = ( !lfe_airblast_physics_falloff.GetBool() ? 1.0f : RemapValClamped( vecDir, 128, 128*0.25f, 0.0f, 1.0f );
+		//float flFalloff = 1.0f;
+
+		if ( tf_airblast_cray_debug.GetBool() )
+		{
+			NDebugOverlay::VertArrow(pAttacker->WorldSpaceCenter(), pAttacker->WorldSpaceCenter() + (100.0f * vecDir),
+				3.0f, 0, 0, 50, 255, true, 5.0f);
+			NDebugOverlay::EntityTextAtPosition(pAttacker->WorldSpaceCenter() + (100.0f * vecDir), -1,
+				"xhair", 5.0f, 255, 255, 255 );
+			
+			NDebugOverlay::VertArrow(pAttacker->WorldSpaceCenter(), pAttacker->WorldSpaceCenter() + (100.0f * vecVictimDir.Normalized()),
+				3.0f, 0, 50, 0, 255, true, 5.0f);
+			NDebugOverlay::EntityTextAtPosition(pAttacker->WorldSpaceCenter() + (100.0f * vecVictimDir.Normalized()), -1,
+				"delta-WSC", 5.0f, 255, 255, 255 );
+		}
+
+		float flDot = DotProduct( vecDir2D, vecVictimDir2D );
+		if ( flDot >= 0.8 )
+		{
+			IPhysicsObject *pPhys = pEntity->VPhysicsGetObject();
+			if ( pPhys )
+			{
+				float flPushbackScale = lfe_airblast_physics_force.GetFloat();
+				float flVerticalPushbackScale = 0;
+				CALL_ATTRIB_HOOK_FLOAT( flPushbackScale, airblast_pushback_scale );
+				CALL_ATTRIB_HOOK_FLOAT( flVerticalPushbackScale, airblast_vertical_pushback_scale );
+
+				pEntity->EmitSound( "TFPlayer.AirBlastImpact" );
+				//float massFactor = clamp( pPhys->GetMass(), 0.5, 15 );
+				float massFactor = pPhys->GetMass();
+				massFactor = RemapVal( massFactor, 0.5, 15, 0.5, 4 );
+				vecDir *= flPushbackScale * massFactor;
+
+				pPhys->Wake();
+				pPhys->ApplyForceCenter( vecDir );
+				AngularImpulse aVel = RandomAngularImpulse( -10, 10 ) * massFactor;
+				pPhys->ApplyTorqueCenter( aVel );
+
+				CEffectData	data;
+				data.m_nHitBox = GetParticleSystemIndex( "deflect_fx" );
+				data.m_vOrigin = pEntity->WorldSpaceCenter();
+				data.m_vAngles = vec3_angle;
+				data.m_nEntIndex = 0;
+
+				CPVSFilter filter( GetAbsOrigin() );
+				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
+
+				if ( tf_airblast_cray_debug.GetBool() )
+				{
+					Vector vA = pEntity->WorldSpaceCenter();
+					Vector vB = vA + ((flPushbackScale          * vecVictimDir.Normalized()) / 3.0f);
+					Vector vC = vB + ((flVerticalPushbackScale	* Vector(0.0f, 0.0f, 1.0f)) / 3.0f);
+
+					NDebugOverlay::VertArrow(vA, vB, 3.0f, 50, 0, 0, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vA + vB) / 2.0f, 0, "Delta-WSC", 5.0f, 255, 255, 255);
+					NDebugOverlay::EntityTextAtPosition((vA + vB) / 2.0f, 1, "Impulse", 5.0f, 255, 255, 255);
+					
+					NDebugOverlay::VertArrow(vB, vC, 3.0f, 50, 50, 0, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vB + vC) / 2.0f, 0, "Vertical", 5.0f, 255, 255, 255);
+					NDebugOverlay::EntityTextAtPosition((vB + vC) / 2.0f, 1, "Impulse", 5.0f, 255, 255, 255);
+					
+					NDebugOverlay::VertArrow(vA, vC, 3.0f, 50, 50, 50, 255, true, 5.0f);
+					NDebugOverlay::EntityTextAtPosition((vA + vC) / 2.0f, 0, "Vector Sum", 5.0f, 255, 255, 255);
+				}
+			}
+		}
+	}
+}
+#endif
 
 CTFWeaponInfo *GetTFWeaponInfo( int iWeapon )
 {

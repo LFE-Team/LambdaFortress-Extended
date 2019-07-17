@@ -113,7 +113,9 @@ extern ConVar tf_damage_disablespread;
 extern ConVar tf_damage_range;
 extern ConVar tf_damage_lineardist;
 extern ConVar tf_damage_events_track_for;
-extern ConVar lfe_debug_director_print;
+extern ConVar tf_airblast_cray_debug;
+extern ConVar tf_airblast_cray_ground_minz;
+extern ConVar tf_airblast_cray_ground_reflect;
 #endif
 
 // dvs: for opening doors -- these should probably not be here
@@ -131,7 +133,6 @@ extern ConVar lfe_debug_director_print;
 #include "tf_weapon_medigun.h"
 #include "triggers.h"
 #include "tf_gamestats.h"
-#include "entity_capture_flag.h"
 #include "tf_shareddefs.h"
 #endif
 
@@ -256,7 +257,7 @@ int g_TFClassTeams[] =
 	TF_TEAM_YELLOW,	//CLASS_ANTLION,
 	TEAM_UNASSIGNED,	//CLASS_BARNACLE,
 	TEAM_UNASSIGNED,	//CLASS_BULLSEYE,
-	//TEAM_UNASSIGNED,	////CLASS_BULLSQUID,	
+	TEAM_UNASSIGNED,	////CLASS_BULLSQUID,	
 	TF_TEAM_RED,	//CLASS_CITIZEN_PASSIVE,	
 	TF_TEAM_RED,	//CLASS_CITIZEN_REBEL,
 	TF_TEAM_BLUE,	//CLASS_COMBINE,
@@ -666,14 +667,6 @@ void CAI_BaseNPC::SelectDeathPose( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 {
-	if (FClassnameIs(this, "npc_turret_floor"))
-	{
-	}
-	else if (info.GetAttacker()->GetTeamNumber() == TF_TEAM_RED && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && 
-			sv_dynamicnpcs.GetFloat() == 1 && (GetTeamNumber() == TF_TEAM_BLUE || GetTeamNumber() == TF_TEAM_YELLOW || GetTeamNumber() == TF_TEAM_GREEN))
-	{
-		TFGameRules()->iDirectorAnger = TFGameRules()->iDirectorAnger + 2;
-	}
 	if (IsCurSchedule(SCHED_NPC_FREEZE))
 	{
 		// We're frozen; don't die.
@@ -683,13 +676,23 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	Wake( false );
 
 #ifdef TF_CLASSIC
+	RemoveAllCond();
+
+	if (FClassnameIs(this, "npc_turret_floor"))
+	{
+	}
+	else if (info.GetAttacker()->GetTeamNumber() == TF_TEAM_RED && (TFGameRules()->IsAnyCoOp() || TFGameRules()->IsVersus()) && 
+			sv_dynamicnpcs.GetBool() && (GetTeamNumber() == TF_TEAM_BLUE || GetTeamNumber() == TF_TEAM_YELLOW || GetTeamNumber() == TF_TEAM_GREEN))
+	{
+		TFGameRules()->m_iDirectorAnger = TFGameRules()->m_iDirectorAnger + 2;
+	}
+
 	int killer_index = 0;
 
 	// Find the killer & the scorer
 	CAI_BaseNPC *pVictim = this;
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pKiller = info.GetAttacker();
-	CTFPlayer *pTFKiller = ToTFPlayer( pKiller );
 	//CBasePlayer *pScorer = TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
 	CTFPlayer *pScorer = ToTFPlayer( TFGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim ) );
 	CBaseEntity *pAssister = TFGameRules()->GetAssister( pVictim, pKiller, pInflictor );
@@ -698,6 +701,16 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 	const char *killer_weapon_name = TFGameRules()->GetKillingWeaponName( info, NULL, iWeaponID );
 	const char *killer_weapon_log_name = NULL;
 
+	CTFWeaponBase *pKillerWeapon = NULL;
+	if ( info.GetWeapon() )
+	{
+		pKillerWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
+	}
+	else if ( pKiller && pKiller->IsPlayer() )
+	{
+		// Assume that player used his currently active weapon.
+		pKillerWeapon = ToTFPlayer( pKiller )->GetActiveTFWeapon();
+	}
 
 	if ( iWeaponID && pScorer )
 	{
@@ -750,40 +763,7 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 			gameeventmanager->FireEvent( event );
 		}
 	}
-
-	// If the npc has a capture flag and was killed by a player, award that player a defense
-	if ( HasItem() && pTFKiller && ( pKiller != this ) )
-	{
-		CCaptureFlag *pCaptureFlag = dynamic_cast<CCaptureFlag *>( GetItem() );
-		if ( pCaptureFlag )
-		{
-			IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
-			if ( event )
-			{
-				event->SetInt( "player", pTFKiller->entindex() );
-				event->SetInt( "eventtype", TF_FLAGEVENT_DEFEND );
-				event->SetInt( "priority", 8 );
-				gameeventmanager->FireEvent( event );
-			}
-			CTF_GameStats.Event_PlayerDefendedPoint( pTFKiller );
-		}
-	}
-
-	// If the npc has a capture flag, drop it.
-	if ( HasItem() )
-	{
-		GetItem()->Drop( this, true );
-
-		IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
-		if ( event )
-		{
-			event->SetInt( "player", entindex() );
-			event->SetInt( "eventtype", TF_FLAGEVENT_DROPPED );
-			event->SetInt( "priority", 8 );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-
+	
 	// Ragdoll should burn if NPC burned to death.
 	m_bBurningDeath = IsOnFire() || ( info.GetDamageType() & (DMG_BURN | DMG_IGNITE) );
 
@@ -845,6 +825,13 @@ void CAI_BaseNPC::Event_Killed( const CTakeDamageInfo &info )
 				}
 			}
 		}
+	}
+
+	// Handle on-kill effects.
+	if ( pKillerWeapon && pKiller != this )
+	{
+		// Notify the damaging weapon.
+		pKillerWeapon->OnPlayerKill( this, info );
 	}
 
 	// fixed jarate death
@@ -1078,13 +1065,8 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
-	/*
-	if ( pTFAttacker->m_Shared.IsMiniCritBoosted() )
-	{
-		bitsDamage |= DMG_MINICRITICAL;
-		info.AddDamageType( DMG_MINICRITICAL );
-	}
-	*/
+	//CAI_BaseNPC *pNPCInflictor = dynamic_cast<CAI_BaseNPC *>( pInflictor );
+
 	// Handle on-hit effects.
 	if ( pWeapon && pAttacker != this )
 	{
@@ -1126,20 +1108,18 @@ int CAI_BaseNPC::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		int nCritWhileAirborne = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nCritWhileAirborne, crit_while_airborne );
-
 		if ( nCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
 		{
 			bitsDamage |= DMG_CRITICAL;
 			info.AddDamageType( DMG_CRITICAL );
 		}
 
-		int nMiniCritWhileAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritWhileAirborne, crit_while_airborne );
-
-		if ( nMiniCritWhileAirborne && pTFAttacker && pTFAttacker->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
+		int nMiniCritBecomeCrits = 0;
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, nMiniCritBecomeCrits, minicrits_become_crits );
+		if ( nMiniCritBecomeCrits && ( bitsDamage & DMG_MINICRITICAL ) )
 		{
-			bitsDamage |= DMG_MINICRITICAL;
-			info.AddDamageType( DMG_MINICRITICAL );
+			bitsDamage |= DMG_CRITICAL;
+			info.AddDamageType( DMG_CRITICAL );
 		}
 
 		// Notify the damaging weapon.
@@ -1717,6 +1697,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	int iOldHealth = m_iHealth;
 	bool bIgniting = false;
 	bool bBleeding = false;
+	float flBleeding = 0;
 
 	if ( m_takedamage != DAMAGE_EVENTS_ONLY )
 	{
@@ -1732,9 +1713,8 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		if ( !bBleeding )
 		{
-			int iBleeding = 0;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, iBleeding, bleeding_duration );
-			bBleeding = ( iBleeding != 0 );
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, flBleeding, bleeding_duration );
+			bBleeding = ( flBleeding != 0 );
 		}
 
 		// Take damage - round to the nearest integer.
@@ -1756,7 +1736,7 @@ int CAI_BaseNPC::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if ( bBleeding )
 	{
-		Bleed( ToTFPlayer( pAttacker ), pTFWeapon );
+		MakeBleed( ToTFPlayer( pAttacker ), pTFWeapon, flBleeding );
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent( "npc_hurt" );
@@ -4085,20 +4065,7 @@ void CAI_BaseNPC::RunAnimation( void )
 	{
 		SetPlaybackRate( 1.0f );
 	}
-
-	// Second, see if any flags are slowing them down
-	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
-	{
-		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( GetItem() );
-
-		if ( pFlag )
-		{
-			if ( pFlag->GetGameType() == TF_FLAGTYPE_ATTACK_DEFEND || pFlag->GetGameType() == TF_FLAGTYPE_TERRITORY_CONTROL )
-			{
-				SetPlaybackRate( 0.6f );
-			}
-		}
-	}
+	
 #endif
 
 	DispatchAnimEvents( this );
@@ -4312,7 +4279,10 @@ void CAI_BaseNPC::UpdateEfficiency( bool bInPVS )
 				}
 			}
 			
-			iSound = pCurrentSound->NextSound();
+			if ( pCurrentSound )
+				iSound = pCurrentSound->NextSound();
+			else
+				break;
 		}
 	}
 
@@ -4503,7 +4473,10 @@ void CAI_BaseNPC::UpdateSleepState( bool bInPVS )
 							break;
 						}
 
-						iSound = pCurrentSound->NextSound();
+						if ( pCurrentSound )
+							iSound = pCurrentSound->NextSound();
+						else
+							break;
 					}
 				}
 			}
@@ -6448,7 +6421,7 @@ bool CAI_BaseNPC::WeaponLOSCondition(const Vector &ownerPos, const Vector &targe
 			}
 		}
 	}
-	return bHaveLOS;
+	return bHaveLOS && !IsHiddenByFog( targetPos );
 }
 
 //-----------------------------------------------------------------------------
@@ -7927,9 +7900,8 @@ void CAI_BaseNPC::NPCInit ( void )
 	SetIdealActivity( ACT_IDLE );
 	SetActivity( ACT_IDLE );
 
-#ifdef HL1_DLL
-	SetDeathPose( ACT_INVALID );
-#endif
+	if (TFGameRules()->IsInHL1Map())
+		SetDeathPose( ACT_INVALID );
 
 	ClearCommandGoal();
 
@@ -12070,8 +12042,6 @@ IMPLEMENT_SERVERCLASS_ST( CAI_BaseNPC, DT_AI_BaseNPC )
 	SendPropInt( SENDINFO( m_nNumHealers ), 5, SPROP_UNSIGNED | SPROP_CHANGES_OFTEN ),
 	SendPropBool( SENDINFO( m_bBurningDeath ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_flCondExpireTimeLeft ), SendPropFloat( SENDINFO_ARRAY( m_flCondExpireTimeLeft ) ) ),
-	SendPropEHandle( SENDINFO( m_hItem ) ),
-	SendPropInt( SENDINFO( m_nTFFlags ) )
 #endif
 END_SEND_TABLE()
 
@@ -12589,7 +12559,7 @@ bool CAI_BaseNPC::LoadedSchedules(void)
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-CAI_BaseNPC::CAI_BaseNPC(void)
+CAI_BaseNPC::CAI_BaseNPC( void )
  :	m_UnreachableEnts( 0, 4 ),
     m_bDeferredNavigation( false )
 {
@@ -12680,8 +12650,11 @@ CAI_BaseNPC::CAI_BaseNPC(void)
 
 	m_bAirblasted = false;
 
-	m_flLastObjectiveTime = -1.f;
-	m_hItem = NULL;
+	m_flCritTime = 0;
+	m_flLastCritCheckTime = 0;
+	m_iLastCritCheckFrame = 0;
+	m_bCurrentAttackIsCrit = false;
+	m_iCurrentSeed = -1;
 
 	m_LagTrack = new CUtlFixedLinkedList< LagRecordNPC >();
 
@@ -12732,29 +12705,30 @@ void CAI_BaseNPC::UpdateOnRemove(void)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: Targetting Buildings.
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::SearchBuildingThink( void )
+void CAI_BaseNPC::SearchBuildingThink(void)
 {
-	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest( "obj_sentrygun", GetAbsOrigin(), 1024 );
-	if ( pSentry && !InSameTeam( pSentry ) && m_NPCState != NPC_STATE_SCRIPT )
+	CBaseEntity *pPlayer = gEntList.FindEntityByClassnameNearest("player", GetAbsOrigin(), 400);
+	CBaseEntity *pSentry = gEntList.FindEntityByClassnameNearest("obj_sentrygun", GetAbsOrigin(), 1024);
+	if ((!pPlayer || pPlayer && pPlayer->GetTeamNumber() == this->GetTeamNumber()) && pSentry && !InSameTeam(pSentry) && m_NPCState != NPC_STATE_SCRIPT)
 	{
-		SetTarget( pSentry );
+		SetTarget(pSentry);
 	}
 
-	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest( "obj_dispenser", GetAbsOrigin(), 1024 );
-	if ( !pSentry && pDispenser /*&& !pDispenser->IsDisabled() && !pDispenser->HasSapper()*/ && !InSameTeam( pDispenser ) && m_NPCState != NPC_STATE_SCRIPT )
+	CBaseEntity *pDispenser = gEntList.FindEntityByClassnameNearest("obj_dispenser", GetAbsOrigin(), 1024);
+	if ((!pPlayer || pPlayer && pPlayer->GetTeamNumber() == this->GetTeamNumber()) && !pSentry && pDispenser /*&& !pDispenser->IsDisabled() && !pDispenser->HasSapper()*/ && !InSameTeam(pDispenser) && m_NPCState != NPC_STATE_SCRIPT)
 	{
-		SetTarget( pDispenser );
+		SetTarget(pDispenser);
 	}
 
-	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest( "obj_teleporter", GetAbsOrigin(), 1024 );
-	if ( !pSentry && !pDispenser && pTeleporter /*&& !pTeleporter->IsDisabled() && !pTeleporter->HasSapper()*/ && !InSameTeam( pTeleporter ) && m_NPCState != NPC_STATE_SCRIPT )
+	CBaseEntity *pTeleporter = gEntList.FindEntityByClassnameNearest("obj_teleporter", GetAbsOrigin(), 1024);
+	if ((!pPlayer || pPlayer && pPlayer->GetTeamNumber() == this->GetTeamNumber()) && !pSentry && !pDispenser && pTeleporter /*&& !pTeleporter->IsDisabled() && !pTeleporter->HasSapper()*/ && !InSameTeam(pTeleporter) && m_NPCState != NPC_STATE_SCRIPT)
 	{
-		SetTarget( pTeleporter );
+		SetTarget(pTeleporter);
 	}
 
-	SetContextThink( &CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "buildingcontext" );
+	SetContextThink(&CAI_BaseNPC::SearchBuildingThink, gpGlobals->curtime + 0.1, "buildingcontext");
 }
 
 //-----------------------------------------------------------------------------
@@ -15725,13 +15699,7 @@ void CAI_BaseNPC::RecalculateChargeEffects( bool bInstantRemove )
 			pProviders[chargeType] = pPlayer;
 		}
 	}
-
-	// Deny stock uber while carrying flag.
-	if ( HasTheFlag() )
-	{
-		bShouldCharge[TF_CHARGE_INVULNERABLE] = false;
-	}
-
+	
 	for ( int i = 0; i < TF_CHARGE_COUNT; i++ )
 	{
 		float flRemoveTime = ( i == TF_CHARGE_INVULNERABLE ) ? tf_invuln_time.GetFloat() : 0.0f;
@@ -15758,7 +15726,7 @@ void CAI_BaseNPC::SetChargeEffect( medigun_charge_types chargeType, bool bShould
 
 	if ( bShouldCharge )
 	{
-		Assert( chargeType != TF_CHARGE_INVULNERABLE || !HasTheFlag()  );
+		Assert( chargeType != TF_CHARGE_INVULNERABLE );
 
 		if ( m_flChargeOffTime[chargeType] != 0.0f )
 		{
@@ -16298,28 +16266,155 @@ void CAI_BaseNPC::InputRemoveCond( inputdata_t &inputdata )
 	RemoveCond( inputdata.value.Int() );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CAI_BaseNPC::DropFlag( void )
+void CAI_BaseNPC::ApplyAbsVelocityImpulse( const Vector &inVecImpulse )
 {
-	if ( HasItem() )
+	if ( inVecImpulse != vec3_origin )
 	{
-		CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag*>( GetItem() );
-		if ( pFlag )
-		{
-			pFlag->Drop( this, true, true );
-			IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
-			if ( event )
-			{
-				event->SetInt( "player", entindex() );
-				event->SetInt( "eventtype", TF_FLAGEVENT_DROPPED );
-				event->SetInt( "priority", 8 );
+		Vector vecImpulse = inVecImpulse;
 
-				gameeventmanager->FireEvent( event );
-			}
-			RemoveGlowEffect();
+		// Safety check against receive a huge impulse, which can explode physics
+		switch ( CheckEntityVelocity( vecImpulse ) )
+		{
+			case -1:
+				Warning( "Discarding ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", vecImpulse.x, vecImpulse.y, vecImpulse.z, GetDebugName() );
+				Assert( false );
+				return;
+			case 0:
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Clamping ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", inVecImpulse.x, inVecImpulse.y, inVecImpulse.z, GetDebugName() );
+				}
+				break;
+		}
+
+		Vector vecResult;
+		VectorAdd( GetAbsVelocity(), vecImpulse, vecResult );
+		SetAbsVelocity( vecResult );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::ApplyGenericPushbackImpulse( const Vector &vecDir )
+{
+	Vector dp = vecDir;
+
+	// do the z-minning BEFORE applying the regular vulnerability multiplier
+	if ( tf_airblast_cray_ground_reflect.GetBool() )
+	{
+		if (( GetFlags() & FL_ONGROUND) != 0) {
+			dp.z = Min(dp.z, tf_airblast_cray_ground_minz.GetFloat());
 		}
 	}
+
+	SetGroundEntity( NULL );
+	AddCond( TF_COND_KNOCKED_INTO_AIR );
+
+	ApplyAbsVelocityImpulse(dp);
+
+	Vector vBefore;
+	GetVelocity(&vBefore, NULL);
+
+	Vector vAfter;
+	GetVelocity(&vAfter, NULL);
+
+	if ( tf_airblast_cray_debug.GetBool() )
+	{
+		Vector vDiff = vAfter - vBefore;
+
+		float diff   = vDiff.Length();
+		float diff_x = abs(vDiff.x);
+		float diff_y = abs(vDiff.y);
+		float diff_z = abs(vDiff.z);
+
+		NDebugOverlay::EntityText(entindex(), -1, CFmtStrN<256>("dV:   %6.1f", diff),   1.0f, 0xff, 0xff, 0xff, 0xff);
+		NDebugOverlay::EntityText(entindex(),  1, CFmtStrN<256>("dV.x: %6.1f", diff_x), 1.0f, 0xff, 0xff, 0xff, 0xff);
+		NDebugOverlay::EntityText(entindex(),  2, CFmtStrN<256>("dV.y: %6.1f", diff_y), 1.0f, 0xff, 0xff, 0xff, 0xff);
+		NDebugOverlay::EntityText(entindex(),  3, CFmtStrN<256>("dV.z: %6.1f", diff_z), 1.0f, 0xff, 0xff, 0xff, 0xff);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Most calls use the prediction seed
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::CalcIsAttackMiniCritical( void)
+{
+	if ( IsMiniCritBoosted() || InCond( TF_COND_NOHEALINGDAMAGEBUFF ) )
+	{
+		m_bCurrentAttackIsMiniCrit = true;
+	}
+	else
+	{
+		m_bCurrentAttackIsMiniCrit = false;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Most calls use the prediction seed
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::CalcIsAttackCritical( void )
+{
+	if ( gpGlobals->framecount == m_iLastCritCheckFrame )
+		return;
+
+	m_iLastCritCheckFrame = gpGlobals->framecount;
+
+	// if base entity seed has changed since last calculation, reseed with new seed
+	int iSeed = CBaseEntity::GetPredictionRandomSeed();
+	if ( iSeed != m_iCurrentSeed )
+	{
+		m_iCurrentSeed = iSeed;
+		RandomSeed( m_iCurrentSeed );
+	}
+
+	if ( IsCritBoosted() )
+	{
+		m_bCurrentAttackIsCrit = true;
+	}
+	else
+	{
+		// call the weapon-specific helper method
+		m_bCurrentAttackIsCrit = CalcIsAttackCriticalHelper();
+	}
+}
+
+extern ConVar lfe_hl2_weapon_criticals_melee;
+extern ConVar tf_debug_criticals;
+//-----------------------------------------------------------------------------
+// Purpose: Melee Crit Calulation
+//-----------------------------------------------------------------------------
+bool CAI_BaseNPC::CalcIsAttackCriticalHelper( void )
+{
+	int nCvarValue = lfe_hl2_weapon_criticals_melee.GetInt();
+
+	if ( nCvarValue == 0 )
+		return false;
+
+	if ( nCvarValue == 1 && !lfe_hl2_weapon_criticals_melee.GetBool() )
+		return false;
+
+	float flNPCCritMult = GetCritMult();
+
+	float flCritChance = TF_DAMAGE_CRIT_CHANCE_MELEE * flNPCCritMult;
+	//CALL_ATTRIB_HOOK_FLOAT( flCritChance, mult_crit_chance );
+
+	// If the chance is 0, just bail.
+	if ( flCritChance == 0.0f )
+		return false;
+
+	if ( tf_debug_criticals.GetBool() )
+	{
+		Msg( "%s : Rolling crit: %.02f%% chance... ", GetClassname(), flCritChance * 100.0f );
+	}
+
+	bool bSuccess = ( RandomInt( 0, WEAPON_RANDOM_RANGE - 1 ) <= flCritChance * WEAPON_RANDOM_RANGE );
+
+	if ( tf_debug_criticals.GetBool() )
+	{
+		Msg( "%s\n", bSuccess ? "SUCCESS" : "FAILURE" );
+	}
+
+	return bSuccess;
 }
 #endif

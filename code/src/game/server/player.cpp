@@ -69,6 +69,8 @@
 #include "dt_utlvector_send.h"
 #include "vote_controller.h"
 #include "ai_speech.h"
+#include "fogvolume.h"
+#include "fogcontroller.h"
 
 #if defined ( USES_ECON_ITEMS ) || defined ( TF_CLASSIC )
 #include "econ_wearable.h"
@@ -88,7 +90,6 @@
 
 ConVar autoaim_max_dist( "autoaim_max_dist", "2160" ); // 2160 = 180 feet
 ConVar autoaim_max_deflect( "autoaim_max_deflect", "0.99" );
-ConVar sv_hl2_beta("sv_hl2_beta", "0");
 
 #ifdef CSTRIKE_DLL
 ConVar	spec_freeze_time( "spec_freeze_time", "5.0", FCVAR_CHEAT | FCVAR_REPLICATED, "Time spend frozen in observer freeze cam." );
@@ -457,6 +458,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetHealth", InputSetHealth ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetHUDVisibility", InputSetHUDVisibility ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SetFogController", InputSetFogController ),
+	DEFINE_INPUTFUNC( FIELD_STRING, "SetColorcorrectionController", InputSetColorCorrectionController ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "HandleMapEvent", InputHandleMapEvent ),
 
 	DEFINE_FIELD( m_nNumCrouches, FIELD_INTEGER ),
@@ -467,7 +469,7 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_nNumCrateHudHints, FIELD_INTEGER ),
 
-
+	DEFINE_FIELD( m_hColorCorrectionCtrl, FIELD_EHANDLE ),
 
 	// DEFINE_FIELD( m_nBodyPitchPoseParam, FIELD_INTEGER ),
 	// DEFINE_ARRAY( m_StepSoundCache, StepSoundCache_t,  2  ),
@@ -653,6 +655,8 @@ CBasePlayer::CBasePlayer( )
 
 	m_flLastUserCommandTime = 0.f;
 	m_flMovementTimeForUserCmdProcessingRemaining = 0.0f;
+
+	m_hColorCorrectionCtrl.Set( NULL );
 
 	m_flLastObjectiveTime = -1.f;
 }
@@ -4536,12 +4540,34 @@ void CBasePlayer::ForceOrigin( const Vector &vecOrigin )
 	m_vForcedOrigin = vecOrigin;
 }
 
+//--------------------------------------------------------------------------------------------------------
+void CBasePlayer::OnTonemapTriggerStartTouch( CTonemapTrigger *pTonemapTrigger )
+{
+	m_hTriggerTonemapList.FindAndRemove( pTonemapTrigger );
+	m_hTriggerTonemapList.AddToTail( pTonemapTrigger );
+}
+
+ //--------------------------------------------------------------------------------------------------------
+void CBasePlayer::OnTonemapTriggerEndTouch( CTonemapTrigger *pTonemapTrigger )
+{
+	m_hTriggerTonemapList.FindAndRemove( pTonemapTrigger );
+}
+
+ //--------------------------------------------------------------------------------------------------------
+void CBasePlayer::UpdateTonemapController( void )
+{
+	m_hTonemapController = TheTonemapSystem()->GetMasterTonemapController();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CBasePlayer::PostThink()
 {
 	m_vecSmoothedVelocity = m_vecSmoothedVelocity * SMOOTHING_FACTOR + GetAbsVelocity() * ( 1 - SMOOTHING_FACTOR );
+
+	UpdateTonemapController();
+	UpdateFXVolume();
 
 	if ( !g_fGameOver && !m_iPlayerLocked )
 	{
@@ -4967,6 +4993,7 @@ void CBasePlayer::Spawn( void )
 
 	// Initialize the fog and postprocess controllers.
 	InitFogController();
+	InitColorCorrectionController();
 
 	m_DmgTake		= 0;
 	m_DmgSave		= 0;
@@ -6625,19 +6652,20 @@ bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 		return false;
 	}
 
+	// always use this or the weapon won't even go into the owner
 	// Act differently in the episodes
-	if ( hl2_episodic.GetBool() )
-	{
+	//if ( hl2_episodic.GetBool() )
+	//{
 		// Don't let the player touch the item unless unobstructed
 		if ( !UTIL_ItemCanBeTouchedByPlayer( pWeapon, this ) && !gEvilImpulse101 )
 			return false;
-	}
-	else
+	//}
+	/*else
 	{
 		// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
 		if( pWeapon->FVisible( this, MASK_SOLID ) == false && !(GetFlags() & FL_NOTARGET) )
 			return false;
-	}
+	}*/
 	
 	// ----------------------------------------
 	// If I already have it just take the ammo
@@ -7610,6 +7638,57 @@ void CBasePlayer::HideViewModels( void )
 	}
 }
 
+void CBasePlayer::UpdateFXVolume( void )
+{
+	CFogController *pFogController = NULL;
+	CColorCorrection* pColorCorrectionEnt = NULL;
+
+ 	Vector eyePos;
+	CBaseEntity *pViewEntity = GetViewEntity();
+	if ( pViewEntity )
+	{
+		eyePos = pViewEntity->GetAbsOrigin();
+	}
+	else
+	{
+		eyePos = EyePosition();
+	}
+
+ 	CFogVolume *pFogVolume = CFogVolume::FindFogVolumeForPosition( eyePos );
+	if ( pFogVolume )
+	{
+		pFogController = pFogVolume->GetFogController();
+		pColorCorrectionEnt = pFogVolume->GetColorCorrectionController();
+
+ 		if ( !pFogController )
+		{
+			pFogController = FogSystem()->GetMasterFogController();
+		}
+
+		if ( !pColorCorrectionEnt )
+		{
+			pColorCorrectionEnt = ColorCorrectionSystem()->GetMasterColorCorrection();
+		}
+	}
+	else if ( TheFogVolumes.Count() > 0 )
+	{
+		// If we're not in a fog volume, clear our fog volume, if the map has any.
+		// This will get us back to using the master fog controller.
+		pFogController = FogSystem()->GetMasterFogController();
+		pColorCorrectionEnt = ColorCorrectionSystem()->GetMasterColorCorrection();
+	}
+
+ 	if ( pFogController && m_Local.m_PlayerFog.m_hCtrl.Get() != pFogController )
+	{
+		m_Local.m_PlayerFog.m_hCtrl.Set( pFogController );
+	}
+
+	if ( pColorCorrectionEnt && m_hColorCorrectionCtrl.Get() != pColorCorrectionEnt )
+	{
+		m_hColorCorrectionCtrl.Set( pColorCorrectionEnt );
+	}
+}
+
 class CStripWeapons : public CPointEntity
 {
 	DECLARE_CLASS( CStripWeapons, CPointEntity );
@@ -7679,11 +7758,9 @@ public:
 	//Inputs
 	void InputReload(inputdata_t &data);
 
-#ifdef HL1_DLL
 	void	MessageThink( void );
 	inline	float	MessageTime( void ) { return m_messageTime; }
 	inline	void	SetMessageTime( float time ) { m_messageTime = time; }
-#endif
 
 private:
 
@@ -7691,22 +7768,18 @@ private:
 	float	m_Duration;
 	float	m_HoldTime;
 
-#ifdef HL1_DLL
 	string_t m_iszMessage;
 	float	m_messageTime;
-#endif
 };
 
 LINK_ENTITY_TO_CLASS( player_loadsaved, CRevertSaved );
 
 BEGIN_DATADESC( CRevertSaved )
 
-#ifdef HL1_DLL
 	DEFINE_KEYFIELD( m_iszMessage, FIELD_STRING, "message" ),
 	DEFINE_KEYFIELD( m_messageTime, FIELD_FLOAT, "messagetime" ),	// These are not actual times, but durations, so save as floats
 
 	DEFINE_FUNCTION( MessageThink ),
-#endif
 
 	DEFINE_KEYFIELD( m_loadTime, FIELD_FLOAT, "loadtime" ),
 	DEFINE_KEYFIELD( m_Duration, FIELD_FLOAT, "duration" ),
@@ -7776,13 +7849,16 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 #else
 	UTIL_ScreenFadeAll( m_clrRender, Duration(), HoldTime(), FFADE_OUT );
 
-#ifdef HL1_DLL
-	SetNextThink( gpGlobals->curtime + MessageTime() );
-	SetThink( &CRevertSaved::MessageThink );
-#else
-	SetNextThink( gpGlobals->curtime + LoadTime() );
-	SetThink( &CRevertSaved::LoadThink );
-#endif
+	if(TFGameRules()->IsInHL1Map())
+	{
+		SetNextThink( gpGlobals->curtime + MessageTime() );
+		SetThink( &CRevertSaved::MessageThink );
+	}
+	else
+	{
+		SetNextThink( gpGlobals->curtime + LoadTime() );
+		SetThink( &CRevertSaved::LoadThink );
+	}
 
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 
@@ -7799,7 +7875,6 @@ void CRevertSaved::InputReload( inputdata_t &inputdata )
 #endif
 }
 
-#ifdef HL1_DLL
 void CRevertSaved::MessageThink( void )
 {
 	UTIL_ShowMessageAll( STRING( m_iszMessage ) );
@@ -7812,7 +7887,6 @@ void CRevertSaved::MessageThink( void )
 	else
 		LoadThink();
 }
-#endif
 
 
 void CRevertSaved::LoadThink( void )
@@ -8024,6 +8098,8 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),
 
+		SendPropEHandle		( SENDINFO( m_hTonemapController ) ),
+
 	END_SEND_TABLE()
 
 
@@ -8067,6 +8143,8 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 		// Data that only gets sent to the local player.
 		SendPropDataTable( "localdata", 0, &REFERENCE_SEND_TABLE(DT_LocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+
+		SendPropEHandle( SENDINFO( m_hColorCorrectionCtrl ) ),
 
 	END_SEND_TABLE()
 
@@ -8750,11 +8828,20 @@ void CBasePlayer::InputSetHUDVisibility( inputdata_t &inputdata )
 void CBasePlayer::InputSetFogController( inputdata_t &inputdata )
 {
 	// Find the fog controller with the given name.
-	CFogController *pFogController = dynamic_cast<CFogController*>( gEntList.FindEntityByName( NULL, inputdata.value.String() ) );
+	CFogController *pFogController = NULL;
+	if ( inputdata.value.FieldType() == FIELD_EHANDLE )
+	{
+		pFogController = dynamic_cast<CFogController*>( inputdata.value.Entity().Get() );
+	}
+	else
+	{
+		pFogController = dynamic_cast<CFogController*>( gEntList.FindEntityByName( NULL, inputdata.value.String() ) );
+	}
+
 	if ( pFogController )
 	{
 		m_Local.m_PlayerFog.m_hCtrl.Set( pFogController );
-	}
+ 	}
 }
 
 //-----------------------------------------------------------------------------
@@ -8764,6 +8851,36 @@ void CBasePlayer::InitFogController( void )
 {
 	// Setup with the default master controller.
 	m_Local.m_PlayerFog.m_hCtrl = FogSystem()->GetMasterFogController();
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void CBasePlayer::InputSetColorCorrectionController( inputdata_t &inputdata )
+{
+	// Find the fog controller with the given name.
+	CColorCorrection *pController = NULL;
+	if ( inputdata.value.FieldType() == FIELD_EHANDLE )
+	{
+		pController = dynamic_cast<CColorCorrection*>( inputdata.value.Entity().Get() );
+	}
+	else
+	{
+		pController = dynamic_cast<CColorCorrection*>( gEntList.FindEntityByName( NULL, inputdata.value.String() ) );
+	}
+
+ 	if ( pController )
+	{
+		m_hColorCorrectionCtrl.Set( pController );
+	}
+}
+
+//-----------------------------------------------------------------------------
+//
+//-----------------------------------------------------------------------------
+void CBasePlayer::InitColorCorrectionController( void )
+{
+	m_hColorCorrectionCtrl = ColorCorrectionSystem()->GetMasterColorCorrection();
 }
 
 //-----------------------------------------------------------------------------

@@ -33,11 +33,6 @@ const char *g_aClassNames[] =
 	"TF_CLASS_PYRO",
 	"TF_CLASS_SPY",
 	"TF_CLASS_ENGINEER",
-	"TF_CLASS_CIVILIAN",
-	"TF_CLASS_REBEL,"
-	"TF_CLASS_METROPOLICE,"
-	"TF_CLASS_COMBINE_SOLDIER,"
-	"TF_CLASS_APETURE_SUBJECT,"
 };
 
 //-----------------------------------------------------------------------------
@@ -707,9 +702,6 @@ void CTFGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDama
 	}	
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameStats::Event_PlayerKilledOther( CBasePlayer *pAttacker, CBaseEntity *pVictim, const CTakeDamageInfo &info )
 {
 	// This also gets called when the victim is a building.  That gets tracked separately as building destruction, don't count it here
@@ -824,6 +816,14 @@ void CTFGameStats::Event_PlayerDominatedOther( CTFPlayer *pAttacker )
 void CTFGameStats::Event_PlayerRevenge( CTFPlayer *pAttacker )
 {
 	IncrementStat( pAttacker, TFSTAT_REVENGE, 1 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGameStats::Event_PlayerRevived( CTFPlayer *pAttacker )
+{
+	IncrementStat( pAttacker, TFSTAT_BONUS, 1 );
 }
 
 //-----------------------------------------------------------------------------

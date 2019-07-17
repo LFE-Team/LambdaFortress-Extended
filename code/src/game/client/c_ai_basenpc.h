@@ -17,7 +17,6 @@
 #include "ai_basenpc_shared.h"
 #include "tf_shareddefs.h"
 #include "c_tf_player.h"
-#include "tf_item.h"
 #endif
 
 // NOTE: Moved all controller code into c_basestudiomodel
@@ -107,10 +106,11 @@ public:
 	void OnAddPhase( void );
 	void OnAddSpeedBoost( void );
 	void OnAddUrine( void );
-	void OnAddMilk( void );
-	void OnAddGas( void );
+	void OnAddMadMilk( void );
+	void OnAddCondGas( void );
 	void OnAddBleeding( void );
 	void OnAddBuff( void );
+	void OnAddSapped( void );
 	//void OnAddRune( void );
 
 	void OnRemoveBurning( void );
@@ -123,22 +123,24 @@ public:
 	void OnRemovePhase( void );
 	void OnRemoveSpeedBoost( void );
 	void OnRemoveUrine( void );
-	void OnRemoveMilk( void );
-	void OnRemoveGas( void );
+	void OnRemoveMadMilk( void );
+	void OnRemoveCondGas( void );
 	void OnRemoveBleeding( void );
 	void OnRemoveBuff( void );
+	void OnRemoveSapped( void );
 	//void OnRemoveRune( void );
 
 	void	StartBurningSound( void );
 	void	StopBurningSound( void );
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
-	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
+	void	MakeBleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
 
 	CNewParticleEffect *m_pStun;
 	CNewParticleEffect *m_pWarp;
 	CNewParticleEffect *m_pSpeedTrails;
 	CNewParticleEffect *m_pBuffAura;
+	CNewParticleEffect *m_pSapped;
 
 	void	UpdatePhaseEffects( void );
 	void	UpdateSpeedBoostEffects( void );
@@ -161,15 +163,15 @@ public:
 	CSoundPatch *m_pCritSound;
 
 	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
+	
+	void FireBullet( const FireBulletsInfo_t &info, bool bDoEffects, int nDamageType, int nCustomDamageType = TF_DMG_CUSTOM_NONE );
+	void ImpactWaterTrace( trace_t &trace, const Vector &vecStart );
 
+	void AddTempCritBonus( float flDuration = PERMANENT_CONDITION );
 
-	CNetworkHandle( C_TFItem, m_hItem );
+private:
 
-	bool			HasItem( void );					// Currently can have only one item at a time.
-	void			SetItem( C_TFItem *pItem );
-	C_TFItem		*GetItem( void );
-	bool			IsAllowedToPickUpFlag( void );
-	bool			HasTheFlag( void );
+	float m_flWaterImpactTime;
 #endif
 
 private:

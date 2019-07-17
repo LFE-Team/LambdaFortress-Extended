@@ -47,23 +47,25 @@ void CTFAdvButtonBase::Init()
 { 
 	SetTall(50);
 	SetWide(100);
-	Q_strncpy(pDefaultBG, DEFAULT_BG, sizeof(pDefaultBG));
-	Q_strncpy(pArmedBG, ARMED_BG, sizeof(pArmedBG));
-	Q_strncpy(pDepressedBG, DEPRESSED_BG, sizeof(pDepressedBG));
-	Q_strncpy(pDefaultBorder, DEFAULT_BORDER, sizeof(pDefaultBorder));
-	Q_strncpy(pArmedBorder, ARMED_BORDER, sizeof(pArmedBorder));
-	Q_strncpy(pDepressedBorder, DEPRESSED_BORDER, sizeof(pDepressedBorder));
-	Q_strncpy(pDefaultColor, DEFAULT_COLOR, sizeof(pDefaultColor));
-	Q_strncpy(pArmedColor, ARMED_COLOR, sizeof(pArmedColor));
-	Q_strncpy(pDepressedColor, DEPRESSED_COLOR, sizeof(pDepressedColor));
-	Q_strncpy(pSelectedColor, ARMED_COLOR, sizeof(pSelectedColor));
-	Q_strncpy(pDefaultButtonImage, DEFAULT_IMAGE, sizeof(pDefaultButtonImage));
-	Q_strncpy(pImageColorDefault, DEFAULT_COLOR, sizeof(pImageColorDefault));
-	Q_strncpy(pImageColorArmed, ARMED_COLOR, sizeof(pImageColorArmed));
-	Q_strncpy(pImageColorDepressed, DEPRESSED_COLOR, sizeof(pImageColorDepressed));
+	Q_strncpy( pDefaultBG,				DEFAULT_BG,			sizeof(pDefaultBG) );
+	Q_strncpy( pArmedBG,				ARMED_BG,			sizeof(pArmedBG) );
+	Q_strncpy( pDepressedBG,			DEPRESSED_BG,		sizeof(pDepressedBG) );
+	Q_strncpy( pDefaultBorder,			DEFAULT_BORDER,		sizeof(pDefaultBorder) );
+	Q_strncpy( pArmedBorder,			ARMED_BORDER,		sizeof(pArmedBorder) );
+	Q_strncpy( pDepressedBorder,		DEPRESSED_BORDER,	sizeof(pDepressedBorder) );
+	Q_strncpy( pDefaultColor,			DEFAULT_COLOR,		sizeof(pDefaultColor) );
+	Q_strncpy( pArmedColor,				ARMED_COLOR,		sizeof(pArmedColor) );
+	Q_strncpy( pDepressedColor,			DEPRESSED_COLOR,	sizeof(pDepressedColor) );
+	Q_strncpy( pSelectedColor,			ARMED_COLOR,		sizeof(pSelectedColor) );
+	Q_strncpy( pDefaultButtonImage,		DEFAULT_IMAGE,		sizeof(pDefaultButtonImage) );
+	Q_strncpy( pArmedButtonImage,		ARMED_IMAGE,		sizeof(pArmedButtonImage) );
+	Q_strncpy( pDepressedButtonImage,	DEPRESSED_IMAGE,	sizeof(pDepressedButtonImage) );
+	Q_strncpy( pImageColorDefault,		DEFAULT_COLOR,		sizeof(pImageColorDefault) );
+	Q_strncpy( pImageColorArmed,		ARMED_COLOR,		sizeof(pImageColorArmed) );
+	Q_strncpy( pImageColorDepressed,	DEPRESSED_COLOR,	sizeof(pImageColorDepressed) );
 	
-	Q_strncpy(m_szCommand, EMPTY_STRING, sizeof(m_szCommand));
-	Q_strncpy(pToolTip, EMPTY_STRING, sizeof(pToolTip));
+	Q_strncpy( m_szCommand, EMPTY_STRING, sizeof(m_szCommand) );
+	Q_strncpy( pToolTip, EMPTY_STRING, sizeof(pToolTip) );
 	m_bBorderVisible = true;
 	m_bAutoChange = false;
 	m_bSelected = false;
@@ -77,8 +79,13 @@ void CTFAdvButtonBase::ApplySettings(KeyValues *inResourceData)
 {
 	BaseClass::ApplySettings(inResourceData);
 
-	Q_strncpy(m_szCommand, inResourceData->GetString("command", EMPTY_STRING), sizeof(m_szCommand));
+	Q_strncpy( m_szCommand, inResourceData->GetString("command", EMPTY_STRING), sizeof(m_szCommand) );
 	m_bBorderVisible = inResourceData->GetBool("bordervisible", true);
+
+	Q_strncpy( pDefaultButtonImage, inResourceData->GetString("image_default", DEFAULT_IMAGE), sizeof(pDefaultButtonImage) );
+	Q_strncpy( pArmedButtonImage, inResourceData->GetString("image_armed", ARMED_IMAGE), sizeof(pArmedButtonImage));
+	Q_strncpy( pDepressedButtonImage, inResourceData->GetString("image_depressed", DEPRESSED_IMAGE), sizeof(pDepressedButtonImage) );
+	SetImage( pDefaultButtonImage );
 
 	for (KeyValues *pData = inResourceData->GetFirstSubKey(); pData != NULL; pData = pData->GetNextKey())
 	{
@@ -182,6 +189,21 @@ void CTFAdvButtonBase::SetImageSize(int iWide, int iTall)
 	pButtonImage->SetSize(iWide, iTall);
 }
 
+void CTFAdvButtonBase::SetImageDefault( const char *sImage)
+{
+	V_strncpy( pDefaultButtonImage, sImage, sizeof(pDefaultButtonImage) );
+}
+
+void CTFAdvButtonBase::SetImageArmed( const char *sImage)
+{
+	V_strncpy(pArmedButtonImage, sImage, sizeof(pArmedButtonImage) );
+}
+
+void CTFAdvButtonBase::SetImageSelected( const char *sImage)
+{
+	V_strncpy( pDepressedButtonImage, sImage, sizeof( pDepressedButtonImage ) );
+}
+
 void CTFAdvButtonBase::SetToolTip(const char *sText)
 {
 	V_strncpy( pToolTip, sText, sizeof( pToolTip ) );
@@ -217,26 +239,38 @@ void CTFAdvButtonBase::SendAnimation(MouseState flag)
 			MAINMENU_ROOT->HideToolTip();
 		if (m_bBorderVisible)
 			SetBorder(GETSCHEME()->GetBorder(pSelectedBG));
+
+		SetImage( pDefaultButtonImage );
 		break;
 	case MOUSE_ENTERED:
 		if (pToolTip[0] != '\0')
 			MAINMENU_ROOT->ShowToolTip(pToolTip);
 		if (m_bBorderVisible)
 			SetBorder(GETSCHEME()->GetBorder(pArmedBG));
+
+		SetImage( pArmedButtonImage );
 		break;
 	case MOUSE_EXITED:
 		if (pToolTip[0] != '\0')
 			MAINMENU_ROOT->HideToolTip();
 		if (m_bBorderVisible)
 			SetBorder(GETSCHEME()->GetBorder(pSelectedBG));
+
+		SetImage( pDefaultButtonImage );
 		break;
 	case MOUSE_PRESSED:
+		if (pToolTip[0] != '\0')
+			MAINMENU_ROOT->HideToolTip();
 		if (m_bBorderVisible)
 			SetBorder(GETSCHEME()->GetBorder(pDepressedBG));
+
+		SetImage( pDepressedButtonImage );
 		break;
 	default:
 		if (m_bBorderVisible)
 			SetBorder(GETSCHEME()->GetBorder(pDefaultBG));
+		
+		SetImage( pDefaultButtonImage );
 		break;
 	}
 }

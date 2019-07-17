@@ -23,41 +23,7 @@ ipch
 *.sln
 
 # OSX/Linux build products
-*.mak
-*.mak.vpc_crc
-*.xcodeproj/
-obj*/
-!devtools/*.mak
-!utils/smdlexp/smdlexp.mak
-
-# Specific Source build products
-client.pdb
-client.dll
-# Files to ignore when considering what GIT should commit.
-
-# Visual Studio 
-*.suo
-*.user
-*.sln.docstates
-*.obj
-*.pch
-*.tlog
-*.log
-*.scc
-*.exp
-*.ilk
-*.lastbuildstate
-vc100.pdb
-ipch
-*.sdf
-*.opensdf
-*.idb
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.vpc_crc
-*.sln
-
-# OSX/Linux build products
+*.project
 *.mak
 *.mak.vpc_crc
 *.xcodeproj/
@@ -73,12 +39,8 @@ server.pdb
 server.dll
 server.lib
 
-client.so
-client.so.dbg
-server.so
-server.so.dbg
-server_srv.so
-server_srv.so.dbg
+client*.so*
+server*.so*
 
 client.dylib
 client.dylib.dSYM/
@@ -93,8 +55,10 @@ config.cfg
 
 # library files
 code/src/lib/public/mathlib.lib
+code/src/lib/public/linux32/mathlib.a
 code/src/lib/public/raytrace.lib
 code/src/lib/public/tier1.lib
+code/src/lib/public/linux32/mathlib.a
 code/src/lib/public/vgui_controls.lib
 
 # misc files
@@ -107,8 +71,11 @@ code/src/utils/sapi51/Samples/VB/TTSAppVB/ttsapp.RES
 *.pdb
 *.sentinel
 code/game/tf_coop_extended/bin/game_shader_dx9.dll
+code/game/tf_coop_extended/bin/game_shader_dx9*.so*
 code/src/game/server/Release_tf_coop_extended/vc120.pdb
 code/src/game/client/Release_tf_coop_extended/vc120.pdb
 code/src/game/server/Release_tf_coop_extended/
 code/src/game/client/Release_tf_coop_extended/
 code/src/materialsystem/stdshaders/Release_dx9_tf_coop_extended/
+*.opendb
+*.db

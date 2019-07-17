@@ -6,8 +6,15 @@
 //=============================================================================//
 #include "cbase.h"
 #include "ai_basenpc_shared.h"
-#if defined(TF_CLASSIC) || defined(TF_CLASSIC_CLIENT)
 #include "tf_shareddefs.h"
+#include "tf_fx_shared.h"
+#include "effect_dispatch_data.h"
+// Client specific.
+#ifdef CLIENT_DLL
+#include "engine/ivdebugoverlay.h"
+#include "c_te_effect_dispatch.h"
+#else // Server specific
+#include "te_effect_dispatch.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -116,16 +123,6 @@ TF_NPCData g_aNPCData[] =
 	},
 	{
 		"monster_human_grunt",
-		TF_TEAM_BLUE,
-		0,
-	},
-	{
-		"monster_human_grunt_red",
-		TF_TEAM_RED,
-		0,
-	},
-	{
-		"monster_human_grunt_blue",
 		TF_TEAM_BLUE,
 		0,
 	},
@@ -309,21 +306,6 @@ TF_NPCData g_aNPCData[] =
 		TFFL_BUILDING,
 	},
 	{
-		"npc_rollerminered",
-		TF_TEAM_RED,
-		TFFL_BUILDING,
-	},
-	{
-		"npc_rollermine_hackable",
-		TF_TEAM_RED,
-		TFFL_BUILDING,
-	},
-	{
-		"npc_rollermine_ep1",
-		TF_TEAM_RED,
-		TFFL_BUILDING,
-	},
-	{
 		"npc_turret_ceiling",
 		TF_TEAM_BLUE,
 		TFFL_BUILDING | TFFL_NODEFLECT,
@@ -331,7 +313,7 @@ TF_NPCData g_aNPCData[] =
 	{
 		"npc_turret_floor",
 		TF_TEAM_BLUE,
-		TFFL_BUILDING,
+		TFFL_BUILDING | TFFL_NOBACKSTAB,
 	},
 	{
 		"npc_turret_ground",
@@ -751,11 +733,11 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 		break;
 
 	case TF_COND_MAD_MILK:
-		OnAddMilk();
+		OnAddMadMilk();
 		break;
 
 	case TF_COND_GAS:
-		OnAddGas();
+		OnAddCondGas();
 		break;
 #endif
 	case TF_COND_SPEED_BOOST:
@@ -777,14 +759,18 @@ void CAI_BaseNPC::OnConditionAdded( int nCond )
 	case TF_COND_RUNE_SUPERNOVA:
 		OnAddRune();
 		break;
-#endif
-#ifdef CLIENT_DLL
+#else
 	case TF_COND_OFFENSEBUFF:
 	case TF_COND_DEFENSEBUFF:
 	case TF_COND_REGENONDAMAGEBUFF:
 		OnAddBuff();
 		break;
 #endif
+
+	case TF_COND_SAPPED:
+		OnAddSapped();
+		break;
+
 	default:
 		break;
 	}
@@ -863,11 +849,11 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 		break;
 
 	case TF_COND_MAD_MILK:
-		OnRemoveMilk();
+		OnRemoveMadMilk();
 		break;
 
 	case TF_COND_GAS:
-		OnRemoveGas();
+		OnRemoveCondGas();
 		break;
 
 	case TF_COND_SPEED_BOOST:
@@ -889,14 +875,18 @@ void CAI_BaseNPC::OnConditionRemoved( int nCond )
 	case TF_COND_RUNE_SUPERNOVA:
 		OnRemoveRune();
 		break;
-#endif
-#ifdef CLIENT_DLL
+#else
 	case TF_COND_OFFENSEBUFF:
 	case TF_COND_DEFENSEBUFF:
 	case TF_COND_REGENONDAMAGEBUFF:
 		OnRemoveBuff();
 		break;
 #endif
+
+	case TF_COND_SAPPED:
+		OnRemoveSapped();
+		break;
+
 	default:
 		break;
 	}
@@ -1063,7 +1053,7 @@ void CAI_BaseNPC::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/,
 //-----------------------------------------------------------------------------
 // Purpose: BLOOD LEAKING
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flBleedDuration /*= -1.0f*/ )
+void CAI_BaseNPC::MakeBleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon /*= NULL*/, float flBleedDuration /*= -1.0f*/ )
 {
 #ifdef CLIENT_DLL
 
@@ -1282,10 +1272,6 @@ void CAI_BaseNPC::OnRemoveHalloweenGiant( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnAddPhase(void)
 {
-#ifdef GAME_DLL
-	DropFlag();
-#endif
-
 	UpdatePhaseEffects();
 }
 
@@ -1369,7 +1355,7 @@ void CAI_BaseNPC::AddPhaseEffects(void)
 	pPhaseTrail->SetStartWidth( 16.0f );
 	pPhaseTrail->SetTextureResolution( 0.01416667 );
 	pPhaseTrail->SetLifeTime( 1.0 );
-	pPhaseTrail->FollowEntity( this );
+	pPhaseTrail->SetAttachment( this, LookupAttachment( "chest" ) );
 	m_pPhaseTrails.AddToTail( pPhaseTrail );
 }
 #endif
@@ -1412,25 +1398,30 @@ void CAI_BaseNPC::UpdatePhaseEffects(void)
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::UpdateSpeedBoostEffects(void)
 {
-	if ( !IsSpeedBoosted() )
-		return;
-
-	if(  GetAbsVelocity() != vec3_origin )
+	if ( IsSpeedBoosted() )
 	{
-		// We're on the move
-		if ( !m_pSpeedTrails )
+		if(  GetAbsVelocity() != vec3_origin )
 		{
-			m_pSpeedTrails = ParticleProp()->Create( "speed_boost_trail", PATTACH_ABSORIGIN_FOLLOW );
+			// We're on the move
+			if ( !m_pSpeedTrails )
+			{
+				m_pSpeedTrails = ParticleProp()->Create( "speed_boost_trail", PATTACH_ABSORIGIN_FOLLOW );
+			}
+		}
+		else
+		{
+			// We're not moving
+			if( m_pSpeedTrails )
+			{
+				ParticleProp()->StopEmission( m_pSpeedTrails );
+				m_pSpeedTrails = NULL;
+			}
 		}
 	}
 	else
 	{
-		// We're not moving
-		if( m_pSpeedTrails )
-		{
-			ParticleProp()->StopEmission( m_pSpeedTrails );
-			m_pSpeedTrails = NULL;
-		}
+		ParticleProp()->StopEmission( m_pSpeedTrails );
+		m_pSpeedTrails = NULL;
 	}
 }
 
@@ -1445,7 +1436,7 @@ void CAI_BaseNPC::OnAddUrine( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddMilk( void )
+void CAI_BaseNPC::OnAddMadMilk( void )
 {
 	ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
 }
@@ -1453,7 +1444,7 @@ void CAI_BaseNPC::OnAddMilk( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnAddGas( void )
+void CAI_BaseNPC::OnAddCondGas( void )
 {
 	const char *pszEffectName = ConstructTeamParticle( "gas_can_drips_%s", GetTeamNumber() );
 	ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW ); 
@@ -1477,7 +1468,7 @@ void CAI_BaseNPC::OnRemoveUrine( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveMilk( void )
+void CAI_BaseNPC::OnRemoveMadMilk( void )
 {
 #ifdef GAME_DLL
 	if( IsAlive() )
@@ -1492,7 +1483,7 @@ void CAI_BaseNPC::OnRemoveMilk( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::OnRemoveGas( void )
+void CAI_BaseNPC::OnRemoveCondGas( void )
 {
 #ifdef GAME_DLL
 	if( IsAlive() )
@@ -1530,7 +1521,6 @@ void CAI_BaseNPC::OnRemoveRune( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::OnAddBuff( void )
 {
-
 	// Start the buff effect
 	if ( !m_pBuffAura )
 	{
@@ -1538,7 +1528,6 @@ void CAI_BaseNPC::OnAddBuff( void )
 
 		m_pBuffAura = ParticleProp()->Create( pszEffectName, PATTACH_ABSORIGIN_FOLLOW );
 	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -1551,6 +1540,79 @@ void CAI_BaseNPC::OnRemoveBuff( void )
 		ParticleProp()->StopEmission( m_pBuffAura );
 		m_pBuffAura = NULL;
 	}
+}
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnAddSapped( void )
+{
+#ifdef GAME_DLL
+	EmitSound( "Weapon_Sapper.Plant" );
+	//EmitSound( "Weapon_Sapper.Timer" );
+	m_flSappedDamageAccumulator = 0;
+	m_flLastSappedThinkTime = gpGlobals->curtime;
+	SetContextThink( &CAI_BaseNPC::SappedThink, gpGlobals->curtime + 0.1, "SappedThink" );
+#else
+	if ( !m_pSapped )
+	{
+		m_pSapped = ParticleProp()->Create( "sapper_sentry1_fx", PATTACH_ABSORIGIN_FOLLOW );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::OnRemoveSapped( void )
+{
+#ifdef GAME_DLL
+	//StopSound( "Weapon_Sapper.Timer" );
+	m_flLastSappedThinkTime = 0;
+	SetContextThink( NULL, 0, "SappedThink" );
+#else
+	if ( m_pSapped )
+	{
+		ParticleProp()->StopEmission( m_pSapped );
+		m_pSapped = NULL;
+	}
+#endif
+}
+
+#ifdef GAME_DLL
+extern ConVar obj_sapper_amount;
+//-----------------------------------------------------------------------------
+// Purpose: Slowly drain hp from the npc I'm attached to
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::SappedThink( void )
+{
+	SetNextThink( gpGlobals->curtime + 0.1, "SappedThink" );
+
+	// Don't bring npc back from the dead
+	if ( !IsAlive() )
+		return;
+
+	// how much damage to give this think?
+	float flTimeSinceLastThink = gpGlobals->curtime - m_flLastSappedThinkTime;
+	float flDamageToGive = ( flTimeSinceLastThink ) * obj_sapper_amount.GetFloat();
+
+	// add to accumulator
+	m_flSappedDamageAccumulator += flDamageToGive;
+
+	int iDamage = (int)m_flSappedDamageAccumulator;
+
+	m_flSappedDamageAccumulator -= iDamage;
+
+	CTakeDamageInfo info;
+	info.SetDamage( iDamage );
+	info.SetAttacker( this );
+	info.SetInflictor( this );
+	info.SetDamageType( DMG_CRUSH );
+
+	TakeDamage( info );
+
+	m_flLastSappedThinkTime = gpGlobals->curtime;
 }
 #endif
 
@@ -1578,47 +1640,205 @@ void CAI_BaseNPC::OnRemoveSpeedBoost( void )
 #endif
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::HasItem( void )
-{
-	return ( m_hItem != NULL );
-}
+extern ConVar tf_debug_bullets;
+extern ConVar tf_useparticletracers;
+extern ConVar sv_showimpacts;
 
 //-----------------------------------------------------------------------------
 // Purpose:
+//   Input: info
+//          bDoEffects - effects (blood, etc.) should only happen client-side.
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::SetItem( CTFItem *pItem )
+void CAI_BaseNPC::FireBullet( const FireBulletsInfo_t &info, bool bDoEffects, int nDamageType, int nCustomDamageType /*= TF_DMG_CUSTOM_NONE*/ )
 {
-	m_hItem = pItem;
-}
+	// Fire a bullet (ignoring the shooter).
+	Vector vecStart = info.m_vecSrc;
+	Vector vecEnd = vecStart + info.m_vecDirShooting * info.m_flDistance;
+	trace_t trace;
+	UTIL_TraceLine( vecStart, vecEnd, ( MASK_SHOT ), this, COLLISION_GROUP_NONE, &trace );
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-CTFItem	*CAI_BaseNPC::GetItem( void )
-{
-	return m_hItem;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Is the player allowed to use a teleporter ?
-//-----------------------------------------------------------------------------
-bool CAI_BaseNPC::HasTheFlag( void )
-{
-	if ( HasItem() && GetItem()->GetItemID() == TF_ITEM_CAPTURE_FLAG )
+#ifdef GAME_DLL
+	if ( tf_debug_bullets.GetBool() )
 	{
-		return true;
+		NDebugOverlay::Line( vecStart, trace.endpos, 0, 255, 0, true, 30 );
 	}
+#endif
 
-	return false;
+
+#ifdef CLIENT_DLL
+	if ( sv_showimpacts.GetInt() == 1 || sv_showimpacts.GetInt() == 2 )
+	{
+		// draw red client impact markers
+		debugoverlay->AddBoxOverlay( trace.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
+
+		if ( trace.m_pEnt && trace.m_pEnt->IsPlayer() )
+		{
+			C_AI_BaseNPC *pNPC = dynamic_cast<C_AI_BaseNPC *>( trace.m_pEnt );
+			pNPC->DrawClientHitboxes( 4, true );
+		}
+	}
+#else
+	if ( sv_showimpacts.GetInt() == 1 || sv_showimpacts.GetInt() == 3 )
+	{
+		// draw blue server impact markers
+		NDebugOverlay::Box( trace.endpos, Vector( -2, -2, -2 ), Vector( 2, 2, 2 ), 0, 0, 255, 127, 4 );
+
+		if ( trace.m_pEnt && trace.m_pEnt->IsPlayer() )
+		{
+			CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( trace.m_pEnt );
+			pNPC->DrawServerHitboxes( 4, true );
+		}
+	}
+#endif
+
+	if ( trace.fraction < 1.0 )
+	{
+		// Verify we have an entity at the point of impact.
+		Assert( trace.m_pEnt );
+
+		if ( bDoEffects )
+		{
+			// If shot starts out of water and ends in water
+			if ( !( enginetrace->GetPointContents( trace.startpos ) & ( CONTENTS_WATER | CONTENTS_SLIME ) ) &&
+				( enginetrace->GetPointContents( trace.endpos ) & ( CONTENTS_WATER | CONTENTS_SLIME ) ) )
+			{
+				// Water impact effects.
+				ImpactWaterTrace( trace, vecStart );
+			}
+			else
+			{
+				// Regular impact effects.
+
+				// don't decal your teammates or objects on your team
+				if ( trace.m_pEnt->GetTeamNumber() != GetTeamNumber() )
+				{
+					UTIL_ImpactTrace( &trace, nDamageType );
+				}
+			}
+
+#ifdef CLIENT_DLL
+			static int	tracerCount;
+			if ( ( info.m_iTracerFreq != 0 ) && ( tracerCount++ % info.m_iTracerFreq ) == 0 )
+			{
+				// if this is a local player, start at attachment on view model
+				// else start on attachment on weapon model
+
+				int iEntIndex = entindex();
+				int iUseAttachment = TRACER_DONT_USE_ATTACHMENT;
+				int iAttachment = 1;
+
+				C_BaseCombatWeapon *pWeapon = GetActiveWeapon();
+
+				if( pWeapon )
+					iAttachment = pWeapon->LookupAttachment( "muzzle" );
+
+				bool bInToolRecordingMode = clienttools->IsInRecordingMode();
+
+				if( pWeapon )
+				{
+					iEntIndex = pWeapon->entindex();
+
+					int nModelIndex = pWeapon->GetModelIndex();
+					int nWorldModelIndex = pWeapon->GetWorldModelIndex();
+					if ( bInToolRecordingMode && nModelIndex != nWorldModelIndex )
+					{
+						pWeapon->SetModelIndex( nWorldModelIndex );
+					}
+
+					pWeapon->GetAttachment( iAttachment, vecStart );
+
+					if ( bInToolRecordingMode && nModelIndex != nWorldModelIndex )
+					{
+						pWeapon->SetModelIndex( nModelIndex );
+					}
+				}
+
+				if ( tf_useparticletracers.GetBool() )
+				{
+					const char *pszTracerEffect = GetTracerType();
+					if ( pszTracerEffect && pszTracerEffect[0] )
+					{
+						char szTracerEffect[128];
+						if ( nDamageType & DMG_CRITICAL )
+						{
+							Q_snprintf( szTracerEffect, sizeof(szTracerEffect), "%s_crit", pszTracerEffect );
+							pszTracerEffect = szTracerEffect;
+						}
+
+						FX_TFTracer( pszTracerEffect, vecStart, trace.endpos, entindex(), true );
+					}
+				}
+				else
+				{
+					UTIL_Tracer( vecStart, trace.endpos, entindex(), iUseAttachment, 5000, true, GetTracerType() );
+				}
+			}
+#endif
+
+		}
+
+		// Server specific.
+#ifndef CLIENT_DLL
+		// See what material we hit.
+		CTakeDamageInfo dmgInfo( this, info.m_pAttacker, GetActiveWeapon(), info.m_flDamage, nDamageType, nCustomDamageType );
+		CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, info.m_vecDirShooting, trace.endpos, 1.0 );	//MATTTODO bullet forces
+		trace.m_pEnt->DispatchTraceAttack( dmgInfo, info.m_vecDirShooting, &trace );
+#endif
+	}
+}
+
+#ifdef CLIENT_DLL
+extern ConVar tf_impactwatertimeenable;
+extern ConVar tf_impactwatertime;
+#endif
+
+//-----------------------------------------------------------------------------
+// Purpose: Trace from the shooter to the point of impact (another player,
+//          world, etc.), but this time take into account water/slime surfaces.
+//   Input: trace - initial trace from player to point of impact
+//          vecStart - starting point of the trace 
+//-----------------------------------------------------------------------------
+void CAI_BaseNPC::ImpactWaterTrace( trace_t &trace, const Vector &vecStart )
+{
+#ifdef CLIENT_DLL
+	if ( tf_impactwatertimeenable.GetBool() )
+	{
+		if ( m_flWaterImpactTime > gpGlobals->curtime )
+			return;
+	}
+#endif 
+
+	trace_t traceWater;
+	UTIL_TraceLine( vecStart, trace.endpos, ( MASK_SHOT | CONTENTS_WATER | CONTENTS_SLIME ),
+		this, COLLISION_GROUP_NONE, &traceWater );
+	if ( traceWater.fraction < 1.0f )
+	{
+		CEffectData	data;
+		data.m_vOrigin = traceWater.endpos;
+		data.m_vNormal = traceWater.plane.normal;
+		data.m_flScale = random->RandomFloat( 8, 12 );
+		if ( traceWater.contents & CONTENTS_SLIME )
+		{
+			data.m_fFlags |= FX_WATER_IN_SLIME;
+		}
+
+		const char *pszEffectName = "tf_gunshotsplash";
+
+		DispatchEffect( pszEffectName, data );
+
+#ifdef CLIENT_DLL
+		if ( tf_impactwatertimeenable.GetBool() )
+		{
+			m_flWaterImpactTime = gpGlobals->curtime + tf_impactwatertime.GetFloat();
+		}
+#endif
+	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Are we allowed to pick the flag up?
+// Purpose: Add Mannpower Revenge Crit
 //-----------------------------------------------------------------------------
-bool CAI_BaseNPC::IsAllowedToPickUpFlag( void )
+void CAI_BaseNPC::AddTempCritBonus( float flDuration )
 {
-	return true;
+	AddCond( TF_COND_RUNE_IMBALANCE, flDuration );
 }

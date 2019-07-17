@@ -159,9 +159,6 @@ CTimedEventMgr g_NetworkPropertyEventMgr;
 
 ISaveRestoreBlockHandler *GetEventQueueSaveRestoreBlockHandler();
 ISaveRestoreBlockHandler *GetCommentarySaveRestoreBlockHandler();
-#ifdef TF_CLASSIC
-ISaveRestoreBlockHandler *GetMapAddSaveRestoreBlockHandler();
-#endif
 
 CUtlLinkedList<CMapEntityRef, unsigned short> g_MapEntityRefs;
 
@@ -585,6 +582,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 
 #ifndef _X360
+	SteamAPI_InitSafe();
 	s_SteamAPIContext.Init();
 	s_SteamGameServerAPIContext.Init();
 #endif
@@ -686,9 +684,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetTemplateSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetCommentarySaveRestoreBlockHandler() );
-	#ifdef TF_CLASSIC
-	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetMapAddSaveRestoreBlockHandler() );
-	#endif
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->AddBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 
@@ -768,9 +763,6 @@ void CServerGameDLL::DLLShutdown( void )
 
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetAchievementSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetCommentarySaveRestoreBlockHandler() );
-	#ifdef TF_CLASSIC
-	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetMapAddSaveRestoreBlockHandler() );
-	#endif
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetEventQueueSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetDefaultResponseSystemSaveRestoreBlockHandler() );
 	g_pGameSaveRestoreBlockSet->RemoveBlockHandler( GetTemplateSaveRestoreBlockHandler() );
@@ -807,6 +799,7 @@ void CServerGameDLL::DLLShutdown( void )
 #ifndef _X360
 	s_SteamAPIContext.Clear(); // Steam API context shutdown
 	s_SteamGameServerAPIContext.Clear();
+	// SteamAPI_Shutdown(); << Steam shutdown is controlled by engine?
 #endif	
 
 	gameeventmanager = NULL;

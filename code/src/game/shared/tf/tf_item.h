@@ -15,8 +15,11 @@
 #endif
 
 #ifdef CLIENT_DLL
+#define CTFPlayer C_TFPlayer
 #define CTFItem C_TFItem
 #endif
+
+class CTFPlayer;
 
 //=============================================================================
 //
@@ -32,8 +35,8 @@ public:
 	virtual unsigned int GetItemID();
 	
 	// Pick up and drop.
-	virtual void PickUp( CBaseEntity *pPlayer, bool bInvisible );
-	virtual void Drop( CBaseEntity *pPlayer, bool bVisible, bool bThrown = false, bool bMessage = true );
+	virtual void PickUp( CTFPlayer *pPlayer, bool bInvisible );
+	virtual void Drop( CTFPlayer *pPlayer, bool bVisible, bool bThrown = false, bool bMessage = true );
 
 #ifdef CLIENT_DLL
 	virtual bool ShouldDraw();

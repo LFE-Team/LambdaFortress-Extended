@@ -316,6 +316,14 @@ float CWeaponMedigun::GetHealRate( void )
 {
 	float flHealRate = (float)m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_nDamage;
 	CALL_ATTRIB_HOOK_FLOAT( flHealRate, mult_medigun_healrate );
+
+	float flHealingMastery = 0;
+	CALL_ATTRIB_HOOK_FLOAT( flHealingMastery, healing_mastery );
+	if ( flHealingMastery )
+	{
+		return flHealRate + flHealingMastery;
+	}
+
 	return flHealRate;
 }
 
@@ -632,6 +640,10 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 			if ( pTarget != pNewTarget && pNewTarget->IsPlayer() )
 			{
 				pTFPlayer->m_Shared.Heal( pOwner, GetHealRate() );
+				if ( pTFPlayer->IsPlayerClass( TF_CLASS_SCOUT ) )
+				{
+					pOwner->TeamFortress_SetSpeed();
+				}
 			}
 
 			pTFPlayer->m_Shared.RecalculateChargeEffects( false );
@@ -650,7 +662,8 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 			if ( pTarget != pNewTarget && pNewTarget->IsCombatItem() )
 			{
 				//pMarker->ReviveThink();
-				pMarker->RevivePlayer(); // TODO: remove this and made proper healing
+				pMarker->ReviveOwner(); // TODO: remove this and made proper healing
+				CTF_GameStats.Event_PlayerRevived( pOwner );
 			}
 		}
 
@@ -962,6 +975,9 @@ void CWeaponMedigun::RemoveHealingTarget( bool bSilent )
 			pTFPlayer->m_Shared.StopHealing( pOwner );
 			pTFPlayer->m_Shared.RecalculateChargeEffects( false );
 
+			if ( pTFPlayer->IsPlayerClass( TF_CLASS_SCOUT ) )
+				pOwner->TeamFortress_SetSpeed();
+
 			if ( !bSilent )
 			{
 				pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_STOPPEDHEALING, pTFPlayer->IsAlive() ? "healtarget:alive" : "healtarget:dead" );
@@ -1041,36 +1057,8 @@ void CWeaponMedigun::PrimaryAttack( void )
 #ifdef GAME_DLL
 			pOwner->SpeakWeaponFire();
 #endif
-
 			SendWeaponAnim( ACT_MP_ATTACK_STAND_PREFIRE );
 			pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRE );
-
-#ifdef CLIENT_DLL
-				// Handle the dynamic light
-				if (lfe_muzzlelight.GetBool())
-				{
-					dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
-					dl->origin = pOwner->Weapon_ShootPosition();;
-					switch ( GetTFPlayerOwner()->GetTeamNumber() )
-					{
-					case TF_TEAM_RED:
-						dl->color.r = 255;
-						dl->color.g = 80;
-						dl->color.b = 10;
-						break;
-
-					case TF_TEAM_BLUE:
-						dl->color.r = 10;
-						dl->color.g = 80;
-						dl->color.b = 255;
-						break;
-					}
-					dl->die = gpGlobals->curtime + 0.01f;
-					dl->radius = 128.f;
-					dl->decay = 512.0f;
-					dl->style = 1;
-				}
-#endif
 		}
 
 		m_bHealing = true;
@@ -1372,6 +1360,31 @@ void CWeaponMedigun::UpdateEffects( void )
 	// Loops through the healing targets, and make sure we have an effect for each of them
 	if ( m_hHealingTarget )
 	{
+			// Handle the dynamic light
+			if (lfe_muzzlelight.GetBool())
+			{
+				dlight_t *dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC + index );
+				dl->origin = pFiringPlayer->Weapon_ShootPosition();;
+				switch ( GetTFPlayerOwner()->GetTeamNumber() )
+				{
+				case TF_TEAM_RED:
+					dl->color.r = 255;
+					dl->color.g = 80;
+					dl->color.b = 10;
+					break;
+
+				case TF_TEAM_BLUE:
+					dl->color.r = 10;
+					dl->color.g = 80;
+					dl->color.b = 255;
+					break;
+				}
+				dl->die = gpGlobals->curtime + 0.01f;
+				dl->radius = 128.f;
+				dl->decay = 512.0f;
+				dl->style = 1;
+			}
+
 		if ( m_hHealingTargetEffect.pTarget == m_hHealingTarget )
 			return;
 

@@ -46,6 +46,8 @@ public:
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
 	virtual void	Killed( const CTakeDamageInfo &info );
 
+	//bool			ApplyRoboSapper( CTFPlayer*, float, int )
+	//void			IsValidRoboSapperTarget( CTFPlayer* )
 private:
 	float m_flSapperDamageAccumulator;
 	float m_flLastThinkTime;

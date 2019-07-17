@@ -79,6 +79,7 @@ CAreaPortal::CAreaPortal()
 void CAreaPortal::Spawn( void )
 {
 	AddEffects( EF_NORECEIVESHADOW | EF_NOSHADOW );
+	m_state = AREAPORTAL_OPEN;
 	Precache();
 }
 
@@ -97,7 +98,7 @@ void CAreaPortal::Precache( void )
 //------------------------------------------------------------------------------
 void CAreaPortal::InputClose( inputdata_t &inputdata )
 {
-	m_state = AREAPORTAL_CLOSED;
+	m_state = AREAPORTAL_OPEN;
 	UpdateState();
 }
 
@@ -117,7 +118,8 @@ void CAreaPortal::InputOpen( inputdata_t &inputdata )
 //------------------------------------------------------------------------------
 void CAreaPortal::InputToggle( inputdata_t &inputdata )
 {
-	m_state = ((m_state == AREAPORTAL_OPEN) ? AREAPORTAL_CLOSED : AREAPORTAL_OPEN);
+	//m_state = ((m_state == AREAPORTAL_OPEN) ? AREAPORTAL_CLOSED : AREAPORTAL_OPEN);
+	m_state = AREAPORTAL_OPEN;
 	UpdateState();
 }
 
@@ -144,14 +146,16 @@ bool CAreaPortal::UpdateVisibility( const Vector &vOrigin, float fovDistanceAdju
 //------------------------------------------------------------------------------
 void CAreaPortal::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if ( useType == USE_ON )
+	if ( useType == USE_ON || useType == USE_OFF )
 	{
 		m_state = AREAPORTAL_OPEN;
 	}
+	/*
 	else if ( useType == USE_OFF )
 	{
 		m_state = AREAPORTAL_CLOSED;
 	}
+	*/
 	else
 	{
 		return;
@@ -163,6 +167,7 @@ void CAreaPortal::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 
 bool CAreaPortal::KeyValue( const char *szKeyName, const char *szValue )
 {
+	/*
 	if( FStrEq( szKeyName, "StartOpen" ) )
 	{
 		m_state = (atoi(szValue) != 0) ? AREAPORTAL_OPEN : AREAPORTAL_CLOSED;
@@ -173,6 +178,8 @@ bool CAreaPortal::KeyValue( const char *szKeyName, const char *szValue )
 	{
 		return BaseClass::KeyValue( szKeyName, szValue );
 	}
+	*/
+	return BaseClass::KeyValue(szKeyName, szValue);
 }
 
 

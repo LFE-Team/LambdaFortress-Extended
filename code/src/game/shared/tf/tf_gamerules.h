@@ -47,12 +47,13 @@ class CHealthKit;
 #endif
 
 extern ConVar sv_hl1_ff;
+extern ConVar lfe_mapadd_enable;
 
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;
 extern ConVar	sv_dynamicnpcs;
 extern ConVar	sv_difficulty;
-
+extern ConVar	sv_hl2_beta;
 extern ConVar	fraglimit;
 
 extern Vector g_TFClassViewVectors[];
@@ -106,11 +107,19 @@ public:
 
 	void	InputSetDifficulty( inputdata_t &inputdata );
 
+	void	InputSpawnBoss( inputdata_t &inputdata );
+
 	virtual void Activate();
 
 	int		m_iHud_Type;
 	bool	m_bCTF_Overtime;
+	bool	m_bForceDynamicNPC;
 
+	COutputEvent			m_IsHL2BetaEnabled;
+	COutputEvent			m_IsDynamicNPCEnabled;
+	COutputEvent			m_IsCoOp;
+	COutputEvent			m_IsBluCoOp;
+	COutputEvent			m_IsVersus;
 #endif
 };
 
@@ -148,8 +157,8 @@ public:
 
 	int				GetFarthestOwnedControlPoint( int iTeam, bool bWithSpawnpoints );
 	virtual bool	TeamMayCapturePoint( int iTeam, int iPointIndex );
-	virtual bool	PlayerMayCapturePoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
-	virtual bool	PlayerMayBlockPoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
+	virtual bool	PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
+	virtual bool	PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason = NULL, int iMaxReasonLength = 0 );
 
 	static int		CalcPlayerScore( RoundStats_t *pRoundStats );
 
@@ -298,7 +307,7 @@ protected:
 
 public:
 	// Return the value of this player towards capturing a point
-	virtual int		GetCaptureValueForPlayer( CBaseEntity *pPlayer );
+	virtual int		GetCaptureValueForPlayer( CBasePlayer *pPlayer );
 
 	// Collision and Damage rules.
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
@@ -334,35 +343,40 @@ public:
 	virtual bool	IsInHybridCTF_CPMode( void ) { return m_bPlayingHybrid_CTF_CP; };
 	virtual bool	IsInSpecialDeliveryMode( void ) { return m_bPlayingSpecialDeliveryMode; };
 
-	bool IsCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP ); }
-	bool IsBluCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_BLUCOOP ); }
-	bool IsAnyCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP || GetGameType() == TF_GAMETYPE_BLUCOOP ); }
-	bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
-	bool IsBluCoOpGameRunning( void ) { return ( IsBluCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
-	bool IsAnyCoOpGameRunning( void ) { return ( IsBluCoOp() || IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
-	bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
+	virtual bool IsCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP ); }
+	virtual bool IsBluCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_BLUCOOP ); }
+	virtual bool IsAnyCoOp( void ) { return ( GetGameType() == TF_GAMETYPE_COOP || GetGameType() == TF_GAMETYPE_BLUCOOP ); }
+	virtual bool IsCoOpGameRunning( void ) { return ( IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers() ); }
+	virtual bool IsBluCoOpGameRunning( void ) { return ( IsBluCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
+	virtual bool IsAnyCoOpGameRunning( void ) { return ( IsBluCoOp() || IsCoOp() && State_Get() == GR_STATE_RND_RUNNING && !IsInWaitingForPlayers()); }
+	virtual bool IsVersus( void ) { return ( GetGameType() == TF_GAMETYPE_VS ); }
 
-	bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
+	virtual bool IsZombieSurvival( void ) { return ( GetGameType() == TF_GAMETYPE_ZS ); }
 
-	bool IsFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1 && sv_hl1_ff.GetFloat() == 1 ); }
-	bool IsHL1FriendlyFire( void ) { return ( sv_hl1_ff.GetFloat() == 1 ); }
-	bool IsMPFriendlyFire( void ) { return ( friendlyfire.GetFloat() == 1 ); }
+	bool IsFriendlyFire( void ) { return ( friendlyfire.GetBool() && sv_hl1_ff.GetBool() ); }
+	bool IsHL1FriendlyFire( void ) { return ( sv_hl1_ff.GetBool() ); }
+	bool IsMPFriendlyFire( void ) { return ( friendlyfire.GetBool() ); }
 
-	int iDirectorAnger;
-	int iMaxDirectorAnger;
+	bool IsMapAddAllowed( void ) { return ( lfe_mapadd_enable.GetBool() ); }
+	bool IsDynamicNPCAllowed( void ) { return ( sv_dynamicnpcs.GetBool() ); }
+
+	bool IsHL2Beta( void ) { return ( sv_hl2_beta.GetBool() ); }
+
+	int m_iDirectorAnger;
+	int m_iMaxDirectorAnger;
+
+	int		DirectorAnger( void ) { return m_iDirectorAnger; }
+	int		DirectorMaxAnger( void ) { return m_iMaxDirectorAnger; }
+
+	virtual void	SetDirectorAnger( int iAnger ) {  m_iDirectorAnger = iAnger; }
+	virtual void	SetDynamicNPC( bool bEnable );
+
+	virtual void	UpdateDirectorAnger();
+public: 
+
+	bool IsInHL1Map();
 
 #ifdef GAME_DLL
-	bool IsInHL1Map()
-	{
-		if (!Q_strnicmp(STRING(gpGlobals->mapname), "t0", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "c0", 2) \
-			|| !Q_strnicmp(STRING(gpGlobals->mapname), "c1", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "c2", 2) \
-			|| !Q_strnicmp(STRING(gpGlobals->mapname), "c3", 2) || !Q_strnicmp(STRING(gpGlobals->mapname), "c4", 2) \
-			|| !Q_strnicmp(STRING(gpGlobals->mapname), "c5", 2))
-			return true;
-		else
-			return false;
-	}
-
 	bool IsInHL2Map()
 	{
 		if (!Q_strnicmp(STRING(gpGlobals->mapname), "d1_", 3) || !Q_strnicmp(STRING(gpGlobals->mapname), "d2_", 3) || !Q_strnicmp(STRING(gpGlobals->mapname), "d3_", 4) )
@@ -507,23 +521,56 @@ private:
 #endif
 
 	CNetworkVar( int, m_nGameType ); // Type of game this map is (CTF, CP)
+	//CNetworkVar( int, m_nStopWatchState );
 	CNetworkString( m_pszTeamGoalStringRed, MAX_TEAMGOAL_STRING );
 	CNetworkString( m_pszTeamGoalStringBlue, MAX_TEAMGOAL_STRING );
 	CNetworkVar( float, m_flCapturePointEnableTime );
 	CNetworkVar( int, m_nHudType );
+	//CNetworkVar( bool, m_bIsInTraining );
+	//CNetworkVar( bool, m_bAllowTrainingAchievements );
+	//CNetworkVar( bool, m_bIsWaitingForTrainingContinue );
+	//CNetworkVar( bool, m_bIsTrainingHUDVisible );
+	//CNetworkVar( bool, m_bIsInItemTestingMode );
+	//CNetworkVar( bool, m_hBonusLogic );
 	CNetworkVar( bool, m_bPlayingKoth );
 	CNetworkVar( bool, m_bPlayingMedieval );
+	CNetworkVar( bool, m_bPlayingHybrid_CTF_CP );
 	CNetworkVar( bool, m_bPlayingSpecialDeliveryMode );
 	CNetworkVar( bool, m_bPlayingRobotDestructionMode );
+	CNetworkVar( CHandle<CTeamRoundTimer>, m_hRedKothTimer );
+	CNetworkVar( CHandle<CTeamRoundTimer>, m_hBlueKothTimer );
+	//CNetworkVar( int, m_nMapHolidayType );
+	//CNetworkVar( int, m_itHandle );
 	CNetworkVar( bool, m_bPlayingMannVsMachine );
-	CNetworkVar( bool, m_bPlayingHybrid_CTF_CP );
+	//CNetworkVar( CHandle<CTFPlayer?>, m_hBirthdayPlayer );
+	//CNetworkVar( int, m_nBossHealth );
+	//CNetworkVar( int, m_nMaxBossHealth );
+	//CNetworkVar( float, m_fBossNormalizedTravelDistance );
+	//CNetworkVar( bool, m_bMannVsMachineAlarmStatus );
+	//CNetworkVar( bool, m_bHaveMinPlayersToEnableReady );
+	//CNetworkVar( bool, m_bBountyModeEnabled );
+	//CNetworkVar( int, m_nHalloweenEffect );
+	//CNetworkVar( float, m_fHalloweenEffectStartTime );
+	//CNetworkVar( float, m_fHalloweenEffectDuration );
+	//CNetworkVar( bool?, m_halloweenScenario );
+	//CNetworkVar( bool, m_bHelltowerPlayersInHell );
+	//CNetworkVar( bool, m_bIsUsingSpells );
 	CNetworkVar( bool, m_bCompetitiveMode );
 	CNetworkVar( bool, m_bPowerupMode );
-	CNetworkVar( CHandle<CTeamRoundTimer>, m_hBlueKothTimer );
-	CNetworkVar( CHandle<CTeamRoundTimer>, m_hRedKothTimer );
+	//CNetworkVar( int, m_nMatchGroupType );
+	//CNetworkVar( bool, m_bMatchEnded );
+	//CNetworkVar( const char?, m_pszCustomUpgradesFile );
+	//CNetworkVar( bool, m_bTruceActive );
+	//CNetworkVar( bool, m_bShowMatchSummary );
+	//CNetworkVar( bool, m_bTeamsSwitched );
+	//CNetworkVar( bool, m_bMapHasMatchSummaryStage );
+	//CNetworkVar( bool, m_bPlayersAreOnMatchSummaryStage );
+	//CNetworkVar( bool, m_bStopWatchWinner );
+	//CNetworkVar( ?, m_ePlayerWantsRematch );
+	//CNetworkVar( ?, m_eRematchState );
+	//CNetworkVar( int, m_nNextMapVoteOptions );
 
 public:
-
 	bool m_bControlSpawnsPerTeam[MAX_TEAMS][MAX_CONTROL_POINTS];
 	int	 m_iPreviousRoundWinners;
 

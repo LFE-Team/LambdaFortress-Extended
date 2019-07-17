@@ -13,7 +13,7 @@
 #include "cbase.h"
 #include "hl1_player_shared.h"
 #include "hl1_player.h"
-#include "Takedamageinfo.h"
+#include "takedamageinfo.h"
 
 
 class CHL1MP_Player;

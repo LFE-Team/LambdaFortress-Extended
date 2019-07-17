@@ -75,6 +75,8 @@ enum
 #define TF_DAMAGE_CRIT_DURATION_RAPID		2.0f
 #define TF_DAMAGE_CRIT_CHANCE_MELEE			0.10f
 
+#define LFE_DAMAGE_NPC_CRIT_DURATION_RAPID	1.5f
+
 #define TF_DAMAGE_CRITMOD_MAXTIME			20
 #define TF_DAMAGE_CRITMOD_MINTIME			2
 #define TF_DAMAGE_CRITMOD_DAMAGE			800
@@ -89,12 +91,11 @@ enum
 //-----------------------------------------------------------------------------
 #define PANEL_CLASS_BLUE		"class_blue"
 #define PANEL_CLASS_RED			"class_red"
-#define PANEL_CLASS_GREEN		"class_green"
-#define PANEL_CLASS_YELLOW		"class_yellow"
 #define PANEL_MAPINFO			"mapinfo"
 #define PANEL_ROUNDINFO			"roundinfo"
-#define PANEL_COOPSCOREBOARD "coopscoreboard"
-#define PANEL_ARENATEAMSELECT "arenateamselect"
+#define PANEL_ARENATEAMSELECT	"arenateamselect"
+#define PANEL_COOPSCOREBOARD	"coopscoreboard"
+#define PANEL_COOPTEAMSELECT	"coopteamselect"
 
 // file we'll save our list of viewed intro movies in
 #define MOVIES_FILE				"viewed.res"
@@ -155,6 +156,9 @@ extern const char *g_aRawPlayerClassNames[];	// raw class names
 extern const char *g_aPlayerClassEmblems[];
 extern const char *g_aPlayerClassEmblemsDead[];
 
+extern const char *g_aPlayerClassEmblemsAlt[];
+extern const char *g_aPlayerClassEmblemsAltDead[];
+
 //-----------------------------------------------------------------------------
 // For entity_capture_flags to use when placed in the world
 //-----------------------------------------------------------------------------
@@ -164,7 +168,8 @@ enum ETFFlagType
 	TF_FLAGTYPE_ATTACK_DEFEND,
 	TF_FLAGTYPE_TERRITORY_CONTROL,
 	TF_FLAGTYPE_INVADE,
-	TF_FLAGTYPE_KINGOFTHEHILL,
+	TF_FLAGTYPE_SPECIAL_DELIVERY,
+	TF_FLAGTYPE_PLAYER_DESTRUCTION,
 };
 
 //-----------------------------------------------------------------------------
@@ -222,6 +227,7 @@ enum
 	TF_AMMO_METAL,
 	TF_AMMO_GRENADES1,
 	TF_AMMO_GRENADES2,
+	//TF_AMMO_GRENADES3,
 	TF_AMMO_COUNT
 };
 
@@ -263,6 +269,7 @@ enum
 	TF_WPN_TYPE_PRIMARY2,
 	TF_WPN_TYPE_ITEM3,
 	TF_WPN_TYPE_ITEM4,
+	LFE_WPN_TYPE_PHYSGUN,
 	TF_WPN_TYPE_COUNT
 };
 
@@ -650,6 +657,7 @@ enum ETFCond
 	// Add New conds here
 	TF_COND_SLOWED,
 	LFE_COND_FLASHLIGHT,
+	LFE_COND_LOW_GRAVITY,
 
 	TF_COND_LAST
 };
@@ -718,11 +726,13 @@ enum
 #define TF_FLAGINFO_STOLEN		(1<<0)
 #define TF_FLAGINFO_DROPPED		(1<<1)
 
-enum {
+enum
+{
 	TF_FLAGEVENT_PICKUP = 1,
 	TF_FLAGEVENT_CAPTURE,
 	TF_FLAGEVENT_DEFEND,
-	TF_FLAGEVENT_DROPPED
+	TF_FLAGEVENT_DROPPED,
+	TF_FLAGEVENT_RETURNED
 };
 
 //-----------------------------------------------------------------------------
@@ -1124,6 +1134,7 @@ typedef enum
 #define TF_SCORE_TELEPORTS_PER_POINT			2	
 #define TF_SCORE_HEAL_HEALTHUNITS_PER_POINT		600
 #define TF_SCORE_BONUS_PER_POINT				1
+#define TF_SCORE_REVIVE_PLAYER					2
 
 //-------------------------
 // Shared Teleporter State
@@ -1252,23 +1263,24 @@ enum
 //--------------------------------------------------------------------------
 // Stun
 //--------------------------------------------------------------------------
+#define TF_STUNFLAG_SLOWDOWN			(1<<0) // activates slowdown modifier
+#define TF_STUNFLAG_BONKSTUCK			(1<<1) // bonk sound, stuck
+#define TF_STUNFLAG_LIMITMOVEMENT		(1<<2) // disable forward/backward movement
+#define TF_STUNFLAG_CHEERSOUND			(1<<3) // cheering sound
+#define TF_STUNFLAG_NOSOUNDOREFFECT		(1<<4) // no sound or particle
+#define TF_STUNFLAG_THIRDPERSON			(1<<5) // panic animation
+#define TF_STUNFLAG_GHOSTEFFECT			(1<<6) // ghost particles
+#define TF_STUNFLAG_BONKEFFECT			(1<<7) // sandman particles
+#define TF_STUNFLAG_RESISTDAMAGE		(1<<8) // damage resist modifier
+	
 enum
 {
-	TF_STUNFLAG_SLOWDOWN			= (1<<0), // activates slowdown modifier
-	TF_STUNFLAG_BONKSTUCK			= (1<<1), // bonk sound, stuck
-	TF_STUNFLAG_LIMITMOVEMENT		= (1<<2), // disable forward/backward movement
-	TF_STUNFLAG_CHEERSOUND			= (1<<3), // cheering sound
-	TF_STUNFLAG_NOSOUNDOREFFECT		= (1<<4), // no sound or particle
-	TF_STUNFLAG_THIRDPERSON			= (1<<5), // panic animation
-	TF_STUNFLAG_GHOSTEFFECT			= (1<<6), // ghost particles
-	
-	TF_STUNFLAGS_LOSERSTATE		= TF_STUNFLAG_SLOWDOWN | TF_STUNFLAG_NOSOUNDOREFFECT | TF_STUNFLAG_THIRDPERSON,
-	TF_STUNFLAGS_GHOSTSCARE		= TF_STUNFLAG_GHOSTEFFECT | TF_STUNFLAG_THIRDPERSON,
-	TF_STUNFLAGS_SMALLBONK		= TF_STUNFLAG_THIRDPERSON | TF_STUNFLAG_SLOWDOWN,
-	TF_STUNFLAGS_NORMALBONK		= TF_STUNFLAG_BONKSTUCK,
-	TF_STUNFLAGS_BIGBONK		= TF_STUNFLAG_CHEERSOUND | TF_STUNFLAG_BONKSTUCK,
-
-	TF_STUNFLAGS_COUNT
+	TF_STUNFLAGS_LOSERSTATE		= TF_STUNFLAG_THIRDPERSON | TF_STUNFLAG_SLOWDOWN | TF_STUNFLAG_NOSOUNDOREFFECT, // Currently unused
+	TF_STUNFLAGS_GHOSTSCARE		= TF_STUNFLAG_THIRDPERSON |TF_STUNFLAG_GHOSTEFFECT, // Ghost stun
+	TF_STUNFLAGS_SMALLBONK		= TF_STUNFLAG_THIRDPERSON | TF_STUNFLAG_SLOWDOWN | TF_STUNFLAG_BONKEFFECT, // Half stun
+	TF_STUNFLAGS_NORMALBONK		= TF_STUNFLAG_BONKSTUCK, // Full stun
+	TF_STUNFLAGS_BIGBONK		= TF_STUNFLAG_CHEERSOUND | TF_STUNFLAG_BONKSTUCK | TF_STUNFLAG_RESISTDAMAGE | TF_STUNFLAG_BONKEFFECT, // Moonshot
+	TF_STUNFLAGS_COUNT // This doesn't really work with flags
 };
 
  //--------------------------------------------------------------------------
@@ -1288,7 +1300,9 @@ enum EHoliday
 	kHoliday_HalloweenOrFullMoon,
 	kHoliday_HalloweenOrFullMoonOrValentines,
 	kHoliday_AprilFools,
-	kHoliday_LFBirthday
+	kHoliday_LFBirthday,
+
+	kHolidayCount
 };
 
 //--------------------------------------------------------------------------
@@ -1399,7 +1413,7 @@ enum
 	TAUNTATK_SCOUT_DRINK,
 	TAUNTATK_HEAVY_HIGH_NOON, // POW!
 	TAUNTATK_SCOUT_GRAND_SLAM, // BONK!
-	TAUNTATK_MEDIC_INHALE, // ????
+	TAUNTATK_MEDIC_INHALE,
 	TAUNTATK_SPY_FENCING_SLASH_A, // Just lay
 	TAUNTATK_SPY_FENCING_SLASH_B, // Your weapon down
 	TAUNTATK_SPY_FENCING_STAB, // And walk away.
@@ -1416,7 +1430,7 @@ enum
 	TAUNTATK_ENGINEER_GUITAR_SMASH,
 	TAUNTATK_ENGINEER_ARM_IMPALE, // Grinder Start
 	TAUNTATK_ENGINEER_ARM_KILL, // Grinder Kill
-	TAUNTATK_ENGINEER_ARM_BLEND, // Grinder Stun and hurt?
+	TAUNTATK_ENGINEER_ARM_BLEND, // Grinder Stun and hurt
 	TAUNTATK_SOLDIER_GRENADE_KILL_WORMSIGN,
 	TAUNTATK_SHOW_ITEM,
 	TAUNTATK_MEDIC_RELEASE_DOVES,
@@ -1506,5 +1520,28 @@ public:
 #define TF_REVIVEMARKER_MODEL "models/props_mvm/mvm_revive_tombstone.mdl"
 
 #define IN_TYPING ( 1 << 31 )
+
+extern const char *g_pszBreadModels[];
+
+extern const char *g_pszClassModels[];
+extern const char *g_pszRobotClassModels[];
+extern const char *g_pszRobotBossClassModels[];
+
+#define TF_BOT_SENTRYBUSTER_MODEL "models/bots/demo/bot_sentry_buster.mdl"
+
+#define FOR_EACH_PLAYER( code ) for ( int it = 0; it <= gpGlobals->maxClients; ++it )  {\
+    CTFPlayer *pPlayer = ToTFPlayer(UTIL_PlayerByIndex( it ));\
+    if ( !pPlayer ) continue;\
+    code\
+}
+ #define FOR_EACH_PLAYER_TEAM( code, team ) for ( int it = 0; it <= gpGlobals->maxClients; ++it )  {\
+    CTFPlayer *pPlayer = ToTFPlayer(UTIL_PlayerByIndex( it ));\
+    if ( !pPlayer ) continue;\
+    if ( team != TEAM_ANY && pPlayer->GetTeamNumber() != team ) continue;\
+    code\
+}
+
+extern const char *g_aTFCondNames[];
+int GetTFCondId( const char *pszTFCondName );
 
 #endif // TF_SHAREDDEFS_H

@@ -9,7 +9,6 @@
 class CAvatarImagePanel;
 class CTFAdvButton;
 class CTFBlogPanel;
-class CTFServerlistPanel;
 class CTFAdvSlider;
 
 enum PauseMusicStatus
@@ -49,8 +48,6 @@ public:
 	void SetVersionLabel();
 	void PlayMusic();
 	void ShowBlogPanel(bool show);
-	void SetServerlistSize(int size);
-	void UpdateServerInfo();
 
 private:
 	void GetRandomMusic(char *pszBuf, int iBufLength);
@@ -65,6 +62,8 @@ private:
 
 	CSteamID			m_SteamID;
 	CTFBlogPanel		*m_pBlogPanel;
-	CTFServerlistPanel	*m_pServerlistPanel;
+
+	static void ConfirmQuit();
+	static void ConfirmDisconnect();
 };
 #endif // TFMAINMENUPAUSEPANEL_H

@@ -6,8 +6,8 @@
 
 #include "cbase.h"
 #include "entityapi.h"
-#include "EntityOutput.h"
-#include "AI_BaseNPC.h"
+#include "entityoutput.h"
+#include "ai_basenpc.h"
 #include "hl1_monstermaker.h"
 #include "mapentities.h"
 

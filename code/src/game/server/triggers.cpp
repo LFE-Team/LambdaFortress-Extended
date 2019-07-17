@@ -785,9 +785,13 @@ bool CTriggerHurt::HurtEntity( CBaseEntity *pOther, float damage )
 		}
 	}
 
-	if (pOther->IsPlayer())
+	if ( pOther->IsPlayer() )
 	{
 		m_OnHurtPlayer.FireOutput(pOther, this);
+	} // delete revive marker
+	else if ( pOther->IsCombatItem() && m_flDamage <= 1000 )
+	{
+		UTIL_Remove( pOther );
 	}
 	else
 	{
@@ -1688,6 +1692,9 @@ void CChangeLevel::ChangeLevelNow( CBaseEntity *pActivator )
 		}
 	}
 
+	//if ( TFGameRules() && TFGameRules()->IsCoOpGameRunning() )
+	//	TFGameRules()->SetWinningTeam( TF_STORY_TEAM, WINREASON_NONE, false, false );
+
 	// This object will get removed in the call to engine->ChangeLevel, copy the params into "safe" memory
 	Q_strncpy( st_szNextMap, m_szMapName, sizeof( st_szNextMap ) );
 
@@ -1740,10 +1747,9 @@ void CChangeLevel::ChangeLevelNow( CBaseEntity *pActivator )
 			if ( !playerInPVS )
 			{
 				Warning( "Player isn't in the landmark's (%s) PVS, aborting\n", m_szLandmarkName );
-#ifndef HL1_DLL
-				// HL1 works even with these errors!
-				return;
-#endif
+				
+				if(!TFGameRules()->IsInHL1Map())
+					return;
 			}
 		}
 	}
@@ -2420,16 +2426,17 @@ void CTriggerPush::Touch( CBaseEntity *pOther )
 				origin.z += 1.0f;
 				pOther->SetAbsOrigin( origin );
 			}
+			
+			if(TFGameRules()->IsInHL1Map())
+			{
+				// Apply the z velocity as a force so it counteracts gravity properly
+				Vector vecImpulse( 0, 0, vecPush.z * 0.025 );//magic hack number
 
-#ifdef HL1_DLL
-			// Apply the z velocity as a force so it counteracts gravity properly
-			Vector vecImpulse( 0, 0, vecPush.z * 0.025 );//magic hack number
+				pOther->ApplyAbsVelocityImpulse( vecImpulse );
 
-			pOther->ApplyAbsVelocityImpulse( vecImpulse );
-
-			// apply x, y as a base velocity so we travel at constant speed on conveyors
-			vecPush.z = 0;
-#endif			
+				// apply x, y as a base velocity so we travel at constant speed on conveyors
+				vecPush.z = 0;
+			}		
 
 			pOther->SetBaseVelocity( vecPush );
 			pOther->AddFlag( FL_BASEVELOCITY );
@@ -2527,20 +2534,16 @@ void CTriggerTeleport::Touch( CBaseEntity *pOther )
 	//
 	const QAngle *pAngles = NULL;
 	Vector *pVelocity = NULL;
-
-#ifdef HL1_DLL
 	Vector vecZero(0,0,0);		
-#endif
 
 	if (!pentLandmark && !HasSpawnFlags(SF_TELEPORT_PRESERVE_ANGLES) )
 	{
 		pAngles = &pentTarget->GetAbsAngles();
 
-#ifdef HL1_DLL
-		pVelocity = &vecZero;
-#else
-		pVelocity = NULL;	//BUGBUG - This does not set the player's velocity to zero!!!
-#endif
+		if(TFGameRules()->IsInHL1Map())
+			pVelocity = &vecZero;
+		else
+			pVelocity = NULL;	//BUGBUG - This does not set the player's velocity to zero!!!
 	}
 
 	tmp += vecLandmarkOffset;
@@ -2940,6 +2943,7 @@ void CAI_ChangeHintGroup::InputActivate( inputdata_t &inputdata )
 #define SF_CAMERA_PLAYER_SNAP_TO		16
 #define SF_CAMERA_PLAYER_NOT_SOLID		32
 #define SF_CAMERA_PLAYER_INTERRUPT		64
+#define SF_CAMERA_PLAYER_SETFOV			128
 
 
 //-----------------------------------------------------------------------------
@@ -2950,6 +2954,8 @@ class CTriggerCamera : public CBaseEntity
 public:
 	DECLARE_CLASS( CTriggerCamera, CBaseEntity );
 
+	CTriggerCamera();
+	~CTriggerCamera();
 	void Spawn( void );
 	bool KeyValue( const char *szKeyName, const char *szValue );
 	void Enable( void );
@@ -2985,6 +2991,8 @@ private:
 	int	  m_state;
 	Vector m_vecMoveDir;
 
+	float m_fov;
+	float m_fovSpeed;
 
 	string_t m_iszTargetAttachment;
 	int	  m_iAttachmentIndex;
@@ -3041,6 +3049,9 @@ BEGIN_DATADESC( CTriggerCamera )
 	DEFINE_FIELD( m_nPlayerButtons, FIELD_INTEGER ),
 	DEFINE_FIELD( m_nOldTakeDamage, FIELD_INTEGER ),
 
+	DEFINE_KEYFIELD( m_fov, FIELD_FLOAT, "fov" ),
+	DEFINE_KEYFIELD( m_fovSpeed, FIELD_FLOAT, "fov_rate" ),
+
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "Disable", InputDisable ),
@@ -3050,6 +3061,23 @@ BEGIN_DATADESC( CTriggerCamera )
 	DEFINE_OUTPUT( m_OnEndFollow, "OnEndFollow" ),
 
 END_DATADESC()
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CTriggerCamera::CTriggerCamera()
+{
+	m_fov = 90;
+	m_fovSpeed = 1;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CTriggerCamera::~CTriggerCamera()
+{
+	Disable();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -3224,6 +3252,19 @@ void CTriggerCamera::Enable( void )
 		m_flReturnTime = gpGlobals->curtime + m_flWait;
 		m_flSpeed = m_initialSpeed;
 		m_targetSpeed = m_initialSpeed;
+
+		if ( HasSpawnFlags( SF_CAMERA_PLAYER_SETFOV ) )
+		{
+			if ( pPlayer )
+			{
+				if ( pPlayer->GetFOVOwner() && ( FClassnameIs( pPlayer->GetFOVOwner(), "point_viewcontrol_multiplayer" ) || FClassnameIs( pPlayer->GetFOVOwner(), "point_viewcontrol" ) 
+					|| FClassnameIs( pPlayer->GetFOVOwner(), "lfe_viewcontrol" ) ) )
+				{
+					pPlayer->ClearZoomOwner();
+				}
+				pPlayer->SetFOV( this, m_fov, m_fovSpeed );
+			}
+		}
 
 		// this pertains to view angles, not translation.
 		if ( HasSpawnFlags( SF_CAMERA_PLAYER_SNAP_TO ) )
@@ -3575,8 +3616,16 @@ void CTriggerCamera::Disable( void )
 			}
 		}
 
+		if ( HasSpawnFlags( SF_CAMERA_PLAYER_SETFOV ) )
+		{
+			((CBasePlayer*)m_hPlayer.Get())->SetFOV( this, 0, m_fovSpeed );
+		}
+
 		//return the player to previous takedamage state
-		m_hPlayer->m_takedamage = DAMAGE_YES;
+		if (m_hPlayer)
+		{
+			m_hPlayer->m_takedamage = DAMAGE_YES;
+		}
 	}
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;
@@ -5351,7 +5400,6 @@ void CTriggerApplyImpulse::InputApplyImpulse( inputdata_t& )
 	}
 }
 
-#ifdef HL1_DLL
 //----------------------------------------------------------------------------------
 // func_friction
 //----------------------------------------------------------------------------------
@@ -5417,7 +5465,6 @@ void CFrictionModifier::EndTouch( CBaseEntity *pOther )
 	}
 }
 
-#endif //HL1_DLL
 
 bool IsTriggerClass( CBaseEntity *pEntity )
 {

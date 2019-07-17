@@ -63,7 +63,7 @@ public:
 #endif
 
 	// Call when we hit an entity. Use for special weapon effects on hit.
-	virtual void	OnEntityHit( CBaseEntity *pEntity );
+	virtual void	OnEntityHit( CBaseEntity *pEntity, CTakeDamageInfo *pInfo );
 
 	virtual void	SendPlayerAnimEvent( CTFPlayer *pPlayer );
 

@@ -6,56 +6,14 @@
 //=============================================================================
 
 #include "cbase.h"
-#include "hud.h"
-#include "hudelement.h"
-#include "c_tf_player.h"
-#include "iclientmode.h"
-#include "ienginevgui.h"
-#include <vgui/ILocalize.h>
-#include <vgui/ISurface.h>
-#include <vgui/IVGui.h>
-#include <vgui_controls/EditablePanel.h>
-#include <vgui_controls/ProgressBar.h>
+#include "tf_hud_itemeffectmeter.h"
 #include <vgui_controls/AnimationController.h>
 #include "engine/IEngineSound.h"
-#include "tf_controls.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
-
-class CHudItemEffects;
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CHudItemEffectMeter : public EditablePanel
-{
-	DECLARE_CLASS_SIMPLE( CHudItemEffectMeter, EditablePanel );
-
-public:
-	CHudItemEffectMeter( Panel *pParent, const char *pElementName );
-
-	virtual void	ApplySchemeSettings( IScheme *scheme );
-	virtual void	PerformLayout( void );
-	virtual void	LevelInit( void );
-
-	virtual void	UpdateStatus( void );
-
-	int				GetSlot( void ) { return m_iSlot; }
-	void			SetSlot( int iSlot ) { m_iSlot = iSlot; }
-	void			SetWeapon( C_TFWeaponBase *pWeapon );
-
-private:
-	ContinuousProgressBar *m_pEffectMeter;
-	CExLabel *m_pEffectMeterLabel;
-
-	bool m_bPlayingAnim;
-	int m_iSlot;
-	CHandle<C_TFWeaponBase> m_hWeapon;
-	float m_flOldCharge;
-};
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -154,14 +112,14 @@ void CHudItemEffectMeter::UpdateStatus( void )
 
 	if ( m_pEffectMeter )
 	{
-		float flCharge = m_hWeapon->GetEffectBarProgress();;
+		float flCharge = m_hWeapon->GetEffectBarProgress();
 		m_pEffectMeter->SetProgress( flCharge );
 		
 		// Play a ding when full charged.
 		if ( m_flOldCharge < 1.0f && flCharge >= 1.0f && !m_hWeapon->IsWeapon( TF_WEAPON_INVIS ) )
 		{
 			CLocalPlayerFilter filter;
-			C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, "TFPlayer.Recharged" );
+			C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, GetBeepSound() );
 
 			if ( m_hWeapon->IsWeapon( TF_WEAPON_BUFF_ITEM ) )
 			{
@@ -190,26 +148,7 @@ void CHudItemEffectMeter::UpdateStatus( void )
 	}
 }
 
-
-class CHudItemEffects : public CHudElement, public EditablePanel
-{
-	DECLARE_CLASS_SIMPLE( CHudItemEffects, EditablePanel );
-
-public:
-	CHudItemEffects( const char *pElementName );
-	~CHudItemEffects();
-
-	virtual void PerformLayout( void );
-	virtual bool ShouldDraw( void );
-	virtual void OnTick( void );
-	virtual void ApplySchemeSettings( IScheme *scheme );
-
-private:
-	CUtlVector<CHudItemEffectMeter *> m_pEffectBars;
-	
-	CPanelAnimationVarAliasType( int, m_iXOffset, "x_offset", "50", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_iYOffset, "y_offset", "0", "proportional_int" );
-};
+class CHudItemEffects;
 
 DECLARE_HUDELEMENT( CHudItemEffects );
 

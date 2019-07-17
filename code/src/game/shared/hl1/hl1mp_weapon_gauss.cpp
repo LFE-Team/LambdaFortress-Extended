@@ -6,7 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "hl1mp_basecombatweapon_shared.h"
 //#include "basecombatcharacter.h"
 //#include "AI_BaseNPC.h"
@@ -34,7 +34,7 @@
 #else
 #include "te_effect_dispatch.h"
 #endif
-#include "soundemittersystem/isoundemittersystembase.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 
 #define GAUSS_GLOW_SPRITE	"sprites/hotglow.vmt"
 #define GAUSS_BEAM_SPRITE	"sprites/smoke.vmt"

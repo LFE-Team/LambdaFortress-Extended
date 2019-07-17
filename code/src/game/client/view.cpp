@@ -45,6 +45,7 @@
 #include "ScreenSpaceEffects.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
+#include "tf_gamerules.h"
 
 #if defined( REPLAY_ENABLED )
 #include "replay/ireplaysystem.h"
@@ -67,6 +68,13 @@ void ToolFramework_AdjustEngineViewport( int& x, int& y, int& width, int& height
 bool ToolFramework_SetupEngineView( Vector &origin, QAngle &angles, float &fov );
 bool ToolFramework_SetupEngineMicrophone( Vector &origin, QAngle &angles );
 
+int GetNearZ()
+{
+	if (TFGameRules()->IsInHL1Map())
+		return 3;
+	else
+		return 7;
+}
 
 extern ConVar default_fov;
 extern bool g_bRenderingScreenshot;

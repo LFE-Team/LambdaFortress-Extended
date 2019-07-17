@@ -51,6 +51,10 @@ extern const char *GetMapDisplayName( const char *mapName );
 
 vgui::IImage* GetDefaultAvatarImage( C_BasePlayer *pPlayer );
 
+ConVar tf_scoreboard_alt_class_icons( "tf_scoreboard_alt_class_icons", "0", FCVAR_ARCHIVE, "Show alternate class icons in the scoreboard." );
+ConVar tf_scoreboard_mouse_mode( "tf_scoreboard_mouse_mode", "0", FCVAR_ARCHIVE | FCVAR_DEVELOPMENTONLY, "" );
+ConVar tf_scoreboard_ping_as_text( "tf_scoreboard_ping_as_text", "0", FCVAR_ARCHIVE, "Show ping values as text in the scoreboard." );
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -74,7 +78,9 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_iImageDead = 0;
 	m_iImageDominated = 0;
 	m_iImageNemesis = 0;
-	
+	m_iImagePing = 0;
+	m_iImagePingBot = 0;
+
 	ListenForGameEvent( "server_spawn" );
 
 	SetDialogVariable( "server", "" );
@@ -111,11 +117,7 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 		m_iImageDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dead", true ) );
 		m_iImageDominated = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dominated", true ) );
 		m_iImageNemesis = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis", true ) );
-		for ( int i = 0; i < TF_CLASS_COUNT_ALL; i++ )
-		{
-			m_iClassEmblem[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblems[i - 1], true ) );
-			m_iClassEmblemDead[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblemsDead[i - 1], true ) );
-		}
+
 		// resize the images to our resolution
 		for ( int i = 1; i < m_pImageList->GetImageCount(); i++ )
 		{
@@ -256,9 +258,13 @@ void CTFClientScoreBoardDialog::InitPlayerList( SectionedListPanel *pPlayerList 
 	pPlayerList->AddColumnToSection( 0, "dominating", "", SectionedListPanel::COLUMN_IMAGE, m_iNemesisWidth );
 	//pPlayerList->AddColumnToSection( 0, "status", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iStatusWidth );
 	pPlayerList->AddColumnToSection( 0, "nemesis", "", SectionedListPanel::COLUMN_IMAGE, m_iNemesisWidth );
-	pPlayerList->AddColumnToSection( 0, "class", "", SectionedListPanel::COLUMN_IMAGE, m_iClassWidth );
 	pPlayerList->AddColumnToSection( 0, "score", "#TF_Scoreboard_Score", SectionedListPanel::COLUMN_RIGHT, m_iScoreWidth );
-	pPlayerList->AddColumnToSection( 0, "ping", "#TF_Scoreboard_Ping", SectionedListPanel::COLUMN_RIGHT, m_iPingWidth );
+	pPlayerList->AddColumnToSection( 0, "class", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_RIGHT, m_iClassWidth );
+
+	if ( tf_scoreboard_ping_as_text.GetBool() )
+		pPlayerList->AddColumnToSection( 0, "ping", "#TF_Scoreboard_Ping", SectionedListPanel::COLUMN_RIGHT, m_iPingWidth );
+	else
+		pPlayerList->AddColumnToSection( 0, "ping", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_RIGHT, m_iPingWidth );
 }
 
 //-----------------------------------------------------------------------------
@@ -439,6 +445,8 @@ bool AreEnemyTeams(int iTeam1, int iTeam2)
 //-----------------------------------------------------------------------------
 void CTFClientScoreBoardDialog::UpdatePlayerList( void )
 {
+	Reset();
+
 	int iSelectedPlayerIndex = GetLocalPlayerIndex();
 
 	// Save off which player we had selected
@@ -560,7 +568,31 @@ void CTFClientScoreBoardDialog::UpdatePlayerList( void )
 			{
 				if ( g_PR->IsFakePlayer( playerIndex ) )
 				{
-					pKeyValues->SetString( "ping", "#TF_Scoreboard_Bot" );
+					if ( tf_scoreboard_ping_as_text.GetBool() )
+					{
+						pKeyValues->SetString( "ping", "#TF_Scoreboard_Bot" );
+					}
+					else
+					{
+						switch ( g_PR->GetTeam( playerIndex ) )
+						{
+						case TF_TEAM_BLUE:
+							m_iImagePingBot = m_pImageList->AddImage( scheme()->GetImage( tf_PR->IsAlive( playerIndex ) ? "../hud/scoreboard_ping_bot_blue" : "../hud/scoreboard_ping_bot_blue_d", true ) );
+							break;
+						case TF_TEAM_RED:
+							m_iImagePingBot = m_pImageList->AddImage( scheme()->GetImage( tf_PR->IsAlive( playerIndex ) ? "../hud/scoreboard_ping_bot_red" : "../hud/scoreboard_ping_bot_red_d", true ) );
+							break;
+						}
+
+						pKeyValues->SetInt( "ping", m_iImagePingBot );
+
+						int wide = 13, tall = 13;
+						if ( m_pImageList->GetImage( m_iImagePingBot ) )
+						{
+							m_pImageList->GetImage( m_iImagePingBot )->SetSize(scheme()->GetProportionalScaledValueEx( GetScheme(), wide ), scheme()->GetProportionalScaledValueEx( GetScheme(),tall ) );
+						}
+
+					}
 				}
 				else
 				{
@@ -569,9 +601,56 @@ void CTFClientScoreBoardDialog::UpdatePlayerList( void )
 			}
 			else
 			{
-				pKeyValues->SetInt( "ping", g_PR->GetPing( playerIndex ) );
+				if ( tf_scoreboard_ping_as_text.GetBool() )
+				{
+					pKeyValues->SetInt( "ping", g_PR->GetPing( playerIndex ) );
+				}
+				else
+				{
+					pKeyValues->SetInt( "ping", m_iImagePing );
+
+					int wide = 13, tall = 13;
+					if ( m_pImageList->GetImage( m_iImagePing ) )
+					{
+						m_pImageList->GetImage( m_iImagePing )->SetSize(scheme()->GetProportionalScaledValueEx( GetScheme(), wide ), scheme()->GetProportionalScaledValueEx( GetScheme(),tall ) );
+					}
+
+					// TODO: fix math
+					if ( g_PR->GetPing( playerIndex ) < 100 )
+						m_iImagePing = m_pImageList->AddImage( scheme()->GetImage( tf_PR->IsAlive( playerIndex ) ? "../hud/scoreboard_ping_low" : "../hud/scoreboard_ping_low_d", true ) );
+					else if ( g_PR->GetPing( playerIndex ) < 200 )
+						m_iImagePing = m_pImageList->AddImage( scheme()->GetImage( tf_PR->IsAlive( playerIndex ) ? "../hud/scoreboard_ping_med" : "../hud/scoreboard_ping_med_d", true ) );
+					else if ( g_PR->GetPing( playerIndex ) < 300 )
+						m_iImagePing = m_pImageList->AddImage( scheme()->GetImage( tf_PR->IsAlive( playerIndex ) ? "../hud/scoreboard_ping_high" : "../hud/scoreboard_ping_high_d", true ) );
+					else if ( g_PR->GetPing( playerIndex ) > 400 )
+						m_iImagePing = m_pImageList->AddImage( scheme()->GetImage( tf_PR->IsAlive( playerIndex ) ? "../hud/scoreboard_ping_very_high" : "../hud/scoreboard_ping_very_high_d", true ) );
+				}
 			}
 
+			for ( int i = 0; i < TF_CLASS_COUNT_ALL; i++ )
+			{
+				if ( tf_scoreboard_alt_class_icons.GetBool() )
+				{
+					m_iClassEmblem[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblemsAlt[i - 1], true ) );
+					m_iClassEmblemDead[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblemsAltDead[i - 1], true ) );
+				}
+				else
+				{
+					m_iClassEmblem[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblems[i - 1], true ) );
+					m_iClassEmblemDead[i] = m_pImageList->AddImage( scheme()->GetImage( g_aPlayerClassEmblemsDead[i - 1], true ) );
+				}
+
+				int wide = 13, tall = 13;
+				if ( m_pImageList->GetImage( m_iClassEmblem[i] ) )
+				{
+					m_pImageList->GetImage( m_iClassEmblem[i] )->SetSize(scheme()->GetProportionalScaledValueEx( GetScheme(), wide ), scheme()->GetProportionalScaledValueEx( GetScheme(),tall ) );
+				}
+
+				if ( m_pImageList->GetImage( m_iClassEmblemDead[i] ) )
+				{
+					m_pImageList->GetImage( m_iClassEmblemDead[i] )->SetSize(scheme()->GetProportionalScaledValueEx( GetScheme(), wide ), scheme()->GetProportionalScaledValueEx( GetScheme(),tall ) );
+				}
+			}
 
 			UpdatePlayerAvatar( playerIndex, pKeyValues );
 			

@@ -55,7 +55,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_AI_BaseNPC, DT_AI_BaseNPC, CAI_BaseNPC )
 	RecvPropArray3( RECVINFO_ARRAY( m_flCondExpireTimeLeft ), RecvPropFloat( RECVINFO( m_flCondExpireTimeLeft[0] ) ) ),
 	RecvPropInt( RECVINFO( m_nNumHealers ) ),
 	RecvPropBool( RECVINFO( m_bBurningDeath ) ),
-	RecvPropEHandle( RECVINFO( m_hItem ) ),
 	RecvPropInt( RECVINFO( m_nTFFlags ) )
 #endif
 END_RECV_TABLE()
@@ -86,9 +85,13 @@ C_AI_BaseNPC::C_AI_BaseNPC()
 	m_pBurningEffect = NULL;
 	m_flBurnEffectStartTime = 0;
 	m_flBurnEffectEndTime = 0;
+
 	m_hRagdoll.Set( NULL );
+
 	m_pCritSound = NULL;
 	m_pCritEffect = NULL;
+
+	m_flWaterImpactTime = 0.0f;
 #endif
 }
 
@@ -168,7 +171,7 @@ void C_AI_BaseNPC::ClientThink( void )
 #endif // HL2_DLL
 
 #ifdef HL2_EPISODIC
-	C_BaseHLPlayer *pPlayer = dynamic_cast<C_BaseHLPlayer*>( C_BasePlayer::GetLocalPlayer() );
+	C_BaseHLPlayer *pPlayer = static_cast<C_BaseHLPlayer*>( C_BasePlayer::GetLocalPlayer() );
 
 	if ( pPlayer && m_flTimePingEffect > gpGlobals->curtime )
 	{

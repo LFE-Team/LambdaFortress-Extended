@@ -2043,7 +2043,21 @@ void CNPC_RollerMine::ShockTouch( CBaseEntity *pOther )
 	pOther->CollisionProp()->CalcNearestPoint( WorldSpaceCenter(), &out );
 
 	Vector vecForce = ( -impulse * pPhysics->GetMass() * 10 );
-	CTakeDamageInfo	info( this, this, vecForce, out, sk_rollermine_shock.GetFloat(), DMG_SHOCK );
+
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_SHOCK;
+	if ( IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+
+	CTakeDamageInfo	info( this, this, vecForce, out, sk_rollermine_shock.GetFloat(), iDmgType );
 
 	if( FClassnameIs( pOther, "npc_combine_s" ) )
 	{

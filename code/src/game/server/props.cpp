@@ -42,6 +42,11 @@
 #include "gamestats.h"
 #include "vehicle_base.h"
 
+#ifdef TF_CLASSIC
+#include "tf_gamerules.h"
+extern ConVar lfe_allow_ignite_prop;
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -437,10 +442,16 @@ void CBreakableProp::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize,
 {
 	if( IsOnFire() )
 		return;
-
+#ifdef TF_CLASSIC
+	if( !lfe_allow_ignite_prop.GetBool() )
+	{
+		if( !HasInteraction( PROPINTER_FIRE_FLAMMABLE ) )
+			return;
+	}
+#else
 	if( !HasInteraction( PROPINTER_FIRE_FLAMMABLE ) )
 		return;
-
+#endif
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
 	if ( g_pGameRules->ShouldBurningPropsEmitLight() )

@@ -168,6 +168,21 @@ void TrackBoneSetupEnt( C_BaseAnimating *pEnt );
 
 bool IsEngineThreaded();
 
+//sunlightshadowctrl
+class CHackForGetLocalPlayerAccessAllowedGuard
+{
+public:
+	CHackForGetLocalPlayerAccessAllowedGuard(char const *pszContext, bool bOldSlot);
+	~CHackForGetLocalPlayerAccessAllowedGuard();
+private:
+	bool m_bChanged;
+	char const *m_pszContext;
+	bool m_bSaveGetLocalPlayerAllowed;
+};
+
+#define HACK_GETLOCALPLAYER_GUARD( desc )	CHackForGetLocalPlayerAccessAllowedGuard g_HackGLPGuard( desc, true );
+//
+
 #ifndef NO_STEAM
 
 /// Returns Steam ID, given player index.   Returns an invalid SteamID upon

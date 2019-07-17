@@ -22,8 +22,11 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+
 extern ConVar sk_auto_reload_time;
 extern ConVar sk_plr_num_shotgun_pellets;
+extern ConVar sk_npc_dmg_buckshot;
 
 class CWeaponShotgun : public CBaseHLCombatWeapon
 {
@@ -82,6 +85,8 @@ public:
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+
+	virtual const char	*GetTracerType( void );
 
 	DECLARE_ACTTABLE();
 
@@ -183,7 +188,27 @@ void CWeaponShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool
 		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
 	}
 
-	pOperator->FireBullets( 8, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+	{
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		FX_NPCFireBullets(
+			pOperator->entindex(),
+			vecShootOrigin,
+			vecShootDir,
+			TF_WEAPON_SHOTGUN_PRIMARY,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+			8,
+			sk_npc_dmg_buckshot.GetInt(),
+			IsCurrentAttackACrit() );
+	}
+	else
+	{
+		pOperator->FireBullets( 8, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -471,7 +496,7 @@ void CWeaponShotgun::PrimaryAttack( void )
 	
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	pPlayer->FireBullets( sk_plr_num_shotgun_pellets.GetInt(), vecSrc, vecAiming, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0, -1, -1, 0, NULL, true, true );
-	
+
 	pPlayer->ViewPunch( QAngle( random->RandomFloat( -2, -1 ), random->RandomFloat( -2, 2 ), 0 ) );
 
 	CSoundEnt::InsertSound( SOUND_COMBAT, GetAbsOrigin(), SOUNDENT_VOLUME_SHOTGUN, 0.2, GetOwner() );
@@ -791,3 +816,23 @@ void CWeaponShotgun::WeaponIdle( void )
 	}
 }
 */
+
+extern ConVar tf_useparticletracers;
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+const char *CWeaponShotgun::GetTracerType( void )
+{
+	if ( tf_useparticletracers.GetBool() )
+	{
+		if ( GetOwner() && !m_szTracerName[0] )
+		{
+			const char *pszTeamName = GetTeamParticleName( GetOwner()->GetTeamNumber() );
+			V_snprintf( m_szTracerName, MAX_TRACER_NAME, "bullet_shotgun_tracer01_%s", pszTeamName );
+		}
+
+		return m_szTracerName;
+	}
+
+	return BaseClass::GetTracerType();
+}

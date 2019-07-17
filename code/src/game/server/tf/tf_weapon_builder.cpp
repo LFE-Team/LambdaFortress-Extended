@@ -17,6 +17,10 @@
 #include "vguiscreen.h"
 #include "tf_gamerules.h"
 #include "tf_obj_teleporter.h"
+#include "npc_turret_floor.h"
+#include "npc_scanner.h"
+#include "npc_turret_ground.h"
+#include "npc_manhack.h"
 
 extern ConVar tf2_object_hard_limits;
 extern ConVar tf_fastbuild;
@@ -76,8 +80,6 @@ void CTFWeaponBuilder::SetObjectMode(int iObjectMode)
 void CTFWeaponBuilder::Precache(void)
 {
 	BaseClass::Precache();
-
-	PrecacheScriptSound( "Weapon_Sapper.Plant" );
 
 	// Precache all the viewmodels we could possibly be building
 	for (int iObj = 0; iObj < OBJ_LAST; iObj++)
@@ -165,7 +167,7 @@ Activity CTFWeaponBuilder::GetDrawActivity(void)
 	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
 
 	// Use the one handed sapper deploy if we're invisible.
-	if (pOwner && GetType() == OBJ_ATTACHMENT_SAPPER && pOwner->m_Shared.InCond(TF_COND_STEALTHED))
+	if (pOwner && GetType() == OBJ_ATTACHMENT_SAPPER && (pOwner->m_Shared.InCond( TF_COND_STEALTHED ) || pOwner->m_Shared.m_bFeignDeathReady ))
 	{
 		return ACT_VM_DRAW_DEPLOYED;
 	}
@@ -263,59 +265,79 @@ void CTFWeaponBuilder::ItemPostFrame(void)
 void CTFWeaponBuilder::PrimaryAttack(void)
 {
 	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-	if ( pOwner && pOwner->IsPlayerClass( TF_CLASS_SPY ) )
+	if ( GetType() == OBJ_ATTACHMENT_SAPPER )
 	{
 		Vector m_SapPos = pOwner->GetAbsOrigin();
 		float flSapRadius = 80.0;
-		variant_t sVariant;
-		CBaseEntity *pTurret = gEntList.FindEntityByClassnameNearest("npc_turret_floor", m_SapPos, flSapRadius);
-		CBaseEntity *pGroundTurret = gEntList.FindEntityByClassnameNearest("npc_turret_ground", m_SapPos, flSapRadius);
-		CBaseEntity *pScanner = gEntList.FindEntityByClassnameNearest("npc_cscanner", m_SapPos, flSapRadius);
-		CBaseEntity *pCamera = gEntList.FindEntityByClassnameNearest("npc_combine_camera", m_SapPos, flSapRadius);
-		//CBaseEntity *pMine = gEntList.FindEntityByClassnameNearest("npc_rollermine", m_SapPos, flSapRadius);
-		CBaseEntity *pManHack = gEntList.FindEntityByClassnameNearest("npc_manhack", m_SapPos, flSapRadius);
+		CBaseEntity *pTurret = gEntList.FindEntityByClassnameNearest( "npc_turret_floor", m_SapPos, flSapRadius );
+		CBaseEntity *pGroundTurret = gEntList.FindEntityByClassnameNearest( "npc_turret_ground", m_SapPos, flSapRadius );
+		CBaseEntity *pScanner = gEntList.FindEntityByClassnameNearest( "npc_cscanner", m_SapPos, flSapRadius);
+		CBaseEntity *pCamera = gEntList.FindEntityByClassnameNearest( "npc_combine_camera", m_SapPos, flSapRadius );
+		CBaseEntity *pManHack = gEntList.FindEntityByClassnameNearest( "npc_manhack", m_SapPos, flSapRadius );
 
-		if (pTurret && pTurret->GetTeamNumber() == TF_TEAM_BLUE && pOwner->GetTeamNumber() == TF_TEAM_RED)
+		// Sap if they're still Alive and not in the Same Team with the sapper
+		if ( pTurret && pTurret->IsAlive() && !pTurret->InSameTeam( pOwner )  )
 		{
-			pTurret->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
-			PrecacheModel("models/combine_turrets/floor_turret_sapper.mdl");
-			pTurret->SetModel("models/combine_turrets/floor_turret_sapper.mdl");
-			EmitSound( "Weapon_Sapper.Plant" );
-			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
+			auto pTheTurret = dynamic_cast< CNPC_FloorTurret * >( pTurret );
+			if ( pTheTurret && !pTheTurret->InCond( TF_COND_SAPPED ) && pTheTurret->IRelationType(this) != D_LI )
+			{
+				pTheTurret->OnAddSapper();
+				pTheTurret->AddCond( TF_COND_SAPPED );
+				PrecacheModel("models/combine_turrets/floor_turret_sapper.mdl");
+				pTheTurret->SetModel("models/combine_turrets/floor_turret_sapper.mdl");
+				pTheTurret->AddDamagerToHistory( pOwner );
+				pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_GRENADE );
+			}
 		}
+		else if ( pScanner && pScanner->IsAlive() && !pScanner->InSameTeam( pOwner )  )
+		{
+			auto pTheScanner = dynamic_cast< CNPC_CScanner * >( pScanner );
+			if ( pTheScanner && !pTheScanner->InCond( TF_COND_SAPPED ) && pTheScanner->IRelationType(this) != D_LI )
+			{
+				pTheScanner->AddCond( TF_COND_SAPPED );
+				pTheScanner->AddDamagerToHistory( pOwner );
+				pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_GRENADE );
+			}
+		}
+		else if ( pCamera && pCamera->IsAlive() && !pCamera->InSameTeam( pOwner )  )
+		{
+			auto pTheCamera = dynamic_cast< CAI_BaseNPC * >( pCamera );
+			if ( pTheCamera && !pTheCamera->InCond( TF_COND_SAPPED ) && pTheCamera->IRelationType(this) != D_LI )
+			{
+				//pTheCamera->Disable();
+				pTheCamera->AddCond( TF_COND_SAPPED );
+				pTheCamera->AddDamagerToHistory( pOwner );
+				pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_GRENADE );
+			}
+		}
+		else if ( pManHack && pManHack->IsAlive() && !pManHack->InSameTeam( pOwner )  )
+		{
+			auto pTheManHack = dynamic_cast< CNPC_Manhack * >( pManHack );
+			if ( pTheManHack && !pTheManHack->InCond( TF_COND_SAPPED ) && pTheManHack->IRelationType(this) != D_LI )
+			{
+				//pTheManHack->InteractivePowerDown();
+				pTheManHack->AddCond( TF_COND_SAPPED );
+				pTheManHack->AddDamagerToHistory( pOwner );
 
-		if (pScanner)
-		{
-			//pScanner->AcceptInput("Break", NULL, NULL, sVariant, NULL);
-			pScanner->SetHealth(0);
-			pScanner->EmitSound( "Weapon_Sapper.Plant" );
-			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
+				pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_GRENADE );
+			}
 		}
-		if (pCamera)
+		else if ( pGroundTurret && pGroundTurret->IsAlive() && !pGroundTurret->InSameTeam( pOwner ) )
 		{
-			pCamera->AcceptInput("Disable", NULL, NULL, sVariant, NULL);
-			pCamera->EmitSound( "Weapon_Sapper.Plant" );
-			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
-		}
-		if (pManHack)
-		{
-			pManHack->AcceptInput("InteractivePowerDown", NULL, NULL, sVariant, NULL);
-			pManHack->EmitSound( "Weapon_Sapper.Plant" );
-			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
-		}
-		if (pGroundTurret)
-		{
-			//pGroundTurret->AcceptInput("Ignite", NULL, NULL, sVariant, NULL);
-			pGroundTurret->SetHealth(0);
-			pGroundTurret->EmitSound("Weapon_Sapper.Plant");
-			pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
+			auto pTheGroundTurret = dynamic_cast< CNPC_GroundTurret * >( pGroundTurret );
+			if ( pTheGroundTurret && !pTheGroundTurret->InCond( TF_COND_SAPPED ) && pTheGroundTurret->IRelationType(this) != D_LI )
+			{
+				pTheGroundTurret->AddCond( TF_COND_SAPPED );
+				pTheGroundTurret->AddDamagerToHistory( pOwner );
+				pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_GRENADE );
+			}
 		}
 	}
 
-	if (!pOwner)
+	if ( !pOwner )
 		return;
 
-	if (!CanAttack())
+	if ( !CanAttack() )
 		return;
 
 	// Necessary so that we get the latest building position for the test, otherwise
@@ -323,12 +345,12 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 	UpdatePlacementState();
 
 	// What state should we move to?
-	switch (m_iBuildState)
+	switch ( m_iBuildState )
 	{
 	case BS_IDLE:
 	{
 		// Idle state starts selection
-		SetCurrentState(BS_SELECTING);
+		SetCurrentState( BS_SELECTING );
 	}
 	break;
 
@@ -341,19 +363,19 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 
 	case BS_PLACING:
 	{
-		if (m_hObjectBeingBuilt)
+		if ( m_hObjectBeingBuilt )
 		{
 			int iFlags = m_hObjectBeingBuilt->GetObjectFlags();
 
 			// Tricky, because this can re-calc the object position and change whether its a valid 
 			// pos or not. Best not to do this only in debug, but we can be pretty sure that this
 			// will give the same result as was calculated in UpdatePlacementState() above.
-			Assert(IsValidPlacement());
+			Assert( IsValidPlacement() );
 
 			// If we're placing an attachment, like a sapper, play a placement animation on the owner
 			if (m_hObjectBeingBuilt->MustBeBuiltOnAttachmentPoint())
 			{
-				pOwner->DoAnimationEvent(PLAYERANIMEVENT_ATTACK_GRENADE);
+				pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_GRENADE );
 			}
 
 			// Need to save this for later since StartBuilding will clear m_hObjectBeingBuilt.
@@ -362,22 +384,22 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 			StartBuilding();
 
 			// Attaching a sapper to a teleporter automatically saps another end.
-			if (GetType() == OBJ_ATTACHMENT_SAPPER)
+			if ( GetType() == OBJ_ATTACHMENT_SAPPER )
 			{
-				CObjectTeleporter *pTeleporter = dynamic_cast<CObjectTeleporter *>(pParentObject);
+				CObjectTeleporter *pTeleporter = dynamic_cast<CObjectTeleporter *>( pParentObject );
 
-				if (pTeleporter)
+				if ( pTeleporter )
 				{
 					CObjectTeleporter *pMatch = pTeleporter->GetMatchingTeleporter();
 
 					// If the other end is not already sapped then place a sapper on it.
-					if (pMatch && !pMatch->IsPlacing() && !pMatch->HasSapper())
+					if ( pMatch && !pMatch->IsPlacing() && !pMatch->HasSapper() )
 					{
-						SetCurrentState(BS_PLACING);
+						SetCurrentState( BS_PLACING );
 						StartPlacement();
-						if (m_hObjectBeingBuilt.Get())
+						if ( m_hObjectBeingBuilt.Get() )
 						{
-							m_hObjectBeingBuilt->UpdateAttachmentPlacement(pMatch);
+							m_hObjectBeingBuilt->UpdateAttachmentPlacement( pMatch );
 							StartBuilding();
 						}
 					}
@@ -385,10 +407,10 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 			}
 
 			// Should we switch away?
-			if (iFlags & OF_ALLOW_REPEAT_PLACEMENT)
+			if ( iFlags & OF_ALLOW_REPEAT_PLACEMENT )
 			{
 				// Start placing another
-				SetCurrentState(BS_PLACING);
+				SetCurrentState( BS_PLACING );
 				StartPlacement();
 			}
 			else
@@ -401,10 +423,10 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 
 	case BS_PLACING_INVALID:
 	{
-		if (m_flNextDenySound < gpGlobals->curtime)
+		if ( m_flNextDenySound < gpGlobals->curtime )
 		{
 			CSingleUserRecipientFilter filter(pOwner);
-			EmitSound(filter, entindex(), "Player.DenyWeaponSelection");
+			EmitSound( filter, entindex(), "Player.DenyWeaponSelection" );
 
 			m_flNextDenySound = gpGlobals->curtime + 0.5;
 		}
@@ -415,9 +437,9 @@ void CTFWeaponBuilder::PrimaryAttack(void)
 	m_flNextPrimaryAttack = gpGlobals->curtime + 0.2f;
 }
 
-void CTFWeaponBuilder::SecondaryAttack(void)
+void CTFWeaponBuilder::SecondaryAttack( void )
 {
-	if (m_bInAttack2)
+	if ( m_bInAttack2 )
 		return;
 
 	// require a re-press
@@ -427,11 +449,11 @@ void CTFWeaponBuilder::SecondaryAttack(void)
 	if (!pOwner)
 		return;
 
-	if (pOwner->DoClassSpecialSkill())
+	if ( pOwner->DoClassSpecialSkill() )
 	{
 		// intentionally blank
 	}
-	else if (m_iBuildState == BS_PLACING)
+	else if ( m_iBuildState == BS_PLACING )
 	{
 		if (m_hObjectBeingBuilt)
 		{

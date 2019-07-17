@@ -1646,6 +1646,18 @@ void CNPC_Barnacle::BitePrey( void )
 #endif
 	// DMG_CRUSH because we don't wan't to impart physics forces
 
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
+	if ( IsCurrentAttackACrit() )
+	{
+		iDamageType |= DMG_CRITICAL;
+	}
+ 	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDamageType |= DMG_MINICRITICAL;
+	}
+
 	pVictim->TakeDamage( CTakeDamageInfo( this, this, nDamage, iDamageType | DMG_CRUSH ) );
 
 	m_cGibs = 3;

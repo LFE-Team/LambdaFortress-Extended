@@ -20,7 +20,7 @@ class CTFAdvButton : public CTFAdvButtonBase
 {
 	friend class CTFButton;
 public:
-	DECLARE_CLASS_SIMPLE(CTFAdvButton, CTFAdvButtonBase);
+	DECLARE_CLASS_SIMPLE( CTFAdvButton, CTFAdvButtonBase );
 
 	CTFAdvButton(vgui::Panel *parent, const char *panelName, const char *text);
 	~CTFAdvButton();
@@ -43,6 +43,7 @@ public:
 	CTFButton *GetButton() { return m_pButton; };
 
 protected:
+
 	CTFButton		*m_pButton;
 	bool			m_bGlowing;
 	bool			m_bAnimationIn;
@@ -78,7 +79,20 @@ private:
 	CTFAdvButton   *m_pParent;
 	float			m_fXShift;
 	float			m_fYShift;
+	float			m_fXShiftImage;
+	float			m_fYShiftImage;
 };
 
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+class CExImageButton : public CTFAdvButton
+{
+public:
+	DECLARE_CLASS_SIMPLE( CExImageButton, CTFAdvButton );
+
+	CExImageButton(vgui::Panel *parent, const char *panelName, const char *text);
+	~CExImageButton();
+};
 #endif // tf_advbutton_H

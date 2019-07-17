@@ -205,6 +205,10 @@ public:
 	virtual bool SupportsBorderColor( void ) const = 0;
 	virtual bool SupportsFetch4( void ) const = 0;
 
+	//sunlightshadowctrl
+	virtual float GetShadowDepthBias() const = 0;
+	virtual float GetShadowSlopeScaleDepthBias() const = 0;
+
 	inline bool ShouldAlwaysUseShaderModel2bShaders() const { return IsOpenGL(); }
 	inline bool PlatformRequiresNonNullPixelShaders() const { return IsOpenGL(); }
 };

@@ -18,6 +18,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+
 IMPLEMENT_SERVERCLASS_ST( CHLMachineGun, DT_HLMachineGun )
 END_SEND_TABLE()
 
@@ -86,44 +88,39 @@ void CHLMachineGun::PrimaryAttack( void )
 		m_iClip1 -= iBulletsToFire;
 	}
 
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
 	m_iPrimaryAttacks++;
 	gamestats->Event_WeaponFired( pPlayer, true, GetClassname() );
 
 	// Fire the bullets
-	FireBulletsInfo_t info;
-	info.m_iShots = iBulletsToFire;
-	info.m_vecSrc = pPlayer->Weapon_ShootPosition( );
-	info.m_vecDirShooting = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
-	info.m_vecSpread = pPlayer->GetAttackSpread( this );
-	info.m_flDistance = MAX_TRACE_LENGTH;
-	info.m_iAmmoType = m_iPrimaryAmmoType;
-	info.m_iTracerFreq = 2;
-	#ifndef TF_CLASSIC
-	FireBullets( info );
-	#else
-	// Fire a bullet (ignoring the shooter).
-	Vector vecStart = info.m_vecSrc;
-	Vector vecEnd = vecStart + info.m_vecDirShooting * info.m_flDistance;
-	trace_t trace;
-	UTIL_TraceLine( vecStart, vecEnd, ( MASK_SHOT ), this, COLLISION_GROUP_NONE, &trace );
-
-	// Setup the bullet damage type & roll for crit.
-	int	nDamageType	= DMG_GENERIC;
-	int nCustomDamageType = TF_DMG_CUSTOM_NONE;
-
-	if ( IsCurrentAttackACrit() )
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
 	{
-		nDamageType |= DMG_CRITICAL;
+		FX_NPCFireBullets(
+			pPlayer->entindex(),
+			pPlayer->Weapon_ShootPosition(),
+			pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT ),
+			TF_WEAPON_PISTOL,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pPlayer->GetCurrentWeaponProficiency()),
+			iBulletsToFire,
+			3,
+			IsCurrentAttackACrit() );
 	}
-	else if ( IsCurrentAttackAMiniCrit() )
+	else
 	{
-		nDamageType |= DMG_MINICRITICAL;
+		FireBulletsInfo_t info;
+		info.m_iShots = iBulletsToFire;
+		info.m_vecSrc = pPlayer->Weapon_ShootPosition( );
+		info.m_vecDirShooting = pPlayer->GetAutoaimVector( AUTOAIM_SCALE_DEFAULT );
+		info.m_vecSpread = pPlayer->GetAttackSpread( this );
+		info.m_flDistance = MAX_TRACE_LENGTH;
+		info.m_iAmmoType = m_iPrimaryAmmoType;
+		info.m_iTracerFreq = 2;
+		FireBullets( info );
 	}
-
-	CTakeDamageInfo dmgInfo( this, info.m_pAttacker, this, info.m_flDamage, nDamageType, nCustomDamageType );
-	//CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, info.m_vecDirShooting, trace.endpos, 1.0 );	//MATTTODO bullet forces
-	trace.m_pEnt->DispatchTraceAttack( dmgInfo, info.m_vecDirShooting, &trace );
-	#endif
 
 	//Factor in the view kick
 	AddViewKick();
@@ -138,6 +135,8 @@ void CHLMachineGun::PrimaryAttack( void )
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+
+	m_flLastFireTime = gpGlobals->curtime;
 
 	// Register a muzzleflash for the AI
 	pPlayer->SetMuzzleFlashTime( gpGlobals->curtime + 0.5 );

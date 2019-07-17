@@ -8,6 +8,7 @@
 #include "tf_dropped_weapon.h"
 #include "tf_gamerules.h"
 #include "in_buttons.h"
+#include "tf_weapon_invis.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -101,6 +102,13 @@ bool CTFDroppedWeapon::MyTouch( CBasePlayer *pPlayer )
 	bool bSuccess = false;
 
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+	int iType = 0;
+	CTFWeaponInvis *pInvis = static_cast<CTFWeaponInvis*>(pTFPlayer->Weapon_OwnsThisID(TF_WEAPON_INVIS));
+	CALL_ATTRIB_HOOK_INT_ON_OTHER(pInvis, iType, set_weapon_mode);
+	if (iType == 1)
+	{
+		return false;
+	}
 
 	int iSlot = m_Item.GetStaticData()->GetLoadoutSlot( pTFPlayer->GetPlayerClass()->GetClassIndex() );
 	CTFWeaponBase *pWeapon = (CTFWeaponBase *)pTFPlayer->GetEntityForLoadoutSlot( iSlot );

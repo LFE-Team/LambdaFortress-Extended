@@ -95,3 +95,11 @@ Color CTFPlayerResource::GetPlayerColor( int iIndex )
 {
 	return Color( m_vecColors[iIndex].x * 255.0, m_vecColors[iIndex].y * 255.0, m_vecColors[iIndex].z * 255.0, 255 );
 }
+
+float CTFPlayerResource::GetHealthPercent()
+{
+	float max_health = GetMaxHealth();
+	float health = GetHealth();
+
+	return health / max_health;
+}

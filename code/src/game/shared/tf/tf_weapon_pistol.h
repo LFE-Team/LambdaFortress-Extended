@@ -77,6 +77,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual void	PrimaryAttack( void ) { m_bReloadsSingly = false; BaseClass::PrimaryAttack();}
+
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_HANDGUN_SCOUT_PRIMARY; }
 };
 

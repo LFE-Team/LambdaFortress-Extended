@@ -47,6 +47,19 @@ void FX_TFTracerSound( const Vector &start, const Vector &end, int iTracerType )
 		flWhizDist = 96;
 		// fall through !
 
+	case TRACER_TYPE_GUNSHIP:
+		pszSoundName = "Bullets.GunshipNearmiss";
+		break;
+
+	case TRACER_TYPE_STRIDER:
+		pszSoundName = "Bullets.StriderNearmiss";
+		break;
+
+	case TRACER_TYPE_WATERBULLET:
+		pszSoundName = "Underwater.BulletImpact";
+		flWhizDist = 48;
+		break;
+
 	default:
 		{
 			Ray_t bullet, listener;

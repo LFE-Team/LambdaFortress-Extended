@@ -10,7 +10,7 @@
 #include "AI_Navigator.h"
 #include "npc_Assassin.h"
 #include "game.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "engine/IEngineSound.h"
 #include "AI_Squad.h"
 #include "AI_SquadSlot.h"

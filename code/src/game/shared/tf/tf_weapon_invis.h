@@ -48,12 +48,21 @@ public:
 	virtual void	ItemBusyFrame( void );
 
 	virtual bool	HasChargeBar( void ) { return true; }
-	virtual const char* GetEffectLabelText( void ) { return "#TF_Cloak"; }
+	virtual const char* GetEffectLabelText( void );
 	virtual float	GetEffectBarProgress( void );
 
 #ifndef CLIENT_DLL
 	virtual void	GetControlPanelInfo( int nPanelIndex, const char *&pPanelName );
 #endif
+
+	bool HasFeignDeath( void );
+	bool HasMotionCloak( void );
+
+	//virtual void OnActiveStateChanged( int iOldState );
+
+	//void SetCloakRates( void );
+
+	//void SetFeignDeathState( bool bState );
 
 private:
 

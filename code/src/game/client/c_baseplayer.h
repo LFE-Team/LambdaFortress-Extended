@@ -25,6 +25,7 @@
 #include "c_env_fog_controller.h"
 #include "igameevents.h"
 #include "GameEventListener.h"
+#include "c_colorcorrection.h"
 
 #if defined USES_ECON_ITEMS
 #include "econ_item.h"
@@ -381,6 +382,8 @@ public:
 	void					UpdateFogController( void );
 	void					UpdateFogBlend( void );
 
+	C_ColorCorrection*		GetActiveColorCorrection() const;
+
 	float					GetFOVTime( void ){ return m_flFOVTime; }
 
 	virtual void			OnAchievementAchieved( int iAchievement ) {}
@@ -413,6 +416,8 @@ public:
 #if defined USES_ECON_ITEMS
 	CNetworkVarEmbedded( CAttributeList, m_AttributeList );
 #endif
+
+	EHANDLE					m_hTonemapController;
 
 	// Data common to all other players, too
 	CPlayerState			pl;
@@ -635,6 +640,9 @@ public:
 	bool  ShouldGoSouth( Vector vNPCForward, Vector vNPCRight ); //Such a bad name.
 
 	void SetOldPlayerZ( float flOld ) { m_flOldPlayerZ = flOld;	}
+
+private:
+	CNetworkHandle( C_ColorCorrection, m_hColorCorrectionCtrl );		// active FXVolume color correction
 };
 
 EXTERN_RECV_TABLE(DT_BasePlayer);

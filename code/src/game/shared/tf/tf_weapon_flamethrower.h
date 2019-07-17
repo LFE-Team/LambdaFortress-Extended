@@ -89,10 +89,6 @@ public:
 
 	// Server specific.
 #else
-	virtual void	DeflectEntity( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir );
-	virtual void	DeflectPlayer( CTFPlayer *pVictim, CTFPlayer *pAttacker, Vector &vecDir );
-	virtual void	DeflectNPC( CAI_BaseNPC *pVictim, CTFPlayer *pAttacker, Vector &vecDir );		// blast npcs
-	virtual void	DeflectPhysics( CBaseEntity *pEntity, CTFPlayer *pAttacker, Vector &vecDir ); // end of the gravity gun primary function
 
 	void			SetHitTarget( void );
 	void			HitTargetThink( void );
@@ -110,6 +106,9 @@ private:
 
 	int			m_iParticleWaterLevel;
 	float		m_flAmmoUseRemainder;
+
+	// Don't need network this as mini-crits don't use special particle effects
+	bool m_bMiniCritFire;
 
 #if defined( CLIENT_DLL )
 	CSoundPatch	*m_pFiringStartSound;

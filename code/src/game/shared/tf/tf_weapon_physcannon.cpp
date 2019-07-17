@@ -29,6 +29,8 @@
 	#include "tf_gamestats.h"
 	#include "soundent.h"
 	#include "effect_dispatch_data.h"
+	#include "tf_weaponbase_rocket.h"
+	#include "tf_team.h"
 #endif
 
 #include "gamerules.h"
@@ -45,6 +47,7 @@
 #include "debugoverlay_shared.h"
 
 #include "tf_gamerules.h"
+#include "tf_viewmodel.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1044,6 +1047,24 @@ void CWeaponPhysCannon::Precache( void )
 	SetClassname( "tf_weapon_physcannon" );
 #endif
 
+	PrecacheModel(PHYSCANNON_MODEL_SCOUT);
+	PrecacheModel(PHYSCANNON_MODEL_SOLDIER);
+	PrecacheModel(PHYSCANNON_MODEL_PYRO);
+	PrecacheModel(PHYSCANNON_MODEL_DEMO);
+	PrecacheModel(PHYSCANNON_MODEL_HEAVY);
+	PrecacheModel(PHYSCANNON_MODEL_ENGINEER);
+	PrecacheModel(PHYSCANNON_MODEL_MEDIC);
+	PrecacheModel(PHYSCANNON_MODEL_SNIPER);
+	PrecacheModel(PHYSCANNON_MODEL_SPY);
+	PrecacheModel(MEGACANNON_MODEL_SCOUT);
+	PrecacheModel(MEGACANNON_MODEL_SOLDIER);
+	PrecacheModel(MEGACANNON_MODEL_PYRO);
+	PrecacheModel(MEGACANNON_MODEL_DEMO);
+	PrecacheModel(MEGACANNON_MODEL_HEAVY);
+	PrecacheModel(MEGACANNON_MODEL_ENGINEER);
+	PrecacheModel(MEGACANNON_MODEL_MEDIC);
+	PrecacheModel(MEGACANNON_MODEL_SNIPER);
+	PrecacheModel(MEGACANNON_MODEL_SPY);
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE );
 	PrecacheModel( PHYSCANNON_BEAM_SPRITE_NOZ );
 
@@ -1189,7 +1210,6 @@ inline float CWeaponPhysCannon::SpriteScaleFactor()
 	return 1.0f;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : Returns true on success, false on failure.
@@ -1229,22 +1249,120 @@ void CWeaponPhysCannon::SetViewModel(void)
 {
 	int iType = 0;
 	CALL_ATTRIB_HOOK_INT(iType, set_weapon_mode);
-	if (!IsMegaPhysCannon() || iType != 1)
-	{
-		BaseClass::SetViewModel();
-		return;
-	}
 
-	CBasePlayer *pOwner = ToBasePlayer(GetOwner());
+	CTFPlayer *pOwner = ToTFPlayer(GetOwner());
 	if (pOwner == NULL)
 		return;
 
-	CBaseViewModel *vm = pOwner->GetViewModel(m_nViewModelIndex);
+	CTFViewModel *vm = dynamic_cast<CTFViewModel*>(pOwner->GetViewModel(m_nViewModelIndex, false));
+
 
 	if (vm == NULL)
 		return;
 
-	vm->SetWeaponModel(MEGACANNON_MODEL, this);
+	Assert(vm->ViewModelIndex() == m_nViewModelIndex);
+
+	if (!TFGameRules()->MegaPhyscannonActive())
+	{
+		CTFWeaponBase *pLastWeapon = static_cast<CTFWeaponBase*>(pOwner->GetLastWeapon());
+		if (pLastWeapon)
+		{
+			CTFViewModel *vm2 = dynamic_cast<CTFViewModel*>(pOwner->GetViewModel(pLastWeapon->m_nViewModelIndex, false));
+
+			if (pLastWeapon && vm2 && pOwner->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_PHYSCANNON)
+			{
+				vm2->SetWeaponModel(NULL, pLastWeapon);
+			}
+		}
+		//fix model issues
+
+		if (pOwner->IsPlayerClass(TF_CLASS_SCOUT))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_SCOUT, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_SOLDIER, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_PYRO))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_PYRO, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_DEMO, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_HEAVY, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_ENGINEER, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_MEDIC))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_MEDIC, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_SNIPER))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_SNIPER, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_SPY))
+		{
+			vm->SetWeaponModel(PHYSCANNON_MODEL_SPY, this);
+		}
+	}
+	else
+	{
+		CTFWeaponBase *pLastWeapon = static_cast<CTFWeaponBase*>(pOwner->GetLastWeapon());
+		if (pLastWeapon)
+		{
+			CTFViewModel *vm2 = dynamic_cast<CTFViewModel*>(pOwner->GetViewModel(pLastWeapon->m_nViewModelIndex, false));
+
+			if (pLastWeapon && vm2 && pOwner->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_PHYSCANNON)
+			{
+				vm2->SetWeaponModel(NULL, pLastWeapon);
+			}
+		}
+		//fix model issues
+		if (pOwner->IsPlayerClass(TF_CLASS_SCOUT))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_SCOUT, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_SOLDIER))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_SOLDIER, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_PYRO))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_PYRO, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_DEMOMAN))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_DEMO, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_HEAVYWEAPONS))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_HEAVY, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_ENGINEER))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_ENGINEER, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_MEDIC))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_MEDIC, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_SNIPER))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_SNIPER, this);
+		}
+		else if (pOwner->IsPlayerClass(TF_CLASS_SPY))
+		{
+			vm->SetWeaponModel(MEGACANNON_MODEL_SPY, this);
+		}
+	}
 	//BaseClass::SetViewModel();
 }
 
@@ -1346,11 +1464,11 @@ void CWeaponPhysCannon::PrimaryFireEffect( void )
 	color32 redcrit = { 237, 140, 55, 32 };
 	color32 blucrit = { 28, 168, 112, 32 };
 
-	if ( pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted() && pOwner->GetTeamNumber() == TF_STORY_TEAM )
+	if ( (pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted()) && pOwner->GetTeamNumber() == TF_STORY_TEAM )
 	{
 		UTIL_ScreenFade( pOwner, redcrit, 0.1f, 0.0f, FFADE_IN );
 	}
-	else if ( pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted() && pOwner->GetTeamNumber() == TF_COMBINE_TEAM )
+	else if ( (pOwner->m_Shared.IsCritBoosted() || pOwner->m_Shared.IsMiniCritBoosted()) && pOwner->GetTeamNumber() == TF_COMBINE_TEAM )
 	{
 		UTIL_ScreenFade( pOwner, blucrit, 0.1f, 0.0f, FFADE_IN );
 	}
@@ -2059,6 +2177,7 @@ void CWeaponPhysCannon::TertiaryAttack( void )
 	{
 		// Drop the held object
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = m_flNextTertiaryAttack = gpGlobals->curtime + lfe_physcannon_mega_crit_tertiary_cooldown.GetFloat();
+		StartEffectBarRegen();
 #ifdef GAME_DLL
 		PrimaryFireEffect();
 		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
@@ -2922,7 +3041,7 @@ void CWeaponPhysCannon::WaitForUpgradeThink()
 		SetContextThink(&CWeaponPhysCannon::WaitForUpgradeThink, gpGlobals->curtime + 0.1f, s_pWaitForUpgradeContext);
 		return;
 	}
-#ifndef CLIENT_DLL 
+#ifdef GAME_DLL
 	if (!GlobalEntity_IsInTable("super_phys_gun"))
 	{
 		GlobalEntity_Add(MAKE_STRING("super_phys_gun"), gpGlobals->mapname, GLOBAL_ON);
@@ -2938,7 +3057,7 @@ void CWeaponPhysCannon::WaitForUpgradeThink()
 	DestroyEffects();
 
 	// HACK: Hacky notification back to the level that we've finish upgrading
-#ifndef CLIENT_DLL 
+#ifdef GAME_DLL
 	CBaseEntity *pEnt = gEntList.FindEntityByName(NULL, "script_physcannon_upgrade");
 	if (pEnt)
 	{
@@ -2949,8 +3068,29 @@ void CWeaponPhysCannon::WaitForUpgradeThink()
 	StopSound("WeaponDissolve.Charge");
 
 	// Re-enable weapon pickup
-	AddSolidFlags(FSOLID_TRIGGER);
+	//AddSolidFlags(FSOLID_TRIGGER);
+#ifdef GAME_DLL
+	UTIL_Remove( this );
 
+	FOR_EACH_PLAYER(
+	{
+		CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+		if ( pTFPlayer && pTFPlayer->IsAlive() )
+		{
+			CTFTeam *pTeam = dynamic_cast<CTFTeam *>( pTFPlayer->GetTeam() );
+			if ( pTeam )
+			{
+				// If this is a shared weapon add it to team inventory.
+				if ( !pTeam->HasWeapon( 9001 ) )
+				{
+					pTeam->AddWeapon( 9001 );
+				}
+			}
+			TFPlayerClassData_t *pData = pTFPlayer->GetPlayerClass()->GetData();
+			pTFPlayer->ManageTeamWeapons( pData );
+		}
+	});
+#endif
 	SetContextThink(NULL, gpGlobals->curtime, s_pWaitForUpgradeContext);
 }
 
@@ -3166,8 +3306,9 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
 	if ( !IsMegaPhysCannon() || iType != 1 )
 	{
-		if (pTarget->VPhysicsIsFlesh())
+		if ( pTarget->VPhysicsIsFlesh() )
 			return false;
+
 		return CBasePlayer::CanPickupObject(pTarget, physcannon_maxmass.GetFloat(), 0);
 	}
 
@@ -3175,6 +3316,9 @@ bool CWeaponPhysCannon::CanPickupObject( CBaseEntity *pTarget )
 		return true;
 
 	if ( dynamic_cast<CRagdollProp*>( pTarget ) )
+		return true;
+
+	if ( dynamic_cast<CTFBaseRocket*>( pTarget ) )
 		return true;
 
 	// massLimit should be 0 since we would've already called it with physcannon_maxmass.GetFloat() above if it weren't a MegaPhysCannon
@@ -4081,13 +4225,13 @@ void CallbackPhyscannonImpact( const CEffectData &data )
 		// Translate the attachment entity to the viewmodel
 		C_BasePlayer *pPlayer = dynamic_cast<C_BasePlayer *>(pWeapon->GetOwner());
 
-		if ( pPlayer )
+		if ( pPlayer && !::input->CAM_IsThirdPerson() )
 		{
 			pEnt = pPlayer->GetViewModel();
-		}
 
-		// Format attachment for first-person view!
-		::FormatViewModelAttachment( vecAttachment, true );
+			// Format attachment for first-person view!
+			::FormatViewModelAttachment( vecAttachment, true );
+		}
 
 		// Explosions at the impact point
 		FX_GaussExplosion( data.m_vOrigin, -dir, 0 );
@@ -4151,9 +4295,74 @@ void CWeaponPhysCannon::DefaultTouch( CBaseEntity *pOther )
 
 	if( HasSpawnFlags( SF_WEAPON_NO_PLAYER_PICKUP ) )
 		return;
-	
+
+	SetRemoveable( true );
+
 	BaseClass::DefaultTouch( pOther );
 #endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CWeaponPhysCannon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
+{
+#ifdef GAME_DLL
+	if ( !pNewOwner )
+		return;
+
+	if ( !HasItemDefinition() )
+	{
+		m_OnPlayerPickup.FireOutput( pNewOwner, this );
+		UTIL_Remove( this );
+
+		FOR_EACH_PLAYER(
+		{
+			CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
+			if ( pTFPlayer && pTFPlayer->IsAlive() )
+			{
+				CTFTeam *pTeam = dynamic_cast<CTFTeam *>( pTFPlayer->GetTeam() );
+				if ( pTeam )
+				{
+					int iItemID = 9000;
+					if ( TFGameRules()->MegaPhyscannonActive() )
+						iItemID = 9001;
+					else
+						iItemID = 9000;
+					// If this is a shared weapon add it to team inventory.
+					if ( !pTeam->HasWeapon( iItemID ) )
+					{
+						pTeam->AddWeapon( iItemID );
+					}
+				}
+				TFPlayerClassData_t *pData = pTFPlayer->GetPlayerClass()->GetData();
+				pTFPlayer->ManageTeamWeapons( pData );
+			}
+		});
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CWeaponPhysCannon::HasChargeBar( void )
+{
+	int iType = 0;
+	CALL_ATTRIB_HOOK_INT( iType, set_weapon_mode );
+	if ( IsMegaPhysCannon() || iType == 1 )
+		return true;
+
+	return false;
+}
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+float CWeaponPhysCannon::InternalGetEffectBarRechargeTime( void )
+{
+	return lfe_physcannon_mega_crit_tertiary_cooldown.GetFloat();
 }
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponPhysCannon_Secondary, DT_WeaponPhysCannon_Secondary )

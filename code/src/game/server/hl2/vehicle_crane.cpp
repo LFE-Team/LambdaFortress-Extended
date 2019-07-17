@@ -372,7 +372,15 @@ void CPropCrane::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 
 	ResetUseKey( pPlayer );
 
-	GetServerVehicle()->HandlePassengerEntry( pPlayer, (value>0) );
+	// sort of a hack but it works
+	if ( GetServerVehicle()->GetPassenger() == pPlayer )
+	{
+		GetServerVehicle()->HandlePassengerExit( pPlayer );
+	}
+	else
+	{
+		GetServerVehicle()->HandlePassengerEntry( pPlayer, (value>0) );
+	}
 }
 
 //-----------------------------------------------------------------------------

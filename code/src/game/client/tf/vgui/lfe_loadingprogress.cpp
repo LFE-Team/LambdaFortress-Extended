@@ -30,10 +30,29 @@
 
 using namespace vgui;
 
+extern int UI_IsDebug();
+
+// Tip portraits
+const char* g_pszTipsClassImages[] = 
+{
+	"class_portraits/all_class",
+	"class_portraits/scout",
+	"class_portraits/sniper",
+	"class_portraits/soldier",
+	"class_portraits/demoman",
+	"class_portraits/medic",
+	"class_portraits/heavy",
+	"class_portraits/pyro",
+	"class_portraits/spy",
+	"class_portraits/engineer",
+};
 
 CTFLoadingProgress *g_pTFLoadingProgress = NULL;
 
-CON_COMMAND( lfe_hud_reload_loadingprogress, "Reload Loading Progress")
+ConVar lfe_ui_loadingprogress_statsummary( "lfe_ui_loadingprogress_statsummary", "0", FCVAR_ARCHIVE, "Show stats summary on loading screen" );
+ConVar lfe_ui_loadingprogress_tips( "lfe_ui_loadingprogress_tips", "1", FCVAR_ARCHIVE, "Show stats summary on loading screen" );
+
+CON_COMMAND( lfe_ui_reload_loadingprogress, "Reload Loading Progress")
 {
 	g_pTFLoadingProgress->InvalidateLayout( true, true );
 }
@@ -71,15 +90,17 @@ CTFLoadingProgress::CTFLoadingProgress() : vgui::EditablePanel( NULL, "TFLoading
 	m_bControlsLoaded = false;
 	m_bInteractive = false;
 
-	m_pTipLabel = new vgui::Label( this, "TipLabel", "" );
+	m_pTipImage = new CTFImagePanel( this, "TipImage" );
 	m_pTipText = new vgui::Label( this, "TipText", "" );
 
 	m_pNextTipButton = new vgui::Button( this, "NextTipButton", "" );	
 	m_pCloseButton = new vgui::Button( this, "CloseButton", "" );	
 
-	ListenForGameEvent( "server_spawn" );
+	m_pMapInfo = dynamic_cast<EditablePanel *>( FindChildByName( "MapInfo" ) );
 
-	Reset();
+	m_pStatSummary = new CTFStatsSummaryPanel( this, "CTFStatsSummaryPanel" );
+
+	ListenForGameEvent( "server_spawn" );
 }
 
 //-----------------------------------------------------------------------------
@@ -103,17 +124,6 @@ void CTFLoadingProgress::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-	if ( m_pTipLabel && m_pTipText )
-	{
-		m_pTipLabel->SizeToContents();
-		int width = m_pTipLabel->GetWide();
-
-		int x, y, w, t;
-		m_pTipText->GetBounds( x, y, w, t );
-		m_pTipText->SetBounds( x + width, y, w - width, t );
-		m_pTipText->InvalidateLayout( false, true ); // have it re-layout the contents so it's wrapped correctly now that we've changed the size
-	}
-
 	if ( m_pNextTipButton )
 	{
 		m_pNextTipButton->SizeToContents();
@@ -131,7 +141,6 @@ void CTFLoadingProgress::OnCommand( const char *command )
 		UpdateDialog();
 		SetVisible( false );
 		SetParent( (VPANEL) NULL );
-		SetDefaultSelections();
 	}
 	else if ( 0 == Q_stricmp( command, "nexttip" ) )
 	{
@@ -139,22 +148,6 @@ void CTFLoadingProgress::OnCommand( const char *command )
 	}
 
 	BaseClass::OnCommand( command );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Resets the dialog
-//-----------------------------------------------------------------------------
-void CTFLoadingProgress::Reset()
-{
-	SetDefaultSelections();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets all user-controllable dialog settings to default values
-//-----------------------------------------------------------------------------
-void CTFLoadingProgress::SetDefaultSelections()
-{
-
 }
 
 //-----------------------------------------------------------------------------
@@ -169,22 +162,27 @@ void CTFLoadingProgress::ApplySchemeSettings(vgui::IScheme *pScheme)
 	m_bControlsLoaded = true;
 
 	// Set the PRE-Map-Load Background image
-	if ( IsPC() )
+	vgui::ImagePanel *pImagePanel = dynamic_cast<ImagePanel *>( FindChildByName( "MainBackground" ) );
+	if ( pImagePanel )
 	{
-		ImagePanel *pImagePanel = dynamic_cast<ImagePanel *>( FindChildByName( "MainBackground" ) );
-		if ( pImagePanel )
-		{
-			// determine if we're in widescreen or not and select the appropriate image
-			int screenWide, screenTall;
-			surface()->GetScreenSize( screenWide, screenTall );
-			float aspectRatio = (float)screenWide/(float)screenTall;
-			bool bIsWidescreen = aspectRatio >= 1.6f;
+		// determine if we're in widescreen or not and select the appropriate image
+		int screenWide, screenTall;
+		surface()->GetScreenSize( screenWide, screenTall );
+		float aspectRatio = (float)screenWide/(float)screenTall;
+		bool bIsWidescreen = aspectRatio >= 1.6f;
 
-			pImagePanel->SetImage( bIsWidescreen ? "../console/background01_widescreen" : "../console/background01" );
-		}
+		char szBGName[128];
+		char szImage[128];
+
+		// get mainmenu background
+		engine->GetMainMenuBackgroundName(szBGName, sizeof(szBGName));
+		Q_snprintf(szImage, sizeof(szImage), "../console/%s", szBGName);
+		if (bIsWidescreen)
+			Q_strcat(szImage, "_widescreen", sizeof(szImage));
+
+		pImagePanel->SetImage( szImage );
 	}
 
-	SetDefaultSelections();
 	UpdateDialog();
 	SetVisible( false );
 }
@@ -195,24 +193,35 @@ void CTFLoadingProgress::ApplySchemeSettings(vgui::IScheme *pScheme)
 void CTFLoadingProgress::ClearMapLabel()
 {
 	SetDialogVariable( "maplabel", "" );
+	SetDialogVariable( "maptype", "" );
+	SetDialogVariable( "mapauthor", "" );
 
-	vgui::Label *pLabel = dynamic_cast<Label *>( FindChildByName( "OnYourWayLabel" ) );
+	CExLabel *pMapAuthorLabel = dynamic_cast<CExLabel *>( FindChildByName("MapAuthors") );
+	if ( pMapAuthorLabel && pMapAuthorLabel->IsVisible() )
+		pMapAuthorLabel->SetVisible( false );
+
+	CExLabel *pLabel = dynamic_cast<CExLabel *>( FindChildByName( "OnYourWayLabel" ) );
 	if ( pLabel && pLabel->IsVisible() )
-	{
 		pLabel->SetVisible( false );
-	}
 
-	vgui::Label *pLabelShadow = dynamic_cast<Label *>( FindChildByName( "OnYourWayLabelShadow" ) );
+	CExLabel *pLabelShadow = dynamic_cast<CExLabel *>( FindChildByName( "OnYourWayLabelShadow" ) );
 	if ( pLabelShadow && pLabelShadow->IsVisible() )
-	{
 		pLabelShadow->SetVisible( false );
-	}
 
-	vgui::ImagePanel *pImagePanel = dynamic_cast<ImagePanel *>( FindChildByName( "MapBackground" ) );
-	if ( pImagePanel && pImagePanel->IsVisible() )
-	{
-		pImagePanel->SetVisible( false );
-	}
+	vgui::ImagePanel *pMapBackground = dynamic_cast<ImagePanel *>( FindChildByName( "MapBackground" ) );
+	if ( pMapBackground && pMapBackground->IsVisible() )
+		pMapBackground->SetVisible( false );
+
+	if ( m_pMapInfo && m_pMapInfo->IsVisible() )
+		m_pMapInfo->SetVisible( false );
+
+	vgui::ImagePanel *pStampBackground = dynamic_cast<ImagePanel *>( FindChildByName( "Background" ) );
+	if ( pStampBackground && pStampBackground->IsVisible() )
+		pStampBackground->SetVisible( false );
+
+	vgui::ImagePanel *pMapImage = dynamic_cast<ImagePanel *>( FindChildByName( "MapImage" ) );
+	if ( pMapImage && pMapImage->IsVisible() )
+		pMapImage->SetVisible( false );
 }
 
 //-----------------------------------------------------------------------------
@@ -227,7 +236,9 @@ void CTFLoadingProgress::UpdateDialog()
 	// update the tip
 	UpdateTip();
 	// show or hide controls depending on if we're interactive or not
-	UpdateControls();		
+	UpdateControls();
+
+	m_pStatSummary->UpdateDialog();
 }
 
 //-----------------------------------------------------------------------------
@@ -235,7 +246,13 @@ void CTFLoadingProgress::UpdateDialog()
 //-----------------------------------------------------------------------------
 void CTFLoadingProgress::UpdateTip()
 {
-	SetDialogVariable( "tiptext", g_TFTips.GetRandomTip() );
+	int iClass = TF_CLASS_UNDEFINED;
+	SetDialogVariable( "tiptext", g_TFTips.GetRandomTip( iClass ) );
+
+	if ( m_pTipImage )
+	{
+		m_pTipImage->SetImage( g_pszTipsClassImages[iClass] );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -244,12 +261,12 @@ void CTFLoadingProgress::UpdateTip()
 void CTFLoadingProgress::UpdateControls()
 {
 	// show or hide controls depending on what mode we're in
-	bool bShowPlayerData = ( m_bInteractive || m_iTotalSpawns > 0 );
+	//bool bShowPlayerData = ( m_bInteractive || m_iTotalSpawns > 0 );
 
-	m_pTipText->SetVisible( bShowPlayerData );
-	m_pTipLabel->SetVisible( bShowPlayerData );
+	m_pTipText->SetVisible( lfe_ui_loadingprogress_tips.GetBool() );
+	m_pTipImage->SetVisible( lfe_ui_loadingprogress_tips.GetBool() );
 
-	m_pNextTipButton->SetVisible( m_bInteractive );
+	m_pNextTipButton->SetVisible( m_bInteractive && lfe_ui_loadingprogress_tips.GetBool() );
 	m_pCloseButton->SetVisible( m_bInteractive );
 }
 //-----------------------------------------------------------------------------
@@ -264,6 +281,8 @@ float CTFLoadingProgress::SafeCalcFraction( float flNumerator, float flDemoninat
 }
 
 extern const char *GetMapDisplayName( const char *mapName );
+extern const char *GetMapType( const char *mapName );
+extern const char *GetMapAuthor( const char *mapName );
 
 //-----------------------------------------------------------------------------
 // Purpose: Event handler
@@ -282,49 +301,95 @@ void CTFLoadingProgress::FireGameEvent( IGameEvent *event )
 			{
 				// If we're loading a background map, don't display anything
 				// HACK: Client doesn't get gpGlobals->eLoadType, so just do string compare for now.
-				if ( Q_stristr( pMapName, "background") )
+				if ( Q_stristr( pMapName, "background" ) )
 				{
 					ClearMapLabel();
 				}
 				else
 				{
 					// set the map name in the UI
-					wchar_t wzMapName[255]=L"";
+					wchar_t wzMapName[255] = L"";
 					g_pVGuiLocalize->ConvertANSIToUnicode( GetMapDisplayName( pMapName ), wzMapName, sizeof( wzMapName ) );
 
 					SetDialogVariable( "maplabel", wzMapName );
 
-					vgui::Label *pLabel = dynamic_cast<Label *>( FindChildByName( "OnYourWayLabel" ) );
-					if ( pLabel && !pLabel->IsVisible() )
+					// set the map type in the UI
+					const char *szMapType = GetMapType( pMapName );
+					SetDialogVariable( "maptype", g_pVGuiLocalize->Find( szMapType ) );
+
+					if ( m_pMapInfo && m_pMapInfo->IsVisible() )
+						m_pMapInfo->SetVisible( true );
+
+					// set the map author name in the UI
+					const char *szMapAuthor = GetMapAuthor( pMapName );
+					if ( szMapAuthor[0] != '\0' )
 					{
-						pLabel->SetVisible( true );
+						SetDialogVariable( "mapauthor", szMapAuthor );
+
+						CExLabel *pMapAuthorLabel = dynamic_cast<CExLabel *>( FindChildByName( "MapAuthors" ) );
+						if ( pMapAuthorLabel && !pMapAuthorLabel->IsVisible() )
+							pMapAuthorLabel->SetVisible( false );
 					}
 
-					vgui::Label *pLabelShadow = dynamic_cast<Label *>( FindChildByName( "OnYourWayLabelShadow" ) );
+					CExLabel *pLabel = dynamic_cast<CExLabel *>( FindChildByName( "OnYourWayLabel" ) );
+					if ( pLabel && !pLabel->IsVisible() )
+						pLabel->SetVisible( true );
+
+					CExLabel *pLabelShadow = dynamic_cast<CExLabel *>( FindChildByName( "OnYourWayLabelShadow" ) );
 					if ( pLabelShadow && !pLabelShadow->IsVisible() )
-					{
 						pLabelShadow->SetVisible( true );
-					}
-					
+
 					// set the background image
-					vgui::ImagePanel *pImagePanel = dynamic_cast<ImagePanel *>( FindChildByName( "MapBackground" ) );
+					vgui::ImagePanel *pMapBackground = dynamic_cast<ImagePanel *>( FindChildByName( "MapBackground" ) );
+
+					// determine if we're in widescreen or not and select the appropriate image
+					int screenWide, screenTall;
+					surface()->GetScreenSize( screenWide, screenTall );
+					float aspectRatio = (float)screenWide/(float)screenTall;
+					bool bIsWidescreen = aspectRatio >= 1.6f;
+
+					char szMapBackground[ MAX_PATH ];
+					Q_snprintf( szMapBackground, sizeof( szMapBackground ),  bIsWidescreen ? "VGUI/maps/menu_loading_%s_widescreen" : "VGUI/maps/menu_loading_%s", pMapName );
+					Q_strlower( szMapBackground );
+					IMaterial *pMapBGMaterial = materials->FindMaterial( szMapBackground, TEXTURE_GROUP_VGUI, false );
+					if ( pMapBGMaterial && !IsErrorMaterial( pMapBGMaterial ) )
+					{
+						if ( !pMapBackground->IsVisible() )
+							pMapBackground->SetVisible( true );
+
+						// take off the vgui/ at the beginning when we set the image
+						Q_snprintf( szMapBackground, sizeof( szMapBackground ), bIsWidescreen ? "maps/menu_loading_%s_widescreen" : "maps/menu_loading_%s", pMapName );
+						Q_strlower( szMapBackground );
+
+						pMapBackground->SetImage( szMapBackground );
+					}
+					else
+					{
+						if ( pMapBackground->IsVisible() )
+							pMapBackground->SetVisible( false );
+
+						vgui::ImagePanel *pStampBackground = dynamic_cast<ImagePanel *>( FindChildByName( "Background" ) );
+						if ( pStampBackground && !pStampBackground->IsVisible() )
+							pStampBackground->SetVisible( true );
+					}
+
+					// set the map photos
+					vgui::ImagePanel *pMapImage = dynamic_cast<ImagePanel *>( FindChildByName( "MapImage" ) );
 
 					char szMapImage[ MAX_PATH ];
-					Q_snprintf( szMapImage, sizeof( szMapImage ), "VGUI/maps/menu_loading_%s", pMapName );
+					Q_snprintf( szMapImage, sizeof( szMapImage ),  "VGUI/maps/menu_photos_%s", pMapName );
 					Q_strlower( szMapImage );
 					IMaterial *pMapMaterial = materials->FindMaterial( szMapImage, TEXTURE_GROUP_VGUI, false );
 					if ( pMapMaterial && !IsErrorMaterial( pMapMaterial ) )
 					{
-						if ( !pImagePanel->IsVisible() )
-						{
-							pImagePanel->SetVisible( true );
-						}
+						if ( !pMapImage->IsVisible() )
+							pMapImage->SetVisible( true );
 
 						// take off the vgui/ at the beginning when we set the image
-						Q_snprintf( szMapImage, sizeof( szMapImage ), "maps/menu_loading_%s", pMapName );
+						Q_snprintf( szMapImage, sizeof( szMapImage ), "maps/menu_photos_%s", pMapName );
 						Q_strlower( szMapImage );
 
-						pImagePanel->SetImage( szMapImage );
+						pMapImage->SetImage( szMapImage );
 					}
 				}
 			}	
@@ -337,9 +402,14 @@ void CTFLoadingProgress::FireGameEvent( IGameEvent *event )
 //-----------------------------------------------------------------------------
 void CTFLoadingProgress::OnActivate()
 {
+	if ( UI_IsDebug() )
+		Msg( "[GAMEUI] MAIN_MENU -> LOADING_MENU\n");
+
 	ClearMapLabel();
 
 	UpdateDialog();
+
+	m_pStatSummary->SetVisible( lfe_ui_loadingprogress_statsummary.GetBool() );
 
 	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 255, 0.0f, 0.4f, vgui::AnimationController::INTERPOLATOR_SIMPLESPLINE);
 }
@@ -349,6 +419,15 @@ void CTFLoadingProgress::OnActivate()
 //-----------------------------------------------------------------------------
 void CTFLoadingProgress::OnDeactivate()
 {
+	if ( UI_IsDebug() )
+		Msg( "[GAMEUI] LOADING_MENU -> PAUSE_MENU\n");
+
 	ClearMapLabel();
+	m_pStatSummary->SetVisible( false );
 	vgui::GetAnimationController()->RunAnimationCommand(this, "Alpha", 0, 0.0f, 0.4f, vgui::AnimationController::INTERPOLATOR_LINEAR);
+}
+
+CON_COMMAND( lfe_ui_show_loadingprogress, "Shows Loading Screen" )
+{
+	GLoadingProgress()->ShowModal();
 }

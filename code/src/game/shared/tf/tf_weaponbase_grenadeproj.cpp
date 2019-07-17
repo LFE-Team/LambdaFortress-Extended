@@ -604,63 +604,73 @@ void CTFWeaponBaseGrenadeProj::ResolveFlyCollisionCustom( trace_t &trace, Vector
 	VectorAdd( vecAbsVelocity, GetBaseVelocity(), vecVelocity );
 	float flSpeedSqr = DotProduct( vecVelocity, vecVelocity );
 
-	// Stop if on ground.
-	if ( trace.plane.normal.z > 0.7f )			// Floor
+	int iNoBounce = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_hLauncher.Get(), iNoBounce, grenade_no_bounce );
+	if ( iNoBounce != 1 )
 	{
-		// Verify that we have an entity.
-		CBaseEntity *pEntity = trace.m_pEnt;
-		Assert( pEntity );
-
-		SetAbsVelocity( vecAbsVelocity );
-
-		if ( flSpeedSqr < ( 30 * 30 ) )
+		// Stop if on ground.
+		if ( trace.plane.normal.z > 0.7f )			// Floor
 		{
-			if ( pEntity->IsStandable() )
+			// Verify that we have an entity.
+			CBaseEntity *pEntity = trace.m_pEnt;
+			Assert( pEntity );
+
+			SetAbsVelocity( vecAbsVelocity );
+
+			if ( flSpeedSqr < ( 30 * 30 ) )
 			{
-				SetGroundEntity( pEntity );
+				if ( pEntity->IsStandable() )
+				{
+					SetGroundEntity( pEntity );
+				}
+
+				// Reset velocities.
+				SetAbsVelocity( vec3_origin );
+				SetLocalAngularVelocity( vec3_angle );
+
+				//align to the ground so we're not standing on end
+				QAngle angle;
+				VectorAngles( trace.plane.normal, angle );
+
+				// rotate randomly in yaw
+				angle[1] = random->RandomFloat( 0, 360 );
+
+				// TFTODO: rotate around trace.plane.normal
+
+				SetAbsAngles( angle );			
 			}
+			else
+			{
+				Vector vecDelta = GetBaseVelocity() - vecAbsVelocity;	
+				Vector vecBaseDir = GetBaseVelocity();
+				VectorNormalize( vecBaseDir );
+				float flScale = vecDelta.Dot( vecBaseDir );
 
-			// Reset velocities.
-			SetAbsVelocity( vec3_origin );
-			SetLocalAngularVelocity( vec3_angle );
-
-			//align to the ground so we're not standing on end
-			QAngle angle;
-			VectorAngles( trace.plane.normal, angle );
-
-			// rotate randomly in yaw
-			angle[1] = random->RandomFloat( 0, 360 );
-
-			// TFTODO: rotate around trace.plane.normal
-
-			SetAbsAngles( angle );			
+				VectorScale( vecAbsVelocity, ( 1.0f - trace.fraction ) * gpGlobals->frametime, vecVelocity ); 
+				VectorMA( vecVelocity, ( 1.0f - trace.fraction ) * gpGlobals->frametime, GetBaseVelocity() * flScale, vecVelocity );
+				PhysicsPushEntity( vecVelocity, &trace );
+			}
 		}
 		else
 		{
-			Vector vecDelta = GetBaseVelocity() - vecAbsVelocity;	
-			Vector vecBaseDir = GetBaseVelocity();
-			VectorNormalize( vecBaseDir );
-			float flScale = vecDelta.Dot( vecBaseDir );
-
-			VectorScale( vecAbsVelocity, ( 1.0f - trace.fraction ) * gpGlobals->frametime, vecVelocity ); 
-			VectorMA( vecVelocity, ( 1.0f - trace.fraction ) * gpGlobals->frametime, GetBaseVelocity() * flScale, vecVelocity );
-			PhysicsPushEntity( vecVelocity, &trace );
+			// If we get *too* slow, we'll stick without ever coming to rest because
+			// we'll get pushed down by gravity faster than we can escape from the wall.
+			if ( flSpeedSqr < ( 30 * 30 ) )
+			{
+				// Reset velocities.
+				SetAbsVelocity( vec3_origin );
+				SetLocalAngularVelocity( vec3_angle );
+			}
+			else
+			{
+				SetAbsVelocity( vecAbsVelocity );
+			}
 		}
 	}
 	else
 	{
-		// If we get *too* slow, we'll stick without ever coming to rest because
-		// we'll get pushed down by gravity faster than we can escape from the wall.
-		if ( flSpeedSqr < ( 30 * 30 ) )
-		{
-			// Reset velocities.
-			SetAbsVelocity( vec3_origin );
-			SetLocalAngularVelocity( vec3_angle );
-		}
-		else
-		{
-			SetAbsVelocity( vecAbsVelocity );
-		}
+		SetAbsVelocity( vec3_origin );
+		SetLocalAngularVelocity( vec3_angle );
 	}
 
 	BounceSound();

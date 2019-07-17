@@ -141,8 +141,8 @@ void CTFOptionsVideoPanel::CreateControls()
 	m_bRequireRestart = false;
 
 	Label *pTitleVideo = new Label( this, "DescTextTitle", "Video" );
-	m_pMode = new ComboBox(this, "Resolution", 8, false);
-	m_pAspectRatio = new ComboBox(this, "AspectRatio", 6, false);
+	m_drpResolution = new ComboBox(this, "Resolution", 8, false);
+	m_drpAspectRatio = new ComboBox(this, "AspectRatio", 6, false);
 
 	char pszAspectName[3][64];
 	wchar_t *unicodeText = g_pVGuiLocalize->Find("#GameUI_AspectNormal");
@@ -152,24 +152,23 @@ void CTFOptionsVideoPanel::CreateControls()
 	unicodeText = g_pVGuiLocalize->Find("#GameUI_AspectWide16x10");
 	g_pVGuiLocalize->ConvertUnicodeToANSI(unicodeText, pszAspectName[2], 32);
 
-	int iNormalItemID = m_pAspectRatio->AddItem(pszAspectName[0], NULL);
-	int i16x9ItemID = m_pAspectRatio->AddItem(pszAspectName[1], NULL);
-	int i16x10ItemID = m_pAspectRatio->AddItem(pszAspectName[2], NULL);
+	int iNormalItemID = m_drpAspectRatio->AddItem(pszAspectName[0], NULL);
+	int i16x9ItemID = m_drpAspectRatio->AddItem(pszAspectName[1], NULL);
+	int i16x10ItemID = m_drpAspectRatio->AddItem(pszAspectName[2], NULL);
 
 	const MaterialSystem_Config_t &config = materials->GetCurrentConfigForVideoCard();
-
 	int iAspectMode = GetScreenAspectMode(config.m_VideoMode.m_Width, config.m_VideoMode.m_Height);
 	switch (iAspectMode)
 	{
 	default:
 	case 0:
-		m_pAspectRatio->ActivateItem(iNormalItemID);
+		m_drpAspectRatio->ActivateItem(iNormalItemID);
 		break;
 	case 1:
-		m_pAspectRatio->ActivateItem(i16x9ItemID);
+		m_drpAspectRatio->ActivateItem(i16x9ItemID);
 		break;
 	case 2:
-		m_pAspectRatio->ActivateItem(i16x10ItemID);
+		m_drpAspectRatio->ActivateItem(i16x10ItemID);
 		break;
 	}
 
@@ -190,8 +189,8 @@ void CTFOptionsVideoPanel::CreateControls()
 	//	m_pBenchmark->SetVisible(false);
 	//}
 	AddControl(pTitleVideo, O_CATEGORY);
-	AddControl(m_pMode, O_LIST, "#GameUI_Resolution");
-	AddControl(m_pAspectRatio, O_LIST, "#GameUI_AspectRatio");
+	AddControl(m_drpResolution, O_LIST, "#GameUI_Resolution");
+	AddControl(m_drpAspectRatio, O_LIST, "#GameUI_AspectRatio");
 	AddControl(m_pWindowed, O_LIST, "#GameUI_DisplayMode");
 	AddControl(m_pGammaSlider, O_SLIDER);
 
@@ -426,14 +425,14 @@ void CTFOptionsVideoPanel::PrepareResolutionList()
 {
 	// get the currently selected resolution
 	char sz[256];
-	m_pMode->GetText(sz, 256);
+	m_drpResolution->GetText(sz, 256);
 	int currentWidth = 0, currentHeight = 0;
 	sscanf( sz, "%i x %i", &currentWidth, &currentHeight );
 
 	// Clean up before filling the info again.
-	m_pMode->DeleteAllItems();
-	m_pAspectRatio->SetItemEnabled(1, false);
-	m_pAspectRatio->SetItemEnabled(2, false);
+	m_drpResolution->DeleteAllItems();
+	m_drpAspectRatio->SetItemEnabled(1, false);
+	m_drpAspectRatio->SetItemEnabled(2, false);
 
 	// get full video mode list
 	vmode_t *plist = NULL;
@@ -462,14 +461,14 @@ void CTFOptionsVideoPanel::PrepareResolutionList()
 		int iAspectMode = GetScreenAspectMode( plist->width, plist->height );
 		if ( iAspectMode > 0 )
 		{
-			m_pAspectRatio->SetItemEnabled( iAspectMode, true );
+			m_drpAspectRatio->SetItemEnabled( iAspectMode, true );
 			bFoundWidescreen = true;
 		}
 
 		// filter the list for those matching the current aspect
-		if ( iAspectMode == m_pAspectRatio->GetActiveItem() )
+		if ( iAspectMode == m_drpAspectRatio->GetActiveItem() )
 		{
-			itemID = m_pMode->AddItem( sz, NULL);
+			itemID = m_drpResolution->AddItem( sz, NULL);
 		}
 
 		// try and find the best match for the resolution to be selected
@@ -484,19 +483,19 @@ void CTFOptionsVideoPanel::PrepareResolutionList()
 	}
 
 	// disable ratio selection if we can't display widescreen.
-	m_pAspectRatio->SetEnabled( bFoundWidescreen );
+	m_drpAspectRatio->SetEnabled( bFoundWidescreen );
 
 	m_nSelectedMode = selectedItemID;
 
 	if (selectedItemID != -1)
 	{
-		m_pMode->ActivateItem(selectedItemID);
+		m_drpResolution->ActivateItem(selectedItemID);
 	}
 	else
 	{
 		char sz[256];
 		sprintf( sz, "%d x %d", config.m_VideoMode.m_Width, config.m_VideoMode.m_Height );
-		m_pMode->SetText( sz );
+		m_drpResolution->SetText( sz );
 	}
 }
 
@@ -540,9 +539,7 @@ void CTFOptionsVideoPanel::OnResetData()
 	ConVarRef mat_aaquality("mat_aaquality");
 	ConVarRef mat_vsync("mat_vsync");
 	ConVarRef r_flashlightdepthtexture("r_flashlightdepthtexture");
-#ifndef _X360
 	ConVarRef r_waterforceexpensive("r_waterforceexpensive");
-#endif
 	ConVarRef r_waterforcereflectentities("r_waterforcereflectentities");
 	ConVarRef mat_reducefillrate("mat_reducefillrate");
 	ConVarRef mat_hdr_level("mat_hdr_level");
@@ -606,9 +603,7 @@ void CTFOptionsVideoPanel::OnResetData()
 	int nMSAAMode = FindMSAAMode(nAASamples, nAAQuality);
 	m_pAntialiasingMode->ActivateItem(nMSAAMode);
 
-#ifndef _X360
 	if (r_waterforceexpensive.GetBool())
-#endif
 	{
 		if (r_waterforcereflectentities.GetBool())
 		{
@@ -619,12 +614,10 @@ void CTFOptionsVideoPanel::OnResetData()
 			m_pWaterDetail->ActivateItem(1);
 		}
 	}
-#ifndef _X360
 	else
 	{
 		m_pWaterDetail->ActivateItem(0);
 	}
-#endif
 
 	m_pVSync->ActivateItem(mat_vsync.GetInt());
 
@@ -699,7 +692,7 @@ void CTFOptionsVideoPanel::SetCurrentResolutionComboItem()
 	{
 		char sz[256];
 		GetResolutionName( plist, sz, sizeof(sz) );
-        m_pMode->SetText(sz);
+        m_drpResolution->SetText(sz);
 	}
 }
 
@@ -736,11 +729,11 @@ void CTFOptionsVideoPanel::OnApplyChanges()
 	char sz[256];
 	//if ( m_nSelectedMode == -1 )
 	//{
-	//	m_pMode->GetText(sz, 256);
+	//	m_drpResolution->GetText(sz, 256);
 	//}
 	//else
 	//{
-		m_pMode->GetItemText( m_nSelectedMode, sz, 256 );
+		m_drpResolution->GetItemText( m_nSelectedMode, sz, 256 );
 	//}
 	
 	int width = 0, height = 0;
@@ -758,7 +751,6 @@ void CTFOptionsVideoPanel::OnApplyChanges()
 		// set mode
 		char szCmd[ 256 ];
 		Q_snprintf( szCmd, sizeof( szCmd ), "mat_setvideomode %i %i %i\n", width, height, windowed ? 1 : 0 );
-		Msg(szCmd);
 		engine->ClientCmd_Unrestricted( szCmd );
 	}
 
@@ -768,14 +760,6 @@ void CTFOptionsVideoPanel::OnApplyChanges()
 	}
 
 	m_pGammaSlider->ApplyChanges();
-
-	// apply changes
-	engine->ClientCmd_Unrestricted( "mat_savechanges\n" );
-
-
-	//VIDEOADV
-	//if (!m_bUseChanges)
-	//	return;
 
 	ApplyChangesToConVar("mat_dxlevel", m_pDXLevel->GetActiveItemUserData()->GetInt("dxlevel"));
 	ApplyChangesToConVar("r_rootlod", 2 - m_pModelDetail->GetActiveItem());
@@ -839,21 +823,15 @@ void CTFOptionsVideoPanel::OnApplyChanges()
 	{
 	default:
 	case 0:
-#ifndef _X360
 		ApplyChangesToConVar("r_waterforceexpensive", false);
-#endif
 		ApplyChangesToConVar("r_waterforcereflectentities", false);
 		break;
 	case 1:
-#ifndef _X360
 		ApplyChangesToConVar("r_waterforceexpensive", true);
-#endif
 		ApplyChangesToConVar("r_waterforcereflectentities", false);
 		break;
 	case 2:
-#ifndef _X360
 		ApplyChangesToConVar("r_waterforceexpensive", true);
-#endif
 		ApplyChangesToConVar("r_waterforcereflectentities", true);
 		break;
 	}
@@ -867,6 +845,15 @@ void CTFOptionsVideoPanel::OnApplyChanges()
 	ApplyChangesToConVar("mat_queue_mode", m_pQueuedMode->GetActiveItem() * -1);
 
 	ApplyChangesToConVar("mat_motion_blur_enabled", m_pMotionBlur->GetActiveItem());
+
+	// apply changes
+	engine->ClientCmd_Unrestricted( "mat_savechanges\n" );
+
+	engine->ClientCmd_Unrestricted( "host_writeconfig" );
+
+	//VIDEOADV
+	//if (!m_bUseChanges)
+	//	return;
 }
 
 void CTFOptionsVideoPanel::MarkDefaultSettingsAsRecommended()
@@ -883,9 +870,7 @@ void CTFOptionsVideoPanel::MarkDefaultSettingsAsRecommended()
 	int nAAQuality = pKeyValues->GetInt("ConVar.mat_aaquality", 0);
 	int nRenderToTextureShadows = pKeyValues->GetInt("ConVar.r_shadowrendertotexture", 0);
 	int nShadowDepthTextureShadows = pKeyValues->GetInt("ConVar.r_flashlightdepthtexture", 0);
-#ifndef _X360
 	int nWaterUseRealtimeReflection = pKeyValues->GetInt("ConVar.r_waterforceexpensive", 0);
-#endif
 	int nWaterUseEntityReflection = pKeyValues->GetInt("ConVar.r_waterforcereflectentities", 0);
 	int nMatVSync = pKeyValues->GetInt("ConVar.mat_vsync", 1);
 	int nRootLOD = pKeyValues->GetInt("ConVar.r_rootlod", 0);
@@ -961,9 +946,7 @@ void CTFOptionsVideoPanel::MarkDefaultSettingsAsRecommended()
 
 	SetComboItemAsRecommended(m_pShaderDetail, nReduceFillRate ? 0 : 1);
 
-#ifndef _X360
 	if (nWaterUseRealtimeReflection)
-#endif
 	{
 		if (nWaterUseEntityReflection)
 		{
@@ -974,12 +957,10 @@ void CTFOptionsVideoPanel::MarkDefaultSettingsAsRecommended()
 			SetComboItemAsRecommended(m_pWaterDetail, 1);
 		}
 	}
-#ifndef _X360
 	else
 	{
 		SetComboItemAsRecommended(m_pWaterDetail, 0);
 	}
-#endif
 
 	SetComboItemAsRecommended(m_pVSync, nMatVSync != 0);
 
@@ -1036,7 +1017,7 @@ int CTFOptionsVideoPanel::FindMSAAMode(int nAASamples, int nAAQuality)
 //-----------------------------------------------------------------------------
 void CTFOptionsVideoPanel::OnTextChanged(Panel *pPanel, const char *pszText)
 {
-	m_nSelectedMode = m_pMode->GetActiveItem();
+	m_nSelectedMode = m_drpResolution->GetActiveItem();
 	PrepareResolutionList();
 }
 

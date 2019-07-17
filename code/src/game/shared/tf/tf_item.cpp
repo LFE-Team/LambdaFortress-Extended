@@ -8,10 +8,8 @@
 
 #ifdef CLIENT_DLL
 #include "c_tf_player.h"
-#include "c_ai_basenpc.h"
 #else
 #include "tf_player.h"
-#include "ai_basenpc.h"
 #endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED( TFItem, DT_TFItem )
@@ -30,7 +28,7 @@ unsigned int CTFItem::GetItemID( void )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTFItem::PickUp( CBaseEntity *pPlayer, bool bInvisible )
+void CTFItem::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 {
 	// SetParent with attachment point - look it up later if need be!
 	SetOwnerEntity( pPlayer );
@@ -43,34 +41,19 @@ void CTFItem::PickUp( CBaseEntity *pPlayer, bool bInvisible )
 	{
 		AddEffects( EF_NODRAW );
 	}
-#ifdef GAME_DLL
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
 
-	// Add the item to the entity's item inventory.
-	if ( pTFPlayer )
-		pTFPlayer->SetItem( this );
-	else if ( pNPC )
-		pNPC->SetItem( this );
-#endif
+	// Add the item to the player's item inventory.
+	pPlayer->SetItem( this );
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTFItem::Drop( CBaseEntity *pPlayer, bool bVisible, bool bThrown /*= false*/, bool bMessage /*= true*/ )
+void CTFItem::Drop( CTFPlayer *pPlayer, bool bVisible, bool bThrown /*= false*/, bool bMessage /*= true*/ )
 {
-#ifdef GAME_DLL
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
-
 	// Remove the item from the player's item inventory.
-	if ( pTFPlayer )
-		pTFPlayer->SetItem( NULL );
-	else if ( pNPC )
-		pNPC->SetItem( NULL );
+	pPlayer->SetItem( NULL );
 
-#endif
 	// Make visible?
 	if ( bVisible )
 	{
@@ -80,7 +63,6 @@ void CTFItem::Drop( CBaseEntity *pPlayer, bool bVisible, bool bThrown /*= false*
 	// Clear the parent.
 	SetParent( NULL );
 	SetOwnerEntity( NULL );
-
 }
 
 #ifdef CLIENT_DLL

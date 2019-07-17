@@ -279,7 +279,7 @@ protected:
 	void Write_BeamOff( CBaseEntity *pEnt );   	///< write a message turning a beam off
 	void Write_AllBeamsOff( void );				///< tell client to kill all beams
 
-	int beamonce = 1; //Makes sure it only plays once the beam
+	int beamonce; //Makes sure it only plays once the beam
 
 	// for the pin-the-player-to-something behavior
 	EHANDLE m_hPlayerPinPos;
@@ -421,6 +421,8 @@ void CNPC_Advisor::Spawn()
 	SetGoalEnt( NULL );
 
 	AddEFlags( EFL_NO_DISSOLVE );
+
+	beamonce = 1;
 }
 
 

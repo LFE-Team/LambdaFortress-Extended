@@ -33,6 +33,7 @@
 #include <baseviewport.h>
 #include "tf_viewport.h"
 #include "tf_teammenu.h"
+#include "tf_arenateammenu.h"
 
 #include "vguicenterprint.h"
 #include "text_message.h"
@@ -258,13 +259,13 @@ IViewPortPanel* TFViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTFIntroMenu( this );
 	}
-	else if (Q_strcmp(PANEL_COOPSCOREBOARD, szPanelName) == 0)
+	else if ( Q_strcmp( PANEL_COOPSCOREBOARD, szPanelName ) == 0)
 	{
-		newpanel = new CTFCoOpScoreBoardDialog(this);
+		newpanel = new CTFCoOpScoreBoardDialog( this );
 	}
-	else if (Q_strcmp(PANEL_ARENATEAMSELECT, szPanelName) == 0)
+	else if ( Q_strcmp( PANEL_ARENATEAMSELECT, szPanelName ) == 0)
 	{
-		newpanel = new CTFArenaTeamMenu(this);
+		newpanel = new CTFArenaTeamMenu( this );
 	}
 	else
 	{

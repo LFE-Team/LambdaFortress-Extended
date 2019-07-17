@@ -8,7 +8,7 @@
 #include "cbase.h"
 //#include "basecombatweapon.h"
 #include "hl1mp_basecombatweapon_shared.h"
-#include "NPCevent.h"
+#include "npcevent.h"
 //#include "basecombatcharacter.h"
 //#include "AI_BaseNPC.h"
 #ifdef CLIENT_DLL

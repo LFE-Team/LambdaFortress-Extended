@@ -6,11 +6,11 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "hl1mp_basecombatweapon_shared.h"
 #include "Sprite.h"
-#include "Beam_Shared.h"
-#include "Takedamageinfo.h"
+#include "beam_shared.h"
+#include "takedamageinfo.h"
 //#include "basecombatcharacter.h"
 //#include "AI_BaseNPC.h"
 
@@ -19,7 +19,7 @@
 #include "hl1/hl1_c_player.h"
 #else
 #include "player.h"
-#include "hl1/Hl1_player.h"
+#include "hl1/hl1_player.h"
 #endif
 
 //#include "player.h"

@@ -11,6 +11,7 @@
 #include "tf_team.h"
 #include "engine/IEngineSound.h"
 #include "entity_ammopack.h"
+#include "tf_weapon_invis.h"
 
 //=============================================================================
 //
@@ -77,11 +78,22 @@ bool CAmmoPack::MyTouch( CBasePlayer *pPlayer )
 			bSuccess = true;
 		}
 
+		int iNoItems = 0;
+		int iCloakWhenCloaked = 0;
+		float flReducedCloakFromAmmo = 0;
+		CTFWeaponInvis *pInvis = static_cast<CTFWeaponInvis*>( pTFPlayer->Weapon_OwnsThisID( TF_WEAPON_INVIS ) );
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pInvis, iNoItems, mod_cloak_no_regen_from_items );
+		CALL_ATTRIB_HOOK_INT_ON_OTHER( pInvis, iCloakWhenCloaked, NoCloakWhenCloaked );
+		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pInvis, flReducedCloakFromAmmo, ReducedCloakFromAmmo );
+
 		float flCloak = pTFPlayer->m_Shared.GetSpyCloakMeter();
 		if ( flCloak < 100.0f )
 		{
-			pTFPlayer->m_Shared.SetSpyCloakMeter( min( 100.0f, flCloak + 100.0f * PackRatios[GetPowerupSize()] ) );
-			bSuccess = true;
+			if ( !pTFPlayer->m_Shared.InCond( TF_COND_STEALTHED ) && iCloakWhenCloaked != 1 && iNoItems != 1 )
+			{
+				pTFPlayer->m_Shared.SetSpyCloakMeter( min( 100.0f, flCloak + min( 100.0f, flReducedCloakFromAmmo ) * PackRatios[GetPowerupSize()] ) );
+				bSuccess = true;
+			}
 		}
 
 		// did we give them anything?

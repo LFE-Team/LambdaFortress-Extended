@@ -430,6 +430,10 @@ public:
 
 	CAttributeManager m_AttributeManager;
 
+	int		m_iSquadMemberCount;
+	int		m_iSquadMedicCount;
+	bool	m_fSquadInFollowMode;
+
 	// HL2 Ladder related data
 	EHANDLE			m_hLadder;
 	LadderMove_t	m_LadderMove;

@@ -21,7 +21,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar    sk_plr_dmg_smg1_grenade;	
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+
+extern ConVar    sk_plr_dmg_smg1_grenade;
+extern ConVar    sk_npc_dmg_smg1;
 
 class CWeaponSMG1 : public CHLSelectFireMachineGun
 {
@@ -59,6 +62,8 @@ public:
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector &vecShootOrigin, Vector &vecShootDir );
 	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+
+	virtual bool	CanCritRapidFire()		{ return true; }
 
 	DECLARE_ACTTABLE();
 
@@ -178,10 +183,32 @@ void CWeaponSMG1::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, Vector 
 {
 	// FIXME: use the returned number of bullets to account for >10hz firerate
 	WeaponSoundRealtime( SINGLE_NPC );
+	if ( IsCurrentAttackACrit() )
+		EmitSound( "Weapon_Fist.MissCrit" );
 
 	CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_MACHINEGUN, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
-	pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED,
-		MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0 );
+	if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+	{
+		CalcIsAttackCritical();
+		CalcIsAttackMiniCritical();
+
+		FX_NPCFireBullets(
+			pOperator->entindex(),
+			vecShootOrigin,
+			vecShootDir,
+			TF_WEAPON_SMG,
+			TF_WEAPON_PRIMARY_MODE,
+			CBaseEntity::GetPredictionRandomSeed() & 255,
+			GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+			1,
+			sk_npc_dmg_smg1.GetInt(),
+			IsCurrentAttackACrit() );
+	}
+	else
+	{
+		pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED,
+			MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2, entindex(), 0 );
+	}
 
 	pOperator->DoMuzzleFlash();
 	m_iClip1 = m_iClip1 - 1;

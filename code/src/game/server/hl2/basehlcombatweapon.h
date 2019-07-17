@@ -41,15 +41,7 @@ public:
 	// utility function
 	static void DoMachineGunKick( CBasePlayer *pPlayer, float dampEasy, float maxVerticleKickAngle, float fireDurationTime, float slideLimitTime );
 
-#ifdef TF_CLASSIC
-	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
-	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }
-#endif
 protected:
-#ifdef TF_CLASSIC
-	bool			m_bCurrentAttackIsCrit;
-	bool			m_bCurrentAttackIsMiniCrit;
-#endif
 
 	int	m_nShotsFired;	// Number of consecutive shots fired
 

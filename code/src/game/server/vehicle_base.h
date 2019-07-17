@@ -215,6 +215,14 @@ public:
 // IDrivableVehicle
 public:
 	virtual CBaseEntity *GetDriver( void );
+	//to make non passenger vehicles back compatible
+	virtual CBaseEntity	*GetPassenger( int iRole ){ return GetDriver(); }
+	virtual int			GetNumPassengers( void ){ return (GetDriver()) ? 1 : 0; }
+	virtual void		PassengerEnterVehicle( CBasePlayer *pPlayer, int nRole )
+	{
+		Assert(nRole == VEHICLE_DRIVER); 
+		EnterVehicle( pPlayer ); 
+	}
 	virtual void		ItemPostFrame( CBasePlayer *pPlayer ) { return; }
 	virtual void		SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move );
 	virtual void		ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMoveData ) { return; }

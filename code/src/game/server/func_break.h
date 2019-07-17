@@ -80,6 +80,7 @@ public:
 	static const char *MaterialSound( Materials precacheMaterial );
 
 	static const char *pSpawnObjects[];
+	static const char *pSpawnObjects_HL1[];
 
 	int DrawDebugTextOverlays(void);
 

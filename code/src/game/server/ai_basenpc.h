@@ -41,7 +41,6 @@
 #include "ai_basenpc_shared.h"
 #include "tf_player.h"
 #include "SpriteTrail.h"
-#include "tf_item.h"
 #endif
 
 #define PLAYER_SQUADNAME "player_squad"
@@ -1202,7 +1201,7 @@ public:
 	virtual bool IsValidCommandTarget( CBaseEntity *pTarget )			{ return false; }
 	const Vector &GetCommandGoal() const								{ return m_vecCommandGoal; }
 	virtual void OnMoveToCommandGoalFailed()							{}
-	string_t GetPlayerSquadName() const									{ Assert( gm_iszPlayerSquad != NULL_STRING ); return gm_iszPlayerSquad; }
+	virtual string_t GetPlayerSquadName() const							{ Assert( gm_iszPlayerSquad != NULL_STRING ); return gm_iszPlayerSquad; }
 	bool IsInPlayerSquad() const;
 	virtual CAI_BaseNPC *GetSquadCommandRepresentative()				{ return NULL; }
 
@@ -2228,7 +2227,7 @@ public:
 
 #ifdef TF_CLASSIC
 public:
-	// Team support for TF2C!
+	// Team support for TF2!
 	virtual void		ChangeTeam( int iTeamNum );
 
 	// Velocity at time when we hit ground
@@ -2257,7 +2256,7 @@ public:
 	bool	IsBuffed( void );
 
 	void	Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flFlameDuration = -1.0f );
-	void	Bleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
+	void	MakeBleed( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon = NULL, float flBleedDuration = -1.0f );
 
 	void	AddPhaseEffects( void );
 	CUtlVector< CSpriteTrail * > m_pPhaseTrails;
@@ -2290,10 +2289,12 @@ public:
 	void OnAddPhase( void );
 	void OnAddSpeedBoost( void );
 	/*void OnAddUrine( void );
-	void OnAddMilk( void );
-	void OnAddGas( void );*/
+	void OnAddMadMilk( void );
+	void OnAddCondGas( void );*/
 	void OnAddBleeding( void );
 	//void OnAddBuff( void );
+	void OnAddSapped( void );
+	void SappedThink( void );
 	void OnAddRune( void );
 
 	void OnRemoveBurning( void );
@@ -2306,9 +2307,10 @@ public:
 	void OnRemovePhase( void );
 	void OnRemoveSpeedBoost( void );
 	void OnRemoveUrine( void );
-	void OnRemoveMilk( void );
-	void OnRemoveGas( void );
+	void OnRemoveMadMilk( void );
+	void OnRemoveCondGas( void );
 	void OnRemoveBleeding( void );
+	void OnRemoveSapped( void );
 	//void OnRemoveBuff( void );
 	void OnRemoveRune( void );
 
@@ -2357,20 +2359,23 @@ public:
 	void InputSetPlaybackRate( inputdata_t &inputdata );
 	void InputAddCond( inputdata_t &inputdata );
 	void InputRemoveCond( inputdata_t &inputdata );
-
-	// How long since this npc last interacted with something the game considers an objective/target/goal
-	float				GetTimeSinceLastObjective( void ) const { return ( m_flLastObjectiveTime == -1.f ) ? 999.f : gpGlobals->curtime - m_flLastObjectiveTime; }
-	void				SetLastObjectiveTime( float flTime ) { m_flLastObjectiveTime = flTime; }
-
-	bool				HasItem( void );					// Currently can have only one item at a time.
-	void				SetItem( CTFItem *pItem );
-	CTFItem				*GetItem( void );
-	bool IsAllowedToPickUpFlag( void );
-	bool HasTheFlag( void );
-
-	void				DropFlag( void );
-
+	
 	void				SearchBuildingThink( void );
+
+	void			ApplyAbsVelocityImpulse( const Vector &vecImpulse );
+	virtual void	ApplyGenericPushbackImpulse( const Vector &vecDir );
+
+	void				FireBullet( const FireBulletsInfo_t &info, bool bDoEffects, int nDamageType, int nCustomDamageType = TF_DMG_CUSTOM_NONE );
+	void				ImpactWaterTrace( trace_t &trace, const Vector &vecStart );
+
+	void CalcIsAttackCritical( void );
+	void CalcIsAttackMiniCritical( void );
+	virtual bool CalcIsAttackCriticalHelper();
+	bool IsCurrentAttackACrit() { return m_bCurrentAttackIsCrit; }
+	bool IsCurrentAttackAMiniCrit() { return m_bCurrentAttackIsMiniCrit; }
+
+	void AddTempCritBonus( float flDuration = PERMANENT_CONDITION );
+
 protected:
 	// Burn handling
 	EHANDLE					m_hBurnAttacker;
@@ -2387,7 +2392,16 @@ protected:
 	// Some networked flags used by TF like backstab immunity.
 	CNetworkVar( int, m_nTFFlags );
 
+	bool			m_bCurrentAttackIsCrit;
+	bool			m_bCurrentAttackIsMiniCrit;
+	float			m_flCritTime;
+	float			m_flLastCritCheckTime;
+	int				m_iLastCritCheckFrame;
+	int				m_iCurrentSeed;
 private:
+	float m_flSappedDamageAccumulator;
+	float m_flLastSappedThinkTime;
+
 	CNetworkVar( int, m_nPlayerCond );
 	CNetworkVar( int, m_nPlayerCondEx );
 	CNetworkVar( int, m_nPlayerCondEx2 );
@@ -2411,11 +2425,7 @@ private:
 	CNetworkVar( int, m_nNumHealers );
 
 	DamagerHistory_t m_DamagerHistory[MAX_DAMAGER_HISTORY];	// history of who has damaged this NPC
-
-	float		m_flLastObjectiveTime;				// Last curtime player touched/killed something the gamemode considers an objective
-
-	// Items.
-	CNetworkHandle( CTFItem, m_hItem );
+	
 #endif
 public:
 	CUtlFixedLinkedList<LagRecordNPC>* GetLagTrack() { return m_LagTrack; }

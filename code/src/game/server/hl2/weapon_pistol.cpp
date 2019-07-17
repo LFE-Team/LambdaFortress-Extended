@@ -21,6 +21,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern ConVar lfe_hl2_weapon_use_tf_bullet;
+extern ConVar sk_npc_dmg_pistol;
+
 #define	PISTOL_FASTEST_REFIRE_TIME		0.1f
 #define	PISTOL_FASTEST_DRY_REFIRE_TIME	0.2f
 
@@ -196,7 +199,30 @@ void CWeaponPistol::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCh
 			CSoundEnt::InsertSound( SOUND_COMBAT|SOUND_CONTEXT_GUNFIRE, pOperator->GetAbsOrigin(), SOUNDENT_VOLUME_PISTOL, 0.2, pOperator, SOUNDENT_CHANNEL_WEAPON, pOperator->GetEnemy() );
 
 			WeaponSound( SINGLE_NPC );
-			pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+			if ( IsCurrentAttackACrit() )
+				EmitSound( "Weapon_Fist.MissCrit" );
+
+			if ( lfe_hl2_weapon_use_tf_bullet.GetBool() )
+			{
+				CalcIsAttackCritical();
+				CalcIsAttackMiniCritical();
+
+				FX_NPCFireBullets(
+					pOperator->entindex(),
+					vecShootOrigin,
+					vecShootDir,
+					TF_WEAPON_PISTOL,
+					TF_WEAPON_PRIMARY_MODE,
+					CBaseEntity::GetPredictionRandomSeed() & 255,
+					GetSpreadBias(pOperator->GetCurrentWeaponProficiency()),
+					1,
+					sk_npc_dmg_pistol.GetInt(),
+					IsCurrentAttackACrit() );
+			}
+			else
+			{
+				pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, VECTOR_CONE_PRECALCULATED, MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 2 );
+			}
 			pOperator->DoMuzzleFlash();
 			m_iClip1 = m_iClip1 - 1;
 		}

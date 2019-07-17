@@ -26,6 +26,7 @@ public:
 	int	GetTotalScore( int iIndex );
 	Color GetPlayerColor( int iIndex );
 
+	float GetHealthPercent();
 protected:
 	CNetworkArray( int,	m_iTotalScore, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iMaxHealth, MAX_PLAYERS+1 );

@@ -29,7 +29,7 @@
 #include "game/server/ientityinfo.h"
 #include "game/server/igameinfo.h"
 
-//#define SAMPLE_TF2_PLUGIN
+#define SAMPLE_TF2_PLUGIN
 #ifdef SAMPLE_TF2_PLUGIN
 #include "tf/tf_shareddefs.h"
 #endif

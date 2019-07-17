@@ -30,6 +30,7 @@
 #include "precipitation_shared.h"
 #include "shot_manipulator.h"
 #include "modelentities.h"
+#include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -492,9 +493,7 @@ void CGibShooter::InitPointGib( CGib *pGib, const Vector &vecShootDir, float flS
 		pGib->m_lifeTime = (m_flGibLife * random->RandomFloat( 0.95, 1.05 ));	// +/- 5%
 
 		// HL1 gibs always die after a certain time, other games have to opt-in
-#ifndef HL1_DLL
-		if( HasSpawnFlags( SF_SHOOTER_STRICT_REMOVE ) )
-#endif
+		if( HasSpawnFlags( SF_SHOOTER_STRICT_REMOVE ) || TFGameRules()->IsInHL1Map() )
 		{
 			pGib->SetNextThink( gpGlobals->curtime + pGib->m_lifeTime );
 			pGib->SetThink ( &CGib::DieThink );
@@ -569,9 +568,7 @@ CBaseEntity *CGibShooter::SpawnGib( const Vector &vecShootDir, float flSpeed )
 
 					pPhysicsObject->ApplyTorqueCenter( torque );
 
-#ifndef HL1_DLL
-					if( HasSpawnFlags( SF_SHOOTER_STRICT_REMOVE ) )
-#endif
+					if( HasSpawnFlags( SF_SHOOTER_STRICT_REMOVE ) || TFGameRules()->IsInHL1Map() )
 					{
 						pGib->m_bForceRemove = true;
 						pGib->SetNextThink( gpGlobals->curtime + pGib->m_lifeTime );

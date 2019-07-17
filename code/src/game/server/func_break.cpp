@@ -21,6 +21,7 @@
 #include "util.h"
 #include "physics_impact_damage.h"
 #include "tier0/icommandline.h"
+#include "tf_gamerules.h"
 
 #ifdef PORTAL
 	#include "portal_shareddefs.h"
@@ -34,9 +35,8 @@
 ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
 ConVar func_break_reduction_factor( "func_break_reduction_factor", ".5" );
 
-#ifdef HL1_DLL
 extern void PlayerPickupObject( CBasePlayer *pPlayer, CBaseEntity *pObject );
-#endif
+
 
 extern Vector		g_vecAttackDir;
 
@@ -44,65 +44,79 @@ extern Vector		g_vecAttackDir;
 // This is done instead of just a classname in the FGD so we can control which entities can
 // be spawned, and still remain fairly flexible
 
-#ifndef HL1_DLL
-	const char *CBreakable::pSpawnObjects[] =
-	{
-		NULL,						// 0
-		"item_battery",				// 1
-		"item_healthkit",			// 2
-		"item_ammo_pistol",			// 3
-		"item_ammo_pistol_large",	// 4
-		"item_ammo_smg1",			// 5
-		"item_ammo_smg1_large",		// 6
-		"item_ammo_ar2",			// 7
-		"item_ammo_ar2_large",		// 8
-		"item_box_buckshot",		// 9
-		"item_flare_round",			// 10
-		"item_box_flare_rounds",	// 11
-		"item_rpg_round",			// 12
-		"unused (item_smg1_grenade) 13",// 13
-		"item_box_sniper_rounds",	// 14
-		"unused (???"") 15",		// 15 - split into two strings to avoid trigraph warning 
-		"weapon_stunstick",			// 16
-		"unused (weapon_ar1) 17",	// 17
-		"weapon_ar2",				// 18
-		"unused (???"") 19",		// 19 - split into two strings to avoid trigraph warning 
-		"weapon_rpg",				// 20
-		"weapon_smg1",				// 21
-		"unused (weapon_smg2) 22",	// 22
-		"unused (weapon_slam) 23",	// 23
-		"weapon_shotgun",			// 24
-		"unused (weapon_molotov) 25",// 25
-		"item_dynamic_resupply",	// 26
-	};
-#else
-	// Half-Life 1 spawn objects!
-	const char *CBreakable::pSpawnObjects[] =
-	{
-		NULL,				// 0
-		"item_battery",		// 1
-		"item_healthkit",	// 2
-		"weapon_glock",		// 3
-		"ammo_9mmclip",		// 4
-		"weapon_mp5",		// 5
-		"ammo_9mmAR",		// 6
-		"ammo_ARgrenades",	// 7
-		"weapon_shotgun",	// 8
-		"ammo_buckshot",	// 9
-		"weapon_crossbow",	// 10
-		"ammo_crossbow",	// 11
-		"weapon_357",		// 12
-		"ammo_357",			// 13
-		"weapon_rpg",		// 14
-		"ammo_rpgclip",		// 15
-		"ammo_gaussclip",	// 16
-		"weapon_handgrenade",// 17
-		"weapon_tripmine",	// 18
-		"weapon_satchel",	// 19
-		"weapon_snark",		// 20
-		"weapon_hornetgun",	// 21
-	};
-#endif
+const char *CBreakable::pSpawnObjects[] =
+{
+	NULL,						// 0
+	"item_battery",				// 1
+	"item_healthkit",			// 2
+	"item_ammo_pistol",			// 3
+	"item_ammo_pistol_large",	// 4
+	"item_ammo_smg1",			// 5
+	"item_ammo_smg1_large",		// 6
+	"item_ammo_ar2",			// 7
+	"item_ammo_ar2_large",		// 8
+	"item_box_buckshot",		// 9
+	"item_flare_round",			// 10
+	"item_box_flare_rounds",	// 11
+	"item_rpg_round",			// 12
+	"unused (item_smg1_grenade) 13",// 13
+	"item_box_sniper_rounds",	// 14
+	"unused (???"") 15",		// 15 - split into two strings to avoid trigraph warning 
+	"weapon_stunstick",			// 16
+	"unused (weapon_ar1) 17",	// 17
+	"weapon_ar2",				// 18
+	"unused (???"") 19",		// 19 - split into two strings to avoid trigraph warning 
+	"weapon_rpg",				// 20
+	"weapon_smg1",				// 21
+	"unused (weapon_smg2) 22",	// 22
+	"unused (weapon_slam) 23",	// 23
+	"weapon_shotgun",			// 24
+	"unused (weapon_molotov) 25",// 25
+	"item_dynamic_resupply",	// 26
+};
+
+// Half-Life 1 spawn objects!
+const char *CBreakable::pSpawnObjects_HL1[] =
+{
+	NULL,				// 0
+	"item_battery",		// 1
+	"item_healthkit",	// 2
+	"weapon_glock",		// 3
+	"ammo_9mmclip",		// 4
+	"weapon_mp5",		// 5
+	"ammo_9mmAR",		// 6
+	"ammo_ARgrenades",	// 7
+	"weapon_shotgun",	// 8
+	"ammo_buckshot",	// 9
+	"weapon_crossbow",	// 10
+	"ammo_crossbow",	// 11
+	"weapon_357",		// 12
+	"ammo_357",			// 13
+	"weapon_rpg",		// 14
+	"ammo_rpgclip",		// 15
+	"ammo_gaussclip",	// 16
+	"weapon_handgrenade",// 17
+	"weapon_tripmine",	// 18
+	"weapon_satchel",	// 19
+	"weapon_snark",		// 20
+	"weapon_hornetgun",	// 21
+};
+
+static inline int GetSpawnObjectsSize()
+{
+	if(TFGameRules()->IsInHL1Map())
+		return ARRAYSIZE(CBreakable::pSpawnObjects_HL1);
+	else
+		return ARRAYSIZE(CBreakable::pSpawnObjects);
+}
+
+static inline const char **GetSpawnObjects()
+{
+	if(TFGameRules()->IsInHL1Map())
+		return CBreakable::pSpawnObjects_HL1;
+	else
+		return CBreakable::pSpawnObjects;
+}
 
 const char *pFGDPropData[] =
 {
@@ -218,8 +232,8 @@ bool CBreakable::KeyValue( const char *szKeyName, const char *szValue )
 	else if (FStrEq(szKeyName, "spawnobject") )
 	{
 		int object = atoi( szValue );
-		if ( object > 0 && object < ARRAYSIZE(pSpawnObjects) )
-			m_iszSpawnObject = MAKE_STRING( pSpawnObjects[object] );
+		if ( object > 0 && object < GetSpawnObjectsSize() )
+			m_iszSpawnObject = MAKE_STRING( GetSpawnObjects()[object] );
 	}
 	else if (FStrEq(szKeyName, "propdata") )
 	{
@@ -406,7 +420,6 @@ void CBreakable::Precache( void )
 		pGibName = "ConcreteChunks";
 		break;
 
-#ifdef HL1_DLL
 	case matComputer:
 		pGibName = "ComputerGibs";
 		break;
@@ -418,21 +431,20 @@ void CBreakable::Precache( void )
 	case matFlesh:
 		pGibName = "FleshGibs";
 		break;
-
-	case matCinderBlock:
-		pGibName = "CinderBlocks";
-		break;
-
+		
 	case matWeb:
 		pGibName = "WebGibs";
 		break;
-#else
-
+		
 	case matCinderBlock:
-		pGibName = "ConcreteChunks";
+	{
+		if(TFGameRules()->IsInHL1Map())
+			pGibName = "CinderBlocks";
+		else
+			pGibName = "ConcreteChunks";
 		break;
-#endif
-
+	}
+	
 #if HL2_EPISODIC 
 	case matNone:
 		pGibName = "";
@@ -449,9 +461,7 @@ void CBreakable::Precache( void )
 	{
 		pGibName = STRING(m_iszGibModel);
 
-#ifdef HL1_DLL
 		PrecacheModel( pGibName );
-#endif
 	}
 
 	m_iszModelName = MAKE_STRING( pGibName );
@@ -467,15 +477,15 @@ void CBreakable::Precache( void )
 	else
 	{
 		// Actually, precache all possible objects...
-		for ( int i = 0; i < ARRAYSIZE(pSpawnObjects) ; ++i )
+		for ( int i = 0; i < GetSpawnObjectsSize() ; ++i )
 		{
-			if ( !pSpawnObjects[ i ] )
+			if ( !GetSpawnObjects()[ i ] )
 				continue;
 
-			if ( !Q_strnicmp( pSpawnObjects[ i ], "unused", Q_strlen( "unused" ) ) )
+			if ( !Q_strnicmp( GetSpawnObjects()[ i ], "unused", Q_strlen( "unused" ) ) )
 				continue;
 
-			UTIL_PrecacheOther( pSpawnObjects[ i ] );
+			UTIL_PrecacheOther( GetSpawnObjects()[ i ] );
 		}	
 	}
 
@@ -1067,21 +1077,18 @@ void CBreakable::Die( void )
 	if ( m_iszModelName != NULL_STRING )
 	{
 		for ( int i = 0; i < iCount; i++ )
-		{
-
-	#ifdef HL1_DLL
+		{			
 			// Use the passed model instead of the propdata type
 			const char *modelName = STRING( m_iszModelName );
-			
-			// if the map specifies a model by name
-			if( strstr( modelName, ".mdl" ) != NULL )
+
+			if(TFGameRules()->IsInHL1Map() && strstr( modelName, ".mdl" ) != NULL )
 			{
 				iModelIndex = modelinfo->GetModelIndex( modelName );
 			}
 			else	// do the hl2 / normal way
-	#endif
-
-			iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel(  STRING( m_iszModelName ) ) );
+			{
+				iModelIndex = modelinfo->GetModelIndex( g_PropDataSystem.GetRandomChunkModel(  STRING( m_iszModelName ) ) );
+			}
 
 			// All objects except the first one in this run are marked as slaves...
 			int slaveFlag = 0;
@@ -1246,10 +1253,11 @@ void CPushable::Spawn( void )
 		CreateVPhysics();
 	}
 
-#ifdef HL1_DLL
-	// Force HL1 Pushables to stay axially aligned.
-	VPhysicsGetObject()->SetInertia( Vector( 1e30, 1e30, 1e30 ) );
-#endif//HL1_DLL
+	if(TFGameRules()->IsInHL1Map())
+	{
+		// Force HL1 Pushables to stay axially aligned.
+		VPhysicsGetObject()->SetInertia( Vector( 1e30, 1e30, 1e30 ) );
+	}
 }
 
 
@@ -1270,22 +1278,25 @@ bool CPushable::CreateVPhysics( void )
 // Pull the func_pushable
 void CPushable::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-#ifdef HL1_DLL
-	if( m_spawnflags & SF_PUSH_NO_USE )
-		return;
-
-	// Allow pushables to be dragged by player
-	CBasePlayer *pPlayer = ToBasePlayer( pActivator );
-	if ( pPlayer )
+	if(TFGameRules()->IsInHL1Map())
 	{
-		if ( useType == USE_ON )
+		if( m_spawnflags & SF_PUSH_NO_USE )
+			return;
+
+		// Allow pushables to be dragged by player
+		CBasePlayer *pPlayer = ToBasePlayer( pActivator );
+		if ( pPlayer )
 		{
-			PlayerPickupObject( pPlayer, this );
+			if ( useType == USE_ON )
+			{
+				PlayerPickupObject( pPlayer, this );
+			}
 		}
 	}
-#else
-	BaseClass::Use( pActivator, pCaller, useType, value );
-#endif
+	else
+	{
+		BaseClass::Use( pActivator, pCaller, useType, value );
+	}
 }
 
 

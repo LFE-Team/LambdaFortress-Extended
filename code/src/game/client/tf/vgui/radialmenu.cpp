@@ -24,7 +24,7 @@
 #include "c_tf_player.h"
 #include "vgui/polygonbutton.h"
 #include "vgui/radialmenu.h"
-#include "vgui/cursor.h"
+#include "vgui/Cursor.h"
 #include "fmtstr.h"
 #include "vgui_int.h"
 
@@ -103,7 +103,7 @@ public:
 	}
 
 	//----------------------------------------------------------------------------------------------------
-	void CRadialButton::UpdateHotspots( KeyValues *data )
+	void UpdateHotspots( KeyValues *data )
 	{
 		BaseClass::UpdateHotspots( data );
 
@@ -139,7 +139,7 @@ public:
 	}
 
 	//----------------------------------------------------------------------------------------------------
-	void CRadialButton::PerformLayout( void )
+	void PerformLayout( void )
 	{
 		int wide, tall;
 		GetSize( wide, tall );

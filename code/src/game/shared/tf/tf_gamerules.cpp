@@ -54,6 +54,7 @@
 	#include "tf_weaponbase_grenadeproj.h"
 	#include "tf_weapon_physcannon.h"
 	#include "tf_projectile_arrow.h"
+	#include "lfe_mapadd.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -83,7 +84,6 @@ static int g_TauntCamAchievements[] =
 	0,		// TF_CLASS_PYRO,
 	0,		// TF_CLASS_SPY,
 	0,		// TF_CLASS_ENGINEER,
-	0,		// TF_CLASS_CIVILIAN,
 
 	0,		// TF_CLASS_COUNT_ALL,
 };
@@ -92,15 +92,11 @@ extern ConVar mp_capstyle;
 extern ConVar sv_turbophysics;
 extern ConVar mp_chattime;
 extern ConVar tf_arena_max_streak;
+extern ConVar lfe_coop_lives;
 
 ConVar tf_caplinear( "tf_caplinear", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "If set to 1, teams must capture control points linearly." );
 ConVar tf_stalematechangeclasstime( "tf_stalematechangeclasstime", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Amount of time that players are allowed to change class in stalemates." );
 ConVar tf_birthday( "tf_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED );
-
-ConVar lfe_force_aprilfool( "lfe_force_aprilfool", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force April Fool mode." );
-ConVar lfe_force_halloween( "lfe_force_halloween", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Halloween mode." );
-ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Smissmas mode." );
-ConVar lfe_force_birthday( "lfe_force_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Lambda Fortress's birthday mode." );
 
 ConVar  alyx_darkness_force( "alyx_darkness_force", "0", FCVAR_CHEAT | FCVAR_REPLICATED );
 
@@ -109,6 +105,14 @@ ConVar lfe_allow_thirdperson( "lfe_allow_thirdperson", "1", FCVAR_NOTIFY | FCVAR
 
 // LF:E's cvars.
 ConVar lfe_force_legacy( "lfe_force_legacy", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force original lambda fortress style mode" );
+ConVar lfe_force_aprilfool( "lfe_force_aprilfool", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force April Fool mode." );
+ConVar lfe_force_halloween( "lfe_force_halloween", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Halloween mode." );
+ConVar lfe_force_smissmas( "lfe_force_smissmas", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Smissmas mode." );
+ConVar lfe_force_birthday( "lfe_force_birthday", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Force Lambda Fortress's birthday mode." );
+ConVar sv_dynamicnpcs("sv_dynamicnpcs", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_ARCHIVE, "Enable The Dynamic NPC System.");
+ConVar sv_hl2_beta("sv_hl2_beta", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable Half-Life 2 Beta content.");
+
+ConVar mp_gamemode( "mp_gamemode", "coop", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Current game mode, acceptable values are coop and vs.", false, 0.0f, false, 0.0f );
 
 #ifdef GAME_DLL
 // TF overrides the default value of this convar
@@ -118,15 +122,19 @@ ConVar tf_gamemode_arena( "tf_gamemode_arena", "0" , FCVAR_NOTIFY | FCVAR_REPLIC
 ConVar tf_gamemode_cp( "tf_gamemode_cp", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_ctf( "tf_gamemode_ctf", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_sd( "tf_gamemode_sd", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-ConVar tf_gamemode_rd( "tf_gamemode_rd", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_payload( "tf_gamemode_payload", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_mvm( "tf_gamemode_mvm", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar tf_gamemode_rd( "tf_gamemode_rd", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar tf_beta_content( "tf_beta_content", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar tf_gamemode_pd( "tf_gamemode_pd", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar tf_gamemode_tc( "tf_gamemode_tc", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_passtime( "tf_gamemode_passtime", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
+ConVar tf_gamemode_misc( "tf_gamemode_misc", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_versus( "lfe_versus", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_blucoop( "lfe_blucoop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 ConVar lfe_gamemode_zs( "lfe_gamemode_zs", "0" , FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-ConVar sv_dynamicnpcs("sv_dynamicnpcs", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enable The Dynamic NPC System.");
-ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Set the New Difficulty System.\n1 = Original \n2 = Medium\n 3 = Hard \n4 = Unusual");
+ConVar sv_dynamicnpcs_debug("sv_dynamicnpcs_debug", "0", FCVAR_REPLICATED, "Dynamic NPC System Debug.");
+ConVar sv_difficulty("sv_difficulty", "1", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_ARCHIVE, "Set the New Difficulty System.\n1 = Original \n2 = Medium\n 3 = Hard \n4 = Unusual");
 
 ConVar tf_gravetalk( "tf_gravetalk", "1", FCVAR_NOTIFY, "Teammates can always chat with each other whether alive or dead." );
 ConVar tf_ctf_bonus_time( "tf_ctf_bonus_time", "10", FCVAR_NOTIFY, "Length of team crit time for CTF capture." );
@@ -156,6 +164,12 @@ ConVar lfe_classlimit_heavy( "lfe_classlimit_heavy", "-1", FCVAR_NOTIFY, "Per-te
 ConVar lfe_classlimit_pyro( "lfe_classlimit_pyro", "-1", FCVAR_NOTIFY, "Per-team class limit for Pyros.\n" );
 ConVar lfe_classlimit_spy( "lfe_classlimit_spy", "-1", FCVAR_NOTIFY, "Per-team class limit for Spies.\n" );
 ConVar lfe_classlimit_engineer( "lfe_classlimit_engineer", "-1", FCVAR_NOTIFY, "Per-team class limit for Engineers.\n" );
+
+ConVar lfe_allow_revive_marker( "lfe_allow_revive_marker", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow Revive Marker to drop on death." );
+ConVar lfe_allow_ignite_prop( "lfe_allow_ignite_prop", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allow flamethrower to ignite on prop_physics." );
+
+ConVar lfe_mapadd_enable( "lfe_mapadd_enable", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables mapadd file to generate scripted stuff if it is available for the current map." );
+ConVar sv_currentdiff("sv_currentdiff", "1", FCVAR_DEVELOPMENTONLY);
 #endif
 
 #ifdef GAME_DLL
@@ -186,7 +200,7 @@ ConVar tf_flag_caps_per_round( "tf_flag_caps_per_round", "3", FCVAR_REPLICATED, 
 							  );
 
 ConVar lfe_use_hl2_player_hull( "lfe_use_hl2_player_hull", "1", FCVAR_NOTIFY | FCVAR_REPLICATED );
-ConVar lfe_coop( "lfe_coop", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables cooperative mode. Changes will take effect upon map restart." );
+ConVar lfe_coop( "lfe_coop", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Enables cooperative mode. Changes will take effect upon map restart." );
 ConVar lfe_coop_min_red_players( "lfe_coop_min_red_players", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minumum amount of players on RED required to join BLU in Versus mode." );
 
 // This sets what percentage of players are required in the changelevel trigger before map change takes effect. Currently it's set to 100% (all players required).
@@ -334,6 +348,7 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 
 	DEFINE_KEYFIELD( m_iHud_Type, FIELD_INTEGER, "hud_type"),
 	//DEFINE_KEYFIELD( m_bCTF_Overtime, FIELD_BOOLEAN, "ctf_overtime" ),
+	DEFINE_KEYFIELD( m_bForceDynamicNPC, FIELD_BOOLEAN, "force_dynamicnpcs" ),
 
 	// Inputs.
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "SetRedTeamRespawnWaveTime", InputSetRedTeamRespawnWaveTime ),
@@ -359,6 +374,14 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetDifficulty", InputSetDifficulty ),
 
+	DEFINE_INPUTFUNC( FIELD_VOID, "SpawnBoss", InputSpawnBoss ),
+
+	// Outputs
+	DEFINE_OUTPUT( m_IsHL2BetaEnabled, "IsHL2BetaEnabled" ),
+	DEFINE_OUTPUT( m_IsDynamicNPCEnabled, "IsDynamicNPCEnabled" ),
+	DEFINE_OUTPUT( m_IsCoOp, "IsCoOp" ),
+	DEFINE_OUTPUT( m_IsBluCoOp, "IsBluCoOp" ),
+	DEFINE_OUTPUT( m_IsVersus, "IsVersus" ),
 
 END_DATADESC()
 
@@ -542,11 +565,44 @@ void CTFGameRulesProxy::InputSetDifficulty( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CTFGameRulesProxy::InputSpawnBoss( inputdata_t &inputdata )
+{
+	CBaseEntity *pBossSpawnpoint = gEntList.FindEntityByClassname(NULL, "info_director_boss");
+	variant_t sVariant;
+	if ( pBossSpawnpoint )
+		pBossSpawnpoint->AcceptInput( "SpawnBoss", NULL, NULL, sVariant, NULL );
+
+	TFGameRules()->SetDirectorAnger( 20 );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CTFGameRulesProxy::Activate()
 {
 	TFGameRules()->Activate();
 
 	TFGameRules()->SetHudType( m_iHud_Type );
+	TFGameRules()->SetDynamicNPC( m_bForceDynamicNPC );
+
+	ConVarRef hl2_beta( "sv_hl2_beta" );
+	if ( hl2_beta.GetInt() == 1 )
+	{
+		m_IsHL2BetaEnabled.FireOutput( this, this );
+	}
+
+	ConVarRef dynamic_npcs( "sv_dynamicnpcs" );
+	if ( dynamic_npcs.GetInt() == 1 )
+		m_IsDynamicNPCEnabled.FireOutput( this, this );
+
+	if ( TFGameRules()->IsCoOp() )
+		m_IsCoOp.FireOutput( this, this );
+
+	if ( TFGameRules()->IsBluCoOp() )
+		m_IsBluCoOp.FireOutput( this, this );
+
+	if ( TFGameRules()->IsVersus() )
+		m_IsVersus.FireOutput( this, this );
 
 	BaseClass::Activate();
 }
@@ -675,21 +731,19 @@ private:
 	//string_t sVehicle;
 	int iVehicleNum;
 	int iSpawnedVehicles;
-	int iMaxVehicles;
 	int iDelay;
 	bool m_bGunEnabled;
 };
 
-BEGIN_DATADESC(CTFLogicVehicleSpawner)
-DEFINE_INPUTFUNC(FIELD_VOID, "ForceSpawn", InputForceSpawn),
-DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
-DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
-DEFINE_KEYFIELD(iVehicleNum, FIELD_INTEGER, "vehicle_to_spawn"),
-DEFINE_KEYFIELD(iMaxVehicles, FIELD_INTEGER, "max_vehicles"),
-DEFINE_KEYFIELD(iDelay, FIELD_INTEGER, "delay"),
-DEFINE_INPUTFUNC(FIELD_VOID, "EnableGun", InputEnableGun),
-DEFINE_INPUTFUNC(FIELD_VOID, "RemoveVehicles", InputRemoveVehicles),
-DEFINE_INPUTFUNC(FIELD_VOID, "DisableGun", InputDisableGun),
+BEGIN_DATADESC( CTFLogicVehicleSpawner )
+	DEFINE_INPUTFUNC(FIELD_VOID, "ForceSpawn", InputForceSpawn),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
+	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
+	DEFINE_KEYFIELD(iVehicleNum, FIELD_INTEGER, "vehicle_to_spawn"),
+	DEFINE_KEYFIELD(iDelay, FIELD_INTEGER, "delay"),
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableGun", InputEnableGun),
+	DEFINE_INPUTFUNC(FIELD_VOID, "RemoveVehicles", InputRemoveVehicles),
+	DEFINE_INPUTFUNC(FIELD_VOID, "DisableGun", InputDisableGun),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS(lfe_vehiclespawner, CTFLogicVehicleSpawner);
@@ -697,18 +751,20 @@ LINK_ENTITY_TO_CLASS(lfe_vehiclespawner, CTFLogicVehicleSpawner);
 CTFLogicVehicleSpawner::CTFLogicVehicleSpawner()
 {
 	m_bEnabled = true;
-	iMaxVehicles = 12;
 	iSpawnedVehicles = 0;
 	iDelay = 10.0;
 }
+
 CTFLogicVehicleSpawner::~CTFLogicVehicleSpawner()
 {
 }
+
 void CTFLogicVehicleSpawner::Spawn(void)
 {
 	BaseClass::Spawn();
 	Think();
 }
+
 void CTFLogicVehicleSpawner::InputDisable(inputdata_t &inputdata)
 {
 	m_bEnabled = false;
@@ -739,6 +795,7 @@ void CTFLogicVehicleSpawner::Think(void)
 	SpawnVehicle();
 	SetContextThink(&CTFLogicVehicleSpawner::Think, gpGlobals->curtime + iDelay, "ThinkContextVehicle");
 }
+
 void CTFLogicVehicleSpawner::InputRemoveVehicles(inputdata_t &inputdata)
 {
 	//this feature should and will be rewritten.
@@ -764,14 +821,15 @@ void CTFLogicVehicleSpawner::InputRemoveVehicles(inputdata_t &inputdata)
 	}
 	iSpawnedVehicles = 0;
 }
+
 void CTFLogicVehicleSpawner::SpawnVehicle(void)
 {
-	//TODO: replace max vehicles with the number of players on red
 	variant_t sVariant;
 #ifdef GAME_DLL
 	bool bCanSpawn;
 	bCanSpawn = false;
-	if (m_bEnabled && iSpawnedVehicles != iMaxVehicles)
+	int iTeamPlayers = GetGlobalTFTeam(TF_TEAM_RED)->GetNumPlayers();
+	if (m_bEnabled && iSpawnedVehicles < iTeamPlayers)
 	{
 		//CBaseEntity *pAirboats = gEntList.FindEntityByClassname(NULL, "prop_vehicle_airboat");
 		/*
@@ -956,10 +1014,9 @@ void CTFLogicPlayerTeleports::Spawn(void)
 	BaseClass::Spawn();
 }
 
-void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
+void CTFLogicPlayerTeleports::InputTeleportPlayers( inputdata_t &inputdata )
 {
-	QAngle vecAngles(0, GetAbsAngles().y - 90, 0);
-	Vector vecForward;
+	QAngle vecAngles = GetAbsAngles();
 	Vector vecOrigin = GetAbsOrigin();
 	Vector velocity = vec3_origin;
 
@@ -974,10 +1031,10 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 		{
 			if ( pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_RED )
 			{
-				pTeamPlayer->Teleport(&vecOrigin, &vecAngles, &velocity);
+				pTeamPlayer->Teleport( &vecOrigin, &vecAngles, &velocity );
 			}
 		}
-		else if ( iTeamToTeleport == 2)
+		else if ( iTeamToTeleport == 2 )
 		{
 			if ( pTeamPlayer && pTeamPlayer->IsAlive() && pTeamPlayer->GetTeamNumber() == TF_TEAM_BLUE )
 			{
@@ -986,6 +1043,7 @@ void CTFLogicPlayerTeleports::InputTeleportPlayers(inputdata_t &inputdata)
 		}
 	}
 }
+
 //-----------------------------------------------------------------------------
 // Zombie Survival
 //-----------------------------------------------------------------------------
@@ -1119,7 +1177,7 @@ public:
 	~CTFLogicDate();
 
 	void Activate(void);
-	void Think(void);
+	void DateThink(void);
 
 	int ObjectCaps(void) { return BaseClass::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
@@ -1149,6 +1207,8 @@ BEGIN_DATADESC( CTFLogicDate )
 	DEFINE_KEYFIELD(iMinute, FIELD_INTEGER, "minute"),
 	DEFINE_KEYFIELD(iMinute, FIELD_INTEGER, "second"),
 
+	DEFINE_THINKFUNC( DateThink ),
+
 	// Outputs
 	DEFINE_OUTPUT(m_OnDate, "OnDate" ),
 
@@ -1171,30 +1231,32 @@ CTFLogicDate::~CTFLogicDate()
 //------------------------------------------------------------------------------
 // Purpose : Fire my outputs here if I fire on map reload
 //------------------------------------------------------------------------------
-void CTFLogicDate::Activate(void)
+void CTFLogicDate::Activate( void )
 {
 	BaseClass::Activate();
-	SetNextThink( gpGlobals->curtime + 0.2 );
+
+	SetThink( &CTFLogicDate::DateThink );
+	SetNextThink( gpGlobals->curtime );
 }
 
 /*
-        int tm_sec;     // seconds after the minute - [0,59]
-        int tm_min;    // minutes after the hour - [0,59]
-        int tm_hour;    // hours since midnight - [0,23]
-        int tm_mday;    // day of the month - [1,31]
-        int tm_mon;     // months since January - [0,11]
-        int tm_year;    // years since 1900
-        int tm_wday;    // days since Sunday - [0,6] 
-        int tm_yday;    // days since January 1 - [0,365]
-        int tm_isdst;   // daylight savings time flag
+		tm_sec;		// seconds after the minute - [0,59]
+		tm_min;		// minutes after the hour - [0,59]
+		tm_hour;	// hours since midnight - [0,23]
+		tm_mday;	// day of the month - [1,31]
+		tm_mon;		// months since January - [0,11]
+		tm_year;	// years since 1900
+		tm_wday;	// days since Sunday - [0,6] 
+		tm_yday;	// days since January 1 - [0,365]
+		tm_isdst;	// daylight savings time flag
 */
 //-----------------------------------------------------------------------------
-// Purpose: Called shortly after level spawn. Checks the global state and fires
-//			targets if the global state is set or if there is not global state
-//			to check.
+// Purpose:
 //-----------------------------------------------------------------------------
-void CTFLogicDate::Think(void)
+void CTFLogicDate::DateThink( void )
 {
+	SetNextThink( gpGlobals->curtime + 0.1 );
+
 	time_t ltime = time(0);
 	const time_t *ptime = &ltime;
 	struct tm *today = localtime( ptime );
@@ -1202,99 +1264,265 @@ void CTFLogicDate::Think(void)
 	{
 		if ( today->tm_mon == iMonth && today->tm_mday == iDay && today->tm_year == iYear && today->tm_hour == iHour && today->tm_min == iMinute && today->tm_sec == iSecond )
 		{
-			m_OnDate.FireOutput(NULL, this);
+			m_OnDate.FireOutput( NULL, this );
 		}
 	}
 }
 
-class CTFClassLimits : public CBaseEntity
+//------------------------------------------------------------------------------
+// Purpose : Engineer building manager
+//------------------------------------------------------------------------------
+class CTFBuildingManager : public CBaseEntity
 {
 public:
-	DECLARE_CLASS(CTFClassLimits, CBaseEntity);
+	DECLARE_CLASS( CTFBuildingManager, CBaseEntity );
 	DECLARE_DATADESC();
+	CTFBuildingManager();
+	~CTFBuildingManager();
 
-	void	Spawn(void);
+	void	Spawn( void );
 
-	inline int GetTeam() { return m_iTeam; }
-
-	int GetLimitForClass(int iClass)
-	{
-		int result;
-
-		if (iClass < TF_CLASS_COUNT_ALL)
-		{
-			switch (iClass)
-			{
-			default:
-				result = -1;
-			case TF_CLASS_ENGINEER:
-				result = m_nEngineerLimit;
-				break;
-			case TF_CLASS_SPY:
-				result = m_nSpyLimit;
-				break;
-			case TF_CLASS_PYRO:
-				result = m_nPyroLimit;
-				break;
-			case TF_CLASS_HEAVYWEAPONS:
-				result = m_nHeavyLimit;
-				break;
-			case TF_CLASS_MEDIC:
-				result = m_nMedicLimit;
-				break;
-			case TF_CLASS_DEMOMAN:
-				result = m_nDemomanLimit;
-				break;
-			case TF_CLASS_SOLDIER:
-				result = m_nSoldierLimit;
-				break;
-			case TF_CLASS_SNIPER:
-				result = m_nSniperLimit;
-				break;
-			case TF_CLASS_SCOUT:
-				result = m_nScoutLimit;
-				break;
-			}
-		}
-		else
-		{
-			result = -1;
-		}
-		return result;
-	}
-
-private:
-	int		m_iTeam;
-
-	int		m_nScoutLimit;
-	int		m_nSoldierLimit;
-	int		m_nPyroLimit;
-	int		m_nDemomanLimit;
-	int		m_nHeavyLimit;
-	int		m_nEngineerLimit;
-	int		m_nMedicLimit;
-	int		m_nSniperLimit;
-	int		m_nSpyLimit;
+	void	InputDetonateAllBuilding( inputdata_t &inputdata );
+	void	InputDetonateAllSentry( inputdata_t &inputdata );
+	void	InputDetonateAllDispenser( inputdata_t &inputdata );
+	void	InputDetonateAllTeleporter( inputdata_t &inputdata );
+	void	InputDetonateAllTeleporterEntrance( inputdata_t &inputdata );
+	void	InputDetonateAllTeleporterExit( inputdata_t &inputdata );
+	void	InputRemoveAllBuilding( inputdata_t &inputdata );
+	void	InputRemoveAllSentry( inputdata_t &inputdata );
+	void	InputRemoveAllDispenser( inputdata_t &inputdata );
+	void	InputRemoveAllTeleporterEntrance( inputdata_t &inputdata );
+	void	InputRemoveAllTeleporterExit( inputdata_t &inputdata );
 };
 
-LINK_ENTITY_TO_CLASS(tf_logic_classlimits, CTFClassLimits);
-
-BEGIN_DATADESC(CTFClassLimits)
-DEFINE_KEYFIELD(m_iTeam,			FIELD_INTEGER, "Team"),
-DEFINE_KEYFIELD(m_nScoutLimit,		FIELD_INTEGER, "ScoutLimit"),
-DEFINE_KEYFIELD(m_nSoldierLimit,	FIELD_INTEGER, "SoldierLimit"),
-DEFINE_KEYFIELD(m_nPyroLimit,		FIELD_INTEGER, "PyroLimit"),
-DEFINE_KEYFIELD(m_nDemomanLimit,	FIELD_INTEGER, "DemomanLimit"),
-DEFINE_KEYFIELD(m_nHeavyLimit,		FIELD_INTEGER, "HeavyLimit"),
-DEFINE_KEYFIELD(m_nEngineerLimit,	FIELD_INTEGER, "EngineerLimit"),
-DEFINE_KEYFIELD(m_nMedicLimit,		FIELD_INTEGER, "MedicLimit"),
-DEFINE_KEYFIELD(m_nSniperLimit,		FIELD_INTEGER, "SniperLimit"),
-DEFINE_KEYFIELD(m_nSpyLimit,		FIELD_INTEGER, "SpyLimit"),
+BEGIN_DATADESC( CTFBuildingManager )
+	DEFINE_INPUTFUNC( FIELD_VOID, "DetonateAllBuilding", InputDetonateAllBuilding ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DetonateAllSentry", InputDetonateAllSentry ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DetonateAllDispenser", InputDetonateAllDispenser ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DetonateAllTeleporterEntrance", InputDetonateAllTeleporterEntrance ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "DetonateAllTeleporterExit", InputDetonateAllTeleporterExit ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "RemoveAllBuilding", InputRemoveAllBuilding ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "RemoveAllSentry", InputRemoveAllSentry ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "RemoveAllDispenser", InputRemoveAllDispenser ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "RemoveAllTeleporterEntrance", InputRemoveAllTeleporterEntrance ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "RemoveAllTeleporterExit", InputRemoveAllTeleporterExit ),
 END_DATADESC()
 
-void CTFClassLimits::Spawn(void)
+LINK_ENTITY_TO_CLASS( lfe_building_manager, CTFBuildingManager );
+
+CTFBuildingManager::CTFBuildingManager()
+{
+}
+
+CTFBuildingManager::~CTFBuildingManager()
+{
+}
+
+void CTFBuildingManager::Spawn(void)
 {
 	BaseClass::Spawn();
+}
+
+void CTFBuildingManager::InputDetonateAllBuilding( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( pPlayer )
+		{
+			pPlayer->RemoveAllObjects( false );
+		}
+	}
+}
+
+void CTFBuildingManager::InputDetonateAllSentry( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_SENTRYGUN )
+			{
+				pObject->DetonateObject();
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputDetonateAllDispenser( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_DISPENSER )
+			{
+				pObject->DetonateObject();
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputDetonateAllTeleporterEntrance( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_TELEPORTER && pObject->GetObjectMode() == TELEPORTER_TYPE_ENTRANCE )
+			{
+				pObject->DetonateObject();
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputDetonateAllTeleporterExit( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_TELEPORTER && pObject->GetObjectMode() == TELEPORTER_TYPE_EXIT )
+			{
+				pObject->DetonateObject();
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputRemoveAllBuilding( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( pPlayer )
+		{
+			pPlayer->RemoveAllObjects( true );
+		}
+	}
+}
+
+void CTFBuildingManager::InputRemoveAllSentry( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_SENTRYGUN )
+			{
+				UTIL_Remove( pObject );
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputRemoveAllDispenser( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_DISPENSER )
+			{
+				UTIL_Remove( pObject );
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputRemoveAllTeleporterEntrance( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_TELEPORTER && pObject->GetObjectMode() == TELEPORTER_TYPE_ENTRANCE )
+			{
+				UTIL_Remove( pObject );
+			}		
+		}
+	}
+}
+
+void CTFBuildingManager::InputRemoveAllTeleporterExit( inputdata_t &inputdata )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
+
+		if ( !pPlayer )
+			continue;
+
+		for ( int iObject = pPlayer->GetObjectCount()-1; iObject >= 0; iObject-- )
+		{
+			CBaseObject *pObject = pPlayer->GetObject(iObject);
+			Assert( pObject );
+
+			if ( pObject && pObject->GetType() == OBJ_TELEPORTER && pObject->GetObjectMode() == TELEPORTER_TYPE_EXIT )
+			{
+				UTIL_Remove( pObject );
+			}		
+		}
+	}
 }
 
 class CArenaLogic : public CBaseEntity
@@ -1536,11 +1764,6 @@ ConVar	sk_plr_dmg_smg1			( "sk_plr_dmg_smg1","4", FCVAR_REPLICATED );
 ConVar	sk_npc_dmg_smg1			( "sk_npc_dmg_smg1","3", FCVAR_REPLICATED);
 ConVar	sk_max_smg1				( "sk_max_smg1","225", FCVAR_REPLICATED);
 
-// FIXME: remove these
-//ConVar	sk_plr_dmg_flare_round	( "sk_plr_dmg_flare_round","0", FCVAR_REPLICATED);
-//ConVar	sk_npc_dmg_flare_round	( "sk_npc_dmg_flare_round","0", FCVAR_REPLICATED);
-//ConVar	sk_max_flare_round		( "sk_max_flare_round","0", FCVAR_REPLICATED);
-
 ConVar	sk_plr_dmg_buckshot		( "sk_plr_dmg_buckshot","8", FCVAR_REPLICATED);	
 ConVar	sk_npc_dmg_buckshot		( "sk_npc_dmg_buckshot","3", FCVAR_REPLICATED);
 ConVar	sk_max_buckshot			( "sk_max_buckshot","30", FCVAR_REPLICATED);
@@ -1657,6 +1880,70 @@ ConVar sk_plr_dmg_grenade( "sk_plr_dmg_grenade","0");		// Very lame that the bas
 #endif
 #endif
 
+bool CTFGameRules::IsInHL1Map()
+{
+#ifdef GAME_DLL
+	const char *map = STRING(gpGlobals->mapname);
+#else
+	const char *map = engine->GetLevelName();
+	char mapfile[32];
+	V_FileBase(map, mapfile, sizeof(mapfile));
+	V_StripExtension(mapfile, mapfile, sizeof(mapfile));
+	map = mapfile;
+#endif
+
+	if (map[0] == '\0')
+		return false;
+
+	//t0_*
+	if (V_strnicmp(map, "t0", 4) == 0)
+		return true;
+
+	//c0_*
+	if (V_strnicmp(map, "c0", 4) == 0)
+		return true;
+
+	//c1_*
+	if (V_strnicmp(map, "c1", 4) == 0)
+		return true;
+
+	//c2_*
+	if (V_strnicmp(map, "c2", 4) == 0)
+		return true;
+
+	//c3_*
+	if (V_strnicmp(map, "c3", 4) == 0)
+		return true;
+
+	//c4_*
+	if (V_strnicmp(map, "c4", 4) == 0)
+		return true;
+
+	//c5_*
+	if (V_strnicmp(map, "c5", 4) == 0)
+		return true;
+
+	//t0a0b1
+	int size = V_strlen(map);
+	if (size > 6)
+		return false;
+
+	//t0a0
+	//t0a0a
+	//t0a0b1
+	bool basecheck = (V_isalpha(map[0]) && V_isdigit(map[1]) &&
+		V_isalpha(map[2]) && V_isdigit(map[3]));
+
+	if (size == 4)
+		return basecheck;
+	else if (size == 5)
+		return (basecheck && V_isalpha(map[4]));
+	else if (size == 6)
+		return (basecheck && V_isalpha(map[4]) && V_isdigit(map[5]));
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : iDmgType - 
@@ -1744,8 +2031,8 @@ void CTFGameRules::NPC_DroppedHealth(void)
 #endif
 
 #ifdef GAME_DLL
-unsigned char g_aAuthDataKey[8] = TF2C_AUTHDATA_KEY;
-unsigned char g_aAuthDataXOR[8] = TF2C_AUTHDATA_XOR;
+unsigned char g_aAuthDataKey[8] = {0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41};
+unsigned char g_aAuthDataXOR[8] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 #endif
 
 //-----------------------------------------------------------------------------
@@ -1754,8 +2041,8 @@ unsigned char g_aAuthDataXOR[8] = TF2C_AUTHDATA_XOR;
 CTFGameRules::CTFGameRules()
 {
 	m_bMegaPhysgun = false;
-	iDirectorAnger = 0;
-	iMaxDirectorAnger = 100;
+	m_iDirectorAnger = 0;
+	m_iMaxDirectorAnger = 100;
 #ifdef GAME_DLL
 	m_iDifficultyLevel = sv_difficulty.GetInt();
 	// Create teams.
@@ -1823,6 +2110,7 @@ CTFGameRules::CTFGameRules()
 	// arrays defined in tf_shareddefs.cpp
 	Assert( g_aWeaponDamageTypes[TF_WEAPON_COUNT] == TF_DMG_SENTINEL_VALUE );
 	Assert( FStrEq( g_aWeaponNames[TF_WEAPON_COUNT], "TF_WEAPON_COUNT" ) );	
+	Assert( FStrEq( g_TFCondNames[TF_COND_LAST], "TF_COND_LAST" ) );	
 
 	m_iPreviousRoundWinners = TEAM_UNASSIGNED;
 	m_iBirthdayMode = HOLIDAY_RECALCULATE;
@@ -1936,18 +2224,22 @@ void CTFGameRules::Activate()
 
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
-	tf_gamemode_arena.SetValue( 0 );
-	tf_gamemode_cp.SetValue( 0 );
-	tf_gamemode_ctf.SetValue( 0 );
-	tf_gamemode_sd.SetValue( 0 );
-	tf_gamemode_payload.SetValue( 0 );
-	tf_gamemode_mvm.SetValue( 0 );
-	tf_gamemode_rd.SetValue( 0 );
-	tf_gamemode_passtime.SetValue( 0 );
-	lfe_versus.SetValue( 0 );
-	lfe_blucoop.SetValue( 0 );
-	lfe_gamemode_zs.SetValue( 0 );
-	//hl2_episodic.SetValue( 0 );
+	tf_gamemode_arena	.SetValue(0);
+	tf_gamemode_cp		.SetValue(0);
+	tf_gamemode_ctf		.SetValue(0);
+	tf_gamemode_sd		.SetValue(0);
+	tf_gamemode_payload	.SetValue(0);
+	tf_gamemode_mvm		.SetValue(0);
+	tf_gamemode_rd		.SetValue(0);
+	tf_gamemode_pd		.SetValue(0);
+	tf_gamemode_tc		.SetValue(0);
+	tf_beta_content		.SetValue(0);
+	tf_gamemode_passtime.SetValue(0);
+	tf_gamemode_misc	.SetValue(0);
+	lfe_versus			.SetValue(0);
+	lfe_blucoop			.SetValue(0);
+	lfe_gamemode_zs		.SetValue(0);
+	//hl2_episodic		.SetValue(0);
 
 	SetMultipleTrains( false );
 
@@ -1961,7 +2253,7 @@ void CTFGameRules::Activate()
 		lfe_coop.SetValue( 1 );
 		if ( IsInHL2Map() )
 			hl2_episodic.SetValue( 0 );
-		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server coop config file\n", NULL );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "[TFGameRules] Executing server coop config file\n", NULL );
 		engine->ServerCommand( "exec config_coop.cfg \n" );
 		engine->ServerExecute();
 		return;
@@ -1973,7 +2265,7 @@ void CTFGameRules::Activate()
 		lfe_versus.SetValue( 1 );
 		if ( IsInHL2Map() )
 			hl2_episodic.SetValue( 0 );
-		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server versus config file\n", NULL );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "[TFGameRules] Executing server versus config file\n", NULL );
 		engine->ServerCommand( "exec config_vs.cfg \n" );
 		engine->ServerExecute();
 		return;
@@ -1985,7 +2277,7 @@ void CTFGameRules::Activate()
 		lfe_blucoop.SetValue( 1 );
 		if ( IsInHL2Map() )
 			hl2_episodic.SetValue( 0 );
-		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server blue coop file\n", NULL );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "[TFGameRules] Executing server blue coop file\n", NULL );
 		engine->ServerCommand( "exec config_blucoop.cfg \n ");
 		engine->ServerExecute();
 		return;
@@ -1997,7 +2289,7 @@ void CTFGameRules::Activate()
 		lfe_gamemode_zs.SetValue( 1 );
 		alyx_darkness_force.SetValue( 1 );
 		hl2_episodic.SetValue( 1 );
-		ConColorMsg( Color( 77, 116, 85, 255 ), "Executing server zombie survival config file\n", NULL );
+		ConColorMsg( Color( 77, 116, 85, 255 ), "[TFGameRules] Executing server zombie survival config file\n", NULL );
 		engine->ServerCommand( "exec config_zs.cfg \n" );
 		engine->ServerExecute();
 		return;
@@ -2006,30 +2298,34 @@ void CTFGameRules::Activate()
 	SetSkillLevel( sv_difficulty.GetInt() );
 	if ( m_iDifficultyLevel == 1 )
 	{
-		ConColorMsg( Color( 178, 178, 178, 255 ), "Executing λOriginal Difficulty config file\n", NULL );
+		ConColorMsg( Color( 178, 178, 178, 255 ), "[TFGameRules] Executing λOriginal Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill1.cfg \n" );
 		engine->ServerExecute();
+		sv_currentdiff.SetValue(1);
 		return;
 	}
 	else if ( m_iDifficultyLevel == 2 )
 	{
-		ConColorMsg( Color( 255, 215, 0, 255 ), "Executing Medium Difficulty config file\n", NULL );
+		ConColorMsg( Color( 255, 215, 0, 255 ), "[TFGameRules] Executing Medium Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill2.cfg \n" );
 		engine->ServerExecute();
+		sv_currentdiff.SetValue(2);
 		return;
 	}
 	else if ( m_iDifficultyLevel == 3 )
 	{
-		ConColorMsg( Color( 207, 160, 50, 255 ), "Executing Hard Difficulty config file\n", NULL );
+		ConColorMsg( Color( 207, 160, 50, 255 ), "[TFGameRules] Executing Hard Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill3.cfg \n" );
 		engine->ServerExecute();
+		sv_currentdiff.SetValue(3);
 		return;
 	}
 	else if ( m_iDifficultyLevel == 4 )
 	{
-		ConColorMsg( Color( 134, 80, 172, 255 ), "Executing Unusual Difficulty config file\n", NULL );
+		ConColorMsg( Color( 134, 80, 172, 255 ), "[TFGameRules] Executing Unusual Difficulty config file\n", NULL );
 		engine->ServerCommand( "exec skill4.cfg \n" );
 		engine->ServerExecute();
+		sv_currentdiff.SetValue(4);
 		return;
 	}
 
@@ -2038,7 +2334,7 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_ARENA );
 		tf_gamemode_arena.SetValue( 1 );
-		Msg( "Executing server arena config file\n", 1 );
+		Msg( "[TFGameRules] Executing server arena config file\n", 1 );
 		engine->ServerCommand( "exec config_arena.cfg \n" );
 		engine->ServerExecute();
 		return;
@@ -2086,6 +2382,40 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_CP );
 		tf_gamemode_cp.SetValue( 1 );
+		return;
+	}
+
+	if ( !Q_strncmp( STRING( gpGlobals->mapname ), "tc_", 3 ) == 0 )
+	{
+		tf_gamemode_tc.SetValue( 1 );
+		return;
+	}
+
+	if ( !Q_strncmp( STRING( gpGlobals->mapname ), "sd_", 3 ) == 0 )
+	{
+		tf_gamemode_sd.SetValue( 1 );
+		m_bPlayingSpecialDeliveryMode = true;
+		return;
+	}
+
+	if ( !Q_strncmp( STRING( gpGlobals->mapname ), "rd_", 3 ) == 0 )
+	{
+		tf_gamemode_rd.SetValue( 1 );
+		m_nGameType.Set( TF_GAMETYPE_RD );
+		tf_beta_content.SetValue( 1 );
+		return;
+	}
+
+	if ( !Q_strncmp( STRING( gpGlobals->mapname ), "pd_", 3 ) == 0 )
+	{
+		tf_gamemode_pd.SetValue( 1 );
+		m_nGameType.Set( TF_GAMETYPE_PD );
+		return;
+	}
+
+	if ( tf_gamemode_tc.GetBool() || tf_gamemode_sd.GetBool() || tf_gamemode_pd.GetBool() || m_bPlayingMedieval ) 
+	{
+		tf_gamemode_misc.SetValue( 1 );
 		return;
 	}
 }
@@ -2143,16 +2473,6 @@ int CTFGameRules::GetClassLimit( int iDesiredClassIndex, int iTeam )
 	else if ( tf_classlimit.GetBool() )
 	{
 		result = tf_classlimit.GetInt();
-	}
-	else if (CTFClassLimits *pLimits = dynamic_cast< CTFClassLimits * > ( gEntList.FindEntityByClassname(NULL, "tf_class_limits") ))
-	{
-		do
-		{
-			if (pLimits->GetTeam() == iTeam)
-			{
-				result = pLimits->GetLimitForClass( iDesiredClassIndex );
-			}
-		} while (nullptr != (pLimits = dynamic_cast< CTFClassLimits * > ( gEntList.FindEntityByClassname(pLimits, "tf_class_limits") )));
 	}
 	else if ( !IsInTournamentMode() )
 	{
@@ -2308,7 +2628,7 @@ bool CTFGameRules::RoundCleanupShouldIgnore( CBaseEntity *pEnt )
 		return true;
 
 	// remove gravity gun or shit will happen
-	if ( Q_strstr( pEnt->GetClassname(), "tf_weapon_physcannon" ) )
+	if ( Q_strstr( pEnt->GetClassname(), "weapon_physcannon" ) )
 		return false;
 
 	return BaseClass::RoundCleanupShouldIgnore( pEnt );
@@ -2446,6 +2766,8 @@ void CTFGameRules::SetupOnRoundStart( void )
 	m_szMostRecentCappers[0] = 0;
 
 	OnSkillLevelChanged( m_iDifficultyLevel );
+
+	TFMapAddSystem()->SetMapAddMode( TFGameRules()->IsMapAddAllowed() );
 #endif
 }
 
@@ -3199,23 +3521,22 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 			}
 		}
 
-		if (iDirectorAnger > iMaxDirectorAnger)
+		if (m_iDirectorAnger > m_iMaxDirectorAnger)
 		{
-			iDirectorAnger = 100;
+			SetDirectorAnger( 100 );
 		}
-		if (iDirectorAnger < 0)
+		if (m_iDirectorAnger < 0)
 		{
-			iDirectorAnger = 0;
+			SetDirectorAnger( 0 );
 		}
-		if (iDirectorAnger == 100)
+		if (m_iDirectorAnger == 100)
 		{
-			CBaseEntity *pBossSpawnpoint = gEntList.FindEntityByClassname(NULL, "info_directorboss");
+			CBaseEntity *pBossSpawnpoint = gEntList.FindEntityByClassname( NULL, "info_director_boss" );
 			variant_t sVariant2;
-			if (pBossSpawnpoint)
-			{
-				pBossSpawnpoint->AcceptInput("SpawnBoss", NULL, NULL, sVariant2, NULL);
-			}
-			iDirectorAnger = 20;
+			if ( pBossSpawnpoint )
+				pBossSpawnpoint->AcceptInput( "SpawnBoss", NULL, NULL, sVariant2, NULL );
+
+			SetDirectorAnger( 20 );
 		}
 
 		if ( gEntList.FindEntityByClassname( NULL, "lfe_logic_longjump"))
@@ -3227,7 +3548,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 			m_bLongJump = false;
 		}
 
-		if (physcannon_mega_enabled.GetBool() == true)
+		if ( physcannon_mega_enabled.GetBool() == true )
 		{
 			m_bMegaPhysgun = true;
 		}
@@ -3236,6 +3557,54 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 			// FIXME: Is there a better place for this?
 			m_bMegaPhysgun = ( GlobalEntity_GetState( "super_phys_gun" ) == GLOBAL_ON );
 		}
+		if (sv_difficulty.GetInt() < 1)
+		{
+			sv_difficulty.SetValue(1);
+		}
+		else if (sv_difficulty.GetInt() > 4)
+		{
+			sv_difficulty.SetValue(4);
+		}
+		if (sv_difficulty.GetInt() != sv_currentdiff.GetInt())
+		{
+			sv_currentdiff.SetValue(sv_difficulty.GetInt());
+			if (sv_difficulty.GetInt() == 1)
+			{
+				engine->ServerCommand("exec skill1.cfg \n");
+				engine->ServerExecute();
+				engine->ServerCommand("skill 1 \n");
+				engine->ServerExecute();
+			}
+			else if (sv_difficulty.GetInt() == 2)
+			{
+				engine->ServerCommand("exec skill2.cfg \n");
+				engine->ServerExecute();
+				engine->ServerCommand("skill 2 \n");
+				engine->ServerExecute();
+			}
+			else if (sv_difficulty.GetInt() == 3)
+			{
+				engine->ServerCommand("exec skill3.cfg \n");
+				engine->ServerExecute();
+				engine->ServerCommand("skill 3 \n");
+				engine->ServerExecute();
+			}
+			else if (sv_difficulty.GetInt() == 4)
+			{
+				engine->ServerCommand("exec skill4.cfg \n");
+				engine->ServerExecute();
+				engine->ServerCommand("skill 3 \n"); //SKILL CANNOT GO HIGHER THAN 3
+				engine->ServerExecute();
+			}
+		}
+#ifdef GAME_DLL
+		if (lfe_coop_lives.GetInt() != -1 && lfe_coop_lives.GetInt() < 1)
+		{
+			lfe_coop_lives.SetValue(-1);
+		}
+#endif
+
+
 
 		BaseClass::Think();
 	}
@@ -3271,7 +3640,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_PLAYER,			D_HT, 0);			
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ANTLION,			CLASS_COMBINE,			D_HT, 0);
@@ -3307,7 +3676,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_BARNACLE,			D_LI, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BARNACLE,			CLASS_COMBINE,			D_HT, 0);
@@ -3339,7 +3708,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_ANTLION,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSEYE,			CLASS_COMBINE,			D_NU, 0);
@@ -3366,7 +3735,6 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		// ------------------------------------------------------------
 		//	> CLASS_BULLSQUID
 		// ------------------------------------------------------------
-		/*
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_NONE,				D_NU, 0);			
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_PLAYER,			D_HT, 0);			
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_ANTLION,			D_HT, 0);
@@ -3381,7 +3749,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_CONSCRIPT,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_FLARE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_HEADCRAB,			D_HT, 1);
-		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_HOUNDEYE,			D_HT, 1);
+		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_HOUNDEYE,			D_HT, 1);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_MANHACK,			D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_METROPOLICE,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_MILITARY,			D_HT, 0);
@@ -3395,7 +3763,6 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_PLAYER_ALLY,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_PLAYER_ALLY_VITAL,D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_BULLSQUID,			CLASS_HACKED_ROLLERMINE,D_HT, 0);
-		*/
 		// ------------------------------------------------------------
 		//	> CLASS_CITIZEN_PASSIVE
 		// ------------------------------------------------------------
@@ -3404,7 +3771,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_BARNACLE,			D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_BULLSQUID,		D_FR, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_BULLSQUID,		D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CITIZEN_PASSIVE,	CLASS_COMBINE,			D_NU, 0);
@@ -3468,7 +3835,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_BARNACLE,			D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE,			CLASS_COMBINE,			D_LI, 0);
@@ -3500,7 +3867,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_GUNSHIP,		CLASS_COMBINE,			D_LI, 0);
@@ -3532,7 +3899,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,		CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,		CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,		CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,	CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,	CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,		CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,		CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_COMBINE_HUNTER,		CLASS_COMBINE,			D_LI, 0);
@@ -3564,7 +3931,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_BARNACLE,			D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_CONSCRIPT,			CLASS_COMBINE,			D_HT, 0);
@@ -3596,7 +3963,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_ANTLION,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_FLARE,			CLASS_COMBINE,			D_NU, 0);
@@ -3629,7 +3996,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_BULLSQUID,		D_FR, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_BULLSQUID,		D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HEADCRAB,			CLASS_COMBINE,			D_HT, 0);
@@ -3662,7 +4029,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_BULLSQUID,		D_FR, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_BULLSQUID,		D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HOUNDEYE,			CLASS_COMBINE,			D_HT, 0);
@@ -3695,7 +4062,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MANHACK,			CLASS_COMBINE,			D_NU, 0);
@@ -3727,7 +4094,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_METROPOLICE,		CLASS_COMBINE,			D_NU, 0);
@@ -3759,7 +4126,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MILITARY,			CLASS_COMBINE,			D_NU, 0);
@@ -3791,7 +4158,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_MISSILE,			CLASS_COMBINE,			D_NU, 0);
@@ -3823,7 +4190,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_ANTLION,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_BULLSEYE,			D_NU, 0);	
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_NONE,				CLASS_COMBINE,			D_NU, 0);
@@ -3854,7 +4221,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_BARNACLE,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_BULLSEYE,			D_HT, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_CITIZEN_PASSIVE,	D_LI, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_CITIZEN_REBEL,	D_LI, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER,			CLASS_COMBINE,			D_HT, 0);
@@ -3886,7 +4253,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_BARNACLE,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY,			CLASS_COMBINE,			D_HT, 0);
@@ -3918,7 +4285,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_BARNACLE,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PLAYER_ALLY_VITAL,	CLASS_COMBINE,			D_HT, 0);
@@ -3950,7 +4317,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_SCANNER,			CLASS_COMBINE,			D_LI, 0);
@@ -3982,7 +4349,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_STALKER,			CLASS_COMBINE,			D_NU, 0);
@@ -4014,7 +4381,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_BARNACLE,			D_FR, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_CITIZEN_PASSIVE,	D_LI, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_CITIZEN_REBEL,	D_LI, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_VORTIGAUNT,		CLASS_COMBINE,			D_HT, 0);
@@ -4046,7 +4413,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_ZOMBIE,			CLASS_COMBINE,			D_HT, 0);
@@ -4078,7 +4445,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_BULLSQUID,		D_NU, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_BULLSQUID,		D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_PROTOSNIPER,			CLASS_COMBINE,			D_NU, 0);
@@ -4113,7 +4480,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_CITIZEN_PASSIVE,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_CITIZEN_REBEL,	D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_EARTH_FAUNA,			CLASS_COMBINE,			D_HT, 0);
@@ -4145,7 +4512,7 @@ void CTFGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecS
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_ANTLION,			D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_BARNACLE,			D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_BULLSEYE,			D_NU, 0);
-		//CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_BULLSQUID,		D_HT, 0);
+		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_BULLSQUID,		D_HT, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_CITIZEN_PASSIVE,	D_NU, 0);	
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_CITIZEN_REBEL,	D_NU, 0);
 		CBaseCombatCharacter::SetDefaultRelationship(CLASS_HACKED_ROLLERMINE,			CLASS_COMBINE,			D_HT, 0);
@@ -5076,6 +5443,9 @@ static const char *g_aTaggedConVars[] =
 	"tf_gamemode_rd",
 	"rd",
 
+	"tf_gamemode_pd",
+	"pd",
+
 	"tf_gamemode_payload",
 	"payload",
 
@@ -5084,6 +5454,15 @@ static const char *g_aTaggedConVars[] =
 
 	"tf_gamemode_passtime",
 	"passtime",
+
+	"tf_gamemode_tc",
+	"tc",
+
+	"tf_beta_content",
+	"beta",
+
+	"tf_gamemode_misc",
+	"misc",
 
 	"lfe_coop",
 	"coop",
@@ -5255,6 +5634,8 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 			pObject->IncrementAssists();
 	}
 
+	UpdateDirectorAnger();
+
 	BaseClass::PlayerKilled( pVictim, info );
 }
 
@@ -5295,6 +5676,8 @@ void CTFGameRules::NPCKilled( CAI_BaseNPC *pVictim, const CTakeDamageInfo &info 
 			}
 		}
 	}
+
+	UpdateDirectorAnger();
 }
 
 //-----------------------------------------------------------------------------
@@ -5341,9 +5724,12 @@ void CTFGameRules::CreateStandardEntities()
 	Assert( g_pObjectiveResource );
 
 	// Create the entity that will send our data to the client.
-	CBaseEntity *pEnt = CBaseEntity::Create( "tf_gamerules", vec3_origin, vec3_angle );
-	Assert( pEnt );
-	pEnt->SetName( AllocPooledString("tf_gamerules" ) );
+	CBaseEntity *pEnt = gEntList.FindEntityByClassname( NULL, "tf_gamerules" );
+	if ( !pEnt )
+	{
+		pEnt = CBaseEntity::Create( "tf_gamerules", vec3_origin, vec3_angle );
+		pEnt->SetName( AllocPooledString("tf_gamerules" ) );
+	}
 
 	CBaseEntity::Create("vote_controller", vec3_origin, vec3_angle);
 
@@ -5990,9 +6376,10 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 
 	pTFPlayerVictim->SetDeathFlags( iDeathFlags );
 
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
+	IGameEvent *event = NULL;
+	event = gameeventmanager->CreateEvent("player_death");
 
-	if ( event )
+	if ( event && event != NULL )
 	{
 		event->SetInt( "userid", pVictim->GetUserID() );
 		event->SetInt( "victim_index", pVictim->entindex() );
@@ -6931,16 +7318,11 @@ bool CTFGameRules::TeamMayCapturePoint( int iTeam, int iPointIndex )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::PlayerMayCapturePoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason /* = NULL */, int iMaxReasonLength /* = 0 */ )
+bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason /* = NULL */, int iMaxReasonLength /* = 0 */ )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( !pTFPlayer )
 		return false;
-#ifdef GAME_DLL
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
-	if ( !pNPC )
-		return false;
-#endif
 	// Disguised and invisible spies cannot capture points
 	if ( pTFPlayer->m_Shared.IsStealthed() )
 	{
@@ -6968,32 +7350,17 @@ bool CTFGameRules::PlayerMayCapturePoint( CBaseEntity *pPlayer, int iPointIndex,
 		}
 		return false;
 	}
-#ifdef GAME_DLL
-	if ( pNPC->IsInvulnerable() || pNPC->InCond( TF_COND_PHASE ) )
-	{
-		if ( pszReason )
-		{
-			Q_snprintf( pszReason, iMaxReasonLength, "#Cant_cap_invuln" );
-		}
-		return false;
-	}
-#endif
 	return true;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::PlayerMayBlockPoint( CBaseEntity *pPlayer, int iPointIndex, char *pszReason, int iMaxReasonLength )
+bool CTFGameRules::PlayerMayBlockPoint( CBasePlayer *pPlayer, int iPointIndex, char *pszReason, int iMaxReasonLength )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( !pTFPlayer )
 		return false;
-#ifdef GAME_DLL
-	CAI_BaseNPC *pNPC = pPlayer->MyNPCPointer();
-	if ( !pNPC )
-		return false;
-#endif
 	// Invuln players can block points
 	if ( pTFPlayer->m_Shared.IsInvulnerable() )
 	{
@@ -7003,17 +7370,6 @@ bool CTFGameRules::PlayerMayBlockPoint( CBaseEntity *pPlayer, int iPointIndex, c
 		}
 		return true;
 	}
-#ifdef GAME_DLL
-	// Invuln npcs can block points
-	if ( pNPC->IsInvulnerable() )
-	{
-		if ( pszReason )
-		{
-			Q_snprintf( pszReason, iMaxReasonLength, "#Cant_cap_invuln" );
-		}
-		return true;
-	}
-#endif
 	return false;
 }
 
@@ -7175,7 +7531,8 @@ bool CTFGameRules::IsHalloween( void )
 			struct tm *today = localtime( ptime );
 			if ( today )
 			{
-				if ( today->tm_mon == 10 && today->tm_mday == 29 || today->tm_mday == 30 || today->tm_mday == 31 )
+				if ( today->tm_mon == 10 && today->tm_mday == 26 || today->tm_mday == 27 || today->tm_mday == 28 || today->tm_mday == 29 ||
+				today->tm_mday == 30 || today->tm_mday == 31 )
 				{
 					m_iHalloweenMode = HOLIDAY_ON;
 				}
@@ -7416,7 +7773,7 @@ bool CTFGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 //-----------------------------------------------------------------------------
 // Purpose: Return the value of this player towards capturing a point
 //-----------------------------------------------------------------------------
-int	CTFGameRules::GetCaptureValueForPlayer( CBaseEntity *pPlayer )
+int	CTFGameRules::GetCaptureValueForPlayer( CBasePlayer *pPlayer )
 {
 	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
 	if ( pTFPlayer->IsPlayerClass( TF_CLASS_SCOUT ) )
@@ -8079,7 +8436,7 @@ bool CTFGameRules::ShouldBurningPropsEmitLight()
 //-----------------------------------------------------------------------------
 void CTFGameRules::OnSkillLevelChanged( int iNewLevel )
 {
-	Msg("Difficulty level changed\n");
+	ConColorMsg( Color( 77, 116, 85, 255 ), "[TFGameRules] Difficulty level changed\n", NULL );
 
 	const char *szDifficulty = "Original";
 	if (iNewLevel == 1)	//  original
@@ -8124,3 +8481,22 @@ void CTFGameRules::OnSkillLevelChanged( int iNewLevel )
 }
 
 #endif
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGameRules::SetDynamicNPC( bool bEnable )
+{
+	sv_dynamicnpcs.SetValue( bEnable );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFGameRules::UpdateDirectorAnger( void )
+{
+#ifdef GAME_DLL
+	if ( sv_dynamicnpcs_debug.GetBool() )
+		ConColorMsg( Color( 77, 116, 85, 255 ), "[Dynamic NPC]: Anger Level %d\n", DirectorAnger() );
+#endif
+}

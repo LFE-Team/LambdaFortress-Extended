@@ -5,15 +5,15 @@
 // $NoKeywords: $
 //
 //=============================================================================//
-#ifndef NPC_BULLSQUID_H
-#define NPC_BULLSQUID_H
+#ifndef NPC_BULLSQUIDHL1_H
+#define NPC_BULLSQUIDHL1_H
 
 #include "hl1_ai_basenpc.h"
 
 
-class CNPC_Bullsquid : public CHL1BaseNPC
+class CNPC_HL1Bullsquid : public CHL1BaseNPC
 {
-	DECLARE_CLASS( CNPC_Bullsquid, CHL1BaseNPC );
+	DECLARE_CLASS( CNPC_HL1Bullsquid, CHL1BaseNPC );
 
 public:
 	void Spawn( void );
@@ -65,4 +65,4 @@ private:
 	float m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
 	
 };
-#endif // NPC_BULLSQUID_H
+#endif // NPC_BULLSQUIDHL1_H

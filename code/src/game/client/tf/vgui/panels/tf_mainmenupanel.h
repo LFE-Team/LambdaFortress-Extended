@@ -10,7 +10,6 @@
 class CAvatarImagePanel;
 class CTFAdvButton;
 class CTFBlogPanel;
-class CTFServerlistPanel;
 class CTFAdvSlider;
 
 enum MusicStatus
@@ -46,8 +45,6 @@ public:
 	void PlayMusic();
 	void OnNotificationUpdate();
 	void ShowBlogPanel(bool show);
-	void SetServerlistSize(int size);
-	void UpdateServerInfo();
 
 private:
 	void GetRandomMusic(char *pszBuf, int iBufLength);
@@ -65,7 +62,8 @@ private:
 
 	CSteamID			m_SteamID;
 	CTFBlogPanel		*m_pBlogPanel;
-	CTFServerlistPanel	*m_pServerlistPanel;
+
+	static void ConfirmQuit();
 };
 
 
@@ -84,52 +82,6 @@ private:
 	vgui::HTML			*m_pHTMLPanel;
 protected:
 	CExRichText			*m_pInfo;
-};
-
-class CTFServerlistPanel : public CTFMenuPanelBase
-{
-	DECLARE_CLASS_SIMPLE(CTFServerlistPanel, CTFMenuPanelBase);
-
-public:
-	CTFServerlistPanel(vgui::Panel* parent, const char *panelName);
-	virtual ~CTFServerlistPanel();
-	void PerformLayout();
-	void ApplySchemeSettings(vgui::IScheme *pScheme);
-	void SetServerlistSize(int size);
-	void UpdateServerInfo();
-	void OnThink();
-	void OnCommand(const char* command);
-
-private:
-	static bool ServerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
-	vgui::SectionedListPanel	*m_pServerList;
-	CTFAdvButton				*m_pConnectButton;
-	CTFAdvSlider				*m_pListSlider;
-	CPanelAnimationVarAliasType(int, m_iServerWidth, "server_width", "35", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iPlayersWidth, "players_width", "35", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iPingWidth, "ping_width", "23", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iMapWidth, "map_width", "23", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iScrollWidth, "scroll_width", "23", "proportional_int");
-	int		m_iSize;
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CTFCreditsPanel : public CTFDialogPanelBase
-{
-	DECLARE_CLASS_SIMPLE(CTFCreditsPanel, CTFDialogPanelBase);
-
-public:
-	CTFCreditsPanel(vgui::Panel* parent, const char *panelName);
-	virtual ~CTFCreditsPanel();
-
-	void Show();
-	void Hide();
-	void OnCommand(const char* command);
-	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-protected:
-	CExRichText			*m_pText;
 };
 
 #endif // TFMAINMENUPANEL_H

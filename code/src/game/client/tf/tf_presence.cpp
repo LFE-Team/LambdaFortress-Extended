@@ -52,6 +52,9 @@ CTFRichPresence::~CTFRichPresence()
 void CTFRichPresence::Shutdown()
 {
 	Discord_Shutdown();
+
+	if ( steamapicontext->SteamFriends() )
+		steamapicontext->SteamFriends()->ClearRichPresence();
 }
 
 void CTFRichPresence::Init()
@@ -172,11 +175,14 @@ void CTFRichPresence::Reset()
 	m_sDiscordRichPresence.details = "Main Menu";
 	m_sDiscordRichPresence.endTimestamp;
 
-	steamapicontext->SteamFriends()->SetRichPresence( "status", "Main Menu" );
-	steamapicontext->SteamFriends()->SetRichPresence( "connect", NULL );
-	steamapicontext->SteamFriends()->SetRichPresence( "steam_display", "Main Menu" );
-	steamapicontext->SteamFriends()->SetRichPresence( "steam_player_group", NULL );
-	steamapicontext->SteamFriends()->SetRichPresence( "steam_player_group_size", NULL );
+	if ( steamapicontext->SteamFriends() )
+	{
+		steamapicontext->SteamFriends()->SetRichPresence( "status", "Main Menu" );
+		steamapicontext->SteamFriends()->SetRichPresence( "connect", NULL );
+		steamapicontext->SteamFriends()->SetRichPresence( "steam_display", "Main Menu" );
+		steamapicontext->SteamFriends()->SetRichPresence( "steam_player_group", NULL );
+		steamapicontext->SteamFriends()->SetRichPresence( "steam_player_group_size", NULL );
+	}
 
 	SetLogo();
 	Discord_UpdatePresence( &m_sDiscordRichPresence );
@@ -253,8 +259,16 @@ void CTFRichPresence::UpdateRichPresence()
 	//m_sDiscordRichPresence.largeImageKey = m_szLatchedMapname;
 	//m_sDiscordRichPresence.largeImageText = m_szLatchedMapname;
 
-	UpdatePlayerInfo();
-	UpdateNetworkInfo();
+	if ( !engine->IsDrawingLoadingImage())
+	{
+		UpdatePlayerInfo();
+		UpdateNetworkInfo();
+	}
+	else
+	{
+		m_sDiscordRichPresence.state = "";
+		m_sDiscordRichPresence.details = "Is also currently loading...";
+	}
 
 	SetLogo();
 

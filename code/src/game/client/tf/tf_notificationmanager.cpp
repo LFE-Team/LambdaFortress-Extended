@@ -422,8 +422,6 @@ void CTFNotificationManager::ServerResponded( HServerListRequest hRequest, int i
 
 void CTFNotificationManager::RefreshComplete( HServerListRequest hRequest, EMatchMakingServerResponse response )
 {
-	MAINMENU_ROOT->SetServerlistSize( m_Servers.Count() );
-	MAINMENU_ROOT->OnServerInfoUpdate();
 }
 
 //-----------------------------------------------------------------------------

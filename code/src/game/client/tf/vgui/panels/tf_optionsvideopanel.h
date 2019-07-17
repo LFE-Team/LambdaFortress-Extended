@@ -51,9 +51,9 @@ private:
 
 	int m_nSelectedMode; // -1 if we are running in a nonstandard mode
 
-	vgui::ComboBox		*m_pMode;
+	vgui::ComboBox		*m_drpResolution;
 	vgui::ComboBox		*m_pWindowed;
-	vgui::ComboBox		*m_pAspectRatio;
+	vgui::ComboBox		*m_drpAspectRatio;
 	CCvarSlider			*m_pGammaSlider;
 
 	bool m_bRequireRestart;

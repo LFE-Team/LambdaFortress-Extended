@@ -469,7 +469,10 @@ void CPropJeepEpisodic::Spawn(void)
 		}
 
 		SetBodygroup(JEEP_HOPPER_BODYGROUP, m_bBusterHopperVisible ? 1 : 0);
-		CreateCargoTrigger();
+		
+		// we can't do this here because the modelptr will be null
+		// CreateCargoTrigger();
+		m_flCargoWaitTime = gpGlobals->curtime + 10.0f;
 
 		// carbar bodygroup is always on
 		SetBodygroup(JEEP_CARBAR_BODYGROUP, 1);
@@ -627,7 +630,8 @@ void CPropJeepEpisodic::InputDisableRadar(inputdata_t &data)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::InputEnableRadarDetectEnemies(inputdata_t &data)
 {
-	m_bRadarDetectsEnemies = true;
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
+		m_bRadarDetectsEnemies = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -635,18 +639,23 @@ void CPropJeepEpisodic::InputEnableRadarDetectEnemies(inputdata_t &data)
 //-----------------------------------------------------------------------------
 void CPropJeepEpisodic::InputAddBusterToCargo(inputdata_t &data)
 {
-	if (m_hCargoProp != NULL)
+	if ( FStrEq( STRING( GetModelName() ), "models/vehicle.mdl" ) )
 	{
-		ReleasePropFromCargoHold();
-		m_hCargoProp = NULL;
-	}
-
-	CBaseEntity *pNewBomb = CreateEntityByName("weapon_striderbuster");
-	if (pNewBomb)
-	{
-		DispatchSpawn(pNewBomb);
-		pNewBomb->Teleport(&m_hCargoTrigger->GetAbsOrigin(), NULL, NULL);
-		m_hCargoTrigger->AddCargo(pNewBomb);
+		if (m_hCargoProp != NULL)
+		{
+			ReleasePropFromCargoHold();
+			m_hCargoProp = NULL;
+		}
+		CBaseEntity *pNewBomb = CreateEntityByName("weapon_striderbuster");
+		if (pNewBomb)
+		{
+			DispatchSpawn(pNewBomb);
+			if (m_hCargoTrigger)
+			{
+				pNewBomb->Teleport(&m_hCargoTrigger->GetAbsOrigin(), NULL, NULL);
+				m_hCargoTrigger->AddCargo(pNewBomb);
+			}
+		}
 	}
 }
 
@@ -1010,7 +1019,7 @@ void CPropJeepEpisodic::UpdateCargoEntry(void)
 		return;
 
 	// we don't have cargo for jeep
-	if ( !FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
+	if ( FStrEq( STRING( GetModelName() ), "models/buggy.mdl" ) )
 		return;
 
 	// If we're past our animation point, then we're already done
@@ -1105,6 +1114,11 @@ void CPropJeepEpisodic::Think(void)
 	if (pAlyx && pAlyx->GetPassengerState() == PASSENGER_STATE_EXITING)
 	{
 		m_throttleDisableTime = gpGlobals->curtime + 0.25f;
+	}
+
+	if (m_flCargoWaitTime >= gpGlobals->curtime)
+	{
+		CreateCargoTrigger();
 	}
 
 	// Update our cargo entering our hold

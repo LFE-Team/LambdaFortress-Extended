@@ -210,6 +210,13 @@ void CTFWeaponBaseMelee::Swing( CTFPlayer *pPlayer )
 		WeaponSound( MELEE_MISS );
 	}
 
+	QAngle punchAng;
+	punchAng.x = random->RandomFloat( 0.2f, 1.2f );
+	punchAng.y = random->RandomFloat( -1.2f, -0.2f );
+	punchAng.z = 0.0f;
+	
+	pPlayer->ViewPunch( punchAng ); 
+
 	m_flSmackTime = gpGlobals->curtime + m_pWeaponInfo->GetWeaponData( m_iWeaponMode ).m_flSmackDelay;
 }
 
@@ -260,22 +267,34 @@ bool CTFWeaponBaseMelee::DoSwingTrace( trace_t &trace )
 	static Vector vecSwingMins( -18, -18, -18 );
 	static Vector vecSwingMaxs( 18, 18, 18 );
 
+	float flBoundsMultiplier = 0.0f;
+	CALL_ATTRIB_HOOK_FLOAT( flBoundsMultiplier, melee_bounds_multiplier );
+
 	// Get the current player.
 	CTFPlayer *pPlayer = GetTFPlayerOwner();
 	if ( !pPlayer )
 		return false;
 
 	// Setup the swing range.
+	int nRangeMultiplier = 48;
+	CALL_ATTRIB_HOOK_INT( nRangeMultiplier, melee_range_multiplier );
+
 	Vector vecForward; 
 	AngleVectors( pPlayer->EyeAngles(), &vecForward );
 	Vector vecSwingStart = pPlayer->Weapon_ShootPosition();
-	Vector vecSwingEnd = vecSwingStart + vecForward * 48;
+	Vector vecSwingEnd = vecSwingStart + vecForward * nRangeMultiplier;
 
-	// See if we hit anything.
-	UTIL_TraceLine( vecSwingStart, vecSwingEnd, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &trace );
+	int iCleaveAttack = 0;
+	CALL_ATTRIB_HOOK_INT( iCleaveAttack, melee_cleave_attack );
+	if ( iCleaveAttack != 1 )
+	{
+		// See if we hit anything.
+		UTIL_TraceLine( vecSwingStart, vecSwingEnd, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &trace );
+	}
+
 	if ( trace.fraction >= 1.0 )
 	{
-		UTIL_TraceHull( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &trace );
+		UTIL_TraceHull( vecSwingStart, vecSwingEnd, vecSwingMins * flBoundsMultiplier, vecSwingMaxs * flBoundsMultiplier, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &trace );
 		if ( trace.fraction < 1.0 )
 		{
 			// Calculate the point of intersection of the line (or hull) and the object we hit
@@ -304,13 +323,30 @@ void CTFWeaponBaseMelee::Smack( void )
 {
 	trace_t trace;
 
-	CBasePlayer *pPlayer = GetPlayerOwner();
+	CTFPlayer *pPlayer = GetTFPlayerOwner();
 	if ( !pPlayer )
 		return;
 
 #if !defined (CLIENT_DLL)
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
+#endif
+
+
+#ifdef GAME_DLL
+	// Do Damage.
+	int iCustomDamage = GetDamageCustom();
+	float flDamage = GetMeleeDamage( trace.m_pEnt, iCustomDamage );
+	int iDmgType = DMG_NEVERGIB | DMG_CLUB;
+	if ( IsCurrentAttackACrit() )
+	{
+		// TODO: Not removing the old critical path yet, but the new custom damage is marking criticals as well for melee now.
+		iDmgType |= DMG_CRITICAL;
+	}
+ 	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
 #endif
 
 	// We hit, setup the smack.
@@ -326,48 +362,20 @@ void CTFWeaponBaseMelee::Smack( void )
 			WeaponSound( MELEE_HIT_WORLD );
 		}
 
-		// Get the current player.
-		CTFPlayer *pPlayer = GetTFPlayerOwner();
-		if ( !pPlayer )
-			return;
-
 		Vector vecForward; 
 		AngleVectors( pPlayer->EyeAngles(), &vecForward );
 		Vector vecSwingStart = pPlayer->Weapon_ShootPosition();
 		Vector vecSwingEnd = vecSwingStart + vecForward * 48;
 
-#ifndef CLIENT_DLL
-		// Do Damage.
-		int iCustomDamage = GetDamageCustom();
-		float flDamage = GetMeleeDamage( trace.m_pEnt, iCustomDamage );
-		int iDmgType = DMG_NEVERGIB | DMG_CLUB;
-		if ( IsCurrentAttackACrit() )
-		{
-			// TODO: Not removing the old critical path yet, but the new custom damage is marking criticals as well for melee now.
-			iDmgType |= DMG_CRITICAL;
-		}
- 		if ( IsCurrentAttackAMiniCrit() )
-		{
-			iDmgType |= DMG_MINICRITICAL;
-		}
-
+#ifdef GAME_DLL
 		CTakeDamageInfo info( pPlayer, pPlayer, this, flDamage, iDmgType, iCustomDamage );
 		CalculateMeleeDamageForce( &info, vecForward, vecSwingEnd, 1.0f / flDamage * GetForceScale() );
 
-		int iCleaveAttack = 0;
-		CALL_ATTRIB_HOOK_INT( iCleaveAttack, melee_cleave_attack );
-		if ( iCleaveAttack == 1 )
-		{
-			pPlayer->CheckTraceHullAttack( vecSwingStart, vecSwingEnd, Vector(-16,-16,-16), Vector(36,36,36), flDamage, iDmgType, 0.75f ); 
-		}
-		else
-		{
-			trace.m_pEnt->DispatchTraceAttack( info, vecForward, &trace ); 
-		}
+		trace.m_pEnt->DispatchTraceAttack( info, vecForward, &trace ); 
 
 		ApplyMultiDamage();
 
-		OnEntityHit( trace.m_pEnt );
+		OnEntityHit( trace.m_pEnt, &info );
 #endif
 		// Don't impact trace friendly players or objects
 		if ( trace.m_pEnt && trace.m_pEnt->GetTeamNumber() != pPlayer->GetTeamNumber() )
@@ -377,7 +385,19 @@ void CTFWeaponBaseMelee::Smack( void )
 #endif
 			m_bConnected = true;
 		}
-
+	}
+	else
+	{
+#ifdef GAME_DLL
+		CTakeDamageInfo info( pPlayer, pPlayer, this, flDamage, iDmgType, iCustomDamage );
+		int iHitSelfOnMiss = 0;
+		CALL_ATTRIB_HOOK_INT( iHitSelfOnMiss, hit_self_on_miss );
+		if ( iHitSelfOnMiss )
+		{
+			ApplyMultiDamage();
+			pPlayer->TakeDamage( info );
+		}
+#endif
 	}
 
 #if !defined (CLIENT_DLL)
@@ -398,9 +418,49 @@ float CTFWeaponBaseMelee::GetMeleeDamage( CBaseEntity *pTarget, int &iCustomDama
 	return flDamage;
 }
 
-void CTFWeaponBaseMelee::OnEntityHit( CBaseEntity *pEntity )
+void CTFWeaponBaseMelee::OnEntityHit( CBaseEntity *pEntity, CTakeDamageInfo *pInfo )
 {
-	NULL;
+	CTFPlayer *pOwner = ToTFPlayer( GetPlayerOwner() );
+	if ( !pOwner )
+		return;
+
+	CTFPlayer *pPlayer = ToTFPlayer( pEntity );
+	CAI_BaseNPC *pNPC = dynamic_cast<CAI_BaseNPC *>( pEntity );
+
+	int nSpeedBuff = 0;
+	CALL_ATTRIB_HOOK_INT( nSpeedBuff, speed_buff_ally );
+	if ( nSpeedBuff )
+	{
+		if ( pEntity->InSameTeam( pOwner ) )
+		{
+			if ( pEntity->IsPlayer() )
+			{
+				pPlayer->m_Shared.AddCond( TF_COND_SPEED_BOOST, 2 );
+				pOwner->m_Shared.AddCond( TF_COND_SPEED_BOOST, 2 );
+			}
+			else if ( pEntity->IsNPC() )
+			{
+				pNPC->AddCond( TF_COND_SPEED_BOOST, 2 );
+				pOwner->m_Shared.AddCond( TF_COND_SPEED_BOOST, 2 );
+			}
+		}
+	}
+	
+	int nMiniCritAndConsumesBurning = 0;
+	CALL_ATTRIB_HOOK_INT( nMiniCritAndConsumesBurning, attack_minicrits_and_consumes_burning );
+	if ( nMiniCritAndConsumesBurning )
+	{
+		if ( pEntity->IsPlayer() && pPlayer->m_Shared.InCond( TF_COND_BURNING ) )
+		{
+			pPlayer->m_Shared.RemoveCond( TF_COND_BURNING );
+			pOwner->m_Shared.AddCond( TF_COND_SPEED_BOOST, 4 );
+		}
+		else if ( pEntity->IsNPC() && pNPC->InCond( TF_COND_BURNING ) )
+		{
+			pNPC->RemoveCond( TF_COND_BURNING );
+			pOwner->m_Shared.AddCond( TF_COND_SPEED_BOOST, 4 );
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

@@ -7,6 +7,7 @@
 #include <vgui/ILocalize.h>
 #include "script_parser.h"
 #include "econ_item_view.h"
+#include "tf_gamerules.h"
 
 using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
@@ -15,70 +16,64 @@ using namespace vgui;
 #define PANEL_WIDE 110
 #define PANEL_TALL 70
 
-static const char *pszClassModels[TF_CLASS_COUNT_ALL] =
-{
-	"",
-	"models/player/scout.mdl",
-	"models/player/sniper.mdl",
-	"models/player/soldier.mdl",
-	"models/player/demo.mdl",
-	"models/player/medic.mdl",
-	"models/player/heavy.mdl",
-	"models/player/pyro.mdl",
-	"models/player/spy.mdl",
-	"models/player/engineer.mdl",
-};
-
 static int g_aClassLoadoutSlots[TF_CLASS_COUNT_ALL][INVENTORY_ROWNUM] =
 {
 	{
-		-1, -1, -1,
+		-1, -1, -1, -1,
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	},
 	{
 		TF_LOADOUT_SLOT_SECONDARY,
-		//TF_LOADOUT_SLOT_PDA2,
 		TF_LOADOUT_SLOT_BUILDING,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_PDA2, //watch
 	},
 	{
 		TF_LOADOUT_SLOT_PRIMARY,
 		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
+		TF_LOADOUT_SLOT_MISC, //shows nothing
 	}
 };
 
@@ -199,8 +194,8 @@ bool CTFLoadoutPanel::Init()
 
 	for ( int iClassIndex = 0; iClassIndex < TF_CLASS_COUNT_ALL; iClassIndex++ )
 	{
-		if ( pszClassModels[iClassIndex][0] != '\0' )
-			modelinfo->FindOrLoadModel( pszClassModels[iClassIndex] );
+		if ( g_pszClassModels[iClassIndex][0] != '\0' )
+			modelinfo->FindOrLoadModel( g_pszClassModels[iClassIndex] );
 
 		for ( int iSlot = 0; iSlot < TF_LOADOUT_SLOT_HAT; iSlot++ )
 		{
@@ -234,7 +229,58 @@ void CTFLoadoutPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	LoadControlSettings( "resource/UI/main_menu/LoadoutPanel.res" );
+	// Setup conditions.
+	KeyValues *pConditions = NULL;
+	if ( m_iCurrentClass == TF_CLASS_SCOUT )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_scout" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_SOLDIER )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_soldier" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_PYRO )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_pyro" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_DEMOMAN )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_demoman" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_HEAVYWEAPONS )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_heavyweapons" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_ENGINEER )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_engineer" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_MEDIC )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_medic" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_SNIPER )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_sniper" );
+	}
+	else if ( m_iCurrentClass == TF_CLASS_SPY )
+	{
+		pConditions = new KeyValues( "conditions" );
+		AddSubKeyNamed( pConditions, "if_spy" );
+	}
+
+	LoadControlSettings( "resource/UI/main_menu/LoadoutPanel.res", NULL, NULL, pConditions );
+
+	if ( pConditions )
+		pConditions->deleteThis();
 }
 
 void CTFLoadoutPanel::PerformLayout()
@@ -247,6 +293,7 @@ void CTFLoadoutPanel::PerformLayout()
 			CTFAdvItemButton *m_pWeaponButton = m_pWeaponIcons[INVENTORY_COLNUM * iSlot + iPreset];
 			m_pWeaponButton->SetSize( XRES( PANEL_WIDE ), YRES( PANEL_TALL ) );
 			m_pWeaponButton->SetPos( iPreset * XRES( ( PANEL_WIDE + 10 ) ), iSlot * YRES( ( PANEL_TALL + 5 ) ) );
+			m_pWeaponButton->SetSize(m_pWeaponButton->GetWide() * 0.80, m_pWeaponButton->GetTall() * 0.80);
 			m_pWeaponButton->SetBorderVisible( true );
 			m_pWeaponButton->SetBorderByString( "AdvRoundedButtonDefault", "AdvRoundedButtonArmed", "AdvRoundedButtonDepressed" );
 			m_pWeaponButton->SetLoadoutSlot( iSlot, iPreset );
@@ -257,6 +304,7 @@ void CTFLoadoutPanel::PerformLayout()
 
 		m_pSlideButtonL->SetSize( XRES( 10 ), YRES( PANEL_TALL ) );
 		m_pSlideButtonL->SetPos( 0, iSlot * YRES( ( PANEL_TALL + 5 ) ) );
+		m_pSlideButtonL->SetSize(m_pSlideButtonL->GetWide() * 0.80, m_pSlideButtonL->GetTall() * 0.80);
 		m_pSlideButtonL->SetText( "<" );
 		m_pSlideButtonL->SetBorderVisible( true );
 		m_pSlideButtonL->SetBorderByString( "AdvLeftButtonDefault", "AdvLeftButtonArmed", "AdvLeftButtonDepressed" );
@@ -266,6 +314,7 @@ void CTFLoadoutPanel::PerformLayout()
 
 		m_pSlideButtonR->SetSize( XRES( 10 ), YRES( PANEL_TALL ) );
 		m_pSlideButtonR->SetPos( m_pWeaponSetPanel->GetWide() - XRES( 10 ), iSlot * YRES( ( PANEL_TALL + 5 ) ) );
+		m_pSlideButtonR->SetSize(m_pSlideButtonR->GetWide() * 0.80, m_pSlideButtonR->GetTall() * 0.80);
 		m_pSlideButtonR->SetText( ">" );
 		m_pSlideButtonR->SetBorderVisible( true );
 		m_pSlideButtonR->SetBorderByString( "AdvRightButtonDefault", "AdvRightButtonArmed", "AdvRightButtonDepressed" );
@@ -564,13 +613,20 @@ void CTFLoadoutPanel::UpdateModelWeapons( void )
 			}
 		}
 
-		//m_pClassModelPanel->SetPoseParameterByName( "r_hand_grip", 16.0f );
 	}
 
 	// Set the animation.
 	m_pClassModelPanel->SetAnimationIndex( iAnimationIndex >= 0 ? iAnimationIndex : TF_WPN_TYPE_PRIMARY );
 
 	m_pClassModelPanel->Update();
+	if (m_iCurrentClass == TF_CLASS_SCOUT)
+	{
+		m_pClassModelPanel->SetPoseParameterByName("r_hand_grip", 16.0); //fixes scout secondary issues
+	}
+	else if (m_iCurrentClass == TF_CLASS_ENGINEER)
+	{
+		m_pClassModelPanel->SetPoseParameterByName("r_hand_grip", 0.0); //fixes engineer secondary issues
+	}
 }
 
 void CTFLoadoutPanel::Show()
@@ -648,7 +704,7 @@ void CTFLoadoutPanel::SetModelClass( int iClass )
 		}
 	}
 
-	m_pClassModelPanel->SetModelName( strdup( pszClassModels[iClass] ), nSkin );
+	m_pClassModelPanel->SetModelName( strdup( g_pszClassModels[iClass] ), nSkin );
 }
 
 void CTFLoadoutPanel::UpdateModelPanels()
@@ -667,6 +723,7 @@ void CTFLoadoutPanel::DefaultLayout()
 	BaseClass::DefaultLayout();
 
 	UpdateModelPanels();
+	//InvalidateLayout( true, true );
 
 	int iClassIndex = m_iCurrentClass;
 	SetDialogVariable( "classname", g_pVGuiLocalize->Find( g_aPlayerClassNames[iClassIndex] ) );

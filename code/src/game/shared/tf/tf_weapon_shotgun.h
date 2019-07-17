@@ -18,7 +18,6 @@
 #define CTFShotgun_HWG C_TFShotgun_HWG
 #define CTFShotgun_Pyro C_TFShotgun_Pyro
 #define CTFScatterGun C_TFScatterGun
-#define CTFDoubleBarrel C_TFDoubleBarrel
 #endif
 
 // Reload Modes
@@ -66,7 +65,19 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_SCATTERGUN; }
+
+	virtual bool    HasKnockback( void );
+
+	virtual bool	Reload( void );
+	virtual void	FinishReload( void );
+
+	//void ApplyPostHitEffects( const CTakeDamageInfo &info, CBaseEntity *pVictim );
+	//virtual void Equip( CBaseCombatCharacter *pOwner );
+
+	virtual void FireBullet( CTFPlayer *pPlayer );
 };
+
+//void CanScatterGunKnockBack(CTFWeaponBase* , float distance, float force);
 
 class CTFShotgun_Soldier : public CTFShotgun
 {

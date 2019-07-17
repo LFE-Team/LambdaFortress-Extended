@@ -18,6 +18,7 @@
 #include "tf_player.h"
 #else
 #include "c_baseanimating.h"
+#include "c_tf_player.h"
 #endif
 
 #ifdef CLIENT_DLL
@@ -44,20 +45,45 @@ public:
 	virtual void	Precache();
 
 	virtual bool	IsCombatItem( void ) const { return true; }
+	bool			IsReviveInProgress( void );
 
 	virtual	bool	ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void			ReviveThink( void );
 
-	void			InitReviveMarker( CBaseEntity *pOwner, int iClass );
-	void			RevivePlayer( void );
+	void			ReviveOwner( void );
+	//void			PromptOwner( void );
 #ifdef GAME_DLL
+	DECLARE_DATADESC();
+	virtual int		UpdateTransmitState( void );
 	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
-	static CTFReviveMarker *Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner, int iClass );
+	static CTFReviveMarker *Create( CTFPlayer *pOwner );
+	void			AddMarkerHealth( float flAmount );
 #else
+	virtual void	OnDataChanged( DataUpdateType_t updateType );
+	virtual bool	IsVisibleToTargetID( void ) const { return true; }
 	void CreateReviveMeEffect( void );
 
 	// Medic callout particle effect
 	CNewParticleEffect	*m_pReviveMeEffect;
+#endif
+#ifdef GAME_DLL
+	void	SetOwner( CTFPlayer *pOwner );
+#endif
+	//CNetworkVar( int, m_nRevives );
+
+#ifdef GAME_DLL
+	CNetworkHandle( CTFPlayer,	m_hOwner );
+#else
+	CHandle< C_TFPlayer > m_hOwner;
+#endif
+protected:
+
+#ifdef GAME_DLL
+	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_iHealth );
+	//IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_iMaxHealth );
+#else
+	int				m_iHealth;
+	int				m_iMaxHealth;
 #endif
 };
 

@@ -1501,7 +1501,20 @@ void CNPC_Manhack::Slice( CBaseEntity *pHitEntity, float flInterval, trace_t &tr
 		flDamage = 1.0f;
 	}
 
-	CTakeDamageInfo info( this, this, flDamage, DMG_SLASH );
+	CalcIsAttackCritical();
+	CalcIsAttackMiniCritical();
+
+	int iDmgType = DMG_SLASH;
+	if ( IsCurrentAttackACrit() )
+	{
+		iDmgType |= DMG_CRITICAL;
+	}
+	if ( IsCurrentAttackAMiniCrit() )
+	{
+		iDmgType |= DMG_MINICRITICAL;
+	}
+
+	CTakeDamageInfo info( this, this, flDamage, iDmgType );
 
 	// check for actual "ownership" of damage
 	CBasePlayer *pPlayer = HasPhysicsAttacker( MANHACK_SMASH_TIME );
@@ -1515,6 +1528,7 @@ void CNPC_Manhack::Slice( CBaseEntity *pHitEntity, float flInterval, trace_t &tr
 	{
 		dir = tr.m_pEnt->GetAbsOrigin() - GetAbsOrigin();
 	}
+
 	CalculateMeleeDamageForce( &info, dir, tr.endpos );
 	pHitEntity->TakeDamage( info );
 

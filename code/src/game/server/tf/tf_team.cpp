@@ -572,15 +572,35 @@ void CTFTeam::AddWeapon( int iWeapon )
 	for ( int i = 0; i < GetNumPlayers(); i++ )
 	{
 		CTFPlayer *pPlayer = ToTFPlayer( GetPlayer( i ) );
-		
-		if ( pPlayer && pPlayer->IsAlive() && !pPlayer->Weapon_OwnsThisID( iWeapon ) )
+
+		CEconItemDefinition *pItemDef = GetItemSchema()->GetItemDefinition( iWeapon );
+		if ( pItemDef )
 		{
-			const char *pszWeaponName = WeaponIdToClassname( iWeapon );
-			CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName );
+			int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
+			int iSlot = pItemDef->GetLoadoutSlot( iClass );
+			CTFWeaponBase *pWeapon = (CTFWeaponBase *)pPlayer->GetEntityForLoadoutSlot( iSlot );
+			CEconItemView econItem( iWeapon );
 
 			if ( pWeapon )
 			{
-				pWeapon->DefaultTouch( this );
+				if ( pPlayer->ItemsMatch( pWeapon->GetItem(), &econItem, pWeapon ) )
+				{
+					pWeapon->UnEquip( pPlayer );
+					pWeapon = NULL;
+				}
+			}
+
+			if ( !pWeapon )
+			{
+				const char *pszWeaponName = econItem.GetEntityName();
+				CTFWeaponBase *pNewWeapon = (CTFWeaponBase *)pPlayer->GiveNamedItem( pszWeaponName, 0, &econItem );
+
+				if ( pNewWeapon )
+				{
+					pPlayer->SetAmmoCount( pNewWeapon->GetInitialAmmo(), pNewWeapon->GetPrimaryAmmoType() );
+					pNewWeapon->GiveTo( pPlayer );
+					//pPlayer->m_Shared.SetDesiredWeaponIndex( -1 );
+				}
 			}
 		}
 	}
